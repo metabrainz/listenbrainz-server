@@ -303,7 +303,7 @@ export default class YearInMusic extends React.Component<
           <div className="col-md-12 d-flex center-p">
             <h3 className="visible-lg-inline-block">Top Tracks of the Year</h3>
             <ComponentToImage
-              data={yearInMusicData.top_recordings.slice(0, 10)}
+              data={yearInMusicData.top_releases.slice(0, 10)}
             />
           </div>
         </div>
@@ -339,7 +339,14 @@ export default class YearInMusic extends React.Component<
         </Coverflow>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
-            <h3 className="center-p">Your 50 most played songs of 2021</h3>
+            <div className="col-md-12 d-flex center-p">
+              <h3 className="visible-lg-inline-block">
+                Your 50 most played songs of 2021
+              </h3>
+              <ComponentToImage
+                data={yearInMusicData.top_recordings.slice(0, 10)}
+              />
+            </div>
             <div className="scrollable-area">
               {yearInMusicData.top_recordings.slice(0, 50).map((recording) => (
                 <ListenCard
@@ -366,7 +373,14 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="card content-card" id="top-artists">
-            <h3 className="center-p">Your top 50 artists of 2021</h3>
+            <div className="col-md-12 d-flex center-p">
+              <h3 className="visible-lg-inline-block">
+                Your top 50 artists of 2021
+              </h3>
+              <ComponentToImage
+                data={yearInMusicData.top_artists.slice(0, 10)}
+              />
+            </div>
             <div className="scrollable-area">
               {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
                 const details = getEntityLink(
