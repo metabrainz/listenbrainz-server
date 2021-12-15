@@ -195,6 +195,7 @@ export default class YearInMusic extends React.Component<
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
     const { APIService } = this.context;
+    const { listens } = this.state;
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
@@ -424,20 +425,22 @@ export default class YearInMusic extends React.Component<
                     {artist.listen_count} listens
                   </span>
                 );
+                const listenHere = {
+                  listened_at: 0,
+                  track_metadata: {
+                    track_name: "",
+                    artist_name: artist.artist_name,
+                    additional_info: {
+                      artist_mbids: artist.artist_mbids,
+                    },
+                  },
+                };
+                listens.push(listenHere);
                 return (
                   <ListenCard
                     compact
                     key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
-                    listen={{
-                      listened_at: 0,
-                      track_metadata: {
-                        track_name: "",
-                        artist_name: artist.artist_name,
-                        additional_info: {
-                          artist_mbids: artist.artist_mbids,
-                        },
-                      },
-                    }}
+                    listen={listenHere}
                     thumbnail={thumbnail}
                     listenDetails={details}
                     showTimestamp={false}
@@ -630,6 +633,7 @@ export default class YearInMusic extends React.Component<
                       {topLevelPlaylist.jspf?.playlist?.track.map(
                         (playlistTrack) => {
                           const listen = JSPFTrackToListen(playlistTrack);
+                          listens.push(listen);
                           return (
                             <ListenCard
                               className="playlist-item-card"
