@@ -339,7 +339,7 @@ export default class YearInMusic extends React.Component<
                 currentFigureScale={2}
                 otherFigureScale={1}
                 navigation
-                enableScroll={false}
+                enableScroll
                 infiniteScroll
                 enableHeading
                 active={0}
