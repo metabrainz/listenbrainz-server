@@ -359,7 +359,7 @@ def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
     message.set_content(text)
     message.add_alternative(html, subtype="html")
 
-    message.get_payload()[1].add_related(lb_logo, 'image', 'svg', cid=lb_logo_cid)
+    message.get_payload()[1].add_related(lb_logo, 'image', 'png', cid=lb_logo_cid, filename="listenbrainz-logo.png")
     if current_app.config["TESTING"]:  # Not sending any emails during the testing process
         return
 
@@ -369,7 +369,7 @@ def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
 
 def notify_yim_users():
     lb_logo_cid = make_msgid()
-    with open("/static/img/navbar_logo.svg", "rb") as img:
+    with open("/static/img/listenbrainz-logo.png", "rb") as img:
         lb_logo = img.read()
 
     # with db.engine.connect() as connection:
