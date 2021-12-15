@@ -56,4 +56,33 @@
 		margin-right:0;
 		margin-left:0;
 	}
+	/* "Save as image" component */
+	.savable-card {
+		width: 450px;
+		// display: none;
+		.card-img-top{
+			max-width:60%;
+		}
+		.card-img-bottom{
+			width: 70%;
+		}
+		.card-footer{
+			padding: 1rem;
+		}
+		.list-container{
+			text-align: initial;
+			padding:2rem;
+			display: grid;
+    		grid-template-columns: repeat(2, 1fr);
+    		gap: 10px;
+			.listen-card {
+				box-shadow: rgb(192 192 192 / 15%) 0 1px 1px, rgb(192 192 192 / 20%) 0 2px 2px;
+				box-shadow: fade(@card-shadow-color,15%) 0px 1px 1px, fade(@card-shadow-color,20%) 0px 2px 2px;
+				margin:0;
+				.right-section{
+					display: none;
+				}
+			}
+		}
+	}
 }
