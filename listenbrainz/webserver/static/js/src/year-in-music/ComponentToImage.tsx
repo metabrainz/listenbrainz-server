@@ -6,9 +6,10 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export type ComponentToImageProps = {
   data: any[];
+  entity: string;
 };
 
-const ComponentToImage = ({ data }: ComponentToImageProps) => {
+const ComponentToImage = ({ data, entity }: ComponentToImageProps) => {
   const saveAs = (blob: string, fileName: string) => {
     const elem = window.document.createElement("a");
     elem.href = blob;
@@ -42,7 +43,7 @@ const ComponentToImage = ({ data }: ComponentToImageProps) => {
         return canvas.toDataURL("image/png", 1.0);
       })
       .then((image) => {
-        saveAs(image, "year-in-music.png");
+        saveAs(image, `${{ entity }}.png`);
       });
   };
 
@@ -74,7 +75,7 @@ const ComponentToImage = ({ data }: ComponentToImageProps) => {
           alt="ListenBrainz"
         />
         <h2 className="card-title">Year In Music 2021</h2>
-        <h5 className="card-title">akshaaatt&apos;s Top Artists</h5>
+        <h5 className="card-title">akshaaatt&apos;s Top {entity}</h5>
         <img
           className="card-img-top"
           src="/static/img/logo_big.svg"
@@ -84,12 +85,24 @@ const ComponentToImage = ({ data }: ComponentToImageProps) => {
             padding: "4px",
             margin: "4px",
           }}
-          alt="Tickets to my Downfall"
+          alt=""
         />
         <ul className="list-group list-group-flush">
-          {data.map((release) => (
-            <li className="list-group-item">{release.name}</li>
-          ))}
+          {(() => {
+            if (entity === "Artists") {
+              return data.map((release) => (
+                <li className="list-group-item">{release.artist_name}</li>
+              ));
+            }
+            if (entity === "Releases") {
+              return data.map((release) => (
+                <li className="list-group-item">{release.release_name}</li>
+              ));
+            }
+            return data.map((release) => (
+              <li className="list-group-item">{release.track_name}</li>
+            ));
+          })()}
         </ul>
         <div className="card-body">
           <p className="card-text">

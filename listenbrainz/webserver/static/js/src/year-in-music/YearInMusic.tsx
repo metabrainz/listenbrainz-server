@@ -304,6 +304,7 @@ export default class YearInMusic extends React.Component<
             <h3 className="visible-lg-inline-block">Top Tracks of the Year</h3>
             <ComponentToImage
               data={yearInMusicData.top_releases.slice(0, 10)}
+              entity="Releases"
             />
           </div>
         </div>
@@ -345,6 +346,7 @@ export default class YearInMusic extends React.Component<
               </h3>
               <ComponentToImage
                 data={yearInMusicData.top_recordings.slice(0, 10)}
+                entity="Recordings"
               />
             </div>
             <div className="scrollable-area">
@@ -379,6 +381,7 @@ export default class YearInMusic extends React.Component<
               </h3>
               <ComponentToImage
                 data={yearInMusicData.top_artists.slice(0, 10)}
+                entity="Artists"
               />
             </div>
             <div className="scrollable-area">
@@ -656,7 +659,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <YearInMusicWithAlertNotifications
           user={user}
-          yearInMusicData={yearInMusicData}
+          yearInMusicData={fakeData}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
