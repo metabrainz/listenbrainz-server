@@ -288,7 +288,7 @@ def get_coverart_for_top_releases(top_releases):
             caa_url = caa_id_to_archive_url(release_mbid, caa_id)
             release_coverart[release_mbid] = caa_url
 
-        unmatched_release_group_ids = [release_mbid_to_release_group_id[rmbid] 
+        unmatched_release_group_ids = [release_mbid_to_release_group_id[rmbid]
                                        for rmbid in release_mbids
                                        if rmbid not in release_coverart and rmbid in release_mbid_to_release_group_id]
 
@@ -317,15 +317,15 @@ def get_coverart_for_top_releases(top_releases):
         ORDER BY release.release_group, release_group_cover_art.release,
           release_event.date_year, release_event.date_month,
           release_event.date_day"""
-
-        res = connection.execute(sqlalchemy.text(query), {"release_group_ids": tuple(unmatched_release_group_ids)})
-        for row in res.fetchall():
-            caa_id = row["caa_id"]
-            release_group_id = row["release_group_id"]
-            release_mbid = row["release_mbid"]
-            original_release_mbid = release_group_id_to_release_mbid[release_group_id]
-            caa_url = caa_id_to_archive_url(release_mbid, caa_id)
-            release_coverart[original_release_mbid] = caa_url
+        if unmatched_release_group_ids:
+            res = connection.execute(sqlalchemy.text(query), {"release_group_ids": tuple(unmatched_release_group_ids)})
+            for row in res.fetchall():
+                caa_id = row["caa_id"]
+                release_group_id = row["release_group_id"]
+                release_mbid = row["release_mbid"]
+                original_release_mbid = release_group_id_to_release_mbid[release_group_id]
+                caa_url = caa_id_to_archive_url(release_mbid, caa_id)
+                release_coverart[original_release_mbid] = caa_url
 
     return release_coverart
 
