@@ -6,6 +6,7 @@ import sqlalchemy
 import ujson
 from flask import current_app, render_template
 from psycopg2.extras import execute_values
+from brainzutils import musicbrainz_db
 
 from data.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
@@ -225,6 +226,123 @@ def insert_playlists(troi_patch_slug, import_file):
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error("Error while inserting playlist/%s:" % troi_patch_slug, exc_info=True)
+
+
+def caa_id_to_archive_url(release_mbid, caa_id):
+    return f"https://archive.org/download/mbid-{release_mbid}/mbid-{release_mbid}-{caa_id}_thumb500.jpg"
+
+
+def get_coverart_for_top_releases(top_releases):
+    """Use the CAA database connection to find coverart for each release
+    1. For all releases, find coverart
+    2. For releases where there is no coverart, get their releasegroup
+    3. Find release mbids for the above release groups
+    4. For these release mbids, find coverart
+    """
+
+    release_mbids = [rel["release_mbid"] for rel in top_releases if "release_mbid" in rel]
+
+    release_coverart = {}
+    release_mbid_to_row = {}
+    release_id_to_mbid = {}
+    release_mbid_to_release_group_id = {}
+    with musicbrainz_db.engine.connect() as connection:
+        query = """SELECT release_gid_redirect.gid::text
+                        , new_id
+                        , release.release_group
+                     FROM release_gid_redirect
+                     JOIN release
+                       ON release.id = new_id
+                    WHERE release_gid_redirect.gid IN :release_mbids"""
+        res = connection.execute(sqlalchemy.text(query), {"release_mbids": tuple(release_mbids)})
+        for row in res.fetchall():
+            release_mbid_to_row[row["gid"]] = row["new_id"]
+            release_id_to_mbid[row["new_id"]] = row["gid"]
+            release_mbid_to_release_group_id[row["gid"]] = row["release_group"]
+        query = """SELECT gid::text
+                        , id
+                        , release_group
+                     FROM release
+                    WHERE gid IN :release_mbids"""
+        res = connection.execute(sqlalchemy.text(query), {"release_mbids": tuple(release_mbids)})
+        for row in res.fetchall():
+            release_mbid_to_row[row["gid"]] = row["id"]
+            release_id_to_mbid[row["id"]] = row["gid"]
+            release_mbid_to_release_group_id[row["gid"]] = row["release_group"]
+
+        # We need to know what the release mbid was that we passed in which gave us this rgid
+        release_group_id_to_release_mbid = {v: k for k, v in release_mbid_to_release_group_id.items()}
+
+        # Front coverart
+        query = """SELECT id
+                        , release 
+                     FROM cover_art_archive.index_listing
+                    WHERE release in :release_ids
+                      AND is_front = 't';
+        """
+        res = connection.execute(sqlalchemy.text(query), {"release_ids": tuple(release_id_to_mbid.keys())})
+        for row in res.fetchall():
+            release_id = row["release"]
+            caa_id = row["id"]
+            release_mbid = release_id_to_mbid[release_id]
+            caa_url = caa_id_to_archive_url(release_mbid, caa_id)
+            release_coverart[release_mbid] = caa_url
+
+        unmatched_release_group_ids = [release_mbid_to_release_group_id[rmbid] 
+                                       for rmbid in release_mbids
+                                       if rmbid not in release_coverart and rmbid in release_mbid_to_release_group_id]
+
+        # Release mbids which didn't have coverart - find their releasegroup and then see if there is a release with coverart
+        # https://github.com/metabrainz/artwork-redirect/blob/90ff5c7b/artwork_redirect/request.py#L124
+        query = """SELECT DISTINCT ON (release.release_group)
+          release_group.id as release_group_id
+        , release.gid::text AS release_mbid
+        , index_listing.id as caa_id
+        FROM cover_art_archive.index_listing
+        JOIN musicbrainz.release
+          ON musicbrainz.release.id = cover_art_archive.index_listing.release
+        JOIN musicbrainz.release_group
+          ON release_group.id = release.release_group
+        LEFT JOIN (
+          SELECT release, date_year, date_month, date_day
+          FROM musicbrainz.release_country
+          UNION ALL
+          SELECT release, date_year, date_month, date_day
+          FROM musicbrainz.release_unknown_country
+        ) release_event ON (release_event.release = release.id)
+        FULL OUTER JOIN cover_art_archive.release_group_cover_art
+        ON release_group_cover_art.release = musicbrainz.release.id
+        WHERE release_group.id in :release_group_ids
+        AND is_front = true
+        ORDER BY release.release_group, release_group_cover_art.release,
+          release_event.date_year, release_event.date_month,
+          release_event.date_day"""
+
+        res = connection.execute(sqlalchemy.text(query), {"release_group_ids": tuple(unmatched_release_group_ids)})
+        for row in res.fetchall():
+            caa_id = row["caa_id"]
+            release_group_id = row["release_group_id"]
+            release_mbid = row["release_mbid"]
+            original_release_mbid = release_group_id_to_release_mbid[release_group_id]
+            caa_url = caa_id_to_archive_url(release_mbid, caa_id)
+            release_coverart[original_release_mbid] = caa_url
+
+    return release_coverart
+
+
+def handle_coverart(user_id, data):
+    with db.engine.connect() as connection:
+        connection.execute(
+            sqlalchemy.text("""
+            INSERT INTO statistics.year_in_music (user_id, data)
+                 VALUES (:user_id, jsonb_build_object(:stat_type,:data :: jsonb))
+            ON CONFLICT (user_id)
+          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+            """),
+            user_id=user_id,
+            stat_type="top_releases_coverart",
+            data=ujson.dumps(data)
+        )
 
 
 def send_mail(subject, to_name, to_email, text, html):
