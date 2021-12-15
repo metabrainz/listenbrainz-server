@@ -381,6 +381,11 @@ def handle_top_stats(message):
         return
     year_in_music.handle_top_stats(user["id"], message["entity"], message["data"])
 
+    # for top_releases, look up cover art
+    if message["entity"] == "releases":
+        coverart = year_in_music.get_coverart_for_top_releases(message["data"])
+        year_in_music.handle_coverart(user["id"], coverart)
+
 
 def handle_listens_per_day(message):
     musicbrainz_id = message["musicbrainz_id"]
