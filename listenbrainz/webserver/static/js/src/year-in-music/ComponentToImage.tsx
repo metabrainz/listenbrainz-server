@@ -79,7 +79,7 @@ const ComponentToImage = ({
           style={{ marginRight: "4px" }}
           icon={faCamera as IconProp}
         />
-        Share as Image
+        Save as Image
       </button>
       <div id={`savable-${entityType}-component`} className="savable-card card">
         <img

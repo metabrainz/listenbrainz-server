@@ -65,6 +65,8 @@ redirect_bp.add_url_rule("/recommendations/",
                          redirect_user_page("user.recommendation_playlists"))
 redirect_bp.add_url_rule("/pins/", "redirect_pins",
                          redirect_user_page("user.pins"))
+redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
+                         redirect_user_page("user.year_in_music"))
 
 @user_bp.route("/<user_name>/")
 @web_listenstore_needed
