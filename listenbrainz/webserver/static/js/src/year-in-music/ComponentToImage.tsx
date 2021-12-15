@@ -43,7 +43,7 @@ const ComponentToImage = ({ data, entity }: ComponentToImageProps) => {
         return canvas.toDataURL("image/png", 1.0);
       })
       .then((image) => {
-        saveAs(image, `${{ entity }}.png`);
+        saveAs(image, `${entity}.png`);
       });
   };
 
@@ -61,7 +61,7 @@ const ComponentToImage = ({ data, entity }: ComponentToImageProps) => {
           style={{ marginRight: "4px" }}
           icon={faCamera as IconProp}
         />
-        Share as Image
+        Save as Image
       </button>
       <div
         id="card"
@@ -78,10 +78,10 @@ const ComponentToImage = ({ data, entity }: ComponentToImageProps) => {
         <h5 className="card-title">akshaaatt&apos;s Top {entity}</h5>
         <img
           className="card-img-top"
-          src="/static/img/logo_big.svg"
+          src="/static/img/ListenBrainz_logo_no_text.png"
           style={{
-            width: "128px",
-            height: "128px",
+            width: "80px",
+            height: "80px",
             padding: "4px",
             margin: "4px",
           }}
