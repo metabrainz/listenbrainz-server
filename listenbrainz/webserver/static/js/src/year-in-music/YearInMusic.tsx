@@ -335,8 +335,7 @@ export default class YearInMusic extends React.Component<
         <hr className="wide" />
         <div className="row">
           <div className="col-md-12 d-flex center-p">
-            <h3 className="visible-lg-inline-block">Your top albums of 2021</h3>
-            <br />
+            <h3>Your top albums of 2021</h3>
             <ComponentToImage
               data={yearInMusicData.top_releases.slice(0, 10)}
               entityType="release"
@@ -395,10 +394,7 @@ export default class YearInMusic extends React.Component<
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
             <div className="col-md-12 d-flex center-p">
-              <h3 className="visible-lg-inline-block">
-                Your 50 most played songs of 2021
-              </h3>
-              <br />
+              <h3>Your 50 most played songs of 2021</h3>
               <ComponentToImage
                 data={yearInMusicData.top_recordings.slice(0, 10)}
                 entityType="recording"
@@ -432,10 +428,7 @@ export default class YearInMusic extends React.Component<
           </div>
           <div className="card content-card" id="top-artists">
             <div className="col-md-12 d-flex center-p">
-              <h3 className="visible-lg-inline-block">
-                Your top 50 artists of 2021
-              </h3>
-              <br />
+              <h3>Your top 50 artists of 2021</h3>
               <ComponentToImage
                 data={yearInMusicData.top_artists.slice(0, 10)}
                 entityType="artist"
