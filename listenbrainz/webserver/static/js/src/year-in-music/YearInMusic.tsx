@@ -447,7 +447,7 @@ export default class YearInMusic extends React.Component<
             <h3 className="text-center">
               Your listening activity in 2021
               <div className="small">
-                Number of listens submitted for each day fo the year
+                Number of listens submitted for each day of the year
               </div>
             </h3>
             <div className="graph">
