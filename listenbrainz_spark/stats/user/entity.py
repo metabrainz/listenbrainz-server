@@ -80,6 +80,10 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         if entity == "recordings" and stats_range == "all_time":
             _dict[entity] = _dict[entity][:1000]
 
+        # for year in music, only retain top 50 stats
+        if message_type == "year_in_music_top_stats":
+            _dict[entity] = _dict[entity][:50]
+
         entity_list = []
         for item in _dict[entity]:
             try:
