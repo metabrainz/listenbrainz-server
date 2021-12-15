@@ -236,13 +236,16 @@ def notify_yim_users():
     #     """)
     #     rows = result.fetchall()
 
-    rows = [
-        {
-            "user_id": 5746,
-            "musicbrainz_id": "amCap1712",
-            "email": "kartikohri13@gmail.com"
-        }
-    ]
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id AS user_id
+                 , musicbrainz_id
+                 , email
+              FROM "users"
+             WHERE musicbrainz_id IN ('amCap1712', 'rob', 'alastairp', 'mr_monkey', 'akshaaatt')    
+        """))
+        rows = result.fetchall()
+
     for row in rows:
         user_name = row["musicbrainz_id"]
 
