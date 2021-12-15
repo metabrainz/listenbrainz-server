@@ -1,5 +1,6 @@
 import smtplib
 from email.message import EmailMessage
+from email.utils import make_msgid
 
 import psycopg2
 import sqlalchemy
@@ -349,7 +350,7 @@ def handle_coverart(user_id, data):
         )
 
 
-def send_mail(subject, to_name, to_email, text, html):
+def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
     message = EmailMessage()
     message["From"] = f"ListenBrainz <noreply@{current_app.config['MAIL_FROM_DOMAIN']}>"
     message["To"] = f"{to_name} <{to_email}>"
@@ -358,6 +359,7 @@ def send_mail(subject, to_name, to_email, text, html):
     message.set_content(text)
     message.add_alternative(html, subtype="html")
 
+    message.get_payload()[1].add_related(lb_logo, 'image', 'svg', cid=lb_logo_cid)
     if current_app.config["TESTING"]:  # Not sending any emails during the testing process
         return
 
@@ -366,6 +368,10 @@ def send_mail(subject, to_name, to_email, text, html):
 
 
 def notify_yim_users():
+    lb_logo_cid = make_msgid()
+    with open("/static/img/navbar_logo.svg", "rb") as img:
+        lb_logo = img.read()
+
     # with db.engine.connect() as connection:
     #     result = connection.execute("""
     #         SELECT user_id
@@ -402,7 +408,8 @@ def notify_yim_users():
             "feedback": f"{base_url}/user/{user_name}/feedback/",
             "pins": f"{base_url}/user/{user_name}/pins/",
             "playlists": f"{base_url}/user/{user_name}/playlists/",
-            "collaborations": f"{base_url}/user/{user_name}/collaborations/"
+            "collaborations": f"{base_url}/user/{user_name}/collaborations/",
+            "lb_logo_cid": lb_logo_cid[1:-1]
         }
 
         send_mail(
@@ -410,7 +417,9 @@ def notify_yim_users():
             text=render_template("emails/year_in_music.txt", **params),
             to_email=row["email"],
             to_name=user_name,
-            html=render_template("emails/year_in_music.html", **params)
+            html=render_template("emails/year_in_music.html", **params),
+            lb_logo_cid=lb_logo_cid,
+            lb_logo=lb_logo
         )
         # create timeline event too
         timeline_message = 'ListenBrainz\' very own retrospective on 2021 has just dropped: Check out ' \
