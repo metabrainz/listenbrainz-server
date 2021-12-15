@@ -312,6 +312,14 @@ def submit_release(user, token, releasembid):
     listenbrainz.misc.submit_release.submit_release_impl(token, releaseid, "http://web:7000")
 
 
+@cli.command()
+def notify_yim_users():
+    application = webserver.create_app()
+    with application.app_context():
+        from listenbrainz.db import year_in_music
+        year_in_music.notify_yim_users()
+
+
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")
 cli.add_command(dump_manager.cli, name="dump")
