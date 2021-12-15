@@ -629,6 +629,7 @@ export default class YearInMusic extends React.Component<
                       </a>
                       <div
                         className="small ellipsis-2-lines"
+                        // eslint-disable-next-line react/no-danger
                         dangerouslySetInnerHTML={{
                           __html: sanitize(
                             topLevelPlaylist.jspf?.playlist?.annotation

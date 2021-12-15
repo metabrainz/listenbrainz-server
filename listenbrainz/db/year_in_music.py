@@ -1,11 +1,16 @@
-import json
+import smtplib
+from email.message import EmailMessage
 
 import psycopg2
 import sqlalchemy
 import ujson
-from flask import current_app
+from flask import current_app, render_template
 from psycopg2.extras import execute_values
+
+from data.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
+from listenbrainz.db.user_timeline_event import create_user_notification_event
+
 
 
 def get_year_in_music(user_id):
@@ -201,3 +206,70 @@ def insert_playlists(troi_patch_slug, import_file):
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error("Error while inserting playlist/%s:" % troi_patch_slug, exc_info=True)
+
+
+def send_mail(subject, to_name, to_email, text, html):
+    message = EmailMessage()
+    message["From"] = f"ListenBrainz <noreply@{current_app.config['MAIL_FROM_DOMAIN']}>"
+    message["To"] = f"{to_name} <{to_email}>"
+    message["Subject"] = subject
+
+    message.set_content(text)
+    message.add_alternative(html, subtype="html")
+
+    if current_app.config["TESTING"]:  # Not sending any emails during the testing process
+        return
+
+    with smtplib.SMTP(current_app.config["SMTP_SERVER"], current_app.config["SMTP_PORT"]) as server:
+        server.send_message(message)
+
+
+def notify_yim_users():
+    # with db.engine.connect() as connection:
+    #     result = connection.execute("""
+    #         SELECT user_id
+    #              , musicbrainz_id
+    #              , email
+    #           FROM statistics.year_in_music yim
+    #           JOIN "users"
+    #             ON "users".id = yim.user_id
+    #     """)
+    #     rows = result.fetchall()
+
+    rows = [
+        {
+            "user_id": 5746,
+            "musicbrainz_id": "amCap1712",
+            "email": "kartikohri13@gmail.com"
+        }
+    ]
+    for row in rows:
+        user_name = row["musicbrainz_id"]
+
+        # cannot use url_for because we do not set SERVER_NAME and
+        # a request_context will not be available in this script.
+        base_url = "https://listenbrainz.org"
+        year_in_music = f"{base_url}/user/{user_name}/year-in-music/"
+        params = {
+            "user_name": user_name,
+            "year_in_music": year_in_music,
+            "statistics": f"{base_url}/user/{user_name}/reports/",
+            "feed": f"{base_url}/feed/",
+            "feedback": f"{base_url}/user/{user_name}/feedback/",
+            "pins": f"{base_url}/user/{user_name}/pins/",
+            "playlists": f"{base_url}/user/{user_name}/playlists/",
+            "collaborations": f"{base_url}/user/{user_name}/collaborations/"
+        }
+
+        send_mail(
+            subject="Year In Music 2021",
+            text=render_template("emails/year_in_music.txt", **params),
+            to_email=row["email"],
+            to_name=user_name,
+            html=render_template("emails/year_in_music.html", **params)
+        )
+        # create timeline event too
+        timeline_message = 'ListenBrainz\' very own retrospective on 2021 has just dropped: Check out ' \
+                           f'your own <a href="{year_in_music}">Year in Music</a> now!'
+        metadata = NotificationMetadata(creator="troi-bot", message=timeline_message)
+        create_user_notification_event(row["user_id"], metadata)
