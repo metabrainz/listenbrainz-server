@@ -87,6 +87,7 @@ const responsive = {
 
 export type YearInMusicState = {
   followingList: Array<string>;
+  ca: { [key: string]: string };
 };
 
 export default class YearInMusic extends React.Component<
@@ -100,11 +101,13 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
+      ca: {},
     };
   }
 
   async componentDidMount() {
     await this.getFollowing();
+    await this.getCoverArt();
   }
 
   private getPlaylistByName(
@@ -137,6 +140,40 @@ export default class YearInMusic extends React.Component<
       const { newAlert } = this.props;
       newAlert("danger", "Error while fetching followers", err.toString());
     }
+  };
+
+  getCoverArt = async () => {
+    const { ca } = this.state;
+    ca.map(async (release_mbidHere: string, imageSource: string) => {
+      try {
+        const CAAResponse = await fetch(
+          `https://coverartarchive.org/release/${release_mbidHere}`
+        );
+        if (CAAResponse.ok) {
+          const body: CoverArtArchiveResponse = await CAAResponse.json();
+          if (!body.images?.[0]?.thumbnails) {
+            return undefined;
+          }
+          const { thumbnails } = body.images[0];
+          this.setState({
+            // ca{
+            //   release_mbidHere:  thumbnails[250] ??
+            //     thumbnails.small ??
+            //     // If neither of the above exists, return the first one we find
+            //     // @ts-ignore
+            //     thumbnails[Object.keys(thumbnails)?.[0]]
+            // }
+          });
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Couldn't fetch Cover Art Archive entry for ${release_mbidHere}`,
+          error
+        );
+      }
+    });
+    return false;
   };
 
   updateFollowingList = (
@@ -326,62 +363,35 @@ export default class YearInMusic extends React.Component<
             },
           }}
         >
-          {yearInMusicData.top_releases.slice(0, 50).map(async (release) => {
-            try {
-              const CAAResponse = await fetch(
-                `https://coverartarchive.org/release/${release.release_mbid}`
-              );
-              if (CAAResponse.ok) {
-                const body: CoverArtArchiveResponse = await CAAResponse.json();
-                if (!body.images?.[0]?.thumbnails) {
-                  return undefined;
-                }
-                const { thumbnails } = body.images[0];
-                return (
-                  <img
-                    src={
-                      thumbnails[250] ??
-                      thumbnails.small ??
-                      // If neither of the above exists, return the first one we find
-                      // @ts-ignore
-                      thumbnails[Object.keys(thumbnails)?.[0]]
-                    }
-                    alt={release.release_name}
-                    data-action={() => {
-                      window.postMessage(
-                        {
-                          brainzplayer_event: "play-listen",
-                          payload: {
-                            listened_at: 0,
-                            track_metadata: {
-                              artist_name: release.artist_name,
-                              release_name: release.release_name,
-                              additional_info: {
-                                release_mbid: release.release_mbid,
-                                artist_mbids: release.artist_mbids,
-                              },
-                            },
-                          },
+          {yearInMusicData.top_releases.slice(0, 50).map((release) => (
+            <img
+              src="/static/img/cover-art-placeholder.jpg"
+              alt={release.release_name}
+              data-action={() => {
+                window.postMessage(
+                  {
+                    brainzplayer_event: "play-listen",
+                    payload: {
+                      listened_at: 0,
+                      track_metadata: {
+                        artist_name: release.artist_name,
+                        release_name: release.release_name,
+                        additional_info: {
+                          release_mbid: release.release_mbid,
+                          artist_mbids: release.artist_mbids,
                         },
-                        window.location.origin
-                      );
-                    }}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                    }}
-                  />
+                      },
+                    },
+                  },
+                  window.location.origin
                 );
-              }
-            } catch (error) {
-              // eslint-disable-next-line no-console
-              return console.warn(
-                `Couldn't fetch Cover Art Archive entry for ${release.release_name}`,
-                error
-              );
-            }
-            return false;
-          })}
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+              }}
+            />
+          ))}
         </Coverflow>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
