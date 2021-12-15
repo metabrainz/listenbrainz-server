@@ -1,11 +1,13 @@
 {%- extends 'base-react.html' -%}
 
 {% block head %}
+   {{ super() }}
    <meta name="twitter:card" content="summary"></meta>
    <meta name="twitter:site" content="@listenbrainz" />
    <meta property="og:url" content="{{ url_for("user.year_in_music", user_name=user_name) }}" />
-   <meta property="og:title" content="Year in Music for {{ user_name }}" />
-   <meta property="og:description" content="ListenBrainz Year in Music report for {{ user_name }}, a retrospective of music listening habits for 2021." />
+   <meta property="og:title" content="ListenBrainz Year in Music for {{ user_name }}" />
+   <meta property="og:description" content="Check out the music review for 2021 that @ListenBrainz created from my listening history!" />
+   <meta property="og:image" content="https://test.listenbrainz.org/static/img/year-in-music-2021.png" />
 {% endblock %}
 
 {% block content %}
