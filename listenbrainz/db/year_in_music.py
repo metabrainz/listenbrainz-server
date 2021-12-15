@@ -231,8 +231,8 @@ def notify_yim_users():
     #              , musicbrainz_id
     #              , email
     #           FROM statistics.year_in_music yim
-    #           JOIN "users"
-    #             ON "users".id = yim.user_id
+    #           JOIN "user"
+    #             ON "user".id = yim.user_id
     #     """)
     #     rows = result.fetchall()
 
@@ -241,7 +241,7 @@ def notify_yim_users():
             SELECT id AS user_id
                  , musicbrainz_id
                  , email
-              FROM "users"
+              FROM "user"
              WHERE musicbrainz_id IN ('amCap1712', 'rob', 'alastairp', 'mr_monkey', 'akshaaatt')    
         """))
         rows = result.fetchall()
