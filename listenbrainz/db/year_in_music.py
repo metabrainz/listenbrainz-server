@@ -11,6 +11,25 @@ from data.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
 from listenbrainz.db.user_timeline_event import create_user_notification_event
 
+# Year in Music data element defintions
+#
+# The following keys are being used to populate the data JSONB element of the year_in_music table:
+#
+# day_of_week
+# listens_per_day
+# most_listened_year
+# most_prominent_color
+# new_releases_of_top_artists
+# playlist-top-discoveries-for-year-playlists
+# playlist-top-missed-recordings-for-year-playlists
+# playlist-top-new-recordings-for-year-playlists
+# playlist-top-recordings-for-year-playlists
+# similar_users
+# top_artists
+# top_recordings
+# top_releases
+# top_releases_coverart
+# total_listen_count
 
 
 def get_year_in_music(user_id):
