@@ -92,7 +92,6 @@ export default class YearInMusic extends React.Component<
 
   async componentDidMount() {
     await this.getFollowing();
-    // await this.getCoverArt();
   }
 
   private getPlaylistByName(
@@ -125,42 +124,6 @@ export default class YearInMusic extends React.Component<
       const { newAlert } = this.props;
       newAlert("danger", "Error while fetching followers", err.toString());
     }
-  };
-
-  getCoverArt = async () => {
-    const { ca } = this.state;
-    // for (const caKey in ca) {
-    //   console.log(caKey);
-    //   try {
-    //     const CAAResponse = await fetch(
-    //       `https://coverartarchive.org/release/${caKey}`
-    //     );
-    //     if (CAAResponse.ok) {
-    //       const body: CoverArtArchiveResponse = await CAAResponse.json();
-    //       if (!body.images?.[0]?.thumbnails) {
-    //         return undefined;
-    //       }
-    //       const { thumbnails } = body.images[0];
-    //       this.setState({
-    //         ca: {
-    //           key:
-    //             thumbnails[250] ??
-    //             thumbnails.small ??
-    //             // If neither of the above exists, return the first one we find
-    //             // @ts-ignore
-    //             thumbnails[Object.keys(thumbnails)?.[0]],
-    //         },
-    //       });
-    //     }
-    //   } catch (error) {
-    //     // eslint-disable-next-line no-console
-    //     console.warn(
-    //       `Couldn't fetch Cover Art Archive entry for ${caKey}`,
-    //       error
-    //     );
-    //   }
-    // }
-    return false;
   };
 
   updateFollowingList = (
