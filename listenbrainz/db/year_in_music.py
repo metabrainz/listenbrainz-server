@@ -241,6 +241,8 @@ def get_coverart_for_top_releases(top_releases):
     """
 
     release_mbids = [rel["release_mbid"] for rel in top_releases if "release_mbid" in rel]
+    if not release_mbids:
+        return {}
 
     release_coverart = {}
     release_mbid_to_row = {}
