@@ -6,10 +6,15 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export type ComponentToImageProps = {
   data: any[];
-  entity: string;
+  entityType: Entity;
+  user: ListenBrainzUser;
 };
 
-const ComponentToImage = ({ data, entity }: ComponentToImageProps) => {
+const ComponentToImage = ({
+  data,
+  entityType,
+  user,
+}: ComponentToImageProps) => {
   const saveAs = (blob: string, fileName: string) => {
     const elem = window.document.createElement("a");
     elem.href = blob;
@@ -32,26 +37,26 @@ const ComponentToImage = ({ data, entity }: ComponentToImageProps) => {
   };
 
   const exportAsPicture = () => {
-    const element = document.getElementById("card");
+    const targetId = `savable-${entityType}-component`;
+    const element = document.getElementById(targetId);
     html2canvas(element as HTMLElement, {
       onclone(clonedDoc) {
         // eslint-disable-next-line no-param-reassign
-        clonedDoc!.getElementById("card")!.style.display = "block";
+        clonedDoc!.getElementById(targetId)!.style.display = "block";
       },
     })
       .then((canvas) => {
         return canvas.toDataURL("image/png", 1.0);
       })
       .then((image) => {
-        saveAs(image, `${{ entity }}.png`);
+        saveAs(image, `${user.name}-top-${entityType}s-2021.png`);
       });
   };
 
   return (
     <>
       <button
-        className="col-6 btn-primary center"
-        style={{ marginLeft: "2rem", marginBottom: "1rem" }}
+        className="btn btn-primary"
         onClick={exportAsPicture}
         type="button"
       >
@@ -64,9 +69,9 @@ const ComponentToImage = ({ data, entity }: ComponentToImageProps) => {
         Share as Image
       </button>
       <div
-        id="card"
+        id={`savable-${entityType}-component`}
         className="card text-center justify-content-center align-content-center align-items-center"
-        style={{ width: "24rem", display: "none" }}
+        style={{ width: "350px", display: "none" }}
       >
         <img
           className="card-img-top"
@@ -75,7 +80,9 @@ const ComponentToImage = ({ data, entity }: ComponentToImageProps) => {
           alt="ListenBrainz"
         />
         <h2 className="card-title">Year In Music 2021</h2>
-        <h5 className="card-title">akshaaatt&apos;s Top {entity}</h5>
+        <h5 className="card-title">
+          {user.name}&apos;s Top {entityType}
+        </h5>
         <img
           className="card-img-top"
           src="/static/img/logo_big.svg"
@@ -89,25 +96,25 @@ const ComponentToImage = ({ data, entity }: ComponentToImageProps) => {
         />
         <ul className="list-group list-group-flush">
           {(() => {
-            if (entity === "Artists") {
-              return data.map((release) => (
-                <li className="list-group-item">{release.artist_name}</li>
+            if (entityType === "artist") {
+              return data.map((artist) => (
+                <li className="list-group-item">{artist.artist_name}</li>
               ));
             }
-            if (entity === "Releases") {
+            if (entityType === "release") {
               return data.map((release) => (
                 <li className="list-group-item">{release.release_name}</li>
               ));
             }
-            return data.map((release) => (
-              <li className="list-group-item">{release.track_name}</li>
+            return data.map((recording) => (
+              <li className="list-group-item">{recording.track_name}</li>
             ));
           })()}
         </ul>
         <div className="card-body">
           <p className="card-text">
             <small className="text-muted">
-              Find your Stats at{" "}
+              Find your stats at{" "}
               <a href="https://listenbrainz.org">listenbrainz.org</a>
             </small>
           </p>
