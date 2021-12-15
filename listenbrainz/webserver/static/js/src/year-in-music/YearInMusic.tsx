@@ -338,9 +338,9 @@ export default class YearInMusic extends React.Component<
                 displayQuantityOfSide={3}
                 currentFigureScale={2}
                 otherFigureScale={1}
-                // navigation
-                // enableScroll
-                // infiniteScroll
+                navigation
+                enableScroll={false}
+                infiniteScroll
                 enableHeading
                 active={0}
                 media={{
@@ -350,11 +350,11 @@ export default class YearInMusic extends React.Component<
                   },
                   "@media (min-width: 900px)": {
                     width: "100%",
-                    height: "600px",
+                    height: "500px",
                   },
                 }}
               >
-                {yearInMusicData.top_releases.slice(0, 10).map((release) => (
+                {yearInMusicData.top_releases.slice(0, 50).map((release) => (
                   <img
                     src="/static/img/cover-art-placeholder.jpg"
                     alt={release.release_name}
