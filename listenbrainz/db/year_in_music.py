@@ -1,11 +1,13 @@
 import smtplib
 from email.message import EmailMessage
+from email.utils import make_msgid
 
 import psycopg2
 import sqlalchemy
 import ujson
 from flask import current_app, render_template
 from psycopg2.extras import execute_values
+from brainzutils import musicbrainz_db
 
 from data.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
@@ -227,7 +229,128 @@ def insert_playlists(troi_patch_slug, import_file):
         current_app.logger.error("Error while inserting playlist/%s:" % troi_patch_slug, exc_info=True)
 
 
-def send_mail(subject, to_name, to_email, text, html):
+def caa_id_to_archive_url(release_mbid, caa_id):
+    return f"https://archive.org/download/mbid-{release_mbid}/mbid-{release_mbid}-{caa_id}_thumb500.jpg"
+
+
+def get_coverart_for_top_releases(top_releases):
+    """Use the CAA database connection to find coverart for each release
+    1. Get release id and releasegroup id for each release (also considering release mbid redirects)
+    2. Get coverart for these releases
+    3. For releases with no cover art, see if any other release in their releasegroup has coverarat
+    """
+
+    if musicbrainz_db.engine is None:
+        current_app.logger.warning("get_coverart_for_top_releases: No connection to MusicBrainz database")
+        return {}
+
+    release_mbids = [rel["release_mbid"] for rel in top_releases if "release_mbid" in rel]
+    if not release_mbids:
+        return {}
+
+    release_coverart = {}
+    release_id_to_mbid = {}
+    release_mbid_to_release_group_id = {}
+    with musicbrainz_db.engine.connect() as connection:
+        query = """SELECT release_gid_redirect.gid::text
+                        , new_id
+                        , release.release_group
+                     FROM release_gid_redirect
+                     JOIN release
+                       ON release.id = new_id
+                    WHERE release_gid_redirect.gid IN :release_mbids"""
+        res = connection.execute(sqlalchemy.text(query), {"release_mbids": tuple(release_mbids)})
+        for row in res.fetchall():
+            release_id_to_mbid[row["new_id"]] = row["gid"]
+            release_mbid_to_release_group_id[row["gid"]] = row["release_group"]
+        query = """SELECT gid::text
+                        , id
+                        , release_group
+                     FROM release
+                    WHERE gid IN :release_mbids"""
+        res = connection.execute(sqlalchemy.text(query), {"release_mbids": tuple(release_mbids)})
+        for row in res.fetchall():
+            release_id_to_mbid[row["id"]] = row["gid"]
+            release_mbid_to_release_group_id[row["gid"]] = row["release_group"]
+
+        # We need to know what the release mbid was that we passed in which gave us this rgid
+        release_group_id_to_release_mbid = {v: k for k, v in release_mbid_to_release_group_id.items()}
+
+        # Front coverart
+        query = """SELECT id
+                        , release
+                     FROM cover_art_archive.index_listing
+                    WHERE release in :release_ids
+                      AND is_front = 't';
+        """
+        res = connection.execute(sqlalchemy.text(query), {"release_ids": tuple(release_id_to_mbid.keys())})
+        for row in res.fetchall():
+            release_id = row["release"]
+            caa_id = row["id"]
+            release_mbid = release_id_to_mbid[release_id]
+            caa_url = caa_id_to_archive_url(release_mbid, caa_id)
+            release_coverart[release_mbid] = caa_url
+
+        unmatched_release_group_ids = [release_mbid_to_release_group_id[rmbid]
+                                       for rmbid in release_mbids
+                                       if rmbid not in release_coverart and rmbid in release_mbid_to_release_group_id]
+
+        # Release mbids which didn't have coverart - find their releasegroup and then see if there is a release with coverart
+        # https://github.com/metabrainz/artwork-redirect/blob/90ff5c7b/artwork_redirect/request.py#L124
+        query = """SELECT DISTINCT ON (release.release_group)
+          release_group.id as release_group_id
+        , release.gid::text AS release_mbid
+        , index_listing.id as caa_id
+        FROM cover_art_archive.index_listing
+        JOIN musicbrainz.release
+          ON musicbrainz.release.id = cover_art_archive.index_listing.release
+        JOIN musicbrainz.release_group
+          ON release_group.id = release.release_group
+        LEFT JOIN (
+          SELECT release, date_year, date_month, date_day
+          FROM musicbrainz.release_country
+          UNION ALL
+          SELECT release, date_year, date_month, date_day
+          FROM musicbrainz.release_unknown_country
+        ) release_event ON (release_event.release = release.id)
+        FULL OUTER JOIN cover_art_archive.release_group_cover_art
+        ON release_group_cover_art.release = musicbrainz.release.id
+        WHERE release_group.id in :release_group_ids
+        AND is_front = true
+        ORDER BY release.release_group, release_group_cover_art.release,
+          release_event.date_year, release_event.date_month,
+          release_event.date_day"""
+        if unmatched_release_group_ids:
+            res = connection.execute(sqlalchemy.text(query), {"release_group_ids": tuple(unmatched_release_group_ids)})
+            for row in res.fetchall():
+                caa_id = row["caa_id"]
+                release_group_id = row["release_group_id"]
+                release_mbid = row["release_mbid"]
+                # Use the release mbid that was passed into the method as the returned key, even if this isn't actually
+                # the release that has the covert art
+                original_release_mbid = release_group_id_to_release_mbid[release_group_id]
+                caa_url = caa_id_to_archive_url(release_mbid, caa_id)
+                release_coverart[original_release_mbid] = caa_url
+
+    return release_coverart
+
+
+def handle_coverart(user_id, data):
+    with db.engine.connect() as connection:
+        connection.execute(
+            sqlalchemy.text("""
+            INSERT INTO statistics.year_in_music (user_id, data)
+                 VALUES (:user_id, jsonb_build_object(:stat_type,:data :: jsonb))
+            ON CONFLICT (user_id)
+          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+            """),
+            user_id=user_id,
+            stat_type="top_releases_coverart",
+            data=ujson.dumps(data)
+        )
+
+
+def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
     message = EmailMessage()
     message["From"] = f"ListenBrainz <noreply@{current_app.config['MAIL_FROM_DOMAIN']}>"
     message["To"] = f"{to_name} <{to_email}>"
@@ -236,6 +359,7 @@ def send_mail(subject, to_name, to_email, text, html):
     message.set_content(text)
     message.add_alternative(html, subtype="html")
 
+    message.get_payload()[1].add_related(lb_logo, 'image', 'png', cid=lb_logo_cid, filename="listenbrainz-logo.png")
     if current_app.config["TESTING"]:  # Not sending any emails during the testing process
         return
 
@@ -244,6 +368,10 @@ def send_mail(subject, to_name, to_email, text, html):
 
 
 def notify_yim_users():
+    lb_logo_cid = make_msgid()
+    with open("/static/img/listenbrainz-logo.png", "rb") as img:
+        lb_logo = img.read()
+
     # with db.engine.connect() as connection:
     #     result = connection.execute("""
     #         SELECT user_id
@@ -280,7 +408,8 @@ def notify_yim_users():
             "feedback": f"{base_url}/user/{user_name}/feedback/",
             "pins": f"{base_url}/user/{user_name}/pins/",
             "playlists": f"{base_url}/user/{user_name}/playlists/",
-            "collaborations": f"{base_url}/user/{user_name}/collaborations/"
+            "collaborations": f"{base_url}/user/{user_name}/collaborations/",
+            "lb_logo_cid": lb_logo_cid[1:-1]
         }
 
         send_mail(
@@ -288,7 +417,9 @@ def notify_yim_users():
             text=render_template("emails/year_in_music.txt", **params),
             to_email=row["email"],
             to_name=user_name,
-            html=render_template("emails/year_in_music.html", **params)
+            html=render_template("emails/year_in_music.html", **params),
+            lb_logo_cid=lb_logo_cid,
+            lb_logo=lb_logo
         )
         # create timeline event too
         timeline_message = 'ListenBrainz\' very own retrospective on 2021 has just dropped: Check out ' \

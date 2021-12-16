@@ -27,7 +27,7 @@
   "stats.new_releases_of_top_artists": {
     "name": "stats.new_releases_of_top_artists",
     "description": "Calculate list of releases released this year by top 50 artists of this year for each user",
-    "params": []
+    "params": ["year"]
   },
   "stats.most_prominent_color": {
     "name": "stats.most_prominent_color",
@@ -118,7 +118,7 @@
   "similarity.similar_users_year_end": {
     "name": "similarity.similar_users_year_end",
     "description": "Generate similar user correlation for Year in Music",
-    "params": []
+    "params": ["year"]
   },
   "year_in_music.listens_per_day": {
     "name": "year_in_music.listens_per_day",
