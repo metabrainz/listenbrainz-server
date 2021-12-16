@@ -728,9 +728,9 @@ export default class YearInMusic extends React.Component<
             <h3 className="text-center">
               We made some personalized playlists for {youOrUsername}!
               <div className="small mt-15">
-                You&apos;ll find below 3 playlists that encapsulate your year,
-                and 1 playlist of music exploration based on users similar to
-                you
+                You&apos;ll find below 3 playlists that encapsulate{" "}
+                {yourOrUsersName} year, and 1 playlist of music exploration
+                based on users similar to {youOrUsername}
               </div>
             </h3>
             <div className="row flex flex-wrap">
