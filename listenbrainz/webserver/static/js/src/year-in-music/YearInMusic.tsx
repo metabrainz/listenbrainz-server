@@ -181,7 +181,7 @@ export default class YearInMusic extends React.Component<
 
     /* Most listened years */
     let mostListenedYearDataForGraph;
-    if (yearInMusicData.most_listened_year.length) {
+    if (!isEmpty(yearInMusicData.most_listened_year)) {
       const mostListenedYears = Object.keys(yearInMusicData.most_listened_year);
       // Ensure there are no holes between years
       const filledYears = range(
