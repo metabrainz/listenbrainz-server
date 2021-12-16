@@ -234,18 +234,20 @@ def caa_id_to_archive_url(release_mbid, caa_id):
 
 def get_coverart_for_top_releases(top_releases):
     """Use the CAA database connection to find coverart for each release
-    1. For all releases, find coverart
-    2. For releases where there is no coverart, get their releasegroup
-    3. Find release mbids for the above release groups
-    4. For these release mbids, find coverart
+    1. Get release id and releasegroup id for each release (also considering release mbid redirects)
+    2. Get coverart for these releases
+    3. For releases with no cover art, see if any other release in their releasegroup has coverarat
     """
+
+    if musicbrainz_db.engine is None:
+        current_app.logger.warning("get_coverart_for_top_releases: No connection to MusicBrainz database")
+        return {}
 
     release_mbids = [rel["release_mbid"] for rel in top_releases if "release_mbid" in rel]
     if not release_mbids:
         return {}
 
     release_coverart = {}
-    release_mbid_to_row = {}
     release_id_to_mbid = {}
     release_mbid_to_release_group_id = {}
     with musicbrainz_db.engine.connect() as connection:
@@ -258,7 +260,6 @@ def get_coverart_for_top_releases(top_releases):
                     WHERE release_gid_redirect.gid IN :release_mbids"""
         res = connection.execute(sqlalchemy.text(query), {"release_mbids": tuple(release_mbids)})
         for row in res.fetchall():
-            release_mbid_to_row[row["gid"]] = row["new_id"]
             release_id_to_mbid[row["new_id"]] = row["gid"]
             release_mbid_to_release_group_id[row["gid"]] = row["release_group"]
         query = """SELECT gid::text
@@ -268,7 +269,6 @@ def get_coverart_for_top_releases(top_releases):
                     WHERE gid IN :release_mbids"""
         res = connection.execute(sqlalchemy.text(query), {"release_mbids": tuple(release_mbids)})
         for row in res.fetchall():
-            release_mbid_to_row[row["gid"]] = row["id"]
             release_id_to_mbid[row["id"]] = row["gid"]
             release_mbid_to_release_group_id[row["gid"]] = row["release_group"]
 
@@ -277,7 +277,7 @@ def get_coverart_for_top_releases(top_releases):
 
         # Front coverart
         query = """SELECT id
-                        , release 
+                        , release
                      FROM cover_art_archive.index_listing
                     WHERE release in :release_ids
                       AND is_front = 't';
@@ -325,6 +325,8 @@ def get_coverart_for_top_releases(top_releases):
                 caa_id = row["caa_id"]
                 release_group_id = row["release_group_id"]
                 release_mbid = row["release_mbid"]
+                # Use the release mbid that was passed into the method as the returned key, even if this isn't actually
+                # the release that has the covert art
                 original_release_mbid = release_group_id_to_release_mbid[release_group_id]
                 caa_url = caa_id_to_archive_url(release_mbid, caa_id)
                 release_coverart[original_release_mbid] = caa_url
