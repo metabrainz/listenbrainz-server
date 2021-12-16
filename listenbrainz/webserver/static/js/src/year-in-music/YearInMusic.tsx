@@ -601,11 +601,33 @@ export default class YearInMusic extends React.Component<
             </h3>
             <div className="scrollable-area">
               {yearInMusicData.new_releases_of_top_artists.map((release) => {
+                const artistName = release.artist_credit_names.join(", ");
+                const details = (
+                  <>
+                    <div title={release.title} className="ellipsis-2-lines">
+                      {getEntityLink(
+                        "release",
+                        release.title,
+                        release.release_id
+                      )}
+                    </div>
+                    <span
+                      className="small text-muted ellipsis"
+                      title={artistName}
+                    >
+                      {getEntityLink(
+                        "artist",
+                        artistName,
+                        release.artist_credit_mbids[0]
+                      )}
+                    </span>
+                  </>
+                );
                 const listenHere = {
                   listened_at: 0,
                   listened_at_iso: release.first_release_date,
                   track_metadata: {
-                    artist_name: release.artist_credit_names.join(", "),
+                    artist_name: artistName,
                     track_name: release.title,
                     release_name: release.title,
                     additional_info: {
@@ -617,6 +639,7 @@ export default class YearInMusic extends React.Component<
                 listens.push(listenHere);
                 return (
                   <ListenCard
+                    listenDetails={details}
                     key={release.release_id}
                     compact
                     listen={listenHere}
