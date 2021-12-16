@@ -140,7 +140,7 @@ const ComponentToImage = ({
             })}
           </div>
         )}
-        {entityType === "artist" && (
+        {entityType === "recording" && (
           <div className="list-container">
             {data.map((recording) => (
               <ListenCard
