@@ -40,7 +40,7 @@ functions = {
     'import.artist_relation': listenbrainz_spark.request_consumer.jobs.import_dump.import_artist_relation_to_hdfs,
     'import.musicbrainz_release_dump': listenbrainz_spark.request_consumer.jobs.import_dump.import_release_json_dump_to_hdfs,
     'similarity.similar_users': listenbrainz_spark.user_similarity.user_similarity.main,
-    'similarity.similar_users_2021': listenbrainz_spark.year_in_music.similar_users.get_similar_users,
+    'similarity.similar_users_year_end': listenbrainz_spark.year_in_music.similar_users.get_similar_users,
     'year_in_music.top_stats': listenbrainz_spark.year_in_music.top_stats.calculate_top_entity_stats,
     'year_in_music.listens_per_day': listenbrainz_spark.year_in_music.listens_per_day.calculate_listens_per_day,
     'year_in_music.listen_count': listenbrainz_spark.year_in_music.listen_count.get_listen_count,
