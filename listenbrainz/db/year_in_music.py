@@ -423,6 +423,7 @@ def notify_yim_users():
               FROM statistics.year_in_music yim
               JOIN "user"
                 ON "user".id = yim.user_id
+             WHERE email IS NOT NULL
         """)
         rows = result.fetchall()
 
@@ -445,15 +446,20 @@ def notify_yim_users():
             "lb_logo_cid": lb_logo_cid[1:-1]
         }
 
-        send_mail(
-            subject="Year In Music 2021",
-            text=render_template("emails/year_in_music.txt", **params),
-            to_email=row["email"],
-            to_name=user_name,
-            html=render_template("emails/year_in_music.html", **params),
-            lb_logo_cid=lb_logo_cid,
-            lb_logo=lb_logo
-        )
+        try:
+            send_mail(
+                subject="Year In Music 2021",
+                text=render_template("emails/year_in_music.txt", **params),
+                to_email=row["email"],
+                to_name=user_name,
+                html=render_template("emails/year_in_music.html", **params),
+                lb_logo_cid=lb_logo_cid,
+                lb_logo=lb_logo
+            )
+            current_app.logger.info("Email sent to %s", user_name)
+        except Exception:
+            current_app.logger.error("Could not send YIM email", exc_info=True)
+
         # create timeline event too
         timeline_message = 'ListenBrainz\' very own retrospective on 2021 has just dropped: Check out ' \
                            f'your own <a href="{year_in_music}">Year in Music</a> now!'
