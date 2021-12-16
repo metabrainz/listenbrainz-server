@@ -71,7 +71,7 @@ export type YearInMusicProps = {
     new_releases_of_top_artists: Array<{
       type: string;
       title: string;
-      release_id: string;
+      release_mbid: string;
       first_release_date: string;
       artist_credit_mbids: string[];
       artist_credit_names: string[];
@@ -210,7 +210,7 @@ export default class YearInMusic extends React.Component<
       mostListenedYearDataForGraph = filledYears.map((year: number) => ({
         year,
         // Set to 0 for years without data
-        albums: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
+        songs: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
       }));
     }
 
@@ -327,7 +327,8 @@ export default class YearInMusic extends React.Component<
               </li>
               <li>
                 and finally four <a href="#playlists">personalized playlists</a>
-                of music {youOrUsername} listened to and new songs to discover
+                &nbsp; of music {youOrUsername} listened to and new songs to
+                discover
               </li>
             </ul>
             <p>
@@ -525,8 +526,8 @@ export default class YearInMusic extends React.Component<
           </div>
           <div className="card content-card">
             <h3 className="text-center">
-              <span className="accent">Friday</span> was {yourOrUsersName} most
-              active listening day
+              <span className="accent">{yearInMusicData.day_of_week}</span> was{" "}
+              {yourOrUsersName} most active listening day on average
             </h3>
           </div>
         </div>
@@ -534,7 +535,7 @@ export default class YearInMusic extends React.Component<
           {mostListenedYearDataForGraph && (
             <div className="card content-card" id="most-listened-year">
               <h3 className="text-center">
-                What year are {yourOrUsersName} favorite albums from?
+                What year are {yourOrUsersName} favorite songs from?
                 <div className="small mt-15">
                   How much were you on the lookout for new music this year? Not
                   that we&apos;re judging.
@@ -542,11 +543,11 @@ export default class YearInMusic extends React.Component<
               </h3>
               <div className="graph">
                 <ResponsiveBar
-                  margin={{ left: 30, bottom: 30 }}
+                  margin={{ left: 50, bottom: 30 }}
                   data={mostListenedYearDataForGraph}
                   padding={0.1}
                   layout="vertical"
-                  keys={["albums"]}
+                  keys={["songs"]}
                   indexBy="year"
                   colors="#eb743b"
                   enableLabel={false}
@@ -557,6 +558,11 @@ export default class YearInMusic extends React.Component<
                         (datum) => Math.round((datum.year + 1) / 5) * 5
                       )
                     ),
+                  }}
+                  axisLeft={{
+                    legend: "Number of listens",
+                    legendOffset: -40,
+                    legendPosition: "middle",
                   }}
                 />
               </div>
