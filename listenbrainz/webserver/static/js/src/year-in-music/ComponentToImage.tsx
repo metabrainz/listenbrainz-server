@@ -1,10 +1,6 @@
 import html2canvas from "html2canvas";
 import React, { useState } from "react";
-import {
-  faCamera,
-  faPlay,
-  faHeadphones,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCamera, faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import ListenCard from "../listens/ListenCard";
@@ -59,8 +55,8 @@ const ComponentToImage = ({
       imageTimeout: 30000,
       scrollX: -window.scrollX,
       scrollY: -window.scrollY,
-      windowWidth: document.documentElement.offsetWidth,
-      windowHeight: document.documentElement.offsetHeight,
+      windowWidth: element!.offsetWidth,
+      windowHeight: element!.offsetHeight,
     })
       .then((canvas) => {
         return canvas.toDataURL("image/png", 1.0);
@@ -90,7 +86,7 @@ const ComponentToImage = ({
       <div id={`savable-${entityType}-component`} className="savable-card card">
         <img
           className="card-img-top"
-          src="/static/img/year-in-music-2021.svg"
+          src="/static/img/year-in-music-2021.png"
           alt="Your year in music 2021"
         />
         <h3 className="card-title">
@@ -221,7 +217,7 @@ const ComponentToImage = ({
           </p>
           <img
             className="card-img-bottom"
-            src="/static/img/listenbrainz-logo.svg"
+            src="/static/img/listenbrainz-logo.png"
             alt="ListenBrainz"
           />
         </div>
