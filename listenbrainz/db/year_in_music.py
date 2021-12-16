@@ -394,6 +394,9 @@ def handle_coverart(user_id, key, data):
 
 
 def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
+    if not to_email:
+        return
+
     message = EmailMessage()
     message["From"] = f"ListenBrainz <noreply@{current_app.config['MAIL_FROM_DOMAIN']}>"
     message["To"] = f"{to_name} <{to_email}>"
@@ -408,6 +411,8 @@ def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
 
     with smtplib.SMTP(current_app.config["SMTP_SERVER"], current_app.config["SMTP_PORT"]) as server:
         server.send_message(message)
+
+    current_app.logger.info("Email sent to %s", to_name)
 
 
 def notify_yim_users():
@@ -445,15 +450,19 @@ def notify_yim_users():
             "lb_logo_cid": lb_logo_cid[1:-1]
         }
 
-        send_mail(
-            subject="Year In Music 2021",
-            text=render_template("emails/year_in_music.txt", **params),
-            to_email=row["email"],
-            to_name=user_name,
-            html=render_template("emails/year_in_music.html", **params),
-            lb_logo_cid=lb_logo_cid,
-            lb_logo=lb_logo
-        )
+        try:
+            send_mail(
+                subject="Year In Music 2021",
+                text=render_template("emails/year_in_music.txt", **params),
+                to_email=row["email"],
+                to_name=user_name,
+                html=render_template("emails/year_in_music.html", **params),
+                lb_logo_cid=lb_logo_cid,
+                lb_logo=lb_logo
+            )
+        except Exception:
+            current_app.logger.error("Could not send YIM email to %s", user_name, exc_info=True)
+
         # create timeline event too
         timeline_message = 'ListenBrainz\' very own retrospective on 2021 has just dropped: Check out ' \
                            f'your own <a href="{year_in_music}">Year in Music</a> now!'
