@@ -96,99 +96,57 @@ const ComponentToImage = ({
         <h3 className="card-title">
           {user.name}&apos;s top {entityType}s of 2021
         </h3>
-        <div className="list-container">
-          {(() => {
-            if (entityType === "artist") {
-              return data.map((artist) => {
-                const details = getEntityLink(
-                  "artist",
-                  artist.artist_name,
-                  artist.artist_mbids[0]
-                );
-                const thumbnail = (
-                  <span className="badge badge-info">
-                    <FontAwesomeIcon
-                      style={{ marginRight: "4px" }}
-                      icon={faHeadphones as IconProp}
-                    />
-                    {artist.listen_count}
-                  </span>
-                );
-                return (
-                  <ListenCard
-                    compact
-                    key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
-                    listen={{
-                      listened_at: 0,
-                      track_metadata: {
-                        track_name: "",
-                        artist_name: artist.artist_name,
-                        additional_info: {
-                          artist_mbids: artist.artist_mbids,
-                        },
-                      },
-                    }}
-                    thumbnail={thumbnail}
-                    listenDetails={details}
-                    showTimestamp={false}
-                    showUsername={false}
-                    newAlert={() => {}}
+        {entityType === "release" && (
+          <div className="grid">
+            {data.slice(0, 9).map((release) => (
+              <img src={release.cover_art_src} alt={release.release_name} />
+            ))}
+          </div>
+        )}
+        {entityType === "artist" && (
+          <div className="list-container">
+            {data.map((artist) => {
+              const details = getEntityLink(
+                "artist",
+                artist.artist_name,
+                artist.artist_mbids[0]
+              );
+              const thumbnail = (
+                <span className="badge badge-info">
+                  <FontAwesomeIcon
+                    style={{ marginRight: "4px" }}
+                    icon={faHeadphones as IconProp}
                   />
-                );
-              });
-            }
-            if (entityType === "release") {
-              return data.map((release) => {
-                const details = (
-                  <>
-                    <div
-                      title={release.release_name}
-                      className="ellipsis-2-lines"
-                    >
-                      {getEntityLink(
-                        "release",
-                        release.release_name,
-                        release.release_mbid
-                      )}
-                    </div>
-                    <span
-                      className="small text-muted ellipsis"
-                      title={release.artist_name}
-                    >
-                      {getEntityLink(
-                        "artist",
-                        release.artist_name,
-                        release.artist_mbids[0]
-                      )}
-                    </span>
-                  </>
-                );
-                return (
-                  <ListenCard
-                    compact
-                    key={`top-release-${release.release_name}-${release.release_mbid}`}
-                    listen={{
-                      listened_at: 0,
-                      track_metadata: {
-                        track_name: "",
-                        artist_name: release.artist_name,
-                        release_name: release.release_name,
-                        additional_info: {
-                          artist_mbids: release.artist_mbids,
-                          release_mbid: release.release_mbid,
-                        },
+                  {artist.listen_count}
+                </span>
+              );
+              return (
+                <ListenCard
+                  compact
+                  key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
+                  listen={{
+                    listened_at: 0,
+                    track_metadata: {
+                      track_name: "",
+                      artist_name: artist.artist_name,
+                      additional_info: {
+                        artist_mbids: artist.artist_mbids,
                       },
-                    }}
-                    listenDetails={details}
-                    showTimestamp={false}
-                    showUsername={false}
-                    newAlert={() => {}}
-                  />
-                );
-              });
-            }
-            return data.map((recording) => (
-              // <li className="list-group-item">{recording.track_name}</li>
+                    },
+                  }}
+                  thumbnail={thumbnail}
+                  listenDetails={details}
+                  showTimestamp={false}
+                  showUsername={false}
+                  newAlert={() => {}}
+                />
+              );
+            })}
+          </div>
+        )}
+        {entityType === "artist" && (
+          <div className="list-container">
+            {data.map((recording) => (
               <ListenCard
                 compact
                 key={`top-recordings-${recording.recording_mbid}`}
@@ -209,9 +167,9 @@ const ComponentToImage = ({
                 showUsername={false}
                 newAlert={() => {}}
               />
-            ));
-          })()}
-        </div>
+            ))}
+          </div>
+        )}
         <div className="card-footer">
           <p className="card-text">
             <small className="text-muted">

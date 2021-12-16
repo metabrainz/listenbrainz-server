@@ -5,6 +5,7 @@ import Coverflow from "react-coverflow";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import {
   get,
+  has,
   isEmpty,
   isNil,
   isString,
@@ -47,6 +48,7 @@ export type YearInMusicProps = {
       listen_count: number;
       release_name: string;
       release_mbid: string;
+      cover_art_src?: string;
     }>;
     top_releases_coverart: { [key: string]: string };
     top_recordings: Array<{
@@ -187,7 +189,7 @@ export default class YearInMusic extends React.Component<
               connecting a music service
             </a>{" "}
             or <a href="/profile/import/">importing your listening history</a>,
-            and come back next year !
+            and come back next year!
           </p>
         </div>
       );
@@ -352,12 +354,27 @@ export default class YearInMusic extends React.Component<
             <div className="col-md-12 d-flex center-p">
               <h3>{capitalize(yourOrUsersName)} top albums of 2021</h3>
               <ComponentToImage
-                data={yearInMusicData.top_releases.slice(0, 10)}
+                data={yearInMusicData.top_releases
+                  .filter((release) =>
+                    has(
+                      yearInMusicData.top_releases_coverart,
+                      release.release_mbid
+                    )
+                  )
+                  .slice(0, 10)
+                  .map((release) => {
+                    // eslint-disable-next-line no-param-reassign
+                    release.cover_art_src =
+                      yearInMusicData.top_releases_coverart?.[
+                        release.release_mbid
+                      ];
+                    return release;
+                  })}
                 entityType="release"
                 user={user}
               />
             </div>
-            <div>
+            <div id="releases-coverflow">
               <Coverflow
                 displayQuantityOfSide={3}
                 currentFigureScale={2}
@@ -381,7 +398,7 @@ export default class YearInMusic extends React.Component<
                 {yearInMusicData.top_releases.slice(0, 50).map((release) => (
                   <img
                     src={
-                      yearInMusicData.top_releases_coverart[
+                      yearInMusicData.top_releases_coverart?.[
                         release.release_mbid
                       ] ?? "/static/img/cover-art-placeholder.jpg"
                     }
@@ -666,7 +683,7 @@ export default class YearInMusic extends React.Component<
         <div className="row">
           <div className="card content-card" id="playlists">
             <h3 className="text-center">
-              We made some personalized playlists for {youOrUsername} !
+              We made some personalized playlists for {youOrUsername}!
               <div className="small mt-15">
                 You&apos;ll find below 3 playlists that encapsulate your year,
                 and 1 playlist of music exploration based on users similar to
