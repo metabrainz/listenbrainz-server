@@ -325,7 +325,7 @@ def request_similar_users_year_end(year: int):
     send_request_to_spark_cluster('similarity.similar_users_year_end', year=year)
 
 
-@click.command(name="request_year_in_music")
+@cli.command(name="request_year_in_music")
 @click.pass_context
 def request_year_in_music(ctx):
     ctx.invoke(request_new_release_stats)
