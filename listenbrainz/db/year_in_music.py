@@ -461,7 +461,7 @@ def notify_yim_users():
                 lb_logo=lb_logo
             )
         except Exception:
-            current_app.logger.error("Could not send YIM email", exc_info=True)
+            current_app.logger.error("Could not send YIM email to %s", user_name, exc_info=True)
 
         # create timeline event too
         timeline_message = 'ListenBrainz\' very own retrospective on 2021 has just dropped: Check out ' \
