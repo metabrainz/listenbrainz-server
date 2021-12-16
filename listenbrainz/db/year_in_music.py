@@ -394,7 +394,7 @@ def handle_coverart(user_id, key, data):
 
 
 def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
-    if to_email is None:
+    if not to_email:
         return
 
     message = EmailMessage()
