@@ -433,6 +433,7 @@ declare type JSPFPlaylistExtension = {
 declare type JSPFTrackExtension = {
   added_by: string;
   artist_identifier: string[]; // Full MusicBrainz artist URIs
+  artist_mbids?: string[]; // Full MusicBrainz artist URIs
   added_at: string; // ISO date string
   release_identifier?: string; // Full MusicBrainz release URI
 };
