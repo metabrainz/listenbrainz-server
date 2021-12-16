@@ -94,11 +94,12 @@
 	.savable-card {
 		width: 450px;
 		display: none;
+		padding: 1rem;
 		.card-img-top{
 			max-width:60%;
 		}
 		.card-img-bottom{
-			width: 70%;
+			width: 45%;
 		}
 		.card-footer{
 			padding: 1rem;
@@ -113,8 +114,17 @@
 				box-shadow: rgb(192 192 192 / 15%) 0 1px 1px, rgb(192 192 192 / 20%) 0 2px 2px;
 				box-shadow: fade(@card-shadow-color,15%) 0px 1px 1px, fade(@card-shadow-color,20%) 0px 2px 2px;
 				margin:0;
+				a {
+					color: inherit !important;
+				}
 				.right-section{
 					display: none;
+				}
+				.main-content{
+					padding:0;
+					.listen-thumbnail {
+						margin: 0px 10px 0px 0px;
+					}
 				}
 			}
 		}
