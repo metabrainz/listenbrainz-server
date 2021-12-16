@@ -188,7 +188,7 @@ def request_yim_listens_per_day():
 @cli.command(name="request_yearly_listen_count")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
-def request_yim_listen_count(year):
+def request_yim_listen_count(year: int):
     """ Send request to calculate yearly listen count stat to the spark cluster
     """
     send_request_to_spark_cluster("year_in_music.listen_count", year=year)
@@ -325,7 +325,7 @@ def request_similar_users_year_end(year: int):
     send_request_to_spark_cluster('similarity.similar_users_year_end', year=year)
 
 
-@click.command(name="request_year_in_music")
+@cli.command(name="request_year_in_music")
 @click.pass_context
 def request_year_in_music(ctx):
     ctx.invoke(request_new_release_stats)
