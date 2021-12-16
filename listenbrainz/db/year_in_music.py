@@ -1,6 +1,7 @@
 import smtplib
 from email.message import EmailMessage
 from email.utils import make_msgid
+import os
 
 import psycopg2
 import sqlalchemy
@@ -11,6 +12,7 @@ from brainzutils import musicbrainz_db
 
 from data.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
+from listenbrainz.db import timescale
 from listenbrainz.db.user_timeline_event import create_user_notification_event
 
 # Year in Music data element defintions
@@ -229,11 +231,36 @@ def insert_playlists(troi_patch_slug, import_file):
         current_app.logger.error("Error while inserting playlist/%s:" % troi_patch_slug, exc_info=True)
 
 
+def get_coverart_for_playlist(playlist_jspf):
+    tracks = playlist_jspf.get('jspf', {}).get('playlist', {}).get('track', [])
+    track_recording_mbids = [os.path.basename(track['identifier']) for track in tracks]
+
+    query = """SELECT recording_mbid::text
+                    , release_mbid::text
+                 FROM mbid_mapping_metadata
+                WHERE recording_mbid in :recording_mbids"""
+
+    recording_mbid_to_release_mbid = {}
+    with timescale.engine.connect() as connection:
+        res = connection.execute(sqlalchemy.text(query), {"recording_mbids": tuple(track_recording_mbids)})
+        for row in res.fetchall():
+            recording_mbid = row["recording_mbid"]
+            release_mbid = row["release_mbid"]
+            recording_mbid_to_release_mbid[recording_mbid] = release_mbid
+    
+    coverart = get_coverart_for_top_releases(list(recording_mbid_to_release_mbid.values()))
+    recording_mbid_to_coverart = {}
+    for recording_mbid, release_mbid in recording_mbid_to_release_mbid.items():
+        if release_mbid in coverart:
+            recording_mbid_to_coverart[recording_mbid] = coverart[release_mbid]
+    return recording_mbid_to_coverart
+
+
 def caa_id_to_archive_url(release_mbid, caa_id):
     return f"https://archive.org/download/mbid-{release_mbid}/mbid-{release_mbid}-{caa_id}_thumb500.jpg"
 
 
-def get_coverart_for_top_releases(top_releases):
+def get_coverart_for_top_releases(release_mbids):
     """Use the CAA database connection to find coverart for each release
     1. Get release id and releasegroup id for each release (also considering release mbid redirects)
     2. Get coverart for these releases
@@ -244,7 +271,6 @@ def get_coverart_for_top_releases(top_releases):
         current_app.logger.warning("get_coverart_for_top_releases: No connection to MusicBrainz database")
         return {}
 
-    release_mbids = [rel["release_mbid"] for rel in top_releases if "release_mbid" in rel]
     if not release_mbids:
         return {}
 
@@ -335,7 +361,7 @@ def get_coverart_for_top_releases(top_releases):
     return release_coverart
 
 
-def handle_coverart(user_id, data):
+def handle_coverart(user_id, key, data):
     with db.engine.connect() as connection:
         connection.execute(
             sqlalchemy.text("""
@@ -345,7 +371,7 @@ def handle_coverart(user_id, data):
           DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
             """),
             user_id=user_id,
-            stat_type="top_releases_coverart",
+            stat_type=key,
             data=ujson.dumps(data)
         )
 

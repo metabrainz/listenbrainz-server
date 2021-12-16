@@ -107,15 +107,34 @@ export default class YearInMusic extends React.Component<
     playlistName: string,
     description?: string
   ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
+    const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
     const { yearInMusicData } = this.props;
     let playlist;
     try {
       const rawPlaylist = get(yearInMusicData, playlistName);
+      const coverArt = get(yearInMusicData, `${playlistName}-coverart`);
       playlist = isString(rawPlaylist) ? JSON.parse(rawPlaylist) : rawPlaylist;
       // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
       if (description) {
         playlist.description = description;
       }
+      /* Add a track image if it exists in the `{playlistName}-coverart` key */
+      playlist.jspf.playlist.track = playlist.jspf.playlist.track.map(
+        (track: JSPFTrack) => {
+          const newTrack = { ...track };
+          const track_id = track.identifier;
+          const found = track_id.match(uuidMatch);
+          if (found) {
+            const recording_mbid = found[0];
+            newTrack.id = recording_mbid;
+            const recording_coverart = coverArt[recording_mbid];
+            if (recording_coverart) {
+              newTrack.image = recording_coverart;
+            }
+          }
+          return newTrack;
+        }
+      );
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(`"Error parsing ${playlistName}:`, error);
@@ -699,10 +718,22 @@ export default class YearInMusic extends React.Component<
                         (playlistTrack) => {
                           const listen = JSPFTrackToListen(playlistTrack);
                           listens.push(listen);
+                          let thumbnail;
+                          if (playlistTrack.image) {
+                            thumbnail = (
+                              <div className="listen-thumbnail">
+                                <img
+                                  src={playlistTrack.image}
+                                  alt={`Cover Art for ${playlistTrack.title}`}
+                                />
+                              </div>
+                            );
+                          }
                           return (
                             <ListenCard
                               className="playlist-item-card"
                               listen={listen}
+                              thumbnail={thumbnail}
                               compact
                               showTimestamp={false}
                               showUsername={false}

@@ -383,8 +383,9 @@ def handle_top_stats(message):
 
     # for top_releases, look up cover art
     if message["entity"] == "releases":
-        coverart = year_in_music.get_coverart_for_top_releases(message["data"])
-        year_in_music.handle_coverart(user["id"], coverart)
+        release_mbids = [rel["release_mbid"] for rel in message["data"] if "release_mbid" in rel]
+        coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
+        year_in_music.handle_coverart(user["id"], "top_releases_coverart", coverart)
 
 
 def handle_listens_per_day(message):
