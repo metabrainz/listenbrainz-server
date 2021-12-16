@@ -415,25 +415,15 @@ def notify_yim_users():
     with open("/static/img/listenbrainz-logo.png", "rb") as img:
         lb_logo = img.read()
 
-    # with db.engine.connect() as connection:
-    #     result = connection.execute("""
-    #         SELECT user_id
-    #              , musicbrainz_id
-    #              , email
-    #           FROM statistics.year_in_music yim
-    #           JOIN "user"
-    #             ON "user".id = yim.user_id
-    #     """)
-    #     rows = result.fetchall()
-
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT id AS user_id
+        result = connection.execute("""
+            SELECT user_id
                  , musicbrainz_id
                  , email
-              FROM "user"
-             WHERE musicbrainz_id IN ('amCap1712', 'rob', 'alastairp', 'mr_monkey', 'akshaaatt')    
-        """))
+              FROM statistics.year_in_music yim
+              JOIN "user"
+                ON "user".id = yim.user_id
+        """)
         rows = result.fetchall()
 
     for row in rows:
