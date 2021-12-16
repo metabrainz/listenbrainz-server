@@ -235,19 +235,19 @@ export default class YearInMusic extends React.Component<
 
     /* Playlists */
     const topDiscoveriesPlaylist = this.getPlaylistByName(
-      "playlist-top-discoveries-for-year-playlists",
+      "playlist-top-discoveries-for-year",
       `Highlights songs that ${user.name} first listened to (more than once) in 2021`
     );
     const topMissedRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-missed-recordings-for-year-playlists",
+      "playlist-top-missed-recordings-for-year",
       `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
     );
     const topNewRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-new-recordings-for-year-playlists",
+      "playlist-top-new-recordings-for-year",
       `Songs released in 2021 that ${user.name} listened to`
     );
     const topRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-recordings-for-year-playlists",
+      "playlist-top-recordings-for-year",
       `This playlist is made from ${user.name}'s top recordings for 2021 statistics`
     );
 

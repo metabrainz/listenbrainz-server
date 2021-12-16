@@ -2537,7 +2537,7 @@
 			"type": "Album"
 		}
 	],
-	"playlist-top-discoveries-for-year-playlists": {
+	"playlist-top-discoveries-for-year": {
 		"jspf": {
 			"playlist": {
 				"annotation": "<p>\n              This playlist highlights tracks that user mr_monkey first listened to more than once in 2021.\n              </p>\n              <p>\n              We generated this playlist from your listens and chose all the recordings that you first\n              listened to this year and then selected the recordings that you listened to more than once.\n              </p>\n              <p>\n              Double click on any recording to start playing it -- we'll do our best to find a matching recording\n              to play. If you have Spotify, we recommend connecting your account for a better playback experience.\n              </p>\n           ",
@@ -2607,7 +2607,7 @@
 		},
 		"mbid": "2b09d9da-c3f5-478a-b691-5926ce89203b"
 	},
-	"playlist-top-missed-recordings-for-year-playlists": {
+	"playlist-top-missed-recordings-for-year": {
 		"jspf": {
 			"playlist": {
 				"annotation": "<p>\n              This playlist is made from tracks that your most similar users listened to this year, but that\n              you didn't listen to this year.\n              </p>\n              <p>\n              Double click on any recording to start playing it -- we'll do our best to find a matching recording\n              to play. If you have Spotify, we recommend connecting your account for a better playback experience.\n              </p>\n           ",
@@ -2672,7 +2672,7 @@
 		},
 		"mbid": "8945fc28-9f41-491f-988b-bbc54a7e0d9d"
 	},
-	"playlist-top-new-recordings-for-year-playlists": {
+	"playlist-top-new-recordings-for-year": {
 		"jspf": {
 			"playlist": {
 				"annotation": "Tracks that were released in 2021 that you've listened to. (Yes, we finish\n              sentences with prepositions here.)",
@@ -2740,7 +2740,7 @@
 		},
 		"mbid": "0b2edc2e-afee-4b5f-8cd2-a26beac5f141"
 	},
-	"playlist-top-recordings-for-year-playlists": {
+	"playlist-top-recordings-for-year": {
 		"jspf": {
 			"playlist": {
 				"annotation": "<p>\n              This playlist is made from your <a href=\"https://listenbrainz.org/user/mr_monkey/reports?range=year\">\n              top recordings for 2021 statistics</a>.\n              </p>\n              <p>\n              Double click on any recording to start playing it -- we'll do our best to find a matching recording\n              to play. If you have Spotify, we recommend connecting your account for a better playback experience.\n              </p>\n              <p>\n              Please keep in mind that this is our first attempt at making playlists for our users. Our processes\n              are not fully debugged and you may find that things are not perfect. So, if this playlist isn't\n              very accurate, we apologize -- we'll continue to make them better. (e.g. some recordings may be missing\n              from this list because we were not able to find a match for it in MusicBrainz.)\n              </p>\n              <p>\n              Happy holidays from everyone at MetaBrainz!\n              </p>\n           ",
