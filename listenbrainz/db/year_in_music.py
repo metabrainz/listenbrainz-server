@@ -247,7 +247,7 @@ def get_coverart_for_playlist(playlist_jspf):
             recording_mbid = row["recording_mbid"]
             release_mbid = row["release_mbid"]
             recording_mbid_to_release_mbid[recording_mbid] = release_mbid
-    
+
     coverart = get_coverart_for_top_releases(list(recording_mbid_to_release_mbid.values()))
     recording_mbid_to_coverart = {}
     for recording_mbid, release_mbid in recording_mbid_to_release_mbid.items():
