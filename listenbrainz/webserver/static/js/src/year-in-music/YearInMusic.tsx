@@ -360,7 +360,7 @@ export default class YearInMusic extends React.Component<
                     src={
                       yearInMusicData.top_releases_coverart[
                         release.release_mbid
-                      ]
+                      ] ?? "/static/img/cover-art-placeholder.jpg"
                     }
                     alt={release.release_name}
                   />
