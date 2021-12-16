@@ -205,6 +205,7 @@ def insert_playlists(troi_patch_slug, import_file):
         """
 
     data = []
+    coverart_data = []
     with open(import_file, "r") as f:
         while True:
             user_name = f.readline()
@@ -214,11 +215,16 @@ def insert_playlists(troi_patch_slug, import_file):
             user_name = user_name.strip()
             playlist_mbid = f.readline().strip()
             jspf = f.readline().strip()
+            jspf_obj = ujson.loads(jspf)
+            coverart = get_coverart_for_playlist(jspf_obj)
+            coverart_data.append((user_name, ujson.dumps({
+                f"playlist-{troi_patch_slug}-coverart": coverart
+            })))
 
             data.append((user_name, ujson.dumps({
                 f"playlist-{troi_patch_slug}": {
                     "mbid": playlist_mbid,
-                    "jspf": ujson.loads(jspf)
+                    "jspf": jspf_obj
                 }
             })))
 
@@ -226,14 +232,21 @@ def insert_playlists(troi_patch_slug, import_file):
         with connection.cursor() as cursor:
             execute_values(cursor, query, data)
         connection.commit()
+        # Coverart
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, coverart_data)
+        connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error("Error while inserting playlist/%s:" % troi_patch_slug, exc_info=True)
 
 
 def get_coverart_for_playlist(playlist_jspf):
-    tracks = playlist_jspf.get('jspf', {}).get('playlist', {}).get('track', [])
+    tracks = playlist_jspf.get('playlist', {}).get('track', [])
     track_recording_mbids = [os.path.basename(track['identifier']) for track in tracks]
+
+    if not track_recording_mbids:
+        return {}
 
     query = """SELECT recording_mbid::text
                     , release_mbid::text
@@ -298,6 +311,10 @@ def get_coverart_for_top_releases(release_mbids):
         for row in res.fetchall():
             release_id_to_mbid[row["id"]] = row["gid"]
             release_mbid_to_release_group_id[row["gid"]] = row["release_group"]
+
+        if not release_id_to_mbid:
+            # sometimes we might not find a release in the database (e.g. running on an out of date db replica)
+            return {}
 
         # We need to know what the release mbid was that we passed in which gave us this rgid
         release_group_id_to_release_mbid = {v: k for k, v in release_mbid_to_release_group_id.items()}
