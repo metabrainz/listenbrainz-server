@@ -325,6 +325,19 @@ def request_similar_users_year_end(year: int):
     send_request_to_spark_cluster('similarity.similar_users_year_end', year=year)
 
 
+@click.command(name="request_year_in_music")
+@click.pass_context
+def request_year_in_music(ctx):
+    ctx.invoke(request_new_release_stats)
+    ctx.invoke(request_most_prominent_color)
+    ctx.invoke(request_day_of_week)
+    ctx.invoke(request_most_listened_year)
+    ctx.invoke(request_yim_top_stats)
+    ctx.invoke(request_yim_listens_per_day)
+    ctx.invoke(request_yim_listen_count)
+    ctx.invoke(request_similar_users_year_end)
+
+
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
 # rather combine multiple commands related to a task so that they are always invoked in the correct order.
 
