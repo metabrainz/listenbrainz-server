@@ -140,7 +140,7 @@ export default class YearInMusic extends React.Component<
           if (found) {
             const recording_mbid = found[0];
             newTrack.id = recording_mbid;
-            const recording_coverart = coverArt[recording_mbid];
+            const recording_coverart = coverArt?.[recording_mbid];
             if (recording_coverart) {
               newTrack.image = recording_coverart;
             }
