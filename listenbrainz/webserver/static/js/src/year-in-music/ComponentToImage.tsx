@@ -146,7 +146,7 @@ const ComponentToImage = ({
                       className="ellipsis-2-lines"
                     >
                       {getEntityLink(
-                        "artist",
+                        "release",
                         release.release_name,
                         release.release_mbid
                       )}
