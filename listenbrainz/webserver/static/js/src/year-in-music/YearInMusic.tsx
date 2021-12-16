@@ -353,7 +353,7 @@ export default class YearInMusic extends React.Component<
                 <a href="#top-artists">artists</a> of the year
               </li>
               <li>
-                some statistics about your{" "}
+                some statistics about {yourOrUsersName}{" "}
                 <a href="#calendar">listening activity</a>
               </li>
               <li>
@@ -361,7 +361,7 @@ export default class YearInMusic extends React.Component<
                 <a href="#similar-users">users similar to {youOrUsername}</a>
               </li>
               <li>
-                new albums that your top artists{" "}
+                new albums that {yourOrUsersName} top artists{" "}
                 <a href="#new-releases">released in 2021</a>
               </li>
               <li>
