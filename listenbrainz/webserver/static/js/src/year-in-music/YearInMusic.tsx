@@ -3,7 +3,16 @@ import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import Coverflow from "react-coverflow";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
-import { get, isEmpty, isNil, isString, range, uniq, capitalize } from "lodash";
+import {
+  get,
+  isEmpty,
+  isNil,
+  isString,
+  range,
+  uniq,
+  capitalize,
+  toPairs,
+} from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
@@ -203,6 +212,11 @@ export default class YearInMusic extends React.Component<
         albums: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
       }));
     }
+
+    /* Similar users sorted by similarity score */
+    const sortedSimilarUsers = toPairs(yearInMusicData.similar_users).sort(
+      (a, b) => b[1] - a[1]
+    );
 
     /* Listening history calendar graph */
     const listensPerDayForGraph = yearInMusicData.listens_per_day
@@ -494,7 +508,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap">
+        <div className="row flex flex-wrap">
           <div className="card content-card">
             <h3 className="text-center">
               {capitalize(youOrUsername)} listened to{" "}
@@ -554,30 +568,26 @@ export default class YearInMusic extends React.Component<
               </div>
             </h3>
             <div className="scrollable-area similar-users-list">
-              {yearInMusicData.similar_users &&
-                Object.keys(yearInMusicData.similar_users).map(
-                  (userName: string, index) => {
-                    const similarUser: SimilarUser = {
-                      name: userName,
-                      similarityScore:
-                        yearInMusicData.similar_users[
-                          userName as keyof typeof yearInMusicData.similar_users
-                        ],
-                    };
-                    const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
-                      similarUser
-                    );
-                    return (
-                      <UserListModalEntry
-                        mode="similar-users"
-                        key={userName}
-                        user={similarUser}
-                        loggedInUserFollowsUser={loggedInUserFollowsUser}
-                        updateFollowingList={this.updateFollowingList}
-                      />
-                    );
-                  }
-                )}
+              {sortedSimilarUsers?.length &&
+                sortedSimilarUsers.map((userFromList) => {
+                  const [name, similarityScore] = userFromList;
+                  const similarUser: SimilarUser = {
+                    name,
+                    similarityScore,
+                  };
+                  const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
+                    similarUser
+                  );
+                  return (
+                    <UserListModalEntry
+                      mode="similar-users"
+                      key={name}
+                      user={similarUser}
+                      loggedInUserFollowsUser={loggedInUserFollowsUser}
+                      updateFollowingList={this.updateFollowingList}
+                    />
+                  );
+                })}
             </div>
           </div>
 
