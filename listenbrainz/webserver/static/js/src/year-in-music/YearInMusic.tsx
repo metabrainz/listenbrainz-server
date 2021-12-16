@@ -383,7 +383,8 @@ export default class YearInMusic extends React.Component<
                 enableScroll
                 infiniteScroll
                 enableHeading
-                active={0}
+                active={3}
+                clickable
                 media={{
                   "@media (max-width: 900px)": {
                     width: "100%",
@@ -397,6 +398,12 @@ export default class YearInMusic extends React.Component<
               >
                 {yearInMusicData.top_releases.slice(0, 50).map((release) => (
                   <img
+                    key={`coverflow-${release.release_name}`}
+                    data-action={
+                      release.release_mbid
+                        ? `https://musicbrainz.org/release/${release.release_mbid}/`
+                        : ""
+                    }
                     src={
                       yearInMusicData.top_releases_coverart?.[
                         release.release_mbid
@@ -440,7 +447,7 @@ export default class YearInMusic extends React.Component<
                 return (
                   <ListenCard
                     compact
-                    key={`top-recordings-${recording.recording_mbid}`}
+                    key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
                     listen={listenHere}
                     showTimestamp={false}
                     showUsername={false}
