@@ -613,7 +613,7 @@ export default class YearInMusic extends React.Component<
                       {getEntityLink(
                         "release",
                         release.title,
-                        release.release_id
+                        release.release_mbid
                       )}
                     </div>
                     <span
@@ -636,7 +636,7 @@ export default class YearInMusic extends React.Component<
                     track_name: release.title,
                     release_name: release.title,
                     additional_info: {
-                      release_mbid: release.release_id,
+                      release_mbid: release.release_mbid,
                       artist_mbids: release.artist_credit_mbids,
                     },
                   },
@@ -645,7 +645,7 @@ export default class YearInMusic extends React.Component<
                 return (
                   <ListenCard
                     listenDetails={details}
-                    key={release.release_id}
+                    key={release.release_mbid}
                     compact
                     listen={listenHere}
                     showTimestamp={false}
