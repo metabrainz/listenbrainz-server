@@ -118,7 +118,7 @@
   "similarity.similar_users_year_end": {
     "name": "similarity.similar_users_year_end",
     "description": "Generate similar user correlation for Year in Music",
-    "params": []
+    "params": ["year"]
   },
   "year_in_music.listens_per_day": {
     "name": "year_in_music.listens_per_day",
