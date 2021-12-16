@@ -93,10 +93,9 @@ const ComponentToImage = ({
           src="/static/img/year-in-music-2021.svg"
           alt="Your year in music 2021"
         />
-        {/* <h2 className="card-title">Year In Music 2021</h2> */}
-        <h5 className="card-title">
+        <h3 className="card-title">
           {user.name}&apos;s top {entityType}s of 2021
-        </h5>
+        </h3>
         <div className="list-container">
           {(() => {
             if (entityType === "artist") {
@@ -223,7 +222,6 @@ const ComponentToImage = ({
           <img
             className="card-img-bottom"
             src="/static/img/listenbrainz-logo.svg"
-            style={{ width: "16rem", padding: "1rem" }}
             alt="ListenBrainz"
           />
         </div>
