@@ -31,7 +31,10 @@ import ComponentToImage from "./ComponentToImage";
 import fakeData from "./year-in-music-data.json";
 import ListenCard from "../listens/ListenCard";
 import UserListModalEntry from "../follow/UserListModalEntry";
-import { JSPFTrackToListen } from "../playlists/utils";
+import {
+  JSPFTrackToListen,
+  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
+} from "../playlists/utils";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -116,6 +119,8 @@ export default class YearInMusic extends React.Component<
     description?: string
   ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
     const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
+    /* We generated some playlists with this incorrect value as the track extension key, rewrite it if it exists */
+    const badPlaylistTrackExtensionValue = "https://musicbrainz.org/recording/";
     const { yearInMusicData } = this.props;
     let playlist;
     try {
@@ -139,6 +144,13 @@ export default class YearInMusic extends React.Component<
             if (recording_coverart) {
               newTrack.image = recording_coverart;
             }
+          }
+          if (
+            newTrack.extension &&
+            track.extension?.[badPlaylistTrackExtensionValue]
+          ) {
+            newTrack.extension[MUSICBRAINZ_JSPF_TRACK_EXTENSION] =
+              track.extension[badPlaylistTrackExtensionValue];
           }
           return newTrack;
         }
