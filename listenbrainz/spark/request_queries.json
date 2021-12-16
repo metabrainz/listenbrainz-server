@@ -27,7 +27,7 @@
   "stats.new_releases_of_top_artists": {
     "name": "stats.new_releases_of_top_artists",
     "description": "Calculate list of releases released this year by top 50 artists of this year for each user",
-    "params": []
+    "params": ["year"]
   },
   "stats.most_prominent_color": {
     "name": "stats.most_prominent_color",
