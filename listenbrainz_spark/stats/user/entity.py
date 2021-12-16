@@ -30,7 +30,8 @@ entity_model_map = {
 }
 
 
-def get_entity_stats(entity: str, stats_range: str) -> Iterator[Optional[UserEntityStatMessage]]:
+def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
+        -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the top entity for all users for specified stats_range """
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
 
@@ -42,14 +43,15 @@ def get_entity_stats(entity: str, stats_range: str) -> Iterator[Optional[UserEnt
     handler = entity_handler_map[entity]
     data = handler(table_name)
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
-                               from_date=from_date, to_date=to_date)
+                               from_date=from_date, to_date=to_date, message_type=message_type)
 
     logger.debug("Done!")
 
     return messages
 
 
-def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime) \
+def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime,
+                    message_type) \
         -> Iterator[Optional[UserEntityStatMessage]]:
     """
     Create messages to send the data to the webserver via RabbitMQ
@@ -61,6 +63,8 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         stats_range: The range for which the statistics have been calculated
         from_date: The start time of the stats
         to_date: The end time of the stats
+        message_type: used to decide which handler on LB webserver side should
+            handle this message. can be "user_entity" or "year_in_music_top_stats"
 
     Returns:
         messages: A list of messages to be sent via RabbitMQ
@@ -76,6 +80,10 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         if entity == "recordings" and stats_range == "all_time":
             _dict[entity] = _dict[entity][:1000]
 
+        # for year in music, only retain top 50 stats
+        if message_type == "year_in_music_top_stats":
+            _dict[entity] = _dict[entity][:50]
+
         entity_list = []
         for item in _dict[entity]:
             try:
@@ -85,7 +93,7 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         try:
             model = UserEntityStatMessage(**{
                 "musicbrainz_id": _dict["user_name"],
-                "type": "user_entity",
+                "type": message_type,
                 "stats_range": stats_range,
                 "from_ts": from_ts,
                 "to_ts": to_ts,

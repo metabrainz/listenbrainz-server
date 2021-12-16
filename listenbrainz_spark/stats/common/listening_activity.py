@@ -65,6 +65,16 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         time ranges. if making modifications here, remember to check and update that as well
     """
     latest_listen_ts = get_latest_listen_ts()
+
+    if stats_range == "year_in_music":
+        # listening activity per day for the current year only, don't need data of 2 ranges here
+        to_ts = latest_listen_ts
+        from_date = to_ts.date() + relativedelta(month=1, day=1)
+        from_ts = datetime.combine(from_date, time.min)
+        step = relativedelta(days=+1)
+        date_format = "%d %B %Y"
+        return from_ts, to_ts, step, date_format
+
     if stats_range == "all_time":
         # all_time stats range is easy, just return time from LASTFM founding
         # to the latest listen we have in spark

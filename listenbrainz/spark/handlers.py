@@ -6,6 +6,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
+from listenbrainz.db import year_in_music
 
 from flask import current_app, render_template
 from pydantic import ValidationError
@@ -347,3 +348,53 @@ def handle_similar_users(message):
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
         )
+
+
+def handle_similar_users_year_end(message):
+    year_in_music.insert_similar_users(message["data"])
+
+
+def handle_new_releases_of_top_artists(message):
+    musicbrainz_id = message["user_name"]
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    if not user:
+        return
+    year_in_music.insert_new_releases_of_top_artists(user["id"], message["data"])
+
+
+def handle_most_prominent_color(message):
+    year_in_music.insert_most_prominent_color(message["data"])
+
+
+def handle_day_of_week(message):
+    year_in_music.insert_day_of_week(message["data"])
+
+
+def handle_most_listened_year(message):
+    year_in_music.insert_most_listened_year(message["data"])
+
+
+def handle_top_stats(message):
+    musicbrainz_id = message["musicbrainz_id"]
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    if not user:
+        return
+    year_in_music.handle_top_stats(user["id"], message["entity"], message["data"])
+
+    # for top_releases, look up cover art
+    if message["entity"] == "releases":
+        release_mbids = [rel["release_mbid"] for rel in message["data"] if "release_mbid" in rel]
+        coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
+        year_in_music.handle_coverart(user["id"], "top_releases_coverart", coverart)
+
+
+def handle_listens_per_day(message):
+    musicbrainz_id = message["musicbrainz_id"]
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    if not user:
+        return
+    year_in_music.handle_listens_per_day(user["id"], message["data"])
+
+
+def handle_yearly_listen_counts(message):
+    year_in_music.handle_yearly_listen_counts(message["data"])

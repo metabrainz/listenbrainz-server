@@ -55,7 +55,7 @@ def calculate_listening_activity():
     return result.toLocalIterator()
 
 
-def get_listening_activity(stats_range: str):
+def get_listening_activity(stats_range: str, message_type="user_listening_activity"):
     """ Compute the number of listens for a time range compared to the previous range
 
     Given a time range, this computes a histogram of a users' listens for that range
@@ -68,12 +68,14 @@ def get_listening_activity(stats_range: str):
     from_date, to_date = setup_time_range(stats_range)
     get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
     data = calculate_listening_activity()
-    messages = create_messages(data=data, stats_range=stats_range, from_date=from_date, to_date=to_date)
+    messages = create_messages(data=data, stats_range=stats_range,
+                               from_date=from_date, to_date=to_date,
+                               message_type=message_type)
     logger.debug("Done!")
     return messages
 
 
-def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime) \
+def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime, message_type) \
         -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """
     Create messages to send the data to webserver via RabbitMQ
@@ -83,6 +85,8 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
         stats_range: The range for which the statistics have been calculated
         from_date: The start time of the stats
         to_date: The end time of the stats
+        message_type: used to decide which handler on LB webserver side should
+            handle this message. can be "user_entity" or "year_in_music_listens_per_day"
     Returns:
         messages: A list of messages to be sent via RabbitMQ
     """
@@ -93,7 +97,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
         try:
             model = UserListeningActivityStatMessage(**{
                 "musicbrainz_id": _dict["user_name"],
-                "type": "user_listening_activity",
+                "type": message_type,
                 "stats_range": stats_range,
                 "from_ts": from_ts,
                 "to_ts": to_ts,

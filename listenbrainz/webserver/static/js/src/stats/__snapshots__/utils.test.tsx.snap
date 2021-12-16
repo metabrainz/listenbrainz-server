@@ -2,7 +2,6 @@
 
 exports[`getEntityLink renders a link if MBID is provided 1`] = `
 <a
-  className="underlined-link"
   href="https://musicbrainz.org/artist/test_mbid"
   rel="noopener noreferrer"
   target="_blank"
