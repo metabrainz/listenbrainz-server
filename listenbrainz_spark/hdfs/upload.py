@@ -51,8 +51,11 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         hdfs_dir = path.MUSICBRAINZ_RELEASE_DUMP
         hdfs_mbdump_dir = os.path.join(hdfs_dir, "mbdump")  # release.tar.xz file has actual dump file inside mbdump dir
         with tarfile.open(name=archive, mode="r:xz") as tar, tempfile.TemporaryDirectory() as local_dir:
-            if not utils.path_exists(hdfs_mbdump_dir):
-                utils.create_dir(hdfs_mbdump_dir)
+            # Remove existing dumps
+            if utils.path_exists(hdfs_dir):
+                utils.delete_dir(hdfs_dir, recursive=True)
+
+            utils.create_dir(hdfs_dir)
 
             for member in tar:
                 t0 = time.monotonic()
