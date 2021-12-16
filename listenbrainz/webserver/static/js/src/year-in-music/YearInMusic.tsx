@@ -270,24 +270,19 @@ export default class YearInMusic extends React.Component<
           <div>
             <h1>{user.name}</h1>
             <p>
-              <b>
-                See profile on
-                <img
-                  src="../../../../static/img/listenbrainz-16.svg"
-                  alt="ListenBrainz Logo"
-                />
-                <a href={`https://listenbrainz.org/user/${user.name}/`}>
-                  ListenBrainz
-                </a>
-                and
-                <img
-                  src="../../../../static/img/musicbrainz-16.svg"
-                  alt="MusicBrainz Logo"
-                />
-                <a href={`https://musicbrainz.org/user/${user.name}`}>
-                  MusicBrainz
-                </a>
-              </b>
+              See profile on&nbsp;
+              <img src="/static/img/favicon-16.png" alt="ListenBrainz Logo" />
+              <a href={`https://listenbrainz.org/user/${user.name}/`}>
+                ListenBrainz
+              </a>
+              &nbsp;and&nbsp;
+              <img
+                src="/static/img/musicbrainz-16.svg"
+                alt="MusicBrainz Logo"
+              />
+              <a href={`https://musicbrainz.org/user/${user.name}`}>
+                MusicBrainz
+              </a>
             </p>
             <p>
               The ListenBrainz team would like to wish you happy holidays! You
@@ -296,33 +291,30 @@ export default class YearInMusic extends React.Component<
               useful personalized features based on your data. We hope you like
               it!
             </p>
-            <p>
-              You will find in this page:
-              <ul>
-                <li>
-                  {yourOrUsersName} top <a href="#top-releases">albums</a>,{" "}
-                  <a href="#top-recordings">songs</a> and{" "}
-                  <a href="#top-artists">artists</a> of the year
-                </li>
-                <li>
-                  some statistics about your{" "}
-                  <a href="#calendar">listening activity</a>
-                </li>
-                <li>
-                  a list of{" "}
-                  <a href="#similar-users">users similar to {youOrUsername}</a>
-                </li>
-                <li>
-                  new albums that your top artists{" "}
-                  <a href="#new-releases">released in 2021</a>
-                </li>
-                <li>
-                  and finally four{" "}
-                  <a href="#playlists">personalized playlists</a>
-                  of music {youOrUsername} listened to and new songs to discover
-                </li>
-              </ul>
-            </p>
+            <p>You will find in this page:</p>
+            <ul>
+              <li>
+                {yourOrUsersName} top <a href="#top-releases">albums</a>,{" "}
+                <a href="#top-recordings">songs</a> and{" "}
+                <a href="#top-artists">artists</a> of the year
+              </li>
+              <li>
+                some statistics about your{" "}
+                <a href="#calendar">listening activity</a>
+              </li>
+              <li>
+                a list of{" "}
+                <a href="#similar-users">users similar to {youOrUsername}</a>
+              </li>
+              <li>
+                new albums that your top artists{" "}
+                <a href="#new-releases">released in 2021</a>
+              </li>
+              <li>
+                and finally four <a href="#playlists">personalized playlists</a>
+                of music {youOrUsername} listened to and new songs to discover
+              </li>
+            </ul>
             <p>
               Double click on any song to start playing it — we will do our best
               to find a matching song to play. If you have a Spotify pro
