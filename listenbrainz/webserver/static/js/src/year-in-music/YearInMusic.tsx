@@ -4,7 +4,6 @@ import { ResponsiveBar } from "@nivo/bar";
 import Coverflow from "react-coverflow";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { get, isEmpty, isNil, isString, range, uniq } from "lodash";
-import { sanitize } from "dompurify";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
@@ -95,13 +94,18 @@ export default class YearInMusic extends React.Component<
   }
 
   private getPlaylistByName(
-    playlistName: string
-  ): { jspf: JSPFObject; mbid: string } | undefined {
+    playlistName: string,
+    description?: string
+  ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
     const { yearInMusicData } = this.props;
     let playlist;
     try {
       const rawPlaylist = get(yearInMusicData, playlistName);
       playlist = isString(rawPlaylist) ? JSON.parse(rawPlaylist) : rawPlaylist;
+      // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
+      if (description) {
+        playlist.description = description;
+      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(`"Error parsing ${playlistName}:`, error);
@@ -211,16 +215,20 @@ export default class YearInMusic extends React.Component<
 
     /* Playlists */
     const topDiscoveriesPlaylist = this.getPlaylistByName(
-      "playlist-top-discoveries-for-year-playlists"
+      "playlist-top-discoveries-for-year-playlists",
+      `Highlights songs that ${user.name} first listened to (more than once) in 2021`
     );
     const topMissedRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-missed-recordings-for-year-playlists"
+      "playlist-top-missed-recordings-for-year-playlists",
+      `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
     );
     const topNewRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-new-recordings-for-year-playlists"
+      "playlist-top-new-recordings-for-year-playlists",
+      `Songs released in 2021 that ${user.name} listened to`
     );
     const topRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-recordings-for-year-playlists"
+      "playlist-top-recordings-for-year-playlists",
+      `This playlist is made from ${user.name}'s top recordings for 2021 statistics`
     );
 
     const allPlaylists = [
@@ -419,7 +427,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="calendar">
             <h3 className="text-center">
               Your listening activity in 2021
-              <div className="small">
+              <div className="small mt-15">
                 Number of listens submitted for each day of the year
               </div>
             </h3>
@@ -453,7 +461,7 @@ export default class YearInMusic extends React.Component<
             <div className="card content-card" id="most-listened-year">
               <h3 className="text-center">
                 What year are your favorite albums from?
-                <div className="small">
+                <div className="small mt-15">
                   How much were you on the lookout for new music this year? Not
                   that we&apos;re judging.
                 </div>
@@ -485,7 +493,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="similar-users">
             <h3 className="text-center">
               Music buddies
-              <div className="small">
+              <div className="small mt-15">
                 Here are the users with the most similar taste to you this year.
                 Maybe go check them out?
               </div>
@@ -521,7 +529,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="new-releases">
             <h3 className="text-center">
               New albums of your top artists
-              <div className="small">
+              <div className="small mt-15">
                 New albums released in 2021 from your favorite artists.
               </div>
             </h3>
@@ -559,7 +567,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card">
             <h3 className="text-center">
               We made some personalized playlists for you !
-              <div className="small">
+              <div className="small mt-15">
                 You&apos;ll find below 3 playlists that encapsulate your year,
                 and 1 playlist of music exploration based on users similar to
                 you
@@ -571,7 +579,7 @@ export default class YearInMusic extends React.Component<
                   return undefined;
                 }
                 return (
-                  <div className="card content-card" id="top-discoveries">
+                  <div className="card content-card mb-10" id="top-discoveries">
                     <h3 className="text-center">
                       <a
                         href={`/playlist/${topLevelPlaylist.mbid}`}
@@ -580,16 +588,10 @@ export default class YearInMusic extends React.Component<
                       >
                         {topLevelPlaylist.jspf?.playlist?.title}
                       </a>
-                      {topLevelPlaylist.jspf?.playlist?.annotation && (
-                        <div
-                          className="small ellipsis-2-lines"
-                          // eslint-disable-next-line react/no-danger
-                          dangerouslySetInnerHTML={{
-                            __html: sanitize(
-                              topLevelPlaylist.jspf.playlist.annotation
-                            ),
-                          }}
-                        />
+                      {topLevelPlaylist.description && (
+                        <div className="small mt-15 ellipsis-2-lines ellipsis">
+                          {topLevelPlaylist.description}
+                        </div>
                       )}
                     </h3>
                     <div>
