@@ -394,6 +394,9 @@ def handle_coverart(user_id, key, data):
 
 
 def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
+    if to_email is None:
+        return
+
     message = EmailMessage()
     message["From"] = f"ListenBrainz <noreply@{current_app.config['MAIL_FROM_DOMAIN']}>"
     message["To"] = f"{to_name} <{to_email}>"
@@ -409,6 +412,8 @@ def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
     with smtplib.SMTP(current_app.config["SMTP_SERVER"], current_app.config["SMTP_PORT"]) as server:
         server.send_message(message)
 
+    current_app.logger.info("Email sent to %s", to_name)
+
 
 def notify_yim_users():
     lb_logo_cid = make_msgid()
@@ -423,7 +428,6 @@ def notify_yim_users():
               FROM statistics.year_in_music yim
               JOIN "user"
                 ON "user".id = yim.user_id
-             WHERE email IS NOT NULL
         """)
         rows = result.fetchall()
 
@@ -456,7 +460,6 @@ def notify_yim_users():
                 lb_logo_cid=lb_logo_cid,
                 lb_logo=lb_logo
             )
-            current_app.logger.info("Email sent to %s", user_name)
         except Exception:
             current_app.logger.error("Could not send YIM email", exc_info=True)
 
