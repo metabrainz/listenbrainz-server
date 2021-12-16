@@ -84,6 +84,7 @@ export type YearInMusicProps = {
 export type YearInMusicState = {
   followingList: Array<string>;
   listens: Array<Listen>;
+  activeCoverflowImage: number;
 };
 
 export default class YearInMusic extends React.Component<
@@ -98,11 +99,16 @@ export default class YearInMusic extends React.Component<
     this.state = {
       followingList: [],
       listens: [],
+      activeCoverflowImage: 0,
     };
   }
 
   async componentDidMount() {
     await this.getFollowing();
+    // Some issue with the coverflow library
+    setTimeout(() => {
+      this.setState({ activeCoverflowImage: 3 });
+    }, 500);
   }
 
   private getPlaylistByName(
@@ -174,7 +180,7 @@ export default class YearInMusic extends React.Component<
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
     const { APIService, currentUser } = this.context;
-    const { listens } = this.state;
+    const { listens, activeCoverflowImage } = this.state;
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
@@ -379,11 +385,10 @@ export default class YearInMusic extends React.Component<
                 displayQuantityOfSide={3}
                 currentFigureScale={2}
                 otherFigureScale={1}
-                navigation
                 enableScroll
                 infiniteScroll
                 enableHeading
-                active={3}
+                active={activeCoverflowImage}
                 clickable
                 media={{
                   "@media (max-width: 900px)": {
