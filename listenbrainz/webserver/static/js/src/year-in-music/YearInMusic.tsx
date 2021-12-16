@@ -3,7 +3,7 @@ import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import Coverflow from "react-coverflow";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
-import { get, isEmpty, isNil, isString, range, uniq } from "lodash";
+import { get, isEmpty, isNil, isString, range, uniq, capitalize } from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
@@ -161,7 +161,7 @@ export default class YearInMusic extends React.Component<
 
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
-    const { APIService } = this.context;
+    const { APIService, currentUser } = this.context;
     const { listens } = this.state;
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
@@ -182,6 +182,11 @@ export default class YearInMusic extends React.Component<
         </div>
       );
     }
+
+    // Is the logged-in user looking at their own page?
+    const isCurrentUser = user.name === currentUser?.name;
+    const youOrUsername = isCurrentUser ? "you" : `${user.name}`;
+    const yourOrUsersName = isCurrentUser ? "your" : `${user.name}'s`;
 
     /* Most listened years */
     let mostListenedYearDataForGraph;
@@ -253,9 +258,9 @@ export default class YearInMusic extends React.Component<
                   Share your year with your friends
                   <p id="share-link">
                     <a
-                      href={`https://listenbrainz.org/user/${user?.name}/year-in-music`}
+                      href={`https://listenbrainz.org/user/${user.name}/year-in-music/`}
                     >
-                      https://listenbrainz.org/user/{user?.name}/year-in-music
+                      https://listenbrainz.org/user/{user.name}/year-in-music/
                     </a>
                   </p>
                 </div>
@@ -263,42 +268,81 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div>
-            <h1>{user?.name}</h1>
+            <h1>{user.name}</h1>
             <p>
-              <img
-                src="../../../../static/img/musicbrainz-16.svg"
-                alt="MusicBrainz Logo"
-              />
               <b>
+                See profile on
+                <img
+                  src="../../../../static/img/listenbrainz-16.svg"
+                  alt="ListenBrainz Logo"
+                />
+                <a href={`https://listenbrainz.org/user/${user.name}/`}>
+                  ListenBrainz
+                </a>
+                and
+                <img
+                  src="../../../../static/img/musicbrainz-16.svg"
+                  alt="MusicBrainz Logo"
+                />
                 <a href={`https://musicbrainz.org/user/${user.name}`}>
-                  See profile on MusicBrainz
+                  MusicBrainz
                 </a>
               </b>
             </p>
-            <div className="flex-wrap">
-              <div className="card">
-                <h3 className="text-center">
-                  You listened to{" "}
-                  <span className="accent">
-                    {yearInMusicData.total_listen_count}
-                  </span>{" "}
-                  songs this year
-                </h3>
-              </div>
-              <div className="card">
-                <h3 className="text-center">
-                  <span className="accent">Friday</span> was your most active
-                  listening day
-                </h3>
-              </div>
-            </div>
+            <p>
+              The ListenBrainz team would like to wish you happy holidays! You
+              have been sending us your listen history in 2021 and we wanted to
+              thank you for doing that! We have been working hard to create
+              useful personalized features based on your data. We hope you like
+              it!
+            </p>
+            <p>
+              You will find in this page:
+              <ul>
+                <li>
+                  {yourOrUsersName} top <a href="#top-releases">albums</a>,{" "}
+                  <a href="#top-recordings">songs</a> and{" "}
+                  <a href="#top-artists">artists</a> of the year
+                </li>
+                <li>
+                  some statistics about your{" "}
+                  <a href="#calendar">listening activity</a>
+                </li>
+                <li>
+                  a list of{" "}
+                  <a href="#similar-users">users similar to {youOrUsername}</a>
+                </li>
+                <li>
+                  new albums that your top artists{" "}
+                  <a href="#new-releases">released in 2021</a>
+                </li>
+                <li>
+                  and finally four{" "}
+                  <a href="#playlists">personalized playlists</a>
+                  of music {youOrUsername} listened to and new songs to discover
+                </li>
+              </ul>
+            </p>
+            <p>
+              Double click on any song to start playing it — we will do our best
+              to find a matching song to play. If you have a Spotify pro
+              account, we recommend{" "}
+              <a href="/profile/music-services/details/">
+                connecting your account
+              </a>{" "}
+              for a better playback experience.
+            </p>
+            <p>
+              We hope you like it! With love, the{" "}
+              <a href="https://metabrainz.org/team">MetaBrainz team</a>
+            </p>
           </div>
         </div>
         <hr className="wide" />
         <div className="row">
           <div className="card content-card" id="top-releases">
             <div className="col-md-12 d-flex center-p">
-              <h3>Your top albums of 2021</h3>
+              <h3>{capitalize(yourOrUsersName)} top albums of 2021</h3>
               <ComponentToImage
                 data={yearInMusicData.top_releases.slice(0, 10)}
                 entityType="release"
@@ -339,7 +383,9 @@ export default class YearInMusic extends React.Component<
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
             <div className="col-md-12 d-flex center-p">
-              <h3>Your 50 most played songs of 2021</h3>
+              <h3>
+                {capitalize(yourOrUsersName)} 50 most played songs of 2021
+              </h3>
               <ComponentToImage
                 data={yearInMusicData.top_recordings.slice(0, 10)}
                 entityType="recording"
@@ -377,7 +423,7 @@ export default class YearInMusic extends React.Component<
           </div>
           <div className="card content-card" id="top-artists">
             <div className="col-md-12 d-flex center-p">
-              <h3>Your top 50 artists of 2021</h3>
+              <h3>{capitalize(yourOrUsersName)} top 50 artists of 2021</h3>
               <ComponentToImage
                 data={yearInMusicData.top_artists.slice(0, 10)}
                 entityType="artist"
@@ -426,7 +472,7 @@ export default class YearInMusic extends React.Component<
         <div className="row">
           <div className="card content-card" id="calendar">
             <h3 className="text-center">
-              Your listening activity in 2021
+              {capitalize(yourOrUsersName)} listening activity in 2021
               <div className="small mt-15">
                 Number of listens submitted for each day of the year
               </div>
@@ -456,11 +502,28 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
         </div>
+        <div className="flex flex-wrap">
+          <div className="card content-card">
+            <h3 className="text-center">
+              {capitalize(youOrUsername)} listened to{" "}
+              <span className="accent">
+                {yearInMusicData.total_listen_count}
+              </span>{" "}
+              songs this year
+            </h3>
+          </div>
+          <div className="card content-card">
+            <h3 className="text-center">
+              <span className="accent">Friday</span> was {yourOrUsersName} most
+              active listening day
+            </h3>
+          </div>
+        </div>
         <div className="row flex flex-wrap">
           {mostListenedYearDataForGraph && (
             <div className="card content-card" id="most-listened-year">
               <h3 className="text-center">
-                What year are your favorite albums from?
+                What year are {yourOrUsersName} favorite albums from?
                 <div className="small mt-15">
                   How much were you on the lookout for new music this year? Not
                   that we&apos;re judging.
@@ -494,8 +557,8 @@ export default class YearInMusic extends React.Component<
             <h3 className="text-center">
               Music buddies
               <div className="small mt-15">
-                Here are the users with the most similar taste to you this year.
-                Maybe go check them out?
+                Here are the users with the most similar taste to {user.name}{" "}
+                this year. Maybe go check them out?
               </div>
             </h3>
             <div className="scrollable-area similar-users-list">
@@ -528,9 +591,10 @@ export default class YearInMusic extends React.Component<
 
           <div className="card content-card" id="new-releases">
             <h3 className="text-center">
-              New albums of your top artists
+              New albums of {yourOrUsersName} top artists
               <div className="small mt-15">
-                New albums released in 2021 from your favorite artists.
+                New albums released in 2021 from {yourOrUsersName} favorite
+                artists
               </div>
             </h3>
             <div className="scrollable-area">
@@ -564,9 +628,9 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <div className="row">
-          <div className="card content-card">
+          <div className="card content-card" id="playlists">
             <h3 className="text-center">
-              We made some personalized playlists for you !
+              We made some personalized playlists for {youOrUsername} !
               <div className="small mt-15">
                 You&apos;ll find below 3 playlists that encapsulate your year,
                 and 1 playlist of music exploration based on users similar to
