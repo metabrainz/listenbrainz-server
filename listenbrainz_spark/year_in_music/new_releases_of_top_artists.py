@@ -76,7 +76,7 @@ def _get_releases_for_year(year):
 def _get_new_releases_of_top_artists():
     return """
         SELECT user_name
-             , collect_list(
+             , collect_set(
                     struct(
                        title
                      , release_mbid
