@@ -22,7 +22,7 @@ import Pill from "../components/Pill";
 import { getPageProps } from "../utils";
 import {
   getChartEntityDetails,
-  isValidStatRange,
+  isInvalidStatRange,
   userChartEntityToListen,
 } from "./utils";
 import ListenCard from "../listens/ListenCard";
@@ -283,7 +283,7 @@ export default class UserEntityChart extends React.Component<
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
         // Check if given range is valid
-        if (isValidStatRange(currRange)) {
+        if (isInvalidStatRange(currRange)) {
           this.setState({
             hasError: true,
             loading: false,

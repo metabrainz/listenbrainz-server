@@ -102,7 +102,7 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
   );
 }
 
-export function isValidStatRange(range: string): boolean {
+export function isInvalidStatRange(range: string): boolean {
   return (
     [
       "week",
