@@ -283,7 +283,7 @@ export default class UserEntityChart extends React.Component<
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
         // Check if given range is valid
-        if (isInvalidStatRange(currRange)) {
+        if (isInvalidStatRange(range)) {
           this.setState({
             hasError: true,
             loading: false,
