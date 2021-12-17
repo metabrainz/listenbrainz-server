@@ -477,6 +477,7 @@ export default class YearInMusic extends React.Component<
                   displayQuantityOfSide={3}
                   currentFigureScale={2}
                   otherFigureScale={1}
+                  navigation
                   enableScroll
                   infiniteScroll
                   enableHeading
@@ -499,7 +500,7 @@ export default class YearInMusic extends React.Component<
                       data-action={
                         release.release_mbid
                           ? `https://musicbrainz.org/release/${release.release_mbid}/`
-                          : ""
+                          : undefined
                       }
                       src={
                         yearInMusicData.top_releases_coverart?.[

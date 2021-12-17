@@ -71,24 +71,24 @@
 		box-shadow: 0 20px 40px rgb(0 0 0 / 30%);
 		-webkit-box-reflect: below 1px -webkit-linear-gradient(bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0));
 	}
-	div[class*="coverflow__left__"]{
-		left:calc(50% - 300px) !important;
-		transform: translateZ(30px);
-		@media(min-width:@screen-desktop) {
-			left:calc(50% - 500px) !important;
+	div[class*="coverflow__text__"]{
+		font-size: .6em;
+		@media(max-width:@screen-tablet) {
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
 	}
+	div[class*="coverflow__left__"]{
+		left:calc(45%) !important;
+		transform: translateZ(70px);
+	}
 	div[class*="coverflow__right__"]{
-		right:calc(50% - 300px) !important;
-		transform: translateZ(30px);
-		@media(min-width:@screen-desktop) {
-			right:calc(50% - 500px) !important;
-		}
+		right:calc(45%) !important;
+		transform: translateZ(70px);
 	}
 	div[class*="coverflow__arrow__"]{
 		&:before, &:after{
 			height: 3px;
-			box-shadow: 2px 2px 3px rgb(0 0 0 / 50%);
 		}
 	}
 	/* "Save as image" component */
