@@ -853,7 +853,7 @@ export default class YearInMusic extends React.Component<
                             {topLevelPlaylist.jspf?.playlist?.title}
                           </a>
                           {topLevelPlaylist.description && (
-                            <div className="small mt-15 ellipsis-2-lines ellipsis">
+                            <div className="small mt-15">
                               {topLevelPlaylist.description}
                             </div>
                           )}
