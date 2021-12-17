@@ -231,6 +231,21 @@ export default class YearInMusic extends React.Component<
         </div>
       );
     }
+    // Some data might not have been calculated for some users
+    // This boolean lets us warn them of that
+    let missingSomeData = false;
+
+    if (
+      !yearInMusicData.top_releases ||
+      !yearInMusicData.top_recordings ||
+      !yearInMusicData.top_artists ||
+      !yearInMusicData.listens_per_day ||
+      !yearInMusicData.total_listen_count ||
+      !yearInMusicData.day_of_week ||
+      !yearInMusicData.new_releases_of_top_artists
+    ) {
+      missingSomeData = true;
+    }
 
     // Is the logged-in user looking at their own page?
     const isCurrentUser = user.name === currentUser?.name;
@@ -239,7 +254,9 @@ export default class YearInMusic extends React.Component<
 
     /* Most listened years */
     let mostListenedYearDataForGraph;
-    if (!isEmpty(yearInMusicData.most_listened_year)) {
+    if (isEmpty(yearInMusicData.most_listened_year)) {
+      missingSomeData = true;
+    } else {
       const mostListenedYears = Object.keys(yearInMusicData.most_listened_year);
       // Ensure there are no holes between years
       const filledYears = range(
@@ -254,23 +271,33 @@ export default class YearInMusic extends React.Component<
     }
 
     /* Similar users sorted by similarity score */
-    const sortedSimilarUsers = toPairs(yearInMusicData.similar_users).sort(
-      (a, b) => b[1] - a[1]
-    );
+    let sortedSimilarUsers;
+    if (isEmpty(yearInMusicData.similar_users)) {
+      missingSomeData = true;
+    } else {
+      sortedSimilarUsers = toPairs(yearInMusicData.similar_users).sort(
+        (a, b) => b[1] - a[1]
+      );
+    }
 
     /* Listening history calendar graph */
-    const listensPerDayForGraph = yearInMusicData.listens_per_day
-      .map((datum) =>
-        datum.listen_count > 0
-          ? {
-              day: new Date(datum.time_range).toLocaleDateString("en-CA"),
-              value: datum.listen_count,
-            }
-          : // Return null if the value is 0
-            null
-      )
-      // Filter out null entries in the array
-      .filter(Boolean);
+    let listensPerDayForGraph;
+    if (isEmpty(yearInMusicData.listens_per_day)) {
+      missingSomeData = true;
+    } else {
+      listensPerDayForGraph = yearInMusicData.listens_per_day
+        .map((datum) =>
+          datum.listen_count > 0
+            ? {
+                day: new Date(datum.time_range).toLocaleDateString("en-CA"),
+                value: datum.listen_count,
+              }
+            : // Return null if the value is 0
+              null
+        )
+        // Filter out null entries in the array
+        .filter(Boolean);
+    }
 
     /* Playlists */
     const topDiscoveriesPlaylist = this.getPlaylistByName(
@@ -289,6 +316,14 @@ export default class YearInMusic extends React.Component<
       "playlist-top-recordings-for-year",
       `This playlist is made from ${user.name}'s top recordings for 2021 statistics`
     );
+    if (
+      !topDiscoveriesPlaylist ||
+      !topMissedRecordingsPlaylist ||
+      !topNewRecordingsPlaylist ||
+      !topRecordingsPlaylist
+    ) {
+      missingSomeData = true;
+    }
 
     const allPlaylists = [
       topDiscoveriesPlaylist,
@@ -297,6 +332,11 @@ export default class YearInMusic extends React.Component<
       topRecordingsPlaylist,
     ];
 
+    const noDataText = (
+      <div className="center-p">
+        We were not able to calculate this data for {youOrUsername}
+      </div>
+    );
     return (
       <div role="main" id="year-in-music">
         <div className="flex flex-wrap" id="header">
@@ -380,76 +420,100 @@ export default class YearInMusic extends React.Component<
               for a better playback experience.
             </p>
             <p>
+              If you have questions or feedback don&apos;t hesitate to contact
+              us on{" "}
+              <a href="https://community.metabrainz.org/c/listenbrainz/18">
+                our forums
+              </a>
+              , <a href="mailto:support@metabrainz.org">by email</a> or{" "}
+              <a href="https://twitter.com/ListenBrainz">on twitter</a>
+            </p>
+            <p>
               We hope you like it! With love, the{" "}
               <a href="https://metabrainz.org/team">MetaBrainz team</a>
             </p>
           </div>
         </div>
+        {missingSomeData && (
+          <div className="alert alert-warning">
+            Heads up: We were unable to compute all of the parts of Your Year in
+            Music due to not enough listens or an issue in our database, but
+            we&apos;re showing you everything that we were able to make. Your
+            page might look a bit different than others.
+          </div>
+        )}
         <hr className="wide" />
         <div className="row">
           <div className="card content-card" id="top-releases">
             <div className="col-md-12 d-flex center-p">
               <h3>{capitalize(yourOrUsersName)} top albums of 2021</h3>
-              <ComponentToImage
-                data={yearInMusicData.top_releases
-                  .filter((release) =>
-                    has(
-                      yearInMusicData.top_releases_coverart,
-                      release.release_mbid
+              {yearInMusicData.top_releases && (
+                <ComponentToImage
+                  data={yearInMusicData.top_releases
+                    .filter((release) =>
+                      has(
+                        yearInMusicData.top_releases_coverart,
+                        release.release_mbid
+                      )
                     )
-                  )
-                  .slice(0, 10)
-                  .map((release) => {
-                    // eslint-disable-next-line no-param-reassign
-                    release.cover_art_src =
-                      yearInMusicData.top_releases_coverart?.[
-                        release.release_mbid
-                      ];
-                    return release;
-                  })}
-                entityType="release"
-                user={user}
-              />
+                    .slice(0, 10)
+                    .map((release) => {
+                      // eslint-disable-next-line no-param-reassign
+                      release.cover_art_src =
+                        yearInMusicData.top_releases_coverart?.[
+                          release.release_mbid
+                        ];
+                      return release;
+                    })}
+                  entityType="release"
+                  user={user}
+                />
+              )}
             </div>
-            <div id="releases-coverflow">
-              <Coverflow
-                displayQuantityOfSide={3}
-                currentFigureScale={2}
-                otherFigureScale={1}
-                enableScroll
-                infiniteScroll
-                enableHeading
-                active={activeCoverflowImage}
-                clickable
-                media={{
-                  "@media (max-width: 900px)": {
-                    width: "100%",
-                    height: "300px",
-                  },
-                  "@media (min-width: 900px)": {
-                    width: "100%",
-                    height: "500px",
-                  },
-                }}
-              >
-                {yearInMusicData.top_releases.slice(0, 50).map((release) => (
-                  <img
-                    key={`coverflow-${release.release_name}`}
-                    data-action={
-                      release.release_mbid
-                        ? `https://musicbrainz.org/release/${release.release_mbid}/`
-                        : ""
-                    }
-                    src={
-                      yearInMusicData.top_releases_coverart?.[
+
+            {yearInMusicData.top_releases ? (
+              <div id="releases-coverflow">
+                <Coverflow
+                  displayQuantityOfSide={3}
+                  currentFigureScale={2}
+                  otherFigureScale={1}
+                  enableScroll
+                  infiniteScroll
+                  enableHeading
+                  active={activeCoverflowImage}
+                  clickable
+                  media={{
+                    "@media (max-width: 900px)": {
+                      width: "100%",
+                      height: "300px",
+                    },
+                    "@media (min-width: 900px)": {
+                      width: "100%",
+                      height: "500px",
+                    },
+                  }}
+                >
+                  {yearInMusicData.top_releases.slice(0, 50).map((release) => (
+                    <img
+                      key={`coverflow-${release.release_name}`}
+                      data-action={
                         release.release_mbid
-                      ] ?? "/static/img/cover-art-placeholder.jpg"
-                    }
-                    alt={release.release_name}
-                  />
-                ))}
-              </Coverflow>
-            </div>
+                          ? `https://musicbrainz.org/release/${release.release_mbid}/`
+                          : ""
+                      }
+                      src={
+                        yearInMusicData.top_releases_coverart?.[
+                          release.release_mbid
+                        ] ?? "/static/img/cover-art-placeholder.jpg"
+                      }
+                      alt={release.release_name}
+                    />
+                  ))}
+                </Coverflow>
+              </div>
+            ) : (
+              noDataText
+            )}
           </div>
         </div>
         <div className="row flex flex-wrap">
@@ -458,87 +522,101 @@ export default class YearInMusic extends React.Component<
               <h3>
                 {capitalize(yourOrUsersName)} 50 most played songs of 2021
               </h3>
-              <ComponentToImage
-                data={yearInMusicData.top_recordings.slice(0, 10)}
-                entityType="recording"
-                user={user}
-              />
+              {yearInMusicData.top_recordings && (
+                <ComponentToImage
+                  data={yearInMusicData.top_recordings.slice(0, 10)}
+                  entityType="recording"
+                  user={user}
+                />
+              )}
             </div>
-            <div className="scrollable-area">
-              {yearInMusicData.top_recordings.slice(0, 50).map((recording) => {
-                const listenHere = {
-                  listened_at: 0,
-                  track_metadata: {
-                    artist_name: recording.artist_name,
-                    track_name: recording.track_name,
-                    release_name: recording.release_name,
-                    additional_info: {
-                      recording_mbid: recording.recording_mbid,
-                      release_mbid: recording.release_mbid,
-                      artist_mbids: recording.artist_mbids,
-                    },
-                  },
-                };
-                listens.push(listenHere);
-                return (
-                  <ListenCard
-                    compact
-                    key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
-                    listen={listenHere}
-                    showTimestamp={false}
-                    showUsername={false}
-                    newAlert={newAlert}
-                  />
-                );
-              })}
-            </div>
+            {yearInMusicData.top_recordings ? (
+              <div className="scrollable-area">
+                {yearInMusicData.top_recordings
+                  .slice(0, 50)
+                  .map((recording) => {
+                    const listenHere = {
+                      listened_at: 0,
+                      track_metadata: {
+                        artist_name: recording.artist_name,
+                        track_name: recording.track_name,
+                        release_name: recording.release_name,
+                        additional_info: {
+                          recording_mbid: recording.recording_mbid,
+                          release_mbid: recording.release_mbid,
+                          artist_mbids: recording.artist_mbids,
+                        },
+                      },
+                    };
+                    listens.push(listenHere);
+                    return (
+                      <ListenCard
+                        compact
+                        key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
+                        listen={listenHere}
+                        showTimestamp={false}
+                        showUsername={false}
+                        newAlert={newAlert}
+                      />
+                    );
+                  })}
+              </div>
+            ) : (
+              noDataText
+            )}
           </div>
           <div className="card content-card" id="top-artists">
             <div className="col-md-12 d-flex center-p">
               <h3>{capitalize(yourOrUsersName)} top 50 artists of 2021</h3>
-              <ComponentToImage
-                data={yearInMusicData.top_artists.slice(0, 10)}
-                entityType="artist"
-                user={user}
-              />
+              {yearInMusicData.top_artists && (
+                <ComponentToImage
+                  data={yearInMusicData.top_artists.slice(0, 10)}
+                  entityType="artist"
+                  user={user}
+                />
+              )}
             </div>
-            <div className="scrollable-area">
-              {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
-                const details = getEntityLink(
-                  "artist",
-                  artist.artist_name,
-                  artist.artist_mbids[0]
-                );
-                const thumbnail = (
-                  <span className="badge badge-info">
-                    {artist.listen_count} listens
-                  </span>
-                );
-                const listenHere = {
-                  listened_at: 0,
-                  track_metadata: {
-                    track_name: "",
-                    artist_name: artist.artist_name,
-                    additional_info: {
-                      artist_mbids: artist.artist_mbids,
+            {yearInMusicData.top_artists ? (
+              <div className="scrollable-area">
+                {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
+                  const details = getEntityLink(
+                    "artist",
+                    artist.artist_name,
+                    artist.artist_mbids[0]
+                  );
+                  const thumbnail = (
+                    <span className="badge badge-info">
+                      {artist.listen_count} listens
+                    </span>
+                  );
+                  const listenHere = {
+                    listened_at: 0,
+                    track_metadata: {
+                      track_name: "",
+                      artist_name: artist.artist_name,
+                      additional_info: {
+                        artist_mbids: artist.artist_mbids,
+                      },
                     },
-                  },
-                };
-                listens.push(listenHere);
-                return (
-                  <ListenCard
-                    compact
-                    key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
-                    listen={listenHere}
-                    thumbnail={thumbnail}
-                    listenDetails={details}
-                    showTimestamp={false}
-                    showUsername={false}
-                    newAlert={newAlert}
-                  />
-                );
-              })}
-            </div>
+                  };
+                  listens.push(listenHere);
+                  return (
+                    <ListenCard
+                      compact
+                      key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
+                      listen={listenHere}
+                      thumbnail={thumbnail}
+                      listenDetails={details}
+                      showTimestamp={false}
+                      showUsername={false}
+                      newAlert={newAlert}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              noDataText
+            )}
           </div>
         </div>
         <div className="row">
@@ -549,58 +627,66 @@ export default class YearInMusic extends React.Component<
                 Number of listens submitted for each day of the year
               </div>
             </h3>
-            <div className="graph">
-              <ResponsiveCalendar
-                from="2021-01-01"
-                to="2021-12-31"
-                data={listensPerDayForGraph as CalendarDatum[]}
-                emptyColor="#eeeeee"
-                colors={["#bbb7e1", "#6e66cc", "#eea582", "#eb743b"]}
-                monthBorderColor="#eeeeee"
-                dayBorderWidth={2}
-                dayBorderColor="#ffffff"
-                legends={[
-                  {
-                    anchor: "bottom-right",
-                    direction: "row",
-                    itemCount: 4,
-                    itemWidth: 42,
-                    itemHeight: 36,
-                    itemsSpacing: 14,
-                    itemDirection: "right-to-left",
-                  },
-                ]}
-              />
-            </div>
+            {listensPerDayForGraph ? (
+              <div className="graph">
+                <ResponsiveCalendar
+                  from="2021-01-01"
+                  to="2021-12-31"
+                  data={listensPerDayForGraph as CalendarDatum[]}
+                  emptyColor="#eeeeee"
+                  colors={["#bbb7e1", "#6e66cc", "#eea582", "#eb743b"]}
+                  monthBorderColor="#eeeeee"
+                  dayBorderWidth={2}
+                  dayBorderColor="#ffffff"
+                  legends={[
+                    {
+                      anchor: "bottom-right",
+                      direction: "row",
+                      itemCount: 4,
+                      itemWidth: 42,
+                      itemHeight: 36,
+                      itemsSpacing: 14,
+                      itemDirection: "right-to-left",
+                    },
+                  ]}
+                />
+              </div>
+            ) : (
+              noDataText
+            )}
           </div>
         </div>
         <div className="row flex flex-wrap">
-          <div className="card content-card">
-            <h3 className="text-center">
-              {capitalize(youOrUsername)} listened to{" "}
-              <span className="accent">
-                {yearInMusicData.total_listen_count}
-              </span>{" "}
-              songs this year
-            </h3>
-          </div>
-          <div className="card content-card">
-            <h3 className="text-center">
-              <span className="accent">{yearInMusicData.day_of_week}</span> was{" "}
-              {yourOrUsersName} most active listening day on average
-            </h3>
-          </div>
-        </div>
-        <div className="row flex flex-wrap">
-          {mostListenedYearDataForGraph && (
-            <div className="card content-card" id="most-listened-year">
+          {yearInMusicData.total_listen_count && (
+            <div className="card content-card">
               <h3 className="text-center">
-                What year are {yourOrUsersName} favorite songs from?
-                <div className="small mt-15">
-                  How much were you on the lookout for new music this year? Not
-                  that we&apos;re judging.
-                </div>
+                {capitalize(youOrUsername)} listened to{" "}
+                <span className="accent">
+                  {yearInMusicData.total_listen_count}
+                </span>{" "}
+                songs this year
               </h3>
+            </div>
+          )}
+          {yearInMusicData.day_of_week && (
+            <div className="card content-card">
+              <h3 className="text-center">
+                <span className="accent">{yearInMusicData.day_of_week}</span>{" "}
+                was {yourOrUsersName} most active listening day on average
+              </h3>
+            </div>
+          )}
+        </div>
+        <div className="row flex flex-wrap">
+          <div className="card content-card" id="most-listened-year">
+            <h3 className="text-center">
+              What year are {yourOrUsersName} favorite songs from?
+              <div className="small mt-15">
+                How much were you on the lookout for new music this year? Not
+                that we&apos;re judging.
+              </div>
+            </h3>
+            {mostListenedYearDataForGraph ? (
               <div className="graph">
                 <ResponsiveBar
                   margin={{ left: 50, bottom: 30 }}
@@ -626,8 +712,10 @@ export default class YearInMusic extends React.Component<
                   }}
                 />
               </div>
-            </div>
-          )}
+            ) : (
+              noDataText
+            )}
+          </div>
         </div>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="similar-users">
@@ -639,26 +727,27 @@ export default class YearInMusic extends React.Component<
               </div>
             </h3>
             <div className="scrollable-area similar-users-list">
-              {sortedSimilarUsers?.length &&
-                sortedSimilarUsers.map((userFromList) => {
-                  const [name, similarityScore] = userFromList;
-                  const similarUser: SimilarUser = {
-                    name,
-                    similarityScore,
-                  };
-                  const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
-                    similarUser
-                  );
-                  return (
-                    <UserListModalEntry
-                      mode="similar-users"
-                      key={name}
-                      user={similarUser}
-                      loggedInUserFollowsUser={loggedInUserFollowsUser}
-                      updateFollowingList={this.updateFollowingList}
-                    />
-                  );
-                })}
+              {sortedSimilarUsers && sortedSimilarUsers.length
+                ? sortedSimilarUsers.map((userFromList) => {
+                    const [name, similarityScore] = userFromList;
+                    const similarUser: SimilarUser = {
+                      name,
+                      similarityScore,
+                    };
+                    const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
+                      similarUser
+                    );
+                    return (
+                      <UserListModalEntry
+                        mode="similar-users"
+                        key={name}
+                        user={similarUser}
+                        loggedInUserFollowsUser={loggedInUserFollowsUser}
+                        updateFollowingList={this.updateFollowingList}
+                      />
+                    );
+                  })
+                : noDataText}
             </div>
           </div>
 
@@ -671,55 +760,57 @@ export default class YearInMusic extends React.Component<
               </div>
             </h3>
             <div className="scrollable-area">
-              {yearInMusicData.new_releases_of_top_artists.map((release) => {
-                const artistName = release.artist_credit_names.join(", ");
-                const details = (
-                  <>
-                    <div title={release.title} className="ellipsis-2-lines">
-                      {getEntityLink(
-                        "release",
-                        release.title,
-                        release.release_mbid
-                      )}
-                    </div>
-                    <span
-                      className="small text-muted ellipsis"
-                      title={artistName}
-                    >
-                      {getEntityLink(
-                        "artist",
-                        artistName,
-                        release.artist_credit_mbids[0]
-                      )}
-                    </span>
-                  </>
-                );
-                const listenHere = {
-                  listened_at: 0,
-                  listened_at_iso: release.first_release_date,
-                  track_metadata: {
-                    artist_name: artistName,
-                    track_name: release.title,
-                    release_name: release.title,
-                    additional_info: {
-                      release_mbid: release.release_mbid,
-                      artist_mbids: release.artist_credit_mbids,
-                    },
-                  },
-                };
-                listens.push(listenHere);
-                return (
-                  <ListenCard
-                    listenDetails={details}
-                    key={release.release_mbid}
-                    compact
-                    listen={listenHere}
-                    showTimestamp={false}
-                    showUsername={false}
-                    newAlert={newAlert}
-                  />
-                );
-              })}
+              {yearInMusicData.new_releases_of_top_artists
+                ? yearInMusicData.new_releases_of_top_artists.map((release) => {
+                    const artistName = release.artist_credit_names.join(", ");
+                    const details = (
+                      <>
+                        <div title={release.title} className="ellipsis-2-lines">
+                          {getEntityLink(
+                            "release",
+                            release.title,
+                            release.release_mbid
+                          )}
+                        </div>
+                        <span
+                          className="small text-muted ellipsis"
+                          title={artistName}
+                        >
+                          {getEntityLink(
+                            "artist",
+                            artistName,
+                            release.artist_credit_mbids[0]
+                          )}
+                        </span>
+                      </>
+                    );
+                    const listenHere = {
+                      listened_at: 0,
+                      listened_at_iso: release.first_release_date,
+                      track_metadata: {
+                        artist_name: artistName,
+                        track_name: release.title,
+                        release_name: release.title,
+                        additional_info: {
+                          release_mbid: release.release_mbid,
+                          artist_mbids: release.artist_credit_mbids,
+                        },
+                      },
+                    };
+                    listens.push(listenHere);
+                    return (
+                      <ListenCard
+                        listenDetails={details}
+                        key={release.release_mbid}
+                        compact
+                        listen={listenHere}
+                        showTimestamp={false}
+                        showUsername={false}
+                        newAlert={newAlert}
+                      />
+                    );
+                  })
+                : noDataText}
             </div>
           </div>
         </div>
@@ -734,68 +825,73 @@ export default class YearInMusic extends React.Component<
               </div>
             </h3>
             <div className="row flex flex-wrap">
-              {allPlaylists.map((topLevelPlaylist) => {
-                if (!topLevelPlaylist) {
-                  return undefined;
-                }
-                return (
-                  <div className="card content-card mb-10" id="top-discoveries">
-                    <h3 className="text-center">
-                      <a
-                        href={`/playlist/${topLevelPlaylist.mbid}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+              {allPlaylists.length
+                ? allPlaylists.map((topLevelPlaylist) => {
+                    if (!topLevelPlaylist) {
+                      return undefined;
+                    }
+                    return (
+                      <div
+                        className="card content-card mb-10"
+                        id="top-discoveries"
                       >
-                        {topLevelPlaylist.jspf?.playlist?.title}
-                      </a>
-                      {topLevelPlaylist.description && (
-                        <div className="small mt-15 ellipsis-2-lines ellipsis">
-                          {topLevelPlaylist.description}
-                        </div>
-                      )}
-                    </h3>
-                    <div>
-                      {topLevelPlaylist.jspf?.playlist?.track.map(
-                        (playlistTrack) => {
-                          const listen = JSPFTrackToListen(playlistTrack);
-                          listens.push(listen);
-                          let thumbnail;
-                          if (playlistTrack.image) {
-                            thumbnail = (
-                              <div className="listen-thumbnail">
-                                <img
-                                  src={playlistTrack.image}
-                                  alt={`Cover Art for ${playlistTrack.title}`}
+                        <h3 className="text-center">
+                          <a
+                            href={`/playlist/${topLevelPlaylist.mbid}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {topLevelPlaylist.jspf?.playlist?.title}
+                          </a>
+                          {topLevelPlaylist.description && (
+                            <div className="small mt-15 ellipsis-2-lines ellipsis">
+                              {topLevelPlaylist.description}
+                            </div>
+                          )}
+                        </h3>
+                        <div>
+                          {topLevelPlaylist.jspf?.playlist?.track.map(
+                            (playlistTrack) => {
+                              const listen = JSPFTrackToListen(playlistTrack);
+                              listens.push(listen);
+                              let thumbnail;
+                              if (playlistTrack.image) {
+                                thumbnail = (
+                                  <div className="listen-thumbnail">
+                                    <img
+                                      src={playlistTrack.image}
+                                      alt={`Cover Art for ${playlistTrack.title}`}
+                                    />
+                                  </div>
+                                );
+                              }
+                              return (
+                                <ListenCard
+                                  className="playlist-item-card"
+                                  listen={listen}
+                                  thumbnail={thumbnail}
+                                  compact
+                                  showTimestamp={false}
+                                  showUsername={false}
+                                  newAlert={newAlert}
                                 />
-                              </div>
-                            );
-                          }
-                          return (
-                            <ListenCard
-                              className="playlist-item-card"
-                              listen={listen}
-                              thumbnail={thumbnail}
-                              compact
-                              showTimestamp={false}
-                              showUsername={false}
-                              newAlert={newAlert}
-                            />
-                          );
-                        }
-                      )}
-                      <hr />
-                      <a
-                        href={`/playlist/${topLevelPlaylist.mbid}`}
-                        className="btn btn-info btn-block"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        See the full playlist…
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
+                              );
+                            }
+                          )}
+                          <hr />
+                          <a
+                            href={`/playlist/${topLevelPlaylist.mbid}`}
+                            className="btn btn-info btn-block"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            See the full playlist…
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })
+                : noDataText}
             </div>
           </div>
         </div>
