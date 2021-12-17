@@ -71,6 +71,13 @@
 		box-shadow: 0 20px 40px rgb(0 0 0 / 30%);
 		-webkit-box-reflect: below 1px -webkit-linear-gradient(bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0));
 	}
+	div[class*="coverflow__text__"]{
+		font-size: .6em;
+		@media(max-width:@screen-tablet) {
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+	}
 	div[class*="coverflow__left__"]{
 		left:calc(45%) !important;
 		transform: translateZ(70px);
