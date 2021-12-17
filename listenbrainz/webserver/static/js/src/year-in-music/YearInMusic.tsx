@@ -35,6 +35,7 @@ import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../playlists/utils";
+import FollowButton from "../FollowButton";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -86,7 +87,6 @@ export type YearInMusicProps = {
 
 export type YearInMusicState = {
   followingList: Array<string>;
-  listens: Array<Listen>;
   activeCoverflowImage: number;
 };
 
@@ -101,7 +101,6 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
-      listens: [],
       activeCoverflowImage: 0,
     };
   }
@@ -211,7 +210,8 @@ export default class YearInMusic extends React.Component<
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
     const { APIService, currentUser } = this.context;
-    const { listens, activeCoverflowImage } = this.state;
+    const { activeCoverflowImage } = this.state;
+    const listens: BaseListenFormat[] = [];
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
@@ -362,7 +362,16 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div>
-            <h1>{user.name}</h1>
+            <h1>
+              {user.name}
+              {currentUser?.name && !isCurrentUser && (
+                <FollowButton
+                  type="icon-only"
+                  user={user}
+                  loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
+                />
+              )}
+            </h1>
             <p>
               See profile on&nbsp;
               <img src="/static/img/favicon-16.png" alt="ListenBrainz Logo" />
@@ -845,7 +854,7 @@ export default class YearInMusic extends React.Component<
                             {topLevelPlaylist.jspf?.playlist?.title}
                           </a>
                           {topLevelPlaylist.description && (
-                            <div className="small mt-15 ellipsis-2-lines ellipsis">
+                            <div className="small mt-15">
                               {topLevelPlaylist.description}
                             </div>
                           )}
