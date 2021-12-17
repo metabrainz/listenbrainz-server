@@ -101,3 +101,17 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
     </>
   );
 }
+
+export function isValidStatRange(range: string): boolean {
+  return (
+    [
+      "week",
+      "month",
+      "year",
+      "all_time",
+      "this_year",
+      "this_month",
+      "this_week",
+    ].indexOf(range) < 0
+  );
+}
