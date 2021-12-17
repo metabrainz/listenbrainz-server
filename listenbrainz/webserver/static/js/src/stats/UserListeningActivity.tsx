@@ -8,6 +8,7 @@ import APIService from "../APIService";
 import Card from "../components/Card";
 import BarDualTone from "./BarDualTone";
 import Loader from "../components/Loader";
+import { isValidStatRange } from "./utils";
 
 export type UserListeningActivityProps = {
   range: UserStatsAPIRange;
@@ -113,7 +114,7 @@ export default class UserListeningActivity extends React.Component<
     const { range: prevRange } = prevProps;
     const { range: currRange } = this.props;
     if (prevRange !== currRange) {
-      if (["week", "month", "year", "all_time"].indexOf(currRange) < 0) {
+      if (isValidStatRange(currRange)) {
         this.setState({
           loading: false,
           hasError: true,

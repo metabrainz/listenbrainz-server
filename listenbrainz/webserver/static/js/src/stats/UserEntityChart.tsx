@@ -20,7 +20,11 @@ import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import { getPageProps } from "../utils";
-import { getChartEntityDetails, userChartEntityToListen } from "./utils";
+import {
+  getChartEntityDetails,
+  isValidStatRange,
+  userChartEntityToListen,
+} from "./utils";
 import ListenCard from "../listens/ListenCard";
 
 export type UserEntityChartProps = {
@@ -279,17 +283,7 @@ export default class UserEntityChart extends React.Component<
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
         // Check if given range is valid
-        if (
-          [
-            "week",
-            "month",
-            "year",
-            "all_time",
-            "this_year",
-            "this_month",
-            "this_week",
-          ].indexOf(range) < 0
-        ) {
+        if (isValidStatRange(currRange)) {
           this.setState({
             hasError: true,
             loading: false,
