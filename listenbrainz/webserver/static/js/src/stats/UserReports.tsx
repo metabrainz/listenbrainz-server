@@ -10,7 +10,7 @@ import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
 import { getPageProps } from "../utils";
-import {getAllStatRanges} from "./utils";
+import { getAllStatRanges } from "./utils";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
