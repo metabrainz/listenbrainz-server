@@ -102,16 +102,18 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
   );
 }
 
-export function isInvalidStatRange(range: string): boolean {
-  return (
-    [
-      "week",
-      "month",
-      "year",
-      "all_time",
-      "this_year",
-      "this_month",
-      "this_week",
-    ].indexOf(range) < 0
-  );
+export function getAllStatRanges(): Map<UserStatsAPIRange, string> {
+  const ranges = new Map<UserStatsAPIRange, string>();
+  ranges.set("this_week", "This Week");
+  ranges.set("this_month", "This Month");
+  ranges.set("this_year", "This Year");
+  ranges.set("week", "Last Week");
+  ranges.set("month", "Last Month");
+  ranges.set("year", "Last Year");
+  ranges.set("all_time", "All time");
+  return ranges;
+}
+
+export function isInvalidStatRange(range: UserStatsAPIRange): boolean {
+  return !getAllStatRanges().has(range);
 }
