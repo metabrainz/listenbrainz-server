@@ -41,7 +41,7 @@ def calculate_listening_activity(spark_date_format):
     # much cheaper than joining with a separate time range table. We still join the grouped data with
     # a separate time range table to fill any gaps i.e. time ranges with no listens get a value of 0
     # instead of being completely omitted from the final result.
-    result = run_query(f""" 
+    result = run_query(f"""
         WITH bucket_listen_counts AS (
             SELECT date_format(listened_at, '{spark_date_format}') AS time_range
                  , count(listened_at) AS listen_count
@@ -60,7 +60,7 @@ def calculate_listening_activity(spark_date_format):
                     ) AS listening_activity
               FROM time_range
          LEFT JOIN bucket_listen_counts
-             USING (time_range) 
+             USING (time_range)
     """)
     return result.toLocalIterator()
 
