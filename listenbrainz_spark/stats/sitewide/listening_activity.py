@@ -43,7 +43,7 @@ def calculate_listening_activity(spark_date_format):
     # instead of being completely omitted from the final result.
     result = run_query(f""" 
         WITH bucket_listen_counts AS (
-            SELECT date_format(listened_at, {spark_date_format}) AS time_range
+            SELECT date_format(listened_at, '{spark_date_format}') AS time_range
                  , count(listened_at) AS listen_count
               FROM listens
           GROUP BY time_range
