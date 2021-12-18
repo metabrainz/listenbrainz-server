@@ -65,7 +65,7 @@ def get_listening_activity(stats_range: str, message_type="user_listening_activi
     details). These values are used on the listening activity reports.
     """
     logger.debug(f"Calculating listening_activity_{stats_range}")
-    from_date, to_date = setup_time_range(stats_range)
+    from_date, to_date, _, _, _ = setup_time_range(stats_range)
     get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
     data = calculate_listening_activity()
     messages = create_messages(data=data, stats_range=stats_range,

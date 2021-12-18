@@ -22,33 +22,40 @@ time_range_schema = StructType([
 logger = logging.getLogger(__name__)
 
 
-def calculate_listening_activity():
+def calculate_listening_activity(spark_date_format):
     """ Calculate number of listens for each user in time ranges given in the "time_range" table.
     The time ranges are as follows:
         1) week - each day with weekday name of the past 2 weeks.
         2) month - each day the past 2 months.
         3) year - each month of the past 2 years.
         4) all_time - each year starting from LAST_FM_FOUNDING_YEAR (2002)
+
+    Args:
+        spark_date_format: the date format
     """
-    # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
+    # calculates the number of listens in each time range for each user, count(listened_at) so that
     # group without listens are counted as 0, count(*) gives 1.
-    result = run_query(""" 
-        WITH intermediate_table AS (
-            SELECT to_unix_timestamp(first(time_range.start)) as from_ts
-                 , to_unix_timestamp(first(time_range.end)) as to_ts
-                 , time_range.time_range AS time_range
-                 , count(listens.listened_at) as listen_count
-              FROM time_range
-         LEFT JOIN listens
-                ON listens.listened_at BETWEEN time_range.start AND time_range.end
-          GROUP BY time_range.time_range
+    # this query is much different that the user listening activity stats query because an earlier
+    # version of this query which was similar to that caused OutOfMemory on yearly and all time
+    # ranges. It turns converting each listened_at to the needed date format and grouping by it is
+    # much cheaper than joining with a separate time range table. We still join the grouped data with
+    # a separate time range table to fill any gaps i.e. time ranges with no listens get a value of 0
+    # instead of being completely omitted from the final result.
+    result = run_query(f""" 
+        WITH bucket_listen_counts AS (
+            SELECT date_format(listened_at, {spark_date_format}) AS time_range
+                 , count(listened_at) AS listen_count
+              FROM listens
+          GROUP BY time_range
         )
             SELECT sort_array(
                        collect_list(
-                           struct(from_ts, to_ts, time_range, listen_count)
+                           struct(start AS from_ts, end AS to_ts, time_range, listen_count)
                         )
                     ) AS listening_activity
-              FROM intermediate_table
+              FROM time_range
+         LEFT JOIN bucket_listen_counts
+             USING (time_range) 
     """)
     return result.toLocalIterator()
 
@@ -63,9 +70,9 @@ def get_listening_activity(stats_range: str):
     details). These values are used on the listening activity reports.
     """
     logger.debug(f"Calculating listening_activity_{stats_range}")
-    from_date, to_date = setup_time_range(stats_range)
+    from_date, to_date, _, _, spark_date_format = setup_time_range(stats_range)
     get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
-    data = calculate_listening_activity()
+    data = calculate_listening_activity(spark_date_format)
     messages = create_messages(data=data, stats_range=stats_range, from_date=from_date, to_date=to_date)
     logger.debug("Done!")
     return messages
