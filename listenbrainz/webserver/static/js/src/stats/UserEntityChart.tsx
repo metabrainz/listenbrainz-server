@@ -21,6 +21,7 @@ import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import { getPageProps } from "../utils";
 import {
+  getAllStatRanges,
   getChartEntityDetails,
   isInvalidStatRange,
   userChartEntityToListen,
@@ -434,16 +435,7 @@ export default class UserEntityChart extends React.Component<
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
 
-    type UserStatsPair = [UserStatsAPIRange, string];
-    const ranges: Array<UserStatsPair> = [
-      ["this_week", "This Week"],
-      ["this_month", "This Month"],
-      ["this_year", "This Year"],
-      ["week", "Week"],
-      ["month", "Month"],
-      ["year", "Year"],
-      ["all_time", "All Time"],
-    ];
+    const ranges = getAllStatRanges();
 
     // We receive the items in inverse order so we need to reorder them
     const listenableItems: BaseListenFormat[] =
@@ -493,27 +485,27 @@ export default class UserEntityChart extends React.Component<
                           data-toggle="dropdown"
                           type="button"
                         >
-                          {`${range.replace(/_/g, " ")}`}
+                          {ranges.get(range)}
                           <span className="caret" />
                         </button>
                         <ul className="dropdown-menu" role="menu">
-                          {ranges.map((stats_range) => {
+                          {Array.from(ranges, ([stat_type, stat_name]) => {
                             return (
                               <li>
                                 <a
                                   href={this.buildURLParams(
                                     1,
-                                    stats_range[0],
+                                    stat_type,
                                     entity
                                   )}
                                   role="button"
                                   onClick={(e) => {
                                     this.handleClickEvent(e, () => {
-                                      this.changeRange(stats_range[0]);
+                                      this.changeRange(stat_type);
                                     });
                                   }}
                                 >
-                                  {stats_range[1]}
+                                  {stat_name}
                                 </a>
                               </li>
                             );

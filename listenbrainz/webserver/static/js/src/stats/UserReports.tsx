@@ -10,6 +10,7 @@ import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
 import { getPageProps } from "../utils";
+import {getAllStatRanges} from "./utils";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
@@ -78,27 +79,19 @@ export default class UserReports extends React.Component<
     const { apiUrl, user } = this.props;
 
     type UserStatsPair = [UserStatsAPIRange, string];
-    const ranges: Array<UserStatsPair> = [
-      ["this_week", "This Week"],
-      ["this_month", "This Month"],
-      ["this_year", "This Year"],
-      ["week", "Week"],
-      ["month", "Month"],
-      ["year", "Year"],
-      ["all_time", "All Time"],
-    ];
+    const ranges = getAllStatRanges();
     return (
       <div>
         <div className="row mt-15">
           <div className="col-xs-12">
-            {ranges.map((stats_range) => {
+            {Array.from(ranges, ([stat_type, stat_name]) => {
               return (
                 <Pill
-                  active={range === stats_range[0]}
+                  active={range === stat_type}
                   type="secondary"
-                  onClick={() => this.changeRange(stats_range[0])}
+                  onClick={() => this.changeRange(stat_type)}
                 >
-                  {stats_range[1]}
+                  {stat_name}
                 </Pill>
               );
             })}
