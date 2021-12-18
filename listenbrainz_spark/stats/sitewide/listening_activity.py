@@ -54,7 +54,7 @@ def calculate_listening_activity(spark_date_format):
                                   to_unix_timestamp(start) AS from_ts
                                 , to_unix_timestamp(end) AS to_ts
                                 , time_range
-                                , listen_count
+                                , COALESCE(listen_count, 0) AS listen_count
                             )
                         )
                     ) AS listening_activity
