@@ -50,7 +50,12 @@ def calculate_listening_activity(spark_date_format):
         )
             SELECT sort_array(
                        collect_list(
-                           struct(start AS from_ts, end AS to_ts, time_range, listen_count)
+                            struct(
+                                  to_unix_timestamp(start) AS from_ts
+                                , to_unix_timestamp(end) AS to_ts
+                                , time_range
+                                , listen_count
+                            )
                         )
                     ) AS listening_activity
               FROM time_range
