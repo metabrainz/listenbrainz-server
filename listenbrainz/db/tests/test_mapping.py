@@ -31,7 +31,7 @@ class MappingTestCase(TimescaleTestCase):
             "artist_credit_id": 204,
             "recording_mbid": "00000737-3a59-4499-b30a-31fe2464555d",
             "release_mbid": "a2589025-8517-45ab-9d64-fe927ba087b1",
-            "release_name": "Batman Returns",
+            "release": "Batman Returns",
             "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"],
             "artist": "Danny Elfman",
             "title": "The Final Confrontation, Part 1"
@@ -41,7 +41,7 @@ class MappingTestCase(TimescaleTestCase):
             "artist_credit_id": 133549,
             "recording_mbid": "c5bfd98d-ccde-4cf3-8abb-63fad1b6065a",
             "release_mbid": "5da4af04-d796-4d07-801d-a878e83dea48",
-            "release_name": "Random Is Resistance",
+            "release": "Random Is Resistance",
             "artist_mbids": ["797bcf41-0e02-431d-ab99-020e1cb3d0fd"],
             "artist": "Rotersand",
             "title": "A Number and a Name"
@@ -51,7 +51,7 @@ class MappingTestCase(TimescaleTestCase):
             "artist_credit_id": None,
             "recording_mbid": None,
             "release_mbid": None,
-            "release_name": None,
+            "release": None,
             "artist_mbids": None,
             "artist": None,
             "title": None
@@ -61,7 +61,7 @@ class MappingTestCase(TimescaleTestCase):
             "artist_credit_id": None,
             "recording_mbid": "67bcde07-bfb1-4b30-88ba-6b995ec04123",
             "release_mbid": "27280632-fa33-3801-a5b1-081ed0b65bb3",
-            "release_name": "Year Zero",
+            "release": "Year Zero",
             "artist_mbids": ["b7ffd2af-418f-4be2-bdd1-22f8b48613da"],
             "artist": "Nine Inch Nails",
             "title": "The Warning"
