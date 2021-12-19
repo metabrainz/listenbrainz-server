@@ -1,5 +1,3 @@
-import logging
-
 ORDER_DESC = 0
 ORDER_ASC = 1
 ORDER_TEXT = [ "DESC", "ASC" ]
@@ -13,13 +11,6 @@ from listenbrainz.listenstore import listenstore
 import listenbrainz.listen as listen
 ListenStore = listenstore.ListenStore
 Listen = listen.Listen
-
-
-# Certain modules configure logging on a module-level context, so we have to
-# configure logging as early as possible or some loggers will be disabled by
-# reconfiguring logging.
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)s %(message)s')
 
 
 # ╭∩╮
