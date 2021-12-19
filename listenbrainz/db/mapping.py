@@ -24,34 +24,6 @@ class MsidMbidModel(BaseModel):
         allow_reuse=True
     )(check_valid_uuid)
 
-    def get_entity_type_and_id(self) -> Tuple[str, str]:
-        """ Returns a tuple of two elements, first of which is a whether the
-         uuid returned is mbid or msid and the second element is the actual
-         uuid returned.
-
-         If a mbid was submitted we return it. If only msid was submitted, we
-         try to resolve one and return the resolved mbid. If mbid could not be
-         resolved we
-         """
-        if self.recording_mbid:
-            return "recording_mbid", self.recording_mbid
-
-        # try to resolve msid to a mbid
-        query = """
-            SELECT recording_mbid::TEXT
-              FROM mbid_mapping
-             WHERE recording_msid = :msid
-               AND recording_mbid IS NOT NULL
-        """
-        with timescale.engine.connect() as connection:
-            result = connection.execute(text(query), msid=self.recording_msid)
-            row = result.fetchone()
-            if row:
-                return "recording_mbid", row["recording_mbid"]
-
-        # neither mbid was submitted nor we could resolve one, send msid
-        return "recording_msid", self.recording_msid
-
 
 def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]):
     query = """
