@@ -23,8 +23,8 @@ import {
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
-import { getPageProps } from "../utils";
+import APIServiceClass from "../utils/APIService";
+import { getPageProps } from "../utils/utils";
 import { getEntityLink } from "../stats/utils";
 import ComponentToImage from "./ComponentToImage";
 
