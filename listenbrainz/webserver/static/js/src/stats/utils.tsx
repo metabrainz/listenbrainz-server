@@ -109,6 +109,8 @@ export function getAllStatRanges(): Map<UserStatsAPIRange, string> {
   ranges.set("this_year", "This Year");
   ranges.set("week", "Last Week");
   ranges.set("month", "Last Month");
+  ranges.set("quarter", "Last 3 months");
+  ranges.set("half_yearly", "Last 6 months");
   ranges.set("year", "Last Year");
   ranges.set("all_time", "All time");
   return ranges;

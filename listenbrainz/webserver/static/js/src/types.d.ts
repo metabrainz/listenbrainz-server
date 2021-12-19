@@ -283,6 +283,8 @@ declare type UserEntityResponse =
 declare type UserStatsAPIRange =
   | "all_time"
   | "year"
+  | "half_yearly"
+  | "quarter"
   | "month"
   | "week"
   | "this_year"
