@@ -276,7 +276,7 @@ def request_candidate_sets(days, top, similar, users, html):
         "users": users,
         "html_flag": html
     }
-    send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', params=params)
+    send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', **params)
 
 
 @cli.command(name='request_recommendations')
