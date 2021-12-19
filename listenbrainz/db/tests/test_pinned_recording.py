@@ -109,7 +109,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
         ]
 
         submitted_data = msb_db.insert_all_in_transaction(recordings)
-        msids = [(x["ids"]["recording_msid"], x["ids"]["artist_msid"]) for x in submitted_data]
+        msids = [x["ids"]["recording_msid"] for x in submitted_data]
 
         with ts.engine.connect() as connection:
             query = """
@@ -128,7 +128,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             query = """INSERT INTO mbid_mapping
                                    (recording_msid, recording_mbid, match_type, last_updated)
                             VALUES (:msid, '076255b4-1575-11ec-ac84-135bf6a670e3', 'exact_match', now())"""
-            connection.execute(sqlalchemy.text(query), {"msid": msids[0][0]})
+            connection.execute(sqlalchemy.text(query), msid=msids[0])
 
         pinned_recs = [
             {
@@ -165,8 +165,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             "track_name": "Wicked Game",
             "artist_name": "Tom Ellis",
             "additional_info": {
-                "recording_msid": msids[1][0],
-                "artist_msid": msids[1][1]
+                "recording_msid": msids[1][0]
             }
         })
 
@@ -181,18 +180,11 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
                 "recording_mbid": "076255b4-1575-11ec-ac84-135bf6a670e3",
                 "release_mbid": "1fd178b4-1575-11ec-b98a-d72392cd8c97",
                 "artist_mbids": ["6a221fda-2200-11ec-ac7d-dfa16a57158f"],
-                "recording_msid": msids[0][0],
-                "artist_msid": msids[0][1]
+                "recording_msid": msids[0][0]
             }
         })
 
     def test_Pinned_Recording_model(self):
-        # test missing required arguments error
-        with self.assertRaises(ValidationError):
-            WritablePinnedRecording(
-                user_id=self.user["id"],
-            )
-
         # test recording_msid = invalid uuid format
         with self.assertRaises(ValidationError):
             WritablePinnedRecording(
