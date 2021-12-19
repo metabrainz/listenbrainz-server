@@ -35,7 +35,7 @@ def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]):
              , recording_name AS title
              , release_name AS release
           FROM mbid_mapping m
-          JOIN mbid_mapping_metadata mm
+     LEFT JOIN mbid_mapping_metadata mm
          USING (recording_mbid)
          WHERE recording_msid IN :msids
             OR recording_mbid IN :mbids
