@@ -132,12 +132,12 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
 
         pinned_recs = [
             {
-                "recording_msid": msids[0][0],
+                "recording_msid": msids[0],
                 "recording_mbid": "076255b4-1575-11ec-ac84-135bf6a670e3",
                 "blurb_content": "Awesome recordings with mapped data"
             },
             {
-                "recording_msid": msids[1][0],
+                "recording_msid": msids[1],
                 "recording_mbid": None,
                 "blurb_content": "Great recording but unmapped"
             }
