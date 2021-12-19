@@ -58,7 +58,7 @@ class MappingTestCase(TimescaleTestCase):
         }
         recording_4 = {
             "recording_msid": "00005660-7eb0-4592-a74b-14f3de9cc4cb",
-            "artist_credit_id": None,
+            "artist_credit_id": 347,
             "recording_mbid": "67bcde07-bfb1-4b30-88ba-6b995ec04123",
             "release_mbid": "27280632-fa33-3801-a5b1-081ed0b65bb3",
             "release": "Year Zero",
