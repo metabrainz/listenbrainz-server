@@ -12,8 +12,8 @@ class MappingTestCase(TimescaleTestCase):
             if recording["recording_mbid"]:
                 connection.execute(text("""
                     INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
-                                                       artist_mbids, artist_credit_name, recording_name) 
-                     VALUES (:artist_credit_id, :recording_mbid ::UUID, :release_mbid ::UUID, :release, 
+                                                       artist_mbids, artist_credit_name, recording_name)
+                     VALUES (:artist_credit_id, :recording_mbid ::UUID, :release_mbid ::UUID, :release,
                              :artist_mbids ::UUID[], :artist, :title)
                 """), **recording)
                 match_type = "exact_match"
@@ -56,26 +56,38 @@ class MappingTestCase(TimescaleTestCase):
             "artist": None,
             "title": None
         }
+        recording_4 = {
+            "recording_msid": "00005660-7eb0-4592-a74b-14f3de9cc4cb",
+            "artist_credit_id": None,
+            "recording_mbid": "67bcde07-bfb1-4b30-88ba-6b995ec04123",
+            "release_mbid": "27280632-fa33-3801-a5b1-081ed0b65bb3",
+            "release_name": "Year Zero",
+            "artist_mbids": ["b7ffd2af-418f-4be2-bdd1-22f8b48613da"],
+            "artist": "Nine Inch Nails",
+            "title": "The Warning"
+        }
 
         self.insert_recording_in_mapping(recording_1)
         self.insert_recording_in_mapping(recording_2)
         self.insert_recording_in_mapping(recording_3)
+        self.insert_recording_in_mapping(recording_4)
 
         # artist_credit_id is not retrieved, remove from dict before checking
         del recording_1["artist_credit_id"]
         del recording_2["artist_credit_id"]
         del recording_3["artist_credit_id"]
+        del recording_4["artist_credit_id"]
 
         expected_mbid_map = {
             recording_1["recording_mbid"]: recording_1,
             recording_2["recording_mbid"]: recording_2
         }
         expected_msid_map = {
-            recording_3["recording_msid"]: recording_3
+            recording_4["recording_msid"]: recording_4
         }
         mbid_map, msid_map = load_recordings_from_mapping(
             mbids=[recording_1["recording_mbid"], recording_2["recording_mbid"]],
-            msids=[recording_3["recording_msid"]]
+            msids=[recording_3["recording_msid"], recording_4["recording_msid"]]
         )
         self.assertEqual(expected_msid_map, msid_map)
         self.assertEqual(expected_mbid_map, mbid_map)

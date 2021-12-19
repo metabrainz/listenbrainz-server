@@ -95,8 +95,9 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
             msid_pin_map[pin.recording_msid] = pin
 
     msid_metadatas = load_recordings_from_msids(msid_pin_map.keys())
-    for msid, pin in msid_pin_map.items():
-        metadata = msid_metadatas[msid]
+    for metadata in msid_metadatas:
+        msid = metadata["ids"]["recording_msid"]
+        pin = msid_pin_map[msid]
         pin.track_metadata = {
             "track_name": metadata["payload"]["title"],
             "artist_name": metadata["payload"]["artist"],
@@ -107,7 +108,7 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
 
     mapping_mbid_metadata, mapping_msid_metadata = load_recordings_from_mapping(mbid_pin_map.keys(), msid_pin_map.keys())
 
-    for mbid, pin in mbid_pin_map.keys():
+    for mbid, pin in mbid_pin_map.items():
         metadata = mapping_mbid_metadata[mbid]
         pin.track_metadata = {
             "track_name": metadata["title"],
@@ -121,8 +122,8 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
             }
         }
 
-    for msid, pin in msid_pin_map.keys():
-        if msid in mapping_msid_metadata:
+    for msid, pin in msid_pin_map.items():
+        if msid not in mapping_msid_metadata:
             continue
 
         metadata = mapping_msid_metadata[msid]
