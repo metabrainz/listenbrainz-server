@@ -116,9 +116,9 @@ class ListeningActivityTestCase(StatsTestCase):
         spark_fmt = "MMMM y"
 
         mock_listen_ts.return_value = datetime(2021, 3, 5, 2, 3, 0)
-        self.assertEqual((periods[0], periods[2], step, fmt, spark_fmt, spark_fmt), listening_activity_utils.get_time_range("half_yearly"))
+        self.assertEqual((periods[0], periods[2], step, fmt, spark_fmt), listening_activity_utils.get_time_range("half_yearly"))
         mock_listen_ts.return_value = datetime(2021, 9, 7, 2, 3, 0)
-        self.assertEqual((periods[1], periods[3], step, fmt, spark_fmt, spark_fmt), listening_activity_utils.get_time_range("half_yearly"))
+        self.assertEqual((periods[1], periods[3], step, fmt, spark_fmt), listening_activity_utils.get_time_range("half_yearly"))
 
         step = relativedelta(days=+1)
         fmt = "%A %d %B %Y"
