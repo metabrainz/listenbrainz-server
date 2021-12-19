@@ -165,7 +165,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             "track_name": "Wicked Game",
             "artist_name": "Tom Ellis",
             "additional_info": {
-                "recording_msid": msids[1][0]
+                "recording_msid": msids[1]
             }
         })
 
@@ -180,7 +180,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
                 "recording_mbid": "076255b4-1575-11ec-ac84-135bf6a670e3",
                 "release_mbid": "1fd178b4-1575-11ec-b98a-d72392cd8c97",
                 "artist_mbids": ["6a221fda-2200-11ec-ac7d-dfa16a57158f"],
-                "recording_msid": msids[0][0]
+                "recording_msid": msids[0]
             }
         })
 
