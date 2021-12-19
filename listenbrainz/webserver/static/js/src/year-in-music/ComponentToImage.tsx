@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import ListenCard from "../listens/ListenCard";
 import { getEntityLink } from "../stats/utils";
-import Loader from "../components/Loader";
+import Loader from "../utils/Loader";
 
 export type ComponentToImageProps = {
   data: any[];
