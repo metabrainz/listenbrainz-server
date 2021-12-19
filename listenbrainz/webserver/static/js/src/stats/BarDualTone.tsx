@@ -101,6 +101,30 @@ export default function BarDualTone(
         : ["thisRangeCount"],
       itemWidth: 100,
     },
+    quarter: {
+      dateFormat: {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      },
+      legendDateFormat: {
+        month: "long",
+        year: "numeric",
+      },
+      keys: ["lastRangeCount", "thisRangeCount"],
+      itemWidth: 100,
+    },
+    half_yearly: {
+      dateFormat: {
+        month: "long",
+        year: "numeric",
+      },
+      legendDateFormat: {
+        year: "numeric",
+      },
+      keys: ["lastRangeCount", "thisRangeCount"],
+      itemWidth: 120,
+    },
     year: {
       dateFormat: {
         month: "long",
