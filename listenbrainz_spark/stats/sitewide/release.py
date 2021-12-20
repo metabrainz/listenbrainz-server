@@ -29,28 +29,41 @@ def get_releases(table: str, user_listen_count_limit, top_releases_limit: int = 
                 }
     """
     result = run_query(f"""
-        WITH intermediate_table as (
-            SELECT first(release_name) AS any_release_name
+        WITH user_counts AS (
+            SELECT user_name
+                 , first(release_name) AS release_name
                  , release_mbid
-                 , first(artist_name) AS any_artist_name
+                 , first(artist_name) AS artist_name
                  , artist_credit_mbids
                  , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM {table}
              WHERE release_name != ''
+          GROUP BY user_name
+                 , lower(release_name)
+                 , release_mbid
+                 , lower(artist_name)
+                 , artist_credit_mbids
+        ), intermediate_table AS (
+            SELECT first(release_name) AS release_name
+                 , release_mbid
+                 , first(artist_name) AS artist_name
+                 , artist_credit_mbids
+                 , SUM(listen_count) as total_listen_count
+              FROM user_counts
           GROUP BY lower(release_name)
                  , release_mbid
                  , lower(artist_name)
                  , artist_credit_mbids
-          ORDER BY listen_count DESC
+          ORDER BY total_listen_count DESC
              LIMIT {top_releases_limit}
         )
         SELECT sort_array(
                     collect_list(
                         struct(
-                            listen_count
-                          , any_release_name AS release_name
+                            total_listen_count AS listen_count
+                          , release_name
                           , release_mbid
-                          , any_artist_name AS artist_name
+                          , artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids
                         )
                     )
