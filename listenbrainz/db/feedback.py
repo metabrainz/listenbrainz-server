@@ -2,6 +2,7 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz.db import timescale
+from listenbrainz.db.mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz import messybrainz as msb_db
 from listenbrainz.messybrainz.data import load_recordings_from_msids
@@ -22,15 +23,15 @@ def insert(feedback: Feedback):
         connection.execute(sqlalchemy.text("""
             INSERT INTO recording_feedback (user_id, recording_msid, score)
                  VALUES (:user_id, :recording_msid, :score)
-            ON CONFLICT (user_id, recording_msid)
+            ON CONFLICT (user_id, recording_msid, recording_mbid)
           DO UPDATE SET score = :score,
                         created = NOW()
             """), {
             'user_id': feedback.user_id,
             'recording_msid': feedback.recording_msid,
+            'recording_mbid': feedback.recording_mbid,
             'score': feedback.score,
-        }
-        )
+        })
 
 
 def delete(feedback: Feedback):
@@ -89,44 +90,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         feedback = [Feedback(**dict(row)) for row in result.fetchall()]
 
     if metadata and len(feedback) > 0:
-        msids = [f.recording_msid for f in feedback]
-        index = {f.recording_msid: f for f in feedback}
-
-        # Fetch the artist and track names from MSB
-        with msb_db.engine.connect() as connection:
-            try:
-                msb_recordings = load_recordings_from_msids(connection, msids)
-            except NoDataFoundException:
-                msb_recordings = []
-
-        artist_msids = {}
-        if msb_recordings:
-            for rec in msb_recordings:
-                index[rec["ids"]["recording_msid"]].track_metadata = {
-                    "artist_name": rec["payload"]["artist"],
-                    "release_name": rec["payload"].get("release_name", ""),
-                    "track_name": rec["payload"]["title"]}
-                artist_msids[rec["ids"]["recording_msid"]
-                             ] = rec["ids"]["artist_msid"]
-
-        # Fetch the mapped MBIDs from the mapping
-        query = """SELECT recording_msid::TEXT, m.recording_mbid::TEXT, release_mbid::TEXT, artist_mbids::TEXT[]
-                     FROM mbid_mapping m
-                     JOIN mbid_mapping_metadata mm
-                       ON m.recording_mbid = mm.recording_mbid
-                    WHERE recording_msid in :msids
-                 ORDER BY recording_msid"""
-
-        with timescale.engine.connect() as connection:
-            result = connection.execute(
-                sqlalchemy.text(query), msids=tuple(msids))
-            for row in result.fetchall():
-                if row["recording_mbid"] is not None:
-                    index[row["recording_msid"]].track_metadata['additional_info'] = {
-                        "recording_mbid": row["recording_mbid"],
-                        "release_mbid": row["release_mbid"],
-                        "artist_mbids": row["artist_mbids"],
-                        "artist_msid": artist_msids[row["recording_msid"]]}
+        feedback = fetch_track_metadata_for_items(feedback)
 
     return feedback
 
@@ -136,7 +100,7 @@ def get_feedback_count_for_user(user_id: int, score=None) -> int:
 
         Args:
             user_id: the row ID of the user in the DB
-            score: If 1, fetch count for all the loved feedback, 
+            score: If 1, fetch count for all the loved feedback,
                    if -1 fetch count for all the hated feedback,
                    if None, fetch count for all feedback
 

@@ -40,29 +40,31 @@ def recording_feedback():
 
     data = request.json
 
-    if 'recording_msid' not in data or 'score' not in data:
-        log_raise_400("JSON document must contain recording_msid and "
+    if ('recording_msid' not in data and 'recording_mbid' not in data) or 'score' not in data:
+        log_raise_400("JSON document must contain either recording_msid or recording_mbid, and "
                       "score top level keys", data)
 
-    if 'recording_msid' in data and 'score' in data and len(data) > 2:
-        log_raise_400("JSON document may only contain recording_msid and "
+    if set(data) - {"recording_msid", "recording_mbid", "score"}:
+        log_raise_400("JSON document may only contain recording_msid, recording_mbid and "
                       "score top level keys", data)
 
     try:
-        feedback = Feedback(user_id=user["id"], recording_msid=data["recording_msid"], score=data["score"])
+        feedback = Feedback(
+            user_id=user["id"],
+            recording_msid=data.get("recording_msid", None),
+            recording_mbid=data.get("recording_mbid", None),
+            score=data["score"]
+        )
     except ValidationError as e:
         # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
         # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line error message.
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       data)
-    try:
-        if feedback.score == 0:
-            db_feedback.delete(feedback)
-        else:
-            db_feedback.insert(feedback)
-    except Exception as e:
-        current_app.logger.error("Error while inserting recording feedback: {}".format(e))
-        raise APIInternalServerError("Something went wrong. Please try again.")
+
+    if feedback.score == 0:
+        db_feedback.delete(feedback)
+    else:
+        db_feedback.insert(feedback)
 
     return jsonify({'status': 'ok'})
 
