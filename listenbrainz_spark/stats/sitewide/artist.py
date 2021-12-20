@@ -19,7 +19,7 @@ def get_artists(table: str, user_listen_count_limit, top_artists_limit: int = SI
     result = run_query(f"""
         WITH user_counts as (
             SELECT user_name
-                 , first(artist_name) AS any_artist_name
+                 , first(artist_name) AS artist_name
                  , artist_credit_mbids
                  , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM {table}
@@ -27,7 +27,7 @@ def get_artists(table: str, user_listen_count_limit, top_artists_limit: int = SI
                  , lower(artist_name)
                  , artist_credit_mbids
         ), intermediate_table AS (
-            SELECT first(artist_name) AS any_artist_name
+            SELECT first(artist_name) AS artist_name
                  , artist_credit_mbids
                  , SUM(listen_count) as total_listen_count
               FROM user_counts
@@ -40,7 +40,7 @@ def get_artists(table: str, user_listen_count_limit, top_artists_limit: int = SI
                     collect_list(
                         struct(
                             total_listen_count AS listen_count
-                          , any_artist_name AS artist_name
+                          , artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids
                         )
                     )
