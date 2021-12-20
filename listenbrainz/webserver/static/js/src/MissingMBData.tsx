@@ -30,7 +30,7 @@ export interface MissingMBDataState {
   currPage?: number;
   totalPages: number;
   loading: boolean;
-  direction: BrainzPlayDirection;
+  // direction: BrainzPlayDirection;
 }
 
 export default class MissingMBDataPage extends React.Component<
@@ -52,7 +52,7 @@ export default class MissingMBDataPage extends React.Component<
         ? Math.ceil(props.missingData.length / this.expectedDataPerPage)
         : 0,
       loading: false,
-      direction: "down",
+      // direction: "down",
     };
 
     this.MissingMBDataTable = React.createRef();
@@ -161,7 +161,7 @@ export default class MissingMBDataPage extends React.Component<
       currPage,
       totalPages,
       loading,
-      direction,
+      // direction,
     } = this.state;
     const { user, newAlert } = this.props;
     const { APIService } = this.context;
@@ -178,7 +178,7 @@ export default class MissingMBDataPage extends React.Component<
     });
     return (
       <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
-        <div className="col-xs-12">
+        <div className="col-xs-12 col-md-8">
           <div>
             <div id="missingMBData" ref={this.MissingMBDataTable}>
               <h2>Missing Data:</h2>
@@ -196,7 +196,7 @@ export default class MissingMBDataPage extends React.Component<
                 const additionalActions = (
                   <>
                     <ListenControl
-                      className="btn-primary btn-success"
+                      buttonClassName="btn btn-sm btn-success"
                       icon={faPlus}
                       title=""
                       // eslint-disable-next-line react/jsx-no-bind
@@ -257,18 +257,18 @@ export default class MissingMBDataPage extends React.Component<
           </div>
         </div>
         <div
-          className="col-xs-12"
+          className="col-xs-12 col-md-4"
           /* eslint-disable no-dupe-keys */
           style={{
             position: "-webkit-sticky",
             // @ts-ignore
             position: "sticky",
-            top: 20,
+            top: "20px",
           }}
           /* eslint-enable no-dupe-keys */
         >
           <BrainzPlayer
-            direction={direction}
+            // direction={direction}
             listens={missingMBDataAsListen}
             newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
