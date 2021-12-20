@@ -1,10 +1,11 @@
 from copy import copy
 
 from datetime import datetime
-from pydantic import BaseModel, NonNegativeInt, validator, constr
-from data.model.validators import check_valid_uuid
+from pydantic import NonNegativeInt, validator
+from listenbrainz.db.mapping import MsidMbidModel
 
-class Feedback(BaseModel):
+
+class Feedback(MsidMbidModel):
     """ Represents a feedback object
         Args:
             user_id: the row id of the user in the DB
@@ -16,10 +17,8 @@ class Feedback(BaseModel):
 
     user_id: NonNegativeInt
     user_name: str = None
-    recording_msid: constr(min_length=1)
     score: int
     created: datetime = None
-    track_metadata: dict = None
 
     def to_api(self) -> dict:
         fb = copy(self)
@@ -35,5 +34,3 @@ class Feedback(BaseModel):
         if scr not in [-1, 0, 1]:
             raise ValueError('Score can have a value of 1, 0 or -1.')
         return scr
-
-    _is_recording_msid_valid: classmethod = validator("recording_msid", allow_reuse=True)(check_valid_uuid)
