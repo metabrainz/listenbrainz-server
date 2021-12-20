@@ -20,7 +20,7 @@ def get_artists(table: str, user_listen_count_limit, top_artists_limit: int = SI
         WITH intermediate_table as (
             SELECT first(artist_name) AS any_artist_name
                  , artist_credit_mbids
-                 , count(*) as listen_count
+                 , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM {table}
           GROUP BY lower(artist_name)
                  , artist_credit_mbids

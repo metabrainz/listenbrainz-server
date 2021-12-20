@@ -34,7 +34,7 @@ def get_releases(table: str, user_listen_count_limit, top_releases_limit: int = 
                  , release_mbid
                  , first(artist_name) AS any_artist_name
                  , artist_credit_mbids
-                 , count(*) as listen_count
+                 , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM {table}
              WHERE release_name != ''
           GROUP BY lower(release_name)
