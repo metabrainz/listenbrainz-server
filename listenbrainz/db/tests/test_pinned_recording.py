@@ -5,9 +5,10 @@ import sqlalchemy
 from pydantic import ValidationError
 import time
 
+from listenbrainz.db.mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.pinned_recording import (
     WritablePinnedRecording,
-    MAX_BLURB_CONTENT_LENGTH, fetch_track_metadata_for_pins,
+    MAX_BLURB_CONTENT_LENGTH
 )
 import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user as db_user
@@ -154,7 +155,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             )
 
         pins = db_pinned_rec.get_pin_history_for_user(self.user["id"], 5, 0)
-        pins_with_metadata = fetch_track_metadata_for_pins(pins)
+        pins_with_metadata = fetch_track_metadata_for_items(pins)
 
         received = [x.dict() for x in pins_with_metadata]
         # pinned recs returned in reverse order of submitted because order newest to oldest

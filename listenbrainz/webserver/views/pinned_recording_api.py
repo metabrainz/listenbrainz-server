@@ -2,7 +2,8 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.pinned_recording as db_pinned_rec
 
 from flask import Blueprint, current_app, jsonify, request
-import math
+
+from listenbrainz.db.mapping import fetch_track_metadata_for_items
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APINoContent
 from brainzutils.ratelimit import ratelimit
@@ -13,7 +14,7 @@ from listenbrainz.webserver.views.api_tools import (
     get_non_negative_param,
     validate_auth_header,
 )
-from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording, fetch_track_metadata_for_pins
+from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from pydantic import ValidationError
 
 pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
@@ -190,7 +191,7 @@ def get_pins_for_user(user_name):
         current_app.logger.error("Error while retrieving pins for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
-    pinned_recordings = fetch_track_metadata_for_pins(pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
     pinned_recordings = [_pinned_recording_to_api(pin) for pin in pinned_recordings]
     total_count = db_pinned_rec.get_pin_count_for_user(user_id=user["id"])
 
@@ -263,7 +264,7 @@ def get_pins_for_user_following(user_name):
         raise APINotFound("Cannot find user: %s" % user_name)
 
     pinned_recordings = db_pinned_rec.get_pins_for_user_following(user_id=user["id"], count=count, offset=offset)
-    pinned_recordings = fetch_track_metadata_for_pins(pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
     pinned_recordings = [_pinned_recording_to_api(pin) for pin in pinned_recordings]
 
     return jsonify(

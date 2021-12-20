@@ -30,7 +30,6 @@ class PinnedRecording(MsidMbidModel):
     blurb_content: constr(max_length=MAX_BLURB_CONTENT_LENGTH) = None
     created: datetime
     pinned_until: datetime
-    track_metadata: dict = None
 
     _validate_created_tzinfo: classmethod = validator("created", always=True, allow_reuse=True)(check_datetime_has_tzinfo)
 
@@ -77,66 +76,3 @@ class WritablePinnedRecording(PinnedRecording):
     @validator("pinned_until", pre=True, always=True)
     def set_pinned_until_to_default(cls, pin_until, values):
         return pin_until or values["created"] + timedelta(days=DAYS_UNTIL_UNPIN)
-
-
-def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
-    """ Fetches track_metadata for every object in a list of PinnedRecordings.
-
-        Args:
-            pins (List of PinnedRecordings): the PinnedRecordings to fetch track_metadata for.
-        Returns:
-            The given list of PinnedRecording objects with updated track_metadata.
-    """
-    msid_pin_map, mbid_pin_map = {}, {}
-    for pin in pins:
-        if pin.recording_mbid:
-            mbid_pin_map[pin.recording_mbid] = pin
-        else:
-            msid_pin_map[pin.recording_msid] = pin
-
-    msid_metadatas = load_recordings_from_msids(msid_pin_map.keys())
-    for metadata in msid_metadatas:
-        msid = metadata["ids"]["recording_msid"]
-        pin = msid_pin_map[msid]
-        pin.track_metadata = {
-            "track_name": metadata["payload"]["title"],
-            "artist_name": metadata["payload"]["artist"],
-            "additional_info": {
-                "recording_msid": msid
-            }
-        }
-
-    mapping_mbid_metadata, mapping_msid_metadata = load_recordings_from_mapping(mbid_pin_map.keys(), msid_pin_map.keys())
-
-    for mbid, pin in mbid_pin_map.items():
-        metadata = mapping_mbid_metadata[mbid]
-        pin.track_metadata = {
-            "track_name": metadata["title"],
-            "artist_name": metadata["artist"],
-            "release_name": metadata["release"],
-            "additional_info": {
-                "recording_msid": metadata["recording_msid"],
-                "recording_mbid": metadata["recording_mbid"],
-                "release_mbid": metadata["release_mbid"],
-                "artist_mbids": metadata["artist_mbids"]
-            }
-        }
-
-    for msid, pin in msid_pin_map.items():
-        if msid not in mapping_msid_metadata:
-            continue
-
-        metadata = mapping_msid_metadata[msid]
-        pin.track_metadata = {
-            "track_name": metadata["title"],
-            "artist_name": metadata["artist"],
-            "release_name": metadata["release"],
-            "additional_info": {
-                "recording_msid": metadata["recording_msid"],
-                "recording_mbid": metadata["recording_mbid"],
-                "release_mbid": metadata["release_mbid"],
-                "artist_mbids": metadata["artist_mbids"]
-            }
-        }
-
-    return pins
