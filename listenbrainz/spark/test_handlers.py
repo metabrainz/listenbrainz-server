@@ -34,6 +34,7 @@ class HandlersTestCase(unittest.TestCase):
 
     def setUp(self):
         self.app = create_app()
+        self.maxDiff = None
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
     @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')

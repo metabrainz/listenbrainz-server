@@ -10,6 +10,9 @@ from listenbrainz_spark.stats.user.tests import StatsTestCase
 
 class UserEntityTestCase(StatsTestCase):
 
+    def setUp(self):
+        self.maxDiff = None
+
     @classmethod
     def setUpClass(cls):
         super(UserEntityTestCase, cls).setUpClass()
