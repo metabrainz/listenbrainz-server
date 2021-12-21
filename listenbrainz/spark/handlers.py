@@ -54,7 +54,6 @@ def notify_user_stats_update(stat_type):
 
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
-    current_app.logger.info("Handle user entity called!!")
     db_stats.insert_multiple_user_jsonb_data(data)
 
 
