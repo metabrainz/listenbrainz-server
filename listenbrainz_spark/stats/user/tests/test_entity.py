@@ -97,18 +97,22 @@ class UserEntityTestCase(StatsTestCase):
 
     def test_skip_incorrect_artists_stats(self):
         """ Test to check if entries with incorrect data is skipped for top user artists """
-        with open(self.path_to_data_file('user_top_artists_incorrect.json')) as f:
+        with open(self.path_to_data_file("user_top_artists_incorrect.json")) as f:
             data = json.load(f)
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            'user_name': "test",
-            'artists': data
+            "data":  [
+                {
+                    "user_name": "test",
+                    "data": data,
+                }
+            ]
         }
 
-        messages = entity.create_messages([mock_result], 'artists', 'all_time',
+        messages = entity.create_messages([mock_result], "artists", "all_time",
                                           datetime.now(), datetime.now(), "user_entity")
-        received_list = next(messages)['data']
+        received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
         self.assertListEqual(data[:1], received_list)
@@ -120,13 +124,17 @@ class UserEntityTestCase(StatsTestCase):
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            'user_name': "test",
-            'releases': data
+            "data":  [
+                {
+                    "user_name": "test",
+                    "data": data,
+                }
+            ]
         }
 
         messages = entity.create_messages([mock_result], 'releases', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
-        received_list = next(messages)['data']
+        received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
         self.assertListEqual(data[:1], received_list)
@@ -138,13 +146,17 @@ class UserEntityTestCase(StatsTestCase):
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            'user_name': "test",
-            'recordings': data
+            "data":  [
+                {
+                    "user_name": "test",
+                    "data": data,
+                }
+            ]
         }
 
         messages = entity.create_messages([mock_result], 'recordings', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
-        received_list = next(messages)['data']
+        received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
         self.assertListEqual(data[:1], received_list)
