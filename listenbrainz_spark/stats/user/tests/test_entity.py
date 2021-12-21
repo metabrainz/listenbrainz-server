@@ -91,26 +91,22 @@ class UserEntityTestCase(StatsTestCase):
         expected_list = recordings[:1000]
         self.assertCountEqual(received_list, expected_list)
 
-        received_count = message["count"]
+        received_count = message['count']
         expected_count = 2000
         self.assertEqual(received_count, expected_count)
 
     def test_skip_incorrect_artists_stats(self):
         """ Test to check if entries with incorrect data is skipped for top user artists """
-        with open(self.path_to_data_file("user_top_artists_incorrect.json")) as f:
+        with open(self.path_to_data_file('user_top_artists_incorrect.json')) as f:
             data = json.load(f)
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            "data":  [
-                {
-                    "user_name": "test",
-                    "data": data,
-                }
-            ]
+            'user_name': "test",
+            'artists': data
         }
 
-        messages = entity.create_messages([mock_result], "artists", "all_time",
+        messages = entity.create_messages([mock_result], 'artists', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
         received_list = next(messages)["data"][0]["data"]
 
@@ -124,12 +120,8 @@ class UserEntityTestCase(StatsTestCase):
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            "data":  [
-                {
-                    "user_name": "test",
-                    "data": data,
-                }
-            ]
+            'user_name': "test",
+            'releases': data
         }
 
         messages = entity.create_messages([mock_result], 'releases', 'all_time',
@@ -146,12 +138,8 @@ class UserEntityTestCase(StatsTestCase):
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            "data":  [
-                {
-                    "user_name": "test",
-                    "data": data,
-                }
-            ]
+            'user_name': "test",
+            'recordings': data
         }
 
         messages = entity.create_messages([mock_result], 'recordings', 'all_time',
