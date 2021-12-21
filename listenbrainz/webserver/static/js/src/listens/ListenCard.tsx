@@ -61,6 +61,8 @@ export type ListenCardProps = {
   feedbackComponent?: JSX.Element;
   // These go in the dropdown menu
   additionalMenuItems?: JSX.Element;
+  // This optional JSX element is for a custom icon
+  additionalActions?: JSX.Element;
 };
 
 type ListenCardState = {
@@ -219,6 +221,7 @@ export default class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
+    const { additionalActions } = this.props;
 
     const recordingMSID = _get(
       listen,
@@ -442,6 +445,7 @@ export default class ListenCard extends React.Component<
                   <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
                 )}
               </button>
+              {additionalActions}
             </div>
           </div>
         </div>
