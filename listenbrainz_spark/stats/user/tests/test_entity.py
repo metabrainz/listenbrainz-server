@@ -86,11 +86,12 @@ class UserEntityTestCase(StatsTestCase):
                                           datetime.now(), datetime.now(), "user_entity")
 
         message = next(messages)
-        received_list = message['data']
+        user_data = message["data"][0]
+        received_list = user_data["data"]
         expected_list = recordings[:1000]
         self.assertCountEqual(received_list, expected_list)
 
-        received_count = message['count']
+        received_count = message["count"]
         expected_count = 2000
         self.assertEqual(received_count, expected_count)
 

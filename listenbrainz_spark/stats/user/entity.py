@@ -1,7 +1,7 @@
 import json
 import logging
 from datetime import datetime
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Dict
 
 from more_itertools import chunked
 from pydantic import ValidationError
@@ -34,7 +34,7 @@ USERS_PER_MESSAGE = 10
 
 
 def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
-        -> Iterator[Optional[UserEntityStatMessage]]:
+        -> Iterator[Optional[Dict]]:
     """ Get the top entity for all users for specified stats_range """
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
 
@@ -87,7 +87,7 @@ def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str
 
 def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime,
                     message_type) \
-        -> Iterator[Optional[UserEntityStatMessage]]:
+        -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to the webserver via RabbitMQ
 

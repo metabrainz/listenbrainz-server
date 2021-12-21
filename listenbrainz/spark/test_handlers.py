@@ -2,21 +2,17 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
+from flask import current_app
+
 from data.model.common_stat import StatRange, StatRecordList
+from data.model.user_artist_stat import UserArtistRecord
+from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
+                                                                  UserRecommendationsRecord)
 from data.model.user_daily_activity import UserDailyActivityRecord
 from data.model.user_entity import UserEntityRecord
 from data.model.user_listening_activity import UserListeningActivityRecord
-from data.model.user_artist_stat import UserArtistRecord
-
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
                                                       UserMissingMusicBrainzDataJson)
-
-from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
-                                                                  UserRecommendationsRecord)
-
-
-from flask import current_app
-
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
@@ -26,7 +22,6 @@ from listenbrainz.spark.handlers import (
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     notify_cf_recording_recommendations_generation)
-
 from listenbrainz.webserver import create_app
 
 
@@ -42,17 +37,19 @@ class HandlersTestCase(unittest.TestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_user_entity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
         data = {
-            'musicbrainz_id': 'iliekcomputers',
             'type': 'user_entity',
             'entity': 'artists',
             'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
-            'count': 1,
-            'data': [{
-                'artist_name': 'Kanye West',
-                'listen_count': 200,
-            }],
+            'data': {
+                'musicbrainz_id': 'iliekcomputers',
+                'data': [{
+                    'artist_name': 'Kanye West',
+                    'listen_count': 200,
+                }],
+                'count': 1,
+            },
         }
         mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
         mock_new_user_stats.return_value = True
@@ -452,5 +449,5 @@ class HandlersTestCase(unittest.TestCase):
                 release_name="No Place Is Home",
                 recording_name="How High"
             )]),
-            'cf'
-        )
+                                          'cf'
+                                          )
