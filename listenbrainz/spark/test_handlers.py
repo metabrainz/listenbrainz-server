@@ -73,6 +73,7 @@ class HandlersTestCase(DatabaseTestCase):
 
         received = db_stats.get_user_stats(1, 'all_time', 'artists')
         expected = StatApi[UserEntityRecord](
+            user_id=1,
             to_ts=10,
             from_ts=1,
             count=1,
@@ -85,12 +86,14 @@ class HandlersTestCase(DatabaseTestCase):
                         artist_name='Kanye West',
                     )
                 ]
-            )
+            ),
+            last_updated=received.last_updated
         )
         self.assertEqual(received, expected)
 
         received = db_stats.get_user_stats(2, 'all_time', 'artists')
         expected = StatApi[UserEntityRecord](
+            user_id=2,
             to_ts=10,
             from_ts=1,
             count=2,
@@ -108,7 +111,8 @@ class HandlersTestCase(DatabaseTestCase):
                         artist_name='Tom Ellis',
                     )
                 ]
-            )
+            ),
+            last_updated=received.last_updated
         )
         self.assertEqual(received, expected)
 
