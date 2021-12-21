@@ -30,7 +30,6 @@ export interface MissingMBDataState {
   currPage?: number;
   totalPages: number;
   loading: boolean;
-  // direction: BrainzPlayDirection;
 }
 
 export default class MissingMBDataPage extends React.Component<
@@ -52,7 +51,6 @@ export default class MissingMBDataPage extends React.Component<
         ? Math.ceil(props.missingData.length / this.expectedDataPerPage)
         : 0,
       loading: false,
-      // direction: "down",
     };
 
     this.MissingMBDataTable = React.createRef();
@@ -156,13 +154,7 @@ export default class MissingMBDataPage extends React.Component<
   };
 
   render() {
-    const {
-      missingData,
-      currPage,
-      totalPages,
-      loading,
-      // direction,
-    } = this.state;
+    const { missingData, currPage, totalPages, loading } = this.state;
     const { user, newAlert } = this.props;
     const { APIService } = this.context;
     const missingMBDataAsListen = missingData.map((data) => {
@@ -268,7 +260,6 @@ export default class MissingMBDataPage extends React.Component<
           /* eslint-enable no-dupe-keys */
         >
           <BrainzPlayer
-            // direction={direction}
             listens={missingMBDataAsListen}
             newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
