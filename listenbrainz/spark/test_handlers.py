@@ -30,6 +30,7 @@ from listenbrainz.webserver import create_app
 class HandlersTestCase(DatabaseTestCase):
 
     def setUp(self):
+        super(HandlersTestCase, self).setUp()
         self.app = create_app()
         self.maxDiff = None
 
