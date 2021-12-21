@@ -10,9 +10,6 @@ from listenbrainz_spark.stats.user.tests import StatsTestCase
 
 class UserEntityTestCase(StatsTestCase):
 
-    def setUp(self):
-        self.maxDiff = None
-
     @classmethod
     def setUpClass(cls):
         super(UserEntityTestCase, cls).setUpClass()
@@ -91,7 +88,7 @@ class UserEntityTestCase(StatsTestCase):
         expected_list = recordings[:1000]
         self.assertCountEqual(received_list, expected_list)
 
-        received_count = message['count']
+        received_count = user_data['count']
         expected_count = 2000
         self.assertEqual(received_count, expected_count)
 

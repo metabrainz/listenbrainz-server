@@ -6,6 +6,9 @@ from listenbrainz_spark.stats.user.tests import StatsTestCase
 
 class EntityTestCase(StatsTestCase):
 
+    def setUp(self):
+        self.maxDiff = None
+
     def test_get_artists(self):
         with open(self.path_to_data_file('user_top_artists_output.json')) as f:
             expected = json.load(f)

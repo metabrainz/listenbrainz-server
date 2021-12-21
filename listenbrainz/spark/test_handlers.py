@@ -42,14 +42,16 @@ class HandlersTestCase(unittest.TestCase):
             'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
-            'data': {
-                'musicbrainz_id': 'iliekcomputers',
-                'data': [{
-                    'artist_name': 'Kanye West',
-                    'listen_count': 200,
-                }],
-                'count': 1,
-            },
+            'data': [
+                {
+                    'musicbrainz_id': 'iliekcomputers',
+                    'data': [{
+                        'artist_name': 'Kanye West',
+                        'listen_count': 200,
+                    }],
+                    'count': 1,
+                }
+            ]
         }
         mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
         mock_new_user_stats.return_value = True
