@@ -3,8 +3,6 @@
 """
 from pydantic import BaseModel, NonNegativeInt, constr
 
-from data.model.common_stat_spark import StatMessage
-
 
 class ListeningActivityRecord(BaseModel):
     """ Each individual record for user's listening activity contains the time range,
