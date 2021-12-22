@@ -64,7 +64,7 @@ def handle_user_entity(data):
 
 
 def _handle_user_activity_stats(stats_type, data):
-    values = [(entry["musicbrainz_id"], None, json.dumps(entry["data"])) for entry in data["data"]]
+    values = [(entry["musicbrainz_id"], 0, json.dumps(entry["data"])) for entry in data["data"]]
     db_stats.insert_multiple_user_jsonb_data(
         stats_type,
         data["stats_range"],
