@@ -8,7 +8,7 @@ from flask import url_for, current_app
 
 from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
-from data.model.user_entity import UserEntityRecord
+from data.model.user_entity import EntityRecord
 
 from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore

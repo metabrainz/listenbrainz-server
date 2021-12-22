@@ -12,7 +12,7 @@ from data.model.common_stat import StatApi, StatisticsRange
 from data.model.user_artist_map import UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
-from data.model.user_entity import UserEntityRecord
+from data.model.user_entity import EntityRecord
 from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
@@ -838,7 +838,7 @@ def year_in_music(user_name: str):
 
 
 
-def _process_user_entity(stats: StatApi[UserEntityRecord], offset, count) -> Tuple[list, int]:
+def _process_user_entity(stats: StatApi[EntityRecord], offset, count) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:
