@@ -20,7 +20,3 @@ class ListeningActivityRecord(BaseModel):
     to_ts: NonNegativeInt
     listen_count: NonNegativeInt
 
-
-class UserListeningActivityStatMessage(StatMessage[ListeningActivityRecord]):
-    """ Format of messages sent to the ListenBrainz Server """
-    musicbrainz_id: constr(min_length=1)

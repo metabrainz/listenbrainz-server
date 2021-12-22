@@ -3,11 +3,14 @@ import logging
 from datetime import datetime
 from typing import Iterator, Optional, Dict
 
+from more_itertools import chunked
 from pydantic import ValidationError
 
-from data.model.user_listening_activity import UserListeningActivityStatMessage
+from data.model.common_stat_spark import MultipleUserStatRecords, StatMessage
+from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.common.listening_activity import setup_time_range
+from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.utils import get_listens_from_new_dump
 
 
@@ -93,20 +96,31 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
     """
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
-    for entry in data:
-        _dict = entry.asDict(recursive=True)
+
+    for entries in chunked(data, USERS_PER_MESSAGE):
+        multiple_user_stats = []
+        for entry in entries:
+            _dict = entry.asDict(recursive=True)
+            try:
+                user_stat = MultipleUserStatRecords[ListeningActivityRecord](
+                    musicbrainz_id=_dict["user_name"],
+                    data=_dict["listening_activity"]
+                )
+                multiple_user_stats.append(user_stat)
+            except ValidationError:
+                logger.error(f"""ValidationError while calculating {stats_range} listening_activity for user: 
+                {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+
         try:
-            model = UserListeningActivityStatMessage(**{
-                "musicbrainz_id": _dict["user_name"],
+            model = StatMessage[MultipleUserStatRecords[ListeningActivityRecord]](**{
                 "type": message_type,
                 "stats_range": stats_range,
                 "from_ts": from_ts,
                 "to_ts": to_ts,
-                "data": _dict["listening_activity"]
+                "data": multiple_user_stats
             })
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error(f"""ValidationError while calculating {stats_range} listening_activity for user: 
-            {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+            logger.error(f"ValidationError while calculating {stats_range} listening_activity:", exc_info=True)
             yield None
