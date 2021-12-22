@@ -1,7 +1,7 @@
 import json
 import logging
 from datetime import datetime
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Dict
 
 from pydantic import ValidationError
 
@@ -55,7 +55,8 @@ def calculate_listening_activity():
     return result.toLocalIterator()
 
 
-def get_listening_activity(stats_range: str, message_type="user_listening_activity"):
+def get_listening_activity(stats_range: str, message_type="user_listening_activity")\
+        -> Iterator[Optional[Dict]]:
     """ Compute the number of listens for a time range compared to the previous range
 
     Given a time range, this computes a histogram of a users' listens for that range
@@ -76,7 +77,7 @@ def get_listening_activity(stats_range: str, message_type="user_listening_activi
 
 
 def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime, message_type) \
-        -> Iterator[Optional[UserListeningActivityStatMessage]]:
+        -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to webserver via RabbitMQ
 

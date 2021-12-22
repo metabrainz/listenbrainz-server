@@ -1,10 +1,10 @@
 from typing import Iterator
 
-from data.model.user_artist_stat import UserArtistRecord
+from data.model.user_artist_stat import ArtistRecord
 from listenbrainz_spark.stats import run_query
 
 
-def get_artists(table: str) -> Iterator[UserArtistRecord]:
+def get_artists(table: str) -> Iterator[ArtistRecord]:
     """ Get artist information (artist_name, artist_credit_id etc) for every user
         ordered by listen count
 
