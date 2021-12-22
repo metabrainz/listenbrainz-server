@@ -53,37 +53,35 @@ def notify_user_stats_update(stat_type):
 
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
-    db_stats.insert_multiple_user_jsonb_data(data)
+    values = [(entry["musicbrainz_id"], entry["count"], json.dumps(entry["data"])) for entry in data["data"]]
+    db_stats.insert_multiple_user_jsonb_data(
+        data["entity"],
+        data["stats_range"],
+        data["from_ts"],
+        data["to_ts"],
+        values
+    )
 
 
-def _handle_user_activity_stats(stats_type, stats_model, data):
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-    stats_range = data['stats_range']
-
-    try:
-        db_stats.insert_user_jsonb_data(user['id'], stats_type, stats_model(**data))
-    except ValidationError:
-        current_app.logger.error(f"""ValidationError while inserting {stats_range} {stats_type} for 
-        user with user_id: {user['id']}. Data: {json.dumps(data, indent=3)}""", exc_info=True)
+def _handle_user_activity_stats(stats_type, data):
+    values = [(entry["musicbrainz_id"], None, json.dumps(entry["data"])) for entry in data["data"]]
+    db_stats.insert_multiple_user_jsonb_data(
+        stats_type,
+        data["stats_range"],
+        data["from_ts"],
+        data["to_ts"],
+        values
+    )
 
 
 def handle_user_listening_activity(data):
     """ Take listening activity stats for user and save it in database. """
-    _handle_user_activity_stats('listening_activity', StatRange[ListeningActivityRecord], data)
+    _handle_user_activity_stats("listening_activity", data)
 
 
 def handle_user_daily_activity(data):
     """ Take daily activity stats for user and save it in database. """
-    _handle_user_activity_stats('daily_activity', StatRange[DailyActivityRecord], data)
+    _handle_user_activity_stats("daily_activity", data)
 
 
 def handle_sitewide_entity(data):

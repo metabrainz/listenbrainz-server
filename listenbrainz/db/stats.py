@@ -88,8 +88,7 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
         })
 
 
-def insert_multiple_user_jsonb_data(data):
-    values = [(entry['musicbrainz_id'], entry['count'], json.dumps(entry['data'])) for entry in data['data']]
+def insert_multiple_user_jsonb_data(stats_type, stats_range, from_ts, to_ts, values):
     query = """
         INSERT INTO statistics.user (user_id, stats_type, stats_range, data, count, from_ts, to_ts, last_updated)
              SELECT "user".id
@@ -111,10 +110,10 @@ def insert_multiple_user_jsonb_data(data):
                   , last_updated = EXCLUDED.last_updated
     """
     formatted_query = sql.SQL(query).format(
-        stats_type=sql.Literal(data['entity']),
-        stats_range=sql.Literal(data['stats_range']),
-        from_ts=sql.Literal(data['from_ts']),
-        to_ts=sql.Literal(data['to_ts'])
+        stats_type=sql.Literal(stats_type),
+        stats_range=sql.Literal(stats_range),
+        from_ts=sql.Literal(from_ts),
+        to_ts=sql.Literal(to_ts)
     )
     connection = db.engine.raw_connection()
     try:
