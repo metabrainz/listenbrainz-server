@@ -7,7 +7,7 @@ from pydantic.generics import GenericModel
 
 SparkT = TypeVar("SparkT")
 
-class MultipleUserStatRecords(GenericModel, Generic[SparkT]):
+class UserStatRecords(GenericModel, Generic[SparkT]):
     musicbrainz_id: constr(min_length=1)
     data: List[SparkT]
 
