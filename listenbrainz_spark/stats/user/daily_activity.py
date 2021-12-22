@@ -9,7 +9,7 @@ from more_itertools import chunked
 from pydantic import ValidationError
 
 import listenbrainz_spark
-from data.model.common_stat_spark import MultipleUserStatRecords, StatMessage
+from data.model.common_stat_spark import UserStatRecords, StatMessage
 from data.model.user_daily_activity import DailyActivityRecord
 from listenbrainz_spark.stats import run_query, get_dates_for_stats_range
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
@@ -100,7 +100,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
         for entry in entries:
             _dict = entry.asDict(recursive=True)
             try:
-                user_stat = MultipleUserStatRecords[DailyActivityRecord](
+                user_stat = UserStatRecords[DailyActivityRecord](
                     musicbrainz_id=_dict["user_name"],
                     data=_dict["daily_activity"]
                 )
@@ -110,7 +110,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
                 {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
 
         try:
-            model = StatMessage[MultipleUserStatRecords[DailyActivityRecord]](**{
+            model = StatMessage[UserStatRecords[DailyActivityRecord]](**{
                 "type": "user_daily_activity",
                 "stats_range": stats_range,
                 "from_ts": from_ts,

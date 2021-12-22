@@ -6,7 +6,7 @@ from typing import Iterator, Optional, Dict
 from more_itertools import chunked
 from pydantic import ValidationError
 
-from data.model.common_stat_spark import MultipleUserStatRecords, StatMessage
+from data.model.common_stat_spark import UserStatRecords, StatMessage
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.common.listening_activity import setup_time_range
@@ -102,7 +102,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
         for entry in entries:
             _dict = entry.asDict(recursive=True)
             try:
-                user_stat = MultipleUserStatRecords[ListeningActivityRecord](
+                user_stat = UserStatRecords[ListeningActivityRecord](
                     musicbrainz_id=_dict["user_name"],
                     data=_dict["listening_activity"]
                 )
@@ -112,7 +112,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
                 {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
 
         try:
-            model = StatMessage[MultipleUserStatRecords[ListeningActivityRecord]](**{
+            model = StatMessage[UserStatRecords[ListeningActivityRecord]](**{
                 "type": message_type,
                 "stats_range": stats_range,
                 "from_ts": from_ts,
