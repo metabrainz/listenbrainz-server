@@ -18,6 +18,8 @@
 
 import json
 
+import pytest
+
 from listenbrainz.messybrainz import data
 from listenbrainz import messybrainz
 from listenbrainz.messybrainz.testing import MessyBrainzTestCase
@@ -44,6 +46,7 @@ recording_diff_case = {
 }
 
 
+@pytest.mark.skip
 class DataTestCase(MessyBrainzTestCase):
 
     def test_get_id_from_meta_hash(self):

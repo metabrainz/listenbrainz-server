@@ -11,7 +11,6 @@ from listenbrainz.messybrainz.data import submit_recording, load_recordings_from
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 
-@pytest.mark.skip
 class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
 
     def setUp(self):

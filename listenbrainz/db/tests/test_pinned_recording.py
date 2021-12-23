@@ -20,7 +20,6 @@ from listenbrainz.db import timescale as ts
 from listenbrainz import messybrainz as msb_db
 
 
-@pytest.mark.skip
 class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
 
     def setUp(self):
