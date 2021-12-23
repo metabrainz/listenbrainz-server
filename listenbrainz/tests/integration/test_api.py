@@ -7,6 +7,7 @@ from flask import url_for, current_app
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz import db
+from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
@@ -16,6 +17,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APITestCase, self).setUp()
+        MessyBrainzTestCase.setUp(self)
         self.followed_user = db_user.get_or_create(3, 'followed_user')
         self.follow_user_url = url_for("social_api_v1.follow_user", user_name=self.followed_user["musicbrainz_id"])
         self.follow_user_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
@@ -506,7 +508,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('additional_info.json'), 'r') as f:
             payload = json.load(f)
 
-        time.sleep(120)
+        time.sleep(15)
 
         payload['payload'][0]['listened_at'] = 1280258690
         response = self.send_data(payload)
