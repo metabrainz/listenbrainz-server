@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 
+import pytest
 import sqlalchemy
 from pydantic import ValidationError
 import time
@@ -19,6 +20,7 @@ from listenbrainz.db import timescale as ts
 from listenbrainz import messybrainz as msb_db
 
 
+@pytest.skip
 class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
 
     def setUp(self):

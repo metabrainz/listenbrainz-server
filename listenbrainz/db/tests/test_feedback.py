@@ -1,3 +1,4 @@
+import pytest
 import sqlalchemy
 
 from listenbrainz.db.model.feedback import Feedback
@@ -10,6 +11,7 @@ from listenbrainz.messybrainz.data import submit_recording, load_recordings_from
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 
+@pytest.skip
 class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
 
     def setUp(self):
