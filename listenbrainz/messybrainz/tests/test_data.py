@@ -51,7 +51,6 @@ class DataTestCase(MessyBrainzTestCase):
 
     def test_get_id_from_meta_hash(self):
         with messybrainz.engine.connect() as connection:
-            time.sleep(30)
             recording_msid = data.submit_recording(connection, recording)
             self.assertEqual(recording_msid, str(data.get_id_from_meta_hash(connection, recording)))
 
