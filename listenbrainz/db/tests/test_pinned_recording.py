@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 
-import pytest
 import sqlalchemy
 from pydantic import ValidationError
 import time

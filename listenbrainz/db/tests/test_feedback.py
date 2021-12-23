@@ -1,4 +1,3 @@
-import pytest
 import sqlalchemy
 
 from listenbrainz.db.model.feedback import Feedback
