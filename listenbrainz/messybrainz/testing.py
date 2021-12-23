@@ -31,11 +31,12 @@ class MessyBrainzTestCase(unittest.TestCase):
 
     def setUp(self):
         init_db_connection(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
-        log.error("MessyBrainzTestCase.setUp called")
         self.drop_tables()
         self.init_db()
+        log.error("MessyBrainzTestCase.setUp called")
 
     def tearDown(self):
+        self.drop_tables()
         log.error("MessyBrainzTestCase.tearDown called")
 
     def init_db(self):
