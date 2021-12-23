@@ -46,11 +46,12 @@ def delete(feedback: Feedback):
             DELETE FROM recording_feedback
              WHERE user_id = :user_id
                AND recording_msid = :recording_msid
+               AND recording_mbid = :recording_mbid
             """), {
             'user_id': feedback.user_id,
             'recording_msid': feedback.recording_msid,
-        }
-        )
+            'recording_mbid': feedback.recording_mbid
+        })
 
 
 def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None, metadata: bool = False) -> List[Feedback]:
@@ -69,14 +70,17 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
     """
 
     args = {"user_id": user_id, "limit": limit, "offset": offset}
-    query = """ SELECT user_id,
-                       "user".musicbrainz_id AS user_name,
-                       recording_msid::text, score,
-                       recording_feedback.created
+    query = """ SELECT user_id
+                     , "user".musicbrainz_id AS user_name
+                     , recording_msid::text
+                     , recording_mbid::text
+                     , score
+                     , recording_feedback.created
                   FROM recording_feedback
                   JOIN "user"
                     ON "user".id = recording_feedback.user_id
-                 WHERE user_id = :user_id """
+                 WHERE user_id = :user_id
+    """
 
     if score:
         query += " AND score = :score"
@@ -122,11 +126,11 @@ def get_feedback_count_for_user(user_id: int, score=None) -> int:
     return count
 
 
-def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, score: int = None) -> List[Feedback]:
+def get_feedback_for_recording(recording: str, limit: int, offset: int, score: int = None) -> List[Feedback]:
     """ Get a list of recording feedback for a given recording in descending order of their creation
 
         Args:
-            recording_msid: the MessyBrainz ID of the recording
+            recording: the msid or mbid of the recording
             score: the score value by which the results are to be filtered. If 1 then returns the loved recordings,
                    if -1 returns hated recordings.
             limit: number of rows to be returned
@@ -136,15 +140,19 @@ def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, sco
             A list of Feedback objects
     """
 
-    args = {"recording_msid": recording_msid, "limit": limit, "offset": offset}
-    query = """ SELECT user_id,
-                       "user".musicbrainz_id AS user_name,
-                       recording_msid::text, score,
-                       recording_feedback.created
+    args = {"recording": recording, "limit": limit, "offset": offset}
+    query = """ SELECT user_id
+                     , "user".musicbrainz_id AS user_name
+                     , recording_msid::text
+                     , recording_mbid::text
+                     , score
+                     , recording_feedback.created
                   FROM recording_feedback
                   JOIN "user"
                     ON "user".id = recording_feedback.user_id
-                 WHERE recording_msid = :recording_msid """
+                 WHERE recording_msid = :recording
+                    OR recording_mbid = :recording
+    """
 
     if score:
         query += " AND score = :score"
@@ -180,35 +188,46 @@ def get_feedback_count_for_recording(recording_msid: str) -> int:
     return count
 
 
-def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: List[str]) -> List[Feedback]:
+def get_feedback_for_multiple_recordings_for_user(user_id: int, user_name: str, recording_msids: List[str],
+                                                  recording_mbids: List[str]) -> List[Feedback]:
     """ Get a list of recording feedback given by the user for given recordings
+
+        For each recording msid and recording mbid,
+            - if record is present then return it
+            - if record is not present then return a pseudo record with score = 0
 
         Args:
             user_id: the row ID of the user in the DB
-            recording_list: list of recording_msid for which feedback records are to be obtained
-                            - if record is present then return it
-                            - if record is not present then return a pseudo record with score = 0
+            user_name: the user name of the user, not used in the query but only for creating the
+                response to be returned from the api
+            recording_msids: list of recording_msid for which feedback records are to be obtained
+            recording_mbids: list of recording_mbid for which feedback records are to be obtained
 
         Returns:
             A list of Feedback objects
     """
-
-    args = {"user_id": user_id, "recording_list": recording_list}
-    query = """ WITH rf AS (
-              SELECT user_id, recording_msid::text, score
+    query = """
+            WITH rf AS (
+              SELECT user_id, recording_msid::text, recording_mbid::text, score
                 FROM recording_feedback
-               WHERE recording_feedback.user_id=:user_id
-                )
-              SELECT COALESCE(rf.user_id, :user_id) AS user_id,
-                     "user".musicbrainz_id AS user_name,
-                     rec_msid AS recording_msid,
-                     COALESCE(rf.score, 0) AS score
-                FROM UNNEST(:recording_list) rec_msid
+               WHERE recording_feedback.user_id = :user_id
+            )
+              SELECT recording_msid
+                   , recording_mbid
+                   , COALESCE(rf.score, 0) AS score
+                FROM UNNEST(:recording_msids) recording_msid
      LEFT OUTER JOIN rf
-                  ON rf.recording_msid::text = rec_msid
-                JOIN "user"
-                  ON "user".id = :user_id """
+               USING (recording_msid)
+           UNION ALL
+              SELECT recording_msid
+                   , recording_mbid
+                   , COALESCE(rf.score, 0) AS score
+                FROM UNNEST(:recording_mbids) recording_mbid
+     LEFT OUTER JOIN rf
+               USING (recording_mbid)
+    """
 
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), args)
-        return [Feedback(**dict(row)) for row in result.fetchall()]
+        result = connection.execute(sqlalchemy.text(query), user_id=user_id,
+                                    recording_msids=recording_msids, recording_mbids=recording_mbids)
+        return [Feedback(user_id=user_id, user_name=user_name, **dict(row)) for row in result.fetchall()]
