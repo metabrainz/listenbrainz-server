@@ -309,13 +309,21 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     bring_up_unit_db
     unit_setup
     echo "Running tests"
-    docker_compose_run listenbrainz pytest "$@"
+    docker_compose_run listenbrainz dockerize \
+                  -wait tcp://lb_db:5432 -timeout 60s \
+                  -wait tcp://redis:6379 -timeout 60s \
+                  -wait tcp://rabbitmq:5672 -timeout 60s \
+                bash -c "$@"
     RET=$?
     unit_dcdown
     exit $RET
 else
     # Else, we have containers, just run tests
     echo "Running tests"
-    docker_compose_run listenbrainz pytest "$@"
+    docker_compose_run listenbrainz dockerize \
+                  -wait tcp://lb_db:5432 -timeout 60s \
+                  -wait tcp://redis:6379 -timeout 60s \
+                  -wait tcp://rabbitmq:5672 -timeout 60s \
+                bash -c "$@"
     exit $?
 fi
