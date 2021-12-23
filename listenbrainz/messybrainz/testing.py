@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-
+import logging
 import os
 import unittest
 from listenbrainz.messybrainz import init_db_connection, run_sql_script
@@ -23,15 +23,20 @@ from listenbrainz import config
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'messybrainz', 'sql')
 
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
 
 class MessyBrainzTestCase(unittest.TestCase):
 
     def setUp(self):
         init_db_connection(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
+        log.error("MessyBrainzTestCase.setUp called")
         self.drop_tables()
         self.init_db()
 
     def tearDown(self):
+        log.error("MessyBrainzTestCase.tearDown called")
         self.drop_tables()
 
     def init_db(self):
