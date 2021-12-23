@@ -46,7 +46,6 @@ recording_diff_case = {
 }
 
 
-@pytest.mark.skip
 class DataTestCase(MessyBrainzTestCase):
 
     def test_get_id_from_meta_hash(self):
