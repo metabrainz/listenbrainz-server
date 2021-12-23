@@ -125,10 +125,10 @@ def get_feedback_for_user(user_name):
 @feedback_api_bp.route("/recording/<recording_msid>/get-feedback", methods=["GET"])
 @crossdomain()
 @ratelimit()
-def get_feedback_for_recording(recording_msid):
+def get_feedback_for_recording(recording):
     """
-    Get feedback for recording with given ``recording_msid``. The format for the JSON returned
-    is defined in our :ref:`feedback-json-doc`.
+    Get feedback for recording with given ``recording_mbid`` or ``recording_msid``. The format for the
+    JSON returned is defined in our :ref:`feedback-json-doc`.
 
     :param score: Optional, If 1 then returns the loved recordings, if -1 returns hated recordings.
     :type score: ``int``
@@ -142,8 +142,8 @@ def get_feedback_for_recording(recording_msid):
     :resheader Content-Type: *application/json*
     """
 
-    if not is_valid_uuid(recording_msid):
-        log_raise_400("%s MSID format invalid." % recording_msid)
+    if not is_valid_uuid(recording):
+        log_raise_400("%s mbid or msid format invalid." % recording)
 
     score = _parse_int_arg('score')
 
@@ -156,8 +156,8 @@ def get_feedback_for_recording(recording_msid):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_recording(recording_msid=recording_msid, limit=count, offset=offset, score=score)
-    total_count = db_feedback.get_feedback_count_for_recording(recording_msid)
+    feedback = db_feedback.get_feedback_for_recording(recording=recording, limit=count, offset=offset, score=score)
+    total_count = db_feedback.get_feedback_count_for_recording(recording)
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -180,26 +180,40 @@ def get_feedback_for_recordings_for_user(user_name):
     If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
 
     :param recordings: comma separated list of recording_msids for which feedback records are to be fetched.
+        this param is deprecated and will be removed in the future. use recording_msids instead.
     :type recordings: ``str``
+    :param recording_msids: comma separated list of recording_msids for which feedback records are to be fetched.
+    :type recording_msids: ``str``
+    :param recording_mbids: comma separated list of recording_mbids for which feedback records are to be fetched.
+    :type recording_mbids: ``str``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
 
-    recordings = request.args.get('recordings')
+    recording_msids = request.args.get("recording_msids")
+    if recording_msids is None:
+        recording_msids = request.args.get("recordings")
+    recording_mbids = request.args.get("recording_mbids")
 
-    if not recordings:
-        log_raise_400("'recordings' has no valid recording MSID.")
+    if recording_msids:
+        recording_msids.extend(parse_param_list(recording_msids))
+    if recording_mbids:
+        recording_msids.extend(parse_param_list(recording_mbids))
 
-    recording_list = parse_param_list(recordings)
-    if not len(recording_list):
-        raise APIBadRequest("'recordings' has no valid recording MSID.")
+    if not recording_msids and not recording_mbids:
+        log_raise_400("No valid recording msid or recording mbid found.")
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
     try:
-        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
+        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            user_id=user["id"],
+            user_name=user_name,
+            recording_msids=recording_msids,
+            recording_mbids=recording_mbids
+        )
     except ValidationError as e:
         # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
         # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line error message.
