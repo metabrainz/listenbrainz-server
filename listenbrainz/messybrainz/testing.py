@@ -37,7 +37,6 @@ class MessyBrainzTestCase(unittest.TestCase):
 
     def tearDown(self):
         log.error("MessyBrainzTestCase.tearDown called")
-        self.drop_tables()
 
     def init_db(self):
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
