@@ -17,6 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA)
 
 import json
+import time
 
 import pytest
 
@@ -50,6 +51,7 @@ class DataTestCase(MessyBrainzTestCase):
 
     def test_get_id_from_meta_hash(self):
         with messybrainz.engine.connect() as connection:
+            time.sleep(30)
             recording_msid = data.submit_recording(connection, recording)
             self.assertEqual(recording_msid, str(data.get_id_from_meta_hash(connection, recording)))
 
