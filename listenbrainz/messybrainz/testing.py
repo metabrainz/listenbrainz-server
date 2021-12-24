@@ -31,7 +31,9 @@ class MessyBrainzTestCase(unittest.TestCase):
         self.init_db()
 
     def tearDown(self):
-        self.drop_tables()
+        pass
+        # dropping the tables in tearDown is causing API tests to fail
+        # self.drop_tables()
 
     def init_db(self):
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
