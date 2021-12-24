@@ -506,8 +506,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('additional_info.json'), 'r') as f:
             payload = json.load(f)
 
-        time.sleep(15)
-
         payload['payload'][0]['listened_at'] = 1280258690
         response = self.send_data(payload)
         self.assert200(response)
