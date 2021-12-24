@@ -44,4 +44,4 @@ jobs:
       continue-on-error: true
 
     - name: Run tests
-      run: ./test.sh int
+      run: ./test.sh -m integration

@@ -41,4 +41,4 @@ jobs:
       continue-on-error: true
 
     - name: Run tests
-      run: ./test.sh
+      run: ./test.sh -m "not integration"

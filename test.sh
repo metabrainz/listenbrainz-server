@@ -6,13 +6,15 @@ if [ "$CI" == "true" ] ; then
     echo "Running in CI mode"
 fi
 
-# UNIT TESTS
-# ./test.sh                build unit test containers, bring up, make database, test, bring down
+# BACKEND TESTS
+# ./test.sh                           build test containers, bring up, make database, test, bring down
+# ./test.sh -m integration            run only integration tests
+# ./test.sh -m "not integration"      run all tests except integration tests
 # for development:
-# ./test.sh -u             build unit test containers, bring up background and load database if needed
-# ./test.sh [params]       run unit tests, passing optional params to inner test
-# ./test.sh -s             stop unit test containers without removing
-# ./test.sh -d             clean unit test containers
+# ./test.sh -u             build test containers, bring up background and load database if needed
+# ./test.sh [params]       run tests, passing optional params to inner test
+# ./test.sh -s             stop test containers without removing
+# ./test.sh -d             clean test containers
 
 # FRONTEND TESTS
 # ./test.sh fe             run frontend tests
@@ -25,17 +27,12 @@ fi
 # ./test.sh spark          run spark tests
 # ./test.sh spark -b       build spark test containers
 
-# INTEGRATION TESTS
-# ./test.sh int            run integration tests
 
 COMPOSE_FILE_LOC=docker/docker-compose.test.yml
 COMPOSE_PROJECT_NAME=listenbrainz_test
 
 SPARK_COMPOSE_FILE_LOC=docker/docker-compose.spark.yml
 SPARK_COMPOSE_PROJECT_NAME=listenbrainz_spark_test
-
-INT_COMPOSE_FILE_LOC=docker/docker-compose.integration.yml
-INT_COMPOSE_PROJECT_NAME=listenbrainz_int
 
 
 if [[ ! -d "docker" ]]; then
@@ -55,12 +52,6 @@ function invoke_docker_compose_spark {
                    "$@"
 }
 
-function invoke_docker_compose_int {
-    docker-compose -f $INT_COMPOSE_FILE_LOC \
-                   -p $INT_COMPOSE_PROJECT_NAME \
-                   "$@"
-}
-
 function docker_compose_run {
     invoke_docker_compose run --rm --user `id -u`:`id -g` "$@"
 }
@@ -69,10 +60,6 @@ function docker_compose_run_spark {
     # We run spark tests as root and not the local user due to the requirement for
     # the uid to exist as a real user
     invoke_docker_compose_spark run --rm "$@"
-}
-
-function docker_compose_run_int {
-    invoke_docker_compose_int run --rm --user `id -u`:`id -g` "$@"
 }
 
 function build_unit_containers {
@@ -170,28 +157,6 @@ function spark_dcdown {
     invoke_docker_compose_spark down
 }
 
-function int_build {
-    invoke_docker_compose_int build
-}
-
-function int_dcdown {
-    # Shutting down all integration test containers associated with this project
-    invoke_docker_compose_int down
-}
-
-function int_setup {
-    echo "Running setup"
-    docker_compose_run_int listenbrainz dockerize \
-                  -wait tcp://lb_db:5432 -timeout 60s \
-                bash -c "python3 manage.py init_db --create-db && \
-                         python3 manage.py init_msb_db --create-db && \
-                         python3 manage.py init_ts_db --create-db"
-}
-
-function bring_up_int_containers {
-    invoke_docker_compose_int up -d lb_db redis timescale_writer rabbitmq
-}
-
 # Exit immediately if a command exits with a non-zero status.
 # set -e
 # trap cleanup EXIT  # Cleanup after tests finish running
@@ -208,34 +173,6 @@ if [ "$1" == "spark" ]; then
     docker_compose_run_spark request_consumer
     RET=$?
     spark_dcdown
-    exit $RET
-fi
-
-if [ "$1" == "int" ]; then
-    echo "Taking down old containers"
-    int_dcdown
-    echo "Building current setup"
-    int_build
-    echo "Building containers"
-    int_setup
-    echo "Bringing containers up"
-    bring_up_int_containers
-    shift
-    if [ -z "$@" ]; then
-        TESTS_TO_RUN="listenbrainz/tests/integration"
-    else
-        TESTS_TO_RUN="$@"
-    fi
-    echo "Running tests $TESTS_TO_RUN"
-
-    docker_compose_run_int listenbrainz dockerize \
-                  -wait tcp://lb_db:5432 -timeout 60s \
-                  -wait tcp://redis:6379 -timeout 60s \
-                  -wait tcp://rabbitmq:5672 -timeout 60s \
-                bash -c "pytest $TESTS_TO_RUN"
-    RET=$?
-    echo "Taking containers down"
-    int_dcdown
     exit $RET
 fi
 
@@ -309,21 +246,13 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     bring_up_unit_db
     unit_setup
     echo "Running tests"
-    docker_compose_run listenbrainz dockerize \
-                  -wait tcp://lb_db:5432 -timeout 60s \
-                  -wait tcp://redis:6379 -timeout 60s \
-                  -wait tcp://rabbitmq:5672 -timeout 60s \
-                bash -c "$@"
+    docker_compose_run listenbrainz pytest "$@"
     RET=$?
     unit_dcdown
     exit $RET
 else
     # Else, we have containers, just run tests
     echo "Running tests"
-    docker_compose_run listenbrainz dockerize \
-                  -wait tcp://lb_db:5432 -timeout 60s \
-                  -wait tcp://redis:6379 -timeout 60s \
-                  -wait tcp://rabbitmq:5672 -timeout 60s \
-                bash -c "$@"
+    docker_compose_run listenbrainz pytest "$@"
     exit $?
 fi
