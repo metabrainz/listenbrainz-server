@@ -63,7 +63,7 @@ def load_config(app):
 
     app.config.from_pyfile(config_file)
     # Output config values and some other info
-    if deploy_env in ['prod', 'beta' 'test']:
+    if deploy_env in ['prod', 'beta', 'test']:
         print('Configuration values are as follows: ')
         print(pprint.pformat(app.config, indent=4))
 
