@@ -83,11 +83,12 @@ class UserEntityTestCase(StatsTestCase):
                                           datetime.now(), datetime.now(), "user_entity")
 
         message = next(messages)
-        received_list = message['data']
+        user_data = message["data"][0]
+        received_list = user_data["data"]
         expected_list = recordings[:1000]
         self.assertCountEqual(received_list, expected_list)
 
-        received_count = message['count']
+        received_count = user_data['count']
         expected_count = 2000
         self.assertEqual(received_count, expected_count)
 
@@ -104,7 +105,7 @@ class UserEntityTestCase(StatsTestCase):
 
         messages = entity.create_messages([mock_result], 'artists', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
-        received_list = next(messages)['data']
+        received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
         self.assertListEqual(data[:1], received_list)
@@ -122,7 +123,7 @@ class UserEntityTestCase(StatsTestCase):
 
         messages = entity.create_messages([mock_result], 'releases', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
-        received_list = next(messages)['data']
+        received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
         self.assertListEqual(data[:1], received_list)
@@ -140,7 +141,7 @@ class UserEntityTestCase(StatsTestCase):
 
         messages = entity.create_messages([mock_result], 'recordings', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
-        received_list = next(messages)['data']
+        received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
         self.assertListEqual(data[:1], received_list)

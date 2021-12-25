@@ -54,24 +54,7 @@ def notify_user_stats_update(stat_type):
 
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-
-    stats_range = data['stats_range']
-    entity = data['entity']
-
-    try:
-        db_stats.insert_user_jsonb_data(user['id'], entity, StatRange[UserEntityRecord](**data))
-    except ValidationError:
-        current_app.logger.error(f"""ValidationError while inserting {stats_range} top {entity} for user
-        with user_id: {user['id']}. Data: {json.dumps({stats_range: data}, indent=3)}""", exc_info=True)
+    db_stats.insert_multiple_user_jsonb_data(data)
 
 
 def _handle_user_activity_stats(stats_type, stats_model, data):

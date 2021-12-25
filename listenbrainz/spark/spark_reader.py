@@ -95,7 +95,7 @@ class SparkReader:
             current_app.logger.error("Bad response sent to spark_reader: %s", json.dumps(response, indent=4),
                                      exc_info=True)
             return
-
+        current_app.logger.info("Received message for %s", response_type)
         try:
             response_handler = self.get_response_handler(response_type)
         except Exception:
@@ -103,7 +103,12 @@ class SparkReader:
                                      exc_info=True)
             return
 
-        response_handler(response)
+        try:
+            response_handler(response)
+        except Exception:
+            current_app.logger.error("Error in the spark reader response handler: data: %s",
+                                     json.dumps(response, indent=4), exc_info=True)
+            return
 
     def callback(self, ch, method, properties, body):
         """ Handle the data received from the queue and
