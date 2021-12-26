@@ -286,6 +286,7 @@ export default class UserPlaylists extends React.Component<
           },
         },
       };
+      // TODO: for temporary testing, revert later when import has its own UI
       const newPlaylistId = await this.APIService.importPlaylist(
         currentUser.auth_token,
         title

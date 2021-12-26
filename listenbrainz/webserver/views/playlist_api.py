@@ -355,6 +355,9 @@ def import_collection():
         raise APIBadRequest("No recordings found in the collection")
 
     recording_ids = [recording["id"] for recording in collection["recordings"]]
+    # TODO: experimenting on test, shows that some recording mbids are not in mapping table
+    # either query from MB and or use recordings?collection= endpoint from MB but that does
+    # not have other collection parameters like name.
     recordings_map, _ = load_recordings_from_mapping(recording_ids, [])
     # TODO: ask MB team for collection description, public & collaborators in ws/2/collection
     playlist = WritablePlaylist(name=collection["name"], creator_id=user["id"])
