@@ -11,6 +11,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.troi.export import export_to_spotify
+from listenbrainz.db.mapping import load_recordings_from_mapping
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
@@ -332,6 +333,45 @@ def create_playlist():
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
+
+
+@playlist_api_bp.route("/import", methods=["POST", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+@api_listenstore_needed
+def import_collection():
+    """ Import collection to playlist. """
+    user = validate_auth_header()
+    data = request.json
+    collection_id = data["collection_id"]
+
+    collection_url = f"https://musicbrainz.org/ws/2/recording?collection={collection_id}&fmt=json"
+    response = requests.get(collection_url)
+    if response.status_code != 200:
+        raise APIBadRequest(f"Could not find collection id: {collection_id}")
+
+    collection = response.json()
+    if not collection["recordings"]:
+        raise APIBadRequest("No recordings found in the collection")
+
+    recording_ids = [recording["id"] for recording in collection["recordings"]]
+    recordings_map, _ = load_recordings_from_mapping(recording_ids, [])
+    # TODO: ask MB team for collection description, public & collaborators in ws/2/collection
+    playlist = WritablePlaylist(name=collection["name"], creator_id=user["id"])
+    for recording_id in recording_ids:
+        playlist.recordings.append(
+            WritablePlaylistRecording(
+                mbid=UUID(recording_id),
+                added_by_id=user["id"],
+                release_mbid=collection["release_mbid"],
+                release_name=collection["release"],
+                artist_mbids=collection["artist_mbids"],
+                artist_credit=collection["artist"],
+                title=collection["title"]
+            )
+        )
+    playlist = db_playlist.create(playlist)
+    return jsonify({"playlist_mbid": playlist.mbid})
 
 
 @playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])

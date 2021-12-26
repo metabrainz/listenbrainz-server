@@ -674,6 +674,24 @@ export default class APIService {
     return response.status;
   };
 
+  importPlaylist = async (
+    userToken: string,
+    collectionId: string
+  ): Promise<string> => {
+    const url = `${this.APIBaseURI}/playlist/import`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ collection_id: collectionId }),
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.playlist_mbid;
+  };
+
   getUserPlaylists = async (
     userName: string,
     userToken?: string,
