@@ -538,6 +538,7 @@ type EventMetadata =
 
 type TimelineEvent = {
   event_type: EventTypeT;
+  id?: number;
   user_name: string;
   created: number;
   metadata: EventMetadata;
