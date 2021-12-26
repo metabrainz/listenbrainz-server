@@ -15,10 +15,11 @@ import {
   faUserSecret,
   faUserSlash,
   faThumbtack,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual, get as _get } from "lodash";
+import { isEqual, get as _get, remove as _remove } from "lodash";
 import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import {
@@ -34,6 +35,7 @@ import Loader from "../components/Loader";
 import ListenCard from "../listens/ListenCard";
 import { getPageProps, preciseTimestamp } from "../utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
+import ListenControl from "../listens/ListenControl";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -327,6 +329,44 @@ export default class UserFeedPage extends React.Component<
     this.setState({ recordingFeedbackMap: newFeedbackMap });
   };
 
+  deleteFeedEvent = async (event: TimelineEvent) => {
+    const { currentUser, APIService } = this.context;
+    const { newAlert } = this.props;
+    const { events } = this.state;
+    try {
+      const status = await APIService.deleteFeedEvent(
+        event.event_type,
+        currentUser.name,
+        currentUser.auth_token as string,
+        event.id
+      );
+      if (status === 200) {
+        newAlert(
+          "success",
+          "Successfully deleted!",
+          <>Successfully deleted!</>
+        );
+        const new_events = _remove(events, (element) => {
+          return element?.id !== event.id;
+        });
+        this.setState({ events: new_events });
+      }
+    } catch (error) {
+      newAlert(
+        "danger",
+        "Could not delete event",
+        <>
+          Something went wrong when we tried to delete your event, please try
+          again or contact us if the problem persists.
+          <br />
+          <strong>
+            {error.name}: {error.message}
+          </strong>
+        </>
+      );
+    }
+  };
+
   renderEventContent(event: TimelineEvent) {
     if (UserFeedPage.isEventListenable(event)) {
       const { metadata } = event;
@@ -351,6 +391,16 @@ export default class UserFeedPage extends React.Component<
                 : ""
             }
             newAlert={newAlert}
+            additionalMenuItems={
+              event.event_type === "recording_recommendation" ? (
+                <ListenControl
+                  icon={faTrash}
+                  title="Delete Event"
+                  // eslint-disable-next-line react/jsx-no-bind
+                  action={this.deleteFeedEvent.bind(this, event)}
+                />
+              ) : undefined
+            }
           />
         </div>
       );
