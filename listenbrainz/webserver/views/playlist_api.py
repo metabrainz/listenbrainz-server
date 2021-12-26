@@ -345,7 +345,7 @@ def import_collection():
     data = request.json
     collection_id = data["collection_id"]
 
-    collection_url = f"https://musicbrainz.org/ws/2/recording?collection={collection_id}&fmt=json"
+    collection_url = f"https://musicbrainz.org/ws/2/collection/{collection_id}/recordings?fmt=json"
     response = requests.get(collection_url)
     if response.status_code != 200:
         raise APIBadRequest(f"Could not find collection id: {collection_id}")
