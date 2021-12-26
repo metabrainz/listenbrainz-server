@@ -359,15 +359,16 @@ def import_collection():
     # TODO: ask MB team for collection description, public & collaborators in ws/2/collection
     playlist = WritablePlaylist(name=collection["name"], creator_id=user["id"])
     for recording_id in recording_ids:
+        recording = recordings_map[recording_id]
         playlist.recordings.append(
             WritablePlaylistRecording(
                 mbid=UUID(recording_id),
                 added_by_id=user["id"],
-                release_mbid=collection["release_mbid"],
-                release_name=collection["release"],
-                artist_mbids=collection["artist_mbids"],
-                artist_credit=collection["artist"],
-                title=collection["title"]
+                release_mbid=recording["release_mbid"],
+                release_name=recording["release"],
+                artist_mbids=recording["artist_mbids"],
+                artist_credit=recording["artist"],
+                title=recording["title"]
             )
         )
     playlist = db_playlist.create(playlist)
