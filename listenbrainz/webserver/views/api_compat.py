@@ -225,7 +225,7 @@ def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
         if 'trackNumber' in data:
             listen['track_metadata']['additional_info']['tracknumber'] = data['trackNumber']
         if 'mbid' in data:
-            listen['track_metadata']['release_mbid'] = data['mbid']
+            listen['track_metadata']['track_mbid'] = data['mbid']
         if 'duration' in data:
             listen['track_metadata']['additional_info']['duration'] = data['duration']
         # Choosen_by_user is 1 by default
