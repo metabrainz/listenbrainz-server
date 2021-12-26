@@ -373,7 +373,7 @@ def format_response(data, format="xml"):
     elif format == 'json':
         # Remove the <lfm> tag and its attributes
         jsonData = xmltodict.parse(data)['lfm']
-        for k in jsonData.keys():
+        for k in list(jsonData.keys()):
             if k[0] == '@':
                 jsonData.pop(k)
 
