@@ -1,4 +1,5 @@
 import sqlalchemy
+from sqlalchemy import text
 
 from listenbrainz import db
 from listenbrainz.db import timescale
@@ -21,11 +22,12 @@ def insert(feedback: Feedback):
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO recording_feedback (user_id, recording_msid, score)
-                 VALUES (:user_id, :recording_msid, :score)
-            ON CONFLICT (user_id, recording_msid, recording_mbid)
-          DO UPDATE SET score = :score,
-                        created = NOW()
+            INSERT INTO recording_feedback (user_id, recording_msid, recording_mbid, score)
+                 VALUES (:user_id, :recording_msid, :recording_mbid, :score)
+            ON CONFLICT (user_id, recording_mbid)
+          DO UPDATE SET score = :score
+                      , recording_msid = :recording_msid
+                      , created = NOW()
             """), {
             'user_id': feedback.user_id,
             'recording_msid': feedback.recording_msid,
@@ -40,18 +42,21 @@ def delete(feedback: Feedback):
         Args:
             feedback: An object of class Feedback
     """
+    conditions = [text("user_id = :user_id")]
+    args = {"user_id": feedback.user_id}
+
+    if feedback.recording_msid:
+        conditions.append("recording_msid = :recording_msid")
+        args["recording_msid"] = feedback.recording_msid
+
+    if feedback.recording_mbid:
+        conditions.append("recording_mbid = :recording_mbid")
+        args["recording_mbid"] = feedback.recording_mbid
+
+    where_clause = " AND ".join(conditions)
 
     with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            DELETE FROM recording_feedback
-             WHERE user_id = :user_id
-               AND recording_msid = :recording_msid
-               AND recording_mbid = :recording_mbid
-            """), {
-            'user_id': feedback.user_id,
-            'recording_msid': feedback.recording_msid,
-            'recording_mbid': feedback.recording_mbid
-        })
+        connection.execute(text("DELETE FROM recording_feedback WHERE ") + where_clause, args)
 
 
 def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None, metadata: bool = False) -> List[Feedback]:
