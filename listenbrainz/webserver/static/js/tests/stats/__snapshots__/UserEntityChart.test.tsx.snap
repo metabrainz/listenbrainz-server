@@ -280,7 +280,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -446,7 +446,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -612,7 +612,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -778,7 +778,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -944,7 +944,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -1110,7 +1110,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -1276,7 +1276,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -1442,7 +1442,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -1608,7 +1608,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -1774,7 +1774,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -1940,7 +1940,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -2106,7 +2106,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -2272,7 +2272,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -2438,7 +2438,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -2604,7 +2604,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -2770,7 +2770,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -2936,7 +2936,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -3102,7 +3102,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -3268,7 +3268,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -3434,7 +3434,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -3600,7 +3600,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -3766,7 +3766,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -3932,7 +3932,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -4098,7 +4098,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -4264,7 +4264,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -5983,7 +5983,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -6175,7 +6175,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -6363,7 +6363,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -6549,7 +6549,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -6741,7 +6741,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -6933,7 +6933,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -7125,7 +7125,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -7317,7 +7317,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -7509,7 +7509,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -7697,7 +7697,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -7883,7 +7883,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -8071,7 +8071,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -8257,7 +8257,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -8445,7 +8445,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -8631,7 +8631,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -8819,7 +8819,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -9005,7 +9005,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -9197,7 +9197,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -9389,7 +9389,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -9581,7 +9581,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -9773,7 +9773,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -9961,7 +9961,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -10147,7 +10147,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -10339,7 +10339,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -10527,7 +10527,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -12492,7 +12492,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -12664,7 +12664,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -12836,7 +12836,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -13008,7 +13008,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -13180,7 +13180,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -13352,7 +13352,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -13524,7 +13524,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -13696,7 +13696,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -13868,7 +13868,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -14040,7 +14040,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -14212,7 +14212,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -14384,7 +14384,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -14556,7 +14556,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -14728,7 +14728,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -14900,7 +14900,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -15072,7 +15072,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -15244,7 +15244,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -15416,7 +15416,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -15588,7 +15588,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -15760,7 +15760,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -15932,7 +15932,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -16104,7 +16104,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -16276,7 +16276,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -16448,7 +16448,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
@@ -16620,7 +16620,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           >
                             <img
                               alt="How can I add missing cover art?"
-                              src="/static/img/cover-art-placeholder.jpg"
+                              src="/static/img/icons/cover-art-placeholder.jpg"
                             />
                           </a>
                         </div>
