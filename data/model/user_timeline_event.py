@@ -40,12 +40,10 @@ class RecordingRecommendationMetadata(BaseModel):
     release_name: Optional[str]
     recording_mbid: Optional[str]
     recording_msid: constr(min_length=1)
-    artist_msid: constr(min_length=1)
 
     _validate_uuids: classmethod = validator(
         "recording_mbid",
         "recording_msid",
-        "artist_msid",
         allow_reuse=True
     )(check_valid_uuid)
 

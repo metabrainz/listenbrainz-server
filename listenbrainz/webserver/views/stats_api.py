@@ -13,6 +13,7 @@ from data.model.user_artist_map import UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import UserEntityRecord
+from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -748,6 +749,93 @@ def _get_sitewide_stats(entity: str):
             "last_updated": int(stats.last_updated.timestamp())
         }
     })
+
+
+@stats_api_bp.route("/sitewide/listening-activity")
+@crossdomain()
+@ratelimit()
+def get_sitewide_listening_activity():
+    """
+    Get the listening activity for entire site. The listening activity shows the number of listens
+    the user has submitted over a period of time.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "from_ts": 1587945600,
+                "last_updated": 1592807084,
+                "listening_activity": [
+                    {
+                        "from_ts": 1587945600,
+                        "listen_count": 26,
+                        "time_range": "Monday 27 April 2020",
+                        "to_ts": 1588031999
+                    },
+                    {
+                        "from_ts": 1588032000,
+                        "listen_count": 57,
+                        "time_range": "Tuesday 28 April 2020",
+                        "to_ts": 1588118399
+                    },
+                    {
+                        "from_ts": 1588118400,
+                        "listen_count": 33,
+                        "time_range": "Wednesday 29 April 2020",
+                        "to_ts": 1588204799
+                    }
+                ],
+                "to_ts": 1589155200,
+                "range": "week"
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - The example above shows the data for three days only, however we calculate the statistics for
+          the current time range and the previous time range. For example for weekly statistics the data
+          is calculated for the current as well as the past week.
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get_sitewide_stats(stats_range, "listening_activity")
+    if stats is None:
+        raise APINoContent('')
+
+    listening_activity = [x.dict() for x in stats.data.__root__]
+    return jsonify({"payload": {
+        "listening_activity": listening_activity,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "range": stats_range,
+        "last_updated": int(stats.last_updated.timestamp())
+    }})
+
+@stats_api_bp.route("/user/<user_name>/year-in-music/")
+def year_in_music(user_name: str):
+    """ Get data for year in music stuff """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+    return jsonify({
+        "payload": {
+            "user_name": user_name,
+            "data": get_year_in_music(user["id"]) or {}
+        }
+    })
+
 
 
 def _process_user_entity(stats: StatApi[UserEntityRecord], offset, count) -> Tuple[list, int]:

@@ -1,0 +1,452 @@
+{
+    "user": {
+        "id": 1,
+        "name": "riksucks"
+    },
+    "missingData": [
+        {
+            "artist_name": "Prabh Deep, Seedhe Maut, Sez on the Beat",
+            "listened_at": "2021-11-08 09:16:06Z",
+            "recording_name": "Class-Sikh Maut, Vol. II",
+            "release_name": "Class-Sikh Maut, Vol. II"
+        },
+        {
+            "artist_name": "Modernmadeit",
+            "listened_at": "2021-11-06 12:47:15Z",
+            "recording_name": "Arabic Nokia",
+            "release_name": "How 2 Anything Type Beat"
+        },
+        {
+            "artist_name": "420 Unlovable, Yori, Splash Daddy",
+            "listened_at": "2021-11-06 11:57:32Z",
+            "recording_name": "Numbers",
+            "release_name": "Pool Party"
+        },
+        {
+            "artist_name": "Lilcockpump",
+            "listened_at": "2021-11-06 11:56:12Z",
+            "recording_name": "Fartcore",
+            "release_name": "Fartcore"
+        },
+        {
+            "artist_name": "Kidshot",
+            "listened_at": "2021-11-06 11:52:56Z",
+            "recording_name": "Flavours Freestyle",
+            "release_name": "Flavours Freestyle"
+        },
+        {
+            "artist_name": "Karma",
+            "listened_at": "2021-11-06 09:06:14Z",
+            "recording_name": "Success",
+            "release_name": "Success"
+        },
+        {
+            "artist_name": "The Siege",
+            "listened_at": "2021-11-06 09:03:26Z",
+            "recording_name": "Kulture",
+            "release_name": "Really Brown Really Rare"
+        },
+        {
+            "artist_name": "Bali",
+            "listened_at": "2021-11-06 08:59:22Z",
+            "recording_name": "No Chorus",
+            "release_name": "No Chorus"
+        },
+        {
+            "artist_name": "Tae Retro",
+            "listened_at": "2021-11-06 08:56:49Z",
+            "recording_name": "Resort / System Settings!",
+            "release_name": "Resort / System Settings!"
+        },
+        {
+            "artist_name": "The Siege",
+            "listened_at": "2021-11-06 08:54:24Z",
+            "recording_name": "Really Brown",
+            "release_name": "Really Brown Really Rare"
+        },
+        {
+            "artist_name": "FrankJavCee, Marionismagical, Frankmusik",
+            "listened_at": "2021-11-06 08:45:04Z",
+            "recording_name": "So Damn Beautiful (FrankMusik Version) [feat. Marionismagical & Frankmusik]",
+            "release_name": "FrankJavCee, Vol. 2"
+        },
+        {
+            "artist_name": "Zero 7, Sophie Barker",
+            "listened_at": "2021-11-05 22:03:33Z",
+            "recording_name": "Passing By",
+            "release_name": "When It Falls"
+        },
+        {
+            "artist_name": "Mogubai Kurdikar",
+            "listened_at": "2021-11-05 21:42:12Z",
+            "recording_name": "Tarana - Savari Matra 15",
+            "release_name": "Vintage 78 Rpm Records - Mogubai Kurdik"
+        },
+        {
+            "artist_name": "Mogubai Kurdikar",
+            "listened_at": "2021-11-05 21:39:05Z",
+            "recording_name": "Pana Viri Main Kab Udini",
+            "release_name": "Vintage 78 Rpm Records - Mogubai Kurdik"
+        },
+        {
+            "artist_name": "Mogubai Kurdikar",
+            "listened_at": "2021-11-05 21:34:41Z",
+            "recording_name": "Chanak Mund Bhailava",
+            "release_name": "Vintage 78 Rpm Records - Mogubai Kurdik"
+        },
+        {
+            "artist_name": "Mogubai Kurdikar",
+            "listened_at": "2021-11-05 21:31:15Z",
+            "recording_name": "Aali Piya",
+            "release_name": "Vintage 78 Rpm Records - Mogubai Kurdik"
+        },
+        {
+            "artist_name": "Mogubai Kurdikar",
+            "listened_at": "2021-11-05 21:27:37Z",
+            "recording_name": "Paya More Rama Naam Dhan",
+            "release_name": "Vintage 78 Rpm Records - Mogubai Kurdik"
+        },
+        {
+            "artist_name": "Kidshot, Encore ABJ",
+            "listened_at": "2021-11-05 20:15:50Z",
+            "recording_name": "Show Me",
+            "release_name": "Show Me"
+        },
+        {
+            "artist_name": "Kidshot",
+            "listened_at": "2021-11-05 19:27:08Z",
+            "recording_name": "Sangharsh",
+            "release_name": "Sangharsh"
+        },
+        {
+            "artist_name": "Ravator, Paradox",
+            "listened_at": "2021-11-05 19:11:37Z",
+            "recording_name": "Shor Sharaba",
+            "release_name": "Shor Sharaba"
+        },
+        {
+            "artist_name": "Gravity",
+            "listened_at": "2021-11-05 19:02:07Z",
+            "recording_name": "Mohre",
+            "release_name": "Prashna Chinha"
+        },
+        {
+            "artist_name": "FrankJavCee",
+            "listened_at": "2021-11-05 18:24:53Z",
+            "recording_name": "See You Tomorrow",
+            "release_name": "See You Tomorrow"
+        },
+        {
+            "artist_name": "FrankJavCee, NothinButLag",
+            "listened_at": "2021-11-05 18:20:32Z",
+            "recording_name": "Fictional Animals",
+            "release_name": "Fictional Animals"
+        },
+        {
+            "artist_name": "Torino Sky",
+            "listened_at": "2021-11-08 22:07:56Z",
+            "recording_name": "Enter The Land Of Dreams",
+            "release_name": "Enter The Land Of Dreams"
+        },
+        {
+            "artist_name": "Alvedon",
+            "listened_at": "2021-11-08 22:04:51Z",
+            "recording_name": "retire (final)",
+            "release_name": "hurry up mixtape"
+        },
+        {
+            "artist_name": "Spaceouters",
+            "listened_at": "2021-11-08 21:50:19Z",
+            "recording_name": "Fireflies",
+            "release_name": "Fireflies"
+        },
+        {
+            "artist_name": "Elsa Greeve",
+            "listened_at": "2021-11-08 21:45:27Z",
+            "recording_name": "Catastrophically in love with you",
+            "release_name": "Catastrophically in love with you"
+        },
+        {
+            "artist_name": "Igor Nikolayev, Natasha Korolyova",
+            "listened_at": "2021-11-08 18:14:03Z",
+            "recording_name": "Такси, такси",
+            "release_name": "Русская музыка 90-х"
+        },
+        {
+            "artist_name": "Kino, Viktor Tsoi",
+            "listened_at": "2021-11-08 18:09:18Z",
+            "recording_name": "Песня без слов",
+            "release_name": "Виктор Цой 55 (Выпуск в честь 55-летия Виктора Цоя)"
+        },
+        {
+            "artist_name": "The Doppler Effect, Carol Lee, John O'Callaghan",
+            "listened_at": "2021-11-08 18:04:13Z",
+            "recording_name": "Beauty Hides In The Deep - John O'Callaghan Extended",
+            "release_name": "Uplifting Trance Top 50"
+        },
+        {
+            "artist_name": "Arksun, Sean Tyas",
+            "listened_at": "2021-11-08 17:41:35Z",
+            "recording_name": "Arisen - Sean Tyas Remix",
+            "release_name": "Arisen (Sean Tyas Remix)"
+        },
+        {
+            "artist_name": "Alex M.O.R.P.H., Cheryl Barnes",
+            "listened_at": "2021-11-08 17:37:56Z",
+            "recording_name": "Hidden Sun of Serenity",
+            "release_name": "Hidden Sun of Serenity"
+        },
+        {
+            "artist_name": "plenka",
+            "listened_at": "2021-11-08 17:10:52Z",
+            "recording_name": "save",
+            "release_name": "save"
+        },
+        {
+            "artist_name": "HelaSex",
+            "listened_at": "2021-11-08 04:12:22Z",
+            "recording_name": "Luminosity",
+            "release_name": "Luminosity"
+        },
+        {
+            "artist_name": "Ash Code, Molchat Doma",
+            "listened_at": "2021-11-08 04:04:05Z",
+            "recording_name": "Fear (Molchat Doma Remix)",
+            "release_name": "Fear (Molchat Doma Remix)"
+        },
+        {
+            "artist_name": "Axis",
+            "listened_at": "2021-11-08 03:52:41Z",
+            "recording_name": "Wasted (ASOT 944) [Progressive Pick]",
+            "release_name": "ASOT 944 - A State Of Trance Episode 944"
+        },
+        {
+            "artist_name": "not a whale",
+            "listened_at": "2021-11-08 03:49:16Z",
+            "recording_name": "Калейдоскоп",
+            "release_name": "Элегический миг"
+        },
+        {
+            "artist_name": "Allen Watts, Christina Novelli",
+            "listened_at": "2021-11-08 03:35:38Z",
+            "recording_name": "My Gravity - Extended Mix",
+            "release_name": "My Gravity"
+        },
+        {
+            "artist_name": "Nürnberg, Otchim",
+            "listened_at": "2021-11-08 03:19:12Z",
+            "recording_name": "Rany - Otchim Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Nürnberg, Plenērs",
+            "listened_at": "2021-11-08 03:15:52Z",
+            "recording_name": "Listy - Plenērs Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Nürnberg, Luis Ake",
+            "listened_at": "2021-11-08 03:12:48Z",
+            "recording_name": "Trymaju - Luis Ake Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Nürnberg, Mareux",
+            "listened_at": "2021-11-08 02:17:58Z",
+            "recording_name": "Adny - Mareux Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Nürnberg, Ash code",
+            "listened_at": "2021-11-08 02:17:32Z",
+            "recording_name": "Abdymi - Ash Code Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Ka$tro",
+            "listened_at": "2021-11-07 18:52:58Z",
+            "recording_name": "In Essence",
+            "release_name": "Barren."
+        },
+        {
+            "artist_name": "Ólafur Arnalds, Arnór Dan",
+            "listened_at": "2021-11-07 18:34:34Z",
+            "recording_name": "So Far",
+            "release_name": "Broadchurch (Music From The Original TV Series)"
+        },
+        {
+            "artist_name": "Joan Magana",
+            "listened_at": "2021-11-07 18:15:53Z",
+            "recording_name": "Primrose",
+            "release_name": "Primrose"
+        },
+        {
+            "artist_name": "Kaua Correia",
+            "listened_at": "2021-11-07 18:11:20Z",
+            "recording_name": "Leticia",
+            "release_name": "Leticia"
+        },
+        {
+            "artist_name": "Adeline Verver",
+            "listened_at": "2021-11-07 18:08:22Z",
+            "recording_name": "Turndown Service",
+            "release_name": "Turndown Service"
+        },
+        {
+            "artist_name": "Ennio Morricone, Carlo Nistri",
+            "listened_at": "2021-11-09 18:06:29Z",
+            "recording_name": "Chi Mai",
+            "release_name": "The Essential Ennio Morricone"
+        },
+        {
+            "artist_name": "BLAZH | БЛАЖЬ",
+            "listened_at": "2021-11-09 04:07:00Z",
+            "recording_name": "Трюмы кораблей",
+            "release_name": "Трюмы кораблей"
+        },
+        {
+            "artist_name": "Ezekiel",
+            "listened_at": "2021-11-09 03:55:51Z",
+            "recording_name": "help_urself",
+            "release_name": "help_urself"
+        },
+        {
+            "artist_name": "Arlette Leduc",
+            "listened_at": "2021-11-09 03:14:56Z",
+            "recording_name": "Euphrosyne",
+            "release_name": "Euphrosyne"
+        },
+        {
+            "artist_name": "Torino Sky",
+            "listened_at": "2021-11-08 22:07:56Z",
+            "recording_name": "Enter The Land Of Dreams",
+            "release_name": "Enter The Land Of Dreams"
+        },
+        {
+            "artist_name": "Alvedon",
+            "listened_at": "2021-11-08 22:04:51Z",
+            "recording_name": "retire (final)",
+            "release_name": "hurry up mixtape"
+        },
+        {
+            "artist_name": "Spaceouters",
+            "listened_at": "2021-11-08 21:50:19Z",
+            "recording_name": "Fireflies",
+            "release_name": "Fireflies"
+        },
+        {
+            "artist_name": "Elsa Greeve",
+            "listened_at": "2021-11-08 21:45:27Z",
+            "recording_name": "Catastrophically in love with you",
+            "release_name": "Catastrophically in love with you"
+        },
+        {
+            "artist_name": "Igor Nikolayev, Natasha Korolyova",
+            "listened_at": "2021-11-08 18:14:03Z",
+            "recording_name": "Такси, такси",
+            "release_name": "Русская музыка 90-х"
+        },
+        {
+            "artist_name": "Kino, Viktor Tsoi",
+            "listened_at": "2021-11-08 18:09:18Z",
+            "recording_name": "Песня без слов",
+            "release_name": "Виктор Цой 55 (Выпуск в честь 55-летия Виктора Цоя)"
+        },
+        {
+            "artist_name": "The Doppler Effect, Carol Lee, John O'Callaghan",
+            "listened_at": "2021-11-08 18:04:13Z",
+            "recording_name": "Beauty Hides In The Deep - John O'Callaghan Extended",
+            "release_name": "Uplifting Trance Top 50"
+        },
+        {
+            "artist_name": "Arksun, Sean Tyas",
+            "listened_at": "2021-11-08 17:41:35Z",
+            "recording_name": "Arisen - Sean Tyas Remix",
+            "release_name": "Arisen (Sean Tyas Remix)"
+        },
+        {
+            "artist_name": "Alex M.O.R.P.H., Cheryl Barnes",
+            "listened_at": "2021-11-08 17:37:56Z",
+            "recording_name": "Hidden Sun of Serenity",
+            "release_name": "Hidden Sun of Serenity"
+        },
+        {
+            "artist_name": "plenka",
+            "listened_at": "2021-11-08 17:10:52Z",
+            "recording_name": "save",
+            "release_name": "save"
+        },
+        {
+            "artist_name": "HelaSex",
+            "listened_at": "2021-11-08 04:12:22Z",
+            "recording_name": "Luminosity",
+            "release_name": "Luminosity"
+        },
+        {
+            "artist_name": "Ash Code, Molchat Doma",
+            "listened_at": "2021-11-08 04:04:05Z",
+            "recording_name": "Fear (Molchat Doma Remix)",
+            "release_name": "Fear (Molchat Doma Remix)"
+        },
+        {
+            "artist_name": "Axis",
+            "listened_at": "2021-11-08 03:52:41Z",
+            "recording_name": "Wasted (ASOT 944) [Progressive Pick]",
+            "release_name": "ASOT 944 - A State Of Trance Episode 944"
+        },
+        {
+            "artist_name": "not a whale",
+            "listened_at": "2021-11-08 03:49:16Z",
+            "recording_name": "Калейдоскоп",
+            "release_name": "Элегический миг"
+        },
+        {
+            "artist_name": "Allen Watts, Christina Novelli",
+            "listened_at": "2021-11-08 03:35:38Z",
+            "recording_name": "My Gravity - Extended Mix",
+            "release_name": "My Gravity"
+        },
+        {
+            "artist_name": "Nürnberg, Otchim",
+            "listened_at": "2021-11-08 03:19:12Z",
+            "recording_name": "Rany - Otchim Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Nürnberg, Plenērs",
+            "listened_at": "2021-11-08 03:15:52Z",
+            "recording_name": "Listy - Plenērs Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Nürnberg, Luis Ake",
+            "listened_at": "2021-11-08 03:12:48Z",
+            "recording_name": "Trymaju - Luis Ake Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Nürnberg, Mareux",
+            "listened_at": "2021-11-08 02:17:58Z",
+            "recording_name": "Adny - Mareux Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Nürnberg, Ash code",
+            "listened_at": "2021-11-08 02:17:32Z",
+            "recording_name": "Abdymi - Ash Code Remix",
+            "release_name": "Paharda (Remixes)"
+        },
+        {
+            "artist_name": "Ka$tro",
+            "listened_at": "2021-11-07 18:52:58Z",
+            "recording_name": "In Essence",
+            "release_name": "Barren."
+        }
+    ],
+    "spotify": {
+        "access_token": "access token",
+        "permission": ["streaming", "user-read-email", "user-read-private"]
+    },
+    "youtube": {"api_key": "fake-api-key"},
+    "initialAlerts": []
+}

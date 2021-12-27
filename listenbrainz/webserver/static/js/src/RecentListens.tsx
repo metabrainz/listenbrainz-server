@@ -44,7 +44,6 @@ import ListenControl from "./listens/ListenControl";
 
 export type RecentListensProps = {
   latestListenTs: number;
-  latestSpotifyUri?: string;
   listens?: Array<Listen>;
   mode: ListensListMode;
   oldestListenTs: number;
@@ -923,7 +922,6 @@ document.addEventListener("DOMContentLoaded", () => {
   } = globalReactProps;
   const {
     latest_listen_ts,
-    latest_spotify_uri,
     listens,
     oldest_listen_ts,
     mode,
@@ -962,7 +960,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <RecentListensWithAlertNotifications
           initialAlerts={optionalAlerts}
           latestListenTs={latest_listen_ts}
-          latestSpotifyUri={latest_spotify_uri}
           listens={listens}
           mode={mode}
           userPinnedRecording={userPinnedRecording}
