@@ -1,4 +1,6 @@
 import sys
+from datetime import date
+
 import click
 import listenbrainz.utils as utils
 import os
@@ -113,17 +115,83 @@ def request_user_stats(type_, range_, entity):
 
 
 @cli.command(name="request_sitewide_stats")
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity']),
+              help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
               help="Entity for which statistics should be calculated")
-def request_sitewide_stats(range_, entity):
+def request_sitewide_stats(type_, range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
     """
+    params = {
+        "stats_range": range_
+    }
+    if type_ == "entity" and entity:
+        params["entity"] = entity
     try:
-        send_request_to_spark_cluster("stats.sitewide.entity", entity=entity, stats_range=range_)
+        send_request_to_spark_cluster(f"stats.sitewide.{type_}", **params)
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
+
+
+@cli.command(name="request_new_release_stats")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_new_release_stats(year: int):
+    """ Send request to calculate new release stats to the spark cluster
+    """
+    send_request_to_spark_cluster("stats.new_releases_of_top_artists", year=year)
+
+
+@cli.command(name="request_most_prominent_color")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_most_prominent_color(year: int):
+    """ Send request to calculate most prominent color stat to the spark cluster
+    """
+    send_request_to_spark_cluster("stats.most_prominent_color", year=year)
+
+
+@cli.command(name="request_day_of_week")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_day_of_week(year: int):
+    """ Send request to calculate most listened day of week to the spark cluster
+    """
+    send_request_to_spark_cluster("stats.day_of_week", year=year)
+
+
+@cli.command(name="request_most_listened_year")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_most_listened_year(year: int):
+    """ Send request to calculate most listened year stat to the spark cluster
+    """
+    send_request_to_spark_cluster("stats.most_listened_year", year=year)
+
+
+@cli.command(name="request_yim_top_stats")
+def request_yim_top_stats():
+    """ Send request to calculate top stats to the spark cluster
+    """
+    send_request_to_spark_cluster("year_in_music.top_stats")
+
+
+@cli.command(name="request_listens_per_day")
+def request_yim_listens_per_day():
+    """ Send request to calculate listens per day stat to the spark cluster
+    """
+    send_request_to_spark_cluster("year_in_music.listens_per_day")
+
+
+@cli.command(name="request_yearly_listen_count")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_listen_count(year: int):
+    """ Send request to calculate yearly listen count stat to the spark cluster
+    """
+    send_request_to_spark_cluster("year_in_music.listen_count", year=year)
 
 
 @cli.command(name="request_import_full")
@@ -208,7 +276,7 @@ def request_candidate_sets(days, top, similar, users, html):
         "users": users,
         "html_flag": html
     }
-    send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', params=params)
+    send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', **params)
 
 
 @cli.command(name='request_recommendations')
@@ -234,12 +302,40 @@ def request_import_artist_relation():
     send_request_to_spark_cluster('import.artist_relation')
 
 
+@cli.command(name='request_import_musicbrainz_release_dump')
+def request_import_musicbrainz_release_dump():
+    """ Send the spark cluster a request to import musicbrainz release dump.
+    """
+    send_request_to_spark_cluster('import.musicbrainz_release_dump')
+
+
 @cli.command(name='request_similar_users')
 @click.option("--max-num-users", type=int, default=25, help="The maxiumum number of similar users to return for any given user.")
 def request_similar_users(max_num_users):
     """ Send the cluster a request to generate similar users.
     """
     send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
+
+
+@cli.command(name='request_similar_users_year_end')
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_similar_users_year_end(year: int):
+    """ Send the cluster a request to generate similar users for Year in Music. """
+    send_request_to_spark_cluster('similarity.similar_users_year_end', year=year)
+
+
+@cli.command(name="request_year_in_music")
+@click.pass_context
+def request_year_in_music(ctx):
+    ctx.invoke(request_new_release_stats)
+    ctx.invoke(request_most_prominent_color)
+    ctx.invoke(request_day_of_week)
+    ctx.invoke(request_most_listened_year)
+    ctx.invoke(request_yim_top_stats)
+    ctx.invoke(request_yim_listens_per_day)
+    ctx.invoke(request_yim_listen_count)
+    ctx.invoke(request_similar_users_year_end)
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
@@ -255,8 +351,11 @@ def cron_request_all_stats(ctx):
         for stat in ["listening_activity", "daily_activity"]:
             ctx.invoke(request_user_stats, type_=stat, range_=stats_range)
 
-        for entity in ["artists"]:
+        for entity in ["artists", "releases", "recordings"]:
             ctx.invoke(request_sitewide_stats, range_=stats_range, entity=entity)
+
+        for stat in ["listening_activity"]:
+            ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)
 
 
 @cli.command(name='cron_request_similar_users')

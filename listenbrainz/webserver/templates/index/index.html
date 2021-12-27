@@ -1,8 +1,10 @@
 {%- extends 'base.html' -%}
 {%- block content -%}
   <div id="homepage" class="row">
-
-    <div class="col-lg-12">
+    <div class="alert alert-success center-p" role="alert">
+      ListenBrainz Year in Music for 2021 just dropped! Find yours <a href="{{ url_for('redirect.redirect_year_in_music') }}" class="alert-link">here</a>. Share it across social media and compare your stats with your friends!
+    </div>
+   <div class="col-lg-12">
       <h2 class="page-title">
         Share and Visualize your Musical Habits!
       </h2>

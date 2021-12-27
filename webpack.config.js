@@ -63,10 +63,12 @@ module.exports = function (env, argv) {
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
       playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
       huesound: path.resolve(jsDir, "src/huesound/ColorPlay.tsx"),
+      yearInMusic: path.resolve(jsDir, "src/year-in-music/YearInMusic.tsx"),
       recommendations: path.resolve(
         jsDir,
         "src/recommendations/Recommendations.tsx"
       ),
+      missingMBData: path.resolve(jsDir, "src/MissingMBData.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

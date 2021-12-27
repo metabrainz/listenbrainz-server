@@ -106,26 +106,6 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertContext('active_section', 'listens')
 
-        # check that artist count is not shown if stats haven't been calculated yet
-        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
-        self.assert200(response)
-        self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable('props'))
-        self.assertIsNone(props['artist_count'])
-
-        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
-            artists_data = ujson.load(f)
-
-        db_stats.insert_user_jsonb_data(user_id=self.user.id, stats_type='artists',
-                                        stats=StatRange[UserEntityRecord](**artists_data))
-        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
-        self.assert200(response)
-        self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable('props'))
-        self.assertEqual(props['artist_count'], '2')
-        global_props = ujson.loads(self.get_context_variable("global_props"))
-        self.assertDictEqual(global_props['spotify'], {})
-
     def test_spotify_token_access_no_login(self):
         db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
                             access_token='token', refresh_token='refresh',

@@ -1,14 +1,15 @@
 import json
 import logging
 from datetime import datetime
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Dict
 
+from more_itertools import chunked
 from pydantic import ValidationError
 
-from data.model.user_entity import UserEntityStatMessage
 from data.model.user_artist_stat import UserArtistRecord
-from data.model.user_release_stat import UserReleaseRecord
+from data.model.user_entity import UserEntityStatMessage, MultipleUserEntityRecords
 from data.model.user_recording_stat import UserRecordingRecord
+from data.model.user_release_stat import UserReleaseRecord
 from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
@@ -29,8 +30,11 @@ entity_model_map = {
     "recordings": UserRecordingRecord
 }
 
+USERS_PER_MESSAGE = 10
 
-def get_entity_stats(entity: str, stats_range: str) -> Iterator[Optional[UserEntityStatMessage]]:
+
+def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
+        -> Iterator[Optional[Dict]]:
     """ Get the top entity for all users for specified stats_range """
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
 
@@ -42,15 +46,48 @@ def get_entity_stats(entity: str, stats_range: str) -> Iterator[Optional[UserEnt
     handler = entity_handler_map[entity]
     data = handler(table_name)
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
-                               from_date=from_date, to_date=to_date)
+                               from_date=from_date, to_date=to_date, message_type=message_type)
 
     logger.debug("Done!")
 
     return messages
 
 
-def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime) \
-        -> Iterator[Optional[UserEntityStatMessage]]:
+def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str) \
+        -> Optional[MultipleUserEntityRecords]:
+    _dict = entry.asDict(recursive=True)
+    total_entity_count = len(_dict[entity])
+
+    # Clip the recordings to top 1000 so that we don't drop messages
+    if entity == "recordings" and stats_range == "all_time":
+        _dict[entity] = _dict[entity][:1000]
+
+    # for year in music, only retain top 50 stats
+    if message_type == "year_in_music_top_stats":
+        _dict[entity] = _dict[entity][:50]
+
+    entity_list = []
+    for item in _dict[entity]:
+        try:
+            entity_list.append(entity_model_map[entity](**item))
+        except ValidationError:
+            logger.error("Invalid entry in entity stats", exc_info=True)
+
+    try:
+        return MultipleUserEntityRecords(
+            musicbrainz_id=_dict["user_name"],
+            data=entity_list,
+            count=total_entity_count
+        )
+    except ValidationError:
+        logger.error(f"""ValidationError while calculating {stats_range} top {entity} for user: 
+        {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+        return None
+
+
+def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime,
+                    message_type) \
+        -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to the webserver via RabbitMQ
 
@@ -61,6 +98,8 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         stats_range: The range for which the statistics have been calculated
         from_date: The start time of the stats
         to_date: The end time of the stats
+        message_type: used to decide which handler on LB webserver side should
+            handle this message. can be "user_entity" or "year_in_music_top_stats"
 
     Returns:
         messages: A list of messages to be sent via RabbitMQ
@@ -68,34 +107,23 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
 
-    for entry in data:
-        _dict = entry.asDict(recursive=True)
-        total_entity_count = len(_dict[entity])
+    for entries in chunked(data, USERS_PER_MESSAGE):
+        multiple_user_stats = []
+        for entry in entries:
+            processed_stat = parse_one_user_stats(entry, entity, stats_range, message_type)
+            multiple_user_stats.append(processed_stat)
 
-        # Clip the recordings to top 1000 so that we don't drop messages
-        if entity == "recordings" and stats_range == "all_time":
-            _dict[entity] = _dict[entity][:1000]
-
-        entity_list = []
-        for item in _dict[entity]:
-            try:
-                entity_list.append(entity_model_map[entity](**item))
-            except ValidationError:
-                logger.error("Invalid entry in entity stats", exc_info=True)
         try:
             model = UserEntityStatMessage(**{
-                "musicbrainz_id": _dict["user_name"],
-                "type": "user_entity",
+                "type": message_type,
                 "stats_range": stats_range,
                 "from_ts": from_ts,
                 "to_ts": to_ts,
-                "data": entity_list,
                 "entity": entity,
-                "count": total_entity_count
+                "data": multiple_user_stats,
             })
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error(f"""ValidationError while calculating {stats_range} top {entity} for user:
-             {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+            logger.error(f"""ValidationError while calculating {stats_range} top {entity}:""", exc_info=True)
             yield None

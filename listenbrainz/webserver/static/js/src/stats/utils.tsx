@@ -9,7 +9,6 @@ export function getEntityLink(
   if (entityMBID) {
     return (
       <a
-        className="underlined-link"
         href={`https://musicbrainz.org/${entityType}/${entityMBID}`}
         target="_blank"
         rel="noopener noreferrer"

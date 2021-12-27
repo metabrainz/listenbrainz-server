@@ -30,3 +30,5 @@ services:
     command: dockerize -wait tcp://namenode:9000 -timeout 60s bash -c "cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini"
     volumes:
       - ..:/rec
+    environment:
+      PYTHONDONTWRITEBYTECODE: 1

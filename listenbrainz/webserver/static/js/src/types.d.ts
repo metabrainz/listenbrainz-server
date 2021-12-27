@@ -4,6 +4,7 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "time-ago";
 declare module "debounce-async";
+declare module "react-coverflow";
 
 declare module "react-bs-notifier";
 declare type AlertType = "danger" | "warning" | "success" | "info";
@@ -432,6 +433,7 @@ declare type JSPFPlaylistExtension = {
 declare type JSPFTrackExtension = {
   added_by: string;
   artist_identifier: string[]; // Full MusicBrainz artist URIs
+  artist_mbids?: string[]; // Full MusicBrainz artist URIs
   added_at: string; // ISO date string
   release_identifier?: string; // Full MusicBrainz release URI
 };
@@ -497,7 +499,6 @@ declare type UserTrackRecommendationMetadata = {
   release_name?: string;
   recording_mbid?: string;
   recording_msid: string;
-  artist_msid: string;
 };
 
 declare type PinEventMetadata = Listen & {
@@ -599,4 +600,11 @@ type ColorReleasesResponse = {
   payload: {
     releases: Array<ColorReleaseItem>;
   };
+};
+
+type MissingMBData = {
+  artist_name: string;
+  listened_at: string;
+  recording_name: string;
+  release_name?: string;
 };

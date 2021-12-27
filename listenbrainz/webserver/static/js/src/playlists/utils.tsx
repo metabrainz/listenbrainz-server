@@ -80,6 +80,10 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
   if (customFields?.added_at) {
     listen.listened_at_iso = customFields.added_at;
   }
+  if (listen.track_metadata.additional_info) {
+    listen.track_metadata.additional_info.artist_mbids =
+      customFields?.artist_mbids || customFields?.artist_identifier;
+  }
   return listen;
 }
 

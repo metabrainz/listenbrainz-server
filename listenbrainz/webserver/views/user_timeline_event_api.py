@@ -63,7 +63,6 @@ def create_user_recording_recommendation_event(user_name):
             "metadata": {
                 "artist_name": "<The name of the artist, required>",
                 "track_name": "<The name of the track, required>",
-                "artist_msid": "<The MessyBrainz ID of the artist, required>",
                 "recording_msid": "<The MessyBrainz ID of the recording, required>",
                 "release_name": "<The name of the release, optional>",
                 "recording_mbid": "<The MusicBrainz ID of the recording, optional>"
@@ -414,7 +413,6 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
                     additional_info=AdditionalInfo(
                         recording_msid=event.metadata.recording_msid,
                         recording_mbid=event.metadata.recording_mbid,
-                        artist_msid=event.metadata.artist_msid,
                     )
                 ),
             )
@@ -457,7 +455,6 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
                     additional_info=AdditionalInfo(
                         recording_msid=pin.recording_msid,
                         recording_mbid=pin.recording_mbid,
-                        artist_msid=pin.track_metadata["artist_msid"],
                     )
                 )
             )

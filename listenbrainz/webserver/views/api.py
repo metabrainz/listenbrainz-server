@@ -61,9 +61,13 @@ def submit_listen():
     try:
         data = ujson.loads(raw_data.decode("utf-8"))
     except ValueError as e:
-        log_raise_400("Cannot parse JSON document: %s" % e, raw_data)
+        log_raise_400("Cannot parse JSON document: %s" % e)
 
     try:
+        if not isinstance(data, dict):
+            raise APIBadRequest("Invalid JSON document submitted. Top level of "
+                                "JSON document should be a json object.")
+
         payload = data['payload']
 
         if not isinstance(payload, list):
@@ -204,10 +208,8 @@ def get_playing_now(user_name):
     listen_data = []
     count = 0
     if playing_now_listen:
-        count += 1
-        listen_data = [{
-            'track_metadata': playing_now_listen.data,
-        }]
+        count = 1
+        listen_data = [playing_now_listen.to_api()]
 
     return jsonify({
         'payload': {
