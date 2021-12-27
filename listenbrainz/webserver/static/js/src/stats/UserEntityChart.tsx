@@ -180,7 +180,7 @@ export default class UserEntityChart extends React.Component<
     const { APIService } = this.context;
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
-    return await APIService.getUserEntity(
+    return APIService.getUserEntity(
       user.name,
       entity,
       range,

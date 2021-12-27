@@ -72,7 +72,9 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  static defaultThumbnailSrc: string = "/static/img/cover-art-placeholder.jpg";
+  static defaultThumbnailSrc: string =
+    "/static/img/icons/cover-art-placeholder.jpg";
+
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
