@@ -101,8 +101,7 @@ def handle_sitewide_entity(data):
 
 
 def handle_sitewide_listening_activity(data):
-    data["musicbrainz_id"] = "listenbrainz-prod"
-    _handle_user_activity_stats('listening_activity', StatRange[ListeningActivityRecord], data)
+    db_stats.insert_sitewide_jsonb_data("listening_activity", StatRange[ListeningActivityRecord](**data))
 
 
 def handle_dump_imported(data):
