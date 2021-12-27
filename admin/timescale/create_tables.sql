@@ -82,4 +82,18 @@ ALTER TABLE mbid_mapping
         )
     );
 
+CREATE TABLE spotify_mapping (
+    recording_msid      UUID NOT NULL,
+    track               TEXT,
+    album               TEXT,
+    artist              TEXT[],
+    album_artist        TEXT[],
+    isrc                TEXT
+);
+
+-- postgres does not enforce dimensionality of arrays. add explicit check to avoid regressions (once burnt, twice shy!).
+ALTER TABLE spotify_mapping_metadata
+    ADD CONSTRAINT spotify_mapping_metadata_ndims_check
+    CHECK ( array_ndims(artist) = 1 AND array_ndims(album_artist) = 1 );
+
 COMMIT;
