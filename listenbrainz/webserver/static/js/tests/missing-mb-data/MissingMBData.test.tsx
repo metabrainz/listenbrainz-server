@@ -1,12 +1,14 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import * as missingDataProps from "./__mocks__/missingMBDataProps.json";
-import { youtube, spotify, user } from "./__mocks__/missingMBDataProps.json";
+import * as missingDataProps from "../__mocks__/missingMBDataProps.json";
+import { youtube, spotify, user } from "../__mocks__/missingMBDataProps.json";
 
-import MissingMBDataPage from "./MissingMBData";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import APIService from "./APIService";
+import MissingMBDataPage from "../../src/missing-mb-data/MissingMBData";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // // Mocking Math.random() fixes this
