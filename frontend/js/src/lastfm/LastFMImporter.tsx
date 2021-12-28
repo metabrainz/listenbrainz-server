@@ -540,6 +540,47 @@ export default class LastFmImporter extends React.Component<
     this.rlOrigin = new Date().getTime() / 1000;
   }
 
+  submitSpotifyStreams = async (text: string) => {
+    const streams: Array<SpotifyStream> = JSON.parse(text);
+    const listens = streams.map((stream) => {
+      return {
+        listened_at: new Date(stream.ts).getTime() / 1000,
+        track_metadata: {
+          track_name: stream.master_metadata_track_name,
+          artist_name: stream.master_metadata_album_artist_name,
+          release_name: stream.master_metadata_album_album_name,
+          additional_info: {
+            spotify_id: stream.spotify_track_uri,
+          },
+        },
+      } as Listen;
+    });
+    const { currentUser } = this.context;
+    await this.APIService.submitListens(
+      currentUser.userToken,
+      "import",
+      listens
+    );
+  };
+
+  handleSpotifyImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fr = new FileReader();
+    fr.onload = (e) => {
+      this.submitSpotifyStreams(e?.target?.result as string);
+    };
+    if (
+      !event ||
+      !event.target ||
+      !event.target.files ||
+      !event.target.files[0]
+    ) {
+      // eslint-disable-next-line no-console
+      console.log("Invalid file!");
+      return;
+    }
+    fr.readAsText(event.target.files[0]);
+  };
+
   render() {
     const { show, canClose, lastfmUsername, msg, service } = this.state;
     return (
@@ -617,6 +658,19 @@ export default class LastFmImporter extends React.Component<
             <br />
           </LastFMImporterModal>
         )}
+        <form>
+          <label className="btn btn-default btn-primary">
+            Spotify Extended Streaming
+            <input
+              id="spotify-import-file"
+              type="file"
+              onSubmit={this.handleSpotifyImport}
+            />
+          </label>
+          <button className="btn btn-success" type="submit">
+            Import Now!
+          </button>
+        </form>
       </div>
     );
   }

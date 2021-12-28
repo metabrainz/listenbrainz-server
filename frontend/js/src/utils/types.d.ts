@@ -71,6 +71,14 @@ declare type Listen = BaseListenFormat & {
   playing_now?: boolean | null;
 };
 
+declare type SpotifyStream = {
+  ts: string;
+  master_metadata_track_name: string;
+  master_metadata_album_artist_name: string;
+  master_metadata_album_album_name: string;
+  spotify_track_uri: string;
+};
+
 declare type Recommendation = Listen & {
   latest_listened_at?: string;
 };
