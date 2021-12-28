@@ -9,6 +9,10 @@ from listenbrainz import db
 
 
 def bulk_insert_loved_tracks(user_id: int, feedback: List[Tuple[int, str]]) -> int:
+    # DO NOTHING because we can only import loved tracks.
+    # if a user has imported something before from last.fm then the score doesn't change.
+    # if the user has unloved a track on last.fm, we won't receive it this time so can't
+    # remove it from feedback in any case.
     query = """
         INSERT INTO recording_feedback (user_id, created, recording_mbid, score)
         VALUES %s ON CONFLICT (user_id, recording_mbid) DO NOTHING
