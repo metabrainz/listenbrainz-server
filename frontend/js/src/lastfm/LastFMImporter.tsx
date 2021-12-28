@@ -563,19 +563,19 @@ export default class LastFmImporter extends React.Component<
   }
 
   async submitPage(payload: Array<Listen>) {
-  const delay = this.getRateLimitDelay();
-  // Halt execution for some time
-  await new Promise((resolve) => {
-    setTimeout(resolve, delay);
-  });
+    const delay = this.getRateLimitDelay();
+    // Halt execution for some time
+    await new Promise((resolve) => {
+      setTimeout(resolve, delay);
+    });
 
-  const response = await this.APIService.submitListens(
-    this.userToken,
-    "import",
-    payload
-  );
-  this.updateRateLimitParameters(response);
-}
+    const response = await this.APIService.submitListens(
+      this.userToken,
+      "import",
+      payload
+    );
+    this.updateRateLimitParameters(response);
+  }
 
   progressBarPercentage() {
     if (this.totalPages >= this.numCompleted)
