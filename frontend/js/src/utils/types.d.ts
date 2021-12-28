@@ -73,6 +73,7 @@ declare type Listen = BaseListenFormat & {
 
 declare type SpotifyStream = {
   ts: string;
+  ms_played: number;
   master_metadata_track_name: string;
   master_metadata_album_artist_name: string;
   master_metadata_album_album_name: string;

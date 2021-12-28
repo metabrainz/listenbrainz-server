@@ -542,19 +542,21 @@ export default class LastFmImporter extends React.Component<
 
   submitSpotifyStreams = async (text: string) => {
     const streams: Array<SpotifyStream> = JSON.parse(text);
-    const listens = streams.map((stream) => {
-      return {
-        listened_at: new Date(stream.ts).getTime() / 1000,
-        track_metadata: {
-          track_name: stream.master_metadata_track_name,
-          artist_name: stream.master_metadata_album_artist_name,
-          release_name: stream.master_metadata_album_album_name,
-          additional_info: {
-            spotify_id: stream.spotify_track_uri,
+    const listens = streams
+      .filter((stream) => stream.ms_played < 30000)
+      .map((stream) => {
+        return {
+          listened_at: new Date(stream.ts).getTime() / 1000,
+          track_metadata: {
+            track_name: stream.master_metadata_track_name,
+            artist_name: stream.master_metadata_album_artist_name,
+            release_name: stream.master_metadata_album_album_name,
+            additional_info: {
+              spotify_id: stream.spotify_track_uri,
+            },
           },
-        },
-      } as Listen;
-    });
+        } as Listen;
+      });
     const { currentUser } = this.context;
     await this.APIService.submitListens(
       currentUser.userToken,
