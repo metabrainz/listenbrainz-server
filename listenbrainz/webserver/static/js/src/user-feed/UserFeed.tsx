@@ -370,6 +370,7 @@ export default class UserFeedPage extends React.Component<
   renderEventContent(event: TimelineEvent) {
     if (UserFeedPage.isEventListenable(event)) {
       const { metadata } = event;
+      const { currentUser } = this.context;
       const { newAlert } = this.props;
       return (
         <div className="event-content">
@@ -392,7 +393,8 @@ export default class UserFeedPage extends React.Component<
             }
             newAlert={newAlert}
             additionalMenuItems={
-              event.event_type === "recording_recommendation" ? (
+              event.event_type === "recording_recommendation" &&
+              event.user_name === currentUser.name ? (
                 <ListenControl
                   icon={faTrash}
                   title="Delete Event"
