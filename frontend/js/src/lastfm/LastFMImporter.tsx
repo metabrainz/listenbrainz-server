@@ -5,6 +5,7 @@ import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Integrations } from "@sentry/tracing";
+import { FormEvent } from "react";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
@@ -660,7 +661,7 @@ export default class LastFmImporter extends React.Component<
             <br />
           </LastFMImporterModal>
         )}
-        <form action="#">
+        <form onSubmit={(e) => e.preventDefault()}>
           <span className="btn btn-default btn-primary">
             Spotify Extended Streaming
           </span>
