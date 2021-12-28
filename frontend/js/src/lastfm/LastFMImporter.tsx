@@ -660,18 +660,15 @@ export default class LastFmImporter extends React.Component<
             <br />
           </LastFMImporterModal>
         )}
-        <form>
+        <form action="#">
           <label className="btn btn-default btn-primary">
             Spotify Extended Streaming
-            <input
-              id="spotify-import-file"
-              type="file"
-              onSubmit={this.handleSpotifyImport}
-            />
           </label>
-          <button className="btn btn-success" type="submit">
-            Import Now!
-          </button>
+          <input
+            id="spotify-import-file"
+            type="file"
+            onSubmit={this.handleSpotifyImport}
+          />
         </form>
       </div>
     );
