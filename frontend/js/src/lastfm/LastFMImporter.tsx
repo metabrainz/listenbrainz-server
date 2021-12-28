@@ -323,7 +323,12 @@ export default class LastFmImporter extends React.Component<
   submitSpotifyStreams = async (text: string) => {
     const streams: Array<SpotifyStream> = JSON.parse(text);
     const listens = streams
-      .filter((stream) => stream.ms_played < 30000)
+      .filter(
+        (stream) =>
+          stream.ms_played > 30000 &&
+          stream.master_metadata_track_name &&
+          stream.master_metadata_album_artist_name
+      )
       .map((stream) => {
         return {
           listened_at: new Date(stream.ts).getTime() / 1000,
@@ -337,11 +342,7 @@ export default class LastFmImporter extends React.Component<
           },
         } as Listen;
       });
-    await this.APIService.submitListens(
-      this.userToken,
-      "import",
-      listens
-    );
+    await this.APIService.submitListens(this.userToken, "import", listens);
   };
 
   handleSpotifyImport = (event: React.ChangeEvent<HTMLInputElement>) => {
