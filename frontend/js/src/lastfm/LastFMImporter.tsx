@@ -319,20 +319,48 @@ export default class LastFmImporter extends React.Component<
     this.startImport();
   };
 
-  async submitPage(payload: Array<Listen>) {
-    const delay = this.getRateLimitDelay();
-    // Halt execution for some time
-    await new Promise((resolve) => {
-      setTimeout(resolve, delay);
-    });
-
-    const response = await this.APIService.submitListens(
-      this.userToken,
+  submitSpotifyStreams = async (text: string) => {
+    const streams: Array<SpotifyStream> = JSON.parse(text);
+    const listens = streams
+      .filter((stream) => stream.ms_played < 30000)
+      .map((stream) => {
+        return {
+          listened_at: new Date(stream.ts).getTime() / 1000,
+          track_metadata: {
+            track_name: stream.master_metadata_track_name,
+            artist_name: stream.master_metadata_album_artist_name,
+            release_name: stream.master_metadata_album_album_name,
+            additional_info: {
+              spotify_id: stream.spotify_track_uri,
+            },
+          },
+        } as Listen;
+      });
+    const { currentUser } = this.context;
+    await this.APIService.submitListens(
+      currentUser.userToken,
       "import",
-      payload
+      listens
     );
-    this.updateRateLimitParameters(response);
-  }
+  };
+
+  handleSpotifyImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fr = new FileReader();
+    fr.onload = (e) => {
+      this.submitSpotifyStreams(e?.target?.result as string);
+    };
+    if (
+      !event ||
+      !event.target ||
+      !event.target.files ||
+      !event.target.files[0]
+    ) {
+      // eslint-disable-next-line no-console
+      console.log("Invalid file!");
+      return;
+    }
+    fr.readAsText(event.target.files[0]);
+  };
 
   async importLoop() {
     while (this.page > 0) {
@@ -534,48 +562,20 @@ export default class LastFmImporter extends React.Component<
     this.rlOrigin = new Date().getTime() / 1000;
   }
 
-  submitSpotifyStreams = async (text: string) => {
-    const streams: Array<SpotifyStream> = JSON.parse(text);
-    const listens = streams
-      .filter((stream) => stream.ms_played < 30000)
-      .map((stream) => {
-        return {
-          listened_at: new Date(stream.ts).getTime() / 1000,
-          track_metadata: {
-            track_name: stream.master_metadata_track_name,
-            artist_name: stream.master_metadata_album_artist_name,
-            release_name: stream.master_metadata_album_album_name,
-            additional_info: {
-              spotify_id: stream.spotify_track_uri,
-            },
-          },
-        } as Listen;
-      });
-    const { currentUser } = this.context;
-    await this.APIService.submitListens(
-      currentUser.userToken,
-      "import",
-      listens
-    );
-  };
+  async submitPage(payload: Array<Listen>) {
+  const delay = this.getRateLimitDelay();
+  // Halt execution for some time
+  await new Promise((resolve) => {
+    setTimeout(resolve, delay);
+  });
 
-  handleSpotifyImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const fr = new FileReader();
-    fr.onload = (e) => {
-      this.submitSpotifyStreams(e?.target?.result as string);
-    };
-    if (
-      !event ||
-      !event.target ||
-      !event.target.files ||
-      !event.target.files[0]
-    ) {
-      // eslint-disable-next-line no-console
-      console.log("Invalid file!");
-      return;
-    }
-    fr.readAsText(event.target.files[0]);
-  };
+  const response = await this.APIService.submitListens(
+    this.userToken,
+    "import",
+    payload
+  );
+  this.updateRateLimitParameters(response);
+}
 
   progressBarPercentage() {
     if (this.totalPages >= this.numCompleted)
