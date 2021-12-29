@@ -135,7 +135,7 @@ def request_sitewide_stats(type_, range_, entity):
         click.echo("Incorrect arguments provided")
 
 
-@cli.command(name="request_tim_new_release_stats")
+@cli.command(name="request_yim_new_release_stats")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
 def request_yim_new_release_stats(year: int):
