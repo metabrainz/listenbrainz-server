@@ -21,6 +21,7 @@ export type UserReportsProps = {
 
 export type UserReportsState = {
   range: UserStatsAPIRange;
+  zoomedId?: string | null;
 };
 
 export default class UserReports extends React.Component<
@@ -32,6 +33,7 @@ export default class UserReports extends React.Component<
 
     this.state = {
       range: "" as UserStatsAPIRange,
+      zoomedId: null,
     };
   }
 
@@ -77,10 +79,12 @@ export default class UserReports extends React.Component<
   };
 
   render() {
-    const { range } = this.state;
+    const { range, zoomedId } = this.state;
     const { apiUrl, user } = this.props;
     const commonProperties = {
       height: 500,
+      enableLabels: true,
+      zoomedId,
       data: {
         name: "Listens",
         color: "hsl(176, 70%, 50%)",
@@ -90,6 +94,7 @@ export default class UserReports extends React.Component<
       id: "name",
       value: "listen_count",
       labelsSkipRadius: 16,
+      motionConfig: "slow",
     };
 
     return (
@@ -190,6 +195,12 @@ export default class UserReports extends React.Component<
                   {...commonProperties}
                   colors={{ scheme: "oranges" }}
                   colorBy="id"
+                  labelsFilter={(label) => label.node.height === 0}
+                  onClick={(node) => {
+                    this.setState({
+                      zoomedId: zoomedId === node.id ? null : node.id,
+                    });
+                  }}
                 />
               </div>
               <div style={{ flexBasis: "100%" }}>
@@ -197,6 +208,12 @@ export default class UserReports extends React.Component<
                   {...commonProperties}
                   colors={{ scheme: "oranges" }}
                   colorBy="id"
+                  labelsFilter={(label) => label.node.height === 0}
+                  onClick={(node) => {
+                    this.setState({
+                      zoomedId: zoomedId === node.id ? null : node.id,
+                    });
+                  }}
                   leavesOnly
                 />
               </div>
