@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
+import { AxisTickProps } from "@nivo/axes";
 
 export type BarProps = {
   data: UserEntityData;
@@ -24,7 +25,7 @@ type Tick = {
 export default function Bar(props: BarProps) {
   const { data, maxValue } = props;
 
-  const renderTickValue = (tick: any): React.ReactNode => {
+  const renderTickValue = (tick: AxisTickProps<string>) => {
     const datum: UserEntityDatum = data[tick.tickIndex];
     const { idx } = datum;
     return (
@@ -59,6 +60,7 @@ export default function Bar(props: BarProps) {
   };
   return (
     <ResponsiveBar
+      // @ts-ignore
       data={data}
       maxValue={maxValue}
       layout="horizontal"

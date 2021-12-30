@@ -1,5 +1,6 @@
 import * as React from "react";
 
+// @ts-ignore
 import { ResponsiveBar, Layer } from "@nivo/bar";
 import { BoxLegendSvg, LegendProps } from "@nivo/legends";
 import { useMediaQuery } from "react-responsive";
@@ -18,6 +19,9 @@ export type BarDualToneProps = {
   showLegend?: boolean;
 };
 
+// @ts-ignore
+// @ts-ignore
+// @ts-ignore
 const BarLegend = ({
   height,
   legends,
@@ -29,6 +33,7 @@ const BarLegend = ({
 }) => (
   <>
     {legends.map((legend) => (
+      // @ts-ignore
       <BoxLegendSvg
         key={JSON.stringify(legend.data?.map(({ id }) => id))}
         {...legend}
@@ -159,6 +164,7 @@ export default function BarDualTone(
 
   return (
     <ResponsiveBar
+      // @ts-ignore
       data={data}
       indexBy="id"
       keys={keys}
