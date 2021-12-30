@@ -3,7 +3,7 @@ import * as React from "react";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import { CirclePacking } from "@nivo/circle-packing";
+import { ResponsiveCirclePacking } from "@nivo/circle-packing";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
@@ -12,6 +12,7 @@ import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
 import { getPageProps } from "../utils";
 import * as circleData from "./circlePacking.json";
+import Card from "../components/Card";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
@@ -79,7 +80,6 @@ export default class UserReports extends React.Component<
     const { range } = this.state;
     const { apiUrl, user } = this.props;
     const commonProperties = {
-      width: 900,
       height: 500,
       data: {
         name: "Listens",
@@ -177,17 +177,30 @@ export default class UserReports extends React.Component<
         </section>
         {user.name === "amCap1712" && (
           <section id="circle-packing">
-            <CirclePacking
-              {...commonProperties}
-              colors={{ scheme: "oranges" }}
-              colorBy="id"
-            />
-            <CirclePacking
-              {...commonProperties}
-              colors={{ scheme: "oranges" }}
-              colorBy="id"
-              leavesOnly
-            />
+            <Card
+              style={{
+                marginTop: 20,
+                minHeight: 600,
+                display: "flex",
+              }}
+              ref={React.createRef()}
+            >
+              <div style={{ flexBasis: "100%" }}>
+                <ResponsiveCirclePacking
+                  {...commonProperties}
+                  colors={{ scheme: "oranges" }}
+                  colorBy="id"
+                />
+              </div>
+              <div style={{ flexBasis: "100%" }}>
+                <ResponsiveCirclePacking
+                  {...commonProperties}
+                  colors={{ scheme: "oranges" }}
+                  colorBy="id"
+                  leavesOnly
+                />
+              </div>
+            </Card>
           </section>
         )}
       </div>
