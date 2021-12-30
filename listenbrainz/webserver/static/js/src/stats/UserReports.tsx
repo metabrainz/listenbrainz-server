@@ -80,6 +80,7 @@ export default class UserReports extends React.Component<
     const { range } = this.state;
     const { apiUrl, user } = this.props;
     const commonProperties = {
+      height: 500,
       data: {
         name: "Listens",
         color: "hsl(176, 70%, 50%)",
@@ -180,7 +181,7 @@ export default class UserReports extends React.Component<
               style={{
                 marginTop: 20,
                 padding: 20,
-                minHeight: 600,
+                minHeight: 540,
                 display: "flex",
               }}
               ref={React.createRef()}
