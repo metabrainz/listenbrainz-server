@@ -3,6 +3,7 @@ import * as React from "react";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import { CirclePacking } from "@nivo/circle-packing";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
@@ -10,6 +11,7 @@ import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
 import { getPageProps } from "../utils";
+import * as circleData from "./circlePacking.json";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
@@ -76,6 +78,19 @@ export default class UserReports extends React.Component<
   render() {
     const { range } = this.state;
     const { apiUrl, user } = this.props;
+    const commonProperties = {
+      width: 900,
+      height: 500,
+      data: {
+        name: "Listens",
+        color: "hsl(176, 70%, 50%)",
+        children: circleData,
+      },
+      padding: 2,
+      id: "name",
+      value: "listen_count",
+      labelsSkipRadius: 16,
+    };
 
     return (
       <div>
@@ -160,6 +175,21 @@ export default class UserReports extends React.Component<
             <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
           </ErrorBoundary>
         </section>
+        {user.name === "amCap1712" && (
+          <section id="circle-packing">
+            <CirclePacking
+              {...commonProperties}
+              colors={{ scheme: "oranges" }}
+              colorBy="id"
+            />
+            <CirclePacking
+              {...commonProperties}
+              colors={{ scheme: "oranges" }}
+              colorBy="id"
+              leavesOnly
+            />
+          </section>
+        )}
       </div>
     );
   }
