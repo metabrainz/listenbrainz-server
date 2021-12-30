@@ -180,7 +180,7 @@ export default class UserReports extends React.Component<
             <Card
               style={{
                 marginTop: 20,
-                minHeight: 600,
+                padding: 20,
                 display: "flex",
               }}
               ref={React.createRef()}
