@@ -9,8 +9,6 @@ import APIService from "../APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 
-import * as circleData from "./circlePacking.json";
-
 export type UserTopTracksBubbleProps = {
   range: UserStatsAPIRange;
   user: ListenBrainzUser;
@@ -179,7 +177,7 @@ export default class UserTopTracksBubble extends React.Component<
                   data={{
                     name: "Listens",
                     color: "hsl(176, 70%, 50%)",
-                    children: data,
+                    children: data.payload.top_tracks_bubble,
                   }}
                   colors={{ scheme: "oranges" }}
                   colorBy="id"
