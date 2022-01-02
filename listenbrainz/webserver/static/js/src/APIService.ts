@@ -1,5 +1,6 @@
 import { isNil, isUndefined, omit } from "lodash";
 import APIError from "./APIError";
+import * as circleData from "./stats/circlePacking.json";
 
 export default class APIService {
   APIBaseURI: string;
@@ -415,6 +416,23 @@ export default class APIService {
       throw error;
     }
     return response.json();
+  };
+
+  getUserTopTracksBubble = async (
+    userName: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserTopTracksBubbleResponse> => {
+    // const url = `${this.APIBaseURI}/stats/user/${userName}/top-tracks-bubble?range=${range}`;
+    // const response = await fetch(url);
+    // await this.checkStatus(response);
+    // if (response.status === 204) {
+    //   const error = new APIError(`HTTP Error ${response.statusText}`);
+    //   error.status = response.statusText;
+    //   error.response = response;
+    //   throw error;
+    // }
+    // return response.json();
+    return circleData as UserTopTracksBubbleResponse;
   };
 
   getUserArtistMap = async (

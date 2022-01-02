@@ -299,6 +299,26 @@ declare type UserEntityData = Array<UserEntityDatum>;
 
 declare type Entity = "artist" | "release" | "recording";
 
+declare type UserTopTracksBubbleResponse = {
+  payload: {
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+    top_tracks_bubble: Array<{
+      name: string; // artist name
+      children: Array<{
+        name: string; // release name
+        children: Array<{
+          name: string; // track name
+          listen_count: number;
+        }>;
+      }>;
+    }>;
+  };
+};
+
 declare type UserListeningActivityResponse = {
   payload: {
     from_ts: number;

@@ -13,4 +13,4 @@ CREATE TYPE external_service_oauth_type AS ENUM ('spotify', 'youtube', 'critique
 CREATE TYPE stats_range_type AS ENUM ('week', 'month', 'quarter', 'half_yearly', 'year', 'all_time',
     'this_week', 'this_month', 'this_year');
 
-CREATE TYPE user_stats_type AS ENUM('artists', 'releases', 'recordings', 'daily_activity', 'listening_activity', 'artist_map');
+CREATE TYPE user_stats_type AS ENUM('artists', 'releases', 'recordings', 'daily_activity', 'listening_activity', 'artist_map', 'top_tracks_bubble');

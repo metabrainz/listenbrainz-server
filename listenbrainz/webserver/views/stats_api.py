@@ -411,6 +411,102 @@ def get_daily_activity(user_name: str):
     }})
 
 
+@stats_api_bp.route("/user/<user_name>/top-tracks-bubble")
+@crossdomain()
+@ratelimit()
+def get_user_top_tracks_bubble(user_name: str):
+    """
+    Get the top tracks to create bubble chart for user ``user_name``. The ``top_tracks_bubble`` key holds
+    the data to draw the chart. The data is an array of nested items, each top item is a name key which
+    is artist name and children are releases. Each child release has a name key which is the release name
+    and a children key with tracks from that release. Each track has a name key which is track name and
+    a listen_count key which is the number of times that track has been listened in the requested stats_range.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "from_ts": 1587945600,
+                "last_updated": 1592807084,
+                "top_tracks_bubble": [
+                    {
+                        "name": "5 Seconds of Summer",
+                        "children": [
+                            {
+                                "name": "5 Seconds of Summer",
+                                "children": [
+                                    {
+                                        "listen_count": 2,
+                                        "name": "She Looks So Perfect"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "Much Dance 2019",
+                                "children": [
+                                    {
+                                        "listen_count": 3,
+                                        "name": "Youngblood"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Adele",
+                        "children": [
+                            {
+                                "name": "21",
+                                "children": [
+                                    {
+                                        "listen_count": 3,
+                                        "name": "Rolling in the Deep"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                ],
+                "range": "all_time",
+                "to_ts": 1589155200,
+                "user_id": "ishaanshah"
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+
+    stats = db_stats.get_user_top_tracks_bubble(user["id"], stats_range)
+    if stats is None:
+        raise APINoContent("")
+
+    return jsonify(
+        {
+            "payload": {
+                "user_id": user_name,
+                "top_tracks_bubble": stats,
+                "from_ts": stats.from_ts,
+                "to_ts": stats.to_ts,
+                "range": stats_range,
+                "last_updated": int(stats.last_updated.timestamp())
+            }
+        }
+    )
+
+
 @stats_api_bp.route("/user/<user_name>/artist-map")
 @crossdomain()
 @ratelimit()
@@ -835,7 +931,6 @@ def year_in_music(user_name: str):
             "data": get_year_in_music(user["id"]) or {}
         }
     })
-
 
 
 def _process_user_entity(stats: StatApi[UserEntityRecord], offset, count) -> Tuple[list, int]:

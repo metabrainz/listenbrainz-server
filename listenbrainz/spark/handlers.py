@@ -57,6 +57,10 @@ def handle_user_entity(data):
     db_stats.insert_multiple_user_jsonb_data(data)
 
 
+def handle_user_top_tracks_bubble(data):
+    db_stats.insert_multiple_user_top_tracks_bubble(data)
+
+
 def _handle_user_activity_stats(stats_type, stats_model, data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)

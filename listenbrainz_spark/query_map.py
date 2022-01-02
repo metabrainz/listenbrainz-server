@@ -9,6 +9,7 @@ import listenbrainz_spark.stats.sitewide.listening_activity
 import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
 import listenbrainz_spark.stats.user.listening_activity
+import listenbrainz_spark.stats.user.bubble_chart
 import listenbrainz_spark.year_in_music.new_releases_of_top_artists
 import listenbrainz_spark.year_in_music.most_prominent_color
 import listenbrainz_spark.year_in_music.similar_users
@@ -29,6 +30,7 @@ functions = {
     'stats.most_prominent_color': listenbrainz_spark.year_in_music.most_prominent_color.get_most_prominent_color,
     'stats.most_listened_year': listenbrainz_spark.year_in_music.most_listened_year.get_most_listened_year,
     'stats.day_of_week': listenbrainz_spark.year_in_music.day_of_week.get_day_of_week,
+    'stats.user.top_tracks_bubble_chart': listenbrainz_spark.stats.user.bubble_chart,
     'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
     'import.dump.incremental_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,

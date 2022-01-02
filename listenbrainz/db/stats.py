@@ -126,6 +126,42 @@ def insert_multiple_user_jsonb_data(data):
         current_app.logger.error("Error while inserting user stats:", exc_info=True)
 
 
+def insert_multiple_user_top_tracks_bubble(data):
+    values = [(entry['musicbrainz_id'], entry['stats']) for entry in data['data']]
+    query = """
+        INSERT INTO statistics.user (user_id, stats_type, stats_range, data, count, from_ts, to_ts, last_updated)
+             SELECT "user".id
+                  , 'top_tracks_bubble'
+                  , {stats_range}
+                  , stats::jsonb
+                  , 0
+                  , {from_ts}
+                  , {to_ts}
+                  , NOW()
+               FROM (VALUES %s) AS t(user_name, stats)
+               JOIN "user"
+                 ON "user".musicbrainz_id = user_name
+        ON CONFLICT (user_id, stats_type, stats_range)
+      DO UPDATE SET data = EXCLUDED.data
+                  , from_ts = EXCLUDED.from_ts
+                  , to_ts = EXCLUDED.to_ts
+                  , last_updated = EXCLUDED.last_updated
+    """
+    formatted_query = sql.SQL(query).format(
+        stats_range=sql.Literal(data['stats_range']),
+        from_ts=sql.Literal(data['from_ts']),
+        to_ts=sql.Literal(data['to_ts'])
+    )
+    connection = db.engine.raw_connection()
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, formatted_query, values)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting user top tracks bubble:", exc_info=True)
+
+
 def insert_sitewide_jsonb_data(stats_type: str, stats: StatRange):
     """ Inserts jsonb data into the given column
 
@@ -166,6 +202,21 @@ def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[
                                                         data=json.dumps(dict(row)[stats_range], indent=3)),
                                  exc_info=True)
         return None
+
+
+def get_user_top_tracks_bubble(user_id: int, stats_range: str):
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, last_updated, data, count, from_ts, to_ts, stats_range
+              FROM statistics.user
+             WHERE user_id = :user_id
+             AND stats_range = :stats_range
+             AND stats_type = 'top_tracks_bubble'
+            """), {
+            'stats_range': stats_range,
+            'user_id': user_id,
+        })
+        return result.fetchone()
 
 
 def get_user_activity_stats(user_id: int, stats_range: str, stats_type: str, stats_model) -> Optional[StatApi]:

@@ -1,42 +1,40 @@
 import json
-import logging
-import time
 
 from flask import current_app
 
 import pika
-import sqlalchemy
 import ujson
 from listenbrainz import utils
-from listenbrainz.db import stats as db_stats
-from listenbrainz.db import user as db_user
-from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.spark.handlers import (handle_candidate_sets,
-                                         handle_dataframes,
-                                         handle_dump_imported, handle_model,
-                                         handle_recommendations,
-                                         handle_user_daily_activity,
-                                         handle_user_entity,
-                                         handle_user_listening_activity,
-                                         handle_sitewide_entity,
-                                         notify_artist_relation_import,
-                                         notify_mapping_import,
-                                         handle_missing_musicbrainz_data,
-                                         notify_cf_recording_recommendations_generation,
-                                         handle_sitewide_listening_activity,
-                                         handle_similar_users,
-                                         handle_new_releases_of_top_artists,
-                                         handle_most_prominent_color,
-                                         handle_similar_users_year_end,
-                                         handle_day_of_week,
-                                         handle_most_listened_year,
-                                         handle_top_stats,
-                                         handle_listens_per_day,
-                                         handle_yearly_listen_counts)
+from listenbrainz.spark.handlers import (
+    handle_candidate_sets,
+    handle_dataframes,
+    handle_dump_imported, handle_model,
+    handle_recommendations,
+    handle_user_daily_activity,
+    handle_user_entity,
+    handle_user_listening_activity,
+    handle_sitewide_entity,
+    notify_artist_relation_import,
+    notify_mapping_import,
+    handle_missing_musicbrainz_data,
+    notify_cf_recording_recommendations_generation,
+    handle_sitewide_listening_activity,
+    handle_similar_users,
+    handle_new_releases_of_top_artists,
+    handle_most_prominent_color,
+    handle_similar_users_year_end,
+    handle_day_of_week,
+    handle_most_listened_year,
+    handle_top_stats,
+    handle_listens_per_day,
+    handle_yearly_listen_counts,
+    handle_user_top_tracks_bubble
+)
 from listenbrainz.webserver import create_app
 
 response_handler_map = {
     'user_entity': handle_user_entity,
+    'user_top_tracks_bubble': handle_user_top_tracks_bubble,
     'user_listening_activity': handle_user_listening_activity,
     'user_daily_activity': handle_user_daily_activity,
     'sitewide_entity': handle_sitewide_entity,
