@@ -1,7 +1,7 @@
 import { Theme } from "@nivo/core";
 import { Choropleth } from "@nivo/geo";
 import { BoxLegendSvg, LegendProps } from "@nivo/legends";
-import { BasicTooltip } from "@nivo/tooltip";
+import {BasicTooltip, Chip} from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
 import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
@@ -139,18 +139,21 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       <div
         style={{
           padding: 12,
-          color: feature.color,
           background: "#ffffff",
         }}
       >
-        <span>${feature.formattedValue} ${suffix}</span>
+        <Chip color={feature.color!} />
+        <span>
+          {feature.label} :
+          <strong>${feature.formattedValue} ${suffix}</strong>
+        </span>
         <br />
         {artists.map((artist: UserArtistMapArtist) => (
           <p>
             <a href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}>
               {artist.artist_name}
             </a>
-            : {artist.listen_count}
+            : <strong>{artist.listen_count}</strong>
           </p>
         ))}
       </div>
