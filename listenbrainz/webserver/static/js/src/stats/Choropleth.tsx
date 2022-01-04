@@ -161,7 +161,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             </strong>
           </span>
         </div>
-        <br />
         <p>
           {artists.map((artist: UserArtistMapArtist) => (
             <>
