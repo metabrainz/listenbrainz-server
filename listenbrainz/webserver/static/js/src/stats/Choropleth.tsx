@@ -155,7 +155,23 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       domain={domain}
       theme={isMobile ? themes.mobile : themes.desktop}
       valueFormat=".2~s"
-      tooltip={CustomTooltip}
+      tooltip={(feature) => {
+        const tooltipData = feature.feature.data;
+        return (
+          <div>
+            {tooltipData.artists.map((artist: UserArtistMapArtist) => (
+              <p>
+                <a
+                  href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
+                >
+                  {artist.artist_name}
+                </a>
+                : {artist.listen_count}
+              </p>
+            ))}
+          </div>
+        );
+      }}
       unknownColor="#efefef"
       label="properties.name"
       projectionScale={width / 5.5}

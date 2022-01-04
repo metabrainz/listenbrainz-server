@@ -420,7 +420,7 @@ export default class APIService {
   getUserArtistMap = async (
     userName: string,
     range: UserStatsAPIRange = "all_time",
-    forceRecalculate: boolean = false
+    forceRecalculate: boolean = true
   ) => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
     const response = await fetch(url);
