@@ -1,7 +1,7 @@
 import calendar
 from collections import defaultdict
 from datetime import datetime, timezone
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Iterable
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
@@ -9,7 +9,7 @@ import pycountry
 import requests
 
 from data.model.common_stat import StatApi, StatisticsRange
-from data.model.user_artist_map import UserArtistMapRecord
+from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import UserEntityRecord
@@ -494,10 +494,11 @@ def get_artist_map(user_name: str):
                 raise APINoContent('')
         else:
             # Calculate the data
-            artist_mbid_counts = defaultdict(int)
+            artist_mbid_counts = {}
             for artist in artist_stats.data.__root__:
                 for artist_mbid in artist.artist_mbids:
-                    artist_mbid_counts[artist_mbid] += artist.listen_count
+                    listen_count = artist.listen_count + artist_mbid_counts.get(artist_mbid, 0)
+                    artist_mbid_counts[artist_mbid] = (artist.artist_name, listen_count)
 
             country_code_data = _get_country_wise_counts(artist_mbid_counts)
             result = StatApi[UserArtistMapRecord](**{
@@ -884,18 +885,19 @@ def _is_valid_range(stats_range: str) -> bool:
     return stats_range in StatisticsRange.__members__
 
 
-def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:
+def _get_country_wise_counts(artist_mbids: Dict[str, Tuple[str, int]]) -> List[UserArtistMapRecord]:
     """ Get country codes from list of given artist_msids and artist_mbids
     """
     # Get artist_origin_countries from artist_credit_ids
-    artist_country_codes = _get_country_code_from_mbids(artist_mbids)
+    artist_country_codes = _get_country_code_from_mbids(artist_mbids.keys())
 
     # Map country codes to appropriate MBIDs and listen counts
     result = defaultdict(lambda: {
         "artist_count": 0,
-        "listen_count": 0
+        "listen_count": 0,
+        "artists": []
     })
-    for artist_mbid, listen_count in artist_mbids.items():
+    for artist_mbid, (artist_name, listen_count) in artist_mbids.items():
         if artist_mbid in artist_country_codes:
             # TODO: add a test to handle the case where pycountry doesn't recognize the country
             country_alpha_3 = pycountry.countries.get(alpha_2=artist_country_codes[artist_mbid])
@@ -903,25 +905,34 @@ def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMap
                 continue
             result[country_alpha_3.alpha_3]["artist_count"] += 1
             result[country_alpha_3.alpha_3]["listen_count"] += listen_count
+            result[country_alpha_3.alpha_3]["artists"].append(
+                UserArtistMapArtist(
+                    artist_mbid=artist_mbid,
+                    artist_name=artist_name,
+                    listen_count=listen_count
+                )
+            )
 
-    return [
-        UserArtistMapRecord(**{
-            "country": country,
-            **data
-        }) for country, data in result.items()
-    ]
+    artist_map_data = []
+    for country, data in result.items():
+        # sort artists within each country based on descending order of listen counts
+        data["artists"].sort(key=lambda x: x.listen_count, reverse=True)
+        artist_map_data.append(UserArtistMapRecord(country=country, **data))
+    return artist_map_data
 
 
-def _get_country_code_from_mbids(artist_mbids: Dict[str, int]) -> Dict[str, str]:
+def _get_country_code_from_mbids(artist_mbids: Iterable[str]) -> Dict[str, str]:
     """ Get a list of artist_country_code corresponding to the input artist_mbids
     """
-    request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids.keys()]
+    request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids]
     artist_country_code = {}
     if len(request_data) > 0:
         try:
-            result = requests.post("{}/artist-country-code-from-artist-mbid/json"
-                                   .format(current_app.config['LISTENBRAINZ_LABS_API_URL']),
-                                   json=request_data, params={'count': len(request_data)})
+            result = requests.post(
+                f"{current_app.config['LISTENBRAINZ_LABS_API_URL']}/artist-country-code-from-artist-mbid/json",
+                json=request_data,
+                params={"count": len(request_data)}
+            )
             # Raise error if non 200 response is received
             result.raise_for_status()
             data = result.json()

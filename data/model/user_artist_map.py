@@ -1,6 +1,13 @@
 from pydantic import BaseModel, NonNegativeInt, constr
 
-from typing import Optional
+from typing import Optional, List
+
+
+class UserArtistMapArtist(BaseModel):
+    """ Each individual artist inside a country of the artist map """
+    artist_name: constr(min_length=1)
+    artist_mbid: constr(min_length=1)
+    listen_count: NonNegativeInt
 
 
 class UserArtistMapRecord(BaseModel):
@@ -10,4 +17,5 @@ class UserArtistMapRecord(BaseModel):
     """
     country: constr(min_length=1)
     artist_count: NonNegativeInt
-    listen_count: Optional[NonNegativeInt]  # Make field optional to maintain backward compatibility
+    listen_count: NonNegativeInt  # listen count of all artists in a country
+    artists: List[UserArtistMapArtist]
