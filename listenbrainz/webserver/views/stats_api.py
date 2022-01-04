@@ -494,10 +494,10 @@ def get_artist_map(user_name: str):
                 raise APINoContent('')
         else:
             # Calculate the data
-            artist_mbid_counts = {}
+            artist_mbid_counts = defaultdict(lambda: ("", 0))
             for artist in artist_stats.data.__root__:
                 for artist_mbid in artist.artist_mbids:
-                    listen_count = artist.listen_count + artist_mbid_counts.get(artist_mbid, 0)
+                    listen_count = artist.listen_count + artist_mbid_counts[artist_mbid][1]
                     artist_mbid_counts[artist_mbid] = (artist.artist_name, listen_count)
 
             country_code_data = _get_country_wise_counts(artist_mbid_counts)
