@@ -333,37 +333,83 @@ export default class UserFeedPage extends React.Component<
     const { currentUser, APIService } = this.context;
     const { newAlert } = this.props;
     const { events } = this.state;
-    try {
-      const status = await APIService.deleteFeedEvent(
-        event.event_type,
-        currentUser.name,
-        currentUser.auth_token as string,
-        event.id
-      );
-      if (status === 200) {
-        newAlert(
-          "success",
-          "Successfully deleted!",
-          <>Successfully deleted!</>
+    if (
+      event.event_type === EventType.RECORDING_RECOMMENDATION ||
+      event.event_type === EventType.NOTIFICATION
+    ) {
+      try {
+        const status = await APIService.deleteFeedEvent(
+          event.event_type,
+          currentUser.name,
+          currentUser.auth_token as string,
+          event.id
         );
-        const new_events = _remove(events, (element) => {
-          return element?.id !== event.id;
-        });
-        this.setState({ events: new_events });
+        if (status === 200) {
+          newAlert(
+            "success",
+            "Successfully deleted!",
+            <>Successfully deleted!</>
+          );
+          const new_events = _remove(events, (element) => {
+            // Making sure the event that is getting deleted is either a recommendation or notification
+            // Since, recommendation and notification are in same db, and might have same id as a pin
+            // Similarly we later on filter by id and event_type for pin deletion
+            return !(
+              element?.id === event.id &&
+              (element.event_type === EventType.RECORDING_RECOMMENDATION ||
+                element.event_type === EventType.NOTIFICATION)
+            );
+          });
+          this.setState({ events: new_events });
+        }
+      } catch (error) {
+        newAlert(
+          "danger",
+          "Could not delete event",
+          <>
+            Something went wrong when we tried to delete your event, please try
+            again or contact us if the problem persists.
+            <br />
+            <strong>
+              {error.name}: {error.message}
+            </strong>
+          </>
+        );
       }
-    } catch (error) {
-      newAlert(
-        "danger",
-        "Could not delete event",
-        <>
-          Something went wrong when we tried to delete your event, please try
-          again or contact us if the problem persists.
-          <br />
-          <strong>
-            {error.name}: {error.message}
-          </strong>
-        </>
-      );
+    } else if (event.event_type === EventType.RECORDING_PIN) {
+      try {
+        const status = await APIService.deletePin(
+          currentUser.auth_token as string,
+          event.id as number
+        );
+        if (status === 200) {
+          newAlert(
+            "success",
+            "Successfully deleted!",
+            <>Successfully deleted!</>
+          );
+          const new_events = _remove(events, (element) => {
+            return !(
+              element?.id === event.id &&
+              element.event_type === EventType.RECORDING_PIN
+            );
+          });
+          this.setState({ events: new_events });
+        }
+      } catch (error) {
+        newAlert(
+          "danger",
+          "Could not delete event",
+          <>
+            Something went wrong when we tried to delete your event, please try
+            again or contact us if the problem persists.
+            <br />
+            <strong>
+              {error.name}: {error.message}
+            </strong>
+          </>
+        );
+      }
     }
   };
 
@@ -393,7 +439,8 @@ export default class UserFeedPage extends React.Component<
             }
             newAlert={newAlert}
             additionalMenuItems={
-              event.event_type === "recording_recommendation" &&
+              (event.event_type === EventType.RECORDING_RECOMMENDATION ||
+                event.event_type === EventType.RECORDING_PIN) &&
               event.user_name === currentUser.name ? (
                 <ListenControl
                   icon={faTrash}
