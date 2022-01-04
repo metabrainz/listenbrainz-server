@@ -1,7 +1,7 @@
 import { Theme } from "@nivo/core";
 import { Choropleth } from "@nivo/geo";
 import { BoxLegendSvg, LegendProps } from "@nivo/legends";
-import {BasicTooltip, Chip} from "@nivo/tooltip";
+import { Chip } from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
 import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
@@ -138,27 +138,44 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     return (
       <div
         style={{
-          padding: 12,
-          background: "#ffffff",
+          background: "white",
+          color: "inherit",
+          fontSize: "inherit",
+          borderRadius: "2px",
+          boxShadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
+          padding: "5px 9px",
         }}
       >
-        <span>
+        <div
+          style={{
+            whiteSpace: "pre",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           <Chip color={feature.color!} style={{ marginRight: 7 }} />
-          {feature.label}:{" "}
-          <strong>${feature.formattedValue} ${suffix}</strong>
-        </span>
-        <br />
-        <p>
-          {artists.map((artist: UserArtistMapArtist) => (
-            <>
-              <a href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}>
-                {artist.artist_name}
-              </a>
-              : <strong>{artist.listen_count}</strong>
-              <br />
-            </>
-          ))}
-        </p>
+          <span>
+            {feature.label}:{" "}
+            <strong>
+              ${feature.formattedValue} ${suffix}
+            </strong>
+          </span>
+
+          <br />
+          <p>
+            {artists.map((artist: UserArtistMapArtist) => (
+              <>
+                <a
+                  href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
+                >
+                  {artist.artist_name}
+                </a>
+                : <strong>{artist.listen_count}</strong>
+                <br />
+              </>
+            ))}
+          </p>
+        </div>
       </div>
     );
   };
