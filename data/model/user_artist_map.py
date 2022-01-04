@@ -18,4 +18,4 @@ class UserArtistMapRecord(BaseModel):
     country: constr(min_length=1)
     artist_count: NonNegativeInt
     listen_count: NonNegativeInt  # listen count of all artists in a country
-    artists: List[UserArtistMapArtist]
+    artists: Optional[List[UserArtistMapArtist]]
