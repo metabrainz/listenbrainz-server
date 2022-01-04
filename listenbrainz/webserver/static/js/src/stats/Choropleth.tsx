@@ -150,11 +150,12 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           style={{
             whiteSpace: "pre",
             display: "flex",
+            flexWrap: "wrap",
             alignItems: "center",
           }}
         >
-          <Chip color={feature.color!} style={{ marginRight: 7 }} />
-          <span>
+          <span style={{ flexBasis: "100%" }}>
+            <Chip color={feature.color!} style={{ marginRight: 7 }} />
             {feature.label}:{" "}
             <strong>
               ${feature.formattedValue} ${suffix}
