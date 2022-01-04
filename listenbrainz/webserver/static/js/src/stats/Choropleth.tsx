@@ -142,9 +142,9 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           background: "#ffffff",
         }}
       >
-        <Chip color={feature.color!} />
         <span>
-          {feature.label} :
+          <Chip color={feature.color!} style={{ marginRight: 7 }} />
+          {feature.label}:{" "}
           <strong>${feature.formattedValue} ${suffix}</strong>
         </span>
         <br />
