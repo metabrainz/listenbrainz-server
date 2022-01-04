@@ -150,33 +150,31 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           style={{
             whiteSpace: "pre",
             display: "flex",
-            flexWrap: "wrap",
             alignItems: "center",
           }}
         >
-          <span style={{ flexBasis: "100%" }}>
-            <Chip color={feature.color!} style={{ marginRight: 7 }} />
+          <Chip color={feature.color!} style={{ marginRight: 7 }} />
+          <span>
             {feature.label}:{" "}
             <strong>
               ${feature.formattedValue} ${suffix}
             </strong>
           </span>
-
-          <br />
-          <p>
-            {artists.map((artist: UserArtistMapArtist) => (
-              <>
-                <a
-                  href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
-                >
-                  {artist.artist_name}
-                </a>
-                : <strong>{artist.listen_count}</strong>
-                <br />
-              </>
-            ))}
-          </p>
         </div>
+        <br />
+        <p>
+          {artists.map((artist: UserArtistMapArtist) => (
+            <>
+              <a
+                href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
+              >
+                {artist.artist_name}
+              </a>
+              : <strong>{artist.listen_count}</strong>
+              <br />
+            </>
+          ))}
+        </p>
       </div>
     );
   };
