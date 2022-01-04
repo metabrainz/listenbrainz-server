@@ -148,14 +148,17 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           <strong>${feature.formattedValue} ${suffix}</strong>
         </span>
         <br />
-        {artists.map((artist: UserArtistMapArtist) => (
-          <p>
-            <a href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}>
-              {artist.artist_name}
-            </a>
-            : <strong>{artist.listen_count}</strong>
-          </p>
-        ))}
+        <p>
+          {artists.map((artist: UserArtistMapArtist) => (
+            <>
+              <a href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}>
+                {artist.artist_name}
+              </a>
+              : <strong>{artist.listen_count}</strong>
+              <br />
+            </>
+          ))}
+        </p>
       </div>
     );
   };
