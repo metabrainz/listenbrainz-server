@@ -1,6 +1,7 @@
 import json
 import time
 
+from flask import current_app
 from kombu.mixins import ConsumerMixin
 
 import ujson
@@ -37,6 +38,7 @@ class ListensDispatcher(ConsumerMixin):
             if event_name == "playing_now":
                 listen = NowPlayingListen(user_id=data["user_id"], user_name=data["user_name"], data=data["data"])
             else:
+                current_app.logger.error("Websockets Listen Data: %s", json.dumps(data))
                 listen = Listen.from_json(data)
             self.socketio.emit(event_name, json.dumps(listen.to_api()), to=listen.user_name)
         message.ack()
