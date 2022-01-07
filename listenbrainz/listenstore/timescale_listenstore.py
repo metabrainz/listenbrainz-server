@@ -14,7 +14,7 @@ import psycopg2
 import psycopg2.sql
 from psycopg2.extras import execute_values
 from psycopg2.errors import UntranslatableCharacter
-from typing import List
+from typing import List, Dict
 import sqlalchemy
 import pandas as pd
 import pyarrow as pa
@@ -112,6 +112,27 @@ class TimescaleListenStore(ListenStore):
             remaining_count = result.fetchone()["remaining_count"]
 
             return count + remaining_count
+
+    def update_listen_counts_for_users(self, user_counts: Dict[str, int]):
+        """ Update the listen counts for users who have listens inserted with a listened_at timestamp earlier
+        than last listen count updater run because the updater will only consider listens with listened_at after
+        the time it last ran.
+        """
+        connection = timescale.engine.raw_connection()
+        query = """
+            WITH nc(user_name, count) AS (VALUES %s)
+            UPDATE listen_count oc
+               SET count = oc.count + nc.count
+              FROM nc
+             WHERE oc.user_name = nc.user_name
+        """
+        try:
+            with connection.cursor() as cursor:
+                execute_values(cursor, query, user_counts.items())
+            connection.commit()
+        except psycopg2.errors.OperationalError:
+            connection.rollback()
+            self.log.error("Error while updating listen counts:", exc_info=True)
 
     def update_timestamps_for_user(self, user_id, min_ts, max_ts):
         """
@@ -257,8 +278,14 @@ class TimescaleListenStore(ListenStore):
             if ts <= ts_updater_last_run:
                 user_counts[user_name] += 1
 
-        for user_name, count in user_counts:
-            cache.increment(REDIS_USER_LISTEN_COUNT + str(user_name), amount=user_counts[user_name])
+        # TODO: Consider the timestamps here more carefully. What is the purpose of the timestamp in the
+        #  listen count table? Here, we have compared the listened_at with just the importer's last run
+        #  and when the importer run agains it will tally listen with listened_at greater than the timestamp
+        #  for the user in the listen count table. This is inconsistent, if we intend to only treat the
+        #  importer's last run as the separation and then we can just remove the timestamp column entirely
+        #  and use the timestamp of last importer run everywhere. Alternatively, we need to first query the
+        #  the timestamps for all affected users here and check listened_at of inserted rows against that.
+        self.update_listen_counts_for_users(user_counts)
 
         for user in user_timestamps:
             self.update_timestamps_for_user(
