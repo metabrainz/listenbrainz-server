@@ -65,12 +65,10 @@ class TimescaleListenStore(ListenStore):
         The listenstore implementation for the timescale DB.
     '''
 
-    def __init__(self, conf, logger):
-        super(TimescaleListenStore, self).__init__(logger)
-
-        timescale.init_db_connection(conf['SQLALCHEMY_TIMESCALE_URI'])
-
-        self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
+    def __init__(self, app):
+        super(TimescaleListenStore, self).__init__(app.logger)
+        timescale.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
+        self.dump_temp_dir_root = app.config.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
     def set_empty_values_for_user(self, user_id: int):
         """When a user is created, set the timestamp keys and insert an entry in the listen count

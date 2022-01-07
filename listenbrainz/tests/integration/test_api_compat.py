@@ -19,20 +19,18 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-import time
 import logging
+import time
+
 import xmltodict
+from flask import url_for
 
 import listenbrainz.db.user as db_user
-from flask import url_for, current_app
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
-from listenbrainz import config
-from listenbrainz.webserver import timescale_connection
-from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
-
+from listenbrainz.webserver import timescale_connection
 
 
 class APICompatTestCase(APICompatIntegrationTestCase):
@@ -47,12 +45,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
             self.lb_user['auth_token'],
         )
         self.log = logging.getLogger(__name__)
-        self.ls = init_timescale_connection(self.log, {
-            'REDIS_HOST': config.REDIS_HOST,
-            'REDIS_PORT': config.REDIS_PORT,
-            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
-        })
+        self.ls = timescale_connection._ts
 
     def test_record_listen_now_playing(self):
         """ Tests if listen of type 'nowplaying' is recorded correctly

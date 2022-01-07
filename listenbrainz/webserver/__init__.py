@@ -4,8 +4,8 @@ import pprint
 import sys
 from time import sleep
 
-from brainzutils.flask import CustomFlask
 from brainzutils import cache, metrics
+from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect
 from flask_login import current_user
 
@@ -23,13 +23,7 @@ API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at s
 
 def create_timescale(app):
     from listenbrainz.webserver.timescale_connection import init_timescale_connection
-    return init_timescale_connection(app.logger, {
-        'SQLALCHEMY_TIMESCALE_URI': app.config['SQLALCHEMY_TIMESCALE_URI'],
-        'REDIS_HOST': app.config['REDIS_HOST'],
-        'REDIS_PORT': app.config['REDIS_PORT'],
-        'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
-        'LISTEN_DUMP_TEMP_DIR_ROOT': app.config['LISTEN_DUMP_TEMP_DIR_ROOT'],
-    })
+    return init_timescale_connection(app)
 
 
 def create_redis(app):

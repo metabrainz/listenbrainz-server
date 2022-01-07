@@ -221,12 +221,7 @@ class TimescaleWriterSubscriber(ListenWriter):
             try:
                 while True:
                     try:
-                        self.ls = TimescaleListenStore({
-                            'REDIS_HOST': current_app.config['REDIS_HOST'],
-                            'REDIS_PORT': current_app.config['REDIS_PORT'],
-                            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
-                            'SQLALCHEMY_TIMESCALE_URI': current_app.config['SQLALCHEMY_TIMESCALE_URI']
-                        }, logger=current_app.logger)
+                        self.ls = TimescaleListenStore(current_app)
                         break
                     except Exception as err:
                         current_app.logger.error("Cannot connect to timescale: %s. Retrying in 2 seconds and trying again." %

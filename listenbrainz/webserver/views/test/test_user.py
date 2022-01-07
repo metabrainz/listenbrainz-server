@@ -1,23 +1,17 @@
+import logging
 import time
-
-import listenbrainz.db.stats as db_stats
-import ujson
 from unittest import mock
 
-from flask import url_for, current_app
+import ujson
+from flask import url_for
 
-from data.model.common_stat import StatRange
+import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
-from data.model.user_entity import UserEntityRecord
-
 from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.webserver.timescale_connection import init_timescale_connection
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.login import User
-
-import listenbrainz.db.user as db_user
-import logging
 
 
 class UserViewsTestCase(IntegrationTestCase):
@@ -25,12 +19,7 @@ class UserViewsTestCase(IntegrationTestCase):
         super(UserViewsTestCase, self).setUp()
 
         self.log = logging.getLogger(__name__)
-        self.logstore = init_timescale_connection(self.log, {
-            'REDIS_HOST': current_app.config['REDIS_HOST'],
-            'REDIS_PORT': current_app.config['REDIS_PORT'],
-            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
-            'SQLALCHEMY_TIMESCALE_URI': self.app.config['SQLALCHEMY_TIMESCALE_URI']
-        })
+        self.logstore = timescale_connection._ts
 
         user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
