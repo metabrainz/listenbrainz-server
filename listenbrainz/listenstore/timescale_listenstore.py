@@ -994,12 +994,13 @@ class TimescaleListenStore(ListenStore):
                       AND user_id = :user_id
                       AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid """
 
-        query_decr_lc = """ UPDATE listen_count 
-                               SET count = count - 1 
-                             WHERE user_name = :user_name"""
+        query_decr_lc = """ UPDATE listen_count
+                               SET count = count - 1
+                             WHERE user_id = :user_id"""
         try:
             with timescale.engine.connect() as connection:
-                connection.execute(sqlalchemy.text(query), args)
+                connection.execute(sqlalchemy.text(query),listened_at=listened_at,
+                                   user_name=user_name, recording_msid=recording_msid)
                 if listened_at <= cache.get(REDIS_USER_LISTEN_COUNT_UPDATER_TS):
                     connection.execute(sqlalchemy.text(query_decr_lc), user_name=user_name)
 
