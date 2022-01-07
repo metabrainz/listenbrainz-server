@@ -23,6 +23,7 @@ API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at s
 
 def create_timescale(app):
     from listenbrainz.webserver.timescale_connection import init_timescale_connection
+    app.logger.info("Initializing timescale connection")
     return init_timescale_connection(app)
 
 
