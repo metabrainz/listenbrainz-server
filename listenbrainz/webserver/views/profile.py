@@ -1,33 +1,29 @@
-import sqlalchemy
-from flask_wtf import FlaskForm
-
-import listenbrainz.db.feedback as db_feedback
-import listenbrainz.db.user as db_user
-from listenbrainz.db import listens_importer
-from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
-from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
-from listenbrainz.webserver.decorators import web_listenstore_needed
-from data.model.external_service import ExternalServiceType
-from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
-from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.domain.youtube import YoutubeService, YOUTUBE_SCOPES
-from listenbrainz.webserver.decorators import crossdomain
-import ujson
-
-
 from datetime import datetime
+from time import time
+
+import ujson
 from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
-from werkzeug.exceptions import NotFound, BadRequest, Unauthorized
-from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIBadRequest
+from flask_wtf import FlaskForm
+from werkzeug.exceptions import NotFound, BadRequest
 
-from listenbrainz import webserver
+import listenbrainz.db.feedback as db_feedback
+import listenbrainz.db.user as db_user
+from data.model.external_service import ExternalServiceType
+from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
+from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
+from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
+from listenbrainz.domain.youtube import YoutubeService, YOUTUBE_SCOPES
 from listenbrainz.webserver import flash
+from listenbrainz.webserver.decorators import web_listenstore_needed
+from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 from listenbrainz.webserver.login import api_login_required
+from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
-from time import time
 
 profile_bp = Blueprint("profile", __name__)
 
@@ -125,9 +121,8 @@ def fetch_listens(musicbrainz_id, to_ts):
     to listenstore until we get all the data. Returns a generator that streams
     the results.
     """
-    db_conn = webserver.create_timescale(current_app)
     while True:
-        batch, _, _ = db_conn.fetch_listens(current_user.to_dict(), to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        batch, _, _ = _ts.fetch_listens(current_user.to_dict(), to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
         if not batch:
             break
         yield from batch
@@ -163,7 +158,6 @@ def stream_json_array(elements):
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
-        db_conn = webserver.create_timescale(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Build a generator that streams the json response. We never load all

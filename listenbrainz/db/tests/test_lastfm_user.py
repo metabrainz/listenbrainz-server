@@ -1,16 +1,15 @@
 
-import listenbrainz.db.user as db_user
 import logging
 from datetime import datetime
+
 from sqlalchemy import text
 
-
-from listenbrainz import config
+import listenbrainz.db.user as db_user
 from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.tests.utils import generate_data
-from listenbrainz.webserver.timescale_connection import init_timescale_connection
+from listenbrainz.webserver.timescale_connection import _ts
 
 
 class TestAPICompatUserClass(DatabaseTestCase):
@@ -18,12 +17,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
     def setUp(self):
         super(TestAPICompatUserClass, self).setUp()
         self.log = logging.getLogger(__name__)
-        self.logstore = init_timescale_connection(self.log, {
-            'REDIS_HOST': config.REDIS_HOST,
-            'REDIS_PORT': config.REDIS_PORT,
-            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI
-        })
+        self.logstore = _ts
 
         # Create a user
         uid = db_user.create(1, "test_api_compat_user")

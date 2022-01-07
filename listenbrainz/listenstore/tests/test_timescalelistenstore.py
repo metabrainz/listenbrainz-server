@@ -1,29 +1,28 @@
 # coding=utf-8
 
-import os
-from time import time
-from datetime import datetime
 import logging
+import os
+import random
 import shutil
-import subprocess
 import tarfile
 import tempfile
-import random
+from datetime import datetime
+from time import time
 
-import ujson
 import psycopg2
 import sqlalchemy
-import listenbrainz.db.user as db_user
-from psycopg2.extras import execute_values
-from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db import timescale as ts, timescale
-from listenbrainz import config
-from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
-from listenbrainz.webserver.timescale_connection import init_timescale_connection
-from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, timescale_utils
-from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS
 from brainzutils import cache
+from psycopg2.extras import execute_values
+
+import listenbrainz.db.user as db_user
+from listenbrainz import config
+from listenbrainz.db import timescale as ts
+from listenbrainz.db.dump import SchemaMismatchException
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
+from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
+from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS
+from listenbrainz.webserver.timescale_connection import _ts
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
@@ -59,12 +58,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.reset_timescale_db()
 
         self.ns = config.REDIS_NAMESPACE
-        self.logstore = init_timescale_connection(self.log, {
-            'REDIS_HOST': config.REDIS_HOST,
-            'REDIS_PORT': config.REDIS_PORT,
-            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
-        })
+        self.logstore = _ts
 
         self.testuser = db_user.get_or_create(1, "test")
         self.testuser_id = self.testuser["id"]

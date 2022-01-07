@@ -1,26 +1,16 @@
 # coding=utf-8
-import sys
-import os
-from time import sleep, time
-from datetime import datetime, timedelta
 import logging
-import shutil
-import subprocess
-import tarfile
-import tempfile
+import os
 
-import ujson
 import psycopg2
 import sqlalchemy
+
 import listenbrainz.db.user as db_user
-from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db import timescale as ts
 from listenbrainz import config
-from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
-from listenbrainz.webserver.timescale_connection import init_timescale_connection
-from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
-from brainzutils import cache
+from listenbrainz.db import timescale as ts
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
+from listenbrainz.webserver.timescale_connection import _ts
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
@@ -55,12 +45,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.reset_timescale_db()
 
         self.ns = config.REDIS_NAMESPACE
-        self.logstore = init_timescale_connection(self.log, {
-            'REDIS_HOST': config.REDIS_HOST,
-            'REDIS_PORT': config.REDIS_PORT,
-            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
-        })
+        self.logstore = _ts
 
         self.testuser_id = db_user.create(1, "test")
         self.testuser_name = db_user.get(self.testuser_id)['musicbrainz_id']
