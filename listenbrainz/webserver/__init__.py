@@ -63,14 +63,15 @@ def load_config(app):
 
     app.config.from_pyfile(config_file)
     # Output config values and some other info
-    if deploy_env in ['prod', 'test']:
+    if deploy_env in ['prod', 'beta', 'test']:
         print('Configuration values are as follows: ')
         print(pprint.pformat(app.config, indent=4))
-    try:
-        with open('.git-version') as git_version_file:
-            print('Running on git commit: %s' % git_version_file.read().strip())
-    except IOError as e:
-        print('Unable to retrieve git commit. Error: %s', str(e))
+
+        try:
+            with open('.git-version') as git_version_file:
+                print('Running on git commit: %s' % git_version_file.read().strip())
+        except IOError as e:
+            print('Unable to retrieve git commit. Error: %s', str(e))
 
 
 def check_ratelimit_token_whitelist(auth_token):
