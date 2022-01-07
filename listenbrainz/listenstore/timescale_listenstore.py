@@ -92,7 +92,7 @@ class TimescaleListenStore(ListenStore):
         """
         with timescale.engine.connect() as connection:
             query = "SELECT count, timestamp FROM listen_count WHERE user_name = :user_name"
-            result = connection.execute(sqlalchemy.text(query), {"user_name": user_name})
+            result = connection.execute(sqlalchemy.text(query), user_name=user_name)
             if result.rowcount > 0:
                 row = result.fetchone()
                 count, timestamp = row["count"], int(row["timestamp"].timestamp())
@@ -102,54 +102,16 @@ class TimescaleListenStore(ListenStore):
             query_remaining = """
                 SELECT count(*) AS remaining_count
                   FROM listen 
-                 WHERE user_name = : user_name 
+                 WHERE user_name = :user_name 
                    AND listened_at > :timestamp
                 """
-            result = connection.execute(sqlalchemy.text(query_remaining), {
-                "user_name": user_name,
-                "timestamp": timestamp
-            })
+            result = connection.execute(sqlalchemy.text(query_remaining),
+                user_name=user_name,
+                timestamp=timestamp
+            )
             remaining_count = result.fetchone()["remaining_count"]
 
             return count + remaining_count
-
-    def reset_listen_count(self, user_name):
-        """ Reset the listen count of a user from cache and put in a new calculated value.
-            returns the re-calculated listen count.
-
-            Args:
-                user_name: the musicbrainz id of user whose listen count needs to be reset
-        """
-        query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
-        t0 = time.monotonic()
-        try:
-            with timescale.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text(query), {
-                    "user_name": user_name,
-                })
-                count = int(result.fetchone()[0] or 0)
-
-        except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count: %s" %
-                           str(e), exc_info=True)
-            raise
-
-        # intended for production monitoring
-        self.log.info("listen counts %s %.2fs" % (user_name, time.monotonic() - t0))
-        # put this value into brainzutils cache without an expiry time
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, count, expirein=0, encode=False)
-        return count
-
-    def set_listen_count_expiry_for_user(self, user_name):
-        """ Set an expire time for the listen count cache item. This is called after
-            a bulk import which allows for timescale continuous aggregates to catch up
-            to listen counts. Once the key expires, the correct value can be calculated
-            from the aggregate.
-
-            Args:
-                user_name: the musicbrainz id of user whose listen count needs an expiry time
-        """
-        cache._r.expire(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY)
 
     def update_timestamps_for_user(self, user_id, min_ts, max_ts):
         """
@@ -999,14 +961,15 @@ class TimescaleListenStore(ListenStore):
 
         Raises: Exception if unable to delete the user in 5 retries
         """
-
+        query = """
+            DELETE FROM listen_count WHERE user_id = :user_id;
+            DELETE FROM listen WHERE user_id = :user_id;
+        """
         self.set_empty_cache_values_for_user(musicbrainz_id, user_id)
-        args = {'user_id': user_id}
-        query = "DELETE FROM listen WHERE user_id = :user_id"
 
         try:
             with timescale.engine.connect() as connection:
-                connection.execute(sqlalchemy.text(query), args)
+                connection.execute(sqlalchemy.text(query), user_id=user_id)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise

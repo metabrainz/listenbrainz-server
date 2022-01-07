@@ -400,11 +400,6 @@ def latest_import():
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
 
-        # During unrelated tests _ts may be None -- improving this would be a great headache.
-        # However, during the test of this code and while serving requests _ts is set.
-        if _ts:
-            _ts.set_listen_count_expiry_for_user(user['musicbrainz_id'])
-
         return jsonify({'status': 'ok'})
 
 
