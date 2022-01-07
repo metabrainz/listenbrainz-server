@@ -9,7 +9,7 @@ from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.tests.utils import generate_data
-from listenbrainz.webserver.timescale_connection import _ts
+from listenbrainz.webserver import timescale_connection
 
 
 class TestAPICompatUserClass(DatabaseTestCase):
@@ -17,7 +17,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
     def setUp(self):
         super(TestAPICompatUserClass, self).setUp()
         self.log = logging.getLogger(__name__)
-        self.logstore = _ts
+        self.logstore = timescale_connection._ts
 
         # Create a user
         uid = db_user.create(1, "test_api_compat_user")

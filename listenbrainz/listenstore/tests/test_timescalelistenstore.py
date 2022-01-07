@@ -22,7 +22,7 @@ from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS
-from listenbrainz.webserver.timescale_connection import _ts
+from listenbrainz.webserver import timescale_connection
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
@@ -58,7 +58,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.reset_timescale_db()
 
         self.ns = config.REDIS_NAMESPACE
-        self.logstore = _ts
+        self.logstore = timescale_connection._ts
 
         self.testuser = db_user.get_or_create(1, "test")
         self.testuser_id = self.testuser["id"]

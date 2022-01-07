@@ -10,7 +10,7 @@ from listenbrainz import config
 from listenbrainz.db import timescale as ts
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
-from listenbrainz.webserver.timescale_connection import _ts
+from listenbrainz.webserver import timescale_connection
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
@@ -45,7 +45,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.reset_timescale_db()
 
         self.ns = config.REDIS_NAMESPACE
-        self.logstore = _ts
+        self.logstore = timescale_connection._ts
 
         self.testuser_id = db_user.create(1, "test")
         self.testuser_name = db_user.get(self.testuser_id)['musicbrainz_id']
