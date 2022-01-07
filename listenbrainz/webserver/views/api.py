@@ -1,3 +1,4 @@
+import logging
 from operator import itemgetter
 
 import psycopg2
@@ -19,6 +20,9 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
     APIUnauthorized, ListenValidationError
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.timescale_connection import _ts
+logging.basicConfig()
+logging.error("_ts imported now")
+logging.error(str(_ts))
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list, \
     is_valid_uuid, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, \
