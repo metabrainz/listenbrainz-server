@@ -19,10 +19,10 @@ from listenbrainz.domain.external_service import ExternalService, ExternalServic
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
 from listenbrainz.domain.youtube import YoutubeService, YOUTUBE_SCOPES
 from listenbrainz.webserver import flash
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
 profile_bp = Blueprint("profile", __name__)
@@ -122,7 +122,7 @@ def fetch_listens(musicbrainz_id, to_ts):
     the results.
     """
     while True:
-        batch, _, _ = _ts.fetch_listens(current_user.to_dict(), to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        batch, _, _ = timescale_connection._ts.fetch_listens(current_user.to_dict(), to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
         if not batch:
             break
         yield from batch

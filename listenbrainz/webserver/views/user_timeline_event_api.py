@@ -34,11 +34,10 @@ from data.model.user_timeline_event import RecordingRecommendationMetadata, APIT
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.listenstore import TimescaleListenStore
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
-from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html, \
     _validate_get_endpoint_params
 
@@ -304,7 +303,7 @@ def get_listen_events(
     # user is following and take a max of 2 out of them per user. This
     # could be done better by writing a complex query to get exactly 2 listens for each user,
     # but I'm happy with this heuristic for now and we can change later.
-    listens, _, _ = _ts.fetch_listens_for_multiple_users_from_storage(
+    listens, _, _ = timescale_connection._ts.fetch_listens_for_multiple_users_from_storage(
         users,
         limit=count,
         from_ts=min_ts,
