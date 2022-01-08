@@ -1,4 +1,3 @@
-import logging
 from operator import itemgetter
 
 import psycopg2
@@ -14,15 +13,12 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.timescale_connection import _ts
-logging.basicConfig()
-logging.error("_ts imported now")
-logging.error(str(_ts))
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list, \
     is_valid_uuid, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, \
@@ -134,7 +130,7 @@ def get_listens(user_name):
     if min_ts and max_ts and min_ts >= max_ts:
         raise APIBadRequest("min_ts should be less than max_ts")
 
-    listens, _, max_ts_per_user = _ts.fetch_listens(
+    listens, _, max_ts_per_user = timescale_connection._ts.fetch_listens(
         user,
         limit=count,
         from_ts=min_ts,
@@ -172,7 +168,7 @@ def get_listen_count(user_name):
         raise APINotFound("Cannot find user: %s" % user_name)
 
     try:
-        listen_count = _ts.get_listen_count_for_user(user["id"])
+        listen_count = timescale_connection._ts.get_listen_count_for_user(user["id"])
     except psycopg2.OperationalError as err:
         current_app.logger.error("cannot fetch user listen count: ", str(err))
         raise APIServiceUnavailable(
@@ -246,7 +242,7 @@ def get_recent_listens_for_user_list(user_list):
         raise APIBadRequest("user_list is empty or invalid.")
 
     users = db_user.get_many_users_by_mb_id(users)
-    listens = _ts.fetch_recent_listens_for_users(
+    listens = timescale_connection._ts.fetch_recent_listens_for_users(
         users,
         limit=limit
     )
@@ -512,7 +508,8 @@ def delete_listen():
         log_raise_400("%s: Recording MSID format invalid." % recording_msid)
 
     try:
-        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_id=user["id"])
+        timescale_connection._ts.delete_listen(listened_at=listened_at,
+                                               recording_msid=recording_msid, user_id=user["id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(
