@@ -1,24 +1,19 @@
-from datetime import datetime
+import os
+from time import sleep
+
+import click
+import sqlalchemy
+from werkzeug.serving import run_simple
 
 import listenbrainz.db.dump_manager as dump_manager
 import listenbrainz.spark.request_manage as spark_request_manage
+from listenbrainz import db
+from listenbrainz import webserver
+from listenbrainz.db import timescale as ts
 from listenbrainz.listenstore import timescale_fill_userid
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     refresh_listen_count_aggregate as ts_refresh_listen_count_aggregate
-
-from listenbrainz import db
-from listenbrainz.db import timescale as ts
-from listenbrainz import webserver
-from werkzeug.serving import run_simple
-import os
-import click
-import sqlalchemy
-from time import sleep
-
-from listenbrainz.utils import safely_import_config
 from listenbrainz.webserver import create_app
-
-safely_import_config()
 
 
 @click.group()
