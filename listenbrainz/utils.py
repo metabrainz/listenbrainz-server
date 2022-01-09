@@ -92,30 +92,6 @@ def create_channel_to_consume(connection, exchange: str, queue: str, callback_fu
     return ch
 
 
-def connect_to_redis(host, port, log=print):
-    """ Create a connection to redis and return it
-
-    Note: This is a blocking function which keeps trying to connect to redis until
-    it establishes a connection
-
-    Args:
-        host: the hostname of the redis server
-        port: the port of the redis server
-        log: the function to use for error logging
-
-    Returns:
-        Redis object
-    """
-    while True:
-        try:
-            redis = Redis(host=host, port=port)
-            redis.ping()
-            return redis
-        except Exception as err:
-            log("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
-            time.sleep(3)
-
-
 def unix_timestamp_to_datetime(timestamp):
     """ Converts expires_at timestamp received from Spotify to a datetime object
 
@@ -126,6 +102,7 @@ def unix_timestamp_to_datetime(timestamp):
         A datetime object with timezone UTC corresponding to the provided timestamp
     """
     return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
+
 
 def get_fallback_connection_name():
     """ Get a connection name friendlier than docker gateway ip during connecting
