@@ -1,31 +1,25 @@
 #!/usr/bin/python3
 import time
+from typing import Dict, List
 
 import spotipy
 from brainzutils import metrics
-from typing import Dict, List
+from brainzutils.mail import send_mail
+from dateutil import parser
+from flask import current_app, render_template
+from spotipy import SpotifyException
+from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
 import listenbrainz.webserver
-
-from listenbrainz.utils import safely_import_config
-from listenbrainz.webserver.models import SubmitListenUserMetadata
-
-safely_import_config()
-
+from listenbrainz.db import user as db_user
+from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, \
     ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService
-
 from listenbrainz.webserver.errors import APIBadRequest
-
-from dateutil import parser
-from flask import current_app, render_template
-from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
-from listenbrainz.db import user as db_user
-from listenbrainz.db.exceptions import DatabaseException
-from spotipy import SpotifyException
-from werkzeug.exceptions import InternalServerError, ServiceUnavailable
-from brainzutils.mail import send_mail
+from listenbrainz.webserver.models import SubmitListenUserMetadata
+from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT, \
+    LISTEN_TYPE_PLAYING_NOW
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
 _listens_imported_since_last_update = 0  # number of listens imported since last metric update was submitted
