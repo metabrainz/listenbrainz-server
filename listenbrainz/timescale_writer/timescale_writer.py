@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
 import sys
-from time import sleep, monotonic
 from datetime import datetime
+from time import sleep, monotonic
 
 import pika
+import psycopg2
 import ujson
+from brainzutils import metrics
 from flask import current_app
 from more_itertools import chunked
 from redis import Redis
-import psycopg2
-
-from listenbrainz.listen import Listen
-from listenbrainz.listenstore import RedisListenStore
-from listenbrainz.listen_writer import ListenWriter
-from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver import create_app
-from brainzutils import metrics
 
 from listenbrainz import messybrainz
+from listenbrainz.listen import Listen
+from listenbrainz.listen_writer import ListenWriter
+from listenbrainz.listenstore import RedisListenStore
+from listenbrainz.listenstore import TimescaleListenStore
+from listenbrainz.webserver import create_app
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
@@ -236,10 +235,8 @@ class TimescaleWriterSubscriber(ListenWriter):
 
                 while True:
                     try:
-                        self.redis = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'],
-                                           decode_responses=True)
-                        self.redis.ping()
-                        self.redis_listenstore = RedisListenStore(current_app.logger, current_app.config)
+                        cache._r.ping()
+                        self.redis_listenstore = redis_connection._redis
                         break
                     except Exception as err:
                         current_app.logger.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." %
