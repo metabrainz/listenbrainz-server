@@ -9,14 +9,11 @@ import ujson
 from brainzutils import metrics, cache
 from flask import current_app
 from more_itertools import chunked
-from redis import Redis
 
 from listenbrainz import messybrainz
 from listenbrainz.listen import Listen
 from listenbrainz.listen_writer import ListenWriter
-from listenbrainz.listenstore import RedisListenStore
-from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver import create_app, redis_connection
+from listenbrainz.webserver import create_app, redis_connection, timescale_connection
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
@@ -221,7 +218,7 @@ class TimescaleWriterSubscriber(ListenWriter):
             try:
                 while True:
                     try:
-                        self.ls = TimescaleListenStore(current_app)
+                        self.ls = timescale_connection._ts
                         break
                     except Exception as err:
                         current_app.logger.error("Cannot connect to timescale: %s. Retrying in 2 seconds and trying again." %
