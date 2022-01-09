@@ -7,10 +7,10 @@ import tarfile
 import tempfile
 import time
 import uuid
-import logging
-from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import Dict
+from typing import List
+
 import pandas as pd
 import psycopg2
 import psycopg2.sql
@@ -537,7 +537,8 @@ class TimescaleListenStore(ListenStore):
                 'Exception while adding dump metadata: %s', str(e), exc_info=True)
             raise
 
-    def write_listens(self, temp_dir, tar_file, archive_name, start_time_range=None, end_time_range=None, full_dump=True):
+    def write_listens(self, temp_dir, tar_file, archive_name, start_time_range=None, end_time_range=None,
+                      full_dump=True):
         """ Dump listens in the format for the ListenBrainz dump.
 
         Args:
@@ -627,7 +628,8 @@ class TimescaleListenStore(ListenStore):
                         archive_name, 'listens', str(year), "%d.listens" % month))
 
                     listen_count += rows_added
-                    self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count, start_time.strftime("%Y-%m-%d"),
+                    self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count,
+                                  start_time.strftime("%Y-%m-%d"),
                                   listen_count / (time.monotonic() - t0))
 
             month = next_month
@@ -676,7 +678,6 @@ class TimescaleListenStore(ListenStore):
                 pxz_command, stdin=subprocess.PIPE, stdout=archive)
 
             with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
-
                 temp_dir = os.path.join(
                     self.dump_temp_dir_root, str(uuid.uuid4()))
                 create_path(temp_dir)
@@ -797,14 +798,14 @@ class TimescaleListenStore(ListenStore):
                         data["recording_name"].append(result["l_recording_name"])
                         data["artist_credit_id"].append(None)
                         approx_size += len(result["l_artist_name"]) + len(result["l_release_name"] or "0") + \
-                            len(result["l_recording_name"])
+                                       len(result["l_recording_name"])
                     else:
                         data["artist_name"].append(result["m_artist_name"])
                         data["release_name"].append(result["m_release_name"])
                         data["recording_name"].append(result["m_recording_name"])
                         data["artist_credit_id"].append(result["artist_credit_id"])
                         approx_size += len(result["m_artist_name"]) + len(result["m_release_name"]) + \
-                            len(result["m_recording_name"]) + len(str(result["artist_credit_id"]))
+                                       len(result["m_recording_name"]) + len(str(result["artist_credit_id"]))
 
                     for col in data:
                         if col == 'listened_at':
@@ -899,7 +900,8 @@ class TimescaleListenStore(ListenStore):
                 else:
                     end = datetime(year=year + 1, day=1, month=1)
 
-                self.log.info("dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
+                self.log.info(
+                    "dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
 
                 # This try block is here in an effort to expose bugs that occur during testing
                 # Without it sometimes test pass and sometimes they give totally unrelated errors.
