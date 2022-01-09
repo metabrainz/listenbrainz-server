@@ -1,12 +1,9 @@
 # coding=utf-8
 import calendar
-import time
-import ujson
-import yaml
 from copy import deepcopy
-
 from datetime import datetime
-from listenbrainz.utils import escape
+
+import ujson
 
 
 def flatten_dict(d, seperator='', parent_key=''):

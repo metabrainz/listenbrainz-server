@@ -1,17 +1,10 @@
 import errno
 import os
 import socket
+import time
+from datetime import datetime, timezone
 
 import pika
-import time
-
-from datetime import datetime, timezone
-from redis import Redis
-
-def escape(value):
-    """ Escapes backslashes, quotes and new lines present in the string value
-    """
-    return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
 
 
 def create_path(path):
