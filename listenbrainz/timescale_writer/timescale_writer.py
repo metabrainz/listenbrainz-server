@@ -6,7 +6,7 @@ from time import sleep, monotonic
 import pika
 import psycopg2
 import ujson
-from brainzutils import metrics
+from brainzutils import metrics, cache
 from flask import current_app
 from more_itertools import chunked
 from redis import Redis
@@ -16,7 +16,7 @@ from listenbrainz.listen import Listen
 from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.listenstore import RedisListenStore
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver import create_app
+from listenbrainz.webserver import create_app, redis_connection
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
