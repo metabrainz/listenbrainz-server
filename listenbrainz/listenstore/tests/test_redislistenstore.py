@@ -13,6 +13,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz import config
 from listenbrainz.listen import Listen, NowPlayingListen
+from listenbrainz.utils import init_cache
 from listenbrainz.webserver.redis_connection import init_redis_connection
 from listenbrainz.listenstore.redis_listenstore import RedisListenStore
 
@@ -21,9 +22,11 @@ class RedisListenStoreTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(RedisListenStoreTestCase, self).setUp()
-        self.log = logging.getLogger()
         # TODO: Ideally this would use a config from a flask app, but this test case doesn't create an app
-        self._redis = init_redis_connection(self.log, config.REDIS_HOST, config.REDIS_PORT, config.REDIS_NAMESPACE)
+        init_cache(config.REDIS_HOST, config.REDIS_PORT, config.REDIS_NAMESPACE)
+
+        self.log = logging.getLogger()
+        self._redis = init_redis_connection(self.log)
         self.testuser = db_user.get_or_create(1, "test")
 
     def tearDown(self):
