@@ -82,7 +82,7 @@ def check_ratelimit_token_whitelist(auth_token):
     return auth_token in current_app.config["WHITELISTED_AUTH_TOKENS"]
 
 
-def gen_app(debug=None):
+def create_app(debug=None):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
@@ -165,8 +165,9 @@ def gen_app(debug=None):
     return app
 
 
-def create_app(debug=None):
-    app = gen_app(debug=debug)
+def create_web_app(debug=None):
+    """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
+    app = create_app(debug=debug)
 
     # Static files
     import listenbrainz.webserver.static_manager
@@ -230,7 +231,7 @@ def create_api_compat_app(debug=None):
     need to create a different app and only register the api_compat blueprints
     """
 
-    app = gen_app(debug=debug)
+    app = create_app(debug=debug)
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp
