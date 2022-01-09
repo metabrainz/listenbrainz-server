@@ -1,9 +1,11 @@
-from redis import Redis
-import redis
 import time
+from typing import Optional
+
+import redis
+
 from listenbrainz.listenstore import RedisListenStore
 
-_redis = None
+_redis: Optional[RedisListenStore] = None
 
 
 def init_redis_connection(logger):
