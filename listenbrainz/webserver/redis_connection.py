@@ -6,17 +6,13 @@ from listenbrainz.listenstore import RedisListenStore
 _redis = None
 
 
-def init_redis_connection(logger, host, port, namespace):
+def init_redis_connection(logger):
     """Create a connection to the Redis server."""
 
     global _redis
     while True:
         try:
-            _redis = RedisListenStore(logger, {
-                'REDIS_HOST': host,
-                'REDIS_PORT': port,
-                'REDIS_NAMESPACE': namespace
-            })
+            _redis = RedisListenStore(logger)
             _redis.check_connection()
             break
         except redis.exceptions.ConnectionError as e:
