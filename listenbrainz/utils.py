@@ -24,14 +24,6 @@ def create_path(path):
                             (path, exception))
 
 
-def log_ioerrors(logger, e):
-    """ Logs IOErrors that occur in case we run out of disk space.
-        This is used in data dumps and is a placeholder while Sentry support
-        is added.
-    """
-    logger.error('IOError while creating dump: %s', str(e))
-
-
 def connect_to_rabbitmq(username, password,
                         host, port, virtual_host,
                         connection_type=pika.BlockingConnection,
