@@ -31,7 +31,6 @@ class RedisListenStoreTestCase(DatabaseTestCase):
 
     def tearDown(self):
         cache._r.flushdb()
-        cache._r.connection.disconnect()
         super(RedisListenStoreTestCase, self).tearDown()
 
     def test_get_and_put_playing_now(self):
