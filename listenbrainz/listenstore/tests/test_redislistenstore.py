@@ -30,8 +30,8 @@ class RedisListenStoreTestCase(DatabaseTestCase):
         self.testuser = db_user.get_or_create(1, "test")
 
     def tearDown(self):
-        self._redis.redis.flushdb()
-        Connection(self._redis.redis).disconnect()
+        cache._r.flushdb()
+        cache._r.connection.disconnect()
         super(RedisListenStoreTestCase, self).tearDown()
 
     def test_get_and_put_playing_now(self):
