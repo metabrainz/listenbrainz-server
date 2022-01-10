@@ -1,5 +1,8 @@
 import * as timeago from "time-ago";
-import { formatWSMessageToListen, preciseTimestamp } from "../../src/utils/utils";
+import {
+  formatWSMessageToListen,
+  preciseTimestamp,
+} from "../../src/utils/utils";
 
 describe("formatWSMessageToListen", () => {
   const mockListen: Listen = {
@@ -52,6 +55,7 @@ describe("preciseTimestamp", () => {
       new Date(testDate).toLocaleString(undefined, {
         day: "2-digit",
         month: "short",
+        year: "numeric",
         hour: "numeric",
         minute: "numeric",
         hour12: true,

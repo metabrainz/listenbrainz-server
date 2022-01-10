@@ -231,7 +231,7 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
   return json as Listen;
 };
 
-// recieves or unix epoch timestamp int or ISO datetime string
+// receives or unix epoch timestamp int or ISO datetime string
 const preciseTimestamp = (
   listened_at: number | string,
   displaySetting?: "timeAgo" | "includeYear" | "excludeYear"
