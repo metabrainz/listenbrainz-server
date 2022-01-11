@@ -14,6 +14,7 @@ from listenbrainz.db.testing import TimescaleTestCase, DatabaseTestCase
 from listenbrainz.listenstore import TimescaleListenStore, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
+from listenbrainz.webserver import create_app
 
 
 class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
@@ -21,9 +22,9 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
-        self.log = logging.getLogger(__name__)
-        self.logstore = TimescaleListenStore(self.log)
-        self.dumpstore = DumpListenStore(self.log)
+        self.app = create_app()
+        self.logstore = TimescaleListenStore(self.app.logger)
+        self.dumpstore = DumpListenStore(self.app)
         self.testuser_name = db_user.get_or_create(1, "test")["musicbrainz_id"]
 
     def tearDown(self):
@@ -148,7 +149,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self._create_test_data(self.testuser_name)
 
         temp_dir = tempfile.mkdtemp()
-        dump_location = self.logstore.dump_listens(
+        dump_location = self.dumpstore.dump_listens(
             location=temp_dir,
             dump_id=1,
             end_time=datetime.now(),

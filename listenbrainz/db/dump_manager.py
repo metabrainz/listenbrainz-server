@@ -87,7 +87,7 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
     """
     app = create_app()
     with app.app_context():
-        ls = DumpListenStore(app.logger)
+        ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -150,7 +150,7 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
 def create_incremental(location, threads, dump_id):
     app = create_app()
     with app.app_context():
-        ls = DumpListenStore(app.logger)
+        ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -323,7 +323,7 @@ def check_dump_ages():
 def create_test_parquet_files():
     app = create_app()
     with app.app_context():
-        ls = DumpListenStore(app.logger)
+        ls = DumpListenStore(app)
         start = datetime.now() - timedelta(days=30)
         ls.dump_listens_for_spark("/tmp", 1000, "full", start)
         sys.exit(-2)
