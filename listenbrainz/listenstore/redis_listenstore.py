@@ -6,16 +6,18 @@ import ujson
 from brainzutils import cache
 
 from listenbrainz.listen import Listen, NowPlayingListen
-from listenbrainz.listenstore import ListenStore
 
 
-class RedisListenStore(ListenStore):
+class RedisListenStore:
 
     RECENT_LISTENS_KEY = "rl-"
     RECENT_LISTENS_MAX = 100
     PLAYING_NOW_KEY = "pn."
     LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
     LISTEN_COUNT_PER_DAY_KEY = "lc-day-"
+
+    def __init__(self, logger):
+        self.log = logger
 
     def get_playing_now(self, user_id):
         """ Return the current playing song of the user
