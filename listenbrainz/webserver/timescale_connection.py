@@ -14,7 +14,7 @@ def init_timescale_connection(app):
 
     while True:
         try:
-            _ts = TimescaleListenStore(app)
+            _ts = TimescaleListenStore(app.logger)
             break
         except Exception:
             app.logger.error(f"Couldn't create TimescaleListenStore instance (sleeping and trying again...):", exc_info=True)

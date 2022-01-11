@@ -21,25 +21,6 @@ CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
 
 
-def create_timescale(app):
-    from listenbrainz.webserver.timescale_connection import init_timescale_connection
-    return init_timescale_connection(app)
-
-
-def create_redis(app):
-    from listenbrainz.webserver.redis_connection import init_redis_connection
-    init_redis_connection(app.logger)
-
-
-def create_rabbitmq(app):
-    from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
-    try:
-        init_rabbitmq_connection(app)
-    except ConnectionError as e:
-        app.logger.error('Could not connect to RabbitMQ: %s', str(e))
-        return
-
-
 def load_config(app):
     # Load configuration files: If we're running under a docker deployment, wait until
     config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'config.py')
@@ -111,18 +92,6 @@ def create_app(debug=None):
     cache.init(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
     metrics.init("listenbrainz")
 
-    # Redis connection
-    create_redis(app)
-
-    # Timescale connection
-    create_timescale(app)
-
-    # RabbitMQ connection
-    try:
-        create_rabbitmq(app)
-    except ConnectionError:
-        app.logger.critical("RabbitMQ service is not up!", exc_info=True)
-
     # Database connections
     from listenbrainz import db
     from listenbrainz.db import timescale as ts
@@ -130,6 +99,21 @@ def create_app(debug=None):
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
     ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
     msb.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+
+    # Redis connection
+    from listenbrainz.webserver.redis_connection import init_redis_connection
+    init_redis_connection(app.logger)
+
+    # Timescale connection
+    from listenbrainz.webserver.timescale_connection import init_timescale_connection
+    init_timescale_connection(app)
+
+    # RabbitMQ connection
+    from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
+    try:
+        init_rabbitmq_connection(app)
+    except ConnectionError:
+        app.logger.critical("RabbitMQ service is not up!", exc_info=True)
 
     if app.config['MB_DATABASE_URI']:
         from brainzutils import musicbrainz_db
