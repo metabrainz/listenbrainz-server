@@ -12,6 +12,7 @@ import psycopg2.sql
 import pyarrow as pa
 import pyarrow.parquet as pq
 import sqlalchemy
+import tempfile
 import ujson
 from psycopg2.extras import execute_values
 
@@ -33,8 +34,9 @@ PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / co
 
 class DumpListenStore:
 
-    def __init__(self, logger):
-        self.log = logger
+    def __init__(self, app):
+        self.log = app.logger
+        self.dump_temp_dir_root = app.config.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
     def get_listens_query_for_dump(self, start_time, end_time):
         """
