@@ -132,13 +132,13 @@ def fill_userid():
 
 def print_status_update(chunk_count, number_chunks, start_time):
     """Print a basic status update based on how many chunks have been computed"""
-    chunk_time = time.monotonic()
-    chunk_percentage = chunk_count / number_chunks
-    duration = round(chunk_time - start_time)
-    durdelta = timedelta(seconds=duration)
-    remaining = round((duration / (chunk_percentage or 0.01)) - duration)
-    remdelta = timedelta(seconds=remaining)
     if number_chunks > 0:
+        chunk_time = time.monotonic()
+        chunk_percentage = chunk_count / number_chunks
+        duration = round(chunk_time - start_time)
+        durdelta = timedelta(seconds=duration)
+        remaining = round((duration / (chunk_percentage or 0.01)) - duration)
+        remdelta = timedelta(seconds=remaining)
         print(f" - Done {chunk_count}/{number_chunks} in {str(durdelta)}; {str(remdelta)} remaining")
     else:
-        print(f" No chunks processed in {str(durdelta)}; {str(remdelta)} remaining")
+        print(f" No chunks processed")
