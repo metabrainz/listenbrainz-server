@@ -1,8 +1,5 @@
-import time
-from collections import defaultdict
 from datetime import datetime, timedelta
 import psycopg2
-from psycopg2.errors import UntranslatableCharacter
 import sqlalchemy
 import subprocess
 import logging
@@ -13,14 +10,12 @@ from sqlalchemy import text
 from listenbrainz.utils import init_cache
 from listenbrainz import db
 from listenbrainz.db import timescale
-from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, \
-    DATA_START_YEAR_IN_SECONDS
+from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_TIMESTAMPS
 from listenbrainz import config
 
 
 logger = logging.getLogger(__name__)
 
-NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH = 3
 SECONDS_IN_A_YEAR = 31536000
 
 
@@ -90,7 +85,6 @@ def recalculate_all_user_data():
 
     # Tabulate all of the listen counts/timestamps for all users
     logger.info("Scan the whole listen table...")
-    listen_counts = defaultdict(int)
     user_timestamps = {}
     query = "SELECT listened_at, user_name, user_id FROM listen where created <= :ts"
     try:
@@ -109,7 +103,13 @@ def recalculate_all_user_data():
                         user_timestamps[user_id][0] = ts
 
                 user_name = row[1]
-                listen_counts[user_name] += 1
+                if user_name not in user_timestamps:
+                    user_timestamps[user_name] = [ts, ts]
+                else:
+                    if ts > user_timestamps[user_name][1]:
+                        user_timestamps[user_name][1] = ts
+                    if ts < user_timestamps[user_name][0]:
+                        user_timestamps[user_name][0] = ts
 
     except psycopg2.OperationalError as e:
         logger.error("Cannot query db to fetch user list." %
@@ -119,11 +119,6 @@ def recalculate_all_user_data():
     logger.info("Setting updated cache entries.")
     # Set the timestamps and listen counts for all users
     for user_name, user_id in user_list:
-        try:
-            cache.increment(REDIS_USER_LISTEN_COUNT + user_name, amount=listen_counts[user_name])
-        except KeyError:
-            pass
-
         try:
             tss = cache.get(REDIS_USER_TIMESTAMPS + str(user_id))
             (min_ts, max_ts) = tss.split(",")
@@ -147,63 +142,6 @@ def unlock_cron():
         subprocess.run(["/usr/local/bin/python", "admin/cron_lock.py", "unlock-cron", "cont-agg"])
     except subprocess.CalledProcessError as err:
         logger.error("Cannot unlock cron after updating continuous aggregates: %s" % str(err))
-
-
-def refresh_listen_count_aggregate():
-    """
-        Manually refresh the listen_count continuous aggregate.
-
-        Arg:
-
-          year_offset: How many years into the past should we start refreshing (e.g 1 year,
-                       will refresh everything that is 1 year or older.
-          year_count: How many years from year_offset should we update.
-
-        Example:
-
-           Assuming today is 2022-01-01 and this function is called for year_offset 1 and
-           year_count 1 then all of 2021 will be refreshed.
-    """
-
-    # Lock the cron container
-    try:
-        subprocess.run(["/usr/local/bin/python", "admin/cron_lock.py", "lock-cron", "cont-agg", "Updating continuous aggregates"])
-    except subprocess.CalledProcessError as err:
-        logger.error("Cannot lock cron for updating continuous aggregates: %s" % str(err))
-        sys.exit(-1)
-
-    logger.info("Starting to refresh continuous aggregates:")
-    timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
-
-    end_ts = int(datetime.now().timestamp()) - SECONDS_IN_A_YEAR
-    start_ts = end_ts - \
-        (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR) + 1
-
-    while True:
-        query = "call refresh_continuous_aggregate('listen_count_30day', :start_ts, :end_ts)"
-        t0 = time.monotonic()
-        try:
-            with timescale.engine.connect() as connection:
-                connection.connection.set_isolation_level(0)
-                connection.execute(sqlalchemy.text(query), {
-                    "start_ts": start_ts,
-                    "end_ts": end_ts
-                })
-        except psycopg2.OperationalError as e:
-            logger.error("Cannot refresh listen_count_30day cont agg: %s" % str(e), exc_info=True)
-            unlock_cron()
-            raise
-
-        t1 = time.monotonic()
-        logger.info("Refreshed continuous aggregate for: %s to %s in %.2fs" % (str(
-            datetime.fromtimestamp(start_ts)), str(datetime.fromtimestamp(end_ts)), t1-t0))
-
-        end_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR)
-        start_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR)
-        if end_ts < DATA_START_YEAR_IN_SECONDS:
-            break
-
-    unlock_cron()
 
 
 class TimescaleListenStoreException(Exception):
