@@ -99,7 +99,7 @@ def profile(user_name):
     else:
         args['from_ts'] = min_ts
     data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
-        user_name, limit=LISTENS_PER_PAGE, **args)
+        user.id, limit=LISTENS_PER_PAGE, **args)
 
     listens = []
     for listen in data:
