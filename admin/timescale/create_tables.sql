@@ -10,9 +10,9 @@ CREATE TABLE listen (
 );
 
 CREATE TABLE listen_count(
-    user_name       TEXT    NOT NULL,
-    count           BIGINT  NOT NULL,
-    timestamp       BIGINT  NOT NULL
+    user_id         INTEGER                     NOT NULL,
+    count           BIGINT                      NOT NULL,
+    timestamp       TIMESTAMP WITH TIME ZONE    NOT NULL  -- timestamp of the latest `created` listen for the user
 );
 
 -- 86400 seconds * 5 = 432000 seconds = 5 days
