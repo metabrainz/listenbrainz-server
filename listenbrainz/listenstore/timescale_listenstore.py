@@ -75,22 +75,22 @@ class TimescaleListenStore(ListenStore):
         self.dump_temp_dir_root = conf.get(
             'LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
-    def set_empty_cache_values_for_user(self, user_id):
+    def set_empty_cache_values_for_user(self, user_name, user_id):
         """When a user is created, set the listen_count and timestamp keys so that we
            can avoid the expensive lookup for a brand new user."""
 
-        cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), 0, expirein=0, encode=False)
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
         cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", expirein=0)
 
-    def get_listen_count_for_user(self, user_id):
+    def get_listen_count_for_user(self, user_name):
         """Get the total number of listens for a user. The number of listens comes from
            brainzutils cache unless an exact number is asked for.
 
         Args:
-            user_id: the user to get listens for
+            user_name: the user to get listens for
         """
 
-        count = cache.get(REDIS_USER_LISTEN_COUNT + str(user_id), decode=False)
+        count = cache.get(REDIS_USER_LISTEN_COUNT + user_name, decode=False)
         # count < 0, yeah that's possible. when a user imports from last.fm,
         # we call set_listen_count_expiry_for_user to set a TTL on the count.
         # the intent is that when the key expires and the listen counts will
@@ -107,23 +107,23 @@ class TimescaleListenStore(ListenStore):
         # inserted a listen. redis would create a key with value 0 and increment it
         # by 1. only now we don't have a way to detect this.
         if count is None or int(count) < 0:
-            return self.reset_listen_count(user_id)
+            return self.reset_listen_count(user_name)
         else:
             return int(count)
 
-    def reset_listen_count(self, user_id):
+    def reset_listen_count(self, user_name):
         """ Reset the listen count of a user from cache and put in a new calculated value.
             returns the re-calculated listen count.
 
             Args:
-                user_id: the musicbrainz id of user whose listen count needs to be reset
+                user_name: the musicbrainz id of user whose listen count needs to be reset
         """
-        query = "SELECT SUM(count) FROM listen_count_30day WHERE user_id = :user_id"
+        query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
         t0 = time.monotonic()
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query), {
-                    "user_id": user_id,
+                    "user_name": user_name,
                 })
                 count = int(result.fetchone()[0] or 0)
 
@@ -133,21 +133,21 @@ class TimescaleListenStore(ListenStore):
             raise
 
         # intended for production monitoring
-        self.log.info("listen counts %s %.2fs" % (user_id, time.monotonic() - t0))
+        self.log.info("listen counts %s %.2fs" % (user_name, time.monotonic() - t0))
         # put this value into brainzutils cache without an expiry time
-        cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), count, expirein=0, encode=False)
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name, count, expirein=0, encode=False)
         return count
 
-    def set_listen_count_expiry_for_user(self, user_id):
+    def set_listen_count_expiry_for_user(self, user_name):
         """ Set an expire time for the listen count cache item. This is called after
             a bulk import which allows for timescale continuous aggregates to catch up
             to listen counts. Once the key expires, the correct value can be calculated
             from the aggregate.
 
             Args:
-                user_id: the musicbrainz id of user whose listen count needs an expiry time
+                user_name: the musicbrainz id of user whose listen count needs an expiry time
         """
-        cache._r.expire(cache._prep_key(REDIS_USER_LISTEN_COUNT + str(user_id)), REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY)
+        cache._r.expire(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY)
 
     def update_timestamps_for_user(self, user_id, min_ts, max_ts):
         """
@@ -247,7 +247,7 @@ class TimescaleListenStore(ListenStore):
 
     def insert(self, listens):
         """
-            Insert a batch of listens. Returns a list of (listened_at, track_name, user_id) that indicates
+            Insert a batch of listens. Returns a list of (listened_at, track_name, user_name, user_id) that indicates
             which rows were inserted into the DB. If the row is not listed in the return values, it was a duplicate.
         """
 
@@ -259,7 +259,7 @@ class TimescaleListenStore(ListenStore):
                         VALUES %s
                    ON CONFLICT (listened_at, track_name, user_id)
                     DO NOTHING
-                     RETURNING listened_at, track_name, user_id"""
+                     RETURNING listened_at, track_name, user_name, user_id"""
 
         inserted_rows = []
         conn = timescale.engine.raw_connection()
@@ -270,7 +270,7 @@ class TimescaleListenStore(ListenStore):
                     result = curs.fetchone()
                     if not result:
                         break
-                    inserted_rows.append((result[0], result[1], result[2]))
+                    inserted_rows.append((result[0], result[1], result[2], result[3]))
             except UntranslatableCharacter:
                 conn.rollback()
                 return
@@ -280,7 +280,7 @@ class TimescaleListenStore(ListenStore):
         # update the listen counts and timestamps for the users
         user_timestamps = {}
         user_counts = defaultdict(int)
-        for ts, _, user_id in inserted_rows:
+        for ts, _, user_name, user_id in inserted_rows:
             if user_id in user_timestamps:
                 if ts < user_timestamps[user_id][0]:
                     user_timestamps[user_id][0] = ts
@@ -289,10 +289,10 @@ class TimescaleListenStore(ListenStore):
             else:
                 user_timestamps[user_id] = [ts, ts]
 
-            user_counts[user_id] += 1
+            user_counts[user_name] += 1
 
-        for user_id in user_counts:
-            cache.increment(REDIS_USER_LISTEN_COUNT + str(user_id), amount=user_counts[user_id])
+        for user_name in user_counts:
+            cache.increment(REDIS_USER_LISTEN_COUNT + str(user_name), amount=user_counts[user_name])
 
         for user in user_timestamps:
             self.update_timestamps_for_user(
@@ -984,18 +984,19 @@ class TimescaleListenStore(ListenStore):
 
         return total_imported
 
-    def delete(self, user_id):
-        """ Delete all listens for user with specified MusicBrainz ID.
+    def delete(self, musicbrainz_id, user_id):
+        """ Delete all listens for user with specified user ID.
 
         Note: this method tries to delete the user 5 times before giving up.
 
         Args:
-            user_id: the MusicBrainz ID of the user
+            musicbrainz_id: the MusicBrainz ID of the user
+            user_id: the listenbrainz row id of the user
 
         Raises: Exception if unable to delete the user in 5 retries
         """
 
-        self.set_empty_cache_values_for_user(user_id)
+        self.set_empty_cache_values_for_user(musicbrainz_id, user_id)
         args = {'user_id': user_id}
         query = "DELETE FROM listen WHERE user_id = :user_id"
 
@@ -1006,11 +1007,12 @@ class TimescaleListenStore(ListenStore):
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise
 
-    def delete_listen(self, listened_at: int, user_id: str, recording_msid: str):
+    def delete_listen(self, listened_at: int, user_name: str, user_id: int, recording_msid: str):
         """ Delete a particular listen for user with specified MusicBrainz ID.
         Args:
             listened_at: The timestamp of the listen
-            user_id: the username of the user
+            user_name: the username of the user
+            user_id: the user id of the user
             recording_msid: the MessyBrainz ID of the recording
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
@@ -1029,7 +1031,7 @@ class TimescaleListenStore(ListenStore):
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), args)
 
-            cache._r.decrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + str(user_id)))
+            cache._r.decrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name))
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
