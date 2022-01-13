@@ -3,7 +3,7 @@ import listenbrainz.db.pinned_recording as db_pinned_rec
 
 from flask import Blueprint, current_app, jsonify, request
 
-from listenbrainz.db.mapping import fetch_track_metadata_for_items
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APINoContent
 from brainzutils.ratelimit import ratelimit

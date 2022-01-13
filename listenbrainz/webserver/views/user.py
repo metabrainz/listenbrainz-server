@@ -9,7 +9,7 @@ from flask_login import current_user, login_required
 from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
 from listenbrainz.db import listens_importer
-from listenbrainz.db.mapping import fetch_track_metadata_for_items
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user

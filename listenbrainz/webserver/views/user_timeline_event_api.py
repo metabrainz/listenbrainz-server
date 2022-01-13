@@ -32,7 +32,7 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
-from listenbrainz.db.mapping import fetch_track_metadata_for_items
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException

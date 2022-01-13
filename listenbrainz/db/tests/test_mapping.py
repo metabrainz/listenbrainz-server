@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from listenbrainz.db.mapping import load_recordings_from_mapping
+from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping
 from listenbrainz.db.testing import TimescaleTestCase
 from listenbrainz.db import timescale as ts
 

@@ -5,7 +5,7 @@ import sqlalchemy
 from pydantic import ValidationError
 import time
 
-from listenbrainz.db.mapping import fetch_track_metadata_for_items
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.pinned_recording import (
     WritablePinnedRecording,
     MAX_BLURB_CONTENT_LENGTH
