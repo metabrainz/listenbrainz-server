@@ -115,6 +115,15 @@ class TimescaleListenStore(ListenStore):
             cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), total_count, REDIS_USER_LISTEN_COUNT_EXPIRY)
             return total_count
 
+    def set_empty_values_for_user(self, user_id):
+        """When a user is created, set the timestamp keys and insert an entry in the listen count
+         table so that we can avoid the expensive lookup for a brand new user."""
+        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
+        query = """INSERT INTO listen_count VALUES (:user_id, 0, NOW())"""
+        with timescale.engine.connect() as connection:
+            connection.execute(sqlalchemy.text(query), user_id=user_id)
+
+
     def update_timestamps_for_user(self, user_id, min_ts, max_ts):
         """
             If any code adds/removes listens it should update the timestamps for the user
