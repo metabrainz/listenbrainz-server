@@ -21,7 +21,6 @@ SECONDS_IN_A_YEAR = 31536000
 
 def update_user_listen_counts():
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
-    # TODO: Check if doing existing users once and new users separately is more performant
     query = """
     WITH nc AS (
         SELECT l.user_id, count(*) as count

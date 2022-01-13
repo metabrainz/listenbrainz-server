@@ -79,7 +79,7 @@ class TimescaleListenStore(ListenStore):
         """When a user is created, set the timestamp keys and insert an entry in the listen count
          table so that we can avoid the expensive lookup for a brand new user."""
         cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", 0)
-        query = """INSERT INTO listen_count VALUES (:user_id, 0, NOW())"""
+        query = """INSERT INTO listen_count VALUES (:user_id, 0, 0, 0, NOW())"""
         with timescale.engine.connect() as connection:
             connection.execute(sqlalchemy.text(query), user_id=user_id)
 
@@ -943,11 +943,11 @@ class TimescaleListenStore(ListenStore):
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise
 
-    def delete_listen(self, listened_at: int, user_name: str, user_id: int, recording_msid: str):
+    def delete_listen(self, listened_at: int, user_id: int, user_id: int, recording_msid: str):
         """ Delete a particular listen for user with specified MusicBrainz ID.
         Args:
             listened_at: The timestamp of the listen
-            user_name: the username of the user
+            user_id: the row id of the user
             user_id: the user id of the user
             recording_msid: the MessyBrainz ID of the recording
         Raises: TimescaleListenStoreException if unable to delete the listen
@@ -956,21 +956,21 @@ class TimescaleListenStore(ListenStore):
             WITH delete_listen AS (
                 DELETE FROM listen
                       WHERE listened_at = :listened_at
-                        AND user_name = :user_name
+                        AND user_id = :user_id
                         AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
                   RETURNING user_name, created
             )
             UPDATE listen_count lc
                SET count = count - 1
               FROM delete_listen dl 
-             WHERE lc.user_name = dl.user_name
+             WHERE lc.user_id = dl.user_id
         -- only decrement count if the listen deleted has a created earlier than the timestamp in the listen count table
                AND lc.timestamp > dl.created
         """
         try:
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), listened_at=listened_at,
-                                   user_name=user_name, recording_msid=recording_msid)
+                                   user_id=user_id, recording_msid=recording_msid)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
