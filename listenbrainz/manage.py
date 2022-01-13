@@ -263,7 +263,7 @@ def recalculate_all_user_data():
     ts_recalculate_all_user_data()
 
 
-@cli.command(name="update_user_listen_counts")
+@cli.command(name="update_all_user_listen_counts")
 def update_all_user_listen_counts():
     """ Scans listen table and update listen counts for all users """
     application = webserver.create_app()
