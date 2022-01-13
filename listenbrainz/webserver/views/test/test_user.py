@@ -168,7 +168,7 @@ class UserViewsTestCase(IntegrationTestCase):
     def _create_test_data(self, user_name):
         min_ts = -1
         max_ts = -1
-        self.test_data = create_test_data_for_timescalelistenstore(user_name)
+        self.test_data = create_test_data_for_timescalelistenstore(user_name, 1)
         for listen in self.test_data:
             if min_ts < 0 or listen.ts_since_epoch < min_ts:
                 min_ts = listen.ts_since_epoch
