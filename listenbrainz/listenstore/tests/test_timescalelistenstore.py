@@ -493,4 +493,4 @@ class TestTimescaleListenStore(DatabaseTestCase):
         min_ts, max_ts = self.logstore.get_timestamps_for_user(testuser["id"])
         self.assertEqual(min_ts, 0)
         self.assertEqual(max_ts, 0)
-        self.assertEqual(cache.get(REDIS_USER_TIMESTAMPS + testuser["id"]), "0,0")
+        self.assertEqual(cache.get(REDIS_USER_TIMESTAMPS + str(testuser["id"])), "0,0")
