@@ -189,7 +189,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
         # Check if listen reached the timescale listenstore
         time.sleep(2)
-        listens, _, _ = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        listens, _, _ = self.ls.fetch_listens(self.lb_user['id'], from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
 
     def test_record_invalid_listen(self):
@@ -248,7 +248,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
         # Check if listens reached the timescale listenstore
         time.sleep(1)
-        listens, _, _ = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        listens, _, _ = self.ls.fetch_listens(self.lb_user['id'], from_ts=timestamp-1)
         self.assertEqual(len(listens), 2)
 
     def test_create_response_for_single_listen(self):
