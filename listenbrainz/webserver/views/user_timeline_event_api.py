@@ -187,7 +187,7 @@ def user_feed(user_name: str):
     users_following = db_user_relationship.get_following_for_user(user['id'])
 
     # get all listen events
-    user_ids = [user['user_id'] for user in users_following]
+    user_ids = [user['id'] for user in users_following]
     if len(users_following) == 0:
         listen_events = []
     else:
