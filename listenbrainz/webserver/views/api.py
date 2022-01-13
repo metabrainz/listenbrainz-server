@@ -172,7 +172,7 @@ def get_listen_count(user_name):
 
     try:
         db_conn = webserver.create_timescale(current_app)
-        listen_count = db_conn.get_listen_count_for_user(user_name)
+        listen_count = db_conn.get_listen_count_for_user(user["id"])
     except psycopg2.OperationalError as err:
         current_app.logger.error("cannot fetch user listen count: ", str(err))
         raise APIServiceUnavailable(

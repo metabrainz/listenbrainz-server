@@ -35,6 +35,7 @@ from listenbrainz.utils import create_path, init_cache
 REDIS_USER_LISTEN_COUNT = "lc."
 REDIS_USER_TIMESTAMPS = "ts."
 REDIS_TOTAL_LISTEN_COUNT = "lc-total"
+REDIS_USER_LISTEN_COUNT_EXPIRY = 300
 
 DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
@@ -81,35 +82,38 @@ class TimescaleListenStore(ListenStore):
         cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
         cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", expirein=0)
 
-    def get_listen_count_for_user(self, user_name):
+    def get_listen_count_for_user(self, user_id: int):
         """Get the total number of listens for a user. The number of listens comes from
            brainzutils cache unless an exact number is asked for.
 
         Args:
-            user_name: the user to get listens for
+            user_id: the user to get listens for
         """
+        cached_count = cache.get(REDIS_USER_LISTEN_COUNT + str(user_id))
+        if cached_count:
+            return cached_count
+
         with timescale.engine.connect() as connection:
-            query = "SELECT count, timestamp FROM listen_count WHERE user_name = :user_name"
-            result = connection.execute(sqlalchemy.text(query), user_name=user_name)
-            if result.rowcount > 0:
-                row = result.fetchone()
-                count, timestamp = row["count"], row["timestamp"]
-            else:
-                count, timestamp = 0, 0
+            query = "SELECT count, timestamp FROM listen_count WHERE user_id = :user_id"
+            result = connection.execute(sqlalchemy.text(query), user_id=user_id)
+            row = result.fetchone()
+            count, timestamp = row["count"], row["timestamp"]
 
             query_remaining = """
                 SELECT count(*) AS remaining_count
-                  FROM listen 
-                 WHERE user_name = :user_name 
+                  FROM listen
+                 WHERE user_id = :user_id
                    AND created > :timestamp
-                """
+            """
             result = connection.execute(sqlalchemy.text(query_remaining),
-                user_name=user_name,
+                user_id=user_id,
                 timestamp=timestamp
             )
             remaining_count = result.fetchone()["remaining_count"]
 
-            return count + remaining_count
+            total_count = count + remaining_count
+            cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), total_count, REDIS_USER_LISTEN_COUNT_EXPIRY)
+            return total_count
 
     def update_timestamps_for_user(self, user_id, min_ts, max_ts):
         """
