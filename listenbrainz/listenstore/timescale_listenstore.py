@@ -79,8 +79,8 @@ class TimescaleListenStore(ListenStore):
         """When a user is created, set the listen_count and timestamp keys so that we
            can avoid the expensive lookup for a brand new user."""
 
-        cache.set(REDIS_USER_LISTEN_COUNT + user_id, 0, expirein=0, encode=False)
-        cache.set(REDIS_USER_TIMESTAMPS + user_id, "0,0", expirein=0)
+        cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), 0, expirein=0, encode=False)
+        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", expirein=0)
 
     def get_listen_count_for_user(self, user_id):
         """Get the total number of listens for a user. The number of listens comes from
@@ -90,7 +90,7 @@ class TimescaleListenStore(ListenStore):
             user_id: the user to get listens for
         """
 
-        count = cache.get(REDIS_USER_LISTEN_COUNT + user_id, decode=False)
+        count = cache.get(REDIS_USER_LISTEN_COUNT + str(user_id), decode=False)
         # count < 0, yeah that's possible. when a user imports from last.fm,
         # we call set_listen_count_expiry_for_user to set a TTL on the count.
         # the intent is that when the key expires and the listen counts will
@@ -135,7 +135,7 @@ class TimescaleListenStore(ListenStore):
         # intended for production monitoring
         self.log.info("listen counts %s %.2fs" % (user_id, time.monotonic() - t0))
         # put this value into brainzutils cache without an expiry time
-        cache.set(REDIS_USER_LISTEN_COUNT + user_id, count, expirein=0, encode=False)
+        cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), count, expirein=0, encode=False)
         return count
 
     def set_listen_count_expiry_for_user(self, user_id):
@@ -147,7 +147,7 @@ class TimescaleListenStore(ListenStore):
             Args:
                 user_id: the musicbrainz id of user whose listen count needs an expiry time
         """
-        cache._r.expire(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_id), REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY)
+        cache._r.expire(cache._prep_key(REDIS_USER_LISTEN_COUNT + str(user_id)), REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY)
 
     def update_timestamps_for_user(self, user_id, min_ts, max_ts):
         """
@@ -164,13 +164,12 @@ class TimescaleListenStore(ListenStore):
                 cached_min_ts = min_ts
             if max_ts > cached_max_ts:
                 cached_max_ts = max_ts
-            cache.set(REDIS_USER_TIMESTAMPS + user_id, "%d,%d" %
-                      (cached_min_ts, cached_max_ts), expirein=0)
+            cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "%d,%d" % (cached_min_ts, cached_max_ts), expirein=0)
 
     def get_timestamps_for_user(self, user_id):
         """ Return the max_ts and min_ts for a given user and cache the result in brainzutils cache
         """
-        tss = cache.get(REDIS_USER_TIMESTAMPS + user_id)
+        tss = cache.get(REDIS_USER_TIMESTAMPS + str(user_id))
         if tss:
             (min_ts, max_ts) = tss.split(",")
             min_ts = int(min_ts)
@@ -179,7 +178,7 @@ class TimescaleListenStore(ListenStore):
             t0 = time.monotonic()
             min_ts = self._select_single_timestamp(True, user_id)
             max_ts = self._select_single_timestamp(False, user_id)
-            cache.set(REDIS_USER_TIMESTAMPS + user_id, "%d,%d" % (min_ts, max_ts), expirein=0)
+            cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "%d,%d" % (min_ts, max_ts), expirein=0)
             # intended for production monitoring
             self.log.info("timestamps %s %.2fs" % (user_id, time.monotonic() - t0))
 
@@ -256,7 +255,7 @@ class TimescaleListenStore(ListenStore):
         for listen in listens:
             submit.append(listen.to_timescale())
 
-        query = """INSERT INTO listen (listened_at, track_name, user_id, user_id, data)
+        query = """INSERT INTO listen (listened_at, track_name, user_name, user_id, data)
                         VALUES %s
                    ON CONFLICT (listened_at, track_name, user_id)
                     DO NOTHING
@@ -293,7 +292,7 @@ class TimescaleListenStore(ListenStore):
             user_counts[user_id] += 1
 
         for user_id in user_counts:
-            cache.increment(REDIS_USER_LISTEN_COUNT + user_id, amount=user_counts[user_id])
+            cache.increment(REDIS_USER_LISTEN_COUNT + str(user_id), amount=user_counts[user_id])
 
         for user in user_timestamps:
             self.update_timestamps_for_user(
@@ -1030,7 +1029,7 @@ class TimescaleListenStore(ListenStore):
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), args)
 
-            cache._r.decrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_id))
+            cache._r.decrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + str(user_id)))
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
