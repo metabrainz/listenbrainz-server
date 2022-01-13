@@ -76,7 +76,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
         self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
 
-        (min_ts, max_ts) = self.ls.get_timestamps_for_user(user_name=user.musicbrainz_id)
+        (min_ts, max_ts) = self.ls.get_timestamps_for_user(user["id"])
         self.assertEqual(min_ts, 1486449409)
         self.assertEqual(max_ts, 1486449409)
 
