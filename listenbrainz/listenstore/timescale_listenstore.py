@@ -35,8 +35,6 @@ from listenbrainz.utils import create_path, init_cache
 REDIS_USER_LISTEN_COUNT = "lc."
 REDIS_USER_TIMESTAMPS = "ts."
 REDIS_TOTAL_LISTEN_COUNT = "lc-total"
-REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY = 86400  # 24 hours
-REDIS_USER_LISTEN_COUNT_UPDATER_TS = "lc-updater-ts"
 
 DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
@@ -95,7 +93,7 @@ class TimescaleListenStore(ListenStore):
             result = connection.execute(sqlalchemy.text(query), user_name=user_name)
             if result.rowcount > 0:
                 row = result.fetchone()
-                count, timestamp = row["count"], int(row["timestamp"].timestamp())
+                count, timestamp = row["count"], row["timestamp"]
             else:
                 count, timestamp = 0, 0
 
@@ -103,7 +101,7 @@ class TimescaleListenStore(ListenStore):
                 SELECT count(*) AS remaining_count
                   FROM listen 
                  WHERE user_name = :user_name 
-                   AND listened_at > :timestamp
+                   AND created > :timestamp
                 """
             result = connection.execute(sqlalchemy.text(query_remaining),
                 user_name=user_name,
@@ -112,27 +110,6 @@ class TimescaleListenStore(ListenStore):
             remaining_count = result.fetchone()["remaining_count"]
 
             return count + remaining_count
-
-    def update_listen_counts_for_users(self, user_counts: Dict[str, int]):
-        """ Update the listen counts for users who have listens inserted with a listened_at timestamp earlier
-        than last listen count updater run because the updater will only consider listens with listened_at after
-        the time it last ran.
-        """
-        connection = timescale.engine.raw_connection()
-        query = """
-            WITH nc(user_name, count) AS (VALUES %s)
-            UPDATE listen_count oc
-               SET count = oc.count + nc.count
-              FROM nc
-             WHERE oc.user_name = nc.user_name
-        """
-        try:
-            with connection.cursor() as cursor:
-                execute_values(cursor, query, user_counts.items())
-            connection.commit()
-        except psycopg2.errors.OperationalError:
-            connection.rollback()
-            self.log.error("Error while updating listen counts:", exc_info=True)
 
     def update_timestamps_for_user(self, user_id, min_ts, max_ts):
         """
@@ -204,32 +181,6 @@ class TimescaleListenStore(ListenStore):
                            str(e), exc_info=True)
             raise
 
-    def get_total_listen_count(self, cache_value=True):
-        """ Returns the total number of listens stored in the ListenStore.
-            First checks the brainzutils cache for the value, if not present there
-            makes a query to the db and caches it in brainzutils cache.
-        """
-
-        if cache_value:
-            count = cache.get(REDIS_TOTAL_LISTEN_COUNT)
-            if count:
-                return int(count)
-
-        query = "SELECT SUM(count) AS value FROM listen_count_30day"
-
-        try:
-            with timescale.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text(query))
-                count = int(result.fetchone()["value"] or "0")
-        except psycopg2.OperationalError as e:
-            self.log.error(
-                "Cannot query timescale listen_count_30day: %s" % str(e), exc_info=True)
-            raise
-
-        if cache_value:
-            cache.set(REDIS_TOTAL_LISTEN_COUNT, count, expirein=0)
-        return count
-
     def insert(self, listens):
         """
             Insert a batch of listens. Returns a list of (listened_at, track_name, user_name, user_id) that indicates
@@ -262,10 +213,8 @@ class TimescaleListenStore(ListenStore):
 
         conn.commit()
 
-        ts_updater_last_run = cache.get(REDIS_USER_LISTEN_COUNT_UPDATER_TS)
-        # update the listen counts and timestamps for the users
+        # update the timestamps for the users
         user_timestamps = {}
-        user_counts = defaultdict(int)
         for ts, _, user_name, user_id in inserted_rows:
             if user_id in user_timestamps:
                 if ts < user_timestamps[user_id][0]:
@@ -274,18 +223,6 @@ class TimescaleListenStore(ListenStore):
                     user_timestamps[user_id][1] = ts
             else:
                 user_timestamps[user_id] = [ts, ts]
-
-            if ts <= ts_updater_last_run:
-                user_counts[user_name] += 1
-
-        # TODO: Consider the timestamps here more carefully. What is the purpose of the timestamp in the
-        #  listen count table? Here, we have compared the listened_at with just the importer's last run
-        #  and when the importer run agains it will tally listen with listened_at greater than the timestamp
-        #  for the user in the listen count table. This is inconsistent, if we intend to only treat the
-        #  importer's last run as the separation and then we can just remove the timestamp column entirely
-        #  and use the timestamp of last importer run everywhere. Alternatively, we need to first query the
-        #  the timestamps for all affected users here and check listened_at of inserted rows against that.
-        self.update_listen_counts_for_users(user_counts)
 
         for user in user_timestamps:
             self.update_timestamps_for_user(
@@ -1010,27 +947,25 @@ class TimescaleListenStore(ListenStore):
             recording_msid: the MessyBrainz ID of the recording
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
-
-        args = {
-            'listened_at': listened_at,
-            'user_id': user_id,
-            'recording_msid': recording_msid
-        }
-        query = """DELETE FROM listen
-                    WHERE listened_at = :listened_at
-                      AND user_id = :user_id
-                      AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid """
-
-        query_decr_lc = """ UPDATE listen_count
-                               SET count = count - 1
-                             WHERE user_id = :user_id"""
+        query = """
+            WITH delete_listen AS (
+                DELETE FROM listen
+                      WHERE listened_at = :listened_at
+                        AND user_name = :user_name
+                        AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
+                  RETURNING user_name, created
+            )
+            UPDATE listen_count lc
+               SET count = count - 1
+              FROM delete_listen dl 
+             WHERE lc.user_name = dl.user_name
+        -- only decrement count if the listen deleted has a created earlier than the timestamp in the listen count table
+               AND lc.timestamp > dl.created
+        """
         try:
             with timescale.engine.connect() as connection:
-                connection.execute(sqlalchemy.text(query),listened_at=listened_at,
+                connection.execute(sqlalchemy.text(query), listened_at=listened_at,
                                    user_name=user_name, recording_msid=recording_msid)
-                if listened_at <= cache.get(REDIS_USER_LISTEN_COUNT_UPDATER_TS):
-                    connection.execute(sqlalchemy.text(query_decr_lc), user_name=user_name)
-
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
