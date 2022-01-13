@@ -7,6 +7,7 @@ import APIService from "../APIService";
 import Card from "../components/Card";
 import HeatMap from "./HeatMap";
 import Loader from "../components/Loader";
+import { isInvalidStatRange } from "./utils";
 
 export type UserDailyActivityProps = {
   range: UserStatsAPIRange;
@@ -57,7 +58,7 @@ export default class UserDailyActivity extends React.Component<
     const { range: prevRange } = prevProps;
     const { range: currRange } = this.props;
     if (prevRange !== currRange) {
-      if (["week", "month", "year", "all_time"].indexOf(currRange) < 0) {
+      if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,
           hasError: true,
