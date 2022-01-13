@@ -5,9 +5,10 @@ import sqlalchemy
 from pydantic import ValidationError
 import time
 
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.pinned_recording import (
     WritablePinnedRecording,
-    MAX_BLURB_CONTENT_LENGTH, fetch_track_metadata_for_pins,
+    MAX_BLURB_CONTENT_LENGTH
 )
 import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user as db_user
@@ -109,7 +110,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
         ]
 
         submitted_data = msb_db.insert_all_in_transaction(recordings)
-        msids = [(x["ids"]["recording_msid"], x["ids"]["artist_msid"]) for x in submitted_data]
+        msids = [x["ids"]["recording_msid"] for x in submitted_data]
 
         with ts.engine.connect() as connection:
             query = """
@@ -128,16 +129,16 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             query = """INSERT INTO mbid_mapping
                                    (recording_msid, recording_mbid, match_type, last_updated)
                             VALUES (:msid, '076255b4-1575-11ec-ac84-135bf6a670e3', 'exact_match', now())"""
-            connection.execute(sqlalchemy.text(query), {"msid": msids[0][0]})
+            connection.execute(sqlalchemy.text(query), msid=msids[0])
 
         pinned_recs = [
             {
-                "recording_msid": msids[0][0],
+                "recording_msid": msids[0],
                 "recording_mbid": "076255b4-1575-11ec-ac84-135bf6a670e3",
                 "blurb_content": "Awesome recordings with mapped data"
             },
             {
-                "recording_msid": msids[1][0],
+                "recording_msid": msids[1],
                 "recording_mbid": None,
                 "blurb_content": "Great recording but unmapped"
             }
@@ -154,7 +155,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             )
 
         pins = db_pinned_rec.get_pin_history_for_user(self.user["id"], 5, 0)
-        pins_with_metadata = fetch_track_metadata_for_pins(pins)
+        pins_with_metadata = fetch_track_metadata_for_items(pins)
 
         received = [x.dict() for x in pins_with_metadata]
         # pinned recs returned in reverse order of submitted because order newest to oldest
@@ -165,8 +166,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             "track_name": "Wicked Game",
             "artist_name": "Tom Ellis",
             "additional_info": {
-                "recording_msid": msids[1][0],
-                "artist_msid": msids[1][1]
+                "recording_msid": msids[1]
             }
         })
 
@@ -181,18 +181,11 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
                 "recording_mbid": "076255b4-1575-11ec-ac84-135bf6a670e3",
                 "release_mbid": "1fd178b4-1575-11ec-b98a-d72392cd8c97",
                 "artist_mbids": ["6a221fda-2200-11ec-ac7d-dfa16a57158f"],
-                "recording_msid": msids[0][0],
-                "artist_msid": msids[0][1]
+                "recording_msid": msids[0]
             }
         })
 
     def test_Pinned_Recording_model(self):
-        # test missing required arguments error
-        with self.assertRaises(ValidationError):
-            WritablePinnedRecording(
-                user_id=self.user["id"],
-            )
-
         # test recording_msid = invalid uuid format
         with self.assertRaises(ValidationError):
             WritablePinnedRecording(
