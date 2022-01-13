@@ -71,6 +71,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
     def tearDown(self):
         self.logstore = None
+        cache._r.flushdb()
         super(TestTimescaleListenStore, self).tearDown()
 
     def _create_test_data(self, user_name, user_id, test_data_file_name=None):
