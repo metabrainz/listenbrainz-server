@@ -520,7 +520,8 @@ def delete_listen():
         log_raise_400("%s: Recording MSID format invalid." % recording_msid)
 
     try:
-        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_id=user["id"])
+        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid,
+                          user_id=user["id"], user_name=user["musicbrainz_id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(
