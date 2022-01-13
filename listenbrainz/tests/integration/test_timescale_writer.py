@@ -4,6 +4,7 @@ import os
 import uuid
 from random import randint
 
+from listenbrainz.db.testing import TimescaleTestCase
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import TimescaleListenStore
@@ -17,10 +18,11 @@ from listenbrainz import config
 from datetime import datetime
 
 
-class TimescaleWriterTestCase(IntegrationTestCase):
+class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
     def setUp(self):
-        super(TimescaleWriterTestCase, self).setUp()
+        IntegrationTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
         self.ls = TimescaleListenStore({'REDIS_HOST': config.REDIS_HOST,
                                        'REDIS_PORT': config.REDIS_PORT,
                                        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
