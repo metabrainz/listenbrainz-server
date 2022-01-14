@@ -138,7 +138,7 @@ def init_error_handlers(app):
                 otherwise
         """
         if current_app.config.get('IS_API_COMPAT_APP') or request.path.startswith(API_PREFIX):
-            return jsonify({'code': code, 'error': error.description}), code
+            return crossdomain(jsonify({'code': code, 'error': error.description}), code)
         return error_wrapper('errors/{code}.html'.format(code=code), error, code)
 
     @app.errorhandler(400)
