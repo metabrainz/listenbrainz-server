@@ -32,6 +32,7 @@ def create_table(mb_conn):
         mb_conn.rollback()
         raise
 
+
 def create_indexes(mb_conn):
     """ Create the user_name index on the tracks of the year table. """
 
@@ -55,7 +56,7 @@ def fetch_user_list(mb_conn, year):
         mb_curs.execute(query)
         rows = mb_curs.fetchall()
 
-    return [ r[0] for r in rows ]
+    return [r[0] for r in rows]
 
 
 def chunks(lst, n):
@@ -89,7 +90,7 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
                           AND m.recording_mbid is not null
                      GROUP BY m.recording_mbid, md.recording_name,
                               md.artist_credit_name, md.artist_mbids, user_name""" % (start_ts, end_ts)
- 
+
             to_insert = []
             lb_curs.execute(query)
             while True:

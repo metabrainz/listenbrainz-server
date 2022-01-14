@@ -31,6 +31,7 @@ def create_table(mb_conn):
         mb_conn.rollback()
         raise
 
+
 def create_indexes(mb_conn):
     """ Create the user_name index on the top discoveries table. """
 
@@ -56,10 +57,10 @@ def fetch_user_list(lb_conn, year):
 
         start_ts = int(datetime(year, 1, 1, 0, 0, tzinfo=timezone.utc).timestamp())
         end_ts = int(datetime(year + 1, 1, 1, 0, 0, tzinfo=timezone.utc).timestamp())
-        lb_curs.execute(query, (start_ts,end_ts))
+        lb_curs.execute(query, (start_ts, end_ts))
         rows = lb_curs.fetchall()
 
-    return [ r[0] for r in rows ]
+    return [r[0] for r in rows]
 
 
 def chunks(lst, n):
@@ -99,7 +100,6 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
                                          extract(year from to_timestamp(listened_at))::INT))[1] = %s
                      ORDER BY user_name, array_length(array_agg(extract(year from to_timestamp(listened_at))::INT), 1) DESC"""
 
-
             for users in chunks(user_list, USERS_PER_BATCH):
                 log(users)
                 lb_curs.execute(query, (tuple(users), year))
@@ -121,7 +121,6 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
                 print("insert %d rows" % len(top_recordings))
                 insert_rows(mb_curs, "mapping.top_discoveries", top_recordings)
                 mb_conn.commit()
-
 
 
 def calculate_top_discoveries(year):
