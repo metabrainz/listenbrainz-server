@@ -138,8 +138,7 @@ def get_vectors_df(playcounts_df):
     return listenbrainz_spark.session.createDataFrame(vectors_mapped_rdd, ['index', 'vector'])
 
 
-def main(max_num_users: int):
-
+def get_similar_users_df(max_num_users: int):
     logger.info('Start generating similar user matrix')
     try:
         listenbrainz_spark.init_spark_session('User Similarity')
@@ -178,4 +177,9 @@ def main(max_num_users: int):
 
     logger.info('Finishing generating similar user matrix')
 
+    return similar_users_df
+
+
+def main(max_num_users: int):
+    similar_users_df = get_similar_users_df(max_num_users)
     return create_messages(similar_users_df)

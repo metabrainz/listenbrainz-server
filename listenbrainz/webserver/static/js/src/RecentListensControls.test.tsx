@@ -2,7 +2,6 @@ import * as React from "react";
 import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 
-import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
 import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidResponse.json";
 import GlobalAppContext from "./GlobalAppContext";
@@ -37,7 +36,6 @@ const GlobalContextMock = {
 
 const {
   latestListenTs,
-  latestSpotifyUri,
   listens,
   mode,
   oldestListenTs,
@@ -47,7 +45,6 @@ const {
 
 const props: RecentListensProps = {
   latestListenTs,
-  latestSpotifyUri,
   listens,
   mode: mode as ListensListMode,
   oldestListenTs,

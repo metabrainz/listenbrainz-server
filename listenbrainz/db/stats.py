@@ -26,6 +26,11 @@ from typing import Optional
 
 import sqlalchemy
 
+import psycopg2
+from psycopg2 import sql
+from psycopg2.extras import execute_values
+
+
 from data.model.common_stat import StatRange, StatApi
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import UserDailyActivityRecord
@@ -48,7 +53,7 @@ def get_timestamp_for_last_user_stats_update():
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT MAX(last_updated) as last_update_ts
-              FROM statistics.user_new
+              FROM statistics.user
             """))
         row = result.fetchone()
         return row['last_update_ts'] if row else None
@@ -64,7 +69,7 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.user_new (user_id, stats_type, stats_range, data, count, from_ts, to_ts, last_updated)
+            INSERT INTO statistics.user (user_id, stats_type, stats_range, data, count, from_ts, to_ts, last_updated)
                  VALUES (:user_id, :stats_type, :stats_range, :data, :count, :from_ts, :to_ts, NOW())
             ON CONFLICT (user_id, stats_type, stats_range)
           DO UPDATE SET data = :data,
@@ -81,6 +86,44 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
             "from_ts": stats.from_ts,
             "to_ts": stats.to_ts
         })
+
+
+def insert_multiple_user_jsonb_data(data):
+    values = [(entry['musicbrainz_id'], entry['count'], json.dumps(entry['data'])) for entry in data['data']]
+    query = """
+        INSERT INTO statistics.user (user_id, stats_type, stats_range, data, count, from_ts, to_ts, last_updated)
+             SELECT "user".id
+                  , {stats_type}
+                  , {stats_range}
+                  , stats::jsonb
+                  , count
+                  , {from_ts}
+                  , {to_ts}
+                  , NOW()
+               FROM (VALUES %s) AS t(user_name, count, stats)
+               JOIN "user"
+                 ON "user".musicbrainz_id = user_name
+        ON CONFLICT (user_id, stats_type, stats_range)
+      DO UPDATE SET data = EXCLUDED.data
+                  , count = EXCLUDED.count
+                  , from_ts = EXCLUDED.from_ts
+                  , to_ts = EXCLUDED.to_ts
+                  , last_updated = EXCLUDED.last_updated
+    """
+    formatted_query = sql.SQL(query).format(
+        stats_type=sql.Literal(data['entity']),
+        stats_range=sql.Literal(data['stats_range']),
+        from_ts=sql.Literal(data['from_ts']),
+        to_ts=sql.Literal(data['to_ts'])
+    )
+    connection = db.engine.raw_connection()
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, formatted_query, values)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting user stats:", exc_info=True)
 
 
 def insert_sitewide_jsonb_data(stats_type: str, stats: StatRange):
@@ -104,7 +147,7 @@ def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, last_updated, data, count, from_ts, to_ts, stats_range
-              FROM statistics.user_new
+              FROM statistics.user
              WHERE user_id = :user_id
              AND stats_range = :stats_range
              AND stats_type = :stats_type
@@ -137,7 +180,7 @@ def get_user_activity_stats(user_id: int, stats_range: str, stats_type: str, sta
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, last_updated, data, from_ts, to_ts, stats_range
-              FROM statistics.user_new
+              FROM statistics.user
              WHERE user_id = :user_id
              AND stats_range = :stats_range
              AND stats_type = :stats_type
@@ -214,7 +257,7 @@ def valid_stats_exist(user_id, days):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
                 SELECT user_id
-                  FROM statistics.user_new
+                  FROM statistics.user
                  WHERE user_id = :user_id
                    AND last_updated >= NOW() - INTERVAL ':x days'
             """), {
@@ -233,7 +276,7 @@ def delete_user_stats(user_id):
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            DELETE FROM statistics.user_new
+            DELETE FROM statistics.user
              WHERE user_id = :user_id
             """), {
             'user_id': user_id

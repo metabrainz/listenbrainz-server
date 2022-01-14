@@ -115,11 +115,11 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
 # Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
 # without going through the process of generating the stats in local environment. Otherwise,
-# set it to "http://localhost"
+# set it to "http://localhost:7000"
 API_URL = 'https://api.listenbrainz.org'
-LASTFM_PROXY_URL = 'http://localhost:8080/'
-SERVER_ROOT_URL = 'http://localhost'
-WEBSOCKETS_SERVER_URL = 'http://localhost:8082'
+LASTFM_PROXY_URL = 'http://localhost:7080/'
+SERVER_ROOT_URL = 'http://localhost:7000'
+WEBSOCKETS_SERVER_URL = 'http://localhost:7082'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 
@@ -132,12 +132,15 @@ ADMINS = []
 # Users who are allowed to submit playlists made for someone else.
 APPROVED_PLAYLIST_BOTS = ['troi-bot']
 
+# Auth tokens that are not subject to rate limits:
+WHITELISTED_AUTH_TOKENS = []
+
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 SPOTIFY_CALLBACK_URL = 'http://localhost/profile/music-services/spotify/callback/'
 
-# CRTIQUEBRAINZ
+# CRITIQUEBRAINZ
 CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change this'
 CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost/profile/music-services/critiquebrainz/callback/'

@@ -9,7 +9,6 @@ export function getEntityLink(
   if (entityMBID) {
     return (
       <a
-        className="underlined-link"
         href={`https://musicbrainz.org/${entityType}/${entityMBID}`}
         target="_blank"
         rel="noopener noreferrer"
@@ -37,6 +36,18 @@ export function userChartEntityToListen(
   const trackName = entityType === "recording" ? entityName : "";
   const artistName = entityType === "artist" ? entityName : artist;
   const releaseName = entityType === "release" ? entityName : release;
+  let artist_mbids = artistMBIDs;
+  let release_mbid = releaseMBID;
+  let recording_mbid;
+  if (entityType === "artist" && entityMBID) {
+    artist_mbids = [entityMBID] as string[];
+  }
+  if (entityType === "release" && entityMBID) {
+    release_mbid = entityMBID;
+  }
+  if (entityType === "recording" && entityMBID) {
+    recording_mbid = entityMBID;
+  }
   return {
     listened_at: -1,
     track_metadata: {
@@ -44,9 +55,9 @@ export function userChartEntityToListen(
       artist_name: artistName ?? "",
       release_name: releaseName ?? "",
       additional_info: {
-        artist_mbids: artistMBIDs,
-        recording_mbid: entityType === "recording" ? entityMBID : undefined,
-        release_mbid: releaseMBID,
+        artist_mbids,
+        recording_mbid,
+        release_mbid,
       },
     },
   };
@@ -89,4 +100,20 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
       </div>
     </>
   );
+}
+
+export function getAllStatRanges(): Map<UserStatsAPIRange, string> {
+  const ranges = new Map<UserStatsAPIRange, string>();
+  ranges.set("this_week", "This Week");
+  ranges.set("this_month", "This Month");
+  ranges.set("this_year", "This Year");
+  ranges.set("week", "Last Week");
+  ranges.set("month", "Last Month");
+  ranges.set("year", "Last Year");
+  ranges.set("all_time", "All time");
+  return ranges;
+}
+
+export function isInvalidStatRange(range: UserStatsAPIRange): boolean {
+  return !getAllStatRanges().has(range);
 }

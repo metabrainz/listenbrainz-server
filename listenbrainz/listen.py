@@ -1,12 +1,9 @@
 # coding=utf-8
 import calendar
-import time
-import ujson
-import yaml
 from copy import deepcopy
-
 from datetime import datetime
-from listenbrainz.utils import escape
+
+import ujson
 
 
 def flatten_dict(d, seperator='', parent_key=''):
@@ -193,7 +190,7 @@ class Listen(object):
         track_metadata['additional_info']['recording_msid'] = self.recording_msid
         track_name = track_metadata['track_name']
         del track_metadata['track_name']
-        return (self.ts_since_epoch, track_name, self.user_name, ujson.dumps({
+        return (self.ts_since_epoch, track_name, self.user_name, self.user_id, ujson.dumps({
             'user_id': self.user_id,
             'track_metadata': track_metadata
         }))
@@ -231,6 +228,12 @@ class NowPlayingListen:
             additional_info = data.get('additional_info', {})
             data['additional_info'] = flatten_dict(additional_info)
             self.data = data
+
+    def to_api(self):
+        return {
+            "track_metadata": self.data,
+            "playing_now": True
+        }
 
     def __repr__(self):
         from pprint import pformat

@@ -1,14 +1,17 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
-from pydantic import BaseModel, validator, constr
-from listenbrainz.db.model.validators import check_rec_mbid_msid_is_valid_uuid, check_datetime_has_tzinfo
-from listenbrainz.messybrainz import load_recordings_from_msids, load_recordings_from_mbids
+
+from pydantic import validator, constr, NonNegativeInt
+
+from data.model.validators import check_datetime_has_tzinfo
+from listenbrainz.db.msid_mbid_mapping import MsidMbidModel, load_recordings_from_mapping
+from listenbrainz.messybrainz import load_recordings_from_msids
 
 DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
 MAX_BLURB_CONTENT_LENGTH = 280  # maximum length of blurb content
 
 
-class PinnedRecording(BaseModel):
+class PinnedRecording(MsidMbidModel):
     """Represents a pinned recording object.
     Args:
         user_id: the row id of the user in the DB
@@ -21,19 +24,12 @@ class PinnedRecording(BaseModel):
         Validates that pinned_until contains tzinfo() and is greater than created.
     """
 
-    user_id: int
+    user_id: NonNegativeInt
     user_name: Optional[str]
-    row_id: int
-    recording_msid: str
-    recording_mbid: str = None
+    row_id: NonNegativeInt
     blurb_content: constr(max_length=MAX_BLURB_CONTENT_LENGTH) = None
     created: datetime
     pinned_until: datetime
-    track_metadata: dict = None
-
-    _validate_recording_msid: classmethod = validator("recording_msid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
-
-    _validate_recording_mbid: classmethod = validator("recording_mbid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
 
     _validate_created_tzinfo: classmethod = validator("created", always=True, allow_reuse=True)(check_datetime_has_tzinfo)
 
@@ -67,7 +63,7 @@ class WritablePinnedRecording(PinnedRecording):
 
     """
 
-    row_id: int = None
+    row_id: NonNegativeInt = None
     created: datetime = None
     pinned_until: datetime = None
 
@@ -80,43 +76,3 @@ class WritablePinnedRecording(PinnedRecording):
     @validator("pinned_until", pre=True, always=True)
     def set_pinned_until_to_default(cls, pin_until, values):
         return pin_until or values["created"] + timedelta(days=DAYS_UNTIL_UNPIN)
-
-
-def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
-    """ Fetches track_metadata for every object in a list of PinnedRecordings.
-
-        Args:
-            pins (List of PinnedRecordings): the PinnedRecordings to fetch track_metadata for.
-        Returns:
-            The given list of PinnedRecording objects with updated track_metadata.
-    """
-
-    # seperate pins containing mbid's from those without
-    mbid_pins = list(filter(lambda pin: pin.recording_mbid, pins))
-    msid_pins = list(filter(lambda pin: not pin.recording_mbid, pins))
-
-    if mbid_pins:
-        fetch_mbids = [pin.recording_mbid for pin in mbid_pins]  # retrieves list of mbid's to fetch with
-        mbid_metadatas = load_recordings_from_mbids(fetch_mbids)
-        # we can zip the pins and metadata because load_recordings_from_mbids
-        # returns the metadata in same order of the mbid list passed to it
-        for pin, metadata in zip(mbid_pins, mbid_metadatas):
-            pin.track_metadata = {
-                "track_name": metadata["payload"]["title"],
-                "artist_name": metadata["payload"]["artist"],
-                "artist_msid": metadata["ids"]["artist_msid"]
-            }
-
-    if msid_pins:
-        fetch_msids = [pin.recording_msid for pin in msid_pins]  # retrieves list of msid's to fetch with
-        msid_metadatas = load_recordings_from_msids(fetch_msids)
-        # we can zip the pins and metadata because load_recordings_from_msids
-        # returns the metadata in same order of the msid list passed to it
-        for pin, metadata in zip(msid_pins, msid_metadatas):
-            pin.track_metadata = {
-                "track_name": metadata["payload"]["title"],
-                "artist_name": metadata["payload"]["artist"],
-                "artist_msid": metadata["ids"]["artist_msid"]
-            }
-
-    return pins

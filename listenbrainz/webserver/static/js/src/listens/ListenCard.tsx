@@ -22,6 +22,8 @@ import {
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
   getRecordingMBID,
+  getAlbumArtFromListenMetadata,
+  getReleaseMBID,
 } from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
@@ -50,7 +52,7 @@ export type ListenCardProps = {
     message: string | JSX.Element
   ) => void;
   // This show under the first line of listen details. It's meant for reviews, etc.
-  additionalDetails?: string | JSX.Element;
+  additionalContent?: string | JSX.Element;
   thumbnail?: JSX.Element;
   // The default details (recording name, artist name) can be replaced
   listenDetails?: JSX.Element;
@@ -59,16 +61,20 @@ export type ListenCardProps = {
   feedbackComponent?: JSX.Element;
   // These go in the dropdown menu
   additionalMenuItems?: JSX.Element;
+  // This optional JSX element is for a custom icon
+  additionalActions?: JSX.Element;
 };
 
 type ListenCardState = {
   isCurrentlyPlaying: boolean;
+  thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
 
 export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
+  static defaultThumbnailSrc: string = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -80,12 +86,32 @@ export default class ListenCard extends React.Component<
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
+    await this.getCoverArt();
+  }
+
+  async componentDidUpdate(oldProps: ListenCardProps) {
+    const { listen } = this.props;
+    if (Boolean(listen) && !isEqual(listen, oldProps.listen)) {
+      await this.getCoverArt();
+    }
   }
 
   componentWillUnmount() {
     window.removeEventListener("message", this.receiveBrainzPlayerMessage);
+  }
+
+  async getCoverArt() {
+    const { spotifyAuth } = this.context;
+    const { listen } = this.props;
+    const albumArtSrc = await getAlbumArtFromListenMetadata(
+      listen,
+      spotifyAuth
+    );
+    if (albumArtSrc) {
+      this.setState({ thumbnailSrc: albumArtSrc });
+    }
   }
 
   playListen = () => {
@@ -142,7 +168,6 @@ export default class ListenCard extends React.Component<
           listen,
           "track_metadata.additional_info.recording_msid"
         ),
-        artist_msid: _get(listen, "track_metadata.additional_info.artist_msid"),
       };
       try {
         const status = await APIService.recommendTrackToFollowers(
@@ -180,7 +205,7 @@ export default class ListenCard extends React.Component<
 
   render() {
     const {
-      additionalDetails,
+      additionalContent,
       listen,
       className,
       showUsername,
@@ -195,13 +220,15 @@ export default class ListenCard extends React.Component<
       updateFeedbackCallback,
       ...otherProps
     } = this.props;
-    const { isCurrentlyPlaying } = this.state;
+    const { isCurrentlyPlaying, thumbnailSrc } = this.state;
+    const { additionalActions } = this.props;
 
     const recordingMSID = _get(
       listen,
       "track_metadata.additional_info.recording_msid"
     );
     const recordingMBID = getRecordingMBID(listen);
+    const releaseMBID = getReleaseMBID(listen);
     const spotifyURL = SpotifyPlayer.getSpotifyURLFromListen(listen);
     const youtubeURL = YoutubePlayer.getYoutubeURLFromListen(listen);
     const soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(listen);
@@ -213,8 +240,14 @@ export default class ListenCard extends React.Component<
       hasRecordingMSID;
 
     // Hide the actions menu if in compact mode or no buttons to be shown
-    const hideActionsMenu =
-      compact || (!additionalMenuItems && !enableRecommendButton);
+    const hasActionOptions =
+      additionalMenuItems ||
+      enableRecommendButton ||
+      recordingMBID ||
+      spotifyURL ||
+      youtubeURL ||
+      soundcloudURL;
+    const hideActionsMenu = compact || !hasActionOptions;
 
     const timeStampForDisplay = (
       <>
@@ -249,141 +282,180 @@ export default class ListenCard extends React.Component<
         onDoubleClick={this.playListen}
         className={`listen-card row ${
           isCurrentlyPlaying ? "current-listen" : ""
-        }${compact ? " compact" : " "} ${className || ""}`}
+        }${compact ? " compact" : ""}${
+          additionalContent ? " has-additional-content" : " "
+        } ${className || ""}`}
       >
-        {thumbnail && <div className="listen-thumbnail">{thumbnail}</div>}
-        {listenDetails ? (
-          <div className="listen-details">{listenDetails}</div>
-        ) : (
-          <div className="listen-details">
-            <div
-              title={listen.track_metadata?.track_name}
-              className="ellipsis-2-lines"
-            >
-              {getTrackLink(listen)}
+        <div className="main-content">
+          {thumbnail || (
+            <div className="listen-thumbnail">
+              {thumbnailSrc ? (
+                <a
+                  href={
+                    releaseMBID
+                      ? `https://musicbrainz.org/release/${releaseMBID}`
+                      : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
+                  }
+                  title={listen.track_metadata?.release_name ?? "Cover art"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={thumbnailSrc}
+                    alt={listen.track_metadata?.release_name ?? "Cover art"}
+                  />
+                </a>
+              ) : (
+                <a
+                  href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                  title="How can I add missing cover art?"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={ListenCard.defaultThumbnailSrc}
+                    alt="How can I add missing cover art?"
+                  />
+                </a>
+              )}
             </div>
-            <span
-              className="small text-muted ellipsis"
-              title={listen.track_metadata?.artist_name}
-            >
-              {getArtistLink(listen)}
-            </span>
-          </div>
-        )}
-        {(showUsername || showTimestamp) && (
-          <div className="username-and-timestamp">
-            {showUsername && (
-              <a
-                href={`/user/${listen.user_name}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={listen.user_name ?? undefined}
-              >
-                {listen.user_name}
-              </a>
-            )}
-            {showTimestamp && timeStampForDisplay}
-          </div>
-        )}
-        <div className="listen-controls">
-          {feedbackComponent ?? (
-            <ListenFeedbackComponent
-              newAlert={newAlert}
-              listen={listen}
-              currentFeedback={currentFeedback as ListenFeedBack}
-              updateFeedbackCallback={updateFeedbackCallback}
-            />
           )}
-          {hideActionsMenu ? null : (
-            <>
-              <FontAwesomeIcon
-                icon={faEllipsisV as IconProp}
-                title="More actions"
-                className="dropdown-toggle"
-                id="listenControlsDropdown"
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="true"
-              />
-              <ul
-                className="dropdown-menu dropdown-menu-right"
-                aria-labelledby="listenControlsDropdown"
+          {listenDetails ? (
+            <div className="listen-details">{listenDetails}</div>
+          ) : (
+            <div className="listen-details">
+              <div
+                title={listen.track_metadata?.track_name}
+                className="ellipsis-2-lines"
               >
-                {recordingMBID && (
-                  <ListenControl
-                    icon={faExternalLinkAlt}
-                    title="Open in MusicBrainz"
-                    link={`https://musicbrainz.org/recording/${recordingMBID}`}
-                    anchorTagAttributes={{
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                    }}
-                  />
-                )}
-                {spotifyURL && (
-                  <ListenControl
-                    icon={faSpotify}
-                    title="Open in Spotify"
-                    link={spotifyURL}
-                    anchorTagAttributes={{
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                    }}
-                  />
-                )}
-                {youtubeURL && (
-                  <ListenControl
-                    icon={faYoutube}
-                    title="Open in YouTube"
-                    link={youtubeURL}
-                    anchorTagAttributes={{
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                    }}
-                  />
-                )}
-                {soundcloudURL && (
-                  <ListenControl
-                    icon={faSoundcloud}
-                    title="Open in Soundcloud"
-                    link={soundcloudURL}
-                    anchorTagAttributes={{
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                    }}
-                  />
-                )}
-                {enableRecommendButton && (
-                  <ListenControl
-                    icon={faCommentDots}
-                    title="Recommend to my followers"
-                    action={this.recommendListenToFollowers}
-                  />
-                )}
-                {additionalMenuItems}
-              </ul>
-            </>
+                {getTrackLink(listen)}
+              </div>
+              <span
+                className="small text-muted ellipsis"
+                title={listen.track_metadata?.artist_name}
+              >
+                {getArtistLink(listen)}
+              </span>
+            </div>
           )}
-          <button
-            title="Play"
-            className="btn-transparent play-button"
-            onClick={this.playListen}
-            type="button"
-          >
-            {isCurrentlyPlaying ? (
-              <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
-            ) : (
-              <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+          <div className="right-section">
+            {(showUsername || showTimestamp) && (
+              <div className="username-and-timestamp">
+                {showUsername && (
+                  <a
+                    href={`/user/${listen.user_name}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={listen.user_name ?? undefined}
+                  >
+                    {listen.user_name}
+                  </a>
+                )}
+                {showTimestamp && timeStampForDisplay}
+              </div>
             )}
-          </button>
+            <div className="listen-controls">
+              {feedbackComponent ?? (
+                <ListenFeedbackComponent
+                  newAlert={newAlert}
+                  listen={listen}
+                  currentFeedback={currentFeedback as ListenFeedBack}
+                  updateFeedbackCallback={updateFeedbackCallback}
+                />
+              )}
+              {hideActionsMenu ? null : (
+                <>
+                  <FontAwesomeIcon
+                    icon={faEllipsisV as IconProp}
+                    title="More actions"
+                    className="dropdown-toggle"
+                    id="listenControlsDropdown"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true"
+                  />
+                  <ul
+                    className="dropdown-menu dropdown-menu-right"
+                    aria-labelledby="listenControlsDropdown"
+                  >
+                    {recordingMBID && (
+                      <ListenControl
+                        icon={faExternalLinkAlt}
+                        title="Open in MusicBrainz"
+                        link={`https://musicbrainz.org/recording/${recordingMBID}`}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {spotifyURL && (
+                      <ListenControl
+                        icon={faSpotify}
+                        title="Open in Spotify"
+                        link={spotifyURL}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {youtubeURL && (
+                      <ListenControl
+                        icon={faYoutube}
+                        title="Open in YouTube"
+                        link={youtubeURL}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {soundcloudURL && (
+                      <ListenControl
+                        icon={faSoundcloud}
+                        title="Open in Soundcloud"
+                        link={soundcloudURL}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {enableRecommendButton && (
+                      <ListenControl
+                        icon={faCommentDots}
+                        title="Recommend to my followers"
+                        action={this.recommendListenToFollowers}
+                      />
+                    )}
+                    {additionalMenuItems}
+                  </ul>
+                </>
+              )}
+              <button
+                title="Play"
+                className="btn-transparent play-button"
+                onClick={this.playListen}
+                type="button"
+              >
+                {isCurrentlyPlaying ? (
+                  <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+                ) : (
+                  <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+                )}
+              </button>
+              {additionalActions}
+            </div>
+          </div>
         </div>
-        {additionalDetails && (
-          <span
-            className="additional-details"
+        {additionalContent && (
+          <div
+            className="additional-content"
             title={listen.track_metadata?.track_name}
           >
-            {additionalDetails}
-          </span>
+            {additionalContent}
+          </div>
         )}
       </Card>
     );

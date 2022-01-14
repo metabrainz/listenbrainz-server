@@ -6,8 +6,6 @@ import {
   faFastForward,
   faPauseCircle,
   faPlayCircle,
-  faSortAmountDown,
-  faSortAmountUp,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -19,8 +17,6 @@ type PlaybackControlsProps = {
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
   playerPaused: boolean;
-  toggleDirection: () => void;
-  direction: BrainzPlayDirection;
   trackName?: string;
   artistName?: string;
   progressMs: number;
@@ -121,8 +117,6 @@ export default class PlaybackControls extends React.Component<
       playPreviousTrack,
       togglePlay,
       playNextTrack,
-      toggleDirection,
-      direction,
     } = this.props;
 
     const { autoHideControls } = this.state;
@@ -192,14 +186,6 @@ export default class PlaybackControls extends React.Component<
               title="Next"
               icon={faFastForward}
             />
-            {direction !== "hidden" && (
-              <PlaybackControlButton
-                className="right btn btn-xs"
-                action={toggleDirection}
-                title={`Play ${direction === "up" ? "down" : "up"}`}
-                icon={direction === "up" ? faSortAmountUp : faSortAmountDown}
-              />
-            )}
           </div>
         </div>
       </div>

@@ -19,6 +19,31 @@
     "description": "Calculate top entites listened to on the website in the requested stats_range",
     "params": ["entity", "stats_range"]
   },
+  "stats.sitewide.listening_activity": {
+    "name": "stats.sitewide.listening_activity",
+    "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
+    "params": ["stats_range"]
+  },
+  "stats.new_releases_of_top_artists": {
+    "name": "stats.new_releases_of_top_artists",
+    "description": "Calculate list of releases released this year by top 50 artists of this year for each user",
+    "params": ["year"]
+  },
+  "stats.most_prominent_color": {
+    "name": "stats.most_prominent_color",
+    "description": "Calculate the most prominent color of the user",
+    "params": ["year"]
+  },
+  "stats.day_of_week": {
+    "name": "stats.day_of_week",
+    "description": "Calculate the day of week with most listens for the user",
+    "params": ["year"]
+  },
+  "stats.most_listened_year": {
+    "name": "stats.most_listened_year",
+    "description": "Calculate the year for in which highest number of albums listened by the user were released",
+    "params": ["year"]
+  },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",
@@ -78,11 +103,36 @@
     "description": "Import artist relation into the spark cluster.",
     "params": []
   },
+  "import.musicbrainz_release_dump": {
+    "name": "import.musicbrainz_release_dump",
+    "description": "Import musicbrainz release json dump into the spark cluster.",
+    "params": []
+  },
   "similarity.similar_users": {
     "name": "similarity.similar_users",
     "description": "Generate similar user correlation",
     "params": [
       "max_num_users"
     ]
+  },
+  "similarity.similar_users_year_end": {
+    "name": "similarity.similar_users_year_end",
+    "description": "Generate similar user correlation for Year in Music",
+    "params": ["year"]
+  },
+  "year_in_music.listens_per_day": {
+    "name": "year_in_music.listens_per_day",
+    "description": "Calculate the listens per day for the current year for each user",
+    "params": []
+  },
+  "year_in_music.listen_count": {
+    "name": "year_in_music.listen_count",
+    "description": "Calculate the total listen count for the given year for each user",
+    "params": ["year"]
+  },
+  "year_in_music.top_stats": {
+    "name": "year_in_music.top_stats",
+    "description": "Calculate the top artists/recordings/releases stats for the current year for each user",
+    "params": []
   }
 }

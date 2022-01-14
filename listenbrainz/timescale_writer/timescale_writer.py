@@ -34,6 +34,7 @@ class TimescaleWriterSubscriber(ListenWriter):
         self.unique_ch = None
         self.redis_listenstore = None
 
+        # these are counts since the last metric update was submitted
         self.incoming_listens = 0
         self.unique_listens = 0
         self.metric_submission_time = monotonic() + METRIC_UPDATE_INTERVAL
@@ -201,6 +202,8 @@ class TimescaleWriterSubscriber(ListenWriter):
         if monotonic() > self.metric_submission_time:
             self.metric_submission_time += METRIC_UPDATE_INTERVAL
             metrics.set("timescale_writer", incoming_listens=self.incoming_listens, unique_listens=self.unique_listens)
+            self.incoming_listens = 0
+            self.unique_listens = 0
 
         return len(data)
 

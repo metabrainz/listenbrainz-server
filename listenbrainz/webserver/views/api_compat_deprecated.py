@@ -27,16 +27,15 @@ import listenbrainz.db.user as db_user
 from brainzutils.musicbrainz_db import engine as mb_engine
 
 from hashlib import md5
-from time import time
 
-from flask import current_app, Blueprint, request, render_template, redirect
+from flask import current_app, Blueprint, request, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.errors import APIBadRequest
+from listenbrainz.webserver.errors import ListenValidationError
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
-from listenbrainz.webserver.views.api_tools import insert_payload, is_valid_timestamp, LISTEN_TYPE_PLAYING_NOW, \
-    is_valid_uuid, check_for_unicode_null_recursively
+from listenbrainz.webserver.views.api_tools import insert_payload, LISTEN_TYPE_PLAYING_NOW, \
+    is_valid_uuid, check_for_unicode_null_recursively, validate_listened_at
 
 api_compat_old_bp = Blueprint('api_compat_old', __name__)
 
@@ -165,15 +164,13 @@ def _to_native_api(data, append_key):
     if append_key != '':
         try:
             listen['listened_at'] = int(data['i{}'.format(append_key)])
-        except (KeyError, ValueError):
+            validate_listened_at(listen)
+        except (KeyError, ValueError, ListenValidationError):
             return None
 
-        # if timestamp is too high, this is an invalid listen
-        # in order to make up for possible clock skew, we allow
-        # timestamps to be one hour ahead of server time
-        if not is_valid_timestamp(listen['listened_at']):
-            return None
-
+    # Source has special meaning in LFM api. e.g.: if you see a listen with
+    # "source": "P", in the database it is a listen from API compat deprecated.
+    # https://web.archive.org/web/20090217162831/http://last.fm/api/submissions
     if 'o{}'.format(append_key) in data:
         listen['track_metadata']['additional_info']['source'] = data['o{}'.format(append_key)]
 
@@ -197,7 +194,7 @@ def _to_native_api(data, append_key):
 
     try:
         check_for_unicode_null_recursively(listen)
-    except APIBadRequest:
+    except ListenValidationError:
         return None
 
     return listen

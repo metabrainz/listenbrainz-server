@@ -16,11 +16,12 @@ from listenbrainz.mbid_mapping_writer.matcher import process_listens
 from listenbrainz.labs_api.labs.api.mbid_mapping import MATCH_TYPES
 from listenbrainz.utils import init_cache
 from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS
+from listenbrainz import messybrainz as msb_db
 from brainzutils import metrics, cache
 
 MAX_THREADS = 3
 MAX_QUEUED_JOBS = MAX_THREADS * 2
-QUEUE_RELOAD_THRESHOLD = 1000
+QUEUE_RELOAD_THRESHOLD = 0
 UPDATE_INTERVAL = 30
 
 LEGACY_LISTEN = 1
@@ -30,8 +31,14 @@ NEW_LISTEN = 0
 UNMATCHED_LISTENS_COMPLETED_TIMEOUT = 86400  # in s
 
 # This is the point where the legacy listens should be processed from
-LEGACY_LISTENS_LOAD_WINDOW = 604800  # 7 days in seconds
+LEGACY_LISTENS_LOAD_WINDOW = 86400 * 3   # load 3 days of data per go
 LEGACY_LISTENS_INDEX_DATE_CACHE_KEY = "mbid.legacy_index_date"
+
+# How many listens should be re-checked every mapping pass?
+NUM_ITEMS_TO_RECHECK_PER_PASS = 100000
+
+# When looking for mapped items marked for re-checking, use this batch size
+RECHECK_BATCH_SIZE = 5000
 
 
 @dataclass(order=True)
@@ -74,6 +81,21 @@ class MappingJobQueue(threading.Thread):
         self.done = True
         self.join()
 
+    def mark_oldest_no_match_entries_as_stale(self):
+        """
+            THIS FUNCTION IS CURRENTLY UNUSED, BUT WILL BE USED LATER.
+        """
+        query = """UPDATE mbid_mapping
+                      SET last_updated = '1970-01-01'
+                    WHERE match_type = 'no_match'
+                      AND last_updated >= (SELECT last_updated
+                                             FROM mbid_mapping
+                                            WHERE match_type = 'no_match'
+                                         ORDER BY last_updated
+                                           OFFSET %s
+                                            LIMIT 1);"""
+        args = (NUM_ITEMS_TO_RECHECK_PER_PASS,)
+
     def load_legacy_listens(self):
         """ This function should kick off a thread to load more legacy listens if called.
             It may be called multiple times, so it must guard against firing off multiple
@@ -86,10 +108,61 @@ class MappingJobQueue(threading.Thread):
             target=_add_legacy_listens_to_queue, args=(self,))
         self.legacy_load_thread.start()
 
+    def fetch_and_queue_listens(self, query, args):
+        """ Fetch and queue legacy and recheck listens """
+
+        msb_query = """SELECT gid AS recording_msid
+                            , rj.data->>'title' AS track_name
+                            , rj.data->>'artist' AS artist_name
+                         FROM recording r
+                         JOIN recording_json rj
+                           ON r.data = rj.id
+                       WHERE gid in :msids"""
+
+        count = 0
+        msids = []
+        with timescale.engine.connect() as connection:
+            curs = connection.execute(sqlalchemy.text(query), args)
+            for row in curs.fetchall():
+                msids.append(row["recording_msid"])
+
+        if len(msids) == 0:
+            return 0
+
+        with msb_db.engine.connect() as connection:
+            curs = connection.execute(sqlalchemy.text(msb_query), msids=tuple(msids))
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+
+                self.queue.put(JobItem(LEGACY_LISTEN, [{"data": {"artist_name": result[2],
+                                                                 "track_name": result[1]},
+                                                        "recording_msid": result[0],
+                                                        "legacy": True}]))
+                count += 1
+
+        return count
+
     def add_legacy_listens_to_queue(self):
         """Fetch more legacy listens from the listens table by doing an left join
            on the matched listens, finding the next chunk of legacy listens to look up.
            Listens are added to the queue with a low priority."""
+
+        # Find listens that have no entry in the mapping yet.
+        legacy_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid
+                            FROM listen
+                       LEFT JOIN mbid_mapping m
+                              ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::text
+                           WHERE m.recording_msid IS NULL
+                             AND listened_at <= :max_ts
+                             AND listened_at > :min_ts"""
+
+        # Find mapping rows that need to be rechecked
+        recheck_query = """SELECT recording_msid
+                             FROM mbid_mapping
+                            WHERE last_updated = '1970-01-01'
+                            LIMIT %d""" % RECHECK_BATCH_SIZE
 
         # Check to see where we need to pick up from, or start new
         if not self.legacy_listens_index_date:
@@ -113,36 +186,20 @@ class MappingJobQueue(threading.Thread):
             self.num_legacy_listens_loaded = 0
             dt = datetime.datetime.fromtimestamp(self.legacy_listens_index_date)
             cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
+
             return
 
-        # Load listens
-        self.app.logger.info("Load more legacy listens for %s" % datetime.datetime.fromtimestamp(
-            self.legacy_listens_index_date).strftime("%Y-%m-%d"))
-        query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid,
-                          track_name,
-                          data->'track_metadata'->'artist_name' AS artist_name
-                     FROM listen
-                LEFT JOIN listen_join_listen_mbid_mapping lj
-                       ON data->'track_metadata'->'additional_info'->>'recording_msid' = lj.recording_msid::text
-                 WHERE lj.recording_msid IS NULL
-                      AND listened_at <= :max_ts
-                      AND listened_at > :min_ts"""
-
-        count = 0
-        with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(query),
-                                      max_ts=self.legacy_listens_index_date,
-                                      min_ts=self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW)
-            while True:
-                result = curs.fetchone()
-                if not result:
-                    break
-
-                self.queue.put(JobItem(LEGACY_LISTEN, [{"data": {"artist_name": result[2],
-                                                                 "track_name": result[1]},
-                                                        "recording_msid": result[0],
-                                                        "legacy": True}]))
-                count += 1
+        # Check to see if any listens have been marked for re-check
+        count = self.fetch_and_queue_listens(recheck_query, {})
+        if count > 0:
+            self.app.logger.info("Loaded %d listens to be rechecked." % count)
+            return
+        else:
+            # If none, check for old legacy listens
+            count = self.fetch_and_queue_listens(legacy_query, {"max_ts": self.legacy_listens_index_date,
+                                                                "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW})
+            self.app.logger.info("Loaded %s more legacy listens for %s" % (count, datetime.datetime.fromtimestamp(
+                self.legacy_listens_index_date).strftime("%Y-%m-%d")))
 
         # update cache entry and count
         self.legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
@@ -163,12 +220,20 @@ class MappingJobQueue(threading.Thread):
 
             percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
                        stats["low_quality"]) / stats["total"] * 100.00
-            self.app.logger.info("loaded %d processed %d matched %d not %d legacy: %d queue: %d %d l/s" %
-                                 (stats["total"], stats["processed"], stats["exact_match"] + stats["high_quality"] +
-                                  stats["med_quality"] +
-                                  stats["low_quality"], stats["no_match"],
-                                     stats["legacy"], self.queue.qsize(), listens_per_sec))
+            self.app.logger.info("total %d matched %d/%d legacy: %d queue: %d %d l/s" %
+                                 (stats["total"],
+                                  stats["exact_match"] + stats["high_quality"] + stats["med_quality"] + stats["low_quality"],
+                                  stats["no_match"],
+                                  stats["legacy"],
+                                  self.queue.qsize(),
+                                  listens_per_sec))
 
+            if stats["last_exact_match"] is None:
+                stats["last_exact_match"] = stats["exact_match"]
+                stats["last_high_quality"] = stats["high_quality"]
+                stats["last_med_quality"] = stats["med_quality"]
+                stats["last_low_quality"] = stats["low_quality"]
+                stats["last_no_match"] = stats["no_match"]
             metrics.set("listenbrainz-mbid-mapping-writer",
                         total_match_p=percent,
                         exact_match_p=stats["exact_match"] /
@@ -182,31 +247,51 @@ class MappingJobQueue(threading.Thread):
                         no_match_p=stats["no_match"] / stats["total"] * 100.00,
                         errors_p=stats["errors"] / stats["total"] * 100.00,
                         total_listens=stats["total"],
-                        total_processed=stats["processed"],
                         exact_match=stats["exact_match"],
                         high_quality=stats["high_quality"],
                         med_quality=stats["med_quality"],
                         low_quality=stats["low_quality"],
                         no_match=stats["no_match"],
                         errors=stats["errors"],
-                        legacy=stats["legacy"],
-                        legacy_match=stats["legacy_match"],
                         qsize=self.queue.qsize(),
+                        exact_match_rate=stats["exact_match"] - stats["last_exact_match"],
+                        high_quality_rate=stats["high_quality"] - stats["last_high_quality"],
+                        med_quality_rate=stats["med_quality"] - stats["last_med_quality"],
+                        low_quality_rate=stats["low_quality"] - stats["last_low_quality"],
+                        no_match_rate=stats["no_match"] - stats["last_no_match"],
                         listens_per_sec=listens_per_sec,
+                        listen_count=stats["listen_count"],
+                        listens_matched=stats["listens_matched"],
                         legacy_index_date=datetime.date.fromtimestamp(self.legacy_listens_index_date).strftime("%Y-%m-%d"))
+
+            stats["last_exact_match"] = stats["exact_match"]
+            stats["last_high_quality"] = stats["high_quality"]
+            stats["last_med_quality"] = stats["med_quality"]
+            stats["last_low_quality"] = stats["low_quality"]
+            stats["last_no_match"] = stats["no_match"]
 
     def run(self):
         """ main thread entry point"""
 
-        stats = {"processed": 0, "total": 0,
-                 "errors": 0, "legacy": 0, "legacy_match": 0}
+        stats = {"processed": 0,
+                 "total": 0,
+                 "errors": 0,
+                 "listen_count": 0,
+                 "listens_matched": 0,
+                 "legacy": 0,
+                 "legacy_match": 0,
+                 "last_exact_match": None,
+                 "last_high_quality": None,
+                 "last_med_quality": None,
+                 "last_low_quality": None,
+                 "last_no_match": None}
         for typ in MATCH_TYPES:
             stats[typ] = 0
 
         # Fetch stats of how many items have already been matched.
         with timescale.engine.connect() as connection:
             query = """SELECT COUNT(*), match_type
-                         FROM listen_mbid_mapping
+                         FROM mbid_mapping
                      GROUP BY match_type"""
             curs = connection.execute(query)
             while True:
@@ -217,7 +302,7 @@ class MappingJobQueue(threading.Thread):
                 stats[result[1]] = result[0]
 
             query = """SELECT COUNT(*)
-                         FROM listen_mbid_mapping"""
+                         FROM mbid_mapping_metadata"""
             curs = connection.execute(query)
             while True:
                 result = curs.fetchone()
@@ -245,7 +330,7 @@ class MappingJobQueue(threading.Thread):
                                 stats["errors"] += 1
                             else:
                                 job_stats = complete.result()
-                                for stat in job_stats:
+                                for stat in job_stats or []:
                                     stats[stat] += job_stats[stat]
                             del futures[complete]
 
@@ -253,8 +338,6 @@ class MappingJobQueue(threading.Thread):
                         for i in range(MAX_QUEUED_JOBS - len(uncompleted)):
                             try:
                                 job = self.queue.get(False)
-                                if self.queue.qsize() < QUEUE_RELOAD_THRESHOLD:
-                                    self.load_legacy_listens()
                             except Empty:
                                 sleep(.1)
                                 continue
@@ -266,8 +349,9 @@ class MappingJobQueue(threading.Thread):
 
                         if self.legacy_load_thread and not self.legacy_load_thread.is_alive():
                             self.legacy_load_thread = None
-                            self.app.logger.info(
-                                "%d legacy listens loaded" % self.num_legacy_listens_loaded)
+
+                        if self.queue.qsize() == 0:
+                            self.load_legacy_listens()
 
                         if monotonic() > update_time:
                             update_time = monotonic() + UPDATE_INTERVAL

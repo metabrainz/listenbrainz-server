@@ -13,6 +13,7 @@ from data.model.user_artist_map import UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import UserEntityRecord
+from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -587,21 +588,159 @@ def get_sitewide_artist():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    stats_range = request.args.get('range', default='all_time')
+    return _get_sitewide_stats("artists")
+
+
+@stats_api_bp.route("/sitewide/releases")
+@crossdomain()
+@ratelimit()
+def get_sitewide_release():
+    """
+    Get sitewide top releases.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "releases": [
+                    {
+                        "artist_mbids": [],
+                        "artist_name": "Coldplay",
+                        "listen_count": 26,
+                        "release_mbid": "",
+                        "release_name": "Live in Buenos Aires"
+                    },
+                    {
+                        "artist_mbids": [],
+                        "artist_name": "Ellie Goulding",
+                        "listen_count": 25,
+                        "release_mbid": "",
+                        "release_name": "Delirium (Deluxe)"
+                    },
+                    {
+                        "artist_mbids": [],
+                        "artist_name": "The Fray",
+                        "listen_count": 25,
+                        "release_mbid": "",
+                        "release_name": "How to Save a Life"
+                    },
+                ],
+                "offset": 0,
+                "count": 2,
+                "range": "year",
+                "last_updated": 1588494361,
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - ``artist_mbids``, ``artist_msid``, ``release_mbid`` and ``release_msid`` are optional fields and
+          may not be present in all the responses
+
+    :param count: Optional, number of artists to return for each time range,
+        Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of artists to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    return _get_sitewide_stats("releases")
+
+
+@stats_api_bp.route("/sitewide/recordings")
+@crossdomain()
+@ratelimit()
+def get_sitewide_recording():
+    """
+    Get sitewide top recordings.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "recordings": [
+                    {
+                        "artist_mbids": [],
+                        "artist_name": "Ellie Goulding",
+                        "listen_count": 25,
+                        "recording_mbid": "0fe11cd3-0be4-467b-84fa-0bd524d45d74",
+                        "release_mbid": "",
+                        "release_name": "Delirium (Deluxe)",
+                        "track_name": "Love Me Like You Do - From \\"Fifty Shades of Grey\\""
+                    },
+                    {
+                        "artist_mbids": [],
+                        "artist_name": "The Fray",
+                        "listen_count": 23,
+                        "recording_mbid": "0008ab49-a6ad-40b5-aa90-9d2779265c22",
+                        "release_mbid": "",
+                        "release_name": "How to Save a Life",
+                        "track_name": "How to Save a Life"
+                    }
+                ],
+                "offset": 0,
+                "count": 2,
+                "range": "year",
+                "last_updated": 1588494361,
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - We only calculate the top 1000 all_time recordings
+        - ``artist_mbids``, ``artist_msid``, ``release_name``, ``release_mbid``, ``release_msid``,
+          ``recording_mbid`` and ``recording_msid`` are optional fields and may not be present in all the responses
+
+    :param count: Optional, number of artists to return for each time range,
+        Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of artists to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    return _get_sitewide_stats("recordings")
+
+
+def _get_sitewide_stats(entity: str):
+    stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+        raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_sitewide_stats(stats_range, 'artists')
+    stats = db_stats.get_sitewide_stats(stats_range, entity)
     if stats is None:
-        raise APINoContent('')
+        raise APINoContent("")
 
     entity_list, total_entity_count = _process_user_entity(stats, offset, count)
     return jsonify({
         "payload": {
-            "artists": entity_list,
+            entity: entity_list,
             "range": stats_range,
             "offset": offset,
             "count": total_entity_count,
@@ -610,6 +749,93 @@ def get_sitewide_artist():
             "last_updated": int(stats.last_updated.timestamp())
         }
     })
+
+
+@stats_api_bp.route("/sitewide/listening-activity")
+@crossdomain()
+@ratelimit()
+def get_sitewide_listening_activity():
+    """
+    Get the listening activity for entire site. The listening activity shows the number of listens
+    the user has submitted over a period of time.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "from_ts": 1587945600,
+                "last_updated": 1592807084,
+                "listening_activity": [
+                    {
+                        "from_ts": 1587945600,
+                        "listen_count": 26,
+                        "time_range": "Monday 27 April 2020",
+                        "to_ts": 1588031999
+                    },
+                    {
+                        "from_ts": 1588032000,
+                        "listen_count": 57,
+                        "time_range": "Tuesday 28 April 2020",
+                        "to_ts": 1588118399
+                    },
+                    {
+                        "from_ts": 1588118400,
+                        "listen_count": 33,
+                        "time_range": "Wednesday 29 April 2020",
+                        "to_ts": 1588204799
+                    }
+                ],
+                "to_ts": 1589155200,
+                "range": "week"
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - The example above shows the data for three days only, however we calculate the statistics for
+          the current time range and the previous time range. For example for weekly statistics the data
+          is calculated for the current as well as the past week.
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get_sitewide_stats(stats_range, "listening_activity")
+    if stats is None:
+        raise APINoContent('')
+
+    listening_activity = [x.dict() for x in stats.data.__root__]
+    return jsonify({"payload": {
+        "listening_activity": listening_activity,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "range": stats_range,
+        "last_updated": int(stats.last_updated.timestamp())
+    }})
+
+@stats_api_bp.route("/user/<user_name>/year-in-music/")
+def year_in_music(user_name: str):
+    """ Get data for year in music stuff """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+    return jsonify({
+        "payload": {
+            "user_name": user_name,
+            "data": get_year_in_music(user["id"]) or {}
+        }
+    })
+
 
 
 def _process_user_entity(stats: StatApi[UserEntityRecord], offset, count) -> Tuple[list, int]:

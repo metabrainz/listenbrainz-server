@@ -1,6 +1,3 @@
-import psycopg2
-import sqlalchemy
-
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
@@ -12,19 +9,19 @@ from flask_login import current_user, login_required
 from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
 from listenbrainz.db import listens_importer
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
-from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
+from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
-from listenbrainz.webserver import timescale_connection, flash
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
-from pydantic import ValidationError
 
 LISTENS_PER_PAGE = 25
 DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 50
@@ -64,6 +61,8 @@ redirect_bp.add_url_rule("/recommendations/",
                          redirect_user_page("user.recommendation_playlists"))
 redirect_bp.add_url_rule("/pins/", "redirect_pins",
                          redirect_user_page("user.pins"))
+redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
+                         redirect_user_page("user.year_in_music"))
 
 @user_bp.route("/<user_name>/")
 @web_listenstore_needed
@@ -110,13 +109,7 @@ def profile(user_name):
     if not listens or listens[0]['listened_at'] >= max_ts_per_user:
         playing_now = playing_now_conn.get_playing_now(user.id)
         if playing_now:
-            listen = {
-                "track_metadata": playing_now.data,
-                "playing_now": "true",
-            }
-            listens.insert(0, listen)
-
-    user_stats = db_stats.get_user_stats(user.id, 'all_time', 'artists')
+            listens.insert(0, playing_now.to_api())
 
     logged_in_user_follows_user = None
     already_reported_user = False
@@ -128,7 +121,7 @@ def profile(user_name):
 
     pin = get_current_pin_for_user(user_id=user.id)
     if pin:
-        pin = dict(fetch_track_metadata_for_pins([pin])[0])
+        pin = dict(fetch_track_metadata_for_items([pin])[0])
 
     props = {
         "user": {
@@ -138,8 +131,6 @@ def profile(user_name):
         "listens": listens,
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
-        "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
-        "artist_count": format(user_stats.count, ",d") if user_stats else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
         "userPinnedRecording": pin,
@@ -376,7 +367,7 @@ def pins(user_name: str):
     }
 
     pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
-    pins = [dict(pin) for pin in fetch_track_metadata_for_pins(pins)]
+    pins = [dict(pin) for pin in fetch_track_metadata_for_items(pins)]
     total_count = get_pin_count_for_user(user_id=user.id)
 
     props = {
@@ -422,25 +413,6 @@ def _get_user(user_name):
         return User.from_dbrow(user)
 
 
-def _get_spotify_uri_for_listens(listens):
-
-    def get_track_id_from_listen(listen):
-        additional_info = listen["track_metadata"]["additional_info"]
-        if "spotify_id" in additional_info and additional_info["spotify_id"] is not None:
-            return additional_info["spotify_id"].rsplit('/', 1)[-1]
-        else:
-            return None
-
-    track_id = None
-    if len(listens):
-        track_id = get_track_id_from_listen(listens[0])
-
-    if track_id:
-        return "spotify:track:" + track_id
-    else:
-        return None
-
-
 def delete_user(musicbrainz_id):
     """ Delete a user from ListenBrainz completely.
     First, drops the user's listens and then deletes the user from the
@@ -477,7 +449,7 @@ def delete_listens_history(musicbrainz_id):
 def feedback(user_name: str):
     """ Show user feedback, with filter on score (love/hate).
 
-    Args: 
+    Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
     Raises:
         NotFound if user isn't present in the database
@@ -526,4 +498,21 @@ def feedback(user_name: str):
         active_section="feedback",
         props=ujson.dumps(props),
         user=user
+    )
+
+
+@user_bp.route("/<user_name>/year-in-music/")
+def year_in_music(user_name):
+    """ Year in Music """
+    user = _get_user(user_name)
+    return render_template(
+        "user/year-in-music.html",
+        user_name=user_name,
+        props=ujson.dumps({
+            "data": get_year_in_music(user.id),
+            "user": {
+                "id": user.id,
+                "name": user.musicbrainz_id,
+            }
+        })
     )

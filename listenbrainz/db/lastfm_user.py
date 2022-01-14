@@ -62,7 +62,7 @@ class User(object):
             })
             row = result.fetchone()
             if row:
-                return User(row['"user".id'], row['"user".created'], row['"user".musicbrainz_id'], row['"user".auth_token'])
+                return User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
             return None
 
     @staticmethod

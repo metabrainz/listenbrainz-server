@@ -1,3 +1,4 @@
+import logging
 import os
 import pprint
 import sys
@@ -62,21 +63,32 @@ def load_config(app):
 
     app.config.from_pyfile(config_file)
     # Output config values and some other info
-    if deploy_env in ['prod', 'test']:
+    if deploy_env in ['prod', 'beta', 'test']:
         print('Configuration values are as follows: ')
         print(pprint.pformat(app.config, indent=4))
-    try:
-        with open('.git-version') as git_version_file:
-            print('Running on git commit: %s' % git_version_file.read().strip())
-    except IOError as e:
-        print('Unable to retrieve git commit. Error: %s', str(e))
+
+        try:
+            with open('.git-version') as git_version_file:
+                print('Running on git commit: %s' % git_version_file.read().strip())
+        except IOError as e:
+            print('Unable to retrieve git commit. Error: %s', str(e))
 
 
-def gen_app(debug=None):
+def check_ratelimit_token_whitelist(auth_token):
+    """
+        Check to see if the given auth_token is a whitelisted auth token.
+    """
+
+    from flask import current_app
+    return auth_token in current_app.config["WHITELISTED_AUTH_TOKENS"]
+
+
+def create_app(debug=None):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
     """
+
     app = CustomFlask(
         import_name=__name__,
         use_flask_uuid=True,
@@ -85,6 +97,11 @@ def gen_app(debug=None):
     load_config(app)
     if debug is not None:
         app.debug = debug
+    # As early as possible, if debug is True, set the log level of our 'listenbrainz' logger to DEBUG
+    # to prevent flask from creating a new log handler
+    if app.debug:
+        logger = logging.getLogger('listenbrainz')
+        logger.setLevel(logging.DEBUG)
 
     # initialize Flask-DebugToolbar if the debug option is True
     if app.debug and app.config['SECRET_KEY']:
@@ -134,7 +151,8 @@ def gen_app(debug=None):
     from listenbrainz.webserver.errors import init_error_handlers
     init_error_handlers(app)
 
-    from brainzutils.ratelimit import inject_x_rate_headers
+    from brainzutils.ratelimit import inject_x_rate_headers, set_user_validation_function
+    set_user_validation_function(check_ratelimit_token_whitelist)
     @app.after_request
     def after_request_callbacks(response):
         return inject_x_rate_headers(response)
@@ -148,8 +166,9 @@ def gen_app(debug=None):
     return app
 
 
-def create_app(debug=None):
-    app = gen_app(debug=debug)
+def create_web_app(debug=None):
+    """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
+    app = create_app(debug=debug)
 
     # Static files
     import listenbrainz.webserver.static_manager
@@ -213,7 +232,7 @@ def create_api_compat_app(debug=None):
     need to create a different app and only register the api_compat blueprints
     """
 
-    app = gen_app(debug=debug)
+    app = create_app(debug=debug)
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp

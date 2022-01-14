@@ -4,6 +4,7 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "time-ago";
 declare module "debounce-async";
+declare module "react-coverflow";
 
 declare module "react-bs-notifier";
 declare type AlertType = "danger" | "warning" | "success" | "info";
@@ -70,8 +71,6 @@ declare type ListenBrainzUser = {
 declare type ImportService = "lastfm" | "librefm";
 
 declare type ListenType = "single" | "playing_now" | "import";
-
-declare type BrainzPlayDirection = "up" | "down" | "hidden";
 
 declare type SubmitListensPayload = {
   listen_type: "single" | "playing_now" | "import";
@@ -281,7 +280,14 @@ declare type UserEntityResponse =
   | UserReleasesResponse
   | UserRecordingsResponse;
 
-declare type UserStatsAPIRange = "all_time" | "year" | "month" | "week";
+declare type UserStatsAPIRange =
+  | "all_time"
+  | "year"
+  | "month"
+  | "week"
+  | "this_year"
+  | "this_month"
+  | "this_week";
 
 declare type UserEntityDatum = {
   id: string;
@@ -434,6 +440,7 @@ declare type JSPFPlaylistExtension = {
 declare type JSPFTrackExtension = {
   added_by: string;
   artist_identifier: string[]; // Full MusicBrainz artist URIs
+  artist_mbids?: string[]; // Full MusicBrainz artist URIs
   added_at: string; // ISO date string
   release_identifier?: string; // Full MusicBrainz release URI
 };
@@ -499,7 +506,6 @@ declare type UserTrackRecommendationMetadata = {
   release_name?: string;
   recording_mbid?: string;
   recording_msid: string;
-  artist_msid: string;
 };
 
 declare type PinEventMetadata = Listen & {
@@ -565,6 +571,28 @@ type CritiqueBrainzReview = {
   rating?: number;
 };
 
+type CoverArtArchiveEntry = {
+  types: string[]; // Array of types i.e ["Front", "Back"]
+  front: boolean;
+  back: boolean;
+  edit: number;
+  image: string; // "http://coverartarchive.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd/829521842.jpg",
+  comment: "";
+  approved: true;
+  id: string;
+  thumbnails: {
+    250: string; // Full URL to 250px version "http://coverartarchive.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd/829521842-250.jpg",
+    500: string;
+    1200: string;
+    small: string;
+    large: string;
+  };
+};
+type CoverArtArchiveResponse = {
+  images: CoverArtArchiveEntry[];
+  release: string; // Full MB URL i.e "http://musicbrainz.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd"
+};
+
 type ColorReleaseItem = {
   artist_name: string;
   color: number[];
@@ -579,4 +607,11 @@ type ColorReleasesResponse = {
   payload: {
     releases: Array<ColorReleaseItem>;
   };
+};
+
+type MissingMBData = {
+  artist_name: string;
+  listened_at: string;
+  recording_name: string;
+  release_name?: string;
 };
