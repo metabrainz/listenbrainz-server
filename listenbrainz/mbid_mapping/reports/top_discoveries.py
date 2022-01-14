@@ -51,10 +51,12 @@ def fetch_user_list(lb_conn, year):
     with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
         query = """SELECT DISTINCT user_name
                      FROM listen
-                    WHERE listened_at >= %s"""
+                    WHERE listened_at >= %s
+                      AND listened_at < %s"""
 
-        ts = int(datetime(year, 1, 1, 0, 0, tzinfo=timezone.utc).timestamp())
-        lb_curs.execute(query, (ts,))
+        start_ts = int(datetime(year, 1, 1, 0, 0, tzinfo=timezone.utc).timestamp())
+        end_ts = int(datetime(year + 1, 1, 1, 0, 0, tzinfo=timezone.utc).timestamp())
+        lb_curs.execute(query, (start_ts,end_ts))
         rows = lb_curs.fetchall()
 
     return [ r[0] for r in rows ]
@@ -75,7 +77,6 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
             create_table(mb_conn)
 
             log("fetch active users")
-#            user_list = ["rob", "alastairp", "mr_monkey", "amCap1712", "akshaaatt"]   # fetch_user_list(lb_conn, year)
             user_list = fetch_user_list(lb_conn, year)
             log("Process %d users." % len(user_list))
 
@@ -123,7 +124,7 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
 
 
 
-def get_top_discoveries(year):
+def calculate_top_discoveries(year):
     """
         Main entry point for creating top discoveries table.
     """
@@ -133,7 +134,3 @@ def get_top_discoveries(year):
             create_table(mb_conn)
             fetch_top_discoveries_for_users(lb_conn, mb_conn, year)
             create_indexes(mb_conn)
-
-
-if __name__ == "__main__":
-    get_top_discoveries(datetime.now().year)

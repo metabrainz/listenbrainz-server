@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+import click
 import psycopg2
 import psycopg2.extras
 from psycopg2.errors import OperationalError
@@ -84,8 +85,10 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
                          JOIN mbid_mapping_metadata md
                            ON m.recording_mbid = md.recording_mbid
                         WHERE listened_at >= %s
+                          AND listened_at < %s
                           AND m.recording_mbid is not null
-                     GROUP BY m.recording_mbid, md.recording_name, md.artist_credit_name, md.artist_mbids, user_name""" % ts
+                     GROUP BY m.recording_mbid, md.recording_name,
+                              md.artist_credit_name, md.artist_mbids, user_name""" % (start_ts, end_ts)
  
             to_insert = []
             lb_curs.execute(query)
@@ -104,18 +107,15 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
             mb_conn.commit()
 
 
-def get_top_discoveries(ts):
+def calculate_tracks_of_the_year(year):
     """
         Main entry point for creating top discoveries table.
     """
 
+    start_ts = int(datetime(year=year, month=1, day=1, tzinfo=timezone.utc).timestamp())
+    end_ts = int(datetime(year=year + 1, month=1, day=1, tzinfo=timezone.utc).timestamp())
     with psycopg2.connect(config.TIMESCALE_DATABASE_URI) as lb_conn:
         with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
             create_table(mb_conn)
-            fetch_tracks_listened_to(lb_conn, mb_conn, ts)
+            fetch_tracks_listened_to(lb_conn, mb_conn, start_ts, end_ts)
             create_indexes(mb_conn)
-
-
-if __name__ == "__main__":
-    ts = int(datetime(year=datetime.now().year, month=1, day=1, tzinfo=timezone.utc).timestamp())
-    get_top_discoveries(ts)
