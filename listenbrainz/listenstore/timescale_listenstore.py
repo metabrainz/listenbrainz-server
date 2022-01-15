@@ -100,8 +100,6 @@ class TimescaleListenStore(ListenStore):
         if cached_count:
             return cached_count
 
-        self.log.info("asked for count from db")
-
         with timescale.engine.connect() as connection:
             query = "SELECT count, created FROM listen_helper WHERE user_id = :user_id"
             result = connection.execute(sqlalchemy.text(query), user_id=user_id)
@@ -112,7 +110,6 @@ class TimescaleListenStore(ListenStore):
                 # we can reach here only in tests, because we create entries in listen_helper
                 # table when user signs up and for existing users an entry should always exist.
                 count, created = 0, LISTEN_MINIMUM_DATE
-            self.log.info("count: %d, created: %s", count, created)
 
             query_remaining = """
                 SELECT count(*) AS remaining_count
@@ -126,7 +123,6 @@ class TimescaleListenStore(ListenStore):
             remaining_count = result.fetchone()["remaining_count"]
 
             total_count = count + remaining_count
-            self.log("total count: %d", total_count)
             cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), total_count, REDIS_USER_LISTEN_COUNT_EXPIRY)
             return total_count
 
