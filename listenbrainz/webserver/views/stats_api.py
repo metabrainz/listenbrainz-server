@@ -494,11 +494,10 @@ def get_artist_map(user_name: str):
                 raise APINoContent('')
         else:
             # Calculate the data
-            artist_mbid_counts = defaultdict(lambda: ("", 0))
+            artist_mbid_counts = defaultdict(int)
             for artist in artist_stats.data.__root__:
                 for artist_mbid in artist.artist_mbids:
-                    listen_count = artist.listen_count + artist_mbid_counts[artist_mbid][1]
-                    artist_mbid_counts[artist_mbid] = (artist.artist_name, listen_count)
+                    artist_mbid_counts[artist_mbid] += artist.listen_count
 
             country_code_data = _get_country_wise_counts(artist_mbid_counts)
             result = StatApi[UserArtistMapRecord](**{
@@ -885,8 +884,8 @@ def _is_valid_range(stats_range: str) -> bool:
     return stats_range in StatisticsRange.__members__
 
 
-def _get_country_wise_counts(artist_mbids: Dict[str, Tuple[str, int]]) -> List[UserArtistMapRecord]:
-    """ Get country codes from list of given artist_msids and artist_mbids
+def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:
+    """ Get country wise listen counts and artist lists from dict of given artist_msids and listen counts
     """
     # Get artist_origin_countries from artist_credit_ids
     artist_country_codes = _get_country_code_from_mbids(artist_mbids.keys())
@@ -897,10 +896,10 @@ def _get_country_wise_counts(artist_mbids: Dict[str, Tuple[str, int]]) -> List[U
         "listen_count": 0,
         "artists": []
     })
-    for artist_mbid, (artist_name, listen_count) in artist_mbids.items():
+    for artist_mbid, listen_count in artist_mbids.items():
         if artist_mbid in artist_country_codes:
             # TODO: add a test to handle the case where pycountry doesn't recognize the country
-            country_alpha_3 = pycountry.countries.get(alpha_2=artist_country_codes[artist_mbid])
+            country_alpha_3 = pycountry.countries.get(alpha_2=artist_country_codes[artist_mbid]["country_code"])
             if country_alpha_3 is None:
                 continue
             result[country_alpha_3.alpha_3]["artist_count"] += 1
@@ -908,7 +907,10 @@ def _get_country_wise_counts(artist_mbids: Dict[str, Tuple[str, int]]) -> List[U
             result[country_alpha_3.alpha_3]["artists"].append(
                 UserArtistMapArtist(
                     artist_mbid=artist_mbid,
-                    artist_name=artist_name,
+                    # we use the artist name from the country code endpoint because the
+                    # other artist name we have in stats is actually artist credit name where
+                    # this artist name is the actual artist name associated with the mbid
+                    artist_name=artist_country_codes[artist_mbid]["artist_name"],
                     listen_count=listen_count
                 )
             )
@@ -921,7 +923,7 @@ def _get_country_wise_counts(artist_mbids: Dict[str, Tuple[str, int]]) -> List[U
     return artist_map_data
 
 
-def _get_country_code_from_mbids(artist_mbids: Iterable[str]) -> Dict[str, str]:
+def _get_country_code_from_mbids(artist_mbids: Iterable[str]) -> Dict[str, Dict]:
     """ Get a list of artist_country_code corresponding to the input artist_mbids
     """
     request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids]
@@ -936,8 +938,7 @@ def _get_country_code_from_mbids(artist_mbids: Iterable[str]) -> Dict[str, str]:
             # Raise error if non 200 response is received
             result.raise_for_status()
             data = result.json()
-            for entry in data:
-                artist_country_code[entry["artist_mbid"]] = entry["country_code"]
+            artist_country_code = {entry["artist_mbid"]: entry for entry in data}
         except requests.RequestException as err:
             current_app.logger.error("Error while getting artist_artist_country_code, {}".format(err), exc_info=True)
             error_msg = ("An error occurred while calculating artist_map data, "
