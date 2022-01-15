@@ -162,7 +162,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           </span>
         </div>
         <p>
-          {artists.map((artist: UserArtistMapArtist) => (
+          {artists.slice(0, 10).map((artist: UserArtistMapArtist) => (
             <>
               <a href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}>
                 {artist.artist_name}
