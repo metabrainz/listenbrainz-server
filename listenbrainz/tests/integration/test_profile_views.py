@@ -98,7 +98,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(resp)
         self.assertEqual(resp.json['latest_import'], val)
 
-        self.assertNotEqual(self.redis.ttl(cache._prep_key(REDIS_USER_LISTEN_COUNT + self.user['id'])), 0)
+        self.assertNotEqual(self.redis.ttl(cache._prep_key(REDIS_USER_LISTEN_COUNT + str(self.user['id']))), 0)
 
         # check that listens have been successfully submitted
         resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
@@ -112,7 +112,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
         resp = self.client.post(url_for('profile.delete_listens'), data={'csrf_token': g.csrf_token})
         self.assertRedirects(resp, url_for('user.profile', user_name=self.user['musicbrainz_id']))
 
-        time.sleep(2)
+        # listen counts are cached for 5 min, so delete key otherwise cached will be returned
+        cache.delete(REDIS_USER_LISTEN_COUNT + str(self.user['id']))
 
         # check that listens have been successfully deleted
         resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
