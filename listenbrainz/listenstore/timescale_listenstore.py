@@ -986,25 +986,17 @@ class TimescaleListenStore(ListenStore):
         """
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
         query = """
-            WITH delete_listen AS (
                 DELETE FROM listen
                       WHERE listened_at = :listened_at
                         AND user_id = :user_id
                         AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
                   RETURNING user_id, created
-            )
-            UPDATE listen_helper lc
-               SET count = count - 1
-              FROM delete_listen dl
-             WHERE lc.user_id = dl.user_id
-            -- only decrement count if the listen deleted has a created earlier than the created timestamp
-            -- in the listen count table
-               AND lc.created > dl.created
         """
         try:
             with timescale.engine.connect() as connection:
-                connection.execute(sqlalchemy.text(query), listened_at=listened_at,
-                                   user_id=user_id, recording_msid=recording_msid)
+                results = connection.execute(sqlalchemy.text(query), listened_at=listened_at,
+                                             user_id=user_id, recording_msid=recording_msid)
+                self.log.info("Deleted %s", results.fetchall())
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException

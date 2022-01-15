@@ -435,11 +435,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         count = self._create_test_data(testuser_name, testuser["id"])
         user_key = REDIS_USER_LISTEN_COUNT + str(testuser["id"])
         self.assertEqual(count, self.logstore.get_listen_count_for_user(testuser["id"]))
-        self.assertEqual(count, int(cache.get(user_key, decode=False) or 0))
-
-        batch = generate_data(uid, testuser_name, int(time()), 1)
-        self.logstore.insert(batch)
-        self.assertEqual(count + 1, int(cache.get(user_key, decode=False) or 0))
+        self.assertEqual(count, cache.get(user_key))
 
     def test_delete_listens(self):
         uid = random.randint(2000, 1 << 31)
