@@ -80,7 +80,7 @@ class TimescaleListenStore(ListenStore):
         """When a user is created, set the timestamp keys and insert an entry in the listen count
          table so that we can avoid the expensive lookup for a brand new user."""
         cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
-        query = """INSERT INTO listen_count VALUES (:user_id, 0, 0, 0, NOW())"""
+        query = """INSERT INTO listen_helper VALUES (:user_id, 0, 0, 0, NOW())"""
         with timescale.engine.connect() as connection:
             connection.execute(sqlalchemy.text(query), user_id=user_id)
 
@@ -101,7 +101,7 @@ class TimescaleListenStore(ListenStore):
             return cached_count
 
         with timescale.engine.connect() as connection:
-            query = "SELECT count, created FROM listen_count WHERE user_id = :user_id"
+            query = "SELECT count, created FROM listen_helper WHERE user_id = :user_id"
             result = connection.execute(sqlalchemy.text(query), user_id=user_id)
             row = result.fetchone()
             count, created = row["count"], row["created"]
@@ -937,7 +937,7 @@ class TimescaleListenStore(ListenStore):
         Raises: Exception if unable to delete the user in 5 retries
         """
         query = """
-            UPDATE listen_count SET count = 0 WHERE user_id = :user_id;
+            UPDATE listen_helper SET count = 0 WHERE user_id = :user_id;
             DELETE FROM listen WHERE user_id = :user_id;
         """
         cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
@@ -964,7 +964,7 @@ class TimescaleListenStore(ListenStore):
                         AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
                   RETURNING user_id, created
             )
-            UPDATE listen_count lc
+            UPDATE listen_helper lc
                SET count = count - 1
               FROM delete_listen dl
              WHERE lc.user_id = dl.user_id
