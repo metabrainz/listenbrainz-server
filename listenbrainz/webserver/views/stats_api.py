@@ -823,6 +823,7 @@ def get_sitewide_listening_activity():
         "last_updated": int(stats.last_updated.timestamp())
     }})
 
+
 @stats_api_bp.route("/user/<user_name>/year-in-music/")
 def year_in_music(user_name: str):
     """ Get data for year in music stuff """
@@ -835,7 +836,6 @@ def year_in_music(user_name: str):
             "data": get_year_in_music(user["id"]) or {}
         }
     })
-
 
 
 def _process_user_entity(stats: StatApi[EntityRecord], offset, count) -> Tuple[list, int]:
