@@ -4,8 +4,8 @@ from typing import TypeVar, Generic, List
 from pydantic import constr, NonNegativeInt, BaseModel
 from pydantic.generics import GenericModel
 
-
 SparkT = TypeVar("SparkT")
+
 
 class UserStatRecords(GenericModel, Generic[SparkT]):
     musicbrainz_id: constr(min_length=1)

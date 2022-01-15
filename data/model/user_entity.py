@@ -11,6 +11,7 @@ from data.model.user_release_stat import ReleaseRecord
 # For more info read https://pydantic-docs.helpmanual.io/usage/types/#unions
 EntityRecord = Union[RecordingRecord, ReleaseRecord, ArtistRecord]
 
+
 class UserEntityRecords(UserStatRecords[EntityRecord]):
     count: NonNegativeInt
 
