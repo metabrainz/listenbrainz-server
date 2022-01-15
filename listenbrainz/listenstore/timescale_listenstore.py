@@ -7,6 +7,7 @@ import tempfile
 import time
 import shutil
 import uuid
+import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
 import ujson
@@ -983,6 +984,7 @@ class TimescaleListenStore(ListenStore):
             recording_msid: the MessyBrainz ID of the recording
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
         query = """
             WITH delete_listen AS (
                 DELETE FROM listen
@@ -1006,6 +1008,7 @@ class TimescaleListenStore(ListenStore):
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARN)
 
 
 class TimescaleListenStoreException(Exception):
