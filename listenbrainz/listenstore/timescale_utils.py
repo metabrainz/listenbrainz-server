@@ -45,12 +45,12 @@ def recalculate_all_user_data():
 
     # Select a list of users
     user_list = []
-    query = 'SELECT musicbrainz_id FROM "user"'
+    query = 'SELECT musicbrainz_id, id FROM "user"'
     try:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(query))
             for row in result:
-                user_list.append(row[0])
+                user_list.append((row[0], row[1]))
     except psycopg2.OperationalError as e:
         logger.error("Cannot query db to fetch user list." %
                      str(e), exc_info=True)
@@ -60,31 +60,31 @@ def recalculate_all_user_data():
                 len(user_list))
 
     # Reset the timestamps and listen counts to 0 for all users
-    for user_name in user_list:
+    for user_name, user_id in user_list:
         cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
-        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", expirein=0)
+        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", expirein=0)
 
     # Tabulate all of the listen counts/timestamps for all users
     logger.info("Scan the whole listen table...")
     listen_counts = defaultdict(int)
     user_timestamps = {}
-    query = "SELECT listened_at, user_name FROM listen where created <= :ts"
+    query = "SELECT listened_at, user_name, user_id FROM listen where created <= :ts"
     try:
         with timescale.engine.connect() as connection:
             result = connection.execute(
                 sqlalchemy.text(query), ts=last_created_ts)
             for row in result:
                 ts = row[0]
-                user_name = row[1]
-                if user_name not in user_timestamps:
-                    user_timestamps[user_name] = [ts, ts]
+                user_id = row[2]
+                if user_id not in user_timestamps:
+                    user_timestamps[user_id] = [ts, ts]
                 else:
-                    if ts > user_timestamps[user_name][1]:
-                        user_timestamps[user_name][1] = ts
-                    if ts < user_timestamps[user_name][0]:
-                        user_timestamps[user_name][0] = ts
+                    if ts > user_timestamps[user_id][1]:
+                        user_timestamps[user_id][1] = ts
+                    if ts < user_timestamps[user_id][0]:
+                        user_timestamps[user_id][0] = ts
 
+                user_name = row[1]
                 listen_counts[user_name] += 1
 
     except psycopg2.OperationalError as e:
@@ -94,23 +94,23 @@ def recalculate_all_user_data():
 
     logger.info("Setting updated cache entries.")
     # Set the timestamps and listen counts for all users
-    for user_name in user_list:
+    for user_name, user_id in user_list:
         try:
             cache.increment(REDIS_USER_LISTEN_COUNT + user_name, amount=listen_counts[user_name])
         except KeyError:
             pass
 
         try:
-            tss = cache.get(REDIS_USER_TIMESTAMPS + user_name)
+            tss = cache.get(REDIS_USER_TIMESTAMPS + str(user_id))
             (min_ts, max_ts) = tss.split(",")
             min_ts = int(min_ts)
             max_ts = int(max_ts)
-            if min_ts and min_ts < user_timestamps[user_name][0]:
-                user_timestamps[user_name][0] = min_ts
-            if max_ts and max_ts > user_timestamps[user_name][1]:
-                user_timestamps[user_name][1] = max_ts
-            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" %
-                      (user_timestamps[user_name][0], user_timestamps[user_name][1]), expirein=0)
+            if min_ts and min_ts < user_timestamps[user_id][0]:
+                user_timestamps[user_id][0] = min_ts
+            if max_ts and max_ts > user_timestamps[user_id][1]:
+                user_timestamps[user_id][1] = max_ts
+            cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "%d,%d" %
+                      (user_timestamps[user_id][0], user_timestamps[user_id][1]), expirein=0)
         except KeyError:
             pass
 
@@ -131,7 +131,7 @@ def refresh_listen_count_aggregate():
 
         Arg:
 
-          year_offset: How many years into the past should we start refreshing (e.g 1 year, 
+          year_offset: How many years into the past should we start refreshing (e.g 1 year,
                        will refresh everything that is 1 year or older.
           year_count: How many years from year_offset should we update.
 
