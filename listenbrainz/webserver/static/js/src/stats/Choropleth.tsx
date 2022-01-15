@@ -157,7 +157,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           <span>
             {feature.label}:{" "}
             <strong>
-              ${feature.formattedValue} ${suffix}
+              {feature.formattedValue} {suffix}
             </strong>
           </span>
         </div>
