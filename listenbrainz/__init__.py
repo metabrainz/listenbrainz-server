@@ -13,4 +13,6 @@ _handler.setFormatter(_formatter)
 _logger = logging.getLogger("listenbrainz")
 # This level is set to DEBUG in listenbrainz.webserver.gen_app if Flask DEBUG=True
 _logger.setLevel(logging.INFO)
-_logger.addHandler(_handler)
+
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+logging.getLogger('sqlalchemy.engine').addHandler(_handler)
