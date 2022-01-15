@@ -104,6 +104,10 @@ class TimescaleListenStore(ListenStore):
             query = "SELECT count, created FROM listen_helper WHERE user_id = :user_id"
             result = connection.execute(sqlalchemy.text(query), user_id=user_id)
             row = result.fetchone()
+            if row is None:
+                # we can reach here only in tests, because we create entries in listen_helper
+                # table when user signs up and for existing users an entry should always exist.
+                return 0
             count, created = row["count"], row["created"]
 
             query_remaining = """
@@ -190,6 +194,27 @@ class TimescaleListenStore(ListenStore):
             self.log.error("Cannot fetch min/max timestamp: %s" %
                            str(e), exc_info=True)
             raise
+
+    def get_total_listen_count(self):
+        """ Returns the total number of listens stored in the ListenStore.
+            First checks the brainzutils cache for the value, if not present there
+            makes a query to the db and caches it in brainzutils cache.
+        """
+        count = cache.get(REDIS_TOTAL_LISTEN_COUNT)
+        if count:
+            return count
+
+        query = "SELECT SUM(count) AS value FROM listen_helper"
+        try:
+            with timescale.engine.connect() as connection:
+                result = connection.execute(sqlalchemy.text(query))
+                count = result.fetchone()["value"]
+        except psycopg2.OperationalError:
+            self.log.error("Cannot query listen counts:", exc_info=True)
+            raise
+
+        cache.set(REDIS_TOTAL_LISTEN_COUNT, count, expirein=REDIS_USER_LISTEN_COUNT_EXPIRY)
+        return count
 
     def insert(self, listens):
         """
