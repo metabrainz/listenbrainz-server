@@ -85,8 +85,13 @@ class TimescaleListenStore(ListenStore):
             connection.execute(sqlalchemy.text(query), user_id=user_id)
 
     def get_listen_count_for_user(self, user_id: int):
-        """Get the total number of listens for a user. The number of listens comes from
-           brainzutils cache unless an exact number is asked for.
+        """Get the total number of listens for a user.
+
+         The number of listens comes from cache if available otherwise the get the
+         listen count from the database. To get the listen count from the database,
+         query listen_helper table for the count and the timestamp till which we
+         already have counted. Then scan the listens created later than that timestamp
+         to get the remaining count. Add the two counts to get total listen count.
 
         Args:
             user_id: the user to get listens for
@@ -96,21 +101,20 @@ class TimescaleListenStore(ListenStore):
             return cached_count
 
         with timescale.engine.connect() as connection:
-            query = "SELECT count, timestamp FROM listen_count WHERE user_id = :user_id"
+            query = "SELECT count, created FROM listen_count WHERE user_id = :user_id"
             result = connection.execute(sqlalchemy.text(query), user_id=user_id)
             row = result.fetchone()
-            count, timestamp = row["count"], row["timestamp"]
+            count, created = row["count"], row["created"]
 
             query_remaining = """
                 SELECT count(*) AS remaining_count
                   FROM listen
                  WHERE user_id = :user_id
-                   AND created > :timestamp
+                   AND created > :created
             """
             result = connection.execute(sqlalchemy.text(query_remaining),
-                user_id=user_id,
-                timestamp=timestamp
-            )
+                                        user_id=user_id,
+                                        created=created)
             remaining_count = result.fetchone()["remaining_count"]
 
             total_count = count + remaining_count
@@ -252,7 +256,8 @@ class TimescaleListenStore(ListenStore):
 
         return self.fetch_listens_for_multiple_users_from_storage([user_id], from_ts, to_ts, limit, order)
 
-    def fetch_listens_for_multiple_users_from_storage(self, user_ids: List[int], from_ts: float, to_ts: float, limit: int, order: int):
+    def fetch_listens_for_multiple_users_from_storage(self, user_ids: List[int], from_ts: float,
+                                                      to_ts: float, limit: int, order: int):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -963,8 +968,9 @@ class TimescaleListenStore(ListenStore):
                SET count = count - 1
               FROM delete_listen dl
              WHERE lc.user_id = dl.user_id
-        -- only decrement count if the listen deleted has a created earlier than the timestamp in the listen count table
-               AND lc.timestamp > dl.created
+            -- only decrement count if the listen deleted has a created earlier than the created timestamp
+            -- in the listen count table
+               AND lc.created > dl.created
         """
         try:
             with timescale.engine.connect() as connection:
