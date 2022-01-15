@@ -156,8 +156,7 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
     elif stats_range == "quarter":
         from_offset = get_two_quarters_ago_offset(latest_listen_date)
         to_offset = relativedelta(months=+6)
-        # compute listening activity for each week with date format as day
-        step = relativedelta(weeks=+1)
+        step = relativedelta(days=+1)
         date_format = "%d %B %Y"
         spark_date_format = "d MMMM y"
     elif stats_range == "half_yearly":
