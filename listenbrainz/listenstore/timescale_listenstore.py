@@ -992,12 +992,13 @@ class TimescaleListenStore(ListenStore):
                         AND user_id = :user_id
                         AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
                   RETURNING user_id, created
-            )
-            UPDATE listen_helper lc
-               SET count = count - 1
-              FROM delete_listen dl
-             WHERE lc.user_id = dl.user_id
-               AND lc.created > dl.created;
+            ), update_count AS (
+                UPDATE listen_helper lc
+                   SET count = count - 1
+                  FROM delete_listen dl
+                 WHERE lc.user_id = dl.user_id
+                   AND lc.created > dl.created
+            ) SELECT * FROM delete_listen;
             -- only decrement count if the listen deleted has a created earlier than the created timestamp
             -- in the listen count table
         """
