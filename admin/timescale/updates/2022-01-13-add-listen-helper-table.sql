@@ -6,5 +6,5 @@ CREATE TABLE listen_helper (
     max_listened_at     BIGINT                      NOT NULL, -- maximum listened_at timestamp seen for the user in listens till `created`
     created             TIMESTAMP WITH TIME ZONE    NOT NULL  -- the created timestamp when data for this user was updated last
 );
-CREATE UNIQUE INDEX user_id_ndx_listen_count ON listen_count (user_id);
+CREATE UNIQUE INDEX user_id_ndx_listen_count ON listen_helper (user_id);
 COMMIT;
