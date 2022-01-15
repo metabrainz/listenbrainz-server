@@ -22,22 +22,23 @@ SECONDS_IN_A_YEAR = 31536000
 def update_user_listen_counts():
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
     query = """
-    WITH nc AS (
-        SELECT l.user_id, count(*) as count
-          FROM listen l
-          JOIN listen_count lc on l.user_id = lc.user_id
-         WHERE created > lc.timestamp
-           AND created <= :until
-      GROUP BY l.user_id
-    )
-    UPDATE listen_count oc
-       SET count = oc.count + nc.count
-         , timestamp = :until
-      FROM nc
-     WHERE oc.user_id = nc.user_id;
+        WITH nc AS (
+            SELECT l.user_id, count(*) as count
+              FROM listen l
+              JOIN listen_count lc on l.user_id = lc.user_id
+             WHERE created > lc.timestamp
+               AND created <= :until
+          GROUP BY l.user_id
+        )
+        UPDATE listen_count oc
+           SET count = oc.count + nc.count
+             , timestamp = :until
+          FROM nc
+         WHERE oc.user_id = nc.user_id
     """
     with timescale.engine.connect() as connection:
         connection.execute(text(query), until=datetime.now())
+
 
 def recalculate_all_user_data():
 
@@ -63,12 +64,12 @@ def recalculate_all_user_data():
 
     # Select a list of users
     user_list = []
-    query = 'SELECT musicbrainz_id, id FROM "user"'
+    query = 'SELECT id FROM "user"'
     try:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(query))
             for row in result:
-                user_list.append((row[0], row[1]))
+                user_list.append(row[0])
     except psycopg2.OperationalError as e:
         logger.error("Cannot query db to fetch user list." %
                      str(e), exc_info=True)
@@ -77,22 +78,21 @@ def recalculate_all_user_data():
     logger.info("Fetched %d users. Setting empty cache entries." %
                 len(user_list))
 
-    # Reset the timestamps and listen counts to 0 for all users
-    for user_name, user_id in user_list:
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
+    # Reset the timestamps to 0 for all users
+    for user_id in user_list:
         cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", expirein=0)
 
-    # Tabulate all of the listen counts/timestamps for all users
+    # Tabulate all of the listen timestamps for all users
     logger.info("Scan the whole listen table...")
     user_timestamps = {}
-    query = "SELECT listened_at, user_name, user_id FROM listen where created <= :ts"
+    query = "SELECT listened_at, user_id FROM listen where created <= :ts"
     try:
         with timescale.engine.connect() as connection:
             result = connection.execute(
                 sqlalchemy.text(query), ts=last_created_ts)
             for row in result:
                 ts = row[0]
-                user_id = row[2]
+                user_id = row[1]
                 if user_id not in user_timestamps:
                     user_timestamps[user_id] = [ts, ts]
                 else:
@@ -100,24 +100,14 @@ def recalculate_all_user_data():
                         user_timestamps[user_id][1] = ts
                     if ts < user_timestamps[user_id][0]:
                         user_timestamps[user_id][0] = ts
-
-                user_name = row[1]
-                if user_name not in user_timestamps:
-                    user_timestamps[user_name] = [ts, ts]
-                else:
-                    if ts > user_timestamps[user_name][1]:
-                        user_timestamps[user_name][1] = ts
-                    if ts < user_timestamps[user_name][0]:
-                        user_timestamps[user_name][0] = ts
-
     except psycopg2.OperationalError as e:
         logger.error("Cannot query db to fetch user list." %
                      str(e), exc_info=True)
         raise
 
     logger.info("Setting updated cache entries.")
-    # Set the timestamps and listen counts for all users
-    for user_name, user_id in user_list:
+    # Set the timestamps for all users
+    for user_id in user_list:
         try:
             tss = cache.get(REDIS_USER_TIMESTAMPS + str(user_id))
             (min_ts, max_ts) = tss.split(",")
