@@ -59,7 +59,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
 
                     r = dict(row)
                     areas.append(r['area_id'])
-                    mapping.append(row)
+                    mapping.append(r)
 
                 if not areas:
                     return []
