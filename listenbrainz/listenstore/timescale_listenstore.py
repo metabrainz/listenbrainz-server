@@ -35,6 +35,7 @@ from listenbrainz.utils import create_path, init_cache
 REDIS_USER_LISTEN_COUNT = "lc."
 REDIS_USER_TIMESTAMPS = "ts."
 REDIS_TOTAL_LISTEN_COUNT = "lc-total"
+# cache listen counts for 5 minutes only, so that listen counts are always up-to-date in 5 minutes.
 REDIS_USER_LISTEN_COUNT_EXPIRY = 300
 
 DUMP_CHUNK_SIZE = 100000
@@ -75,10 +76,10 @@ class TimescaleListenStore(ListenStore):
         self.dump_temp_dir_root = conf.get(
             'LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
-    def set_empty_values_for_user(self, user_name, user_id):
+    def set_empty_values_for_user(self, user_id: int):
         """When a user is created, set the timestamp keys and insert an entry in the listen count
          table so that we can avoid the expensive lookup for a brand new user."""
-        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", 0)
+        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
         query = """INSERT INTO listen_count VALUES (:user_id, 0, 0, 0, NOW())"""
         with timescale.engine.connect() as connection:
             connection.execute(sqlalchemy.text(query), user_id=user_id)
@@ -220,7 +221,7 @@ class TimescaleListenStore(ListenStore):
 
         # update the timestamps for the users
         user_timestamps = {}
-        for ts, _, user_name, user_id in inserted_rows:
+        for ts, _, _, user_id in inserted_rows:
             if user_id in user_timestamps:
                 if ts < user_timestamps[user_id][0]:
                     user_timestamps[user_id][0] = ts
@@ -919,7 +920,7 @@ class TimescaleListenStore(ListenStore):
 
         return total_imported
 
-    def delete(self, musicbrainz_id, user_id):
+    def delete(self, user_id):
         """ Delete all listens for user with specified user ID.
 
         Note: this method tries to delete the user 5 times before giving up.
@@ -931,11 +932,10 @@ class TimescaleListenStore(ListenStore):
         Raises: Exception if unable to delete the user in 5 retries
         """
         query = """
-            DELETE FROM listen_count WHERE user_id = :user_id;
+            UPDATE listen_count SET count = 0 WHERE user_id = :user_id;
             DELETE FROM listen WHERE user_id = :user_id;
         """
-        self.set_empty_cache_values_for_user(musicbrainz_id, user_id)
-
+        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
         try:
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), user_id=user_id)
@@ -943,12 +943,11 @@ class TimescaleListenStore(ListenStore):
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise
 
-    def delete_listen(self, listened_at: int, user_id: int, user_id: int, recording_msid: str):
+    def delete_listen(self, listened_at: int, user_id: int, recording_msid: str):
         """ Delete a particular listen for user with specified MusicBrainz ID.
         Args:
             listened_at: The timestamp of the listen
-            user_id: the row id of the user
-            user_id: the user id of the user
+            user_id: the listenbrainz row id of the user
             recording_msid: the MessyBrainz ID of the recording
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
@@ -958,11 +957,11 @@ class TimescaleListenStore(ListenStore):
                       WHERE listened_at = :listened_at
                         AND user_id = :user_id
                         AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
-                  RETURNING user_name, created
+                  RETURNING user_id, created
             )
             UPDATE listen_count lc
                SET count = count - 1
-              FROM delete_listen dl 
+              FROM delete_listen dl
              WHERE lc.user_id = dl.user_id
         -- only decrement count if the listen deleted has a created earlier than the timestamp in the listen count table
                AND lc.timestamp > dl.created
