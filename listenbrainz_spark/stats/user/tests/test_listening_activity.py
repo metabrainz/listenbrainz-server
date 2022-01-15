@@ -92,7 +92,7 @@ class ListeningActivityTestCase(StatsTestCase):
             datetime(2021, 7, 1),
             datetime(2021, 10, 1)
         ]
-        step = relativedelta(weeks=+1)
+        step = relativedelta(days=+1)
         fmt = "%d %B %Y"
         spark_fmt = "d MMMM y"
 
