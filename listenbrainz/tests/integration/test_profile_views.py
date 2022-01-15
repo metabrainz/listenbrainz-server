@@ -98,7 +98,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(resp)
         self.assertEqual(resp.json['latest_import'], val)
 
-        self.assertNotEqual(self.redis.ttl(cache._prep_key(REDIS_USER_LISTEN_COUNT + self.user['musicbrainz_id'])), 0)
+        self.assertNotEqual(self.redis.ttl(cache._prep_key(REDIS_USER_LISTEN_COUNT + self.user['id'])), 0)
 
         # check that listens have been successfully submitted
         resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
