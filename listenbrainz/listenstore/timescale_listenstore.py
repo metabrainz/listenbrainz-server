@@ -28,7 +28,7 @@ from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
-from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION
+from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
 from listenbrainz.utils import create_path, init_cache
 
 # Append the user name for both of these keys
@@ -106,11 +106,12 @@ class TimescaleListenStore(ListenStore):
             query = "SELECT count, created FROM listen_helper WHERE user_id = :user_id"
             result = connection.execute(sqlalchemy.text(query), user_id=user_id)
             row = result.fetchone()
-            if row is None:
+            if row:
+                count, created = row["count"], row["created"]
+            else:
                 # we can reach here only in tests, because we create entries in listen_helper
                 # table when user signs up and for existing users an entry should always exist.
-                return 0
-            count, created = row["count"], row["created"]
+                count, created = 0, LISTEN_MINIMUM_DATE
             self.log.info("count: %d, created: %s", count, created)
 
             query_remaining = """
