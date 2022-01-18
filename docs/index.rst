@@ -5,7 +5,7 @@ ListenBrainz is a project by the MetaBrainz foundation which allows you to publi
 that you listen to. Using this data, we provide statistics, recommendations, and a platform for you and other developers
 to explore this data.
 
-If you want to use the ListenBrainz API to read or submit data, see the :doc:`API documentation <users/api>`. You also
+If you want to use the ListenBrainz API to read or submit data, see the :doc:`API documentation <users/api/index>`. You also
 may want to review the JSON documentation.
 
 If you are interested in contributing to ListenBrainz as a developer, see the
@@ -20,7 +20,7 @@ Contents
    :maxdepth: 2
    :caption: API Documentation
 
-   users/api
+   users/api/index
    users/api-usage
    users/json
    users/clients
