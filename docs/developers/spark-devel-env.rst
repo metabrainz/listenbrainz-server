@@ -1,5 +1,5 @@
-Set up ListenBrainz Spark development environment
-=================================================
+ListenBrainz Spark development
+==============================
 
 There are two distinct part of the ListenBrainz development environment:
 
