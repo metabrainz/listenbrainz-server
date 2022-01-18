@@ -5,7 +5,7 @@ In order to actually build features that use Spark, it is important to
 understand how the ListenBrainz webserver and the Spark environment
 interact.
 
-.. image:: images/request_consumer.png
+.. image:: ../images/request_consumer.png
   :alt: Lifecycle of a Stat
 
 The ListenBrainz webserver and Spark cluster are completely seperate entities,

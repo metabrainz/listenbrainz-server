@@ -80,16 +80,6 @@ also build the documentation locally:
     cd listenbrainz-server/docs
     pip install -r requirements.txt
     make clean html
-    
-## Pushing test images using Github Actions
-
-1. Go to Actions -> Push deployment image or click [here](https://github.com/metabrainz/listenbrainz-server/actions/workflows/push-dev-image.yml).
-2. Select the branch and enter the docker image tag (version).
-![Screenshot (54)](https://user-images.githubusercontent.com/27751938/136417112-20184ff0-3140-425f-89fe-bae625b820a3.png)
-3. Click on Run Workflow.
-4. The image will be built and pushed to Docker Hub with the desired tag.
-5. To monitor the status of the build, wait for the worflow run to appear. You may need to wait for a few seconds and reload the page.
-![Screenshot (55)](https://user-images.githubusercontent.com/27751938/136417424-997539aa-79ab-4425-8edd-e8f2cfdd482c.png)
 
 ## License Notice
 
