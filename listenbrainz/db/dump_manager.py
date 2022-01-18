@@ -265,19 +265,19 @@ def import_dump(private_archive, private_timescale_archive,
                 public_archive, public_timescale_archive, listen_archive, threads):
     """ Import a ListenBrainz dump into the database.
 
+    Args:
+        private_archive (str): the path to the ListenBrainz private dump to be imported
+        private_timescale_archive (str): the path to the ListenBrainz private timescale dump to be imported
+        public_archive (str): the path to the ListenBrainz public dump to be imported
+        public_timescale_archive (str): the path to the ListenBrainz public timescale dump to be imported
+        listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
+        threads (int): the number of threads to use during decompression, defaults to 1
+
     .. note::
         This method tries to import the private db dump first, followed by the public db
         dump. However, in absence of a private dump, it imports sanitized versions of the user
         table in the public dump in order to satisfy foreign key constraints. Then it imports
         the listen dump.
-
-        Args:
-            private_archive (str): the path to the ListenBrainz private dump to be imported
-            private_timescale_archive (str): the path to the ListenBrainz private timescale dump to be imported
-            public_archive (str): the path to the ListenBrainz public dump to be imported
-            public_timescale_archive (str): the path to the ListenBrainz public timescale dump to be imported
-            listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
-            threads (int): the number of threads to use during decompression, defaults to 1
     """
     app = create_app()
     with app.app_context():
@@ -336,14 +336,13 @@ def create_test_parquet_files():
 def import_yim_playlists(patch_slug, dump_file):
     """ Import playlist excerpts into the YIM data table from a dump file.
 
-        Args:
-            patch_slug (str): The slug of the troi patch that generated these playlists.
-            dump_file (str): The dump file to import. For each user, it should contain
-                             three lines: user_name, playlist_mbid, JSPF data.
+    .. note::
+        First copy the dump to inside the container from which the script is to be run.
 
-        .. note::
-
-            First copy the dump to inside the container from which the script is to be run.
+    Args:
+        patch_slug (str): The slug of the troi patch that generated these playlists.
+        dump_file (str): The dump file to import. For each user, it should contain
+        three lines: user_name, playlist_mbid, JSPF data.
     """
     app = create_app()
     with app.app_context():
