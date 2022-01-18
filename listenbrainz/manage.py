@@ -22,11 +22,11 @@ def cli():
 
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), 'admin', 'sql')
+    os.path.realpath(__file__)), '..', 'admin', 'sql')
 MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), 'admin', 'messybrainz', 'sql')
+    os.path.realpath(__file__)), '..', 'admin', 'messybrainz', 'sql')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), 'admin', 'timescale')
+    os.path.realpath(__file__)), '..', 'admin', 'timescale')
 
 
 @cli.command(name="run_api_compat_server")
