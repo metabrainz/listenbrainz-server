@@ -40,7 +40,7 @@ services:
       args:
         GIT_COMMIT_SHA: HEAD
     environment:
-      FLASK_APP: listenbrainz.webserver
+      FLASK_APP: listenbrainz.webserver:create_web_app()
       FLASK_ENV: development
     command: flask run -h 0.0.0.0 -p 80
     image: web
