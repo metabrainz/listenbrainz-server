@@ -1,23 +1,24 @@
 ListenBrainz documentation
 ==========================
 
-This documentation is for:
+ListenBrainz is a project by the MetaBrainz foundation which allows you to publicly store a record of all of the songs
+that you listen to. Using this data, we provide statistics, recommendations, and a platform for you and other developers
+to explore this data.
 
-- Developers :doc:`using our API <users/api>` to submit and fetch listens
-- System administrators managing a ListenBrainz installation
-- Contributors to the ListenBrainz project
+If you want to use the ListenBrainz API to read or submit data, see the :doc:`API documentation <users/api>`. You also
+may want to review the JSON documentation.
 
-Review the :doc:`JSON <users/json>` documentation if you plan to work with the
-ListenBrainz API. Most of the complexity comes from reading or constructing
-ListenBrainz JSON documents.
+If you are interested in contributing to ListenBrainz as a developer, see the
+:doc:`Developer documentation. <developers/devel-env>`
 
+We also publish some maintainer documentation, which is used by the MetaBrainz team to run the ListenBrainz site.
 
 Contents
 --------
 
 .. toctree::
    :maxdepth: 2
-   :caption: API Users
+   :caption: API Documentation
 
    users/api
    users/api-usage
@@ -28,7 +29,7 @@ Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: ListenBrainz Developers
+   :caption: Developer Documentation
 
    developers/devel-env
    developers/spark-devel-env
