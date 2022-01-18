@@ -9,7 +9,8 @@ site [#]_.
 
 - **Web Root URL**: ``https://listenbrainz.org``
 
-*Note*: All ListenBrainz services are only available on **HTTPS**!
+.. note::
+    All ListenBrainz services are only available on **HTTPS**!
 
 Reference
 ---------
@@ -21,7 +22,7 @@ Core API Endpoints
    :blueprints: api_v1
    :include-empty-docstring:
    :undoc-static:
-   :undoc-endpoints: api_v1.latest_import, api_v1.user_feed
+   :undoc-endpoints: api_v1.latest_import
 
 .. http:get:: /1/latest-import
 
