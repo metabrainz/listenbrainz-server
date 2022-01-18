@@ -35,7 +35,6 @@ Contents
    developers/spark-devel-env
    developers/spark-architecture
    developers/commands
-   developers/faqs
 
 Indices and tables
 ==================
