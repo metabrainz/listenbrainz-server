@@ -36,6 +36,12 @@ Contents
    developers/spark-architecture
    developers/commands
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Maintainer Documentation
+
+   maintainers/docker-image
+
 Indices and tables
 ==================
 
