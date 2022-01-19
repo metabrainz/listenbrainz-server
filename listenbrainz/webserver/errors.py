@@ -138,7 +138,10 @@ def init_error_handlers(app):
                 otherwise
         """
         if current_app.config.get('IS_API_COMPAT_APP') or request.path.startswith(API_PREFIX):
-            return crossdomain(jsonify({'code': code, 'error': error.description})), code
+            response = make_response(jsonify({'code': code, 'error': error.description}), code)
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Access-Control-Expose-Headers"] = "X-RateLimit-Remaining,X-RateLimit-Limit,X-RateLimit-Reset,X-RateLimit-Reset-In"
+            return response
         return error_wrapper('errors/{code}.html'.format(code=code), error, code)
 
     @app.errorhandler(400)
