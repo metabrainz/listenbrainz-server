@@ -33,6 +33,7 @@ Contents
 
    developers/devel-env
    developers/spark-devel-env
+   developers/architecture
    developers/spark-architecture
    developers/commands
 
