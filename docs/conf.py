@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.autohttp.flask',
+    'sphinx_click',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

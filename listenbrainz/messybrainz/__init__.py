@@ -99,19 +99,6 @@ def load_recordings_from_msids(msids):
         return data.load_recordings_from_msids(connection, msids)
 
 
-def load_recordings_from_mbids(mbids):
-    """ Returns data for a recording with specified MusicBrainz ID.
-
-    Args:
-        mbid (uuid): the MusicBrainz ID of the recording
-    Returns:
-        A dict containing the recording data for the recording with specified MusicBrainz ID
-    """
-
-    with engine.begin() as connection:
-        return data.load_recordings_from_mbids(connection, mbids)
-
-
 def insert_single(connection, recording):
     """ Inserts a single recording into MessyBrainz.
 

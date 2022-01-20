@@ -212,6 +212,13 @@ class APITestCase(ListenAPIIntegrationTestCase):
             self.assertEqual('The payload in the JSON document should be'
                              ' a list of listens.', response.json['error'])
 
+    def test_top_level_json_is_not_dict(self):
+        for data in (1, False, None, [2, 3], "foobar"):
+            response = self.send_data(data)
+            self.assert400(response)
+            self.assertEqual("Invalid JSON document submitted. Top level of JSON "
+                             "document should be a json object.", response.json["error"])
+
     def test_unauthorized_submission(self):
         """ Test for checking that unauthorized submissions return 401
         """

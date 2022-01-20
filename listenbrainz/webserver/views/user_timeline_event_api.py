@@ -32,8 +32,8 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.pinned_recording import get_pins_for_feed
-from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
@@ -63,7 +63,6 @@ def create_user_recording_recommendation_event(user_name):
             "metadata": {
                 "artist_name": "<The name of the artist, required>",
                 "track_name": "<The name of the track, required>",
-                "artist_msid": "<The MessyBrainz ID of the artist, required>",
                 "recording_msid": "<The MessyBrainz ID of the recording, required>",
                 "release_name": "<The name of the release, optional>",
                 "recording_mbid": "<The MusicBrainz ID of the recording, optional>"
@@ -414,7 +413,6 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
                     additional_info=AdditionalInfo(
                         recording_msid=event.metadata.recording_msid,
                         recording_mbid=event.metadata.recording_mbid,
-                        artist_msid=event.metadata.artist_msid,
                     )
                 ),
             )
@@ -442,7 +440,7 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
         max_ts=max_ts,
         count=count,
     )
-    recording_pin_events_db = fetch_track_metadata_for_pins(recording_pin_events_db)
+    recording_pin_events_db = fetch_track_metadata_for_items(recording_pin_events_db)
 
     events = []
     for pin in recording_pin_events_db:
@@ -457,7 +455,6 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
                     additional_info=AdditionalInfo(
                         recording_msid=pin.recording_msid,
                         recording_mbid=pin.recording_mbid,
-                        artist_msid=pin.track_metadata["additional_info"]["artist_msid"],
                     )
                 )
             )
