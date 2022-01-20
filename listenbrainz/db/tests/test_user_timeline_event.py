@@ -48,7 +48,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
         events = db_user_timeline_event.get_user_track_recommendation_events(
@@ -70,7 +69,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                     track_name="Sunflower",
                     artist_name="Swae Lee & Post Malone",
                     recording_msid=str(uuid.uuid4()),
-                    artist_msid=str(uuid.uuid4()),
                 )
             )
 
@@ -81,7 +79,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
         self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, event.event_type)
@@ -107,7 +104,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
         new_user = db_user.get_or_create(2, 'captain america')
@@ -117,7 +113,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Fade",
                 artist_name="Kanye West",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
         events = db_user_timeline_event.get_user_track_recommendation_events(
@@ -133,7 +128,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
 
@@ -144,7 +138,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
 
@@ -166,7 +159,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
         db_user_timeline_event.create_user_track_recommendation_event(
@@ -175,7 +167,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Da Funk",
                 artist_name="Daft Punk",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
 
@@ -187,7 +178,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Da Funk",
                 artist_name="Daft Punk",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
 
@@ -216,7 +206,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
         db_user_timeline_event.create_user_track_recommendation_event(
@@ -225,7 +214,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="Da Funk",
                 artist_name="Daft Punk",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
 
@@ -248,7 +236,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="All Caps",
                 artist_name="MF DOOM",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
         self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, event_rec.event_type)
@@ -299,7 +286,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 track_name="All Caps",
                 artist_name="MF DOOM",
                 recording_msid=str(uuid.uuid4()),
-                artist_msid=str(uuid.uuid4()),
             )
         )
         with mock.patch("listenbrainz.db.engine.connect", side_effect=Exception):

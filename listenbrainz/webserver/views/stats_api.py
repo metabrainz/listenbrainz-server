@@ -13,6 +13,7 @@ from data.model.user_artist_map import UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import UserEntityRecord
+from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -821,6 +822,21 @@ def get_sitewide_listening_activity():
         "range": stats_range,
         "last_updated": int(stats.last_updated.timestamp())
     }})
+
+@stats_api_bp.route("/user/<user_name>/year-in-music/")
+def year_in_music(user_name: str):
+    """ Get data for year in music stuff """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+    return jsonify({
+        "payload": {
+            "user_name": user_name,
+            "data": get_year_in_music(user["id"]) or {}
+        }
+    })
+
+
 
 def _process_user_entity(stats: StatApi[UserEntityRecord], offset, count) -> Tuple[list, int]:
     """ Process the statistics data according to query params

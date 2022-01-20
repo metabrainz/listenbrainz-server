@@ -36,6 +36,6 @@
             ]
         }
     },
-    "webSocketsServerUrl": "http://localhost:8082",
+    "webSocketsServerUrl": "http://localhost:7082",
     "labsApiUrl": "http://0.0.0.0"
 }

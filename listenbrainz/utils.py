@@ -1,17 +1,10 @@
 import errno
 import os
 import socket
+import time
+from datetime import datetime, timezone
 
 import pika
-import time
-
-from datetime import datetime, timezone
-from redis import Redis
-
-def escape(value):
-    """ Escapes backslashes, quotes and new lines present in the string value
-    """
-    return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
 
 
 def create_path(path):
@@ -22,14 +15,6 @@ def create_path(path):
         if exception.errno != errno.EEXIST:
             raise Exception("Failed to create directory structure %s. Error: %s" %
                             (path, exception))
-
-
-def log_ioerrors(logger, e):
-    """ Logs IOErrors that occur in case we run out of disk space.
-        This is used in data dumps and is a placeholder while Sentry support
-        is added.
-    """
-    logger.error('IOError while creating dump: %s', str(e))
 
 
 def connect_to_rabbitmq(username, password,
@@ -100,42 +85,6 @@ def create_channel_to_consume(connection, exchange: str, queue: str, callback_fu
     return ch
 
 
-def connect_to_redis(host, port, log=print):
-    """ Create a connection to redis and return it
-
-    Note: This is a blocking function which keeps trying to connect to redis until
-    it establishes a connection
-
-    Args:
-        host: the hostname of the redis server
-        port: the port of the redis server
-        log: the function to use for error logging
-
-    Returns:
-        Redis object
-    """
-    while True:
-        try:
-            redis = Redis(host=host, port=port)
-            redis.ping()
-            return redis
-        except Exception as err:
-            log("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
-            time.sleep(3)
-
-def safely_import_config():
-    """ 
-        Safely import config.py. If config.py is not found, wait 2 seconds and try again.
-    """
-
-    while True:
-        try:
-            from listenbrainz import config
-            break
-        except ImportError:
-            print("Cannot import config.py. Waiting and retrying...")
-            time.sleep(2)
-
 def unix_timestamp_to_datetime(timestamp):
     """ Converts expires_at timestamp received from Spotify to a datetime object
 
@@ -146,6 +95,7 @@ def unix_timestamp_to_datetime(timestamp):
         A datetime object with timezone UTC corresponding to the provided timestamp
     """
     return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
+
 
 def get_fallback_connection_name():
     """ Get a connection name friendlier than docker gateway ip during connecting

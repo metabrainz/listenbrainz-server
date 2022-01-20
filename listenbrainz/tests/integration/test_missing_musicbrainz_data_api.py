@@ -47,6 +47,10 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
+        for index in range(len(data["data"])):
+            # To remove the Z at the end
+            data["data"][index]["listened_at"] = data["data"][index]["listened_at"][:-1]
+
         received_user_name = data['user_name']
         self.assertEqual(received_user_name, self.user['musicbrainz_id'])
 
@@ -73,6 +77,10 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
                                    query_string={'count': 10})
         self.assert200(response)
         data = json.loads(response.data)['payload']
+
+        for index in range(len(data["data"])):
+            # To remove the Z at the end
+            data["data"][index]["listened_at"] = data["data"][index]["listened_at"][:-1]
 
         received_user_name = data['user_name']
         self.assertEqual(received_user_name, self.user['musicbrainz_id'])
@@ -102,6 +110,10 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
+        for index in range(len(data["data"])):
+            # To remove the Z at the end
+            data["data"][index]["listened_at"] = data["data"][index]["listened_at"][:-1]
+
         received_user_name = data['user_name']
         self.assertEqual(received_user_name, self.user['musicbrainz_id'])
 
@@ -130,6 +142,10 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
 
         self.assert200(response)
         data = json.loads(response.data)['payload']
+
+        for index in range(len(data["data"])):
+            # To remove the Z at the end
+            data["data"][index]["listened_at"] = data["data"][index]["listened_at"][:-1]
 
         received_user_name = data['user_name']
         self.assertEqual(received_user_name, self.user['musicbrainz_id'])
