@@ -35,16 +35,20 @@ Services exclusive to ListenBrainz
 
 12) listenbrainz-timescale: timescale instance for LB to store listens and playlists.
 
-13) listenbrainz-typesense, listenbrainz-mbid-mapping, listenbrainz-mbid-mapping-writer-prod: ???
+13) listenbrainz-typesense: typsense (typo robust search) used by the mbid-mapping.
 
-14) listenbrainz spark cluster: spark cluster to generate statistics and recommendations for LB.
+14) listenbrainz-mbid-mapping: A cron container that fires off periodic MBID data processing tasks.
+
+15) listenbrainz-mbid-mapping-writer-prod: Maps incoming listens to the MBID mapping as well as updating the mapping.
+
+16) listenbrainz spark cluster: spark cluster to generate statistics and recommendations for LB.
 
 Services not exclusive to ListenBrainz
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-15) postgres-floyd: primary database instance shared by multiple MetaBrainz projects. The main ListenBrainz DB resides here as well as the MessyBrainz DB.
+17) postgres-floyd: primary database instance shared by multiple MetaBrainz projects. The main ListenBrainz DB resides here as well as the MessyBrainz DB.
 
-16) rabbitmq-clash: rabbitmq instance shared by MetaBrainz services. listenbrainz queues are under /listenbrainz vhost.
+18) rabbitmq-clash: rabbitmq instance shared by MetaBrainz services. listenbrainz queues are under /listenbrainz vhost.
 
 Listen Flow
 ===========
