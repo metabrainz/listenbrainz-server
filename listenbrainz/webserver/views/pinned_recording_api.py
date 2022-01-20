@@ -69,7 +69,7 @@ def pin_recording_for_user():
         current_app.logger.error("Error while inserting pinned track record: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
-    return jsonify({"status": "ok", "data": _pinned_recording_to_api(recording_to_pin_with_id)})
+    return jsonify({"pinned_recording": _pinned_recording_to_api(recording_to_pin_with_id)})
 
 
 @pinned_recording_api_bp.route("/pin/unpin", methods=["POST", "OPTIONS"])

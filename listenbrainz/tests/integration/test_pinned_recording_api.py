@@ -103,9 +103,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         )
 
         self.assert200(response)
-        self.assertEqual(response.json["status"], "ok")
-        self.assertEqual(response.json["data"]["blurb_content"], "Amazing first recording")
-        self.assertIsNotNone(response.json["data"]["row_id"])
+        self.assertEqual(response.json["pinned_recording"]["blurb_content"], "Amazing first recording")
+        self.assertIsNotNone(response.json["pinned_recording"]["row_id"])
 
     def test_pin_unauthorized(self):
         """Tests that pin endpoint returns 401 when auth token is invalid"""
