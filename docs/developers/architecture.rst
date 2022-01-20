@@ -39,12 +39,12 @@ Services exclusive to ListenBrainz
 
 14) listenbrainz spark cluster: spark cluster to generate statistics and recommendations for LB.
 
-Service not exclusive to ListenBrainz
+Services not exclusive to ListenBrainz
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-15) postgres-floyd: primary DB instance shared by MeB services, main LB db resides here. MessyBrainz DB also lies here.
+15) postgres-floyd: primary database instance shared by multiple MetaBrainz projects. The main ListenBrainz DB resides here as well as the MessyBrainz DB.
 
-16) rabbitmq-clash: rabbitmq instance shared by MeB services. listenbrainz queues are under /listenbrainz vhost.
+16) rabbitmq-clash: rabbitmq instance shared by MetaBrainz services. listenbrainz queues are under /listenbrainz vhost.
 
 Listen Flow
 ===========
@@ -72,16 +72,15 @@ a user can have a track entry only once. As you can see, listens of different tr
 for a user. The database returns the "unique" listens to the writer which publishes those to Unique queue.
 
 Websockets consume from the unique queue for the same purpose as with now playing listens. The MBID mapper also consumes
-from the unique and builds a MSID->MBID mapping using these listens.
+from the unique queue and builds a MSID->MBID mapping using these listens.
 
 Frontend Rendering
 ==================
 
-ListenBrainz frontend pages are blend of Jinja2 templates and React components. The Jinja2 templates used are bare bones
-, it includes a placeholder div called `react-container` into which the react components are rendered. To render the
-components, some data like current user info, api url etc are needed. These are injected as json into two script tags:
+ListenBrainz frontend pages are a blend of Jinja2 templates (Python) and React components (Javascript). The Jinja2 templates used are bare bones
+, they include a placeholder div called `react-container` into which the react components are rendered. To render the
+components, some data like current user info, api url etc are needed. These are injected as json into two script tags in the HTML page, to be consumed by the React application:
 page-react-props and global-react-props.
 
-Most ListenBrainz pages will have a Jinja2 template and at least 1 React component file. When building the docker image,
-webpack transpiles the typescript react components to javascript bundles. Using script tags, we manually specify the
-appropriate react component files to include on a given page in its Jinja2 template.
+Most ListenBrainz pages will have a Jinja2 template and at least 1 React component file. The components are written in Typescript, and we use Webpack to transpile them to javascript, to compile CSS from LESS and to minify and bundle everything. This is all done in a separate Docker container which watches for changes in front-end files and recompiles automatically. Using script tags, we manually specify the
+appropriate compiled javascript file to include on a given page in its Jinja2 template.
