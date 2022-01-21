@@ -43,6 +43,7 @@ Contents
 
    maintainers/docker-image
    maintainers/dumps
+   maintainers/pull-requests
 
 Indices and tables
 ==================
