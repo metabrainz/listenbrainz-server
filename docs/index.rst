@@ -42,6 +42,7 @@ Contents
    :caption: Maintainer Documentation
 
    maintainers/docker-image
+   maintainers/dumps
 
 Indices and tables
 ==================
