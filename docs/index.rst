@@ -43,6 +43,8 @@ Contents
 
    maintainers/docker-image
    maintainers/dumps
+   maintainers/spotify-reader
+   maintainers/updating-prod-db-schema
    maintainers/pull-requests
 
 Indices and tables
