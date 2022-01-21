@@ -3,7 +3,7 @@ ListenBrainz Architecture
 =========================
 
 Production Services
-================================
+===================
 
 Services exclusive to ListenBrainz
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -44,7 +44,7 @@ Services exclusive to ListenBrainz
 16) listenbrainz spark cluster: spark cluster to generate statistics and recommendations for LB.
 
 Services not exclusive to ListenBrainz
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 17) postgres-floyd: primary database instance shared by multiple MetaBrainz projects. The main ListenBrainz DB resides here as well as the MessyBrainz DB.
 
