@@ -1,21 +1,17 @@
-import ujson
-import listenbrainz.db.user as db_user
-import listenbrainz.db.feedback as db_feedback
-
-from flask import Blueprint, current_app, jsonify, request
-from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import (APIBadRequest,
-                                           APIInternalServerError, APINotFound,
-                                           APIServiceUnavailable,
-                                           APIUnauthorized)
-from listenbrainz.webserver.utils import parse_boolean_arg
 from brainzutils.ratelimit import ratelimit
-from listenbrainz.webserver.views.api import _parse_int_arg
-from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid,\
-    DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list,\
-    validate_auth_header
-from listenbrainz.db.model.feedback import Feedback
+from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
+
+import listenbrainz.db.feedback as db_feedback
+import listenbrainz.db.user as db_user
+from listenbrainz.db.model.feedback import Feedback
+from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.errors import APINotFound
+from listenbrainz.webserver.utils import parse_boolean_arg
+from listenbrainz.webserver.views.api import _parse_int_arg
+from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, \
+    DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list, \
+    validate_auth_header
 
 feedback_api_bp = Blueprint('feedback_api_v1', __name__)
 
@@ -127,8 +123,8 @@ def get_feedback_for_user(user_name):
 @ratelimit()
 def get_feedback_for_recording(recording):
     """
-    Get feedback for recording with given ``recording_mbid`` or ``recording_msid``. The format for the
-    JSON returned is defined in our :ref:`feedback-json-doc`.
+    Get feedback for recording with given ``recording_msid``. The format for the JSON returned is defined in
+     our :ref:`feedback-json-doc`.
 
     :param score: Optional, If 1 then returns the loved recordings, if -1 returns hated recordings.
     :type score: ``int``
@@ -143,7 +139,7 @@ def get_feedback_for_recording(recording):
     """
 
     if not is_valid_uuid(recording):
-        log_raise_400("%s mbid or msid format invalid." % recording)
+        log_raise_400(f"{recording} msid format invalid.")
 
     score = _parse_int_arg('score')
 
@@ -156,8 +152,8 @@ def get_feedback_for_recording(recording):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_recording(recording=recording, limit=count, offset=offset, score=score)
-    total_count = db_feedback.get_feedback_count_for_recording(recording)
+    feedback = db_feedback.get_feedback_for_recording("recording_msid", recording, limit=count, offset=offset, score=score)
+    total_count = db_feedback.get_feedback_count_for_recording("recording_msid", recording)
 
     feedback = [fb.to_api() for fb in feedback]
 

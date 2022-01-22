@@ -155,10 +155,12 @@ def get_feedback_count_for_user(user_id: int, score=None) -> int:
     return count
 
 
-def get_feedback_for_recording(recording: str, limit: int, offset: int, score: int = None) -> List[Feedback]:
+def get_feedback_for_recording(recording_type: str, recording: str, limit: int, offset: int, score: int = None)\
+        -> List[Feedback]:
     """ Get a list of recording feedback for a given recording in descending order of their creation
 
         Args:
+            recording_type: type of id, recording_msid or recording_mbid
             recording: the msid or mbid of the recording
             score: the score value by which the results are to be filtered. If 1 then returns the loved recordings,
                    if -1 returns hated recordings.
@@ -170,18 +172,17 @@ def get_feedback_for_recording(recording: str, limit: int, offset: int, score: i
     """
 
     args = {"recording": recording, "limit": limit, "offset": offset}
-    query = """ SELECT user_id
-                     , "user".musicbrainz_id AS user_name
-                     , recording_msid::text
-                     , recording_mbid::text
-                     , score
-                     , recording_feedback.created
-                  FROM recording_feedback
-                  JOIN "user"
-                    ON "user".id = recording_feedback.user_id
-                 WHERE recording_msid = :recording
-                    OR recording_mbid = :recording
-    """
+    query = """
+        SELECT user_id
+             , "user".musicbrainz_id AS user_name
+             , recording_msid::text
+             , recording_mbid::text
+             , score
+             , recording_feedback.created
+          FROM recording_feedback
+          JOIN "user"
+            ON "user".id = recording_feedback.user_id
+         WHERE """ + recording_type + " = :recording"
 
     if score:
         query += " AND score = :score"
@@ -191,29 +192,24 @@ def get_feedback_for_recording(recording: str, limit: int, offset: int, score: i
                  LIMIT :limit OFFSET :offset """
 
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), args)
+        result = connection.execute(text(query), args)
         return [Feedback(**dict(row)) for row in result.fetchall()]
 
 
-def get_feedback_count_for_recording(recording_msid: str) -> int:
+def get_feedback_count_for_recording(recording_type: str, recording: str) -> int:
     """ Get total number of recording feedback for a given recording
 
         Args:
-            recording_msid: the MessyBrainz ID of the recording
+            recording_type: type of id, recording_msid or recording_mbid
+            recording: the ID of the recording
 
         Returns:
             The total number of recording feedback for a given recording
     """
-
-    query = "SELECT count(*) AS value FROM recording_feedback WHERE recording_msid = :recording_msid"
-
+    query = "SELECT count(*) AS value FROM recording_feedback WHERE " + recording_type + " = :recording"
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), {
-            'recording_msid': recording_msid,
-        }
-        )
+        result = connection.execute(text(query), recording=recording)
         count = int(result.fetchone()["value"])
-
     return count
 
 
@@ -257,6 +253,9 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, user_name: str, 
     """
 
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), user_id=user_id,
-                                    recording_msids=recording_msids, recording_mbids=recording_mbids)
+        result = connection.execute(
+            text(query), user_id=user_id,
+            recording_msids=recording_msids,
+            recording_mbids=recording_mbids
+        )
         return [Feedback(user_id=user_id, user_name=user_name, **dict(row)) for row in result.fetchall()]
