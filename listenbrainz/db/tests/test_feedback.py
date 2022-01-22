@@ -216,7 +216,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         fb_msid_1 = self.sample_feedback[0]["recording_msid"]
 
         self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_recording(recording_msid=fb_msid_1, limit=25, offset=0)
+        result = db_feedback.get_feedback_for_recording(recording=fb_msid_1, limit=25, offset=0)
         self.assertEqual(len(result), 1)
 
         self.assertEqual(result[0].user_id, self.user["id"])
@@ -227,7 +227,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         user2 = db_user.get_or_create(2, "recording_feedback_other_user")
         self.insert_test_data(user2["id"])
 
-        result = db_feedback.get_feedback_for_recording(recording_msid=fb_msid_1, limit=25, offset=0)
+        result = db_feedback.get_feedback_for_recording(recording=fb_msid_1, limit=25, offset=0)
         self.assertEqual(len(result), 2)
 
         self.assertEqual(result[0].user_id, user2["id"])
@@ -241,20 +241,20 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.assertEqual(result[1].score, self.sample_feedback[0]["score"])
 
         # test the score argument
-        result = db_feedback.get_feedback_for_recording(recording_msid=fb_msid_1, limit=25, offset=0, score=1)
+        result = db_feedback.get_feedback_for_recording(recording=fb_msid_1, limit=25, offset=0, score=1)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].score, 1)
         self.assertEqual(result[1].score, 1)
 
-        result = db_feedback.get_feedback_for_recording(recording_msid=fb_msid_1, limit=25, offset=0, score=-1)
+        result = db_feedback.get_feedback_for_recording(recording=fb_msid_1, limit=25, offset=0, score=-1)
         self.assertEqual(len(result), 0)
 
         # test the limit argument
-        result = db_feedback.get_feedback_for_recording(recording_msid=fb_msid_1, limit=1, offset=0)
+        result = db_feedback.get_feedback_for_recording(recording=fb_msid_1, limit=1, offset=0)
         self.assertEqual(len(result), 1)
 
         # test the offset argument
-        result = db_feedback.get_feedback_for_recording(recording_msid=fb_msid_1, limit=25, offset=1)
+        result = db_feedback.get_feedback_for_recording(recording=fb_msid_1, limit=25, offset=1)
         self.assertEqual(len(result), 1)
 
     def test_get_feedback_count_for_recording(self):
@@ -284,7 +284,9 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
         result = db_feedback.get_feedback_for_multiple_recordings_for_user(
             user_id=self.user["id"],
-            recording_list=recording_list
+            user_name=self.user["musicbrainz_id"],
+            recording_msids=recording_list,
+            recording_mbids=[]
         )
         self.assertEqual(len(result), len(recording_list))
 

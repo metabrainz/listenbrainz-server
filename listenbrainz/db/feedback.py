@@ -1,5 +1,5 @@
 import sqlalchemy
-from sqlalchemy import text
+from sqlalchemy import text, select
 
 from listenbrainz import db
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
@@ -67,7 +67,7 @@ def delete(feedback: Feedback):
         Args:
             feedback: An object of class Feedback
     """
-    conditions = [text("user_id = :user_id")]
+    conditions = ["user_id = :user_id"]
     args = {"user_id": feedback.user_id}
 
     if feedback.recording_msid:
@@ -79,9 +79,8 @@ def delete(feedback: Feedback):
         args["recording_mbid"] = feedback.recording_mbid
 
     where_clause = " AND ".join(conditions)
-
     with db.engine.connect() as connection:
-        connection.execute(text("DELETE FROM recording_feedback WHERE ") + where_clause, args)
+        connection.execute(text("DELETE FROM recording_feedback WHERE " + where_clause), args)
 
 
 def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None, metadata: bool = False) -> List[Feedback]:
