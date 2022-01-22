@@ -7,31 +7,6 @@ from listenbrainz.db.model.feedback import Feedback
 from typing import List
 
 
-_query_only_msid = """
-    INSERT INTO recording_feedback (user_id, recording_msid, score)
-         VALUES (:user_id, :recording_msid, :score)
-    ON CONFLICT (user_id, recording_msid)
-  DO UPDATE SET score = :score
-              , created = NOW()
-"""
-
-_query_only_mbid = """
-    INSERT INTO recording_feedback (user_id, recording_mbid, score)
-         VALUES (:user_id, :recording_mbid, :score)
-    ON CONFLICT (user_id, recording_mbid)
-  DO UPDATE SET score = :score
-              , created = NOW()
-"""
-
-_query_both_msid_mbid = """
-    INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
-         VALUES (:user_id, :recording_mbid, :recording_msid, :score)
-    ON CONFLICT (user_id, recording_mbid)
-  DO UPDATE SET score = :score
-              , recording_msid = :recording_msid
-              , created = NOW()
-"""
-
 def insert(feedback: Feedback):
     """ Inserts a feedback record for a user's loved/hated recording into the database.
         If the record is already present for the user, the score is updated to the new
@@ -40,6 +15,31 @@ def insert(feedback: Feedback):
         Args:
             feedback: An object of class Feedback
     """
+    query_only_msid = """
+        INSERT INTO recording_feedback (user_id, recording_msid, score)
+             VALUES (:user_id, :recording_msid, :score)
+        ON CONFLICT (user_id, recording_msid)
+      DO UPDATE SET score = :score
+                  , created = NOW()
+    """
+
+    query_only_mbid = """
+        INSERT INTO recording_feedback (user_id, recording_mbid, score)
+             VALUES (:user_id, :recording_mbid, :score)
+        ON CONFLICT (user_id, recording_mbid)
+      DO UPDATE SET score = :score
+                  , created = NOW()
+    """
+
+    query_both_msid_mbid = """
+        INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
+             VALUES (:user_id, :recording_mbid, :recording_msid, :score)
+        ON CONFLICT (user_id, recording_mbid)
+      DO UPDATE SET score = :score
+                  , recording_msid = :recording_msid
+                  , created = NOW()
+    """
+
     params = {
         'user_id': feedback.user_id,
         'score': feedback.score,
@@ -49,13 +49,13 @@ def insert(feedback: Feedback):
         # both recording_msid and recording_mbid available
         params['recording_msid'] = feedback.recording_msid
         params['recording_mbid'] = feedback.recording_mbid
-        query = _query_both_msid_mbid
+        query = query_both_msid_mbid
     elif feedback.recording_mbid is not None:  # only recording_mbid available
         params['recording_mbid'] = feedback.recording_mbid
-        query = _query_only_mbid
+        query = query_only_mbid
     else: # only recording_msid available
         params['recording_msid'] = feedback.recording_msid
-        query = _query_only_msid
+        query = query_only_msid
 
     with db.engine.connect() as connection:
         connection.execute(text(query), params)
@@ -231,19 +231,28 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, user_name: str, 
         Returns:
             A list of Feedback objects
     """
-    query = """
+    params = {
+        "user_id": user_id
+    }
+
+    query_base = """
             WITH rf AS (
               SELECT user_id, recording_msid::text, recording_mbid::text, score
                 FROM recording_feedback
                WHERE recording_feedback.user_id = :user_id
             )
+    """
+
+    query_msid = """
               SELECT recording_msid
                    , recording_mbid
                    , COALESCE(rf.score, 0) AS score
                 FROM UNNEST(:recording_msids) recording_msid
      LEFT OUTER JOIN rf
                USING (recording_msid)
-           UNION ALL
+    """
+
+    query_mbid = """
               SELECT recording_msid
                    , recording_mbid
                    , COALESCE(rf.score, 0) AS score
@@ -252,10 +261,20 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, user_name: str, 
                USING (recording_mbid)
     """
 
+    # we cannot use single query here because recordings parameter passed to UNNEST should
+    # not be empty so that we check which list is not empty and construct the query accordingly
+    if recording_msids and recording_mbids:  # both msid and mbid list are not empty
+        params["recording_msids"] = recording_msids
+        params["recording_mbids"] = recording_mbids
+        query_remaining = query_msid + " UNION " + query_mbid
+    elif recording_msids:  # only msid list is not empty
+        params["recording_msids"] = recording_msids
+        query_remaining = query_msid
+    else:  # only mbid list is not empty
+        params["recording_mbids"] = recording_mbids
+        query_remaining = query_mbid
+
+    query = query_base + query_remaining
     with db.engine.connect() as connection:
-        result = connection.execute(
-            text(query), user_id=user_id,
-            recording_msids=recording_msids,
-            recording_mbids=recording_mbids
-        )
+        result = connection.execute(text(query), params)
         return [Feedback(user_id=user_id, user_name=user_name, **dict(row)) for row in result.fetchall()]
