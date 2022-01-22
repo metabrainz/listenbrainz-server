@@ -117,11 +117,34 @@ def get_feedback_for_user(user_name):
         "offset": offset
     })
 
+@feedback_api_bp.route("/recording/<recording_mbid>/get-feedback-mbid", methods=["GET"])
+@crossdomain()
+@ratelimit()
+def get_feedback_for_recording_mbid(recording_mbid):
+    """
+    Get feedback for recording with given ``recording_mbid``. The format for the JSON returned is defined in
+     our :ref:`feedback-json-doc`.
+
+    :param score: Optional, If 1 then returns the loved recordings, if -1 returns hated recordings.
+    :type score: ``int``
+    :param count: Optional, number of feedback items to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`.
+    :type count: ``int``
+    :param offset: Optional, number of feedback items to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 feedback will be skipped, defaults to 0.
+    :type offset: ``int``
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    """
+    if not is_valid_uuid(recording_mbid):
+        log_raise_400(f"{recording_mbid} mbid format invalid.")
+    return _get_feedback_for_recording("recording_mbid", recording_mbid)
+
 
 @feedback_api_bp.route("/recording/<recording_msid>/get-feedback", methods=["GET"])
 @crossdomain()
 @ratelimit()
-def get_feedback_for_recording(recording):
+def get_feedback_for_recording_msid(recording_msid):
     """
     Get feedback for recording with given ``recording_msid``. The format for the JSON returned is defined in
      our :ref:`feedback-json-doc`.
@@ -137,10 +160,12 @@ def get_feedback_for_recording(recording):
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
+    if not is_valid_uuid(recording_msid):
+        log_raise_400(f"{recording_msid} msid format invalid.")
+    return _get_feedback_for_recording("recording_msid", recording_msid)
 
-    if not is_valid_uuid(recording):
-        log_raise_400(f"{recording} msid format invalid.")
 
+def _get_feedback_for_recording(recording_type, recording):
     score = _parse_int_arg('score')
 
     offset = get_non_negative_param('offset', default=0)
@@ -152,8 +177,8 @@ def get_feedback_for_recording(recording):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_recording("recording_msid", recording, limit=count, offset=offset, score=score)
-    total_count = db_feedback.get_feedback_count_for_recording("recording_msid", recording)
+    feedback = db_feedback.get_feedback_for_recording(recording_type, recording, limit=count, offset=offset, score=score)
+    total_count = db_feedback.get_feedback_count_for_recording(recording_type, recording)
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -186,15 +211,16 @@ def get_feedback_for_recordings_for_user(user_name):
     :resheader Content-Type: *application/json*
     """
 
-    recording_msids = request.args.get("recording_msids")
-    if recording_msids is None:
-        recording_msids = request.args.get("recordings")
-    recording_mbids = request.args.get("recording_mbids")
+    msids_unparsed = request.args.get("recording_msids")
+    if msids_unparsed is None:
+        msids_unparsed = request.args.get("recordings")
+    mbids_unparsed = request.args.get("recording_mbids")
 
-    if recording_msids:
-        recording_msids.extend(parse_param_list(recording_msids))
-    if recording_mbids:
-        recording_msids.extend(parse_param_list(recording_mbids))
+    recording_msids, recording_mbids = [], []
+    if msids_unparsed:
+        recording_msids = parse_param_list(msids_unparsed)
+    if mbids_unparsed:
+        recording_mbids = parse_param_list(mbids_unparsed)
 
     if not recording_msids and not recording_mbids:
         log_raise_400("No valid recording msid or recording mbid found.")

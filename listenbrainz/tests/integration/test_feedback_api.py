@@ -1,9 +1,10 @@
 import json
-import listenbrainz.db.user as db_user
-import listenbrainz.db.feedback as db_feedback
 
-from redis import Redis
-from flask import url_for, current_app
+from brainzutils import cache
+from flask import url_for
+
+import listenbrainz.db.feedback as db_feedback
+import listenbrainz.db.user as db_user
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.tests.integration import IntegrationTestCase
 
@@ -15,8 +16,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.user2 = db_user.get_or_create(2, "anothertestuserpleaseignore")
 
     def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
+        cache._r.flushall()
         super(FeedbackAPITestCase, self).tearDown()
 
     def insert_test_data(self, user_id):
@@ -98,8 +98,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"], "JSON document must contain recording_msid and "
-                         "score top level keys")
+        self.assertEqual(
+            response.json["error"],
+            "JSON document must contain either recording_msid or recording_mbid, and score top level keys"
+        )
 
         # submit a feedback without score key
         incomplete_feedback = {
@@ -113,8 +115,9 @@ class FeedbackAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"], "JSON document must contain recording_msid and "
-                         "score top level keys")
+        self.assertEqual(
+            response.json["error"],
+            "JSON document must contain either recording_msid or recording_mbid, and score top level keys")
 
         # submit an empty feedback
         empty_feedback = {}
@@ -126,8 +129,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"], "JSON document must contain recording_msid and "
-                         "score top level keys")
+        self.assertEqual(
+            response.json["error"],
+            "JSON document must contain either recording_msid or recording_mbid, and score top level keys"
+        )
 
     def test_recording_feedback_json_with_extra_keys(self):
         """ Test to check submitting JSON with extra keys returns 400 """
@@ -144,8 +149,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"], "JSON document may only contain recording_msid and "
-                         "score top level keys")
+        self.assertEqual(
+            response.json["error"],
+            "JSON document may only contain recording_msid, recording_mbid and score top level keys"
+        )
 
     def test_recording_feedback_invalid_values(self):
         """ Test to check submitting invalid values in JSON returns 400 """

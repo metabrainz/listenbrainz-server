@@ -248,7 +248,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertDictEqual(results[0], {
             'inserted_at': 0,
             'listened_at': 1539509881,
-            'recording_mbid': None,
             'recording_msid': '6c617681-281e-4dae-af59-8e00f93c4376',
             'user_name': None,
             'track_metadata': {
@@ -263,7 +262,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertDictEqual(results[1], {
             'inserted_at': 0,
             'listened_at': 1539441702,
-            'recording_mbid': None,
             'recording_msid': '7ad53fd7-5b40-4e13-b680-52716fb86d5f',
             'user_name': None,
             'track_metadata': {
@@ -278,7 +276,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertDictEqual(results[2], {
             'inserted_at': 0,
             'listened_at': 1539441531,
-            'recording_mbid': None,
             'recording_msid': None,
             'user_name': None,
             'track_metadata': {
