@@ -2,7 +2,7 @@ from copy import copy
 
 from datetime import datetime
 from pydantic import NonNegativeInt, validator
-from listenbrainz.db.mapping import MsidMbidModel
+from listenbrainz.db.msid_mbid_mapping import MsidMbidModel
 
 
 class Feedback(MsidMbidModel):
