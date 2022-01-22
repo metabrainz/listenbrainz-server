@@ -7,6 +7,31 @@ from listenbrainz.db.model.feedback import Feedback
 from typing import List
 
 
+_query_only_msid = """
+    INSERT INTO recording_feedback (user_id, recording_msid, score)
+         VALUES (:user_id, :recording_msid, :score)
+    ON CONFLICT (user_id, recording_msid)
+  DO UPDATE SET score = :score
+              , created = NOW()
+"""
+
+_query_only_mbid = """
+    INSERT INTO recording_feedback (user_id, recording_mbid, score)
+         VALUES (:user_id, :recording_mbid, :score)
+    ON CONFLICT (user_id, recording_mbid)
+  DO UPDATE SET score = :score
+              , created = NOW()
+"""
+
+_query_both_msid_mbid = """
+    INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
+         VALUES (:user_id, :recording_mbid, :recording_msid, :score)
+    ON CONFLICT (user_id, recording_mbid)
+  DO UPDATE SET score = :score
+              , recording_msid = :recording_msid
+              , created = NOW()
+"""
+
 def insert(feedback: Feedback):
     """ Inserts a feedback record for a user's loved/hated recording into the database.
         If the record is already present for the user, the score is updated to the new
@@ -15,21 +40,25 @@ def insert(feedback: Feedback):
         Args:
             feedback: An object of class Feedback
     """
+    params = {
+        'user_id': feedback.user_id,
+        'score': feedback.score,
+    }
+
+    if feedback.recording_msid is not None and feedback.recording_mbid is not None:
+        # both recording_msid and recording_mbid available
+        params['recording_msid'] = feedback.recording_msid
+        params['recording_mbid'] = feedback.recording_mbid
+        query = _query_both_msid_mbid
+    elif feedback.recording_mbid is not None:  # only recording_mbid available
+        params['recording_mbid'] = feedback.recording_mbid
+        query = _query_only_mbid
+    else: # only recording_msid available
+        params['recording_msid'] = feedback.recording_msid
+        query = _query_only_msid
 
     with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO recording_feedback (user_id, recording_msid, recording_mbid, score)
-                 VALUES (:user_id, :recording_msid, :recording_mbid, :score)
-            ON CONFLICT (user_id, recording_mbid)
-          DO UPDATE SET score = :score
-                      , recording_msid = :recording_msid
-                      , created = NOW()
-            """), {
-            'user_id': feedback.user_id,
-            'recording_msid': feedback.recording_msid,
-            'recording_mbid': feedback.recording_mbid,
-            'score': feedback.score,
-        })
+        connection.execute(text(query), params)
 
 
 def delete(feedback: Feedback):
