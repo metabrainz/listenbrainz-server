@@ -112,8 +112,6 @@ class MappingTestCase(TimescaleTestCase):
         models = fetch_track_metadata_for_items(models)
 
         for model, recording in zip(models, recordings):
-            self.assertEqual(model.recording_msid, recording["recording_msid"])
-            self.assertEqual(model.recording_mbid, recording["recording_mbid"])
             metadata = model.track_metadata
             self.assertEqual(metadata["track_name"], recording["title"])
             self.assertEqual(metadata["artist_name"], recording["artist"])
@@ -123,5 +121,6 @@ class MappingTestCase(TimescaleTestCase):
 
             self.assertEqual(metadata["release_name"], recording["release"])
             self.assertEqual(metadata["additional_info"]["recording_mbid"], recording["recording_mbid"])
+            self.assertEqual(metadata["additional_info"]["recording_msid"], recording["recording_msid"])
             self.assertEqual(metadata["additional_info"]["release_mbid"], recording["release_mbid"])
             self.assertEqual(metadata["additional_info"]["artist_mbids"], recording["artist_mbids"])
