@@ -55,7 +55,7 @@ class MappingTestCase(TimescaleTestCase):
                 "artist_credit_id": None,
                 "recording_mbid": None,
                 "release_mbid": None,
-                "release": None,
+                "release": "The Expanse",
                 "artist_mbids": None,
                 "artist": "James S.A. Corey",
                 "title": "The Churn"
