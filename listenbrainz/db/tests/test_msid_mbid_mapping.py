@@ -74,10 +74,8 @@ class MappingTestCase(TimescaleTestCase):
             "release": None,
             "artist_mbids": None,
         })
-        print(submitted)
         for recording, submission in zip(recordings, submitted):
-            recording["recording_msid"] = submission["ids"]["recording_mbid"]
-            print(recording)
+            recording["recording_msid"] = submission["ids"]["recording_msid"]
             self.insert_recording_in_mapping(recording)
             # artist_credit_id is not retrieved, remove from dict after submitting
             del recording["artist_credit_id"]
