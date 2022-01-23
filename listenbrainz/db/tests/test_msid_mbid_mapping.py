@@ -52,11 +52,6 @@ class MappingTestCase(TimescaleTestCase):
                 "title": "A Number and a Name"
             },
             {
-                "artist_credit_id": None,
-                "recording_mbid": None,
-                "release_mbid": None,
-                "release": "The Expanse",
-                "artist_mbids": None,
                 "artist": "James S.A. Corey",
                 "title": "The Churn"
             },
@@ -71,6 +66,14 @@ class MappingTestCase(TimescaleTestCase):
             }
         ]
         submitted = messybrainz.insert_all_in_transaction(recordings)
+        # data sent to msb cannot contain nulls but we want it when inserting in mapping
+        recordings[2].update(**{
+            "artist_credit_id": None,
+            "recording_mbid": None,
+            "release_mbid": None,
+            "release": None,
+            "artist_mbids": None,
+        })
         for recording, submission in zip(recordings, submitted):
             recording["recording_msid"] = submission["ids"]["recording_mbid"]
             self.insert_recording_in_mapping(recording)
