@@ -121,10 +121,7 @@ class MappingTestCase(TimescaleTestCase):
             if recording["recording_mbid"] is None:  # 3rd recording which only present in MsB
                 continue
 
-            print(metadata)
-            print(recording)
-
             self.assertEqual(metadata["release_name"], recording["release"])
-            self.assertEqual(metadata["recording_mbid"], recording["recording_mbid"])
-            self.assertEqual(metadata["release_mbid"], recording["release_mbid"])
-            self.assertEqual(metadata["artist_mbids"], recording["artist_mbids"])
+            self.assertEqual(metadata["additional_info"]["recording_mbid"], recording["recording_mbid"])
+            self.assertEqual(metadata["additional_info"]["release_mbid"], recording["release_mbid"])
+            self.assertEqual(metadata["additional_info"]["artist_mbids"], recording["artist_mbids"])
