@@ -21,10 +21,22 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.sample_feedback = [
             {
                 "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+                "recording_mbid": None,
                 "score": 1
             },
             {
                 "recording_msid": "222eb00d-9ead-42de-aec9-8f8c1509413d",
+                "recording_mbid": None,
+                "score": -1
+            },
+            {
+                "recording_msid": None,
+                "recording_mbid": "9541592c-0102-4b94-93cc-ee0f3cf83d64",
+                "score": 1
+            },
+            {
+                "recording_msid": "9d008211-c920-4ff7-a17f-b86e4246c58c",
+                "recording_mbid": "e7ebbb99-7346-4323-9541-dffae9e1003b",
                 "score": -1
             }
         ]
@@ -39,7 +51,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
             }
         ]
 
-    def insert_test_data(self, user_id, neg_score=False):
+    def insert_test_data(self, user_id):
         """ Insert test data into the database """
 
         for fb in self.sample_feedback:
@@ -47,13 +59,14 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
                 Feedback(
                     user_id=user_id,
                     recording_msid=fb["recording_msid"],
+                    recording_mbid=fb["recording_mbid"],
                     score=fb["score"]
                 )
             )
 
         return len(self.sample_feedback)
 
-    def insert_test_data_with_metadata(self, user_id, neg_score=False):
+    def insert_test_data_with_metadata(self, user_id):
         """ Insert test data with metadata into the database """
 
         with msb_db.engine.connect() as connection:
@@ -99,15 +112,15 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), count)
 
-    def test_update_score_when_feedback_already_exits(self):
+    def test_update_score_when_feedback_already_exist(self):
         update_fb = self.sample_feedback[0]
 
         count = self.insert_test_data(self.user["id"])
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), count)
 
-        self.assertEqual(result[1].recording_msid, update_fb["recording_msid"])
-        self.assertEqual(result[1].score, 1)
+        self.assertEqual(result[3].recording_msid, update_fb["recording_msid"])
+        self.assertEqual(result[3].score, 1)
 
         update_fb["score"] = -1  # change the score to -1
 
@@ -132,9 +145,9 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         count = self.insert_test_data(self.user["id"])
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), count)
-        self.assertEqual(result[1].recording_msid, del_fb["recording_msid"])
+        self.assertEqual(result[3].recording_msid, del_fb["recording_msid"])
 
-        # delete one record for the user
+        # delete one record for the user using msid
         db_feedback.delete(
             Feedback(
                 user_id=self.user["id"],
@@ -144,9 +157,33 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         )
 
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
-        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result), 3)
+        self.assertNotIn(del_fb["recording_msid"], [x.recording_msid for x in result])
 
-        self.assertNotEqual(result[0].recording_msid, del_fb["recording_msid"])
+        # delete using mbid
+        db_feedback.delete(
+            Feedback(
+                user_id=self.user["id"],
+                recording_mbid=self.sample_feedback[2]["recording_mbid"],
+                score=self.sample_feedback[2]["score"]
+            )
+        )
+        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        self.assertEqual(len(result), 2)
+        self.assertNotIn(self.sample_feedback[2]["recording_mbid"], [x.recording_mbid for x in result])
+
+        # delete using mbid and msid both
+        db_feedback.delete(
+            Feedback(
+                user_id=self.user["id"],
+                recording_mbid=self.sample_feedback[3]["recording_mbid"],
+                recording_msid=self.sample_feedback[3]["recording_msid"],
+                score=self.sample_feedback[2]["score"]
+            )
+        )
+        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        self.assertEqual(len(result), 1)
+        self.assertNotIn(self.sample_feedback[3]["recording_mbid"], [x.recording_mbid for x in result])
 
     def test_get_feedback_for_user(self):
         count = self.insert_test_data(self.user["id"])
@@ -155,22 +192,38 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
-        self.assertEqual(result[0].recording_msid, self.sample_feedback[1]["recording_msid"])
-        self.assertEqual(result[0].score, self.sample_feedback[1]["score"])
+        self.assertEqual(result[0].recording_msid, self.sample_feedback[3]["recording_msid"])
+        self.assertEqual(result[0].recording_mbid, self.sample_feedback[3]["recording_mbid"])
+        self.assertEqual(result[0].score, self.sample_feedback[3]["score"])
 
         self.assertEqual(result[1].user_id, self.user["id"])
         self.assertEqual(result[1].user_name, self.user["musicbrainz_id"])
-        self.assertEqual(result[1].recording_msid, self.sample_feedback[0]["recording_msid"])
-        self.assertEqual(result[1].score, self.sample_feedback[0]["score"])
+        self.assertEqual(result[1].recording_msid, self.sample_feedback[2]["recording_msid"])
+        self.assertEqual(result[1].recording_mbid, self.sample_feedback[2]["recording_mbid"])
+        self.assertEqual(result[1].score, self.sample_feedback[2]["score"])
+
+        self.assertEqual(result[2].user_id, self.user["id"])
+        self.assertEqual(result[2].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[2].recording_msid, self.sample_feedback[1]["recording_msid"])
+        self.assertEqual(result[2].recording_mbid, self.sample_feedback[1]["recording_mbid"])
+        self.assertEqual(result[2].score, self.sample_feedback[1]["score"])
+
+        self.assertEqual(result[3].user_id, self.user["id"])
+        self.assertEqual(result[3].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[3].recording_msid, self.sample_feedback[0]["recording_msid"])
+        self.assertEqual(result[3].recording_mbid, self.sample_feedback[0]["recording_mbid"])
+        self.assertEqual(result[3].score, self.sample_feedback[0]["score"])
 
         # test the score argument
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0, score=1)
-        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result), 2)
         self.assertEqual(result[0].score, 1)
+        self.assertEqual(result[1].score, 1)
 
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0, score=-1)
-        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result), 2)
         self.assertEqual(result[0].score, -1)
+        self.assertEqual(result[1].score, -1)
 
         # test the limit argument
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=1, offset=0)
@@ -178,7 +231,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
         # test the offset argument
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=1)
-        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result), 3)
 
     def test_get_feedback_for_user_with_metadata(self):
         count = self.insert_test_data_with_metadata(self.user["id"])
@@ -200,10 +253,10 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.assertEqual(result, count)
 
         result = db_feedback.get_feedback_count_for_user(user_id=self.user["id"], score=1)
-        self.assertEqual(result, 1)
+        self.assertEqual(result, 2)
 
         result = db_feedback.get_feedback_count_for_user(user_id=self.user["id"], score=-1)
-        self.assertEqual(result, 1)
+        self.assertEqual(result, 2)
 
     def test_get_feedback_for_recording(self):
         fb_msid_1 = self.sample_feedback[0]["recording_msid"]
@@ -216,6 +269,16 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
         self.assertEqual(result[0].recording_msid, fb_msid_1)
         self.assertEqual(result[0].score, self.sample_feedback[0]["score"])
+
+        fb_mbid = self.sample_feedback[3]["recording_mbid"]
+        result = db_feedback.get_feedback_for_recording("recording_mbid", fb_mbid, limit=25, offset=0)
+        self.assertEqual(len(result), 1)
+
+        self.assertEqual(result[0].user_id, self.user["id"])
+        self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[0].recording_mbid, fb_mbid)
+        self.assertEqual(result[0].recording_msid, self.sample_feedback[3]["recording_msid"])
+        self.assertEqual(result[0].score, self.sample_feedback[3]["score"])
 
         user2 = db_user.get_or_create(2, "recording_feedback_other_user")
         self.insert_test_data(user2["id"])
@@ -252,15 +315,22 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
     def test_get_feedback_count_for_recording(self):
         fb_msid_1 = self.sample_feedback[0]["recording_msid"]
+        fb_mbid = self.sample_feedback[2]["recording_mbid"]
 
         self.insert_test_data(self.user["id"])
         result = db_feedback.get_feedback_count_for_recording("recording_msid", fb_msid_1)
+        self.assertEqual(result, 1)
+
+        result = db_feedback.get_feedback_count_for_recording("recording_mbid", fb_mbid)
         self.assertEqual(result, 1)
 
         user2 = db_user.get_or_create(2, "recording_feedback_other_user")
         self.insert_test_data(user2["id"])
 
         result = db_feedback.get_feedback_count_for_recording("recording_msid", fb_msid_1)
+        self.assertEqual(result, 2)
+
+        result = db_feedback.get_feedback_count_for_recording("recording_mbid", fb_mbid)
         self.assertEqual(result, 2)
 
     def test_get_feedback_for_multiple_recordings_for_user(self):
@@ -287,11 +357,13 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
         self.assertEqual(result[0].recording_msid, recording_list[0])
+        self.assertEqual(result[0].recording_mbid, self.sample_feedback[0]["recording_mbid"])
         self.assertEqual(result[0].score, self.sample_feedback[0]["score"])
 
         self.assertEqual(result[1].user_id, self.user["id"])
         self.assertEqual(result[1].user_name, self.user["musicbrainz_id"])
         self.assertEqual(result[1].recording_msid, recording_list[1])
+        self.assertEqual(result[1].recording_mbid, self.sample_feedback[1]["recording_mbid"])
         self.assertEqual(result[1].score, self.sample_feedback[1]["score"])
 
         # test score = 0 is returned for recording_msids for which feedback records are inserted
@@ -299,3 +371,92 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.assertEqual(result[2].user_name, self.user["musicbrainz_id"])
         self.assertEqual(result[2].recording_msid, recording_list[2])
         self.assertEqual(result[2].score, 0)
+
+
+        mbids_list = [
+            self.sample_feedback[2]["recording_mbid"],
+            self.sample_feedback[3]["recording_mbid"],
+            "d53ff85d-f126-46d7-b78f-f8f4d144f6d3"  # non existing recording mbid should return score = 0
+        ]
+
+        result = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            user_id=self.user["id"],
+            user_name=self.user["musicbrainz_id"],
+            recording_msids=[],
+            recording_mbids=mbids_list
+        )
+        self.assertEqual(len(result), len(mbids_list))
+
+        # test correct score is returned for recording_mbids for which feedback records are inserted
+        self.assertEqual(result[0].user_id, self.user["id"])
+        self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[0].recording_msid, self.sample_feedback[2]["recording_msid"])
+        self.assertEqual(result[0].recording_mbid, mbids_list[0])
+        self.assertEqual(result[0].score, self.sample_feedback[2]["score"])
+
+        self.assertEqual(result[1].user_id, self.user["id"])
+        self.assertEqual(result[1].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[1].recording_msid, self.sample_feedback[3]["recording_msid"])
+        self.assertEqual(result[1].recording_mbid, mbids_list[1])
+        self.assertEqual(result[1].score, self.sample_feedback[3]["score"])
+
+        # test score = 0 is returned for recording_mbids for which feedback records are inserted
+        self.assertEqual(result[2].user_id, self.user["id"])
+        self.assertEqual(result[2].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[2].recording_mbid, mbids_list[2])
+        self.assertEqual(result[2].score, 0)
+
+
+        result = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            user_id=self.user["id"],
+            user_name=self.user["musicbrainz_id"],
+            recording_msids=recording_list,
+            recording_mbids=mbids_list
+        )
+        self.assertEqual(len(result), len(mbids_list) + len(recording_list))
+        result_map_msid = {x.recording_msid: x for x in result if x.recording_msid}
+        result_map_mbid = {x.recording_mbid: x for x in result if x.recording_mbid}
+
+        # test correct score is returned for recording_mbids for which feedback records are inserted
+        feedback = result_map_mbid[mbids_list[0]]
+        self.assertEqual(feedback.user_id, self.user["id"])
+        self.assertEqual(feedback.user_name, self.user["musicbrainz_id"])
+        self.assertEqual(feedback.recording_msid, self.sample_feedback[2]["recording_msid"])
+        self.assertEqual(feedback.recording_mbid, mbids_list[0])
+        self.assertEqual(feedback.score, self.sample_feedback[2]["score"])
+
+        feedback = result_map_mbid[mbids_list[1]]
+        self.assertEqual(feedback.user_id, self.user["id"])
+        self.assertEqual(feedback.user_name, self.user["musicbrainz_id"])
+        self.assertEqual(feedback.recording_msid, self.sample_feedback[3]["recording_msid"])
+        self.assertEqual(feedback.recording_mbid, mbids_list[1])
+        self.assertEqual(feedback.score, self.sample_feedback[3]["score"])
+
+        feedback = result_map_mbid[mbids_list[2]]
+        # test score = 0 is returned for recording_mbids for which feedback records are inserted
+        self.assertEqual(feedback.user_id, self.user["id"])
+        self.assertEqual(feedback.user_name, self.user["musicbrainz_id"])
+        self.assertEqual(feedback.recording_mbid, mbids_list[2])
+        self.assertEqual(feedback.score, 0)
+
+        # test correct score is returned for recording_msids for which feedback records are inserted
+        feedback = result_map_msid[recording_list[0]]
+        self.assertEqual(feedback.user_id, self.user["id"])
+        self.assertEqual(feedback.user_name, self.user["musicbrainz_id"])
+        self.assertEqual(feedback.recording_msid, recording_list[0])
+        self.assertEqual(feedback.recording_mbid, self.sample_feedback[0]["recording_mbid"])
+        self.assertEqual(feedback.score, self.sample_feedback[0]["score"])
+
+        feedback = result_map_msid[recording_list[1]]
+        self.assertEqual(feedback.user_id, self.user["id"])
+        self.assertEqual(feedback.user_name, self.user["musicbrainz_id"])
+        self.assertEqual(feedback.recording_msid, recording_list[1])
+        self.assertEqual(feedback.recording_mbid, self.sample_feedback[1]["recording_mbid"])
+        self.assertEqual(feedback.score, self.sample_feedback[1]["score"])
+
+        feedback = result_map_msid[recording_list[2]]
+        # test score = 0 is returned for recording_msids for which feedback records are inserted
+        self.assertEqual(feedback.user_id, self.user["id"])
+        self.assertEqual(feedback.user_name, self.user["musicbrainz_id"])
+        self.assertEqual(feedback.recording_msid, recording_list[2])
+        self.assertEqual(feedback.score, 0)

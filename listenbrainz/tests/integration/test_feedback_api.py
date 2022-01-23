@@ -48,7 +48,19 @@ class FeedbackAPITestCase(IntegrationTestCase):
             "recording_msid": "7babc9be-ca2b-4544-b932-7c9ab38770d6",
             "score": 1
         }
+        response = self.client.post(
+            url_for("feedback_api_v1.recording_feedback"),
+            data=json.dumps(feedback),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "ok")
 
+        feedback = {
+            "recording_mbid": "7babc9be-ca2b-4544-b932-7c9ab38770d6",
+            "score": -1
+        }
         response = self.client.post(
             url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(feedback),
