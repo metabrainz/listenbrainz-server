@@ -65,7 +65,7 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 
-def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
+def fetch_tracks_listened_to(lb_conn, mb_conn, start_ts, end_ts):
     """ Actually fetch the top discoveries for the given year and set of users """
 
     with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
@@ -74,6 +74,7 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
             create_table(mb_conn)
 
             log("fetch tracks listened to")
+            # Fetch the basic data for all tracks that users listened to in a given year.
             query = """SELECT user_name
                             , m.recording_mbid
                             , md.recording_name

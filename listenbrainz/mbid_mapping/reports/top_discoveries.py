@@ -81,6 +81,9 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
             user_list = fetch_user_list(lb_conn, year)
             log("Process %d users." % len(user_list))
 
+            # This query will select all listens/data for a given user list and create an array of the years when
+            # a track was listened to. This data directly is not useful for anything directly, but from this 
+            # a few types of playlists can be generated.
             query = """SELECT user_name
                             , track_name
                             , data->'track_metadata'->>'artist_name' AS artist_name

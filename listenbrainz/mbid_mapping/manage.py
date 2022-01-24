@@ -97,7 +97,8 @@ def cron_log():
 @click.argument('year')
 def top_discoveries(year):
     """
-        Calculate the top discoveries data for the given year.
+        Top discoveries for year -- this creates a table in the mapping schema of the provided mb-docker database
+        that lists all the tracks that a user listened to the first time in the given year.
     """
     calculate_top_discoveries(year)
 
@@ -106,9 +107,10 @@ def top_discoveries(year):
 @click.argument('year')
 def top_tracks(year):
     """
-        Calculate the top tracks data for the given year.
+        Tracks for the year -- this also creates a table in the mapping schema, where this one creates a historgram
+        of which tracks and how many times a user played for a given year.
     """
-    calculate_top_tracks_of_the_year(year)
+    calculate_tracks_of_the_year(year)
 
 
 def usage(command):
