@@ -22,13 +22,17 @@ def create_schema(conn):
         raise
 
 
-def insert_rows(curs, table, values):
+def insert_rows(curs, table, values, cols=None):
     '''
         Helper function to insert a large number of rows into postgres in one go.
     '''
 
-    query = "INSERT INTO " + table + " VALUES %s"
-    execute_values(curs, query, values, template=None)
+    if cols is not None and len(cols) > 0:
+        query = "INSERT INTO " + table + " (" + ",".join(cols) + ") VALUES %s"
+        execute_values(curs, query, values, template=None)
+    else:
+        query = "INSERT INTO " + table + " VALUES %s"
+        execute_values(curs, query, values, template=None)
 
 
 def log(*args):
