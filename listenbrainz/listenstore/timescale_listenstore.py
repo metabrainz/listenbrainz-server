@@ -81,7 +81,7 @@ class TimescaleListenStore(ListenStore):
         """When a user is created, set the timestamp keys and insert an entry in the listen count
          table so that we can avoid the expensive lookup for a brand new user."""
         cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
-        query = """INSERT INTO listen_helper VALUES (:user_id, 0, 0, 0, NOW())"""
+        query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, 0, 0, NOW())"""
         with timescale.engine.connect() as connection:
             connection.execute(sqlalchemy.text(query), user_id=user_id)
 
@@ -90,7 +90,7 @@ class TimescaleListenStore(ListenStore):
 
          The number of listens comes from cache if available otherwise the get the
          listen count from the database. To get the listen count from the database,
-         query listen_helper table for the count and the timestamp till which we
+         query listen_user_metadata table for the count and the timestamp till which we
          already have counted. Then scan the listens created later than that timestamp
          to get the remaining count. Add the two counts to get total listen count.
 
@@ -102,13 +102,13 @@ class TimescaleListenStore(ListenStore):
             return cached_count
 
         with timescale.engine.connect() as connection:
-            query = "SELECT count, created FROM listen_helper WHERE user_id = :user_id"
+            query = "SELECT count, created FROM listen_user_metadata WHERE user_id = :user_id"
             result = connection.execute(sqlalchemy.text(query), user_id=user_id)
             row = result.fetchone()
             if row:
                 count, created = row["count"], row["created"]
             else:
-                # we can reach here only in tests, because we create entries in listen_helper
+                # we can reach here only in tests, because we create entries in listen_user_metadata
                 # table when user signs up and for existing users an entry should always exist.
                 count, created = 0, LISTEN_MINIMUM_DATE
 
@@ -206,7 +206,7 @@ class TimescaleListenStore(ListenStore):
         if count:
             return count
 
-        query = "SELECT SUM(count) AS value FROM listen_helper"
+        query = "SELECT SUM(count) AS value FROM listen_user_metadata"
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query))
@@ -965,7 +965,7 @@ class TimescaleListenStore(ListenStore):
         Raises: Exception if unable to delete the user in 5 retries
         """
         query = """
-            UPDATE listen_helper SET count = 0 WHERE user_id = :user_id;
+            UPDATE listen_user_metadata SET count = 0 WHERE user_id = :user_id;
             DELETE FROM listen WHERE user_id = :user_id;
         """
         cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
@@ -993,7 +993,7 @@ class TimescaleListenStore(ListenStore):
                         AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
                   RETURNING user_id, created
             ), update_count AS (
-                UPDATE listen_helper lc
+                UPDATE listen_user_metadata lc
                    SET count = count - 1
                   FROM delete_listen dl
                  WHERE lc.user_id = dl.user_id

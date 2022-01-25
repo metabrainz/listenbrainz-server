@@ -441,7 +441,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
     def _get_listen_count_from_db(self, user_id):
         with timescale.engine.connect() as connection:
-            query = "SELECT count, created FROM listen_helper"
+            query = "SELECT count, created FROM listen_user_metadata"
             result = connection.execute(sqlalchemy.text(query), user_id=user_id)
             self.log.info("Listen Helper: %s", result.fetchall())
 

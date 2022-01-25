@@ -9,7 +9,7 @@ CREATE TABLE listen (
         data            JSONB                    NOT NULL
 );
 
-CREATE TABLE listen_helper (
+CREATE TABLE listen_user_metadata (
     user_id             INTEGER                     NOT NULL,
     count               BIGINT                      NOT NULL, -- count of listens the user has earlier than `created`
     min_listened_at     BIGINT, -- minimum listened_at timestamp seen for the user in listens till `created`
