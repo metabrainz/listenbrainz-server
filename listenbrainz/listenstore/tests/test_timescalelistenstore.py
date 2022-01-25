@@ -16,7 +16,7 @@ import sqlalchemy
 import listenbrainz.db.user as db_user
 from psycopg2.extras import execute_values
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db import timescale as ts
+from listenbrainz.db import timescale as ts, timescale
 from listenbrainz import config
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
@@ -437,11 +437,22 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(count, self.logstore.get_listen_count_for_user(testuser["id"]))
         self.assertEqual(count, cache.get(user_key))
 
+    def _get_listen_count_from_db(self, user_id):
+        with timescale.engine.connect() as connection:
+            query = """
+                SELECT count(*) AS listen_count, created
+                  FROM listen
+                 WHERE user_id = :user_id
+            """
+            result = connection.execute(sqlalchemy.text(query), user_id=user_id)
+            self.log.info(result.fetchall())
+
     def test_delete_listens(self):
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
         self._create_test_data(testuser_name, testuser["id"])
+        self._get_listen_count_from_db(testuser["id"])
         listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=testuser["id"], to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -451,6 +462,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
         self.logstore.delete(testuser["id"])
+        self._get_listen_count_from_db(testuser["id"])
         listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=testuser["id"], to_ts=1400000300)
         self.assertEqual(len(listens), 0)
 
