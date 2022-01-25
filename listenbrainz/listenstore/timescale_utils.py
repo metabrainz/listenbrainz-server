@@ -21,21 +21,22 @@ SECONDS_IN_A_YEAR = 31536000
 
 def update_user_listen_counts():
     query = """
-        WITH nc AS (
+        WITH nm AS (
             SELECT l.user_id, count(*) as count
               FROM listen l
-              JOIN listen_user_metadata lc on l.user_id = lc.user_id
-             WHERE l.created > lc.created
+              JOIN listen_user_metadata lm
+             USING (user_id)
+             WHERE l.created > lm.created
                AND l.created <= :until
           GROUP BY l.user_id
         )
-        UPDATE listen_user_metadata oc
-           SET count = oc.count + nc.count
-             , created = :until
-          FROM nc
-         WHERE oc.user_id = nc.user_id
+            UPDATE listen_user_metadata om
+               SET count = om.count + nm.count
+                 , created = :until
+              FROM nm
+             WHERE om.user_id = nm.user_id
     """
-    with timescale.engine.connect() as connection:
+    with timescale.engine.begin() as connection:
         connection.execute(text(query), until=datetime.now())
 
 
