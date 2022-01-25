@@ -77,6 +77,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def _create_test_data(self, user_name, user_id, test_data_file_name=None):
         test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
         self.logstore.insert(test_data)
+        self.logstore.set_empty_values_for_user(user_id)
         timescale_utils.update_user_listen_counts()
         return len(test_data)
 
