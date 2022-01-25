@@ -36,6 +36,10 @@ def update_user_listen_counts():
               FROM nm
              WHERE om.user_id = nm.user_id
     """
+    # There is something weird going on here, I do not completely understand why but using engine.connect instead
+    # of engine.begin causes the changes to not be persisted. Reading up on sqlalchemy transaction handling etc.
+    # it makes sense that we need begin for an explicit transaction but how CRUD statements work fine with connect
+    # in remaining LB is beyond me then.
     with timescale.engine.begin() as connection:
         connection.execute(text(query), until=datetime.now())
 
