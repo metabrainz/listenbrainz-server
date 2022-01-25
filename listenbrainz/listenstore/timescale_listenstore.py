@@ -1003,7 +1003,11 @@ class TimescaleListenStore(ListenStore):
             -- in the listen count table
         """
         try:
-            with timescale.engine.connect() as connection:
+            # There is something weird going on here, I do not completely understand why but using engine.connect instead
+            # of engine.begin causes the changes to not be persisted. Reading up on sqlalchemy transaction handling etc.
+            # it makes sense that we need begin for an explicit transaction but how CRUD statements work fine with connect
+            # in remaining LB is beyond me then.
+            with timescale.engine.begin() as connection:
                 results = connection.execute(sqlalchemy.text(query), listened_at=listened_at,
                                              user_id=user_id, recording_msid=recording_msid)
                 self.log.info("Deleted %s", results.fetchall())
