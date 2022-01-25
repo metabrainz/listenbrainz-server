@@ -58,10 +58,10 @@ Listen Flow
 
 Listens can be submitted to ListenBrainz using native ListenBrainz API, Last.fm compatible API (API compat) and
 AudioScrobbler 1.2 compatible API (API compat deprecated). Each api endpoint validates the listens submitted through it
-and sends the listens to a RabbitMQ queue based on listen type. Playing Now listens have a different queue from
-"Permanent" listens (Incoming queue).
+and sends the listens to a RabbitMQ queue based on listen type. Playing Now listens are sent to the [x] queue,
+and permanent listens are sent to the [y] queue.
 
-Playing now listens are ephemeral and not stored in the database but in Redis cache with an appropriate expiry time. The
+Playing now listens are ephemeral are only stored in Redis, with an expiry time of the duration of the track. The
 Playing now queue is consumed by Websockets service. The frontend connects with the Websockets service to display
 listens on the website without manually reloading the page.
 

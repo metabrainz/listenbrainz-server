@@ -12,13 +12,11 @@ received by the maintainers, it is possible that the cron jobs are not setup pro
 Logs
 ^^^^
 Looking at the logs is a good starting point to debug dump failures, the log file is located at :file:`/logs/dumps.log`
-inside the listenbrainz-cron-prod container at the time of writing. You can check the crontab file for the current
-location of the log file. You can open a bash shell in the container by doing something like
+inside the listenbrainz-cron-prod container. The output of dump-related jobs is [redirected in the crontab](https://github.com/metabrainz/listenbrainz-server/blob/1f2e2634126a32a75bdb717b741d55099f4dd411/docker/services/cron/crontab#L8-L19). Open a bash shell in the cron container by running
 :code:`docker exec -it listenbrainz-cron-prod bash`.
 
-After that you can use :command:`tail` to view the latest logs. :command:`cat` is also available but the logs file will
-be huge so the experience using it will not be nice. For example: :code:`tail -n 500 /logs/dumps.log` will list the last
-500 lines of the log file.
+This file is large, so use :command:`tail` instead of :command:`cat` to view the logs. For example: 
+:code:`tail -n 500 /logs/dumps.log` will list the last 500 lines of the log file.
 
 From the log file, you should probably be able to see whether the error occurred in python part of the code or bash
 script. If you see a python stack trace, it is likely that sentry recorded the error too. The sentry view sometimes
@@ -26,7 +24,7 @@ offers more details so searching sentry for this error can be helpful.
 
 Manually triggering dumps
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-Once you have debugged and fixed the issue, you'll probably want to trigger new dumps manually. A few things need to be
+If you want to re-run a dump after it fails, or manually trigger a dump then you can run the dump script manually. A few things need to be
 kept in mind while doing this, the python command invoked to do the dump accepts a id to number the dump. If no id
 specified, the script will look in the database for the last id, add 1 to it and use it for the dump.
 
