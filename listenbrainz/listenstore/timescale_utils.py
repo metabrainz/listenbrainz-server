@@ -31,7 +31,7 @@ def update_user_listen_counts():
         )
         UPDATE listen_helper oc
            SET count = oc.count + nc.count
-             , timestamp = :until
+             , created = :until
           FROM nc
          WHERE oc.user_id = nc.user_id
     """
