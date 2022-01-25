@@ -21,7 +21,7 @@ from listenbrainz import config
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
+from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, timescale_utils
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS
 from brainzutils import cache
 
@@ -77,6 +77,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def _create_test_data(self, user_name, user_id, test_data_file_name=None):
         test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
         self.logstore.insert(test_data)
+        timescale_utils.update_user_listen_counts()
         return len(test_data)
 
     def _insert_mapping_metadata(self, msid):
