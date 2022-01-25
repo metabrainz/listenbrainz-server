@@ -24,12 +24,12 @@ def update_user_listen_counts():
         WITH nc AS (
             SELECT l.user_id, count(*) as count
               FROM listen l
-              JOIN listen_helper lc on l.user_id = lc.user_id
+              JOIN listen_user_metadata lc on l.user_id = lc.user_id
              WHERE l.created > lc.created
                AND l.created <= :until
           GROUP BY l.user_id
         )
-        UPDATE listen_helper oc
+        UPDATE listen_user_metadata oc
            SET count = oc.count + nc.count
              , created = :until
           FROM nc
