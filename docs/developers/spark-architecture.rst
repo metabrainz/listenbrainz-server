@@ -1,5 +1,5 @@
-ListenBrainz Spark Architecture
-===============================
+Spark Architecture
+==================
 
 In order to actually build features that use Spark, it is important to
 understand how the ListenBrainz webserver and the Spark environment
