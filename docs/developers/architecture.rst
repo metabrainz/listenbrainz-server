@@ -1,12 +1,14 @@
-=========================
-ListenBrainz Architecture
-=========================
+============
+Architecture
+============
 
 Production Services
 ===================
 
 Services exclusive to ListenBrainz
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a list of the docker containers for ListenBrainz services running in the MetaBrainz server infrastructure.
 
 1) listenbrainz-cron-prod: runs cron jobs used to execute periodic tasks like creating dumps, invoking spark jobs to
    import dump, requesting statistics and so on.
@@ -16,7 +18,8 @@ Services exclusive to ListenBrainz
 
 3) listenbrainz-api-compat-prod: runs a uwsgi server which serves a flask app for only Last.fm compatible APIs.
 
-4) listenbrainz-api-compat-nginx-prod: Run an nginx container for the compat API that exposes this service on a local IP, not through gateways.
+4) listenbrainz-api-compat-nginx-prod: Run an nginx container for the compat API that exposes this service on a local
+   IP, not through gateways.
 
 5) listenbrainz-timescale-writer-prod: runs timescale writer which consumes listens from incoming rabbitmq queue,
    performs a messybrainz lookup and inserts listens in the database.
@@ -71,7 +74,7 @@ find an existing match for the hash of the listen in the database. If one exists
 the hash and data into the database and returns a new MessyBrainz ID.
 
 Once the writer receives MSIDs from MessyBrainz, it combines those with the listens and inserts the listens in the
-listen table. The insert deduplicate listens based on a (user, timestamp, track) triplet i.e. at a given timestamp,
+listen table. The insert deduplicate listens based on a (user, timestamp, track_name) triplet i.e. at a given timestamp,
 a user can have a track entry only once. As you can see, listens of different tracks at the same timestamp are allowed
 for a user. The database returns the "unique" listens to the writer which publishes those to Unique queue.
 
@@ -81,10 +84,17 @@ from the unique queue and builds a MSID->MBID mapping using these listens.
 Frontend Rendering
 ==================
 
-ListenBrainz frontend pages are a blend of Jinja2 templates (Python) and React components (Javascript). The Jinja2 templates used are bare bones
-, they include a placeholder div called `react-container` into which the react components are rendered. To render the
-components, some data like current user info, api url etc are needed. These are injected as json into two script tags in the HTML page, to be consumed by the React application:
-page-react-props and global-react-props.
+ListenBrainz frontend pages are a blend of Jinja2 templates (Python) and React components (Javascript). The Jinja2
+templates used are bare bones , they include a placeholder div called `react-container` into which the react components
+are rendered. To render the components, some data like current user info, api url etc are needed. These are injected as
+json into two script tags in the HTML page, to be consumed by the React application: page-react-props and
+global-react-props.
 
-Most ListenBrainz pages will have a Jinja2 template and at least 1 React component file. The components are written in Typescript, and we use Webpack to transpile them to javascript, to compile CSS from LESS and to minify and bundle everything. This is all done in a separate Docker container which watches for changes in front-end files and recompiles automatically. Using script tags, we manually specify the
-appropriate compiled javascript file to include on a given page in its Jinja2 template.
+Most ListenBrainz pages will have a Jinja2 template and at least 1 React component file. The components are written in
+Typescript, and we use Webpack to transpile them to javascript, to compile CSS from LESS and to minify and bundle
+everything. In local development, this is all done in a separate Docker container `static_builder` which watches for
+changes in front-end files and recompiles automatically. In production, the compilation happens only once and at time
+of building the docker image.
+
+Using script tags, we manually specify the appropriate compiled javascript file to include on a given page in its
+Jinja2 template.

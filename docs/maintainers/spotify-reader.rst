@@ -1,9 +1,9 @@
 Debugging Spotify Reader
 ========================
 
-To debug spotify reader issues, begin with checking logs of the container. The ListenBrainz admin panel has
-external_service_ouath and listens_importer table which show the user's token, importer error if any, last import
-time and latest listen imported for that user.
+To debug spotify reader issues, begin with checking logs of the container. The `ListenBrainz admin <https://listenbrainz.org/admin>`_
+panel has external_service_ouath and listens_importer table which show the user's token, importer error if any, last
+import time and latest listen imported for that user.
 
 Sometimes spotify's recent listens API does not show updated listens for hours while the currently playing endpoint
 does. So the user may see currently playing listens arrive but the "permanent" listens missing. To confirm this is the
