@@ -61,8 +61,8 @@ Listen Flow
 
 Listens can be submitted to ListenBrainz using native ListenBrainz API, Last.fm compatible API (API compat) and
 AudioScrobbler 1.2 compatible API (API compat deprecated). Each api endpoint validates the listens submitted through it
-and sends the listens to a RabbitMQ queue based on listen type. Playing Now listens are sent to the [x] queue,
-and permanent listens are sent to the [y] queue.
+and sends the listens to a RabbitMQ queue based on listen type. Playing Now listens are sent to the Playing Now queue,
+and permanent listens are sent to the Incoming queue.
 
 Playing now listens are ephemeral are only stored in Redis, with an expiry time of the duration of the track. The
 Playing now queue is consumed by Websockets service. The frontend connects with the Websockets service to display
@@ -73,8 +73,8 @@ Incoming queue. It begins with querying the MessyBrainz database for MessyBrainz
 find an existing match for the hash of the listen in the database. If one exists, it is returned otherwise it inserts
 the hash and data into the database and returns a new MessyBrainz ID.
 
-Once the writer receives MSIDs from MessyBrainz, it combines those with the listens and inserts the listens in the
-listen table. The insert deduplicate listens based on a (user, timestamp, track_name) triplet i.e. at a given timestamp,
+Once the writer receives MSIDs from MessyBrainz, the MSID is added to the track metadata and the listen is inserted in the
+listen table. The insert deduplicates listens based on a (user, timestamp, track_name) triplet i.e. at a given timestamp,
 a user can have a track entry only once. As you can see, listens of different tracks at the same timestamp are allowed
 for a user. The database returns the "unique" listens to the writer which publishes those to Unique queue.
 
