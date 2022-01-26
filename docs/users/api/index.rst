@@ -1,11 +1,9 @@
 ListenBrainz API
 ================
 
-All endpoints have this root URL for our current production site [#]_.
+All endpoints have this root URL for our current production site.
 
 - **API Root URL**: ``https://api.listenbrainz.org``
-
-- **Web Root URL**: ``https://listenbrainz.org``
 
 .. note::
     All ListenBrainz services are only available on **HTTPS**!
@@ -42,7 +40,7 @@ following headers:
   clocks)
 
 - **X-RateLimit-Reset**: UNIX epoch number of seconds (without timezone) when
-  current time window expires [#]
+  current time window expires [#]_
 
 Rate limiting is automatic and the client must use these headers to determine
 the rate to make API calls. If the client exceeds the number of requests
