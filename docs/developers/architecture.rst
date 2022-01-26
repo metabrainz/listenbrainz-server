@@ -137,8 +137,9 @@ listens based on a (user, timestamp, track_name) triplet i.e. at a given timesta
 once. As you can see, listens of different tracks at the same timestamp are allowed for a user. The database returns the
 "unique" listens to the writer which publishes those to Unique queue.
 
-`Websockets  <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/websockets/listens_dispatcher.py>`_
-consumes from the unique queue for the same purpose as with now playing listens. The MBID mapper also `consumes <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/mbid_mapping_writer/mbid_mapping_writer.py>`_
+The `Websockets <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/websockets/listens_dispatcher.py>`_
+server consumes from the unique queue and sends a list of tracks to connected clients (like the now playing queue). The
+MBID mapper also `consumes <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/mbid_mapping_writer/mbid_mapping_writer.py>`_
 from the unique queue and builds a MSID->MBID mapping using these listens.
 
 Frontend Rendering
