@@ -16,7 +16,7 @@ Services exclusive to ListenBrainz
 
 3) listenbrainz-api-compat-prod: runs a uwsgi server which serves a flask app for only Last.fm compatible APIs.
 
-4) listenbrainz-api-compat-nginx-prod: ???
+4) listenbrainz-api-compat-nginx-prod: Run an nginx container for the compat API that exposes this service on a local IP, not through gateways.
 
 5) listenbrainz-timescale-writer-prod: runs timescale writer which consumes listens from incoming rabbitmq queue,
    performs a messybrainz lookup and inserts listens in the database.
