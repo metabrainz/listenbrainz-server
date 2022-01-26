@@ -984,7 +984,6 @@ class TimescaleListenStore(ListenStore):
             recording_msid: the MessyBrainz ID of the recording
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
         query = """
             WITH delete_listen AS (
                 DELETE FROM listen
@@ -992,13 +991,12 @@ class TimescaleListenStore(ListenStore):
                         AND user_id = :user_id
                         AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
                   RETURNING user_id, created
-            ), update_count AS (
-                UPDATE listen_user_metadata lc
-                   SET count = count - 1
-                  FROM delete_listen dl
-                 WHERE lc.user_id = dl.user_id
-                   AND lc.created > dl.created
-            ) SELECT * FROM delete_listen;
+            )
+            UPDATE listen_user_metadata lc
+               SET count = count - 1
+              FROM delete_listen dl
+             WHERE lc.user_id = dl.user_id
+               AND lc.created > dl.created
             -- only decrement count if the listen deleted has a created earlier than the created timestamp
             -- in the listen count table
         """
@@ -1008,13 +1006,11 @@ class TimescaleListenStore(ListenStore):
             # it makes sense that we need begin for an explicit transaction but how CRUD statements work fine with connect
             # in remaining LB is beyond me then.
             with timescale.engine.begin() as connection:
-                results = connection.execute(sqlalchemy.text(query), listened_at=listened_at,
-                                             user_id=user_id, recording_msid=recording_msid)
-                self.log.info("Deleted %s", results.fetchall())
+                connection.execute(sqlalchemy.text(query), listened_at=listened_at,
+                                   user_id=user_id, recording_msid=recording_msid)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARN)
 
 
 class TimescaleListenStoreException(Exception):
