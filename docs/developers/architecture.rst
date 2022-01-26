@@ -8,6 +8,8 @@ Services
 This is a list of the docker containers for ListenBrainz services used in local development and running in the
 MetaBrainz server infrastructure.
 
+In production, webservers run uwsgi server to serve the flask application. In development, the flask development server is used.
+
 .. list-table:: Webservers
    :widths: 15 20 65
    :header-rows: 1
@@ -16,15 +18,15 @@ MetaBrainz server infrastructure.
      - Production
      - Description
 
-   * - web
+   * - `web <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L35>`__
      - listenbrainz-web-prod
      - serves the ListenBrainz flask app for the website and APIs (except compat APIs).
 
-   * - api_compat
+   * - `api_compat <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L58>`__
      - listenbrainz-api-compat-prod
      - serves a flask app for only Last.fm compatible APIs.
 
-   * - websockets
+   * - `websockets <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L88>`__
      - listenbrainz-websockets-prod
      - runs websockets server to handle realtime listen and playlist updates.
 
@@ -36,16 +38,16 @@ MetaBrainz server infrastructure.
      - Production
      - Description
 
-   * - redis
+   * - `redis <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L16>`__
      - listenbrainz-redis
      - redis instance used for caching all stuff ListenBrainz.
 
-   * - lb_db
+   * - `lb_db <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L21>`__
      - listenbrainz-timescale
      - timescale instance for ListenBrainz to store listens and playlists. in development environment, the all databases
        are part of `lb_db` container.
 
-   * - lb_db
+   * - `lb_db <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L21>`__
      - postgres-floyd
      - primary database instance shared by multiple MetaBrainz projects. The main ListenBrainz DB resides here as well
        as the MessyBrainz DB.
@@ -58,20 +60,20 @@ MetaBrainz server infrastructure.
      - Production
      - Description
 
-   * - timescale_writer
+   * - `timescale_writer <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L70>`__
      - listenbrainz-timescale-writer-prod
      - runs timescale writer which consumes listens from incoming rabbitmq queue, performs a messybrainz lookup and
        inserts listens in the database.
 
-   * - spotify_reader
+   * - `spotify_reader <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L79>`__
      - listenbrainz-spotify-reader-prod
      - runs a service for importing listens from spotify API and submitting to rabbitmq.
 
-   * - spark_reader
+   * - `spark_reader <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.spark.override.yml#L24>`__
      - listenbrainz-spark-reader-prod
      - processes incoming results from spark cluster like inserting statistics in database etc.
 
-   * - rabbitmq
+   * - `rabbitmq <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L30>`__
      - rabbitmq-clash
      - rabbitmq instance shared by MetaBrainz services. listenbrainz queues are under /listenbrainz vhost.
 
