@@ -2,56 +2,110 @@
 Architecture
 ============
 
-Production Services
-===================
+Services
+========
 
-Services exclusive to ListenBrainz
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This is a list of the docker containers for ListenBrainz services used in local development and running in the
+MetaBrainz server infrastructure.
 
-This is a list of the docker containers for ListenBrainz services running in the MetaBrainz server infrastructure.
+.. list-table:: Webservers
+   :widths: 15 20 65
+   :header-rows: 1
 
-1) listenbrainz-cron-prod: runs cron jobs used to execute periodic tasks like creating dumps, invoking spark jobs to
-   import dump, requesting statistics and so on.
+   * - Development
+     - Production
+     - Description
 
-2) listenbrainz-web-prod: runs a uwsgi server which serves ListenBrainz flask app for the website and APIs
-   (except compat APIs).
+   * - web
+     - listenbrainz-web-prod
+     - serves the ListenBrainz flask app for the website and APIs (except compat APIs).
 
-3) listenbrainz-api-compat-prod: runs a uwsgi server which serves a flask app for only Last.fm compatible APIs.
+   * - api_compat
+     - listenbrainz-api-compat-prod
+     - serves a flask app for only Last.fm compatible APIs.
 
-4) listenbrainz-api-compat-nginx-prod: Run an nginx container for the compat API that exposes this service on a local
-   IP, not through gateways.
+   * - websockets
+     - listenbrainz-websockets-prod
+     - runs websockets server to handle realtime listen and playlist updates.
 
-5) listenbrainz-timescale-writer-prod: runs timescale writer which consumes listens from incoming rabbitmq queue,
-   performs a messybrainz lookup and inserts listens in the database.
+.. list-table:: Databases and Cache
+   :widths: 15 20 65
+   :header-rows: 1
 
-6) listenbrainz-websockets-prod: runs websockets server to handle realtime listen and playlist updates.
+   * - Development
+     - Production
+     - Description
 
-7) listenbrainz-labs-api-prod: runs a uwsgi server which serves a flask app for experimental ListenBrainz APIs.
+   * - redis
+     - listenbrainz-redis
+     - redis instance used for caching all stuff ListenBrainz.
 
-8) listenbrainz-spotify-reader-prod: runs a service for importing listens from spotify API and submitting to rabbitmq.
+   * - lb_db
+     - listenbrainz-timescale
+     - timescale instance for ListenBrainz to store listens and playlists. in development environment, the all databases
+       are part of `lb_db` container.
 
-9) listenbrainz-spark-reader-prod: processes incoming results from spark cluster like inserting statistics in database etc.
+   * - lb_db
+     - postgres-floyd
+     - primary database instance shared by multiple MetaBrainz projects. The main ListenBrainz DB resides here as well
+       as the MessyBrainz DB.
 
-10) listenbrainz-redis: redis instance used for caching all stuff LB.
+.. list-table:: Misc Services
+   :widths: 15 20 65
+   :header-rows: 1
 
-11) exim-relay-listenbrainz.org: smtp relay used by LB to send emails.
+   * - Development
+     - Production
+     - Description
 
-12) listenbrainz-timescale: timescale instance for LB to store listens and playlists.
+   * - timescale_writer
+     - listenbrainz-timescale-writer-prod
+     - runs timescale writer which consumes listens from incoming rabbitmq queue, performs a messybrainz lookup and
+       inserts listens in the database.
 
-13) listenbrainz-typesense: typsense (typo robust search) used by the mbid-mapping.
+   * - spotify_reader
+     - listenbrainz-spotify-reader-prod
+     - runs a service for importing listens from spotify API and submitting to rabbitmq.
 
-14) listenbrainz-mbid-mapping: A cron container that fires off periodic MBID data processing tasks.
+   * - spark_reader
+     - listenbrainz-spark-reader-prod
+     - processes incoming results from spark cluster like inserting statistics in database etc.
 
-15) listenbrainz-mbid-mapping-writer-prod: Maps incoming listens to the MBID mapping as well as updating the mapping.
+   * - rabbitmq
+     - rabbitmq-clash
+     - rabbitmq instance shared by MetaBrainz services. listenbrainz queues are under /listenbrainz vhost.
 
-16) listenbrainz spark cluster: spark cluster to generate statistics and recommendations for LB.
+.. list-table:: Only Production Services
+   :widths: 30 70
+   :header-rows: 1
 
-Services not exclusive to ListenBrainz
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   * - Production
+     - Description
 
-17) postgres-floyd: primary database instance shared by multiple MetaBrainz projects. The main ListenBrainz DB resides here as well as the MessyBrainz DB.
+   * - listenbrainz-labs-api-prod
+     - serves a flask app for experimental ListenBrainz APIs
 
-18) rabbitmq-clash: rabbitmq instance shared by MetaBrainz services. listenbrainz queues are under /listenbrainz vhost.
+   * - listenbrainz-api-compat-nginx-prod
+     - runs a nginx container for the compat API that exposes this service on a local IP, not through gateways.
+
+   * - listenbrainz-cron-prod
+     - runs cron jobs used to execute periodic tasks like creating dumps, invoking spark jobs to import dump, requesting
+       statistics and so on.
+
+   * - exim-relay-listenbrainz.org
+     - smtp relay used by LB to send emails.
+
+   * - listenbrainz-typesense
+     - typesense (typo robust search) used by the mbid-mapping.
+
+   * - listenbrainz-mbid-mapping
+     - A cron container that fires off periodic MBID data processing tasks.
+
+   * - listenbrainz-mbid-mapping-writer-prod
+     - Maps incoming listens to the MBID mapping as well as updating the mapping.
+
+   * - listenbrainz spark cluster
+     - spark cluster to generate statistics and recommendations for LB.
 
 Listen Flow
 ===========
