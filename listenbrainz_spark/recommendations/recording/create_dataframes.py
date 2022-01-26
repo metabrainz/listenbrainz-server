@@ -298,7 +298,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
             missing_musicbrainz_data_itr (iterator): Data missing from the MusicBrainz.
             from_date (datetime): Date from which start fetching listens.
             to_date (datetime): Date upto which fetch listens.
-            ti (datetime): Timestamp when the first func (main) of the script was called.
+            ti: Timestamp when the first func (main) of the script was called.
 
         Returns:
             messages: A list of messages to be sent via RabbitMQ
@@ -350,8 +350,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
     return messages
 
 
-def main(train_model_window, job_type, minimum_listens_threshold=0):
-
+def calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold):
     if job_type == "recommendation_recording":
         paths = {
             "mapped_listens": path.RECOMMENDATION_RECORDING_MAPPED_LISTENS,
@@ -373,7 +372,6 @@ def main(train_model_window, job_type, minimum_listens_threshold=0):
     else:
         raise SparkException("Invalid job_type parameter received for creating dataframes: " + job_type)
 
-    ti = time.monotonic()
     # dict to save dataframe metadata which would be later merged in model_metadata dataframe.
     metadata = {}
     # "updated" should always be set to False in this script.
@@ -383,9 +381,6 @@ def main(train_model_window, job_type, minimum_listens_threshold=0):
     except SparkSessionNotInitializedException as err:
         logger.error(str(err), exc_info=True)
         raise
-
-    logger.info('Fetching listens to create dataframes...')
-    to_date, from_date = get_dates_to_train_data(train_model_window)
 
     metadata['to_date'] = to_date
     metadata['from_date'] = from_date
@@ -418,6 +413,16 @@ def main(train_model_window, job_type, minimum_listens_threshold=0):
 
     metadata['dataframe_id'] = get_dataframe_id(paths["prefix"])
     save_dataframe_metadata_to_hdfs(metadata, paths["metadata"])
+    return complete_listens_df
+
+
+def main(train_model_window, job_type, minimum_listens_threshold=0):
+    ti = time.monotonic()
+
+    logger.info('Fetching listens to create dataframes...')
+    to_date, from_date = get_dates_to_train_data(train_model_window)
+
+    complete_listens_df = calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold)
 
     logger.info('Preparing missing MusicBrainz data...')
     missing_musicbrainz_data_itr = get_data_missing_from_musicbrainz(complete_listens_df)

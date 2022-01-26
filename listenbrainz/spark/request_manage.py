@@ -135,54 +135,58 @@ def request_sitewide_stats(type_, range_, entity):
         click.echo("Incorrect arguments provided")
 
 
-@cli.command(name="request_new_release_stats")
+@cli.command(name="request_yim_new_release_stats")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
-def request_new_release_stats(year: int):
+def request_yim_new_release_stats(year: int):
     """ Send request to calculate new release stats to the spark cluster
     """
-    send_request_to_spark_cluster("stats.new_releases_of_top_artists", year=year)
+    send_request_to_spark_cluster("year_in_music.new_releases_of_top_artists", year=year)
 
 
-@cli.command(name="request_most_prominent_color")
+@cli.command(name="request_yim_most_prominent_color")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
-def request_most_prominent_color(year: int):
+def request_yim_most_prominent_color(year: int):
     """ Send request to calculate most prominent color stat to the spark cluster
     """
-    send_request_to_spark_cluster("stats.most_prominent_color", year=year)
+    send_request_to_spark_cluster("year_in_music.most_prominent_color", year=year)
 
 
-@cli.command(name="request_day_of_week")
+@cli.command(name="request_yim_day_of_week")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
-def request_day_of_week(year: int):
+def request_yim_day_of_week(year: int):
     """ Send request to calculate most listened day of week to the spark cluster
     """
-    send_request_to_spark_cluster("stats.day_of_week", year=year)
+    send_request_to_spark_cluster("year_in_music.day_of_week", year=year)
 
 
-@cli.command(name="request_most_listened_year")
+@cli.command(name="request_yim_most_listened_year")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
-def request_most_listened_year(year: int):
+def request_yim_most_listened_year(year: int):
     """ Send request to calculate most listened year stat to the spark cluster
     """
-    send_request_to_spark_cluster("stats.most_listened_year", year=year)
+    send_request_to_spark_cluster("year_in_music.most_listened_year", year=year)
 
 
 @cli.command(name="request_yim_top_stats")
-def request_yim_top_stats():
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_top_stats(year: int):
     """ Send request to calculate top stats to the spark cluster
     """
-    send_request_to_spark_cluster("year_in_music.top_stats")
+    send_request_to_spark_cluster("year_in_music.top_stats", year=year)
 
 
 @cli.command(name="request_listens_per_day")
-def request_yim_listens_per_day():
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_listens_per_day(year: int):
     """ Send request to calculate listens per day stat to the spark cluster
     """
-    send_request_to_spark_cluster("year_in_music.listens_per_day")
+    send_request_to_spark_cluster("year_in_music.listens_per_day", year=year)
 
 
 @cli.command(name="request_yearly_listen_count")
@@ -318,25 +322,28 @@ def request_similar_users(max_num_users):
     send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
 
 
-@cli.command(name='request_similar_users_year_end')
+@cli.command(name="request_yim_similar_users")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
-def request_similar_users_year_end(year: int):
+def request_yim_similar_users(year: int):
     """ Send the cluster a request to generate similar users for Year in Music. """
-    send_request_to_spark_cluster('similarity.similar_users_year_end', year=year)
+    send_request_to_spark_cluster('year_in_music.similar_users', year=year)
 
 
 @cli.command(name="request_year_in_music")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
 @click.pass_context
-def request_year_in_music(ctx):
-    ctx.invoke(request_new_release_stats)
-    ctx.invoke(request_most_prominent_color)
-    ctx.invoke(request_day_of_week)
-    ctx.invoke(request_most_listened_year)
-    ctx.invoke(request_yim_top_stats)
-    ctx.invoke(request_yim_listens_per_day)
-    ctx.invoke(request_yim_listen_count)
-    ctx.invoke(request_similar_users_year_end)
+def request_year_in_music(ctx, year: int):
+    """ Send the cluster a request to generate all year in music statistics. """
+    ctx.invoke(request_yim_new_release_stats, year=year)
+    ctx.invoke(request_yim_most_prominent_color, year=year)
+    ctx.invoke(request_yim_day_of_week, year=year)
+    ctx.invoke(request_yim_most_listened_year, year=year)
+    ctx.invoke(request_yim_top_stats, year=year)
+    ctx.invoke(request_yim_listens_per_day, year=year)
+    ctx.invoke(request_yim_listen_count, year=year)
+    ctx.invoke(request_yim_similar_users, year=year)
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
