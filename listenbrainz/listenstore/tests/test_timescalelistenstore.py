@@ -437,12 +437,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(count, self.logstore.get_listen_count_for_user(testuser["id"]))
         self.assertEqual(count, cache.get(user_key))
 
-    def _get_listen_count_from_db(self, user_id):
-        with timescale.engine.connect() as connection:
-            query = "SELECT count, created FROM listen_user_metadata"
-            result = connection.execute(sqlalchemy.text(query), user_id=user_id)
-            self.log.info("Listen Helper: %s", result.fetchall())
-
     def test_delete_listens(self):
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
@@ -466,7 +460,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         testuser_name = testuser['musicbrainz_id']
         self._create_test_data(testuser_name, testuser["id"])
         listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=testuser["id"], to_ts=1400000300)
-        self._get_listen_count_from_db(testuser["id"])
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -475,7 +468,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
         self.logstore.delete_listen(1400000050, testuser["id"], "c7a41965-9f1e-456c-8b1d-27c0f0dde280")
-        self._get_listen_count_from_db(testuser["id"])
         listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=testuser["id"], to_ts=1400000300)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
