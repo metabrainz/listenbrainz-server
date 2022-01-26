@@ -152,7 +152,14 @@ html_favicon = "favicon.ico"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-#html_static_path = ['_static']
+
+# this directory appears to be merged with the default _static directory, make the docs and
+# view the built html folders to figure out how to arrange files inside this directory.
+html_static_path = ['_static']
+
+# the previous line will only copy the files to _static, to `link` them in the html pages
+# this step is also needed. path should be relative to _static directory.
+html_css_files = ['css/wrap-text-in-tables.css']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
