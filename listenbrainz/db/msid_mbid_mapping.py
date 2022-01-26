@@ -100,7 +100,7 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
 
     mapping_mbid_metadata, mapping_msid_metadata = load_recordings_from_mapping(mbid_item_map.keys(), msid_item_map.keys())
     _update_items_from_map(mbid_item_map, mapping_mbid_metadata)
-    _update_items_from_map(msid_item_map, mapping_mbid_metadata)
+    _update_items_from_map(msid_item_map, mapping_msid_metadata)
     return items
 
 
