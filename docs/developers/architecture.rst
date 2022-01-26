@@ -113,26 +113,32 @@ Listen Flow
 .. image:: ../images/listen-flow.svg
    :alt: How listens flow in ListenBrainz
 
-Listens can be submitted to ListenBrainz using native ListenBrainz API, Last.fm compatible API (API compat) and
-AudioScrobbler 1.2 compatible API (API compat deprecated). Each api endpoint validates the listens submitted through it
-and sends the listens to a RabbitMQ queue based on listen type. Playing Now listens are sent to the Playing Now queue,
-and permanent listens are sent to the Incoming queue.
+Listens can be submitted to ListenBrainz using native `ListenBrainz API <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/webserver/views/api.py#L34>`_,
+`Last.fm compatible API (API compat) <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/webserver/views/api_compat.py#L238>`_
+and `AudioScrobbler 1.2 compatible API (API compat deprecated) <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/webserver/views/api_compat_deprecated.py#L107>`_.
+Each api endpoint validates the listens submitted through it and sends the listens to a RabbitMQ queue based on listen
+type. Playing Now listens are `sent <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/webserver/views/api_tools.py#L342>`_
+to the Playing Now queue, and permanent listens are sent to the Incoming queue.
 
-Playing now listens are ephemeral are only stored in Redis, with an expiry time of the duration of the track. The
-Playing now queue is consumed by Websockets service. The frontend connects with the Websockets service to display
-listens on the website without manually reloading the page.
+Playing now listens are ephemeral are only `stored <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/webserver/views/api_tools.py#L59>`_
+in Redis, with an expiry time of the duration of the track (if duration is unavailable then a configurable fallback time
+is used). The Playing now queue is consumed by Websockets service. The frontend connects with the Websockets service to
+display listens on the website without manually reloading the page.
 
 On the other hand, "Permanent" Listens need to be persisted in the database. Timescale Writer service consumes from the
-Incoming queue. It begins with querying the MessyBrainz database for MessyBrainz IDs. MessyBrainz tries to
-find an existing match for the hash of the listen in the database. If one exists, it is returned otherwise it inserts
-the hash and data into the database and returns a new MessyBrainz ID.
+Incoming queue. It begins with `querying <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/timescale_writer/timescale_writer.py#L72>`_
+the MessyBrainz database for MessyBrainz IDs. MessyBrainz tries to find an existing match for the hash of the listen in
+the database. If one exists, it is returned otherwise it inserts the hash and data into the database and returns a new
+MessyBrainz ID.
 
 Once the writer receives MSIDs from MessyBrainz, the MSID is added to the track metadata and the listen is inserted in the
-listen table. The insert deduplicates listens based on a (user, timestamp, track_name) triplet i.e. at a given timestamp,
-a user can have a track entry only once. As you can see, listens of different tracks at the same timestamp are allowed
-for a user. The database returns the "unique" listens to the writer which publishes those to Unique queue.
+listen table. The insert `deduplicates <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/listenstore/timescale_listenstore.py#L263>`_
+listens based on a (user, timestamp, track_name) triplet i.e. at a given timestamp, a user can have a track entry only
+once. As you can see, listens of different tracks at the same timestamp are allowed for a user. The database returns the
+"unique" listens to the writer which publishes those to Unique queue.
 
-Websockets consume from the unique queue for the same purpose as with now playing listens. The MBID mapper also consumes
+`Websockets  <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/websockets/listens_dispatcher.py>`_
+consumes from the unique queue for the same purpose as with now playing listens. The MBID mapper also `consumes <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/mbid_mapping_writer/mbid_mapping_writer.py>`_
 from the unique queue and builds a MSID->MBID mapping using these listens.
 
 Frontend Rendering
