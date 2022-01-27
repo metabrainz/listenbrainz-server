@@ -15,6 +15,9 @@ from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid,
 
 feedback_api_bp = Blueprint('feedback_api_v1', __name__)
 
+# default feedback score if the user the hasn't given feedback on a recording
+FEEDBACK_DEFAULT_SCORE = 0
+
 
 @feedback_api_bp.route("/recording-feedback", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
@@ -57,7 +60,7 @@ def recording_feedback():
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       data)
 
-    if feedback.score == 0:
+    if feedback.score == FEEDBACK_DEFAULT_SCORE:
         db_feedback.delete(feedback)
     else:
         db_feedback.insert(feedback)
