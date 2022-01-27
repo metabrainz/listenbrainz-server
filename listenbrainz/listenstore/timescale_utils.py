@@ -5,6 +5,7 @@ import subprocess
 import logging
 
 from brainzutils import cache
+from psycopg2.extras import execute_values
 from sqlalchemy import text
 
 from listenbrainz.utils import init_cache
