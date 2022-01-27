@@ -82,6 +82,28 @@ def recalculate_all_user_data():
     logger.info("Fetched %d users. Setting empty cache entries." %
                 len(user_list))
 
+    query = """
+        INSERT INTO listen_user_metadata
+             VALUES %s
+        ON CONFLICT
+          DO UPDATE
+                SET count = 0
+                  , min_listened_at = NULL
+                  , max_listened_at = NULL
+                  , created = 'epoch'
+    """
+    values = [(user_id, ) for user_id in user_list]
+    template = "(%s, 0, NULL, NULL, 'epoch')"
+    connection = timescale.engine.raw_connection()
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, values, template=template)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        logger.error("Error while resetting created timestamps:", exc_info=True)
+        raise
+
     # Reset the timestamps to 0 for all users
     for user_id in user_list:
         cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", expirein=0)
