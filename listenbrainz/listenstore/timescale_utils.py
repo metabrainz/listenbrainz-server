@@ -86,7 +86,7 @@ def recalculate_all_user_data():
     query = """
         INSERT INTO listen_user_metadata
              VALUES %s
-        ON CONFLICT
+        ON CONFLICT (user_id)
           DO UPDATE
                 SET count = 0
                   , min_listened_at = NULL
