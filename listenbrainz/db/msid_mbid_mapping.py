@@ -93,8 +93,7 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
     msid_metadatas = load_recordings_from_msids(msid_item_map.keys())
     for metadata in msid_metadatas:
         msid = metadata["ids"]["recording_msid"]
-        items = msid_item_map[msid]
-        for item in items:
+        for item in msid_item_map[msid]:
             item.track_metadata = {
                 "track_name": metadata["payload"]["title"],
                 "artist_name": metadata["payload"]["artist"],
@@ -127,5 +126,3 @@ def _update_items_from_map(models: Dict[str, Iterable[ModelT]], metadatas: Dict)
                     "artist_mbids": metadata["artist_mbids"]
                 }
             }
-
-    return models
