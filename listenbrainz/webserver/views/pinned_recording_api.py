@@ -64,12 +64,12 @@ def pin_recording_for_user():
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
     try:
-        db_pinned_rec.pin(recording_to_pin)
+        recording_to_pin_with_id = db_pinned_rec.pin(recording_to_pin)
     except Exception as e:
         current_app.logger.error("Error while inserting pinned track record: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
-    return jsonify({"status": "ok"})
+    return jsonify({"pinned_recording": _pinned_recording_to_api(recording_to_pin_with_id)})
 
 
 @pinned_recording_api_bp.route("/pin/unpin", methods=["POST", "OPTIONS"])
