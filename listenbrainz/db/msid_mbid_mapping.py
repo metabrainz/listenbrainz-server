@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Iterable, Dict, List, TypeVar
 from typing import Optional, Tuple
 
@@ -79,24 +80,28 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
         Returns:
             The given list of MsidMbidModel objects with updated track_metadata.
     """
-    msid_item_map, mbid_item_map = {}, {}
+    # it is possible to that multiple items have same msid/mbid. for example, pinning the
+    # same recording twice. since the dict is keyed by mbid/msid the corresponding value
+    # should be a iterable of all items having that mbid
+    msid_item_map, mbid_item_map = defaultdict(list), defaultdict(list)
     for item in items:
         if item.recording_mbid:
-            mbid_item_map[item.recording_mbid] = item
+            mbid_item_map[item.recording_mbid].append(item)
         else:
-            msid_item_map[item.recording_msid] = item
+            msid_item_map[item.recording_msid].append(item)
 
     msid_metadatas = load_recordings_from_msids(msid_item_map.keys())
     for metadata in msid_metadatas:
         msid = metadata["ids"]["recording_msid"]
-        item = msid_item_map[msid]
-        item.track_metadata = {
-            "track_name": metadata["payload"]["title"],
-            "artist_name": metadata["payload"]["artist"],
-            "additional_info": {
-                "recording_msid": msid
+        items = msid_item_map[msid]
+        for item in items:
+            item.track_metadata = {
+                "track_name": metadata["payload"]["title"],
+                "artist_name": metadata["payload"]["artist"],
+                "additional_info": {
+                    "recording_msid": msid
+                }
             }
-        }
 
     mapping_mbid_metadata, mapping_msid_metadata = load_recordings_from_mapping(mbid_item_map.keys(), msid_item_map.keys())
     _update_items_from_map(mbid_item_map, mapping_mbid_metadata)
@@ -104,22 +109,23 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
     return items
 
 
-def _update_items_from_map(models: Dict[str, ModelT], metadatas: Dict) -> Dict[str, ModelT]:
-    for _id, item in models.items():
+def _update_items_from_map(models: Dict[str, Iterable[ModelT]], metadatas: Dict):
+    for _id, items in models.items():
         if _id not in metadatas:
             continue
 
-        metadata = metadatas[_id]
-        item.track_metadata = {
-            "track_name": metadata["title"],
-            "artist_name": metadata["artist"],
-            "release_name": metadata["release"],
-            "additional_info": {
-                "recording_msid": metadata["recording_msid"],
-                "recording_mbid": metadata["recording_mbid"],
-                "release_mbid": metadata["release_mbid"],
-                "artist_mbids": metadata["artist_mbids"]
+        for item in items:
+            metadata = metadatas[_id]
+            item.track_metadata = {
+                "track_name": metadata["title"],
+                "artist_name": metadata["artist"],
+                "release_name": metadata["release"],
+                "additional_info": {
+                    "recording_msid": metadata["recording_msid"],
+                    "recording_mbid": metadata["recording_mbid"],
+                    "release_mbid": metadata["release_mbid"],
+                    "artist_mbids": metadata["artist_mbids"]
+                }
             }
-        }
 
     return models
