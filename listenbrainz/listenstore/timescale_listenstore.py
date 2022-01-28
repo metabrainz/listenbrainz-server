@@ -420,7 +420,7 @@ class TimescaleListenStore(ListenStore):
                                   ON mm.recording_mbid = m.recording_mbid
                                WHERE user_id IN :user_ids
                                  AND listened_at > :ts
-                            GROUP BY user_name, listened_at, track_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
+                            GROUP BY user_id, listened_at, track_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
                             ORDER BY listened_at DESC) tmp
                                WHERE rownum <= :limit"""
 
