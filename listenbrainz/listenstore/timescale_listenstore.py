@@ -24,7 +24,7 @@ import pyarrow.parquet as pq
 from brainzutils import cache
 
 from listenbrainz.db import timescale
-from listenbrainz import DUMP_LICENSE_FILE_PATH
+from listenbrainz import DUMP_LICENSE_FILE_PATH, db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listen import Listen
@@ -379,7 +379,7 @@ class TimescaleListenStore(ListenStore):
                         break
 
                     user_name = user_id_map[result["user_id"]]
-                    listens.append(Listen.from_timescale(*result, user_name=user_name))
+                    listens.append(Listen.from_timescale(**result, user_name=user_name))
 
                     if len(listens) == limit:
                         done = True
@@ -432,7 +432,7 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
                 user_name = user_id_map[result["user_id"]]
-                listens.append(Listen.from_timescale(*result[0:8], user_name=user_name))
+                listens.append(Listen.from_timescale(**result, user_name=user_name))
 
         return listens
 
@@ -442,7 +442,7 @@ class TimescaleListenStore(ListenStore):
             Use listened_at timestamp, since not all listens have the created timestamp.
         """
 
-        query = """SELECT listened_at, track_name, user_name, created, data
+        query = """SELECT listened_at, track_name, user_id, created, data
                      FROM listen
                     WHERE listened_at >= :start_time
                       AND listened_at <= :end_time
@@ -460,7 +460,7 @@ class TimescaleListenStore(ListenStore):
             This uses the `created` column to fetch listens.
         """
 
-        query = """SELECT listened_at, track_name, user_name, created, data
+        query = """SELECT listened_at, track_name, user_id, created, data
                      FROM listen
                     WHERE created > :start_ts
                       AND created <= :end_ts
@@ -531,6 +531,13 @@ class TimescaleListenStore(ListenStore):
             temp_dir (str): the dir to use to write files before adding to archive
             full_dump (bool): the type of dump
         """
+        user_id_map = {}
+        query = 'SELECT id, musicbrainz_id FROM "user"'
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text(query))
+            for row in result:
+                user_id_map[row['id']] = row['musicbrainz_id']
+
         t0 = time.monotonic()
         listen_count = 0
 
@@ -588,8 +595,7 @@ class TimescaleListenStore(ListenStore):
                             if not result:
                                 break
 
-                            listen = Listen.from_timescale(
-                                result[0], result[1], result[2], result[3], result[4]).to_json()
+                            listen = Listen.from_timescale(**result).to_json()
                             out_file.write(ujson.dumps(listen) + "\n")
                             rows_added += 1
                     tar_file.add(filename, arcname=os.path.join(
