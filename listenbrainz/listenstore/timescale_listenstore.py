@@ -267,7 +267,7 @@ class TimescaleListenStore(ListenStore):
 
         return inserted_rows
 
-    def fetch_listens_from_storage(self, user_id, from_ts, to_ts, limit, order):
+    def fetch_listens_from_storage(self, user, from_ts, to_ts, limit, order):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -281,9 +281,9 @@ class TimescaleListenStore(ListenStore):
             order: 0 for ASCending order, 1 for DESCending order
         """
 
-        return self.fetch_listens_for_multiple_users_from_storage([user_id], from_ts, to_ts, limit, order)
+        return self.fetch_listens_for_multiple_users_from_storage([user], from_ts, to_ts, limit, order)
 
-    def fetch_listens_for_multiple_users_from_storage(self, user_ids: List[int], from_ts: float,
+    def fetch_listens_for_multiple_users_from_storage(self, users: List[Dict], from_ts: float,
                                                       to_ts: float, limit: int, order: int):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
@@ -297,9 +297,10 @@ class TimescaleListenStore(ListenStore):
             limit: the maximum number of items to return
             order: 0 for DESCending order, 1 for ASCending order
         """
+        user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
 
         min_user_ts = max_user_ts = None
-        for user_id in user_ids:
+        for user_id in user_id_map:
             min_ts, max_ts = self.get_timestamps_for_user(user_id)
             min_user_ts = min(min_ts, min_user_ts or min_ts)
             max_user_ts = max(max_ts, max_user_ts or max_ts)
@@ -311,7 +312,7 @@ class TimescaleListenStore(ListenStore):
             return [], min_user_ts, max_user_ts
 
         window_size = DEFAULT_FETCH_WINDOW
-        query = """SELECT listened_at, track_name, user_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
+        query = """SELECT listened_at, track_name, user_id, created, data, mm.recording_mbid, release_mbid, artist_mbids
                      FROM listen
           FULL OUTER JOIN mbid_mapping mm
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
@@ -348,7 +349,7 @@ class TimescaleListenStore(ListenStore):
                     done = True
                     break
 
-                curs = connection.execute(sqlalchemy.text(query), user_ids=tuple(user_ids),
+                curs = connection.execute(sqlalchemy.text(query), user_ids=tuple(user_id_map.keys()),
                                           from_ts=from_ts, to_ts=to_ts, limit=limit)
                 while True:
                     result = curs.fetchone()
@@ -377,7 +378,9 @@ class TimescaleListenStore(ListenStore):
 
                         break
 
-                    listens.append(Listen.from_timescale(*result))
+                    user_name = user_id_map[result["user_id"]]
+                    listens.append(Listen.from_timescale(*result, user_name=user_name))
+
                     if len(listens) == limit:
                         done = True
                         break
@@ -391,30 +394,31 @@ class TimescaleListenStore(ListenStore):
             listens.reverse()
 
         self.log.info("fetch listens %s %.2fs (%d passes)" %
-                      (str(user_ids), fetch_listens_time, passes))
+                      (str(user_id_map.keys()), fetch_listens_time, passes))
 
         return listens, min_user_ts, max_user_ts
 
-    def fetch_recent_listens_for_users(self, user_list, limit=2, max_age=3600):
+    def fetch_recent_listens_for_users(self, users, limit=2, max_age=3600):
         """ Fetch recent listens for a list of users, given a limit which applies per user. If you
             have a limit of 3 and 3 users you should get 9 listens if they are available.
 
-            user_list: A list containing the users for which you'd like to retrieve recent listens.
+            user_ids: A list containing the users for which you'd like to retrieve recent listens.
             limit: the maximum number of listens for each user to fetch.
             max_age: Only return listens if they are no more than max_age seconds old. Default 3600 seconds
         """
+        user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
 
-        args = {'user_list': tuple(user_list), 'ts': int(
+        args = {'user_ids': tuple(user_id_map.keys()), 'ts': int(
             time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
-                              SELECT listened_at, track_name, user_name, created, data, mm.recording_mbid, release_mbid, artist_mbids,
+                              SELECT listened_at, track_name, user_id, created, data, mm.recording_mbid, release_mbid, artist_mbids,
                                      row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
                                 FROM listen l
                      FULL OUTER JOIN mbid_mapping m
                                   ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = m.recording_msid
                      FULL OUTER JOIN mbid_mapping_metadata mm
                                   ON mm.recording_mbid = m.recording_mbid
-                               WHERE user_id IN :user_list
+                               WHERE user_id IN :user_ids
                                  AND listened_at > :ts
                             GROUP BY user_name, listened_at, track_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
                             ORDER BY listened_at DESC) tmp
@@ -427,8 +431,8 @@ class TimescaleListenStore(ListenStore):
                 result = curs.fetchone()
                 if not result:
                     break
-
-                listens.append(Listen.from_timescale(*result[0:8]))
+                user_name = user_id_map[result["user_id"]]
+                listens.append(Listen.from_timescale(*result[0:8], user_name=user_name))
 
         return listens
 

@@ -134,7 +134,7 @@ def get_listens(user_name):
         raise APIBadRequest("min_ts should be less than max_ts")
 
     listens, _, max_ts_per_user = db_conn.fetch_listens(
-        user["id"],
+        user,
         limit=count,
         from_ts=min_ts,
         to_ts=max_ts
