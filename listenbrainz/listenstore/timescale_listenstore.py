@@ -422,7 +422,7 @@ class TimescaleListenStore(ListenStore):
             time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
                               SELECT listened_at, track_name, user_id, created, data, mm.recording_mbid, release_mbid, artist_mbids,
-                                     row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
+                                     row_number() OVER (partition by user_id ORDER BY listened_at DESC) AS rownum
                                 FROM listen l
                      FULL OUTER JOIN mbid_mapping m
                                   ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = m.recording_msid
@@ -620,9 +620,6 @@ class TimescaleListenStore(ListenStore):
                                 user_id=result["user_id"],
                                 created=result["created"],
                                 data=result["data"],
-                                recording_mbid=result["recording_mbid"],
-                                release_mbid=result["release_mbid"],
-                                artist_mbids=result["artist_mbids"],
                                 user_name=user_name
                             ).to_json()
                             out_file.write(ujson.dumps(listen) + "\n")
