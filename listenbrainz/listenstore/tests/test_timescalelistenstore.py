@@ -243,13 +243,13 @@ class TestTimescaleListenStore(DatabaseTestCase):
         user_name2 = user2['musicbrainz_id']
         self._create_test_data(user_name2, user2["id"])
 
-        recent = self.logstore.fetch_recent_listens_for_users([user["id"], user2["id"]], limit=1, max_age=10000000000)
+        recent = self.logstore.fetch_recent_listens_for_users([user, user2], limit=1, max_age=10000000000)
         self.assertEqual(len(recent), 2)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user["id"], user2["id"]], max_age=10000000000)
+        recent = self.logstore.fetch_recent_listens_for_users([user, user2], max_age=10000000000)
         self.assertEqual(len(recent), 4)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user["id"]], max_age=int(time()) -
+        recent = self.logstore.fetch_recent_listens_for_users([user], max_age=int(time()) -
                                                               recent[0].ts_since_epoch + 1)
         self.assertEqual(len(recent), 1)
         self.assertEqual(recent[0].ts_since_epoch, 1400000200)
