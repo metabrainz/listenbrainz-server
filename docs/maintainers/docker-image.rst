@@ -11,7 +11,7 @@ The git tag associated with the Github release is used as docker image tag.
 Test Images
 ^^^^^^^^^^^
 
-Time to time we want to build images to test PRs on beta.listenbrainz.org or test.listenbrainz.org. To build
+From time to time we want to build images to test PRs on beta.listenbrainz.org or test.listenbrainz.org. To build
 images for this purpose you can either use the `docker/push.sh` script or Github Actions.
 
 .. note::
