@@ -5,8 +5,6 @@ import click
 import sqlalchemy
 from werkzeug.serving import run_simple
 
-import listenbrainz.db.dump_manager as dump_manager
-import listenbrainz.spark.request_manage as spark_request_manage
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.db import timescale as ts
@@ -27,24 +25,6 @@ MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '..', 'admin', 'messybrainz', 'sql')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '..', 'admin', 'timescale')
-
-
-@cli.command(name="run_api_compat_server")
-@click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=7080, show_default=True)
-@click.option("--debug", "-d", is_flag=True,
-              help="Turns debugging mode on or off. If specified, overrides "
-                   "'DEBUG' value in the config file.")
-def run_api_compat_server(host, port, debug=False):
-    application = webserver.create_api_compat_app()
-    run_simple(
-        hostname=host,
-        port=port,
-        application=application,
-        use_debugger=debug,
-        use_reloader=debug,
-        processes=5
-    )
 
 
 @cli.command(name="run_websockets")

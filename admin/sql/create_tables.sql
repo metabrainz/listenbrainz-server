@@ -213,10 +213,15 @@ CREATE TABLE recommendation_feedback (
 CREATE TABLE recording_feedback (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
-    recording_msid          UUID NOT NULL,
+    recording_msid          UUID,
+    recording_mbid          UUID,
     score                   SMALLINT NOT NULL,
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE recording_feedback
+    ADD CONSTRAINT feedback_recording_msid_or_recording_mbid_check
+    CHECK ( recording_msid IS NOT NULL OR recording_mbid IS NOT NULL );
 
 CREATE TABLE release_color(
     id                      SERIAL, -- PK
