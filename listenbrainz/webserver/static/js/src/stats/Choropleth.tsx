@@ -8,6 +8,9 @@ import { format } from "d3-format";
 import { maxBy } from "lodash";
 import * as React from "react";
 import { useMediaQuery } from "react-responsive";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import * as worldCountries from "./world_countries.json";
 
 export type ChoroplethProps = {
@@ -161,17 +164,21 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             </strong>
           </span>
         </div>
-        <p>
-          {artists.slice(0, 10).map((artist: UserArtistMapArtist) => (
-            <>
-              <a href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}>
-                {artist.artist_name}
-              </a>
-              : <strong>{artist.listen_count}</strong>
-              <br />
-            </>
-          ))}
-        </p>
+        {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
+          <div key={artist.artist_mbid}>
+            <span className="badge color-purple" style={{ marginRight: "4px" }}>
+              <FontAwesomeIcon
+                style={{ marginRight: "4px" }}
+                icon={faHeadphones as IconProp}
+              />
+              {artist.listen_count}
+            </span>
+            <a href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}>
+              {artist.artist_name}
+            </a>
+            <br />
+          </div>
+        ))}
       </div>
     );
   };
