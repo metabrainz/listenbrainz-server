@@ -594,8 +594,8 @@ class TimescaleListenStore(ListenStore):
                             result = curs.fetchone()
                             if not result:
                                 break
-
-                            listen = Listen.from_timescale(**result).to_json()
+                            user_name = user_id_map[result["user_id"]]
+                            listen = Listen.from_timescale(**result, user_name=user_name).to_json()
                             out_file.write(ujson.dumps(listen) + "\n")
                             rows_added += 1
                     tar_file.add(filename, arcname=os.path.join(
