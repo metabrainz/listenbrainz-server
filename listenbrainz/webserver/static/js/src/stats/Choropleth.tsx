@@ -164,6 +164,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             </strong>
           </span>
         </div>
+        <hr style={{ margin: "0.5em 0" }} />
         {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
           <div key={artist.artist_mbid}>
             <span className="badge color-purple" style={{ marginRight: "4px" }}>
