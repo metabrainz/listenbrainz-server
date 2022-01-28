@@ -45,13 +45,15 @@ class ConvertListensTestCase(DatabaseTestCase):
                     'discnumber': 1,
                     'spotify_artist_ids': ['https://open.spotify.com/artist/6waa8mKu91GjzD4NlONlNJ'],
                     'artist_names': ['The Hollies'],
-                    'listening_from': 'spotify',
                     'duration_ms': 392080,
                     'spotify_album_id': 'https://open.spotify.com/album/2XoKFlFYe5Cy2Zt8gSHsWH',
                     'release_artist_name': 'The San Sebastian Strings',
                     'release_artist_names': ['The San Sebastian Strings'],
                     'spotify_album_artist_ids': ['https://open.spotify.com/artist/5SPV5qSO1UNNwwBCzrNfum'],
-                    'spotify_id': 'https://open.spotify.com/track/5SvAa2E5qyvZzfFlVtnXsQ'
+                    'spotify_id': 'https://open.spotify.com/track/5SvAa2E5qyvZzfFlVtnXsQ',
+                    'origin_url': 'https://open.spotify.com/track/5SvAa2E5qyvZzfFlVtnXsQ',
+                    'submission_client': 'listenbrainz',
+                    'music_service': 'spotify.com'
                 }
             }
         }
@@ -79,14 +81,16 @@ class ConvertListensTestCase(DatabaseTestCase):
                     'spotify_artist_ids': ['https://open.spotify.com/artist/1OwarW4LEHnoep20ixRA0y',
                                            'https://open.spotify.com/artist/5J6L7N6B4nI1M5cwa29mQG'],
                     'artist_names': ['Robert Plant', 'Alison Krauss'],
-                    'listening_from': 'spotify',
                     'duration_ms': 243480,
                     'spotify_album_id': 'https://open.spotify.com/album/3Z5nkL4z2Tsa3b79vv6LXb',
                     'release_artist_name': 'Robert Plant, Alison Krauss',
                     'release_artist_names': ['Robert Plant', 'Alison Krauss'],
                     'spotify_album_artist_ids': ['https://open.spotify.com/artist/1OwarW4LEHnoep20ixRA0y',
                                                  'https://open.spotify.com/artist/5J6L7N6B4nI1M5cwa29mQG'],
-                    'spotify_id': 'https://open.spotify.com/track/6bnmRsdxYacqLSlS36EJT6'
+                    'spotify_id': 'https://open.spotify.com/track/6bnmRsdxYacqLSlS36EJT6',
+                    'origin_url': 'https://open.spotify.com/track/6bnmRsdxYacqLSlS36EJT6',
+                    'submission_client': 'listenbrainz',
+                    'music_service': 'spotify.com'
                 }
             }
         }
