@@ -15,6 +15,7 @@ class ListenTestCase(unittest.TestCase):
             "created": 1525557084,
             "track_name": "Every Step Every Way",
             "user_name": "iliekcomputers",
+            "user_id": 1,
             "data": {
                 'track_metadata': {
                     "artist_name": "Majid Jordan",
@@ -41,9 +42,10 @@ class ListenTestCase(unittest.TestCase):
 
         listen = Listen.from_timescale(timescale_row['listened_at'],
                                        timescale_row['track_name'],
-                                       timescale_row['user_name'],
+                                       timescale_row['user_id'],
                                        timescale_row['created'],
-                                       timescale_row['data'])
+                                       timescale_row['data'],
+                                       user_name=timescale_row['user_name'])
 
         # Check user name
         self.assertEqual(listen.user_name, timescale_row['user_name'])
