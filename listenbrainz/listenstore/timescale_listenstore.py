@@ -379,7 +379,17 @@ class TimescaleListenStore(ListenStore):
                         break
 
                     user_name = user_id_map[result["user_id"]]
-                    listens.append(Listen.from_timescale(**result, user_name=user_name))
+                    listens.append(Listen.from_timescale(
+                        listened_at=result["listened_at"],
+                        track_name=result["track_name"],
+                        user_id=result["user_id"],
+                        created=result["created"],
+                        data=result["data"],
+                        recording_mbid=result["recording_mbid"],
+                        release_mbid=result["release_mbid"],
+                        artist_mbids=result["artist_mbids"],
+                        user_name=user_name
+                    ))
 
                     if len(listens) == limit:
                         done = True
@@ -432,8 +442,17 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
                 user_name = user_id_map[result["user_id"]]
-                listens.append(Listen.from_timescale(**result, user_name=user_name))
-
+                listens.append(Listen.from_timescale(
+                    listened_at=result["listened_at"],
+                    track_name=result["track_name"],
+                    user_id=result["user_id"],
+                    created=result["created"],
+                    data=result["data"],
+                    recording_mbid=result["recording_mbid"],
+                    release_mbid=result["release_mbid"],
+                    artist_mbids=result["artist_mbids"],
+                    user_name=user_name
+                ))
         return listens
 
     def get_listens_query_for_dump(self, start_time, end_time):
@@ -595,7 +614,17 @@ class TimescaleListenStore(ListenStore):
                             if not result:
                                 break
                             user_name = user_id_map[result["user_id"]]
-                            listen = Listen.from_timescale(**result, user_name=user_name).to_json()
+                            listen = Listen.from_timescale(
+                                listened_at=result["listened_at"],
+                                track_name=result["track_name"],
+                                user_id=result["user_id"],
+                                created=result["created"],
+                                data=result["data"],
+                                recording_mbid=result["recording_mbid"],
+                                release_mbid=result["release_mbid"],
+                                artist_mbids=result["artist_mbids"],
+                                user_name=user_name
+                            ).to_json()
                             out_file.write(ujson.dumps(listen) + "\n")
                             rows_added += 1
                     tar_file.add(filename, arcname=os.path.join(
