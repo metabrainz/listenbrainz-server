@@ -1,6 +1,10 @@
 Building Docker Images
 ======================
 
+.. note::
+
+    This documentation is for ListenBrainz maintainers for when they deploy the website
+
 Production Images
 ^^^^^^^^^^^^^^^^^
 When a Github release is made, production images are automatically built and pushed by the
@@ -43,7 +47,8 @@ Using docker/push.sh script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If Github Actions is unavailable or you want to take advantage of local docker build cache, you can use the
-`docker/push.sh` script. From the repository root, invoke the script with desired docker image tag. For eg:
+`docker/push.sh` script. You will need to be correctly authenticated to docker hub to push this image. From
+the repository root, invoke the script with desired docker image tag. For example:
 
 .. code-block:: bash
 
