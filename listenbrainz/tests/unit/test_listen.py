@@ -40,12 +40,7 @@ class ListenTestCase(unittest.TestCase):
             }
         }
 
-        listen = Listen.from_timescale(timescale_row['listened_at'],
-                                       timescale_row['track_name'],
-                                       timescale_row['user_id'],
-                                       timescale_row['created'],
-                                       timescale_row['data'],
-                                       user_name=timescale_row['user_name'])
+        listen = Listen.from_timescale(**timescale_row)
 
         # Check user name
         self.assertEqual(listen.user_name, timescale_row['user_name'])
