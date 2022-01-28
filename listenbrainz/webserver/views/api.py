@@ -247,7 +247,7 @@ def get_recent_listens_for_user_list(user_list):
 
     db_conn = webserver.create_timescale(current_app)
     users = db_user.get_many_users_by_mb_id(users)
-    listens = db_conn.fetch_recent_listens_for_users(users, limit=limit)
+    listens = db_conn.fetch_recent_listens_for_users(users.values(), limit=limit)
 
     listen_data = []
     for listen in listens:
