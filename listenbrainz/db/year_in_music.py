@@ -62,9 +62,9 @@ def insert_most_prominent_color(data):
         INSERT INTO statistics.year_in_music(user_id, data)
              SELECT "user".id
                   , jsonb_build_object('most_prominent_color', color)
-               FROM (VALUES %s) AS t(user_name, color)
+               FROM (VALUES %s) AS t(user_id, color)
                JOIN "user"
-                 ON "user".musicbrainz_id = user_name
+                 ON "user".id = user_id
         ON CONFLICT (user_id)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """
@@ -84,9 +84,9 @@ def insert_similar_users(data):
         INSERT INTO statistics.year_in_music(user_id, data)
              SELECT "user".id
                   , jsonb_build_object('similar_users', similar_users::jsonb)
-               FROM (VALUES %s) AS t(user_name, similar_users)
+               FROM (VALUES %s) AS t(user_id, similar_users)
                JOIN "user"
-                 ON "user".musicbrainz_id = user_name
+                 ON "user".id = user_id
         ON CONFLICT (user_id)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """
@@ -106,9 +106,9 @@ def insert_day_of_week(data):
         INSERT INTO statistics.year_in_music(user_id, data)
              SELECT "user".id
                   , jsonb_build_object('day_of_week', weekday)
-               FROM (VALUES %s) AS t(user_name, weekday)
+               FROM (VALUES %s) AS t(user_id, weekday)
                JOIN "user"
-                 ON "user".musicbrainz_id = user_name
+                 ON "user".id = user_id
         ON CONFLICT (user_id)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """
@@ -128,9 +128,9 @@ def insert_most_listened_year(data):
         INSERT INTO statistics.year_in_music(user_id, data)
              SELECT "user".id
                   , jsonb_build_object('most_listened_year', yearly_counts::jsonb)
-               FROM (VALUES %s) AS t(user_name, yearly_counts)
+               FROM (VALUES %s) AS t(user_id, yearly_counts)
                JOIN "user"
-                 ON "user".musicbrainz_id = user_name
+                 ON "user".id = user_id
         ON CONFLICT (user_id)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """
@@ -182,9 +182,9 @@ def handle_yearly_listen_counts(data):
         INSERT INTO statistics.year_in_music(user_id, data)
              SELECT "user".id
                   , jsonb_build_object('total_listen_count', listen_count)
-               FROM (VALUES %s) AS t(user_name, listen_count)
+               FROM (VALUES %s) AS t(user_id, listen_count)
                JOIN "user"
-                 ON "user".musicbrainz_id = user_name
+                 ON "user".id = user_id
         ON CONFLICT (user_id)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """

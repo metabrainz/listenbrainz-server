@@ -49,11 +49,11 @@ class CandidateSetsTestClass(RecommendationsTestCase):
         top_artist_limit = 1
         test_top_artist = candidate_sets.get_top_artists(self.mapped_listens_subset, top_artist_limit, [])
 
-        self.assertCountEqual(['top_artist_credit_id', 'user_name'], test_top_artist.columns)
+        self.assertCountEqual(['top_artist_credit_id', 'user_id'], test_top_artist.columns)
         self.assertEqual(test_top_artist.count(), 2)
 
         # empty df
-        mapped_listens = self.mapped_listens_subset.select('*').where(f.col('user_name') == 'lala')
+        mapped_listens = self.mapped_listens_subset.select('*').where(f.col('user_id') == 100)
         with self.assertRaises(TopArtistNotFetchedException):
             candidate_sets.get_top_artists(mapped_listens, top_artist_limit, [])
 
@@ -76,10 +76,10 @@ class CandidateSetsTestClass(RecommendationsTestCase):
 
         self.assertEqual(similar_artist_df.count(), 3)
 
-        self.assertCountEqual(['similar_artist_credit_id', 'user_name'], similar_artist_df.columns)
+        self.assertCountEqual(['similar_artist_credit_id', 'user_id'], similar_artist_df.columns)
 
         self.assertEqual(similar_artist_df_html.count(), 4)
-        self.assertListEqual(['top_artist_credit_id', 'similar_artist_credit_id', 'user_name'], similar_artist_df_html.columns)
+        self.assertListEqual(['top_artist_credit_id', 'similar_artist_credit_id', 'user_id'], similar_artist_df_html.columns)
 
         artist_relation_df = utils.create_dataframe(
             Row(score=1.0, id_0=6, name_0="Less Than Jake", id_1=7, name_1="Wolfgang Amadeus Mozart"),
@@ -101,36 +101,36 @@ class CandidateSetsTestClass(RecommendationsTestCase):
 
     def get_top_artist(self):
         return listenbrainz_spark.session.createDataFrame([
-            Row(top_artist_credit_id=2, user_name='vansika_1'),
-            Row(top_artist_credit_id=2, user_name='vansika'),
-            Row(top_artist_credit_id=1, user_name='vansika'),
+            Row(top_artist_credit_id=2, user_id=4),
+            Row(top_artist_credit_id=2, user_id=3),
+            Row(top_artist_credit_id=1, user_id=3),
         ])
 
     def get_similar_artist_df_html(self):
         return listenbrainz_spark.session.createDataFrame([
-            Row(top_artist_credit_id=2, similar_artist_credit_id=10, user_name='vansika_1'),
-            Row(top_artist_credit_id=2, similar_artist_credit_id=1, user_name='vansika_1'),
-            Row(top_artist_credit_id=2, similar_artist_credit_id=1, user_name='vansika'),
-            Row(top_artist_credit_id=1, similar_artist_credit_id=2, user_name='vansika'),
-            Row(top_artist_credit_id=1, similar_artist_credit_id=90, user_name='vansika')
+            Row(top_artist_credit_id=2, similar_artist_credit_id=10, user_id=4),
+            Row(top_artist_credit_id=2, similar_artist_credit_id=1, user_id=4),
+            Row(top_artist_credit_id=2, similar_artist_credit_id=1, user_id=3),
+            Row(top_artist_credit_id=1, similar_artist_credit_id=2, user_id=3),
+            Row(top_artist_credit_id=1, similar_artist_credit_id=90, user_id=3)
         ])
 
     def get_top_artist_candidate_set_df_html(self):
         return listenbrainz_spark.session.createDataFrame([
             Row(top_artist_credit_id=2, artist_credit_id=1, artist_credit_mbids=['xxx'],
-                recording_mbid='yyy', recording_id=2, user_name='vansika_1'),
+                recording_mbid='yyy', recording_id=2, user_id=4),
             Row(top_artist_credit_id=2, artist_credit_id=1, artist_credit_mbids=['xxx'],
-                recording_mbid='yyy', recording_id=2, user_name='vansika'),
+                recording_mbid='yyy', recording_id=2, user_id=3),
             Row(top_artist_credit_id=1, artist_credit_id=1, artist_credit_mbids=['xxx'],
-                recording_mbid='yyy', recording_id=2, user_name='vansika',),
+                recording_mbid='yyy', recording_id=2, user_id=3,),
         ])
 
     def get_similar_artist_candidate_set_df_html(self):
         return listenbrainz_spark.session.createDataFrame([
             Row(similar_artist_credit_id=2, artist_credit_id=1, artist_credit_mbids=['xxx'],
-                recording_mbid='yyy', recording_id=2, user_name='vansika_1'),
+                recording_mbid='yyy', recording_id=2, user_id=4),
             Row(similar_artist_credit_id=1, artist_credit_id=1, artist_credit_mbids=['xxx'],
-                recording_mbid='yyy', recording_id=2, user_name='vansika')
+                recording_mbid='yyy', recording_id=2, user_id=3)
             ])
 
     def test_get_candidate_html_data(self):

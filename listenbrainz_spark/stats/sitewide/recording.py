@@ -19,7 +19,7 @@ def get_recordings(table: str, user_listen_count_limit, top_recordings_limit: in
     # with sort_array.
     result = run_query(f"""
         WITH user_counts as (
-            SELECT user_name
+            SELECT user_id
                  , first(recording_name) AS recording_name
                  , recording_mbid
                  , first(artist_name) AS artist_name
@@ -28,7 +28,7 @@ def get_recordings(table: str, user_listen_count_limit, top_recordings_limit: in
                  , release_mbid
                  , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM {table}
-          GROUP BY user_name
+          GROUP BY user_id
                  , lower(recording_name)
                  , recording_mbid
                  , lower(artist_name)

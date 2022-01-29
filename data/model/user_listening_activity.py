@@ -23,7 +23,7 @@ class UserListeningActivityRecord(BaseModel):
 
 class UserListeningActivityStatMessage(BaseModel):
     """ Format of messages sent to the ListenBrainz Server """
-    musicbrainz_id: constr(min_length=1)
+    user_id: NonNegativeInt
     type: constr(min_length=1)
     stats_range: constr(min_length=1)  # The range for which the stats are calculated, i.e week, month, year or all_time
     from_ts: NonNegativeInt

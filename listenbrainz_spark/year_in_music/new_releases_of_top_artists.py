@@ -14,7 +14,7 @@ def get_new_releases_of_top_artists(year):
         data = entry.asDict(recursive=True)
         yield NewReleasesStat(
             type="new_releases_of_top_artists",
-            user_name=data["user_name"],
+            user_id=data["user_id"],
             data=data["new_releases"]
         ).dict(exclude_none=True)
 
@@ -22,24 +22,24 @@ def get_new_releases_of_top_artists(year):
 def _get_top_50_artists():
     return """
         WITH intermediate_table as (
-            SELECT user_name
+            SELECT user_id
                  , artist_name
                  , artist_credit_mbids
                  , count(*) as listen_count
               FROM listens_of_year
              WHERE artist_credit_mbids IS NOT NULL
-          GROUP BY user_name
+          GROUP BY user_id
                  , artist_name
                  , artist_credit_mbids
         ), intermediate_table_2 AS (
-            SELECT user_name
+            SELECT user_id
              , artist_name
              , artist_credit_mbids
              , listen_count
-             , row_number() OVER(PARTITION BY user_name ORDER BY listen_count DESC) AS row_number
+             , row_number() OVER(PARTITION BY user_id ORDER BY listen_count DESC) AS row_number
              FROM intermediate_table
         )
-        SELECT user_name
+        SELECT user_id
              , artist_name
              , artist_credit_mbids
              , listen_count
@@ -75,7 +75,7 @@ def _get_releases_for_year(year):
 
 def _get_new_releases_of_top_artists():
     return """
-        SELECT user_name
+        SELECT user_id
              , collect_set(
                     struct(
                        title
@@ -89,5 +89,5 @@ def _get_new_releases_of_top_artists():
           FROM releases_of_year
           JOIN top_50_artists
             ON cardinality(array_intersect(releases_of_year.artist_credit_mbids, top_50_artists.artist_credit_mbids)) > 0
-      GROUP BY user_name
+      GROUP BY user_id
     """
