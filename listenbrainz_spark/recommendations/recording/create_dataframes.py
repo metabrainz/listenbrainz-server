@@ -73,7 +73,7 @@ logger = logging.getLogger(__name__)
 #
 # users_df:
 #   [
-#       'user_name',
+#       'user_id',
 #       'spark_user_id'
 #   ]
 #
@@ -123,12 +123,12 @@ def get_data_missing_from_musicbrainz(listens_df):
             'listened_at',
             'release_name',
             'recording_name',
-            'user_name'
+            'user_id'
         ) \
         .where(col('recording_mbid').isNull())
 
     logger.info('Number of (artist, recording) pairs missing from mapping: {}'.format(df.count()))
-    window = Window.partitionBy('user_name').orderBy(col('listened_at').desc())
+    window = Window.partitionBy('user_id').orderBy(col('listened_at').desc())
 
     # limiting listens to 200 for each user so that messages don't drop
     # Also, we don't want to overwhelm users with the data that they
@@ -140,7 +140,7 @@ def get_data_missing_from_musicbrainz(listens_df):
             'artist_name',
             'release_name',
             'recording_name',
-            'user_name'
+            'user_id'
         ) \
         .agg(func.max('listened_at').alias('listened_at')) \
         .withColumn('rank', row_number().over(window)) \
@@ -161,7 +161,7 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
             metadata (dict): metadata dataframe to append.
             save_path (str): path where playcounts_df should be saved.
     """
-    # listens_df is joined with users_df on user_name.
+    # listens_df is joined with users_df on user_id.
     # The output is then joined with recording_df on recording_mbid.
     # The final step uses groupBy which create groups on spark_user_id and recording_id and counts the number of recording_ids.
     # The final dataframe tells us about the number of times a user has listend to a particular track for all users.
