@@ -20,8 +20,8 @@ class RecommendationsTestCase(SparkNewTestCase):
     @classmethod
     def get_candidate_set(cls):
         return listenbrainz_spark.session.createDataFrame([
-            Row(user_id=1, recording_id=1, user_name='vansika'),
-            Row(user_id=2, recording_id=2, user_name='rob')
+            Row(spark_user_id=1, recording_id=1, user_id=3),
+            Row(spark_user_id=2, recording_id=2, user_id=1)
         ])
 
     @classmethod
@@ -40,7 +40,7 @@ class RecommendationsTestCase(SparkNewTestCase):
     def upload_test_playcounts(cls):
         schema = StructType(
             [
-                StructField("user_id", IntegerType()),
+                StructField("spark_user_id", IntegerType()),
                 StructField("recording_id", IntegerType()),
                 StructField("count", IntegerType())
             ]
