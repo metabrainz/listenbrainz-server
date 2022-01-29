@@ -185,14 +185,14 @@ class RecommendTestClass(RecommendationsTestCase):
         res = sorted([row for row in candidate_set_rdd.collect()])
         self.assertEqual(res, [(1, 1), (2, 2)])
 
-        users = ['vansika']
+        users = [3]
         candidate_set_rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, users)
 
         self.assertTrue(isinstance(candidate_set_rdd, RDD))
         row = candidate_set_rdd.collect()
         self.assertEqual([(1, 1)], row)
 
-        users = ['vansika_1']
+        users = [4]
         with self.assertRaises(EmptyDataframeExcpetion):
             recommend.get_candidate_set_rdd_for_user(candidate_set, users)
 
@@ -449,9 +449,9 @@ class RecommendTestClass(RecommendationsTestCase):
         })
 
     def test_get_user_count(self):
-        df = utils.create_dataframe(Row(user_id=3), schema=None)
-        df = df.union(utils.create_dataframe(Row(user_id=3), schema=None))
-        df = df.union(utils.create_dataframe(Row(user_id=2), schema=None))
+        df = utils.create_dataframe(Row(spark_user_id=3), schema=None)
+        df = df.union(utils.create_dataframe(Row(spark_user_id=3), schema=None))
+        df = df.union(utils.create_dataframe(Row(spark_user_id=2), schema=None))
 
         user_count = recommend.get_user_count(df)
         self.assertEqual(user_count, 2)

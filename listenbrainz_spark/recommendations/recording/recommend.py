@@ -332,7 +332,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
 
     for user_id, data in user_rec.items():
         messages = {
-            'spark_user_id': user_id,
+            'user_id': user_id,
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': data.get('top_artist', []),

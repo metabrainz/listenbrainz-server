@@ -45,7 +45,7 @@ class HandlersTestCase(DatabaseTestCase):
             'to_ts': 10,
             'data': [
                 {
-                    'musicbrainz_id': 'iliekcomputers',
+                    'user_id': 1,
                     'data': [{
                         'artist_name': 'Kanye West',
                         'listen_count': 200,
@@ -53,7 +53,7 @@ class HandlersTestCase(DatabaseTestCase):
                     'count': 1,
                 },
                 {
-                    'musicbrainz_id': 'lucifer',
+                    'user_id': 2,
                     'data': [
                         {
                             'artist_name': 'Selena Gomez',

@@ -144,13 +144,13 @@ class CandidateSetsTestClass(RecommendationsTestCase):
                                                                     top_artist_df, similar_artist_df_html)
 
         expected_user_data = {
-            'vansika': {
+            3: {
                 'top_artist': [2, 1],
                 'similar_artist': [(2, 1), (1, 2), (1, 90)],
                 'top_artist_candidate_set': [(2, 1, 'yyy', 2), (1, 1, 'yyy', 2)],
                 'similar_artist_candidate_set': [(1, 1, 'yyy', 2)]
             },
-            'vansika_1': {
+            4: {
                 'top_artist': [2],
                 'similar_artist': [(2, 10), (2, 1)],
                 'top_artist_candidate_set': [(2, 1, 'yyy', 2)],
@@ -158,19 +158,19 @@ class CandidateSetsTestClass(RecommendationsTestCase):
             }
         }
 
-        self.assertEqual(received_user_data['vansika']['top_artist'], expected_user_data['vansika']['top_artist'])
-        self.assertEqual(received_user_data['vansika']['similar_artist'], expected_user_data['vansika']['similar_artist'])
-        self.assertEqual(received_user_data['vansika']['top_artist_candidate_set'],
-                         expected_user_data['vansika']['top_artist_candidate_set'])
-        self.assertEqual(received_user_data['vansika']['similar_artist_candidate_set'],
-                         expected_user_data['vansika']['similar_artist_candidate_set'])
+        self.assertEqual(received_user_data[3]['top_artist'], expected_user_data[3]['top_artist'])
+        self.assertEqual(received_user_data[3]['similar_artist'], expected_user_data[3]['similar_artist'])
+        self.assertEqual(received_user_data[3]['top_artist_candidate_set'],
+                         expected_user_data[3]['top_artist_candidate_set'])
+        self.assertEqual(received_user_data[3]['similar_artist_candidate_set'],
+                         expected_user_data[3]['similar_artist_candidate_set'])
 
-        self.assertEqual(received_user_data['vansika_1']['top_artist'], expected_user_data['vansika_1']['top_artist'])
-        self.assertEqual(received_user_data['vansika_1']['similar_artist'], expected_user_data['vansika_1']['similar_artist'])
-        self.assertEqual(received_user_data['vansika_1']['top_artist_candidate_set'],
-                         expected_user_data['vansika_1']['top_artist_candidate_set'])
-        self.assertEqual(received_user_data['vansika_1']['similar_artist_candidate_set'],
-                         expected_user_data['vansika_1']['similar_artist_candidate_set'])
+        self.assertEqual(received_user_data[4]['top_artist'], expected_user_data[4]['top_artist'])
+        self.assertEqual(received_user_data[4]['similar_artist'], expected_user_data[4]['similar_artist'])
+        self.assertEqual(received_user_data[4]['top_artist_candidate_set'],
+                         expected_user_data[4]['top_artist_candidate_set'])
+        self.assertEqual(received_user_data[4]['similar_artist_candidate_set'],
+                         expected_user_data[4]['similar_artist_candidate_set'])
 
     def test_filter_top_artists_from_similar_artists(self):
         similar_artist_df = self.get_similar_artist_df_html()
