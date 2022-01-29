@@ -1,6 +1,6 @@
 """
 This script is responsible for creating candidate sets for all users. Candidate sets are dataframes containing
-(user_id, recording_id). The generated candidate sets will be given as input to the recommender that will assign ratings
+(spark_user_id, recording_id). The generated candidate sets will be given as input to the recommender that will assign ratings
 to the recordings in candidate sets. The general flow is as follows:
 
 The listens of the last 7 days are filtered from mapped_listens_df and this is called the mapped_listens_subset_df.
@@ -49,12 +49,12 @@ logger = logging.getLogger(__name__)
 #   [
 #       'top_artist_credit_id',
 #       'top_artist_name',
-#       'user_name'
+#       'user_id'
 #   ]
 #
 # top_artist_candidate_set_df:
 #   [
-#       'user_id',
+#       'spark_user_id',
 #       'recording_id'
 #   ]
 #
@@ -68,20 +68,20 @@ logger = logging.getLogger(__name__)
 #       'msb_artist_credit_name_matchable',
 #       'msb_recording_name_matchable',
 #       'recording_id',
-#       'user_name',
-#       'user_id'
+#       'user_id',
+#       'spark_user_id'
 #   ]
 #
 # similar_artist_df:
 #   [
 #       'similar_artist_credit_id',
 #       'similar_artist_name'
-#       'user_name'
+#       'user_id'
 #   ]
 #
 # similar_artist_candidate_set_df:
 #   [
-#       'user_id',
+#       'spark_user_id',
 #       'recording_id'
 #   ]
 #
@@ -95,8 +95,8 @@ logger = logging.getLogger(__name__)
 #       'msb_artist_credit_name_matchable',
 #       'msb_recording_name_matchable',
 #       'recording_id',
-#       'user_name',
-#       'user_id'
+#       'user_id',
+#       'spark_user_id'
 #   ]
 
 
@@ -165,25 +165,25 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     df = mapped_listens_subset\
         .select(
             'artist_credit_id',
-            'user_name'
+            'user_id'
         ) \
         .groupBy(
             'artist_credit_id',
-            'user_name'
+            'user_id'
         ) \
         .agg(func.count('artist_credit_id').alias('total_count'))
 
-    window = Window.partitionBy('user_name').orderBy(col('total_count').desc())
+    window = Window.partitionBy('user_id').orderBy(col('total_count').desc())
 
     top_artist_df = df.withColumn('rank', row_number().over(window)) \
                       .where(col('rank') <= top_artist_limit) \
                       .select(col('artist_credit_id').alias('top_artist_credit_id'),
-                              col('user_name'))
+                              col('user_id'))
 
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
-                                                         'user_name') \
-                                                 .where(top_artist_df.user_name.isin(users))
+                                                         'user_id') \
+                                                 .where(top_artist_df.user_id.isin(users))
 
         if _is_empty_dataframe(top_artist_given_users_df):
             logger.error('Top artists for {} not fetched'.format(users), exc_info=True)
@@ -211,17 +211,17 @@ def filter_top_artists_from_similar_artists(similar_artist_df, top_artist_df):
     """
 
     df = top_artist_df.select(col('top_artist_credit_id').alias('artist_credit_id'),
-                              col('user_name').alias('user'))
+                              col('user_id').alias('user'))
 
     condition = [
         similar_artist_df.similar_artist_credit_id == df.artist_credit_id,
-        similar_artist_df.user_name == df.user
+        similar_artist_df.user_id == df.user
     ]
 
     res_df = similar_artist_df.join(df, condition, 'left') \
                               .select('top_artist_credit_id',
                                       'similar_artist_credit_id',
-                                      'user_name') \
+                                      'user_id') \
                               .where(col('artist_credit_id').isNull() & col('user').isNull())
 
     return res_df
@@ -246,7 +246,7 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
                        .select(col('id_0').alias('top_artist_credit_id'),
                                col('id_1').alias('similar_artist_credit_id'),
                                'score',
-                               'user_name')
+                               'user_id')
 
     condition = [top_artist_df.top_artist_credit_id == artist_relation_df.id_1]
 
@@ -254,25 +254,25 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
                        .select(col('id_1').alias('top_artist_credit_id'),
                                col('id_0').alias('similar_artist_credit_id'),
                                'score',
-                               'user_name')
+                               'user_id')
 
     df = df1.union(df2)
 
-    window = Window.partitionBy('top_artist_credit_id', 'user_name')\
+    window = Window.partitionBy('top_artist_credit_id', 'user_id')\
                    .orderBy(col('score').desc())
 
     similar_artist_df_html = df.withColumn('rank', row_number().over(window)) \
                                .where(col('rank') <= similar_artist_limit)\
                                .select('top_artist_credit_id',
                                        'similar_artist_credit_id',
-                                       'user_name')
+                                       'user_id')
 
     similar_artist_df_html = filter_top_artists_from_similar_artists(similar_artist_df_html, top_artist_df)
 
     # Two or more artists can have same similar artist(s) leading to non-unique recordings
     # therefore we have filtered the distinct similar artists.
     similar_artist_df = similar_artist_df_html.select('similar_artist_credit_id',
-                                                      'user_name') \
+                                                      'user_id') \
                                               .distinct()
 
     if _is_empty_dataframe(similar_artist_df):
@@ -295,12 +295,12 @@ def filter_last_x_days_recordings(candidate_set_df, mapped_listens_subset):
     """
     df = mapped_listens_subset.select(
         col('recording_mbid').alias('recording_mbid2'),
-        col('user_name').alias('user')
+        col('user_id').alias('user')
     ).distinct()
 
     condition = [
         candidate_set_df.recording_mbid == df.recording_mbid2,
-        candidate_set_df.user_name == df.user
+        candidate_set_df.user_id == df.user
     ]
 
     filtered_df = candidate_set_df \
@@ -332,17 +332,17 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_
 
     df = top_artist_df.join(recordings_df, condition, 'inner')
 
-    top_artist_candidate_set_df_html = df.join(users_df, 'user_name', 'inner') \
+    top_artist_candidate_set_df_html = df.join(users_df, 'user_id', 'inner') \
                   .select('top_artist_credit_id',
                           'artist_credit_id',
                           'recording_mbid',
                           'recording_id',
-                          'user_name',
-                          'user_id')
+                          'user_id',
+                          'spark_user_id')
 
     # top_artist_candidate_set_df_html = filter_last_x_days_recordings(joined_df, mapped_listens_subset)
 
-    top_artist_candidate_set_df = top_artist_candidate_set_df_html.select('recording_id', 'user_id', 'user_name')
+    top_artist_candidate_set_df = top_artist_candidate_set_df_html.select('recording_id', 'spark_user_id', 'user_id')
 
     return top_artist_candidate_set_df, top_artist_candidate_set_df_html
 
@@ -368,17 +368,17 @@ def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df,
 
     df = similar_artist_df.join(recordings_df, condition, 'inner')
 
-    similar_artist_candidate_set_df_html = df.join(users_df, 'user_name', 'inner') \
+    similar_artist_candidate_set_df_html = df.join(users_df, 'user_id', 'inner') \
                   .select('similar_artist_credit_id',
                           'artist_credit_id',
                           'recording_mbid',
                           'recording_id',
-                          'user_name',
-                          'user_id')
+                          'user_id',
+                          'spark_user_id')
 
     # similar_artist_candidate_set_df_html = filter_last_x_days_recordings(joined_df, mapped_listens_subset)
 
-    similar_artist_candidate_set_df = similar_artist_candidate_set_df_html.select('recording_id', 'user_id', 'user_name')
+    similar_artist_candidate_set_df = similar_artist_candidate_set_df_html.select('recording_id', 'spark_user_id', 'user_id')
 
     return similar_artist_candidate_set_df, similar_artist_candidate_set_df_html
 
@@ -434,20 +434,20 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
     user_data = defaultdict(list)
     for row in top_artist_df.collect():
 
-        if row.user_name not in user_data:
-            user_data[row.user_name] = defaultdict(list)
+        if row.user_id not in user_data:
+            user_data[row.user_id] = defaultdict(list)
 
         data = (
             row.top_artist_credit_id
         )
-        user_data[row.user_name]['top_artist'].append(data)
+        user_data[row.user_id]['top_artist'].append(data)
 
     for row in similar_artist_df_html.collect():
         data = (
             row.top_artist_credit_id,
             row.similar_artist_credit_id
         )
-        user_data[row.user_name]['similar_artist'].append(data)
+        user_data[row.user_id]['similar_artist'].append(data)
 
     for row in top_artist_candidate_set_df_html.collect():
         data = (
@@ -456,7 +456,7 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
             row.recording_mbid,
             row.recording_id
         )
-        user_data[row.user_name]['top_artist_candidate_set'].append(data)
+        user_data[row.user_id]['top_artist_candidate_set'].append(data)
 
     for row in similar_artist_candidate_set_df_html.collect():
         data = (
@@ -465,7 +465,7 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
             row.recording_mbid,
             row.recording_id
         )
-        user_data[row.user_name]['similar_artist_candidate_set'].append(data)
+        user_data[row.user_id]['similar_artist_candidate_set'].append(data)
 
     return user_data
 

@@ -82,13 +82,13 @@ def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str
 
     try:
         return MultipleUserEntityRecords(
-            musicbrainz_id=_dict["user_name"],
+            user_id=_dict["user_id"],
             data=entity_list,
             count=total_entity_count
         )
     except ValidationError:
         logger.error(f"""ValidationError while calculating {stats_range} top {entity} for user: 
-        {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+        {_dict["user_id"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
         return None
 
 

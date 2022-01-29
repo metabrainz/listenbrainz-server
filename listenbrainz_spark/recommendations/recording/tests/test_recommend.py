@@ -47,10 +47,10 @@ class RecommendTestClass(RecommendationsTestCase):
 
     def get_recommendation_df(self):
         return listenbrainz_spark.session.createDataFrame([
-            Row(user_id=1, recording_id=1, rating=0.313456),
-            Row(user_id=1, recording_id=2, rating=6.994590001),
-            Row(user_id=2, recording_id=2, rating=-2.4587),
-            Row(user_id=2, recording_id=1, rating=7.999)
+            Row(spark_user_id=1, recording_id=1, rating=0.313456),
+            Row(spark_user_id=1, recording_id=2, rating=6.994590001),
+            Row(spark_user_id=2, recording_id=2, rating=-2.4587),
+            Row(spark_user_id=2, recording_id=1, rating=7.999)
         ])
 
     def test_get_recording_mbids(self):
@@ -63,42 +63,42 @@ class RecommendTestClass(RecommendationsTestCase):
         self.assertEqual(df.count(), 4)
         # Each user's rows are ordered by ratings but the order of users is not
         # fixed so need to test each user's recommendations separately.
-        rows_rob = df.where(df.user_name == "rob").collect()
+        rows_rob = df.where(df.user_id == 1).collect()
         self.assertEqual(rows_rob, [
             Row(
                 recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=1,
                 rating=7.999,
-                user_id=2,
-                user_name='rob'
+                spark_user_id=2,
+                user_id=1
             ),
             Row(
                 recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=2,
                 rating=-2.4587,
-                user_id=2,
-                user_name='rob'
+                spark_user_id=2,
+                user_id=1
             )
         ])
-        rows_vansika = df.where(df.user_name == "vansika").collect()
+        rows_vansika = df.where(df.user_id == 3).collect()
         self.assertEqual(rows_vansika, [
             Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=1,
                 rating=6.994590001,
-                user_id=1,
-                user_name='vansika'),
+                spark_user_id=1,
+                user_id=3),
             Row(
                 recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=2,
                 rating=0.313456,
-                user_id=1,
-                user_name='vansika'
+                spark_user_id=1,
+                user_id=3
                 ),
         ])
 
     def test_filter_recommendations_on_rating(self):
         df = self.get_recommendation_df()
-        recommendation_df = df.select(col('user_id').alias('user'),
+        recommendation_df = df.select(col('spark_user_id').alias('user'),
                                       col('recording_id').alias('product'),
                                       col('rating'))
         limit = 1
@@ -112,11 +112,11 @@ class RecommendTestClass(RecommendationsTestCase):
             Row(
                 rating=6.994590001,
                 recording_id=2,
-                user_id=1),
+                spark_user_id=1),
             Row(
                 rating=7.999,
                 recording_id=1,
-                user_id=2)
+                spark_user_id=2)
         ]
 
         self.assertEqual(received_data, expected_data)
@@ -172,7 +172,7 @@ class RecommendTestClass(RecommendationsTestCase):
         df = self.get_recommendation_df()
 
         df = recommend.scale_rating(df)
-        self.assertEqual(sorted(df.columns), ['rating', 'recording_id', 'user_id'])
+        self.assertEqual(sorted(df.columns), ['rating', 'recording_id', 'spark_user_id'])
         received_ratings = sorted([row.rating for row in df.collect()])
         expected_ratings = [-0.729, 0.657, 1.0, 1.0]
 
@@ -200,8 +200,8 @@ class RecommendTestClass(RecommendationsTestCase):
         params = self.get_recommendation_params()
         df = utils.create_dataframe(
             Row(
-                user_id=1,
-                user_name='vansika',
+                spark_user_id=1,
+                user_id=3,
                 recording_id=1
             ),
             schema=None
@@ -209,8 +209,8 @@ class RecommendTestClass(RecommendationsTestCase):
 
         df = df.union(utils.create_dataframe(
             Row(
-                user_id=1,
-                user_name='vansika',
+                spark_user_id=1,
+                user_id=3,
                 recording_id=2
             ),
             schema=None
@@ -218,8 +218,8 @@ class RecommendTestClass(RecommendationsTestCase):
 
         df = df.union(utils.create_dataframe(
             Row(
-                user_id=2,
-                user_name='rob',
+                spark_user_id=2,
+                user_id=1,
                 recording_id=1
             ),
             schema=None
@@ -231,20 +231,20 @@ class RecommendTestClass(RecommendationsTestCase):
         users_df = recommend.get_user_name_and_user_id(params, [])
 
         self.assertEqual(users_df.count(), 2)
-        user_name = sorted([row.user_name for row in users_df.collect()])
         user_id = sorted([row.user_id for row in users_df.collect()])
-        self.assertEqual(sorted(users_df.columns), sorted(['user_id', 'user_name']))
-        self.assertEqual(['rob', 'vansika'], user_name)
-        self.assertEqual([1, 2], user_id)
+        spark_user_id = sorted([row.spark_user_id for row in users_df.collect()])
+        self.assertEqual(sorted(users_df.columns), sorted(['spark_user_id', 'user_id']))
+        self.assertEqual([1, 3], user_id)
+        self.assertEqual([1, 2], spark_user_id)
 
-        users = ['vansika', 'invalid']
+        users = [3, 100]
         users_df = recommend.get_user_name_and_user_id(params, users)
         self.assertEqual(users_df.count(), 1)
-        self.assertEqual(sorted(users_df.columns), sorted(['user_id', 'user_name']))
-        user_name = [row.user_name for row in users_df.collect()]
+        self.assertEqual(sorted(users_df.columns), sorted(['spark_user_id', 'user_id']))
         user_id = [row.user_id for row in users_df.collect()]
-        self.assertEqual(['vansika'], user_name)
-        self.assertEqual([1], user_id)
+        spark_user_id = [row.spark_user_id for row in users_df.collect()]
+        self.assertEqual([3], user_id)
+        self.assertEqual([1], spark_user_id)
 
         with self.assertRaises(EmptyDataframeExcpetion):
             users = ['invalid']
@@ -313,8 +313,8 @@ class RecommendTestClass(RecommendationsTestCase):
             Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=1.8,
                 recording_id=5,
-                user_id=6,
-                user_name='vansika'),
+                spark_user_id=6,
+                user_id='vansika'),
             schema=None
         )
 
@@ -322,8 +322,8 @@ class RecommendTestClass(RecommendationsTestCase):
             Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=-0.8,
                 recording_id=6,
-                user_id=6,
-                user_name='vansika'),
+                spark_user_id=6,
+                user_id=3),
             schema=None
         ))
 
@@ -331,8 +331,8 @@ class RecommendTestClass(RecommendationsTestCase):
             Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.99,
                 recording_id=6,
-                user_id=7,
-                user_name='rob'),
+                spark_user_id=7,
+                user_id=1),
             schema=None
         ))
         return df
@@ -342,8 +342,8 @@ class RecommendTestClass(RecommendationsTestCase):
             Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.8,
                 recording_id=5,
-                user_id=8,
-                user_name='vansika_1'),
+                spark_user_id=8,
+                user_id=4),
             schema=None
         )
 
@@ -351,8 +351,8 @@ class RecommendTestClass(RecommendationsTestCase):
             Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=-2.8,
                 recording_id=6,
-                user_id=8,
-                user_name='vansika_1'),
+                spark_user_id=8,
+                user_id=4),
             schema=None
         ))
 
@@ -360,8 +360,8 @@ class RecommendTestClass(RecommendationsTestCase):
             Row(recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.19,
                 recording_id=11,
-                user_id=7,
-                user_name='rob'),
+                spark_user_id=7,
+                user_id=1),
             schema=None
         ))
         return df
@@ -386,7 +386,7 @@ class RecommendTestClass(RecommendationsTestCase):
                                top_artist_rec_user_count, similar_artist_rec_user_count)
 
         self.assertEqual(next(data), {
-            'musicbrainz_id': 'vansika',
+            'user_id': 3,
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': [
@@ -404,7 +404,7 @@ class RecommendTestClass(RecommendationsTestCase):
         })
 
         self.assertEqual(next(data), {
-            'musicbrainz_id': 'rob',
+            'user_id': 1,
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': [
@@ -423,7 +423,7 @@ class RecommendTestClass(RecommendationsTestCase):
         })
 
         self.assertEqual(next(data), {
-            'musicbrainz_id': 'vansika_1',
+            'user_id': 4,
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': [],
