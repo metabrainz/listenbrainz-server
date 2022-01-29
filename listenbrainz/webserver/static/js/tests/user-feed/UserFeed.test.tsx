@@ -93,6 +93,10 @@ describe("<UserFeed />", () => {
   });
 
   it("renders recording recommendation events", () => {
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const dateNowMock = jest
+      .spyOn(Date, "now")
+      .mockImplementation(() => date.getTime());
     const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
@@ -105,10 +109,15 @@ describe("<UserFeed />", () => {
     expect(content.exists()).toBeTruthy();
     expect(content.children()).toHaveLength(1);
     const time = recEvent.find(".event-time");
-    expect(time.text()).toEqual("Mar 02, 2021, 7:48 PM");
+    expect(time.text()).toEqual("Mar 02, 7:48 PM");
+    dateNowMock.mockRestore();
   });
 
   it("renders follow relationship events", () => {
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const dateNowMock = jest
+      .spyOn(Date, "now")
+      .mockImplementation(() => date.getTime());
     const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
@@ -120,7 +129,7 @@ describe("<UserFeed />", () => {
     let content = followedEvent.find(".event-content");
     expect(content.exists()).toBeFalsy();
     let time = followedEvent.find(".event-time");
-    expect(time.text()).toEqual("Feb 16, 2021, 11:21 AM");
+    expect(time.text()).toEqual("Feb 16, 11:21 AM");
 
     const followEvent = wrapper.find("#timeline > ul >li").at(4);
     description = followEvent.find(".event-description-text");
@@ -128,10 +137,15 @@ describe("<UserFeed />", () => {
     content = followEvent.find(".event-content");
     expect(content.exists()).toBeFalsy();
     time = followEvent.find(".event-time");
-    expect(time.text()).toEqual("Feb 16, 2021, 11:20 AM");
+    expect(time.text()).toEqual("Feb 16, 11:20 AM");
+    dateNowMock.mockRestore();
   });
 
   it("renders notification events", () => {
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const dateNowMock = jest
+      .spyOn(Date, "now")
+      .mockImplementation(() => date.getTime());
     const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
@@ -151,10 +165,15 @@ describe("<UserFeed />", () => {
     const content = notificationEvent.find(".event-content");
     expect(content.exists()).toBeFalsy();
     const time = notificationEvent.find(".event-time");
-    expect(time.text()).toEqual("Feb 16, 2021, 11:17 AM");
+    expect(time.text()).toEqual("Feb 16, 11:17 AM");
+    dateNowMock.mockRestore();
   });
 
   it("renders recording pin events", () => {
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const dateNowMock = jest
+      .spyOn(Date, "now")
+      .mockImplementation(() => date.getTime());
     const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
@@ -167,11 +186,12 @@ describe("<UserFeed />", () => {
     expect(content.exists()).toBeTruthy();
     expect(content.children()).toHaveLength(1);
     const time = recEvent.find(".event-time");
-    expect(time.text()).toEqual("Feb 16, 2021, 10:44 AM");
+    expect(time.text()).toEqual("Feb 16, 10:44 AM");
 
     // Ensure additional details are rendered if provided
     const additionalContent = content.find(".additional-content");
     expect(additionalContent.text()).toEqual('"Very good..."');
+    dateNowMock.mockRestore();
   });
 
   describe("Pagination", () => {

@@ -180,13 +180,14 @@ export default class UserEntityChart extends React.Component<
     const { APIService } = this.context;
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
-    return APIService.getUserEntity(
+    const data = await APIService.getUserEntity(
       user.name,
       entity,
       range,
       offset,
       this.ROWS_PER_PAGE
     );
+    return data;
   };
 
   processData = (
@@ -277,7 +278,7 @@ export default class UserEntityChart extends React.Component<
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
         // Check if given range is valid
-        if (["week", "month", "year", "all_time"].indexOf(range) < 0) {
+        if (isInvalidStatRange(range)) {
           this.setState({
             hasError: true,
             loading: false,
@@ -427,6 +428,9 @@ export default class UserEntityChart extends React.Component<
     const { newAlert } = this.props;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
+
+    const ranges = getAllStatRanges();
+
     // We receive the items in inverse order so we need to reorder them
     const listenableItems: BaseListenFormat[] =
       data?.map(userChartEntityToListen).reverse() ?? [];
@@ -475,62 +479,31 @@ export default class UserEntityChart extends React.Component<
                           data-toggle="dropdown"
                           type="button"
                         >
-                          {`${range.replace(/_/g, " ")}`}
+                          {ranges.get(range)}
                           <span className="caret" />
                         </button>
                         <ul className="dropdown-menu" role="menu">
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "week", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("week");
-                                });
-                              }}
-                            >
-                              Week
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "month", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("month");
-                                });
-                              }}
-                            >
-                              Month
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "year", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("year");
-                                });
-                              }}
-                            >
-                              Year
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "all_time", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("all_time");
-                                });
-                              }}
-                            >
-                              All Time
-                            </a>
-                          </li>
+                          {Array.from(ranges, ([stat_type, stat_name]) => {
+                            return (
+                              <li>
+                                <a
+                                  href={this.buildURLParams(
+                                    1,
+                                    stat_type,
+                                    entity
+                                  )}
+                                  role="button"
+                                  onClick={(e) => {
+                                    this.handleClickEvent(e, () => {
+                                      this.changeRange(stat_type);
+                                    });
+                                  }}
+                                >
+                                  {stat_name}
+                                </a>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </span>
                       {range !== "all_time" &&

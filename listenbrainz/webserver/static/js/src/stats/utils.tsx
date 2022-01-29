@@ -100,3 +100,19 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
     </>
   );
 }
+
+export function getAllStatRanges(): Map<UserStatsAPIRange, string> {
+  const ranges = new Map<UserStatsAPIRange, string>();
+  ranges.set("this_week", "This Week");
+  ranges.set("this_month", "This Month");
+  ranges.set("this_year", "This Year");
+  ranges.set("week", "Last Week");
+  ranges.set("month", "Last Month");
+  ranges.set("year", "Last Year");
+  ranges.set("all_time", "All time");
+  return ranges;
+}
+
+export function isInvalidStatRange(range: UserStatsAPIRange): boolean {
+  return !getAllStatRanges().has(range);
+}

@@ -57,7 +57,7 @@ export default class UserDailyActivity extends React.Component<
     const { range: prevRange } = prevProps;
     const { range: currRange } = this.props;
     if (prevRange !== currRange) {
-      if (["week", "month", "year", "all_time"].indexOf(currRange) < 0) {
+      if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,
           hasError: true,
@@ -76,7 +76,8 @@ export default class UserDailyActivity extends React.Component<
   getData = async (): Promise<UserDailyActivityResponse> => {
     const { range, user } = this.props;
     try {
-      return await this.APIService.getUserDailyActivity(user.name, range);
+      const data = await this.APIService.getUserDailyActivity(user.name, range);
+      return data;
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({

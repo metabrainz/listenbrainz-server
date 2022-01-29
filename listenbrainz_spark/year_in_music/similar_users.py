@@ -1,12 +1,13 @@
 from datetime import date
 
-from listenbrainz_spark.recommendations.recording import create_dataframes
+from listenbrainz_spark.recommendations.recording.create_dataframes import calculate_dataframes
 from listenbrainz_spark.user_similarity import user_similarity
 
 
 def get_similar_users(year):
-    train_model_window = (date.today() - date(year, 1, 1)).days
-    create_dataframes.main(train_model_window, "similar_users", 50)
+    from_date = datetime(year, 1, 1)
+    to_date = datetime.combine(date(year, 12, 31), time.max)
+    calculate_dataframes(from_date, to_date, "similar_users", 50)
     similar_users_df = user_similarity.get_similar_users_df(25)
 
     itr = similar_users_df.toLocalIterator()

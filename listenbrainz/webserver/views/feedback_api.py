@@ -1,23 +1,22 @@
-import ujson
-import listenbrainz.db.user as db_user
-import listenbrainz.db.feedback as db_feedback
-
-from flask import Blueprint, current_app, jsonify, request
-from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import (APIBadRequest,
-                                           APIInternalServerError, APINotFound,
-                                           APIServiceUnavailable,
-                                           APIUnauthorized)
-from listenbrainz.webserver.utils import parse_boolean_arg
 from brainzutils.ratelimit import ratelimit
-from listenbrainz.webserver.views.api import _parse_int_arg
-from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid,\
-    DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list,\
-    validate_auth_header
-from listenbrainz.db.model.feedback import Feedback
+from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
 
+import listenbrainz.db.feedback as db_feedback
+import listenbrainz.db.user as db_user
+from listenbrainz.db.model.feedback import Feedback
+from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.errors import APINotFound
+from listenbrainz.webserver.utils import parse_boolean_arg
+from listenbrainz.webserver.views.api import _parse_int_arg
+from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, \
+    DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list, \
+    validate_auth_header
+
 feedback_api_bp = Blueprint('feedback_api_v1', __name__)
+
+# default feedback score if the user the hasn't given feedback on a recording
+FEEDBACK_DEFAULT_SCORE = 0
 
 
 @feedback_api_bp.route("/recording-feedback", methods=["POST", "OPTIONS"])
@@ -40,29 +39,31 @@ def recording_feedback():
 
     data = request.json
 
-    if 'recording_msid' not in data or 'score' not in data:
-        log_raise_400("JSON document must contain recording_msid and "
+    if ('recording_msid' not in data and 'recording_mbid' not in data) or 'score' not in data:
+        log_raise_400("JSON document must contain either recording_msid or recording_mbid, and "
                       "score top level keys", data)
 
-    if 'recording_msid' in data and 'score' in data and len(data) > 2:
-        log_raise_400("JSON document may only contain recording_msid and "
+    if set(data) - {"recording_msid", "recording_mbid", "score"}:
+        log_raise_400("JSON document may only contain recording_msid, recording_mbid and "
                       "score top level keys", data)
 
     try:
-        feedback = Feedback(user_id=user["id"], recording_msid=data["recording_msid"], score=data["score"])
+        feedback = Feedback(
+            user_id=user["id"],
+            recording_msid=data.get("recording_msid", None),
+            recording_mbid=data.get("recording_mbid", None),
+            score=data["score"]
+        )
     except ValidationError as e:
         # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
         # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line error message.
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       data)
-    try:
-        if feedback.score == 0:
-            db_feedback.delete(feedback)
-        else:
-            db_feedback.insert(feedback)
-    except Exception as e:
-        current_app.logger.error("Error while inserting recording feedback: {}".format(e))
-        raise APIInternalServerError("Something went wrong. Please try again.")
+
+    if feedback.score == FEEDBACK_DEFAULT_SCORE:
+        db_feedback.delete(feedback)
+    else:
+        db_feedback.insert(feedback)
 
     return jsonify({'status': 'ok'})
 
@@ -119,14 +120,13 @@ def get_feedback_for_user(user_name):
         "offset": offset
     })
 
-
-@feedback_api_bp.route("/recording/<recording_msid>/get-feedback", methods=["GET"])
+@feedback_api_bp.route("/recording/<recording_mbid>/get-feedback-mbid", methods=["GET"])
 @crossdomain()
 @ratelimit()
-def get_feedback_for_recording(recording_msid):
+def get_feedback_for_recording_mbid(recording_mbid):
     """
-    Get feedback for recording with given ``recording_msid``. The format for the JSON returned
-    is defined in our :ref:`feedback-json-doc`.
+    Get feedback for recording with given ``recording_mbid``. The format for the JSON returned is defined in
+     our :ref:`feedback-json-doc`.
 
     :param score: Optional, If 1 then returns the loved recordings, if -1 returns hated recordings.
     :type score: ``int``
@@ -139,10 +139,36 @@ def get_feedback_for_recording(recording_msid):
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
+    if not is_valid_uuid(recording_mbid):
+        log_raise_400(f"{recording_mbid} mbid format invalid.")
+    return _get_feedback_for_recording("recording_mbid", recording_mbid)
 
+
+@feedback_api_bp.route("/recording/<recording_msid>/get-feedback", methods=["GET"])
+@crossdomain()
+@ratelimit()
+def get_feedback_for_recording_msid(recording_msid):
+    """
+    Get feedback for recording with given ``recording_msid``. The format for the JSON returned is defined in
+     our :ref:`feedback-json-doc`.
+
+    :param score: Optional, If 1 then returns the loved recordings, if -1 returns hated recordings.
+    :type score: ``int``
+    :param count: Optional, number of feedback items to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`.
+    :type count: ``int``
+    :param offset: Optional, number of feedback items to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 feedback will be skipped, defaults to 0.
+    :type offset: ``int``
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    """
     if not is_valid_uuid(recording_msid):
-        log_raise_400("%s MSID format invalid." % recording_msid)
+        log_raise_400(f"{recording_msid} msid format invalid.")
+    return _get_feedback_for_recording("recording_msid", recording_msid)
 
+
+def _get_feedback_for_recording(recording_type, recording):
     score = _parse_int_arg('score')
 
     offset = get_non_negative_param('offset', default=0)
@@ -154,8 +180,8 @@ def get_feedback_for_recording(recording_msid):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_recording(recording_msid=recording_msid, limit=count, offset=offset, score=score)
-    total_count = db_feedback.get_feedback_count_for_recording(recording_msid)
+    feedback = db_feedback.get_feedback_for_recording(recording_type, recording, limit=count, offset=offset, score=score)
+    total_count = db_feedback.get_feedback_count_for_recording(recording_type, recording)
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -178,26 +204,41 @@ def get_feedback_for_recordings_for_user(user_name):
     If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
 
     :param recordings: comma separated list of recording_msids for which feedback records are to be fetched.
+        this param is deprecated and will be removed in the future. use recording_msids instead.
     :type recordings: ``str``
+    :param recording_msids: comma separated list of recording_msids for which feedback records are to be fetched.
+    :type recording_msids: ``str``
+    :param recording_mbids: comma separated list of recording_mbids for which feedback records are to be fetched.
+    :type recording_mbids: ``str``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
 
-    recordings = request.args.get('recordings')
+    msids_unparsed = request.args.get("recording_msids")
+    if msids_unparsed is None:
+        msids_unparsed = request.args.get("recordings")
+    mbids_unparsed = request.args.get("recording_mbids")
 
-    if not recordings:
-        log_raise_400("'recordings' has no valid recording MSID.")
+    recording_msids, recording_mbids = [], []
+    if msids_unparsed:
+        recording_msids = parse_param_list(msids_unparsed)
+    if mbids_unparsed:
+        recording_mbids = parse_param_list(mbids_unparsed)
 
-    recording_list = parse_param_list(recordings)
-    if not len(recording_list):
-        raise APIBadRequest("'recordings' has no valid recording MSID.")
+    if not recording_msids and not recording_mbids:
+        log_raise_400("No valid recording msid or recording mbid found.")
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
     try:
-        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
+        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            user_id=user["id"],
+            user_name=user_name,
+            recording_msids=recording_msids,
+            recording_mbids=recording_mbids
+        )
     except ValidationError as e:
         # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
         # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line error message.

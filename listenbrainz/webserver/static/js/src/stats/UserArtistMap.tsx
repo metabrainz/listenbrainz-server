@@ -8,6 +8,7 @@ import APIService from "../utils/APIService";
 import Card from "../utils/Card";
 import Loader from "../utils/Loader";
 import Choropleth from "./Choropleth";
+import { isInvalidStatRange } from "./utils";
 
 export type UserArtistMapProps = {
   range: UserStatsAPIRange;
@@ -63,7 +64,7 @@ export default class UserArtistMap extends React.Component<
     const { range: prevRange } = prevProps;
     const { range: currRange } = this.props;
     if (prevRange !== currRange) {
-      if (["week", "month", "year", "all_time"].indexOf(currRange) < 0) {
+      if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,
           hasError: true,

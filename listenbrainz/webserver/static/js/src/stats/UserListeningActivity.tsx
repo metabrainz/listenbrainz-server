@@ -46,6 +46,13 @@ export default class UserListeningActivity extends React.Component<
       },
       perRange: "day",
     },
+    this_week: {
+      dateFormat: {
+        weekday: "short",
+        timeZone: "UTC",
+      },
+      perRange: "day",
+    },
     month: {
       dateFormat: {
         day: "2-digit",
@@ -53,7 +60,21 @@ export default class UserListeningActivity extends React.Component<
       },
       perRange: "day",
     },
+    this_month: {
+      dateFormat: {
+        day: "2-digit",
+        timeZone: "UTC",
+      },
+      perRange: "day",
+    },
     year: {
+      dateFormat: {
+        month: "short",
+        timeZone: "UTC",
+      },
+      perRange: "month",
+    },
+    this_year: {
       dateFormat: {
         month: "short",
         timeZone: "UTC",
@@ -92,7 +113,7 @@ export default class UserListeningActivity extends React.Component<
     const { range: prevRange } = prevProps;
     const { range: currRange } = this.props;
     if (prevRange !== currRange) {
-      if (["week", "month", "year", "all_time"].indexOf(currRange) < 0) {
+      if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,
           hasError: true,
@@ -107,7 +128,11 @@ export default class UserListeningActivity extends React.Component<
   getData = async (): Promise<UserListeningActivityResponse> => {
     const { range, user } = this.props;
     try {
-      return await this.APIService.getUserListeningActivity(user.name, range);
+      const data = await this.APIService.getUserListeningActivity(
+        user.name,
+        range
+      );
+      return data;
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({
@@ -138,11 +163,11 @@ export default class UserListeningActivity extends React.Component<
     if (!data?.payload) {
       return result;
     }
-    if (range === "week") {
+    if (range === "week" || range === "this_week") {
       result = this.processWeek(data);
-    } else if (range === "month") {
+    } else if (range === "month" || range === "this_month") {
       result = this.processMonth(data);
-    } else if (range === "year") {
+    } else if (range === "year" || range === "this_year") {
       result = this.processYear(data);
     } else if (range === "all_time") {
       result = this.processAllTime(data);

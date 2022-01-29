@@ -81,34 +81,17 @@ export default class UserReports extends React.Component<
       <div>
         <div className="row mt-15">
           <div className="col-xs-12">
-            <Pill
-              active={range === "week"}
-              type="secondary"
-              onClick={() => this.changeRange("week")}
-            >
-              Week
-            </Pill>
-            <Pill
-              active={range === "month"}
-              type="secondary"
-              onClick={() => this.changeRange("month")}
-            >
-              Month
-            </Pill>
-            <Pill
-              active={range === "year"}
-              type="secondary"
-              onClick={() => this.changeRange("year")}
-            >
-              Year
-            </Pill>
-            <Pill
-              active={range === "all_time"}
-              type="secondary"
-              onClick={() => this.changeRange("all_time")}
-            >
-              All Time
-            </Pill>
+            {Array.from(ranges, ([stat_type, stat_name]) => {
+              return (
+                <Pill
+                  active={range === stat_type}
+                  type="secondary"
+                  onClick={() => this.changeRange(stat_type)}
+                >
+                  {stat_name}
+                </Pill>
+              );
+            })}
           </div>
         </div>
         <section id="listening-activity">
