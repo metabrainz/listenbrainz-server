@@ -95,4 +95,4 @@ class CreateDataframeTestCase(RecommendationsTestCase):
 
         with open(os.path.join(TEST_DATA_PATH, 'missing_musicbrainz_data.json')) as f:
             expected_missing_mb_data = json.load(f)
-        self.assertEqual(expected_missing_mb_data, messages)
+        self.assertCountEqual(expected_missing_mb_data, messages)

@@ -281,7 +281,7 @@ class RecommendTestClass(RecommendationsTestCase):
     @patch('listenbrainz_spark.recommendations.recording.recommend.generate_recommendations')
     def test_get_recommendations_for_all(self, mock_recs, mock_candidate_set):
         params = self.get_recommendation_params()
-        users = ['vansika']
+        users = [3]
 
         params.top_artist_candidate_set_df = self.get_top_artist_rec_df()
         params.similar_artist_candidate_set_df = self.get_similar_artist_rec_df()
@@ -314,7 +314,7 @@ class RecommendTestClass(RecommendationsTestCase):
                 rating=1.8,
                 recording_id=5,
                 spark_user_id=6,
-                user_id='vansika'),
+                user_id=3),
             schema=None
         )
 
