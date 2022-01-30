@@ -27,7 +27,7 @@ class CreateDataframeTestCase(RecommendationsTestCase):
 
         expected_users_df = listenbrainz_spark.session.createDataFrame([
             Row(user_id=1, spark_user_id=1),
-            Row(user_id=3, spark_user_id=2)
+            Row(user_id=2, spark_user_id=2)
         ])
         self.assertListEqual(list(expected_users_df.toLocalIterator()), list(users_df.toLocalIterator()))
         self.assertCountEqual(expected_users_df.columns, users_df.columns)
