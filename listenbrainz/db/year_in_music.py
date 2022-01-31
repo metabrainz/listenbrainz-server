@@ -144,19 +144,26 @@ def insert_most_listened_year(data):
         current_app.logger.error("Error while inserting most_listened_year:", exc_info=True)
 
 
-def handle_top_stats(user_id, entity, data):
-    with db.engine.connect() as connection:
-        connection.execute(
-            sqlalchemy.text("""
-            INSERT INTO statistics.year_in_music (user_id, data)
-                 VALUES (:user_id, jsonb_build_object(:stat_type,:data :: jsonb))
-            ON CONFLICT (user_id)
-          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-            """),
-            user_id=user_id,
-            stat_type=f"top_{entity}",
-            data=ujson.dumps(data)
-        )
+def handle_top_stats(entity, data):
+    connection = db.engine.raw_connection()
+    query = """
+        INSERT INTO statistics.year_in_music (user_id, data)
+             SELECT "user".id
+                  , jsonb_build_object(%s, top_stats::jsonb)
+               FROM (VALUES %%s) AS t(user_name, top_stats)
+               JOIN "user"
+                 ON "user".musicbrainz_id = user_name
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+    """
+    try:
+        with connection.cursor() as cursor:
+            query = cursor.mogrify(query, (f"top_{entity}",))
+            execute_values(cursor, query, ujson.dumps(data))
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting top stats:", exc_info=True)
 
 
 def handle_listens_per_day(user_id, data):

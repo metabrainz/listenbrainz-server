@@ -9,7 +9,8 @@ site [#]_.
 
 - **Web Root URL**: ``https://listenbrainz.org``
 
-*Note*: All ListenBrainz services are only available on **HTTPS**!
+.. note::
+    All ListenBrainz services are only available on **HTTPS**!
 
 Reference
 ---------
@@ -21,7 +22,7 @@ Core API Endpoints
    :blueprints: api_v1
    :include-empty-docstring:
    :undoc-static:
-   :undoc-endpoints: api_v1.latest_import, api_v1.user_feed
+   :undoc-endpoints: api_v1.latest_import
 
 .. http:get:: /1/latest-import
 
@@ -198,5 +199,5 @@ Constants that are relevant to using the API:
 .. autodata:: listenbrainz.webserver.views.api_tools.DEFAULT_ITEMS_PER_GET
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE
-.. autodata:: listenbrainz.webserver.views.api_tools.LISTEN_MINIMUM_TS
+.. autodata:: listenbrainz.listenstore.LISTEN_MINIMUM_TS
 .. autodata:: data.model.common_stat.ALLOWED_STATISTICS_RANGE

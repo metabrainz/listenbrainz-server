@@ -258,7 +258,7 @@ class TimescaleListenStore(ListenStore):
         for listen in listens:
             submit.append(listen.to_timescale())
 
-        query = """INSERT INTO listen (listened_at, track_name, user_name, data)
+        query = """INSERT INTO listen (listened_at, track_name, user_name, user_id, data)
                         VALUES %s
                    ON CONFLICT (listened_at, track_name, user_name)
                     DO NOTHING

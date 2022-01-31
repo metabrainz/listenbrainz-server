@@ -153,11 +153,38 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     >
                       <li>
                         <a
+                          href="?page=1&range=this_week&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Week
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_month&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Month
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_year&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Year
+                        </a>
+                      </li>
+                      <li>
+                        <a
                           href="?page=1&range=week&entity="
                           onClick={[Function]}
                           role="button"
                         >
-                          Week
+                          Last Week
                         </a>
                       </li>
                       <li>
@@ -166,7 +193,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Month
+                          Last Month
                         </a>
                       </li>
                       <li>
@@ -175,7 +202,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Year
+                          Last Year
                         </a>
                       </li>
                       <li>
@@ -184,7 +211,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          All Time
+                          All time
                         </a>
                       </li>
                     </ul>
@@ -5842,11 +5869,38 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     >
                       <li>
                         <a
+                          href="?page=1&range=this_week&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Week
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_month&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Month
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_year&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Year
+                        </a>
+                      </li>
+                      <li>
+                        <a
                           href="?page=1&range=week&entity="
                           onClick={[Function]}
                           role="button"
                         >
-                          Week
+                          Last Week
                         </a>
                       </li>
                       <li>
@@ -5855,7 +5909,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Month
+                          Last Month
                         </a>
                       </li>
                       <li>
@@ -5864,7 +5918,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Year
+                          Last Year
                         </a>
                       </li>
                       <li>
@@ -5873,7 +5927,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          All Time
+                          All time
                         </a>
                       </li>
                     </ul>
@@ -12361,11 +12415,38 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     >
                       <li>
                         <a
+                          href="?page=1&range=this_week&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Week
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_month&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Month
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_year&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Year
+                        </a>
+                      </li>
+                      <li>
+                        <a
                           href="?page=1&range=week&entity="
                           onClick={[Function]}
                           role="button"
                         >
-                          Week
+                          Last Week
                         </a>
                       </li>
                       <li>
@@ -12374,7 +12455,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Month
+                          Last Month
                         </a>
                       </li>
                       <li>
@@ -12383,7 +12464,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Year
+                          Last Year
                         </a>
                       </li>
                       <li>
@@ -12392,7 +12473,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          All Time
+                          All time
                         </a>
                       </li>
                     </ul>
@@ -18342,7 +18423,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                       data-toggle="dropdown"
                       type="button"
                     >
-                      all time
+                      All time
                       <span
                         className="caret"
                       />
@@ -18353,11 +18434,38 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                     >
                       <li>
                         <a
+                          href="?page=1&range=this_week&entity=artist"
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Week
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_month&entity=artist"
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Month
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_year&entity=artist"
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Year
+                        </a>
+                      </li>
+                      <li>
+                        <a
                           href="?page=1&range=week&entity=artist"
                           onClick={[Function]}
                           role="button"
                         >
-                          Week
+                          Last Week
                         </a>
                       </li>
                       <li>
@@ -18366,7 +18474,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                           onClick={[Function]}
                           role="button"
                         >
-                          Month
+                          Last Month
                         </a>
                       </li>
                       <li>
@@ -18375,7 +18483,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                           onClick={[Function]}
                           role="button"
                         >
-                          Year
+                          Last Year
                         </a>
                       </li>
                       <li>
@@ -18384,7 +18492,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                           onClick={[Function]}
                           role="button"
                         >
-                          All Time
+                          All time
                         </a>
                       </li>
                     </ul>

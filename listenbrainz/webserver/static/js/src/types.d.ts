@@ -280,7 +280,14 @@ declare type UserEntityResponse =
   | UserReleasesResponse
   | UserRecordingsResponse;
 
-declare type UserStatsAPIRange = "all_time" | "year" | "month" | "week";
+declare type UserStatsAPIRange =
+  | "all_time"
+  | "year"
+  | "month"
+  | "week"
+  | "this_year"
+  | "this_month"
+  | "this_week";
 
 declare type UserEntityDatum = {
   id: string;
