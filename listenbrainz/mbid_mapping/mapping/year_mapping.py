@@ -48,6 +48,7 @@ def create_indexes(conn):
         with conn.cursor() as curs:
             curs.execute("""CREATE INDEX tmp_year_mapping_idx_ac_rec_year
                                       ON mapping.tmp_year_mapping(artist_credit_name, recording_name)""")
+            curs.execute("""CREATE INDEX recording_mbid_ndx_year_mapping ON mapping.year_mapping (recording_mbid)""")
         conn.commit()
     except OperationalError as err:
         log("year mapping: failed to create recording pair index", err)

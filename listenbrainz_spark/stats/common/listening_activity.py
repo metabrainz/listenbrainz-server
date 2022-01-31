@@ -55,9 +55,15 @@ def get_two_quarters_ago_offset(_date: date) -> relativedelta:
         return relativedelta(month=4, day=1)
 
 
-def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str]:
-    """ Returns the start time, end time, segment step size and date format to use for
-    calculating the listening activity stats
+def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str, str]:
+    """ Returns the start time, end time, segment step size, python date format and spark
+     date format to use for calculating the listening activity stats
+
+     We need both python date and spark date format because site wide listening activity uses
+     it. See the site wide listening activity query for details.
+
+     Python date format reference: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+     Spark date format reference: https://spark.apache.org/docs/latest/sql-ref-datetime-pattern.html
 
     .. note::
 
@@ -73,7 +79,8 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         from_ts = datetime.combine(from_date, time.min)
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
-        return from_ts, to_ts, step, date_format
+        spark_date_format = "d MMMM y"
+        return from_ts, to_ts, step, date_format, spark_date_format
 
     if stats_range == "all_time":
         # all_time stats range is easy, just return time from LASTFM founding
@@ -83,7 +90,8 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         # compute listening activity on annual basis
         step = relativedelta(years=+1)
         date_format = "%Y"
-        return from_date, to_date, step, date_format
+        spark_date_format = "y"
+        return from_date, to_date, step, date_format, spark_date_format
 
     # If we had used datetime.now or date.today here and the data in spark
     # became outdated due to some reason, empty stats would be sent to LB.
@@ -100,12 +108,14 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
             # compute listening activity for each day, include weekday in date format
             step = relativedelta(days=+1)
             date_format = "%A %d %B %Y"
+            spark_date_format = "EEEE d MMMM y"
         elif stats_range == "this_month":
             # if today is 1st then 1st of 2 months ago otherwise the 1st of last month
             from_offset = relativedelta(months=-2) if latest_listen_date.day == 1 else relativedelta(months=-1, day=1)
             # compute listening activity for each day but no weekday
             step = relativedelta(days=+1)
             date_format = "%d %B %Y"
+            spark_date_format = "d MMMM y"
         else:
             # if today is the 1st of the year, then still show last year stats
             if latest_listen_date.day == 1 and latest_listen_date.month == 1:
@@ -115,13 +125,14 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
             step = relativedelta(months=+1)
             # compute listening activity for each month
             date_format = "%B %Y"
+            spark_date_format = "MMMM y"
 
         from_date = latest_listen_date + from_offset
 
         # set time to 00:00
         from_date = datetime.combine(from_date, time.min)
         to_date = datetime.combine(latest_listen_date, time.min)
-        return from_date, to_date, step, date_format
+        return from_date, to_date, step, date_format, spark_date_format
 
     # following are "last" week/month/year stats, here we want the stats of the
     # previous week/month/year and *not* from 7 days ago to today so on.
@@ -134,29 +145,33 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         # compute listening activity for each day, include weekday in date format
         step = relativedelta(days=+1)
         date_format = "%A %d %B %Y"
+        spark_date_format = "EEEE d MMMM y"
     elif stats_range == "month":
         from_offset = relativedelta(months=-2, day=1)  # start of the previous to previous month
         to_offset = relativedelta(months=+2)
         # compute listening activity for each day but no weekday
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
+        spark_date_format = "d MMMM y"
     elif stats_range == "quarter":
         from_offset = get_two_quarters_ago_offset(latest_listen_date)
         to_offset = relativedelta(months=+6)
-        # compute listening activity for each week with date format as day
-        step = relativedelta(weeks=+1)
+        step = relativedelta(days=+1)
         date_format = "%d %B %Y"
+        spark_date_format = "d MMMM y"
     elif stats_range == "half_yearly":
         from_offset = _get_half_year_offset(latest_listen_date)
         to_offset = relativedelta(months=+12)
         step = relativedelta(months=+1)
         date_format = "%B %Y"
+        spark_date_format = "MMMM y"
     else:  # year
         from_offset = relativedelta(years=-2, month=1, day=1)  # start of the previous to previous year
         to_offset = relativedelta(years=+2)
         step = relativedelta(months=+1)
         # compute listening activity for each month
         date_format = "%B %Y"
+        spark_date_format = "MMMM y"
 
     from_date = latest_listen_date + from_offset
     to_date = from_date + to_offset
@@ -165,10 +180,10 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
     from_date = datetime.combine(from_date, time.min)
     to_date = datetime.combine(to_date, time.min)
 
-    return from_date, to_date, step, date_format
+    return from_date, to_date, step, date_format, spark_date_format
 
 
-def setup_time_range(stats_range: str) -> Tuple[datetime, datetime]:
+def setup_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str, str]:
     """
     Sets up time range buckets needed to calculate listening activity stats and
     returns the start and end time of the time range.
@@ -181,7 +196,7 @@ def setup_time_range(stats_range: str) -> Tuple[datetime, datetime]:
     will return 1st of last year as the start time and the current date as the
     end time in this example.
     """
-    from_date, to_date, step, date_format = get_time_range(stats_range)
+    from_date, to_date, step, date_format, spark_date_format = get_time_range(stats_range)
     time_range = []
 
     segment_start = from_date
@@ -196,4 +211,4 @@ def setup_time_range(stats_range: str) -> Tuple[datetime, datetime]:
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView("time_range")
 
-    return from_date, to_date
+    return from_date, to_date, step, date_format, spark_date_format

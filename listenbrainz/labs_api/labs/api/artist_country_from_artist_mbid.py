@@ -21,7 +21,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
                   found a 404 error is returned."""
 
     def outputs(self):
-        return ['artist_mbid', 'country_code']
+        return ['artist_mbid', 'artist_name', 'country_code']
 
     def fetch(self, params, count=-1, offset=-1):
 
@@ -30,6 +30,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
 
                 acs = tuple([r['artist_mbid'] for r in params])
                 query = """ SELECT a.gid AS artist_mbid,
+                                   a.name AS artist_name,
                                    ar.id AS area_id,
                                    code AS country_code
                               FROM artist a
@@ -58,7 +59,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
 
                     r = dict(row)
                     areas.append(r['area_id'])
-                    mapping.append(dict(row))
+                    mapping.append(r)
 
                 if not areas:
                     return []

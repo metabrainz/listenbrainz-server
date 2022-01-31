@@ -129,14 +129,16 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     }
 
     const { selectedMetric } = props;
+    let suffix = `${selectedMetric[0].toUpperCase()}${selectedMetric.slice(1)}`;
+    if (feature.formattedValue !== "1") {
+      suffix = `${suffix}s`;
+    }
 
     return (
       <BasicTooltip
         id={feature.label}
         color={feature.color}
-        value={`${
-          feature.formattedValue
-        } ${selectedMetric[0].toUpperCase()}${selectedMetric.slice(1)}s`}
+        value={`${feature.formattedValue} ${suffix}`}
         enableChip
       />
     );
@@ -152,7 +154,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       colors={colorScale}
       domain={domain}
       theme={isMobile ? themes.mobile : themes.desktop}
-      valueFormat=".2s"
+      valueFormat=".2~s"
       tooltip={CustomTooltip}
       unknownColor="#efefef"
       label="properties.name"
