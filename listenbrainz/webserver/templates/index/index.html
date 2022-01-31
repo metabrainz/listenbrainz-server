@@ -6,23 +6,28 @@
     </div>
    <div class="col-lg-12">
       <h2 class="page-title">
-        Share and Visualize your Musical Habits!
+        Visualize and share your music listening history
       </h2>
       <p>
         ListenBrainz keeps tracks of what music you listen to and
-        provides you with insights into your listening habits. We're
-        completely open-source and publish our data as open data.
+        provides you with insights into your listening habits.
+        <br>
+        We're completely open-source and publish our data as open data.
       </p>
       <p>
         You can use ListenBrainz to track your music listening habits and
-        share your taste with others using our visualizations. We also have an
+        share your taste with others using our visualizations.
+        <br>
+        We also have an
         <a href="https://listenbrainz.readthedocs.io/en/production/dev/api/">API</a>
         if you want to do more with our data.
       </p>
       <p>
         To get started, you'll need to <a href="{{ url_for('login.index') }}">sign in</a> with
         a <a href="https://musicbrainz.org">MusicBrainz</a> account. If you don't have a MusicBrainz
-        account, you can <a href="https://musicbrainz.org/register">create one</a>! Once you have an
+        account, you can <a href="https://musicbrainz.org/register">create one</a>!
+        <br>
+        Once you have an
         account, you can <a href="{{ url_for('profile.import_data') }}">import</a>
         data from Last.FM, <a href="{{ url_for('profile.music_services_details') }}">connect your Spotify account</a>,
         or use one of the <a href="{{ url_for('index.add_data_info') }}">many players</a> which can
@@ -33,6 +38,16 @@
       </p>
     </div>
 
+    <div class="col-lg-12">
+      <h2>Discover new music</h2>
+      <p>
+        Based on your listening history we recommend music you might like, new music you missed out on
+        from your favorite artists, as well as what similar users have been listening to.
+        <br>
+        There are many ways to explore and discover new music with ListenBrainz!
+      </p>
+
+    </div>
     <div class="col-md-7 col-lg-8">
       <h2>About us</h2>
       <p>
@@ -76,13 +91,14 @@
             </tbody>
           </table>
           <p style="text-align: center">
-            <small>Updated every 5 minutes!</small><br />
+            <small>Updated every 5 minutes</small><br />
             <small><a href="{{ url_for('index.current_status') }}">more on the current status page</a></small>
           </p>
         </div>
       </div>
 
     </div>
+
     <div class="col-md-5 col-lg-4" id="twitter-block">
       <a class="twitter-timeline" data-dnt="true" data-lang="en" href="https://twitter.com/ListenBrainz" data-widget-id="640261552604643328" data-height="450px">Tweets by @ListenBrainz</a>
       <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
