@@ -1,10 +1,10 @@
 {%- extends 'base.html' -%}
 {%- block content -%}
   <div id="homepage" class="row">
-    <div class="alert alert-success center-p" role="alert">
-      ListenBrainz Year in Music for 2021 just dropped! Find yours <a href="{{ url_for('redirect.redirect_year_in_music') }}" class="alert-link">here</a>. Share it across social media and compare your stats with your friends!
-    </div>
-   <div class="col-lg-12">
+<!--    <div class="alert alert-success center-p" role="alert">-->
+<!--      ListenBrainz Year in Music for 2021 just dropped! Find yours <a href="{{ url_for('redirect.redirect_year_in_music') }}" class="alert-link">here</a>. Share it across social media and compare your stats with your friends!-->
+<!--    </div>-->
+   <div>
       <h2 class="page-title">
         Visualize and share your music listening history
       </h2>
@@ -38,7 +38,7 @@
       </p>
     </div>
 
-    <div class="col-lg-12">
+    <div>
       <h2>Discover new music</h2>
       <p>
         Based on your listening history we recommend music you might like, new music you missed out on
@@ -48,7 +48,7 @@
       </p>
 
     </div>
-    <div class="col-md-7 col-lg-8">
+    <div>
       <h2>About us</h2>
       <p>
         ListenBrainz is operated by the <a href="https://metabrainz.org">MetaBrainz Foundation</a>
@@ -65,8 +65,8 @@
         For more information about this project and its goals, please take a look at our
         <a href="{{ url_for('index.goals') }}">goals page</a>.
       </p>
-      <div id="stats" >
-        <div class="panel-heading"><strong>Data Statistics</strong></div>
+      <div class="card col-md-7" id="stats">
+        <div class="panel-heading center-p"><strong>Data Statistics</strong></div>
         <div class="panel-body">
           <table class="table table-collapsed">
             <thead>
@@ -90,18 +90,20 @@
             {% endif %}
             </tbody>
           </table>
-          <p style="text-align: center">
-            <small>Updated every 5 minutes</small><br />
-            <small><a href="{{ url_for('index.current_status') }}">more on the current status page</a></small>
-          </p>
+        </div>
+        <div class="panel-footer" style="text-align: center">
+          <small>Updated every 5 minutes</small><br />
+          <small><a href="{{ url_for('index.current_status') }}">more on the current status page</a></small>
         </div>
       </div>
 
     </div>
 
-    <div class="col-md-5 col-lg-4" id="twitter-block">
-      <a class="twitter-timeline" data-dnt="true" data-lang="en" href="https://twitter.com/ListenBrainz" data-widget-id="640261552604643328" data-height="450px">Tweets by @ListenBrainz</a>
-      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-    </div>
+    <div class="col-md-5" id="blogs"></div>
   </div>
 {%- endblock -%}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ get_static_path('homepage.js') }}" type="text/javascript"></script>
+{% endblock %}
