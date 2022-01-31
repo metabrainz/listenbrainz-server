@@ -77,7 +77,7 @@ def get_user():
         user = dict(user)
         user["email"] = user_email
         # every time a user logs in, update the email in LB.
-        db_user.update_user_email(musicbrainz_id, user_email)
+        db_user.update_user_details(user["id"], musicbrainz_id, user_email)
 
     return user
 

@@ -515,12 +515,13 @@ def report_user(reporter_id: int, reported_id: int, reason: str = None):
         })
 
 
-def update_user_email(musicbrainz_id, email):
+def update_user_details(lb_id: int, musicbrainz_id: str, email: str):
     """ Update the email field for user with specified MusicBrainz ID
 
     Args:
-        musicbrainz_id (str): MusicBrainz username of a user
-        email (str): email of a user
+        lb_id: listenbrainz row id of the user
+        musicbrainz_id: MusicBrainz username of a user
+        email: email of a user
     """
 
     with db.engine.connect() as connection:
@@ -528,8 +529,10 @@ def update_user_email(musicbrainz_id, email):
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
                    SET email = :email
-                 WHERE musicbrainz_id = :musicbrainz_id
+                     , musicbrainz_id = :musicbrainz_id
+                 WHERE id = :lb_id
                 """), {
+                "lb_id": lb_id,
                 "musicbrainz_id": musicbrainz_id,
                 "email": email
             })
