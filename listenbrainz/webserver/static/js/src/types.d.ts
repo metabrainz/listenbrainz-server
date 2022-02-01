@@ -355,6 +355,12 @@ declare type UserDailyActivityResponse = {
   };
 };
 
+declare type UserArtistMapArtist = {
+  artist_name: string;
+  artist_mbid: string;
+  listen_count: number;
+};
+
 declare type UserArtistMapResponse = {
   payload: {
     from_ts: number;
@@ -366,6 +372,7 @@ declare type UserArtistMapResponse = {
       country: string;
       artist_count: number;
       listen_count: number;
+      artists: Array<UserArtistMapArtist>;
     }>;
   };
 };
@@ -373,6 +380,7 @@ declare type UserArtistMapResponse = {
 declare type UserArtistMapDatum = {
   id: string;
   value: number;
+  artists?: Array<UserArtistMapArtist>;
 };
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
