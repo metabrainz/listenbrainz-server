@@ -208,7 +208,7 @@ def swap_table_and_indexes(mb_conn, lb_conn):
                             RENAME TO mbid_mapping_releases_idx_id""")
 
             with lb_conn.cursor() as lb_curs:
-                lb_curs.execute("DROP TABLE IF EXISTS mapping.canonical_recording")
+                lb_curs.execute("DROP TABLE IF EXISTS canonical_recording")
                 lb_curs.execute("""ALTER TABLE tmp_canonical_recording
                                    RENAME TO canonical_recording""")
                 lb_curs.execute("""ALTER INDEX tmp_canonical_recording_ndx_canonical_recording_mbid
