@@ -80,7 +80,7 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
         Returns:
             The given list of MsidMbidModel objects with updated track_metadata.
     """
-    # it is possible to that multiple items have same msid/mbid. for example, pinning the
+    # it is possible that multiple items have same msid/mbid. for example, pinning the
     # same recording twice. since the dict is keyed by mbid/msid the corresponding value
     # should be a iterable of all items having that mbid
     msid_item_map, mbid_item_map = defaultdict(list), defaultdict(list)
@@ -109,6 +109,7 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
 
 
 def _update_items_from_map(models: Dict[str, Iterable[ModelT]], metadatas: Dict):
+    """ The models are updated in place with data of the corresponding mbid/msid from the metadatas. """
     for _id, items in models.items():
         if _id not in metadatas:
             continue
