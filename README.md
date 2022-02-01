@@ -35,8 +35,7 @@ which has a long-standing history of curating, protecting and making music data 
 public.
 
 For more information about this project and its goals, look at our
-[website](https://listenbrainz.org/), specifically the
-[goals page](https://listenbrainz.org/goals).
+[website](https://listenbrainz.org/).
 
 Changes and other important announcements about the ListenBrainz services will be
 announced on [our blog](https://blog.metabrainz.org/). If you start using our
