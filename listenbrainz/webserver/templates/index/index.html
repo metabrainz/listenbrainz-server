@@ -104,6 +104,115 @@
     <div class="col-md-5"
          style="margin-top: 12px; margin-bottom: 12px"
          id="blogs"></div>
+
+    <h2>Goals</h2>
+
+    <p>The ListenBrainz project has a number of goals:</p>
+    <ol>
+      <li>
+        A public store of your listen history. We feel that a listen history has a tremendous
+        amount of personal value and in aggregate has a huge amount of value for developers who wish
+        to create better music technologies, like recommendation systems.
+      </li>
+      <li>
+        A permanent store of your listen history. MetaBrainz, the non-profit that runs
+        <a href="https://musicbrainz.org">MusicBrainz</a> and ListenBrainz has a long
+        history of curating and making data available to the public in a useful and meaningful manner. We promise
+        to safeguard your listen history permanently.
+      </li>
+      <li>
+        To make data dumps of this listen history available for download. We want everyone who is interested
+        in this data to have access to the data and to use it in any manner they wish.
+      </li>
+      <li>
+        To share listen histories in a distributed fashion. We plan to allow anyone to connect to ListenBrainz
+        and to tap into a live feed of listen data as we receive it. We hope that Last.fm will work with us
+        to make an interconnection with Last.fm possible. We welcome anyone scrobbling to us and we plan to share the listens
+        shared with us to anyone else who wants them. We envision smaller music communities with a specific focus
+        to install their own ListenBrainz server to collect listen data for their specific focus. We hope that
+        these smaller communities will also share their data in the same manner in which we share our data.
+      </li>
+    </ol>
+
+    <h3>Anti-goals</h3>
+
+    <p>The project also has a number of anti-goals (things it doesn't try to be):</p>
+    <ol>
+      <li>
+        A store for people's private listen history. The point of this project is to build a public, shareable
+        store of listen data. As we build out our sharing features, building a private listen store will become
+        possible, but that is not part of our goals.
+      </li>
+      <li>
+        A closed platform. We aim to make everything open and to encourage a community of sharing and participation.
+      </li>
+    </ol>
+
+    <h2 class="page-title">Roadmap</h2>
+
+    We've put together a very rough roadmap for this project:
+
+    <h3>Short term</h3>
+
+    <ul>
+      <li>
+        Work to improve and extend the user data graphing features.
+      </li>
+    </ul>
+
+    <h3>Medium term</h3>
+
+    <ul>
+      <li>
+        Start working on an open source recommendation engine using data from ListenBrainz,
+        <a href="https://acousticbrainz.org">AcousticBrainz</a> and <a href="https://musicbrainz.org">MusicBrainz</a>.
+      </li>
+      <li>
+        Incremental data export: To export smaller data deltas on a more frequent basis than our full data dumps.
+      </li>
+    </ul>
+
+    <h3>Long term</h3>
+    <ul>
+      <li>
+        Total world domination. What other goals are open source projects allowed to have?
+      </li>
+    </ul>
+
+    <br/>
+
+    <p>
+      If you have any ideas that should be on our roadmap, please <a href="https://metabrainz.org/contact">let us know</a>!
+    </p>
+
+    <h2>Frequently Asked Questions</h2>
+
+    <p>
+      <strong>Q:</strong> Why do you call your data Listens?<br />
+      <strong>A:</strong> The term <strong>scrobble</strong> is a trademarked term
+      by Last.fm and we cannot use it. Instead we use the term <strong>listen</strong>.
+    </p>
+      <br/>
+    <p>
+      <strong>Q:</strong> Is it safe for the Last.fm importer to be run twice?<br />
+      <strong>A:</strong> Yes, it is. Running it twice will not cause duplicates in your listen history.
+    </p>
+      <br/>
+    <p>
+      <strong>Q:</strong> I can't play music on the pages; what's going on?<br />
+      <strong>A:</strong> Make sure your browser is allowing autoplaying media on listenbrainz.org.
+      <br/>If you have a Spotify account, you'll have much better results if you <a href="{{ url_for('profile.music_services_details') }}">connect it to ListenBrainz</a>. Otherwise you'll be limited to 30 second excerpts.
+    </p>
+      <br/>
+    <p>
+      <strong>Q:</strong> I connected my Spotify account but the player just doesn't work<br />
+      <strong>A:</strong> Before anything else, try disconnecting and <a href="{{ url_for('profile.music_services_details') }}">reconnecting your Spotify account</a>
+      <br/>
+        Make sure you select the permissions to 'record listens and play music' or 'play music only'.
+
+      <br/><br/>
+        Still no luck? You might have stumbled onto a bug! We would be grateful if you could <a href="https://tickets.metabrainz.org/projects/LB">report it here</a> along with the content of your browser's console.
+    </p>
   </div>
 {%- endblock -%}
 

@@ -84,26 +84,9 @@ def add_data_info():
 def import_data_info():
     return render_template("index/import-data.html")
 
-
-@index_bp.route("/goals/")
-def goals():
-    return render_template("index/goals.html")
-
-
-@index_bp.route("/faq/")
-def faq():
-    return render_template("index/faq.html")
-
-
 @index_bp.route("/lastfm-proxy/")
 def proxy():
     return render_template("index/lastfm-proxy.html")
-
-
-@index_bp.route("/roadmap/")
-def roadmap():
-    return render_template("index/roadmap.html")
-
 
 @index_bp.route("/current-status/")
 @web_listenstore_needed
