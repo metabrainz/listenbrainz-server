@@ -8,7 +8,7 @@ Feedback JSON Documentation
 Submission JSON
 ---------------
 
-To submit recording feedback via our API (see: :doc:`api`), ``POST`` a JSON document to
+To submit recording feedback via our API (see: :doc:`api/recordings`), ``POST`` a JSON document to
 the ``recording-feedback`` endpoint.
 
 A sample feedback may look like:

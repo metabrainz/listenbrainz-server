@@ -168,6 +168,9 @@ def _to_native_api(data, append_key):
         except (KeyError, ValueError, ListenValidationError):
             return None
 
+    # Source has special meaning in LFM api. e.g.: if you see a listen with
+    # "source": "P", in the database it is a listen from API compat deprecated.
+    # https://web.archive.org/web/20090217162831/http://last.fm/api/submissions
     if 'o{}'.format(append_key) in data:
         listen['track_metadata']['additional_info']['source'] = data['o{}'.format(append_key)]
 

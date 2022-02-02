@@ -1,3 +1,3 @@
-from listenbrainz.webserver import create_app
+from listenbrainz.webserver import create_web_app
 
-application = create_app()
+application = create_web_app()

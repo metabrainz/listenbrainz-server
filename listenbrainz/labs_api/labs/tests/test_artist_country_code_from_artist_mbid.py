@@ -18,18 +18,20 @@ json_response = [
     {
         "area_id": 5099,
         "artist_mbid": "164f0d73-1234-4e2c-8743-d77bf2191051",
+        "artist_name": "Kanye West",
         "country_code": "US"
     },
     {
         "area_id": 221,
         "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+        "artist_name": "Portishead",
         "country_code": "GB"
     }
 ]
 
 area_response = [
-    {'artist_mbid': '164f0d73-1234-4e2c-8743-d77bf2191051', 'area_id': 5099, 'country_code': None},
-    {'artist_mbid': '8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11', 'area_id': 221, 'country_code': 'GB'}
+    {'artist_mbid': '164f0d73-1234-4e2c-8743-d77bf2191051', "artist_name": 'Kanye West', 'area_id': 5099, 'country_code': None},
+    {'artist_mbid': '8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11', "artist_name": 'Portishead', 'area_id': 221, 'country_code': 'GB'}
 ]
 
 country_response = [
@@ -56,7 +58,7 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(q.names()[1], "MusicBrainz Artist Country From Artist MBID")
         self.assertNotEqual(q.introduction(), "")
         self.assertEqual(q.inputs(), ['artist_mbid'])
-        self.assertEqual(q.outputs(), ['artist_mbid', 'country_code'])
+        self.assertEqual(q.outputs(), ['artist_mbid', 'artist_name', 'country_code'])
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
