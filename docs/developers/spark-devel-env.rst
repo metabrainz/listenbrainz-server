@@ -1,5 +1,5 @@
-ListenBrainz Spark development
-==============================
+Spark development
+=================
 
 There are two distinct part of the ListenBrainz development environment:
 

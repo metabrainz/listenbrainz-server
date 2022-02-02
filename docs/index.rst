@@ -33,6 +33,7 @@ Contents
 
    developers/devel-env
    developers/spark-devel-env
+   developers/architecture
    developers/spark-architecture
    developers/commands
 
@@ -41,6 +42,10 @@ Contents
    :caption: Maintainer Documentation
 
    maintainers/docker-image
+   maintainers/dumps
+   maintainers/spotify-reader
+   maintainers/updating-prod-db-schema
+   maintainers/pull-requests
 
 Indices and tables
 ==================

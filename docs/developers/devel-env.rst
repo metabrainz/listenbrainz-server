@@ -1,5 +1,5 @@
-ListenBrainz Server development
-===============================
+Server development
+==================
 
 Set up ListenBrainz Server development environment
 --------------------------------------------------
