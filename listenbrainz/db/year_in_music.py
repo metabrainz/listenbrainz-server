@@ -159,7 +159,8 @@ def handle_top_stats(entity, data):
     try:
         with connection.cursor() as cursor:
             query = cursor.mogrify(query, (f"top_{entity}",))
-            execute_values(cursor, query, ujson.dumps(data))
+            values = [(user["musicbrainz_id"], user["data"]) for user in data]
+            execute_values(cursor, query, values)
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
