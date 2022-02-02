@@ -1,5 +1,8 @@
+Server development
+==================
+
 Set up ListenBrainz Server development environment
-==================================================
+--------------------------------------------------
 
 To contribute to the ListenBrainz project, you need a development environment.
 With your development environment, you can test your changes before submitting a
@@ -130,7 +133,7 @@ you obtained.
 
 .. note::
 
-    Again, if you use something other than ``localhost`` as the host you use to access your development server, 
+    Again, if you use something other than ``localhost`` as the host you use to access your development server,
     you should update the ``homepage`` and ``Authorization callback URL`` fields accordingly when registering on CritiqueBrainz.
 
 .. _CritiqueBrainz applications page: https://critiquebrainz.org/profile/applications/
@@ -176,18 +179,18 @@ environment by running ``develop.sh up``.
 .. code-block:: bash
 
     ./develop.sh up
-    
+
 .. note::
 
     By default, the web service listens on port 7000. If you already have a service listening
     on this port, then you can change it by updating the ports section of ``docker/docker-compose.yml``.
-    
-    
+
+
     .. code-block:: bash
-    
+
         ports:
         - "7000:80"
-    
+
     To change the listening port, change only the value before the ":" to the port of your choice
     and point your browser to ``http://localhost:<Port>``
 
