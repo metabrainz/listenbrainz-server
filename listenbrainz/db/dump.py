@@ -46,6 +46,7 @@ from listenbrainz.webserver import create_app
 MAIN_FTP_SERVER_URL = "ftp.eu.metabrainz.org"
 FULLEXPORT_MAX_AGE = 17  # days
 INCREMENTAL_MAX_AGE = 26  # hours
+FEEDBACK_MAX_AGE = 9  # days
 
 # this dict contains the tables dumped in public dump as keys
 # and a tuple of columns that should be dumped as values
@@ -944,7 +945,20 @@ def check_ftp_dump_ages():
         else:
             print("Incremental dump %s is %s old, good!" % (id, str(age)))
     except Exception as err:
-        msg = "Cannot fetch full dump age: %s" % str(err)
+        msg = "Cannot fetch incremental dump age: %s" % str(err)
+
+    try:
+        id, dt = _fetch_latest_file_info_from_ftp_dir(
+            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/spark')
+        age = datetime.now() - dt
+        if age > timedelta(days=FEEDBACK_MAX_AGE):
+            msg = "Feedback dump %s is more than %s days old: %s\n" % (
+                id, FEEDBACK_MAX_AGE, str(age))
+            print(msg, end="")
+        else:
+            print("Feedback dump %s is %s old, good!" % (id, str(age)))
+    except Exception as err:
+        msg = "Cannot fetch feedback dump age: %s" % str(err)
 
     app = create_app()
     with app.app_context():
