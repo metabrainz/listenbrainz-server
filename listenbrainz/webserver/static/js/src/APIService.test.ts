@@ -829,12 +829,31 @@ describe("recommendTrackToFollowers", () => {
   });
 
   describe("submitPinRecording", () => {
+    const pinnedRecordingFromAPI: PinnedRecording = {
+      created: 1605927742,
+      pinned_until: 1605927893,
+      blurb_content:
+        "Our perception of the passing of time is really just a side-effect of gravity",
+      recording_mbid: "recording_mbid",
+      row_id: 1,
+      track_metadata: {
+        artist_name: "TWICE",
+        track_name: "Feel Special",
+        additional_info: {
+          release_mbid: "release_mbid",
+          recording_msid: "recording_msid",
+          recording_mbid: "recording_mbid",
+          artist_msid: "artist_msid",
+        },
+      },
+    };
     beforeEach(() => {
       // Mock function for fetch
       window.fetch = jest.fn().mockImplementation(() => {
         return Promise.resolve({
           ok: true,
           status: 200,
+          json: async () => pinnedRecordingFromAPI,
         });
       });
 
@@ -875,10 +894,10 @@ describe("recommendTrackToFollowers", () => {
       expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
     });
 
-    it("returns the response code if successful", async () => {
+    it("returns the json content if successful", async () => {
       await expect(
         apiService.submitPinRecording("foobar", "foo")
-      ).resolves.toEqual(200);
+      ).resolves.toEqual(pinnedRecordingFromAPI);
     });
   });
 

@@ -1,6 +1,6 @@
-=======================
-ListenBrainz Data Dumps
-=======================
+==========
+Data Dumps
+==========
 
 
 ListenBrainz provides data dumps that you can import into your own server or
@@ -8,6 +8,10 @@ use for other purposes. The full data dumps are created twice a month
 and the incremental data dumps twice a week.
 Each dump contains a number of different files. Depending on your use cases,
 you may or may not require all of them.
+
+We have a bunch of :ref:`commands <Dump Manager>` which may be useful in interacting with dumps
+during local development as well.
+
 
 Dump mirrors
 ============

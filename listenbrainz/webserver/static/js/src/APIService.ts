@@ -860,7 +860,7 @@ export default class APIService {
     recordingMSID: string,
     recordingMBID?: string,
     blurb_content?: string
-  ): Promise<number> => {
+  ): Promise<{ status: string; data: PinnedRecording }> => {
     const url = `${this.APIBaseURI}/pin`;
     const response = await fetch(url, {
       method: "POST",
@@ -875,7 +875,7 @@ export default class APIService {
       }),
     });
     await this.checkStatus(response);
-    return response.status;
+    return response.json();
   };
 
   unpinRecording = async (userToken: string): Promise<number> => {

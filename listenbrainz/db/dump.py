@@ -23,35 +23,30 @@ https://listenbrainz.readthedocs.io/en/production/dev/listenbrainz-dumps.html
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-import logging
 import os
 import shutil
+import subprocess
+import tarfile
+import tempfile
+from datetime import datetime, timedelta
 from ftplib import FTP
 
 import sqlalchemy
-import subprocess
-import sys
-import tarfile
-import tempfile
-import time
 import ujson
-
-from datetime import datetime, timedelta
-
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
-from listenbrainz import DUMP_LICENSE_FILE_PATH
-import listenbrainz.db as db
-from listenbrainz.db import timescale
-from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
-from listenbrainz.utils import create_path, log_ioerrors
 
-from listenbrainz import config
+import listenbrainz.db as db
+from listenbrainz import DUMP_LICENSE_FILE_PATH
+from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.db import timescale
+from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 
 MAIN_FTP_SERVER_URL = "ftp.eu.metabrainz.org"
 FULLEXPORT_MAX_AGE = 17  # days
 INCREMENTAL_MAX_AGE = 26  # hours
+FEEDBACK_MAX_AGE = 8  # days
 
 # this dict contains the tables dumped in public dump as keys
 # and a tuple of columns that should be dumped as values
@@ -950,7 +945,20 @@ def check_ftp_dump_ages():
         else:
             print("Incremental dump %s is %s old, good!" % (id, str(age)))
     except Exception as err:
-        msg = "Cannot fetch full dump age: %s" % str(err)
+        msg = "Cannot fetch incremental dump age: %s" % str(err)
+
+    try:
+        id, dt = _fetch_latest_file_info_from_ftp_dir(
+            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/spark')
+        age = datetime.now() - dt
+        if age > timedelta(days=FEEDBACK_MAX_AGE):
+            msg = "Feedback dump %s is more than %s days old: %s\n" % (
+                id, FEEDBACK_MAX_AGE, str(age))
+            print(msg, end="")
+        else:
+            print("Feedback dump %s is %s old, good!" % (id, str(age)))
+    except Exception as err:
+        msg = "Cannot fetch feedback dump age: %s" % str(err)
 
     app = create_app()
     with app.app_context():

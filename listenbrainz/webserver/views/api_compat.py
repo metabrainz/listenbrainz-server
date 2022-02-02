@@ -225,7 +225,7 @@ def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
         if 'trackNumber' in data:
             listen['track_metadata']['additional_info']['tracknumber'] = data['trackNumber']
         if 'mbid' in data:
-            listen['track_metadata']['release_mbid'] = data['mbid']
+            listen['track_metadata']['track_mbid'] = data['mbid']
         if 'duration' in data:
             listen['track_metadata']['additional_info']['duration'] = data['duration']
         # Choosen_by_user is 1 by default
@@ -373,7 +373,7 @@ def format_response(data, format="xml"):
     elif format == 'json':
         # Remove the <lfm> tag and its attributes
         jsonData = xmltodict.parse(data)['lfm']
-        for k in jsonData.keys():
+        for k in list(jsonData.keys()):
             if k[0] == '@':
                 jsonData.pop(k)
 

@@ -8,7 +8,7 @@ JSON Documentation
 Submission JSON
 ---------------
 
-To submit a listen via our API (see: :doc:`api`), ``POST`` a JSON document to
+To submit a listen via our API (see: :doc:`api/core`), ``POST`` a JSON document to
 the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
 - ``single``: Submit single listen
@@ -253,7 +253,7 @@ Here are a few examples of how to fill in the ``media_player``, ``submission_cli
 current recommendations.
 
 BrainzPlayer on the ListenBrainz website playing a video from YouTube
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: JSON
 
@@ -272,7 +272,7 @@ BrainzPlayer on the ListenBrainz website playing a video from YouTube
   }
 
 BrainzPlayer on the ListenBrainz website playing a video from Spotify
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Note that even though the ``origin_url`` is ``https://open.spotify.com``, we set ``music_service``
 to spotify.com (see above note).
@@ -295,7 +295,7 @@ to spotify.com (see above note).
 
 
 Using Otter for Funkwhale on android, and submitting with Simple Scrobbler
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this case, the media player and submission client are completely separate programs. Because music is being played
 from a user's private collection and not a streaming service, don't include music_service or origin_url.
@@ -318,7 +318,7 @@ from a user's private collection and not a streaming service, don't include musi
 
 
 Rhythmbox player listening to Jamendo
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: JSON
 
@@ -337,7 +337,7 @@ Rhythmbox player listening to Jamendo
   }
 
 Listening to a recording from Bandcamp and submitting with the browser extension WebScrobbler
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Because playback happens in the browser, there is no specific ``media_player``.
 

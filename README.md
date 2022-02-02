@@ -7,10 +7,7 @@
     <a href="https://github.com/metabrainz/listenbrainz-server/commits/master">
     <img src="https://img.shields.io/github/last-commit/metabrainz/listenbrainz-server.svg?style=flat-square&logo=github&logoColor=white"
          alt="GitHub last commit"></a>
-    <a href="https://github.com/metabrainz/listenbrainz-server/issues">
-    <img src="https://img.shields.io/github/issues-raw/metabrainz/listenbrainz-server.svg?style=flat-square&logo=github&logoColor=white"
-         alt="GitHub issues"></a>
-    <a href="https://github.com/metabrainz/metabrainz.org/pulls">
+    <a href="https://github.com/metabrainz/listenbrainz-server/pulls">
     <img src="https://img.shields.io/github/issues-pr-raw/metabrainz/listenbrainz-server?style=flat-square&logo=github&logoColor=white"
          alt="GitHub pull requests"></a>
 </p>
@@ -84,8 +81,6 @@ also build the documentation locally:
 ## License Notice
 
 ```
-listenbrainz-server - Server for the ListenBrainz project
-
 Copyright (C) 2017 MetaBrainz Foundation Inc.
 
 This program is free software; you can redistribute it and/or modify

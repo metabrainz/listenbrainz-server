@@ -40,17 +40,24 @@ def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
     listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = f"user_{entity}_{stats_range}"
-    listens_df.createOrReplaceTempView(table_name)
+    table = f"user_{entity}_{stats_range}"
+    listens_df.createOrReplaceTempView(table)
 
-    handler = entity_handler_map[entity]
-    data = handler(table_name)
-    messages = create_messages(data=data, entity=entity, stats_range=stats_range,
-                               from_date=from_date, to_date=to_date, message_type=message_type)
+    messages = calculate_entity_stats(
+        from_date, to_date, table, entity, stats_range, message_type
+    )
 
     logger.debug("Done!")
 
     return messages
+
+
+def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str,
+                           entity: str, stats_range: str, message_type: str):
+    handler = entity_handler_map[entity]
+    data = handler(table)
+    return create_messages(data=data, entity=entity, stats_range=stats_range,
+                           from_date=from_date, to_date=to_date, message_type=message_type)
 
 
 def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str) \
