@@ -1,5 +1,5 @@
-ListenBrainz Spark development
-==============================
+Spark development
+=================
 
 The ListenBrainz Spark environment is used for computing statistics and computing recommendations.
 If you're just working on adding a feature to the ListenBrainz webserver, you **do not** need

@@ -1,6 +1,6 @@
-====================
-ListenBrainz Scripts
-====================
+=======
+Scripts
+=======
 
 We have a bunch of python scripts to execute common tasks.
 
