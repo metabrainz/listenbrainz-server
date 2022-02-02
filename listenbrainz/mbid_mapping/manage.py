@@ -14,7 +14,6 @@ from mapping.utils import log, CRON_LOG_FILE
 from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
-from recording_similarity.recording_similarity_index import create_recording_similarity_index
 
 
 @click.group()
@@ -112,14 +111,6 @@ def top_tracks(year):
         of which tracks and how many times a user played for a given year.
     """
     calculate_tracks_of_the_year(year)
-
-
-@cli.command()
-def create_recording_similarity():
-    """
-        Update the recording_similarity index
-    """
-    create_recording_similarity_index()
 
 
 def usage(command):
