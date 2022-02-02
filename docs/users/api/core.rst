@@ -7,7 +7,7 @@ The ListenBrainz server supports the following end-points for submitting and fet
    :blueprints: api_v1
    :include-empty-docstring:
    :undoc-static:
-   :undoc-endpoints: api_v1.latest_import, api_v1.get_playlists_for_user, api_v1.get_playlists_created_for_user, api_v1.get_playlists_collaborated_on_for_user
+   :undoc-endpoints: api_v1.latest_import
 
 .. http:get:: /1/latest-import
 
