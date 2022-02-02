@@ -974,8 +974,11 @@ export default class APIService {
     eventType: string,
     username: string,
     userToken: string,
-    id?: number
+    id: number
   ): Promise<any> => {
+    if (!id) {
+      throw new SyntaxError("Event ID not present");
+    }
     const query = `${this.APIBaseURI}/user/${username}/feed/events/delete`;
     const response = await fetch(query, {
       method: "POST",

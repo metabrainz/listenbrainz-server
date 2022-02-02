@@ -19,7 +19,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual, get as _get, remove as _remove } from "lodash";
+import { isEqual, get as _get, filter as _filter } from "lodash";
 import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import {
@@ -342,7 +342,7 @@ export default class UserFeedPage extends React.Component<
           event.event_type,
           currentUser.name,
           currentUser.auth_token as string,
-          event.id
+          event.id!
         );
         if (status === 200) {
           newAlert(
@@ -350,7 +350,7 @@ export default class UserFeedPage extends React.Component<
             "Successfully deleted!",
             <>Successfully deleted!</>
           );
-          const new_events = _remove(events, (element) => {
+          const new_events = _filter(events, (element) => {
             // Making sure the event that is getting deleted is either a recommendation or notification
             // Since, recommendation and notification are in same db, and might have same id as a pin
             // Similarly we later on filter by id and event_type for pin deletion
@@ -383,12 +383,8 @@ export default class UserFeedPage extends React.Component<
           event.id as number
         );
         if (status === 200) {
-          newAlert(
-            "success",
-            "Successfully deleted!",
-            <>Successfully deleted!</>
-          );
-          const new_events = _remove(events, (element) => {
+          newAlert("success", "", <>Successfully deleted!</>);
+          const new_events = _filter(events, (element) => {
             return !(
               element?.id === event.id &&
               element.event_type === EventType.RECORDING_PIN

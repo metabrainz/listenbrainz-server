@@ -1122,6 +1122,17 @@ describe("deleteFeedEvent", () => {
     expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 
+  it("throws appropriate error if id is missing", async () => {
+    await expect(
+      apiService.deleteFeedEvent(
+        "recording_recommendation",
+        "riksucks",
+        "testToken",
+        (undefined as unknown) as number
+      )
+    ).rejects.toThrow(SyntaxError("Event ID not present"));
+  });
+
   it("returns the response code if successful", async () => {
     await expect(
       apiService.deleteFeedEvent(
