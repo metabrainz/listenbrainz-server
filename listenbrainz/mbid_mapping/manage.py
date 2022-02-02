@@ -94,7 +94,7 @@ def cron_log():
 
 
 @cli.command()
-@click.argument('year')
+@click.argument('year', type=int)
 def top_discoveries(year):
     """
         Top discoveries for year -- this creates a table in the mapping schema of the provided mb-docker database
@@ -104,7 +104,7 @@ def top_discoveries(year):
 
 
 @cli.command()
-@click.argument('year')
+@click.argument('year', type=int)
 def top_tracks(year):
     """
         Tracks for the year -- this also creates a table in the mapping schema, where this one creates a historgram
