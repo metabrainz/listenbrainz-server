@@ -126,7 +126,7 @@ def get_feedback_for_user(user_name):
 def get_feedback_for_recording_mbid(recording_mbid):
     """
     Get feedback for recording with given ``recording_mbid``. The format for the JSON returned is defined in
-     our :ref:`feedback-json-doc`.
+    our :ref:`feedback-json-doc`.
 
     :param score: Optional, If 1 then returns the loved recordings, if -1 returns hated recordings.
     :type score: ``int``
@@ -150,7 +150,7 @@ def get_feedback_for_recording_mbid(recording_mbid):
 def get_feedback_for_recording_msid(recording_msid):
     """
     Get feedback for recording with given ``recording_msid``. The format for the JSON returned is defined in
-     our :ref:`feedback-json-doc`.
+    our :ref:`feedback-json-doc`.
 
     :param score: Optional, If 1 then returns the loved recordings, if -1 returns hated recordings.
     :type score: ``int``
@@ -202,6 +202,15 @@ def get_feedback_for_recordings_for_user(user_name):
     is defined in our :ref:`feedback-json-doc`.
 
     If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
+
+    .. note::
+
+        If you get a 502 error while querying this endpoint, consider reducing the number of total recordings you are
+        querying in 1 request. As a rule of thumb, requesting maximum ~75 recordings in 1 request will avert the error.
+
+        The reason this error occurs is because the recording uuids are query params which are part of the request url.
+        The length of the url is subject to a general limit imposed at the middleware level so requests with long urls
+        never reach the ListenBrainz backend. Due to the same reason, the backend cannot provide a meaningful error.
 
     :param recordings: comma separated list of recording_msids for which feedback records are to be fetched.
         this param is deprecated and will be removed in the future. use recording_msids instead.
