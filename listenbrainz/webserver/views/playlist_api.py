@@ -364,12 +364,7 @@ def create_playlist_simple():
     for mbid in recording_mbids:
         playlist.recordings.append(WritablePlaylistRecording(mbid=UUID(mbid), added_by_id=user["id"]))
 
-    try:
-        playlist = db_playlist.create(playlist)
-    except Exception as e:
-        current_app.logger.error("Error while creating new playlist: {}".format(e))
-        raise APIInternalServerError("Failed to create the playlist. Please try again.")
-
+    playlist = db_playlist.create(playlist)
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
 
 
