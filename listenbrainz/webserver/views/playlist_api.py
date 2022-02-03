@@ -328,6 +328,51 @@ def create_playlist():
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
 
 
+@playlist_api_bp.route("/create-simple", methods=["POST", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+@api_listenstore_needed
+def create_playlist_simple():
+    """
+    Create a quick and dirty public playlist. The POST data must be nothing but a list of recording_mbids
+    separated by , all on one line.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlist accepted.
+    :statuscode 400: invalid recording_mbid list sent
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 403: forbidden. The submitting user is not allowed to create playlists for other users.
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header()
+
+    data = str(request.get_data(), "utf-8")
+    print(data)
+    try:
+        recording_mbids = data.split(",")
+        for mbid in recording_mbids:
+            uuid = UUID(mbid)
+    except ValueError:
+        raise APIBadRequest("Invalid data in recording mbid list. Should be nothing but recording_mbids separated by \\n.") 
+
+    playlist = WritablePlaylist(name="Instant playlist",
+                                creator_id=user["id"],
+                                description="Instant playlist -- nothing else is known. Can probably be deleted! :)",
+                                public=True)
+
+    for mbid in recording_mbids:
+        playlist.recordings.append(WritablePlaylistRecording(mbid=UUID(mbid), added_by_id=user["id"]))
+
+    try:
+        playlist = db_playlist.create(playlist)
+    except Exception as e:
+        current_app.logger.error("Error while creating new playlist: {}".format(e))
+        raise APIInternalServerError("Failed to create the playlist. Please try again.")
+
+    return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
+
+
 @playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
