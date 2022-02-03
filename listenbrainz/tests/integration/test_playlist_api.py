@@ -1074,3 +1074,39 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
         )
         self.assert403(response)
+
+
+    def test_simple_playlist_create_and_get(self):
+        """ Test to ensure creating a playlist via the simple endpoint works """
+
+        playlist = "f4655387-c676-4b07-9a27-f560ba254170,079cab5d-0ae6-4524-81f9-5235a284ec49"
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist_simple"),
+            data=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "ok")
+        self.assertNotEqual(response.json["playlist_mbid"], "")
+
+        playlist_mbid = response.json["playlist_mbid"]
+
+        # Make sure the return playlist id is valid
+        UUID(response.json["playlist_mbid"])
+
+        # Test to ensure fetching a playlist works
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid, fetch_metadata="false"),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
+        self.assertEqual(response.json["playlist"]["annotation"], "Instant playlist -- nothing else is known. Can probably be deleted! :)")
+        self.assertEqual(response.json["playlist"]["track"][0]["identifier"], "https://musicbrainz.org/recording/f4655387-c676-4b07-9a27-f560ba254170")
+        self.assertEqual(response.json["playlist"]["track"][1]["identifier"], "https://musicbrainz.org/recording/079cab5d-0ae6-4524-81f9-5235a284ec49")
+        try:
+            dateutil.parser.isoparse(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["last_modified_at"])
+        except ValueError:
+            assert False
