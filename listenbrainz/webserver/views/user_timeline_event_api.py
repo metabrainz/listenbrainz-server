@@ -21,7 +21,7 @@ import time
 import ujson
 
 from collections import defaultdict
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from flask import Blueprint, jsonify, request, current_app
 
@@ -187,11 +187,10 @@ def user_feed(user_name: str):
     users_following = db_user_relationship.get_following_for_user(user['id'])
 
     # get all listen events
-    user_ids = [user['id'] for user in users_following]
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events(db_conn, user_ids, min_ts, max_ts, count)
+        listen_events = get_listen_events(db_conn, users_following, min_ts, max_ts, count)
 
     # for events like "follow" and "recording recommendations", we want to show the user
     # their own events as well
@@ -297,7 +296,7 @@ def delete_feed_events(user_name):
 
 def get_listen_events(
     db_conn: TimescaleListenStore,
-    user_ids: List[int],
+    users: List[Dict],
     min_ts: int,
     max_ts: int,
     count: int,
@@ -311,7 +310,7 @@ def get_listen_events(
     # but I'm happy with this heuristic for now and we can change later.
     db_conn = webserver.create_timescale(current_app)
     listens, _, _ = db_conn.fetch_listens_for_multiple_users_from_storage(
-        user_ids,
+        users,
         limit=count,
         from_ts=min_ts,
         to_ts=max_ts,

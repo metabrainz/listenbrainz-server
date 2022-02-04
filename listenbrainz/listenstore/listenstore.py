@@ -56,7 +56,7 @@ class ListenStore(object):
         """
         raise NotImplementedError()
 
-    def fetch_listens(self, user_id, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
+    def fetch_listens(self, user, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
@@ -67,4 +67,4 @@ class ListenStore(object):
         else:
             order = ORDER_DESC
 
-        return self.fetch_listens_from_storage(user_id, from_ts, to_ts, limit, order)
+        return self.fetch_listens_from_storage(user, from_ts, to_ts, limit, order)
