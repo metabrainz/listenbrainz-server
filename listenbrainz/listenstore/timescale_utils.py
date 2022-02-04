@@ -66,7 +66,7 @@ def add_missing_to_listen_users_metadata():
                 len(user_list))
 
     query = """
-        INSERT INTO listen_user_metadata
+        INSERT INTO listen_user_metadata (user_id, count, min_listened_at, max_listened_at, created)
              VALUES %s
         ON CONFLICT (user_id)
          DO NOTHING
@@ -123,7 +123,7 @@ def recalculate_all_user_data():
                 len(user_list))
 
     query = """
-        INSERT INTO listen_user_metadata
+        INSERT INTO listen_user_metadata (user_id, count, min_listened_at, max_listened_at, created)
              VALUES %s
         ON CONFLICT (user_id)
           DO UPDATE
