@@ -47,7 +47,8 @@ def update_user_listen_counts():
         logger.info("Completed updating listen counts")
 
 
-def add_missing_users_to_metadata():
+def add_missing_to_listen_users_metadata():
+    """ Fetch users from LB and add an entry those users which are missing from listen_user_metadata """
     # Select a list of users
     user_list = []
     query = 'SELECT id FROM "user"'
