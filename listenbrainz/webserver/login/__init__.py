@@ -32,6 +32,16 @@ class User(UserMixin):
             login_id=user['login_id'],
         )
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "created": self.created,
+            "musicbrainz_id": self.musicbrainz_id,
+            "auth_token": self.auth_token,
+            "gdpr_agreed": self.gdpr_agreed,
+            "login_id": self.login_id
+        }
+
 @login_manager.user_loader
 def load_user(user_login_id):
     try:

@@ -134,7 +134,7 @@ def get_listens(user_name):
         raise APIBadRequest("min_ts should be less than max_ts")
 
     listens, _, max_ts_per_user = db_conn.fetch_listens(
-        user["id"],
+        user,
         limit=count,
         from_ts=min_ts,
         to_ts=max_ts
@@ -247,8 +247,7 @@ def get_recent_listens_for_user_list(user_list):
 
     db_conn = webserver.create_timescale(current_app)
     users = db_user.get_many_users_by_mb_id(users)
-    user_ids = [user["id"] for user in users.values()]
-    listens = db_conn.fetch_recent_listens_for_users(user_ids, limit=limit)
+    listens = db_conn.fetch_recent_listens_for_users(users.values(), limit=limit)
 
     listen_data = []
     for listen in listens:

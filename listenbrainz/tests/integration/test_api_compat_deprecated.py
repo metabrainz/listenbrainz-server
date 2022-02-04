@@ -157,7 +157,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         time.sleep(1)
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(self.user['id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 

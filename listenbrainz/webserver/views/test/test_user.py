@@ -192,31 +192,31 @@ class UserViewsTestCase(IntegrationTestCase):
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
-
+        user = User.from_dbrow(db_user.get(1)).to_dict()
         timescale.return_value = ([], 0, 0)
 
         # If no parameter is given, use current time as the to_ts
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call(1, limit=25, from_ts=None)
+        req_call = mock.call(user, limit=25, from_ts=None)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # max_ts query param -> to_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'max_ts': 1520946000})
-        req_call = mock.call(1, limit=25, to_ts=1520946000)
+        req_call = mock.call(user, limit=25, to_ts=1520946000)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # min_ts query param -> from_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'min_ts': 1520941000})
-        req_call = mock.call(1, limit=25, from_ts=1520941000)
+        req_call = mock.call(user, limit=25, from_ts=1520941000)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # If max_ts and min_ts set, only max_ts is used
         self.client.get(url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
-        req_call = mock.call(1, limit=25, to_ts=1520946000)
+        req_call = mock.call(user, limit=25, to_ts=1520946000)
         timescale.assert_has_calls([req_call])
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
