@@ -516,7 +516,7 @@ def report_user(reporter_id: int, reported_id: int, reason: str = None):
 
 
 def update_user_details(lb_id: int, musicbrainz_id: str, email: str):
-    """ Update the email field for user with specified MusicBrainz ID
+    """ Update the email field and MusicBrainz ID of the user specified by the lb_id
 
     Args:
         lb_id: listenbrainz row id of the user
