@@ -59,6 +59,14 @@ class UserTestCase(DatabaseTestCase):
         # after update_last_login, the val should be greater than the old value i.e 0
         self.assertGreater(int(user['last_login'].strftime('%s')), 0)
 
+    def test_update_user_details(self):
+        user_id = db_user.create(17, "barbazfoo", "barbaz@foo.com")
+        db_user.update_user_details(user_id, "hello-world", "hello-world@foo.com")
+        user = db_user.get(user_id, fetch_email=True)
+        self.assertEqual(user["id"], user_id)
+        self.assertEqual(user["musicbrainz_id"], "hello-world")
+        self.assertEqual(user["email"], "hello-world@foo.com")
+
     def test_get_all_users(self):
         """ Tests that get_all_users returns ALL users in the db """
 
