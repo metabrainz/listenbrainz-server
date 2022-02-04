@@ -7,6 +7,7 @@ import tempfile
 import time
 import shutil
 import uuid
+import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
 import ujson
@@ -14,7 +15,7 @@ import psycopg2
 import psycopg2.sql
 from psycopg2.extras import execute_values
 from psycopg2.errors import UntranslatableCharacter
-from typing import List
+from typing import List, Dict
 import sqlalchemy
 import pandas as pd
 import pyarrow as pa
@@ -28,14 +29,15 @@ from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
-from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION
+from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
 from listenbrainz.utils import create_path, init_cache
 
 # Append the user name for both of these keys
 REDIS_USER_LISTEN_COUNT = "lc."
 REDIS_USER_TIMESTAMPS = "ts."
 REDIS_TOTAL_LISTEN_COUNT = "lc-total"
-REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY = 86400  # 24 hours
+# cache listen counts for 5 minutes only, so that listen counts are always up-to-date in 5 minutes.
+REDIS_USER_LISTEN_COUNT_EXPIRY = 300
 
 DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
@@ -75,79 +77,55 @@ class TimescaleListenStore(ListenStore):
         self.dump_temp_dir_root = conf.get(
             'LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
-    def set_empty_cache_values_for_user(self, user_name, user_id):
-        """When a user is created, set the listen_count and timestamp keys so that we
-           can avoid the expensive lookup for a brand new user."""
+    def set_empty_values_for_user(self, user_id: int):
+        """When a user is created, set the timestamp keys and insert an entry in the listen count
+         table so that we can avoid the expensive lookup for a brand new user."""
+        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
+        query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, 0, 0, NOW())"""
+        with timescale.engine.connect() as connection:
+            connection.execute(sqlalchemy.text(query), user_id=user_id)
 
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
-        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", expirein=0)
+    def get_listen_count_for_user(self, user_id: int):
+        """Get the total number of listens for a user.
 
-    def get_listen_count_for_user(self, user_name):
-        """Get the total number of listens for a user. The number of listens comes from
-           brainzutils cache unless an exact number is asked for.
+         The number of listens comes from cache if available otherwise the get the
+         listen count from the database. To get the listen count from the database,
+         query listen_user_metadata table for the count and the timestamp till which we
+         already have counted. Then scan the listens created later than that timestamp
+         to get the remaining count. Add the two counts to get total listen count.
 
         Args:
-            user_name: the user to get listens for
+            user_id: the user to get listens for
         """
+        cached_count = cache.get(REDIS_USER_LISTEN_COUNT + str(user_id))
+        if cached_count:
+            return cached_count
 
-        count = cache.get(REDIS_USER_LISTEN_COUNT + user_name, decode=False)
-        # count < 0, yeah that's possible. when a user imports from last.fm,
-        # we call set_listen_count_expiry_for_user to set a TTL on the count.
-        # the intent is that when the key expires and the listen counts will
-        # be recalculated and put into redis again. the issue is that listen
-        # counts are only calculated when the listen-count api endpoint is
-        # called. So imagine this, I do a last.fm import at 13:00 on 2021-10-23.
-        # The key expires at 13:00 on 2021-10-24. From this moment, redis has no
-        # key for my listens. Then, I delete a listen using the API at say 13:05.
-        # The listen is deleted and the listenstore tries to decrement the listen
-        # count but hey redis has no key. So what does it do, it creates one with
-        # a value of 0 and decrements that. Voila, we have the key with a negative
-        # value.
-        # Note that the check is still incomplete. If instead of deleting, one had
-        # inserted a listen. redis would create a key with value 0 and increment it
-        # by 1. only now we don't have a way to detect this.
-        if count is None or int(count) < 0:
-            return self.reset_listen_count(user_name)
-        else:
-            return int(count)
+        with timescale.engine.connect() as connection:
+            query = "SELECT count, created FROM listen_user_metadata WHERE user_id = :user_id"
+            result = connection.execute(sqlalchemy.text(query), user_id=user_id)
+            row = result.fetchone()
+            if row:
+                count, created = row["count"], row["created"]
+            else:
+                # we can reach here only in tests, because we create entries in listen_user_metadata
+                # table when user signs up and for existing users an entry should always exist.
+                count, created = 0, LISTEN_MINIMUM_DATE
 
-    def reset_listen_count(self, user_name):
-        """ Reset the listen count of a user from cache and put in a new calculated value.
-            returns the re-calculated listen count.
+            query_remaining = """
+                SELECT count(*) AS remaining_count
+                  FROM listen
+                 WHERE user_id = :user_id
+                   AND created > :created
+            """
+            result = connection.execute(sqlalchemy.text(query_remaining),
+                                        user_id=user_id,
+                                        created=created)
+            remaining_count = result.fetchone()["remaining_count"]
 
-            Args:
-                user_name: the musicbrainz id of user whose listen count needs to be reset
-        """
-        query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
-        t0 = time.monotonic()
-        try:
-            with timescale.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text(query), {
-                    "user_name": user_name,
-                })
-                count = int(result.fetchone()[0] or 0)
-
-        except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count: %s" %
-                           str(e), exc_info=True)
-            raise
-
-        # intended for production monitoring
-        self.log.info("listen counts %s %.2fs" % (user_name, time.monotonic() - t0))
-        # put this value into brainzutils cache without an expiry time
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, count, expirein=0, encode=False)
-        return count
-
-    def set_listen_count_expiry_for_user(self, user_name):
-        """ Set an expire time for the listen count cache item. This is called after
-            a bulk import which allows for timescale continuous aggregates to catch up
-            to listen counts. Once the key expires, the correct value can be calculated
-            from the aggregate.
-
-            Args:
-                user_name: the musicbrainz id of user whose listen count needs an expiry time
-        """
-        cache._r.expire(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY)
+            total_count = count + remaining_count
+            cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), total_count, REDIS_USER_LISTEN_COUNT_EXPIRY)
+            return total_count
 
     def update_timestamps_for_user(self, user_id, min_ts, max_ts):
         """
@@ -219,30 +197,25 @@ class TimescaleListenStore(ListenStore):
                            str(e), exc_info=True)
             raise
 
-    def get_total_listen_count(self, cache_value=True):
+    def get_total_listen_count(self):
         """ Returns the total number of listens stored in the ListenStore.
             First checks the brainzutils cache for the value, if not present there
             makes a query to the db and caches it in brainzutils cache.
         """
+        count = cache.get(REDIS_TOTAL_LISTEN_COUNT)
+        if count:
+            return count
 
-        if cache_value:
-            count = cache.get(REDIS_TOTAL_LISTEN_COUNT)
-            if count:
-                return int(count)
-
-        query = "SELECT SUM(count) AS value FROM listen_count_30day"
-
+        query = "SELECT SUM(count) AS value FROM listen_user_metadata"
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query))
-                count = int(result.fetchone()["value"] or "0")
-        except psycopg2.OperationalError as e:
-            self.log.error(
-                "Cannot query timescale listen_count_30day: %s" % str(e), exc_info=True)
+                count = result.fetchone()["value"] or 0
+        except psycopg2.OperationalError:
+            self.log.error("Cannot query listen counts:", exc_info=True)
             raise
 
-        if cache_value:
-            cache.set(REDIS_TOTAL_LISTEN_COUNT, count, expirein=0)
+        cache.set(REDIS_TOTAL_LISTEN_COUNT, count, expirein=REDIS_USER_LISTEN_COUNT_EXPIRY)
         return count
 
     def insert(self, listens):
@@ -277,10 +250,9 @@ class TimescaleListenStore(ListenStore):
 
         conn.commit()
 
-        # update the listen counts and timestamps for the users
+        # update the timestamps for the users
         user_timestamps = {}
-        user_counts = defaultdict(int)
-        for ts, _, user_name, user_id in inserted_rows:
+        for ts, _, _, user_id in inserted_rows:
             if user_id in user_timestamps:
                 if ts < user_timestamps[user_id][0]:
                     user_timestamps[user_id][0] = ts
@@ -288,11 +260,6 @@ class TimescaleListenStore(ListenStore):
                     user_timestamps[user_id][1] = ts
             else:
                 user_timestamps[user_id] = [ts, ts]
-
-            user_counts[user_name] += 1
-
-        for user_name in user_counts:
-            cache.increment(REDIS_USER_LISTEN_COUNT + str(user_name), amount=user_counts[user_name])
 
         for user in user_timestamps:
             self.update_timestamps_for_user(
@@ -316,7 +283,8 @@ class TimescaleListenStore(ListenStore):
 
         return self.fetch_listens_for_multiple_users_from_storage([user_id], from_ts, to_ts, limit, order)
 
-    def fetch_listens_for_multiple_users_from_storage(self, user_ids: List[int], from_ts: float, to_ts: float, limit: int, order: int):
+    def fetch_listens_for_multiple_users_from_storage(self, user_ids: List[int], from_ts: float,
+                                                      to_ts: float, limit: int, order: int):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -424,6 +392,7 @@ class TimescaleListenStore(ListenStore):
 
         self.log.info("fetch listens %s %.2fs (%d passes)" %
                       (str(user_ids), fetch_listens_time, passes))
+        self.log.info("Listens: %s", listens)
 
         return listens, min_user_ts, max_user_ts
 
@@ -984,7 +953,7 @@ class TimescaleListenStore(ListenStore):
 
         return total_imported
 
-    def delete(self, musicbrainz_id, user_id):
+    def delete(self, user_id):
         """ Delete all listens for user with specified user ID.
 
         Note: this method tries to delete the user 5 times before giving up.
@@ -995,43 +964,50 @@ class TimescaleListenStore(ListenStore):
 
         Raises: Exception if unable to delete the user in 5 retries
         """
-
-        self.set_empty_cache_values_for_user(musicbrainz_id, user_id)
-        args = {'user_id': user_id}
-        query = "DELETE FROM listen WHERE user_id = :user_id"
-
+        query = """
+            UPDATE listen_user_metadata SET count = 0 WHERE user_id = :user_id;
+            DELETE FROM listen WHERE user_id = :user_id;
+        """
+        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
         try:
             with timescale.engine.connect() as connection:
-                connection.execute(sqlalchemy.text(query), args)
+                connection.execute(sqlalchemy.text(query), user_id=user_id)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise
 
-    def delete_listen(self, listened_at: int, user_name: str, user_id: int, recording_msid: str):
+    def delete_listen(self, listened_at: int, user_id: int, recording_msid: str):
         """ Delete a particular listen for user with specified MusicBrainz ID.
         Args:
             listened_at: The timestamp of the listen
-            user_name: the username of the user
-            user_id: the user id of the user
+            user_id: the listenbrainz row id of the user
             recording_msid: the MessyBrainz ID of the recording
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
-
-        args = {
-            'listened_at': listened_at,
-            'user_id': user_id,
-            'recording_msid': recording_msid
-        }
-        query = """DELETE FROM listen
-                    WHERE listened_at = :listened_at
-                      AND user_id = :user_id
-                      AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid """
-
+        query = """
+            WITH delete_listen AS (
+                DELETE FROM listen
+                      WHERE listened_at = :listened_at
+                        AND user_id = :user_id
+                        AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
+                  RETURNING user_id, created
+            )
+            UPDATE listen_user_metadata lc
+               SET count = count - 1
+              FROM delete_listen dl
+             WHERE lc.user_id = dl.user_id
+               AND lc.created > dl.created
+            -- only decrement count if the listen deleted has a created earlier than the created timestamp
+            -- in the listen count table
+        """
         try:
-            with timescale.engine.connect() as connection:
-                connection.execute(sqlalchemy.text(query), args)
-
-            cache._r.decrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name))
+            # There is something weird going on here, I do not completely understand why but using engine.connect instead
+            # of engine.begin causes the changes to not be persisted. Reading up on sqlalchemy transaction handling etc.
+            # it makes sense that we need begin for an explicit transaction but how CRUD statements work fine with connect
+            # in remaining LB is beyond me then.
+            with timescale.engine.begin() as connection:
+                connection.execute(sqlalchemy.text(query), listened_at=listened_at,
+                                   user_id=user_id, recording_msid=recording_msid)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
