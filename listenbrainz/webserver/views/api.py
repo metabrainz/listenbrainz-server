@@ -134,7 +134,7 @@ def get_listens(user_name):
         raise APIBadRequest("min_ts should be less than max_ts")
 
     listens, _, max_ts_per_user = db_conn.fetch_listens(
-        user_name,
+        user["id"],
         limit=count,
         from_ts=min_ts,
         to_ts=max_ts
@@ -246,10 +246,10 @@ def get_recent_listens_for_user_list(user_list):
         raise APIBadRequest("user_list is empty or invalid.")
 
     db_conn = webserver.create_timescale(current_app)
-    listens = db_conn.fetch_recent_listens_for_users(
-        users,
-        limit=limit
-    )
+    users = db_user.get_many_users_by_mb_id(users)
+    user_ids = [user["id"] for user in users.values()]
+    listens = db_conn.fetch_recent_listens_for_users(user_ids, limit=limit)
+
     listen_data = []
     for listen in listens:
         listen_data.append(listen.to_api())
@@ -520,8 +520,8 @@ def delete_listen():
         log_raise_400("%s: Recording MSID format invalid." % recording_msid)
 
     try:
-        _ts.delete_listen(listened_at=listened_at,
-                          recording_msid=recording_msid, user_name=user["musicbrainz_id"])
+        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid,
+                          user_id=user["id"], user_name=user["musicbrainz_id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(

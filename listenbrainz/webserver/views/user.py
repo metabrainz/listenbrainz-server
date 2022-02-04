@@ -99,7 +99,7 @@ def profile(user_name):
     else:
         args['from_ts'] = min_ts
     data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
-        user_name, limit=LISTENS_PER_PAGE, **args)
+        user.id, limit=LISTENS_PER_PAGE, **args)
 
     listens = []
     for listen in data:
@@ -424,7 +424,7 @@ def delete_user(musicbrainz_id):
     """
 
     user = _get_user(musicbrainz_id)
-    timescale_connection._ts.delete(user.musicbrainz_id)
+    timescale_connection._ts.delete(user.musicbrainz_id, user.id)
     db_user.delete(user.id)
 
 
@@ -437,10 +437,9 @@ def delete_listens_history(musicbrainz_id):
     """
 
     user = _get_user(musicbrainz_id)
-    timescale_connection._ts.delete(user.musicbrainz_id)
+    timescale_connection._ts.delete(user.musicbrainz_id, user.id)
     timescale_connection._ts.reset_listen_count(user.musicbrainz_id)
-    listens_importer.update_latest_listened_at(
-        user.id, ExternalServiceType.LASTFM, 0)
+    listens_importer.update_latest_listened_at(user.id, ExternalServiceType.LASTFM, 0)
     db_stats.delete_user_stats(user.id)
 
 
