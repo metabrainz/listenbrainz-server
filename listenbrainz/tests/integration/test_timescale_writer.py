@@ -4,6 +4,7 @@ import os
 import uuid
 from random import randint
 
+from listenbrainz.db.testing import TimescaleTestCase
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import TimescaleListenStore
@@ -17,10 +18,11 @@ from listenbrainz import config
 from datetime import datetime
 
 
-class TimescaleWriterTestCase(IntegrationTestCase):
+class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
     def setUp(self):
-        super(TimescaleWriterTestCase, self).setUp()
+        IntegrationTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
         self.ls = TimescaleListenStore({'REDIS_HOST': config.REDIS_HOST,
                                        'REDIS_PORT': config.REDIS_PORT,
                                        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
@@ -55,7 +57,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user['id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
@@ -74,7 +76,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
 
         self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
 
-        (min_ts, max_ts) = self.ls.get_timestamps_for_user(user_name=user.musicbrainz_id)
+        (min_ts, max_ts) = self.ls.get_timestamps_for_user(user["id"])
         self.assertEqual(min_ts, 1486449409)
         self.assertEqual(max_ts, 1486449409)
 
@@ -92,7 +94,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user['id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -104,7 +106,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user['id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -125,10 +127,10 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)  # sleep to allow timescale-writer to do its thing
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user1['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user1['id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-        listens, _, _ = self.ls.fetch_listens(user2['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user2['id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -154,5 +156,5 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user['id'], to_ts=to_ts)
         self.assertEqual(len(listens), 4)

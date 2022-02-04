@@ -187,11 +187,11 @@ def user_feed(user_name: str):
     users_following = db_user_relationship.get_following_for_user(user['id'])
 
     # get all listen events
-    musicbrainz_ids = [user['musicbrainz_id'] for user in users_following]
+    user_ids = [user['id'] for user in users_following]
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count)
+        listen_events = get_listen_events(db_conn, user_ids, min_ts, max_ts, count)
 
     # for events like "follow" and "recording recommendations", we want to show the user
     # their own events as well
@@ -297,7 +297,7 @@ def delete_feed_events(user_name):
 
 def get_listen_events(
     db_conn: TimescaleListenStore,
-    musicbrainz_ids: List[str],
+    user_ids: List[int],
     min_ts: int,
     max_ts: int,
     count: int,
@@ -311,7 +311,7 @@ def get_listen_events(
     # but I'm happy with this heuristic for now and we can change later.
     db_conn = webserver.create_timescale(current_app)
     listens, _, _ = db_conn.fetch_listens_for_multiple_users_from_storage(
-        musicbrainz_ids,
+        user_ids,
         limit=count,
         from_ts=min_ts,
         to_ts=max_ts,

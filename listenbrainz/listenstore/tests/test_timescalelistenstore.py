@@ -71,10 +71,11 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
     def tearDown(self):
         self.logstore = None
+        cache._r.flushdb()
         super(TestTimescaleListenStore, self).tearDown()
 
-    def _create_test_data(self, user_name, test_data_file_name=None):
-        test_data = create_test_data_for_timescalelistenstore(user_name, test_data_file_name)
+    def _create_test_data(self, user_name, user_id, test_data_file_name=None):
+        test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
         self.logstore.insert(test_data)
         return len(test_data)
 
@@ -108,7 +109,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         query = """INSERT INTO listen (listened_at, track_name, user_name, user_id, data, created)
                         VALUES %s
-                   ON CONFLICT (listened_at, track_name, user_name)
+                   ON CONFLICT (listened_at, track_name, user_id)
                     DO NOTHING
                 """
 
@@ -138,21 +139,21 @@ class TestTimescaleListenStore(DatabaseTestCase):
     # about immediate correctness, but eventual correctness, so test tossed.
 
     def test_insert_timescale(self):
-        count = self._create_test_data(self.testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)
+        count = self._create_test_data(self.testuser_name, self.testuser_id)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=1399999999)
         self.assertEqual(len(listens), count)
 
     def test_fetch_listens_0(self):
-        self._create_test_data(self.testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=1400000000, limit=1)
         self.assertEqual(len(listens), 1)
         self.assertEqual(listens[0].ts_since_epoch, 1400000050)
         self.assertEqual(min_ts, 1400000000)
         self.assertEqual(max_ts, 1400000200)
 
     def test_fetch_listens_1(self):
-        self._create_test_data(self.testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=1400000000)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -160,15 +161,15 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_2(self):
-        self._create_test_data(self.testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000100)
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=1400000100)
         self.assertEqual(len(listens), 2)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
     def test_fetch_listens_3(self):
-        self._create_test_data(self.testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -177,23 +178,23 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
     def test_fetch_listens_4(self):
-        self._create_test_data(self.testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000049, to_ts=1400000101)
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=1400000049, to_ts=1400000101)
         self.assertEqual(len(listens), 2)
         self.assertEqual(listens[0].ts_since_epoch, 1400000100)
         self.assertEqual(listens[1].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_5(self):
-        self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name, self.testuser_id)
         with self.assertRaises(ValueError):
-            self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000101, to_ts=1400000001)
+            self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=1400000101, to_ts=1400000001)
 
     def test_fetch_listens_with_gaps(self):
-        self._create_test_data(self.testuser_name,
+        self._create_test_data(self.testuser_name, self.testuser_id,
                                test_data_file_name='timescale_listenstore_test_listens_over_greater_time_range.json')
 
         # test from_ts with gaps
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=1399999999)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1420000050)
         self.assertEqual(listens[1].ts_since_epoch, 1420000000)
@@ -201,13 +202,13 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000000)
 
         # test from_ts and to_ts with gaps
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000049, to_ts=1420000001)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=1400000049, to_ts=1420000001)
         self.assertEqual(len(listens), 2)
         self.assertEqual(listens[0].ts_since_epoch, 1420000000)
         self.assertEqual(listens[1].ts_since_epoch, 1400000050)
 
         # test to_ts with gaps
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1420000051)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, to_ts=1420000051)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1420000050)
         self.assertEqual(listens[1].ts_since_epoch, 1420000000)
@@ -215,9 +216,9 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000000)
 
     def test_fetch_listens_with_mapping(self):
-        self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name, self.testuser_id)
         self._insert_mapping_metadata("c7a41965-9f1e-456c-8b1d-27c0f0dde280")
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=1400000000, limit=1)
         self.assertEqual(len(listens), 1)
         self.assertEqual(listens[0].data["mbid_mapping"]["artist_mbids"], ['6a221fda-2200-11ec-ac7d-dfa16a57158f'])
         self.assertEqual(listens[0].data["mbid_mapping"]["release_mbid"], '1fd178b4-1575-11ec-b98a-d72392cd8c97')
@@ -228,32 +229,32 @@ class TestTimescaleListenStore(DatabaseTestCase):
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
 
-        count = self._create_test_data(testuser_name)
-        listen_count = self.logstore.get_listen_count_for_user(user_name=testuser_name)
+        count = self._create_test_data(testuser_name, testuser["id"])
+        listen_count = self.logstore.get_listen_count_for_user(testuser_name)
         self.assertEqual(count, listen_count)
 
     def test_fetch_recent_listens(self):
         user = db_user.get_or_create(2, 'someuser')
         user_name = user['musicbrainz_id']
-        self._create_test_data(user_name)
+        self._create_test_data(user_name, user["id"])
 
         user2 = db_user.get_or_create(3, 'otheruser')
         user_name2 = user2['musicbrainz_id']
-        self._create_test_data(user_name2)
+        self._create_test_data(user_name2, user2["id"])
 
-        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], limit=1, max_age=10000000000)
+        recent = self.logstore.fetch_recent_listens_for_users([user["id"], user2["id"]], limit=1, max_age=10000000000)
         self.assertEqual(len(recent), 2)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], max_age=10000000000)
+        recent = self.logstore.fetch_recent_listens_for_users([user["id"], user2["id"]], max_age=10000000000)
         self.assertEqual(len(recent), 4)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user_name], max_age=int(time()) -
+        recent = self.logstore.fetch_recent_listens_for_users([user["id"]], max_age=int(time()) -
                                                               recent[0].ts_since_epoch + 1)
         self.assertEqual(len(recent), 1)
         self.assertEqual(recent[0].ts_since_epoch, 1400000200)
 
     def test_dump_listens(self):
-        self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name, self.testuser_id)
         temp_dir = tempfile.mkdtemp()
         dump = self.logstore.dump_listens(
             location=temp_dir,
@@ -279,7 +280,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, to_ts=base + 11)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -303,7 +304,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, to_ts=base + 11)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -318,7 +319,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
     # and timescale will not allow blank created timestamps, so this test is pointless
 
     def test_import_listens(self):
-        self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name, self.testuser_id)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
@@ -328,7 +329,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -339,9 +340,9 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
     def test_dump_and_import_listens_escaped(self):
         user = db_user.get_or_create(3, 'i have a\\weird\\user, na/me"\n')
-        self._create_test_data(user['musicbrainz_id'])
+        self._create_test_data(user['musicbrainz_id'], user['id'])
 
-        self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name, self.testuser_id)
 
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
@@ -354,7 +355,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         self.logstore.import_listens_dump(dump_location)
 
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=user['id'], to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -362,7 +363,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=self.testuser_id, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -431,7 +432,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
-        count = self._create_test_data(testuser_name)
+        count = self._create_test_data(testuser_name, testuser["id"])
         user_key = REDIS_USER_LISTEN_COUNT + testuser_name
         self.assertEqual(count, self.logstore.get_listen_count_for_user(testuser_name))
         self.assertEqual(count, int(cache.get(user_key, decode=False) or 0))
@@ -444,8 +445,8 @@ class TestTimescaleListenStore(DatabaseTestCase):
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
-        self._create_test_data(testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=testuser_name, to_ts=1400000300)
+        self._create_test_data(testuser_name, testuser["id"])
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=testuser["id"], to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -453,16 +454,16 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
-        self.logstore.delete(testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=testuser_name, to_ts=1400000300)
+        self.logstore.delete(testuser_name, testuser["id"])
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=testuser["id"], to_ts=1400000300)
         self.assertEqual(len(listens), 0)
 
     def test_delete_single_listen(self):
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
-        self._create_test_data(testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=testuser_name, to_ts=1400000300)
+        self._create_test_data(testuser_name, testuser["id"])
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=testuser["id"], to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -470,8 +471,8 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
-        self.logstore.delete_listen(1400000050, testuser_name, "c7a41965-9f1e-456c-8b1d-27c0f0dde280")
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=testuser_name, to_ts=1400000300)
+        self.logstore.delete_listen(1400000050, testuser_name, testuser["id"], "c7a41965-9f1e-456c-8b1d-27c0f0dde280")
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_id=testuser["id"], to_ts=1400000300)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -479,7 +480,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000000)
 
         self.assertEqual(self.logstore.get_listen_count_for_user(testuser_name), 4)
-        min_ts, max_ts = self.logstore.get_timestamps_for_user(testuser_name)
+        min_ts, max_ts = self.logstore.get_timestamps_for_user(testuser["id"])
         self.assertEqual(min_ts, 1400000000)
         self.assertEqual(max_ts, 1400000200)
 
@@ -490,8 +491,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         """
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
-        testuser_name = testuser['musicbrainz_id']
-        min_ts, max_ts = self.logstore.get_timestamps_for_user(testuser_name)
+        min_ts, max_ts = self.logstore.get_timestamps_for_user(testuser["id"])
         self.assertEqual(min_ts, 0)
         self.assertEqual(max_ts, 0)
-        self.assertEqual(cache.get(REDIS_USER_TIMESTAMPS + testuser_name), "0,0")
+        self.assertEqual(cache.get(REDIS_USER_TIMESTAMPS + str(testuser["id"])), "0,0")

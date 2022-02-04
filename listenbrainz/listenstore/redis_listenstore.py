@@ -63,9 +63,8 @@ class RedisListenStore(ListenStore):
             self.log.error("Redis ping didn't work: {}".format(str(e)))
             raise
 
-
     def update_recent_listens(self, unique):
-        """ 
+        """
             Store the most recent listens in redis so we can fetch them easily for a recent listens page. This
             is not a critical action, so if it fails, it fails. Let's live with it.
         """
@@ -78,11 +77,10 @@ class RedisListenStore(ListenStore):
         if recent:
             cache._r.zadd(cache._prep_key(self.RECENT_LISTENS_KEY), recent, nx=True)
 
-            # Don't prune the sorted list each time, but only when it reaches twice the desired size 
+            # Don't prune the sorted list each time, but only when it reaches twice the desired size
             count = cache._r.zcard(cache._prep_key(self.RECENT_LISTENS_KEY))
             if count > (self.RECENT_LISTENS_MAX * 2):
                 cache._r.zpopmin(cache._prep_key(self.RECENT_LISTENS_KEY), count - self.RECENT_LISTENS_MAX - 1)
-
 
     def get_recent_listens(self, max = RECENT_LISTENS_MAX):
         """
