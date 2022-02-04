@@ -392,7 +392,6 @@ class TimescaleListenStore(ListenStore):
 
         self.log.info("fetch listens %s %.2fs (%d passes)" %
                       (str(user_ids), fetch_listens_time, passes))
-        self.log.info("Listens: %s", listens)
 
         return listens, min_user_ts, max_user_ts
 
