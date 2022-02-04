@@ -12,7 +12,7 @@ UserEntityRecord = Union[UserRecordingRecord, UserReleaseRecord, UserArtistRecor
 
 
 class MultipleUserEntityRecords(BaseModel):
-    musicbrainz_id: constr(min_length=1)
+    user_id: NonNegativeInt
     count: NonNegativeInt
     data: List[UserEntityRecord]
 

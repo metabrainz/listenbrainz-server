@@ -7,7 +7,7 @@
         "to_ts": 1628511763,
         "data": [
             {
-                "musicbrainz_id": "rob",
+                "user_id": 1,
                 "data": [
                     {
                         "artist_name": "Portishead",
@@ -455,7 +455,7 @@
                 "count": 41
             },
             {
-                "musicbrainz_id": "amCap1712",
+                "user_id": 2,
                 "data": [
                     {
                         "artist_name": "Lucifer Cast, Tom Ellis",

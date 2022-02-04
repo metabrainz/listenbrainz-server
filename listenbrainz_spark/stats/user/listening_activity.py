@@ -28,9 +28,9 @@ def calculate_listening_activity():
     # group without listens are counted as 0, count(*) gives 1.
     result = run_query(""" 
         WITH dist_user_name AS (
-            SELECT DISTINCT user_name FROM listens
+            SELECT DISTINCT user_id FROM listens
         ), intermediate_table AS (
-            SELECT dist_user_name.user_name AS user_name
+            SELECT dist_user_name.user_id AS user_id
                  , to_unix_timestamp(first(time_range.start)) as from_ts
                  , to_unix_timestamp(first(time_range.end)) as to_ts
                  , time_range.time_range AS time_range
@@ -39,18 +39,18 @@ def calculate_listening_activity():
         CROSS JOIN time_range
          LEFT JOIN listens
                 ON listens.listened_at BETWEEN time_range.start AND time_range.end
-               AND listens.user_name = dist_user_name.user_name
-          GROUP BY dist_user_name.user_name
+               AND listens.user_id = dist_user_name.user_id
+          GROUP BY dist_user_name.user_id
                  , time_range.time_range
         )
-            SELECT user_name
+            SELECT user_id
                  , sort_array(
                        collect_list(
                            struct(from_ts, to_ts, time_range, listen_count)
                         )
                     ) AS listening_activity
               FROM intermediate_table
-          GROUP BY user_name
+          GROUP BY user_id
     """)
     return result.toLocalIterator()
 
@@ -96,7 +96,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
         _dict = entry.asDict(recursive=True)
         try:
             model = UserListeningActivityStatMessage(**{
-                "musicbrainz_id": _dict["user_name"],
+                "user_id": _dict["user_id"],
                 "type": message_type,
                 "stats_range": stats_range,
                 "from_ts": from_ts,
@@ -107,5 +107,5 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
             yield result
         except ValidationError:
             logger.error(f"""ValidationError while calculating {stats_range} listening_activity for user: 
-            {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+            {_dict["user_id"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
             yield None
