@@ -42,7 +42,45 @@ def update_user_listen_counts():
     # it makes sense that we need begin for an explicit transaction but how CRUD statements work fine with connect
     # in remaining LB is beyond me then.
     with timescale.engine.begin() as connection:
+        logger.info("Starting to update listen counts")
         connection.execute(text(query), until=datetime.now())
+        logger.info("Completed updating listen counts")
+
+
+def add_missing_users_to_metadata():
+    # Select a list of users
+    user_list = []
+    query = 'SELECT id FROM "user"'
+    try:
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text(query))
+            for row in result:
+                user_list.append(row[0])
+    except psycopg2.OperationalError as e:
+        logger.error("Cannot query db to fetch user list." %
+                     str(e), exc_info=True)
+        raise
+
+    logger.info("Fetched %d users. Setting empty cache entries." %
+                len(user_list))
+
+    query = """
+        INSERT INTO listen_user_metadata
+             VALUES %s
+        ON CONFLICT (user_id)
+         DO NOTHING
+    """
+    values = [(user_id, ) for user_id in user_list]
+    template = "(%s, 0, NULL, NULL, 'epoch')"
+    connection = timescale.engine.raw_connection()
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, values, template=template)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        logger.error("Error while resetting created timestamps:", exc_info=True)
+        raise
 
 
 def recalculate_all_user_data():
