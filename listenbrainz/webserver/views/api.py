@@ -172,7 +172,7 @@ def get_listen_count(user_name):
 
     try:
         db_conn = webserver.create_timescale(current_app)
-        listen_count = db_conn.get_listen_count_for_user(user_name)
+        listen_count = db_conn.get_listen_count_for_user(user["id"])
     except psycopg2.OperationalError as err:
         current_app.logger.error("cannot fetch user listen count: ", str(err))
         raise APIServiceUnavailable(
@@ -400,11 +400,6 @@ def latest_import():
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
 
-        # During unrelated tests _ts may be None -- improving this would be a great headache.
-        # However, during the test of this code and while serving requests _ts is set.
-        if _ts:
-            _ts.set_listen_count_expiry_for_user(user['musicbrainz_id'])
-
         return jsonify({'status': 'ok'})
 
 
@@ -520,8 +515,7 @@ def delete_listen():
         log_raise_400("%s: Recording MSID format invalid." % recording_msid)
 
     try:
-        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid,
-                          user_id=user["id"], user_name=user["musicbrainz_id"])
+        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_id=user["id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(
