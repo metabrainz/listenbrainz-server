@@ -338,11 +338,12 @@ def handle_similar_users_year_end(message):
 
 
 def handle_new_releases_of_top_artists(message):
-    musicbrainz_id = message["user_name"]
-    user = db_user.get_by_mb_id(musicbrainz_id)
+    user_id = message["user_id"]
+    # need to check whether user exists before inserting otherwise possible FK error.
+    user = db_user.get(user_id)
     if not user:
         return
-    year_in_music.insert_new_releases_of_top_artists(user["id"], message["data"])
+    year_in_music.insert_new_releases_of_top_artists(user_id, message["data"])
 
 
 def handle_most_prominent_color(message):

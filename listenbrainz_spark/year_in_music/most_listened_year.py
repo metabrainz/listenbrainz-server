@@ -22,29 +22,29 @@ def _get_releases_with_date():
              WHERE substr(`release-group`.`first-release-date`, 1, 4) != '????'
                AND substr(`release-group`.`first-release-date`, 1, 4) != ''
         ), listen_year AS (
-        SELECT user_name
+        SELECT user_id
              , collect_list(release_date.release_mbid) AS release_mbids
              , release_date.year
              , count(*) AS listen_count
           FROM listens_of_year l
           JOIN release_date
             ON l.release_mbid = release_date.release_mbid
-      GROUP BY user_name
+      GROUP BY user_id
              , release_date.year
         ), grouped_counts AS (
-        SELECT user_name
+        SELECT user_id
              , map_from_entries(
                      collect_list(
                          struct(year, listen_count)
                      )
                ) AS yearly_count
           FROM listen_year
-      GROUP BY user_name
+      GROUP BY user_id
         )
         SELECT to_json(
                     map_from_entries(
                         collect_list(
-                            struct(user_name, yearly_count)
+                            struct(user_id, yearly_count)
                         )
                     )
                ) AS all_user_yearly_counts

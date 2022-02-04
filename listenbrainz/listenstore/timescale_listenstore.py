@@ -746,7 +746,7 @@ class TimescaleListenStore(ListenStore):
 
         query = psycopg2.sql.SQL("""
                     SELECT listened_at,
-                          user_name,
+                          user_id,
                           artist_credit_id,
                           artist_mbids::TEXT[] AS artist_credit_mbids,
                           artist_credit_name AS m_artist_name,
@@ -777,7 +777,7 @@ class TimescaleListenStore(ListenStore):
                 approx_size = 0
                 data = {
                     'listened_at': [],
-                    'user_name': [],
+                    'user_id': [],
                     'artist_name': [],
                     'artist_credit_id': [],
                     'release_name': [],
