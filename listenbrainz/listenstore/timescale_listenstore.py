@@ -465,7 +465,6 @@ class TimescaleListenStore(ListenStore):
                      FROM listen
                     WHERE listened_at >= :start_time
                       AND listened_at <= :end_time
-                      AND user_id != 0
                  ORDER BY listened_at ASC"""
         args = {
             'start_time': start_time,
@@ -484,7 +483,6 @@ class TimescaleListenStore(ListenStore):
                      FROM listen
                     WHERE created > :start_ts
                       AND created <= :end_ts
-                      AND user_id != 0
                  ORDER BY created ASC"""
 
         args = {
@@ -615,7 +613,11 @@ class TimescaleListenStore(ListenStore):
                             result = curs.fetchone()
                             if not result:
                                 break
-                            user_name = user_id_map[result["user_id"]]
+                            # some listens have user id which is absent from user table
+                            # ignore those listens for now
+                            user_name = user_id_map.get(result["user_id"])
+                            if not user_name:
+                                continue
                             listen = Listen.from_timescale(
                                 listened_at=result["listened_at"],
                                 track_name=result["track_name"],
@@ -766,7 +768,6 @@ class TimescaleListenStore(ListenStore):
                        ON mm.recording_mbid = m.recording_mbid
                     WHERE {criteria} > %(start)s
                       AND {criteria} <= %(end)s
-                      AND user_id != 0
                  ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
 
         listen_count = 0
