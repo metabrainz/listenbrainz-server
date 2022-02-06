@@ -58,16 +58,15 @@ def handle_user_entity(data):
 
 
 def _handle_user_activity_stats(stats_type, stats_model, data):
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
+    user = db_user.get(data['user_id'])
     if not user:
-        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", data["user_id"])
         return
 
     # send a notification if this is a new batch of stats
     if is_new_user_stats_batch():
         notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
+    current_app.logger.debug("inserting stats for user %s", user["musicbrainz_id"])
     stats_range = data['stats_range']
 
     try:
