@@ -164,7 +164,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_user_daily_activity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
         data = {
-            'musicbrainz_id': 1,
+            'user_id': 1,
             'type': 'daily_activity',
             'stats_range': 'all_time',
             'from_ts': 1,
@@ -247,7 +247,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
     def test_handle_recommendations(self, mock_get_by_mb_id, mock_db_insert):
         data = {
-            'musicbrainz_id': 1,
+            'user_id': 1,
             'type': 'cf_recording_recommendations',
             'recommendations': {
                 'top_artist': [
@@ -483,12 +483,14 @@ class HandlersTestCase(DatabaseTestCase):
         with self.app.app_context():
             handle_missing_musicbrainz_data(data)
 
-        mock_db_insert.assert_called_with(1, UserMissingMusicBrainzDataJson(
-            missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
-                artist_name="Katty Peri",
-                listened_at="2020-04-29 23:56:23",
-                release_name="No Place Is Home",
-                recording_name="How High"
-            )]),
-                                          'cf'
-                                          )
+        mock_db_insert.assert_called_with(
+            1,
+            UserMissingMusicBrainzDataJson(
+                missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
+                    artist_name="Katty Peri",
+                    listened_at="2020-04-29 23:56:23",
+                    release_name="No Place Is Home",
+                    recording_name="How High"
+                )]),
+            'cf'
+        )
