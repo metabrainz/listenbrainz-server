@@ -125,10 +125,9 @@ def get_top_similar_users(count: int = 200):
         per user) scale.
     """
     similar_users = {}
-    conn = db.engine.raw_connection()
     try:
-        with conn.cursor() as curs:
-            curs.execute("""
+        with db.engine.connect() as connection:
+            result = connection.execute("""
                 SELECT u.musicbrainz_id AS user_name
                      , ou.musicbrainz_id AS other_user_name
                      , value->1 AS similarity -- first element of array is similarity, second is global_similarity
@@ -141,7 +140,7 @@ def get_top_similar_users(count: int = 200):
                    ON r.user_id = u.id -- user_name of the user_id stored directly in column
             """)
             while True:
-                row = curs.fetchone()
+                row = result.fetchone()
                 if not row:
                     break
                 user = row["user_name"]
