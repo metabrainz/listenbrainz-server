@@ -1,5 +1,3 @@
-import listenbrainz_spark
-from listenbrainz_spark import path
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
