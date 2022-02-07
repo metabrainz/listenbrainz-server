@@ -6,6 +6,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
+from listenbrainz.db import year_in_music
 
 from flask import current_app, render_template
 from pydantic import ValidationError
@@ -53,24 +54,7 @@ def notify_user_stats_update(stat_type):
 
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-
-    stats_range = data['stats_range']
-    entity = data['entity']
-
-    try:
-        db_stats.insert_user_jsonb_data(user['id'], entity, StatRange[UserEntityRecord](**data))
-    except ValidationError:
-        current_app.logger.error(f"""ValidationError while inserting {stats_range} top {entity} for user
-        with user_id: {user['id']}. Data: {json.dumps({stats_range: data}, indent=3)}""", exc_info=True)
+    db_stats.insert_multiple_user_jsonb_data(data)
 
 
 def _handle_user_activity_stats(stats_type, stats_model, data):
@@ -117,6 +101,11 @@ def handle_sitewide_entity(data):
     except ValidationError:
         current_app.logger.error(f"""ValidationError while inserting {stats_range} sitewide top {entity}.
         Data: {json.dumps(data, indent=3)}""", exc_info=True)
+
+
+def handle_sitewide_listening_activity(data):
+    data["musicbrainz_id"] = "listenbrainz-prod"
+    _handle_user_activity_stats('listening_activity', StatRange[UserListeningActivityRecord], data)
 
 
 def handle_dump_imported(data):
@@ -342,3 +331,55 @@ def handle_similar_users(message):
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
         )
+
+
+def handle_similar_users_year_end(message):
+    year_in_music.insert_similar_users(message["data"])
+
+
+def handle_new_releases_of_top_artists(message):
+    user_id = message["user_id"]
+    # need to check whether user exists before inserting otherwise possible FK error.
+    user = db_user.get(user_id)
+    if not user:
+        return
+    year_in_music.insert_new_releases_of_top_artists(user_id, message["data"])
+
+
+def handle_most_prominent_color(message):
+    year_in_music.insert_most_prominent_color(message["data"])
+
+
+def handle_day_of_week(message):
+    year_in_music.insert_day_of_week(message["data"])
+
+
+def handle_most_listened_year(message):
+    year_in_music.insert_most_listened_year(message["data"])
+
+
+def handle_top_stats(message):
+    year_in_music.handle_top_stats(message["entity"], message["data"])
+
+    # for top_releases, look up cover art
+    if message["entity"] == "releases":
+        data = message["data"]
+        for user_data in data:
+            user = db_user.get_by_mb_id(user_data["musicbrainz_id"])
+            if not user:
+                return
+            release_mbids = [rel["release_mbid"] for rel in user_data["data"] if "release_mbid" in rel]
+            coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
+            year_in_music.handle_coverart(user["id"], "top_releases_coverart", coverart)
+
+
+def handle_listens_per_day(message):
+    musicbrainz_id = message["musicbrainz_id"]
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    if not user:
+        return
+    year_in_music.handle_listens_per_day(user["id"], message["data"])
+
+
+def handle_yearly_listen_counts(message):
+    year_in_music.handle_yearly_listen_counts(message["data"])

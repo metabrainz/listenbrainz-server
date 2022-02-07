@@ -179,3 +179,13 @@ export function updateMediaSession(
     artwork,
   });
 }
+
+export function updateWindowTitle(
+  trackName: string,
+  prefix?: string,
+  postfix?: string
+) {
+  if (window.document) {
+    window.document.title = `${prefix || ""}${trackName}${postfix || ""}`;
+  }
+}

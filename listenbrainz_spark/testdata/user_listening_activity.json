@@ -1,6 +1,6 @@
 [
     {
-        "musicbrainz_id": "amCap1712",
+        "user_id": 2,
         "type": "user_listening_activity",
         "stats_range": "all_time",
         "from_ts": 1009843200,
@@ -129,7 +129,7 @@
         ]
     },
     {
-        "musicbrainz_id": "rob",
+        "user_id": 1,
         "type": "user_listening_activity",
         "stats_range": "all_time",
         "from_ts": 1009843200,

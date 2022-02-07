@@ -10,8 +10,6 @@ from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.db.model.pinned_recording import (
     PinnedRecording,
     WritablePinnedRecording,
-    fetch_track_metadata_for_pins,
-    DAYS_UNTIL_UNPIN,
     MAX_BLURB_CONTENT_LENGTH,
 )
 import json
@@ -19,6 +17,9 @@ import json
 
 def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
     return pins
+
+
+
 class PinnedRecAPITestCase(IntegrationTestCase):
 
     def setUp(self):
@@ -102,7 +103,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         )
 
         self.assert200(response)
-        self.assertEqual(response.json["status"], "ok")
+        self.assertEqual(response.json["pinned_recording"]["blurb_content"], "Amazing first recording")
+        self.assertIsNotNone(response.json["pinned_recording"]["row_id"])
 
     def test_pin_unauthorized(self):
         """Tests that pin endpoint returns 401 when auth token is invalid"""
@@ -288,7 +290,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
     def test_get_pins_for_user(self):
         """Test that valid response is received with 200 code"""
 
@@ -323,7 +325,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
     def test_get_pins_for_user_count_param(self):
         """Tests that valid response is received honoring count parameter"""
         limit = 2
@@ -368,7 +370,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
     def test_get_pins_for_user_offset_param(self):
         """Tests that valid response is received honoring offset parameter"""
         offset = 2
@@ -415,7 +417,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
     def test_get_pins_for_user_following(self):
         """Test that valid response is received with 200 code"""
         # user follows followed_user_1 and followed_user_2
@@ -456,8 +458,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
-    def test_get_pins_for_user_count_param(self):
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
+    def test_get_pins_for_user_count_param_2(self):
         """Tests that valid response is received honoring count parameter"""
         # user follows followed_user_1 and followed_user_2
         db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
@@ -503,7 +505,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
     def test_get_pins_for_user_following_offset_param(self):
         """Tests that valid response is received honoring offset parameter"""
         # user follows followed_user_1 and followed_user_2

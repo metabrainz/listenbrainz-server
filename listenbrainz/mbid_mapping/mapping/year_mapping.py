@@ -23,6 +23,7 @@ def create_tables(mb_conn):
         with mb_conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_year_mapping")
             curs.execute("""CREATE TABLE mapping.tmp_year_mapping (
+                                         recording_mbid            UUID NOT NULL,
                                          recording_name            TEXT NOT NULL,
                                          artist_credit_name        TEXT NOT NULL,
                                          year                      INTEGER)""")
@@ -47,6 +48,7 @@ def create_indexes(conn):
         with conn.cursor() as curs:
             curs.execute("""CREATE INDEX tmp_year_mapping_idx_ac_rec_year
                                       ON mapping.tmp_year_mapping(artist_credit_name, recording_name)""")
+            curs.execute("""CREATE INDEX recording_mbid_ndx_year_mapping ON mapping.year_mapping (recording_mbid)""")
         conn.commit()
     except OperationalError as err:
         log("year mapping: failed to create recording pair index", err)
@@ -165,8 +167,9 @@ def create_year_mapping():
                 last_ac_id = None
                 artist_recordings = {}
                 count = 0
-                log("year mapping: fetch recordings")
-                mb_curs.execute("""SELECT lower(musicbrainz.musicbrainz_unaccent(r.name)) AS recording_name,
+                log("year mapping: process recordings")
+                mb_curs.execute("""SELECT r.gid::TEXT AS recording_mbid,
+                                          lower(musicbrainz.musicbrainz_unaccent(r.name)) AS recording_name,
                                           lower(musicbrainz.musicbrainz_unaccent(ac.name)) AS artist_credit_name,
                                           ac.id AS artist_credit_id,
                                           date_year AS year
@@ -208,8 +211,10 @@ def create_year_mapping():
                     recording_name = row['recording_name']
                     artist_credit_name = row['artist_credit_name']
                     if recording_name not in artist_recordings:
-                        artist_recordings[recording_name] = (recording_name.replace("'", "''"),
-                                                             artist_credit_name.replace("'", "''"), row['year'])
+                        artist_recordings[recording_name] = (row["recording_mbid"],
+                                                             recording_name.replace("'", "''"),
+                                                             artist_credit_name.replace("'", "''"),
+                                                             row['year'])
                     last_ac_id = row['artist_credit_id']
 
                 rows.extend(artist_recordings.values())

@@ -1,9 +1,9 @@
 import sys
-import listenbrainz.utils as utils
-
 import time
-utils.safely_import_config()
+
 from flask import current_app
+
+import listenbrainz.utils as utils
 
 
 class ListenWriter:

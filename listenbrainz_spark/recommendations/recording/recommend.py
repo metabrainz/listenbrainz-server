@@ -2,10 +2,10 @@
 This script is responsible for generating recommendations for the users. The general flow is as follows:
 
 The best_model saved in HDFS is loaded with the help of model_id which is fetched from model_metadata_df.
-`user_id` and `recording_id` are fetched from top_artist_candidate_set_df and are given as input to the
+`spark_user_id` and `recording_id` are fetched from top_artist_candidate_set_df and are given as input to the
 recommender. An RDD of `user`, `product` and `rating` is returned from the recommender which is later converted to
 a dataframe by filtering top X (an int supplied as an argument to the script) recommendations for all users sorted on rating
-and fields renamed as `user_id`, `recording_id` and `rating`. The ratings are scaled so that they lie between 0 and 1.
+and fields renamed as `spark_user_id`, `recording_id` and `rating`. The ratings are scaled so that they lie between 0 and 1.
 This dataframe is joined with recordings_df on recording_id to get the recording mbids which are then sent over the queue.
 
 The same process is done for similar artist candidate set.
@@ -90,8 +90,8 @@ def get_recording_mbids(params: RecommendationParams, recommendation_df, users_d
 
         Args:
             params: RecommendationParams class object.
-            recommendation_df: Dataframe of user_id, recording id and rating.
-            users_df : user_name and user_id of active users.
+            recommendation_df: Dataframe of spark_user_id, recording id and rating.
+            users_df : user_id and spark_user_id of active users.
 
         Returns:
             dataframe of recommended recording mbids and related info.
@@ -99,18 +99,18 @@ def get_recording_mbids(params: RecommendationParams, recommendation_df, users_d
     df = params.recordings_df.join(recommendation_df, 'recording_id', 'inner') \
                              .select('rating',
                                      'recording_mbid',
-                                     'user_id')
+                                     'spark_user_id')
 
-    recording_mbids_df = df.join(users_df, 'user_id', 'inner')
+    recording_mbids_df = df.join(users_df, 'spark_user_id', 'inner')
 
-    window = Window.partitionBy('user_name').orderBy(col('rating').desc())
+    window = Window.partitionBy('user_id').orderBy(col('rating').desc())
 
     df = recording_mbids_df.withColumn('rank', row_number().over(window)) \
                            .select('recording_mbid',
                                    'rank',
                                    'rating',
-                                   'user_id',
-                                   'user_name')
+                                   'spark_user_id',
+                                   'user_id')
 
     return df
 
@@ -123,7 +123,7 @@ def filter_recommendations_on_rating(df, limit):
             limit (int): Number of recommendations to be filtered for each user.
 
         Returns:
-            recommendation_df: Dataframe of user_id, recording_id and rating.
+            recommendation_df: Dataframe of spark_user_id, recording_id and rating.
     """
     window = Window.partitionBy('user').orderBy(col('rating').desc())
 
@@ -131,7 +131,7 @@ def filter_recommendations_on_rating(df, limit):
                           .where(col('rank') <= limit) \
                           .select(col('rating'),
                                   col('product').alias('recording_id'),
-                                  col('user').alias('user_id'))
+                                  col('user').alias('spark_user_id'))
 
     return recommendation_df
 
@@ -140,12 +140,12 @@ def generate_recommendations(candidate_set, params: RecommendationParams, limit)
     """ Generate recommendations from the candidate set.
 
         Args:
-            candidate_set (rdd): RDD of user_id and recording_id.
+            candidate_set (rdd): RDD of spark_user_id and recording_id.
             params: RecommendationParams class object.
             limit (int): Number of recommendations to be filtered for each user.
 
         Returns:
-            recommendation_df: Dataframe of user_id, recording_id and rating.
+            recommendation_df: Dataframe of spark_user_id, recording_id and rating.
     """
     recommendations = params.model.predictAll(candidate_set)
 
@@ -188,7 +188,7 @@ def scale_rating(df):
 
     df = df.withColumn("scaled_rating", scaling_udf(df.rating)) \
            .select(col('recording_id'),
-                   col('user_id'),
+                   col('spark_user_id'),
                    col('scaled_rating').alias('rating'))
 
     return df
@@ -198,22 +198,22 @@ def get_candidate_set_rdd_for_user(candidate_set_df, users):
     """ Get candidate set RDD for a given user.
 
         Args:
-            candidate_set_df: A dataframe of user_id and recording_id for all users.
+            candidate_set_df: A dataframe of spark_user_id and recording_id for all users.
             users: list of user names to generate recommendations for.
 
         Returns:
-            candidate_set_rdd: An RDD of user_id and recording_id for a given user.
+            candidate_set_rdd: An RDD of spark_user_id and recording_id for a given user.
     """
     if users:
-        candidate_set_user_df = candidate_set_df.select('user_id', 'recording_id') \
-                                                .where(col('user_name').isin(users))
+        candidate_set_user_df = candidate_set_df.select('spark_user_id', 'recording_id') \
+                                                .where(col('user_id').isin(users))
     else:
-        candidate_set_user_df = candidate_set_df.select('user_id', 'recording_id')
+        candidate_set_user_df = candidate_set_df.select('spark_user_id', 'recording_id')
 
     if _is_empty_dataframe(candidate_set_user_df):
         raise EmptyDataframeExcpetion('Empty Candidate sets!')
 
-    candidate_set_rdd = candidate_set_user_df.rdd.map(lambda r: (r['user_id'], r['recording_id']))
+    candidate_set_rdd = candidate_set_user_df.rdd.map(lambda r: (r['spark_user_id'], r['recording_id']))
 
     return candidate_set_rdd
 
@@ -229,11 +229,11 @@ def get_user_name_and_user_id(params: RecommendationParams, users):
             users_df: dataframe of user id and user names.
     """
     if len(users) == 0:
-        users_df = params.top_artist_candidate_set_df.select('user_id', 'user_name').distinct()
+        users_df = params.top_artist_candidate_set_df.select('spark_user_id', 'user_id').distinct()
 
     else:
-        users_df = params.top_artist_candidate_set_df.select('user_id', 'user_name') \
-                                                     .where(params.top_artist_candidate_set_df.user_name.isin(users)) \
+        users_df = params.top_artist_candidate_set_df.select('spark_user_id', 'user_id') \
+                                                     .where(params.top_artist_candidate_set_df.user_id.isin(users)) \
                                                      .distinct()
 
     if _is_empty_dataframe(users_df):
@@ -290,19 +290,19 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
 
     for row in top_artist_rec_itr:
 
-        if user_rec.get(row.user_name) is None:
-            user_rec[row.user_name] = {}
+        if user_rec.get(row.user_id) is None:
+            user_rec[row.user_id] = {}
 
-            user_rec[row.user_name]['top_artist'] = [
+            user_rec[row.user_id]['top_artist'] = [
                 {
                     "recording_mbid": row.recording_mbid,
                     "score": row.rating
                 }
             ]
-            user_rec[row.user_name]['similar_artist'] = []
+            user_rec[row.user_id]['similar_artist'] = []
 
         else:
-            user_rec[row.user_name]['top_artist'].append(
+            user_rec[row.user_id]['top_artist'].append(
                     {
                         "recording_mbid": row.recording_mbid,
                         "score": row.rating
@@ -313,9 +313,9 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
 
     for row in similar_artist_rec_itr:
 
-        if user_rec.get(row.user_name) is None:
-            user_rec[row.user_name] = {}
-            user_rec[row.user_name]['similar_artist'] = [
+        if user_rec.get(row.user_id) is None:
+            user_rec[row.user_id] = {}
+            user_rec[row.user_id]['similar_artist'] = [
                 {
                     "recording_mbid": row.recording_mbid,
                     "score": row.rating
@@ -323,16 +323,16 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
             ]
 
         else:
-            user_rec[row.user_name]['similar_artist'].append(
+            user_rec[row.user_id]['similar_artist'].append(
                     {
                         "recording_mbid": row.recording_mbid,
                         "score": row.rating
                     }
             )
 
-    for user_name, data in user_rec.items():
+    for user_id, data in user_rec.items():
         messages = {
-            'musicbrainz_id': user_name,
+            'user_id': user_id,
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': data.get('top_artist', []),
@@ -393,7 +393,7 @@ def get_recommendations_for_all(params: RecommendationParams, users):
 def get_user_count(df):
     """ Get distinct user count from the given dataframe.
     """
-    users_df = df.select('user_id').distinct()
+    users_df = df.select('spark_user_id').distinct()
     return users_df.count()
 
 

@@ -1,16 +1,17 @@
 import eventlet
+from threading import Thread
 
 from flask_login import current_user
 from flask_socketio import SocketIO, join_room, emit, disconnect
 from werkzeug.exceptions import BadRequest
 
-from listenbrainz.webserver import gen_app
+from listenbrainz.webserver import create_app
 from listenbrainz.db import playlist as db_playlist
 from listenbrainz.websockets.listens_dispatcher import ListensDispatcher
 
 eventlet.monkey_patch()
 
-app = gen_app()
+app = create_app()
 app.init_loggers(
     file_config=app.config.get('LOG_FILE'),
     sentry_config=app.config.get('LOG_SENTRY')
@@ -49,7 +50,7 @@ def joined(data):
         disconnect()
 
 
-def run_websockets(host='0.0.0.0', port=8082, debug=True):
+def run_websockets(host='0.0.0.0', port=7082, debug=True):
     dispatcher = ListensDispatcher(app, socketio)
-    dispatcher.start()
+    Thread(target=dispatcher.start).start()
     socketio.run(app, debug=debug, host=host, port=port)

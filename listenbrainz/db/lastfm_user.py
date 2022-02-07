@@ -62,7 +62,7 @@ class User(object):
             })
             row = result.fetchone()
             if row:
-                return User(row['"user".id'], row['"user".created'], row['"user".musicbrainz_id'], row['"user".auth_token'])
+                return User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
             return None
 
     @staticmethod
@@ -70,4 +70,4 @@ class User(object):
         """ Get playcount from the given user name.
         """
         user = User.load_by_id(user_id)
-        return listenstore.get_listen_count_for_user(user.name)
+        return listenstore.get_listen_count_for_user(user.id)

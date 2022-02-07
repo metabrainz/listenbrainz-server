@@ -70,7 +70,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         super(TestTimescaleListenStore, self).tearDown()
 
     def _create_test_data(self, user_name, test_data_file_name=None):
-        test_data = create_test_data_for_timescalelistenstore(user_name, test_data_file_name)
+        test_data = create_test_data_for_timescalelistenstore(user_name, 1, test_data_file_name)
         self.logstore.insert(test_data)
         return len(test_data)
 

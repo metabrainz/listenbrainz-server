@@ -61,10 +61,18 @@ def submit_listen():
     try:
         data = ujson.loads(raw_data.decode("utf-8"))
     except ValueError as e:
-        log_raise_400("Cannot parse JSON document: %s" % e, raw_data)
+        log_raise_400("Cannot parse JSON document: %s" % e)
 
     try:
+        if not isinstance(data, dict):
+            raise APIBadRequest("Invalid JSON document submitted. Top level of "
+                                "JSON document should be a json object.")
+
         payload = data['payload']
+
+        if not isinstance(payload, list):
+            raise APIBadRequest("The payload in the JSON document should be a list of listens.", payload)
+
         if len(payload) == 0:
             log_raise_400(
                 "JSON document does not contain any listens", payload)
@@ -126,7 +134,7 @@ def get_listens(user_name):
         raise APIBadRequest("min_ts should be less than max_ts")
 
     listens, _, max_ts_per_user = db_conn.fetch_listens(
-        user_name,
+        user,
         limit=count,
         from_ts=min_ts,
         to_ts=max_ts
@@ -164,7 +172,7 @@ def get_listen_count(user_name):
 
     try:
         db_conn = webserver.create_timescale(current_app)
-        listen_count = db_conn.get_listen_count_for_user(user_name)
+        listen_count = db_conn.get_listen_count_for_user(user["id"])
     except psycopg2.OperationalError as err:
         current_app.logger.error("cannot fetch user listen count: ", str(err))
         raise APIServiceUnavailable(
@@ -200,10 +208,8 @@ def get_playing_now(user_name):
     listen_data = []
     count = 0
     if playing_now_listen:
-        count += 1
-        listen_data = [{
-            'track_metadata': playing_now_listen.data,
-        }]
+        count = 1
+        listen_data = [playing_now_listen.to_api()]
 
     return jsonify({
         'payload': {
@@ -240,10 +246,9 @@ def get_recent_listens_for_user_list(user_list):
         raise APIBadRequest("user_list is empty or invalid.")
 
     db_conn = webserver.create_timescale(current_app)
-    listens = db_conn.fetch_recent_listens_for_users(
-        users,
-        limit=limit
-    )
+    users = db_user.get_many_users_by_mb_id(users)
+    listens = db_conn.fetch_recent_listens_for_users(users.values(), limit=limit)
+
     listen_data = []
     for listen in listens:
         listen_data.append(listen.to_api())
@@ -394,11 +399,6 @@ def latest_import():
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
 
-        # During unrelated tests _ts may be None -- improving this would be a great headache.
-        # However, during the test of this code and while serving requests _ts is set.
-        if _ts:
-            _ts.set_listen_count_expiry_for_user(user['musicbrainz_id'])
-
         return jsonify({'status': 'ok'})
 
 
@@ -514,8 +514,7 @@ def delete_listen():
         log_raise_400("%s: Recording MSID format invalid." % recording_msid)
 
     try:
-        _ts.delete_listen(listened_at=listened_at,
-                          recording_msid=recording_msid, user_name=user["musicbrainz_id"])
+        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_id=user["id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(

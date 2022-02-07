@@ -21,7 +21,7 @@ import time
 import ujson
 
 from collections import defaultdict
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from flask import Blueprint, jsonify, request, current_app
 
@@ -32,8 +32,8 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.pinned_recording import get_pins_for_feed
-from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
@@ -63,7 +63,6 @@ def create_user_recording_recommendation_event(user_name):
             "metadata": {
                 "artist_name": "<The name of the artist, required>",
                 "track_name": "<The name of the track, required>",
-                "artist_msid": "<The MessyBrainz ID of the artist, required>",
                 "recording_msid": "<The MessyBrainz ID of the recording, required>",
                 "release_name": "<The name of the release, optional>",
                 "recording_mbid": "<The MusicBrainz ID of the recording, optional>"
@@ -188,11 +187,10 @@ def user_feed(user_name: str):
     users_following = db_user_relationship.get_following_for_user(user['id'])
 
     # get all listen events
-    musicbrainz_ids = [user['musicbrainz_id'] for user in users_following]
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count)
+        listen_events = get_listen_events(db_conn, users_following, min_ts, max_ts, count)
 
     # for events like "follow" and "recording recommendations", we want to show the user
     # their own events as well
@@ -298,7 +296,7 @@ def delete_feed_events(user_name):
 
 def get_listen_events(
     db_conn: TimescaleListenStore,
-    musicbrainz_ids: List[str],
+    users: List[Dict],
     min_ts: int,
     max_ts: int,
     count: int,
@@ -312,7 +310,7 @@ def get_listen_events(
     # but I'm happy with this heuristic for now and we can change later.
     db_conn = webserver.create_timescale(current_app)
     listens, _, _ = db_conn.fetch_listens_for_multiple_users_from_storage(
-        musicbrainz_ids,
+        users,
         limit=count,
         from_ts=min_ts,
         to_ts=max_ts,
@@ -414,7 +412,6 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
                     additional_info=AdditionalInfo(
                         recording_msid=event.metadata.recording_msid,
                         recording_mbid=event.metadata.recording_mbid,
-                        artist_msid=event.metadata.artist_msid,
                     )
                 ),
             )
@@ -442,7 +439,7 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
         max_ts=max_ts,
         count=count,
     )
-    recording_pin_events_db = fetch_track_metadata_for_pins(recording_pin_events_db)
+    recording_pin_events_db = fetch_track_metadata_for_items(recording_pin_events_db)
 
     events = []
     for pin in recording_pin_events_db:
@@ -457,11 +454,11 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
                     additional_info=AdditionalInfo(
                         recording_msid=pin.recording_msid,
                         recording_mbid=pin.recording_mbid,
-                        artist_msid=pin.track_metadata["artist_msid"],
                     )
                 )
             )
             events.append(APITimelineEvent(
+                id=pin.row_id,
                 event_type=UserTimelineEventType.RECORDING_PIN,
                 user_name=pinEvent.user_name,
                 created=pin.created.timestamp(),

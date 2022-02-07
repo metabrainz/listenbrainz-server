@@ -19,6 +19,25 @@ const recordingToPin: Listen = {
   },
 };
 
+const pinnedRecordingFromAPI: PinnedRecording = {
+  created: 1605927742,
+  pinned_until: 1605927893,
+  blurb_content:
+    "Our perception of the passing of time is really just a side-effect of gravity",
+  recording_mbid: "recording_mbid",
+  row_id: 1,
+  track_metadata: {
+    artist_name: "TWICE",
+    track_name: "Feel Special",
+    additional_info: {
+      release_mbid: "release_mbid",
+      recording_msid: "recording_msid",
+      recording_mbid: "recording_mbid",
+      artist_msid: "artist_msid",
+    },
+  },
+};
+
 const user = {
   id: 1,
   name: "name",
@@ -62,7 +81,9 @@ describe("submitPinRecording", () => {
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.context.APIService, "submitPinRecording");
-    spy.mockImplementation(() => Promise.resolve(200));
+    spy.mockImplementation(() =>
+      Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
+    );
 
     await instance.submitPinRecording();
 
@@ -70,9 +91,7 @@ describe("submitPinRecording", () => {
     expect(spy).toHaveBeenCalledWith(
       "auth_token",
       "recording_msid",
-      // Disabling temporarily
-      //   "recording_mbid",
-      undefined,
+      "recording_mbid",
       undefined
     );
     expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
@@ -91,7 +110,9 @@ describe("submitPinRecording", () => {
     const instance = wrapper.instance();
     instance.context.APIService.submitPinRecording = jest
       .fn()
-      .mockImplementation(() => Promise.resolve(200));
+      .mockImplementation(() =>
+        Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
+      );
     wrapper.setState({ blurbContent: "foobar" }); // submit with this blurbContent
 
     // submitPinRecording and check that blurbContent was reset
@@ -119,7 +140,9 @@ describe("submitPinRecording", () => {
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.context.APIService, "submitPinRecording");
-    spy.mockImplementation(() => Promise.resolve(200));
+    spy.mockImplementation(() =>
+      Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
+    );
 
     await instance.submitPinRecording();
     expect(spy).toHaveBeenCalledTimes(0);
