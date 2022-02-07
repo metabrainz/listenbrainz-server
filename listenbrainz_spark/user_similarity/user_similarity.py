@@ -38,8 +38,10 @@ def create_messages(similar_users_df: DataFrame) -> dict:
     itr = similar_users_df.toLocalIterator()
     message = {}
     for row in itr:
-        message[row.spark_user_id] = {
-            user.other_spark_user_id: (user.similarity, user.global_similarity) for user in row.similar_users}
+        message[row.user_id] = {
+            user.other_user_id: (user.similarity, user.global_similarity)
+            for user in row.similar_users
+        }
     yield {
         'type': 'similar_users',
         'data': message
