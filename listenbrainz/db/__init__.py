@@ -10,7 +10,7 @@ import psycopg2
 # statistics, feedback, and results of user interaction on the site.
 # This value must be incremented after schema changes on tables that are included in the
 # public dump
-SCHEMA_VERSION_CORE = 7
+SCHEMA_VERSION_CORE = 8
 
 engine = None
 

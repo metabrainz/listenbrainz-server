@@ -153,11 +153,38 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     >
                       <li>
                         <a
+                          href="?page=1&range=this_week&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Week
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_month&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Month
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_year&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Year
+                        </a>
+                      </li>
+                      <li>
+                        <a
                           href="?page=1&range=week&entity="
                           onClick={[Function]}
                           role="button"
                         >
-                          Week
+                          Last Week
                         </a>
                       </li>
                       <li>
@@ -166,7 +193,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Month
+                          Last Month
                         </a>
                       </li>
                       <li>
@@ -175,7 +202,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Year
+                          Last Year
                         </a>
                       </li>
                       <li>
@@ -184,7 +211,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          All Time
+                          All time
                         </a>
                       </li>
                     </ul>
@@ -5842,11 +5869,38 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     >
                       <li>
                         <a
+                          href="?page=1&range=this_week&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Week
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_month&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Month
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_year&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Year
+                        </a>
+                      </li>
+                      <li>
+                        <a
                           href="?page=1&range=week&entity="
                           onClick={[Function]}
                           role="button"
                         >
-                          Week
+                          Last Week
                         </a>
                       </li>
                       <li>
@@ -5855,7 +5909,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Month
+                          Last Month
                         </a>
                       </li>
                       <li>
@@ -5864,7 +5918,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Year
+                          Last Year
                         </a>
                       </li>
                       <li>
@@ -5873,7 +5927,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          All Time
+                          All time
                         </a>
                       </li>
                     </ul>
@@ -5934,7 +5988,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Love Me Like You Do - From \\"Fifty Shades of Grey\\""
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/0fe11cd3-0be4-467b-84fa-0bd524d45d74"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -5996,7 +6049,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Love Me Like You Do - From \\"Fifty Shades of Grey\\""
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/0fe11cd3-0be4-467b-84fa-0bd524d45d74"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -6128,7 +6180,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="How to Save a Life"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/0008ab49-a6ad-40b5-aa90-9d2779265c22"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -6190,7 +6241,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="How to Save a Life"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/0008ab49-a6ad-40b5-aa90-9d2779265c22"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -6504,7 +6554,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Counting Stars"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/00d32e28-0df2-486c-9829-750301962fb2"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -6566,7 +6615,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Counting Stars"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/00d32e28-0df2-486c-9829-750301962fb2"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -6698,7 +6746,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Burn"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/017cd117-e343-408f-95fe-ee4c1018e312"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -6760,7 +6807,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Burn"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/017cd117-e343-408f-95fe-ee4c1018e312"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -6892,7 +6938,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Blank Space"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/01236d26-9f46-435f-adc5-6c92e6e76f53"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -6954,7 +6999,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Blank Space"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/01236d26-9f46-435f-adc5-6c92e6e76f53"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -7086,7 +7130,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="A Thousand Years"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/03a0cdfb-f964-434f-bfb7-379203dc139d"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -7148,7 +7191,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="A Thousand Years"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/03a0cdfb-f964-434f-bfb7-379203dc139d"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -7280,7 +7322,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Riptide"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/003196a1-f6ab-4fe8-9683-b970d163cfa4"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -7342,7 +7383,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Riptide"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/003196a1-f6ab-4fe8-9683-b970d163cfa4"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -7474,7 +7514,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Castle on the Hill"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/02ba28bc-6d79-44fb-b770-c49395661117"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -7536,7 +7575,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Castle on the Hill"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/02ba28bc-6d79-44fb-b770-c49395661117"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -7850,7 +7888,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Shotgun"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/0a4c5dfd-02c7-43dc-ba7f-1b4ce7a02994"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -7912,7 +7949,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Shotgun"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/0a4c5dfd-02c7-43dc-ba7f-1b4ce7a02994"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -8226,7 +8262,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Hall of Fame"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/045cdbf9-796e-4949-91f6-e05d9ce3ed21"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -8288,7 +8323,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Hall of Fame"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/045cdbf9-796e-4949-91f6-e05d9ce3ed21"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -8602,7 +8636,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Little Talks"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/0031fba1-dde0-3755-bcb2-63b2544159f8"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -8664,7 +8697,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Little Talks"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/0031fba1-dde0-3755-bcb2-63b2544159f8"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -8978,7 +9010,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Payphone"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/0126d206-3894-4d97-b5c2-f6cf037a323a"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -9040,7 +9071,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Payphone"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/0126d206-3894-4d97-b5c2-f6cf037a323a"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -9172,7 +9202,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Paper Planes"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/234ae263-ffad-472a-8077-dab64bcedf99"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -9234,7 +9263,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Paper Planes"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/234ae263-ffad-472a-8077-dab64bcedf99"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -9366,7 +9394,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Battle Symphony"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/14c913e9-db47-40fa-ae1a-81099a67e4bf"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -9428,7 +9455,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Battle Symphony"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/14c913e9-db47-40fa-ae1a-81099a67e4bf"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -9560,7 +9586,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="I Want It That Way"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/0040980c-4f9a-43df-8be0-142dce4374f4"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -9622,7 +9647,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="I Want It That Way"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/0040980c-4f9a-43df-8be0-142dce4374f4"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -9754,7 +9778,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Everything at Once"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/036e67df-baae-4626-a2ab-951dd162e332"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -9816,7 +9839,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Everything at Once"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/036e67df-baae-4626-a2ab-951dd162e332"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -10130,7 +10152,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="Up&Up"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/02b47acf-3bc5-47dc-a516-e8c2c95bc07b"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -10192,7 +10213,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="Up&Up"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/02b47acf-3bc5-47dc-a516-e8c2c95bc07b"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -10324,7 +10344,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         title="On Top of the World"
                       >
                         <a
-                          className="underlined-link"
                           href="https://musicbrainz.org/recording/0132a6b9-a04f-48ea-81e7-5f3a5d608f75"
                           rel="noopener noreferrer"
                           target="_blank"
@@ -10386,7 +10405,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                             title="On Top of the World"
                           >
                             <a
-                              className="underlined-link"
                               href="https://musicbrainz.org/recording/0132a6b9-a04f-48ea-81e7-5f3a5d608f75"
                               rel="noopener noreferrer"
                               target="_blank"
@@ -12397,11 +12415,38 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     >
                       <li>
                         <a
+                          href="?page=1&range=this_week&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Week
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_month&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Month
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_year&entity="
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Year
+                        </a>
+                      </li>
+                      <li>
+                        <a
                           href="?page=1&range=week&entity="
                           onClick={[Function]}
                           role="button"
                         >
-                          Week
+                          Last Week
                         </a>
                       </li>
                       <li>
@@ -12410,7 +12455,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Month
+                          Last Month
                         </a>
                       </li>
                       <li>
@@ -12419,7 +12464,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          Year
+                          Last Year
                         </a>
                       </li>
                       <li>
@@ -12428,7 +12473,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                           onClick={[Function]}
                           role="button"
                         >
-                          All Time
+                          All time
                         </a>
                       </li>
                     </ul>
@@ -18378,7 +18423,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                       data-toggle="dropdown"
                       type="button"
                     >
-                      all time
+                      All time
                       <span
                         className="caret"
                       />
@@ -18389,11 +18434,38 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                     >
                       <li>
                         <a
+                          href="?page=1&range=this_week&entity=artist"
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Week
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_month&entity=artist"
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Month
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="?page=1&range=this_year&entity=artist"
+                          onClick={[Function]}
+                          role="button"
+                        >
+                          This Year
+                        </a>
+                      </li>
+                      <li>
+                        <a
                           href="?page=1&range=week&entity=artist"
                           onClick={[Function]}
                           role="button"
                         >
-                          Week
+                          Last Week
                         </a>
                       </li>
                       <li>
@@ -18402,7 +18474,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                           onClick={[Function]}
                           role="button"
                         >
-                          Month
+                          Last Month
                         </a>
                       </li>
                       <li>
@@ -18411,7 +18483,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                           onClick={[Function]}
                           role="button"
                         >
-                          Year
+                          Last Year
                         </a>
                       </li>
                       <li>
@@ -18420,7 +18492,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                           onClick={[Function]}
                           role="button"
                         >
-                          All Time
+                          All time
                         </a>
                       </li>
                     </ul>

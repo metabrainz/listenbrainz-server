@@ -4,6 +4,7 @@ from flask_wtf import FlaskForm
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db import listens_importer
+from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from data.model.external_service import ExternalServiceType
@@ -126,7 +127,7 @@ def fetch_listens(musicbrainz_id, to_ts):
     """
     db_conn = webserver.create_timescale(current_app)
     while True:
-        batch, _, _ = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        batch, _, _ = db_conn.fetch_listens(current_user.to_dict(), to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
         if not batch:
             break
         yield from batch
@@ -395,3 +396,33 @@ def music_services_disconnect(service_name: str):
                 return redirect(service.get_authorize_url(CRITIQUEBRAINZ_SCOPES))
 
     return redirect(url_for('profile.music_services_details'))
+
+
+@profile_bp.route("/<user_name>/missing-data/")
+def missing_mb_data(user_name: str):
+    """ Shows missing musicbrainz data """
+
+    # user = _get_user(user_name)
+    user_data = {
+        "name": current_user.musicbrainz_id,
+        "id": current_user.id,
+    }
+    source = "cf"
+    missing_data = get_user_missing_musicbrainz_data(current_user.id, source)
+    if missing_data is None:
+        missing_data_list = []
+    else:
+        missing_data_list = getattr(missing_data, 'data').dict()['missing_musicbrainz_data']
+
+    for index in range(len(missing_data_list)):
+        missing_data_list[index]["listened_at"] += "Z"
+
+    props = {
+        "missingData": missing_data_list,
+        "user": user_data,
+    }
+
+    return render_template("user/missing_data.html",
+        user=current_user,
+        props=ujson.dumps(props),
+    )

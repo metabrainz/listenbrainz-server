@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get } from "lodash";
 import GlobalAppContext from "./GlobalAppContext";
-import { preciseTimestamp } from "./utils";
+import { getRecordingMBID, preciseTimestamp } from "./utils";
 
 export type PinRecordingModalProps = {
   recordingToPin: Listen;
@@ -40,50 +40,32 @@ export default class PinRecordingModal extends React.Component<
         recordingToPin,
         "track_metadata.additional_info.recording_msid"
       );
-      // We currently have an issue with submitting MSID and MBID at the same time
-      // So we temporarily remove the MBID from the submition
-      const recordingMBID = undefined;
-      //   const recordingMBID = _get(
-      //     recordingToPin,
-      //     "track_metadata.additional_info.recording_mbid"
-      //   );
+      const recordingMBID = getRecordingMBID(recordingToPin);
+      let newPin: PinnedRecording;
 
       try {
-        const status = await APIService.submitPinRecording(
+        const response = await APIService.submitPinRecording(
           currentUser.auth_token,
           recordingMSID,
           recordingMBID || undefined,
           blurbContent || undefined
         );
-        if (status === 200) {
-          newAlert(
-            "success",
-            `You pinned a recording!`,
-            `${recordingToPin.track_metadata.artist_name} - ${recordingToPin.track_metadata.track_name}`
-          );
-          this.setState({ blurbContent: "" });
-
-          if (onSuccessfulPin) {
-            // The API doesn't send back a PinnedRecording after successful pin
-            // so we transform the Listen we wanted to pin
-            const pinnedUntil = new Date();
-            // Defautl pinned until 7 days
-            pinnedUntil.setDate(pinnedUntil.getDate() + 7);
-
-            const pinnedRecording: PinnedRecording = {
-              blurb_content: blurbContent,
-              track_metadata: { ...recordingToPin.track_metadata },
-              created: Math.round(Date.now() / 1000),
-              recording_mbid: recordingMBID ?? null,
-              recording_msid: recordingMSID,
-              pinned_until: Math.round(pinnedUntil.getTime() / 1000),
-              row_id: NaN,
-            };
-            onSuccessfulPin(pinnedRecording);
-          }
-        }
+        const { data } = response;
+        newPin = data;
       } catch (error) {
         this.handleError(error, "Error while pinning recording");
+        return;
+      }
+
+      newAlert(
+        "success",
+        `You pinned a recording!`,
+        `${recordingToPin.track_metadata.artist_name} - ${recordingToPin.track_metadata.track_name}`
+      );
+      this.setState({ blurbContent: "" });
+
+      if (onSuccessfulPin) {
+        onSuccessfulPin(newPin);
       }
     }
   };

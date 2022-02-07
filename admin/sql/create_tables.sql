@@ -169,17 +169,6 @@ CREATE TABLE statistics.recording (
 ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE (msid);
 
 CREATE TABLE statistics.user (
-    user_id                 INTEGER NOT NULL, -- PK and FK to "user".id
-    artist                  JSONB,
-    release                 JSONB,
-    recording               JSONB,
-    listening_activity      JSONB,
-    daily_activity          JSONB,
-    artist_map              JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE statistics.user_new (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
     stats_type              user_stats_type,
@@ -207,6 +196,12 @@ CREATE TABLE statistics.sitewide (
 
 ALTER TABLE statistics.sitewide ADD CONSTRAINT stats_range_uniq UNIQUE (stats_range);
 
+CREATE TABLE statistics.year_in_music (
+    user_id     INTEGER NOT NULL, -- FK to "user".id
+    data        JSONB
+);
+
+
 CREATE TABLE recommendation_feedback (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
@@ -218,10 +213,15 @@ CREATE TABLE recommendation_feedback (
 CREATE TABLE recording_feedback (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
-    recording_msid          UUID NOT NULL,
+    recording_msid          UUID,
+    recording_mbid          UUID,
     score                   SMALLINT NOT NULL,
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE recording_feedback
+    ADD CONSTRAINT feedback_recording_msid_or_recording_mbid_check
+    CHECK ( recording_msid IS NOT NULL OR recording_mbid IS NOT NULL );
 
 CREATE TABLE release_color(
     id                      SERIAL, -- PK
@@ -246,12 +246,16 @@ CREATE TABLE user_relationship (
 CREATE TABLE pinned_recording(
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
-    recording_msid          UUID NOT NULL,
+    recording_msid          UUID,
     recording_mbid          UUID,
     blurb_content           TEXT,
     pinned_until            TIMESTAMP WITH TIME ZONE NOT NULL,
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE pinned_recording
+    ADD CONSTRAINT pinned_rec_recording_msid_or_recording_mbid_check
+    CHECK ( recording_msid IS NOT NULL OR recording_mbid IS NOT NULL );
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 

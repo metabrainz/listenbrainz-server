@@ -58,6 +58,19 @@ export default function BarDualTone(
       keys: ["lastRangeCount", "thisRangeCount"],
       itemWidth: 120,
     },
+    this_week: {
+      dateFormat: {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      },
+      legendDateFormat: {
+        day: "2-digit",
+        month: "short",
+      },
+      keys: ["lastRangeCount", "thisRangeCount"],
+      itemWidth: 120,
+    },
     month: {
       dateFormat: {
         day: "2-digit",
@@ -73,7 +86,33 @@ export default function BarDualTone(
         : ["thisRangeCount"],
       itemWidth: 100,
     },
+    this_month: {
+      dateFormat: {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      },
+      legendDateFormat: {
+        month: "long",
+        year: "numeric",
+      },
+      keys: !isMobile
+        ? ["lastRangeCount", "thisRangeCount"]
+        : ["thisRangeCount"],
+      itemWidth: 100,
+    },
     year: {
+      dateFormat: {
+        month: "long",
+        year: "numeric",
+      },
+      legendDateFormat: {
+        year: "numeric",
+      },
+      keys: ["lastRangeCount", "thisRangeCount"],
+      itemWidth: 70,
+    },
+    this_year: {
       dateFormat: {
         month: "long",
         year: "numeric",

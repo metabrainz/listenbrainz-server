@@ -2,7 +2,8 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.pinned_recording as db_pinned_rec
 
 from flask import Blueprint, current_app, jsonify, request
-import math
+
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APINoContent
 from brainzutils.ratelimit import ratelimit
@@ -13,7 +14,7 @@ from listenbrainz.webserver.views.api_tools import (
     get_non_negative_param,
     validate_auth_header,
 )
-from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording, fetch_track_metadata_for_pins
+from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from pydantic import ValidationError
 
 pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
@@ -48,13 +49,13 @@ def pin_recording_for_user():
 
     data = request.json
 
-    if "recording_msid" not in data:
-        log_raise_400("JSON document must contain recording_msid: ", data)
+    if "recording_msid" not in data and "recording_mbid" not in data:
+        log_raise_400("JSON document must contain either recording_msid or recording_mbid", data)
 
     try:
         recording_to_pin = WritablePinnedRecording(
             user_id=user["id"],
-            recording_msid=data["recording_msid"],
+            recording_msid=data["recording_msid"] if "recording_msid" in data else None,
             recording_mbid=data["recording_mbid"] if "recording_mbid" in data else None,
             blurb_content=data["blurb_content"] if "blurb_content" in data else None,
             pinned_until=data["pinned_until"] if "pinned_until" in data else None,
@@ -63,12 +64,12 @@ def pin_recording_for_user():
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
     try:
-        db_pinned_rec.pin(recording_to_pin)
+        recording_to_pin_with_id = db_pinned_rec.pin(recording_to_pin)
     except Exception as e:
         current_app.logger.error("Error while inserting pinned track record: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
-    return jsonify({"status": "ok"})
+    return jsonify({"pinned_recording": _pinned_recording_to_api(recording_to_pin_with_id)})
 
 
 @pinned_recording_api_bp.route("/pin/unpin", methods=["POST", "OPTIONS"])
@@ -151,10 +152,9 @@ def get_pins_for_user(user_name):
                     "recording_mbid": null,
                     "recording_msid": "fd7d9162-a284-4a10-906c-faae4f1e166b"
                     "track_metadata": {
-                        "artist_msid": "8c7b4641-e363-4598-ae70-7709840fb934",
                         "artist_name": "Rick Astley",
                         "track_name": "Never Gonna Give You Up"
-                        }
+                    }
                 },
                 "-- more pinned recording items here ---"
             ],
@@ -191,7 +191,7 @@ def get_pins_for_user(user_name):
         current_app.logger.error("Error while retrieving pins for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
-    pinned_recordings = fetch_track_metadata_for_pins(pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
     pinned_recordings = [_pinned_recording_to_api(pin) for pin in pinned_recordings]
     total_count = db_pinned_rec.get_pin_count_for_user(user_id=user["id"])
 
@@ -229,9 +229,8 @@ def get_pins_for_user_following(user_name):
                 "recording_mbid": null,
                 "recording_msid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
                 "track_metadata": {
-                        "artist_msid": "8c7b4641-e363-4598-ae70-7709840fb934",
-                        "artist_name": "Rick Astley",
-                        "track_name": "Never Gonna Give You Up"
+                    "artist_name": "Rick Astley",
+                    "track_name": "Never Gonna Give You Up"
                 },
                 "user_name": "-- the MusicBrainz ID of the user who pinned this recording --"
                 },
@@ -265,7 +264,7 @@ def get_pins_for_user_following(user_name):
         raise APINotFound("Cannot find user: %s" % user_name)
 
     pinned_recordings = db_pinned_rec.get_pins_for_user_following(user_id=user["id"], count=count, offset=offset)
-    pinned_recordings = fetch_track_metadata_for_pins(pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
     pinned_recordings = [_pinned_recording_to_api(pin) for pin in pinned_recordings]
 
     return jsonify(

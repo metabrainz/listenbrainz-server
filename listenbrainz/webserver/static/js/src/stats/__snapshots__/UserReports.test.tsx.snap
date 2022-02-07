@@ -9,32 +9,53 @@ exports[`UserReports renders without crashing 1`] = `
       className="col-xs-12"
     >
       <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        This Week
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        This Month
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        This Year
+      </Pill>
+      <Pill
         active={true}
         onClick={[Function]}
         type="secondary"
       >
-        Week
+        Last Week
       </Pill>
       <Pill
         active={false}
         onClick={[Function]}
         type="secondary"
       >
-        Month
+        Last Month
       </Pill>
       <Pill
         active={false}
         onClick={[Function]}
         type="secondary"
       >
-        Year
+        Last Year
       </Pill>
       <Pill
         active={false}
         onClick={[Function]}
         type="secondary"
       >
-        All Time
+        All time
       </Pill>
     </div>
   </div>

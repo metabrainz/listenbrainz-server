@@ -1120,6 +1120,13 @@ class StatsAPITestCase(IntegrationTestCase):
         expected = [
             {
                 "country": "GBR",
+                'artists': [
+                    {
+                        'artist_mbid': 'cc197bad-dc9c-440d-a5b5-d52ba2e14234',
+                        'artist_name': 'Coldplay',
+                        'listen_count': 321
+                    }
+                ],
                 "artist_count": 1,
                 "listen_count": 321,
             }

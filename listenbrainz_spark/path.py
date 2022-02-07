@@ -86,3 +86,10 @@ USER_SIMILARITY_METADATA_DATAFRAME = os.path.join(
     USER_SIMILARITY_DATAFRAME_DIR, 'dataframe_metadata.parquet')
 USER_SIMILARITY_MAPPED_LISTENS = os.path.join(
     USER_SIMILARITY_DATAFRAME_DIR, 'mapped_listens_df.parquet')
+
+# MusicBrainz Release JSON dump
+MUSICBRAINZ_RELEASE_DUMP = "/musicbrainz/release"
+MUSICBRAINZ_RELEASE_DUMP_JSON_FILE = "/musicbrainz/release/mbdump/release"
+
+# Release colors
+RELEASE_COLOR_DUMP = "/release_color.json"

@@ -16,11 +16,12 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+from pydantic import BaseModel, validator, NonNegativeInt, constr
+from data.model.validators import check_valid_uuid
+
 from datetime import datetime
 from enum import Enum
 from typing import Union, Optional
-
-import pydantic
 
 from data.model.listen import APIListen
 
@@ -33,40 +34,45 @@ class UserTimelineEventType(Enum):
     RECORDING_PIN = 'recording_pin'
 
 
-class RecordingRecommendationMetadata(pydantic.BaseModel):
-    artist_name: str
-    track_name: str
+class RecordingRecommendationMetadata(BaseModel):
+    artist_name: constr(min_length=1)
+    track_name: constr(min_length=1)
     release_name: Optional[str]
     recording_mbid: Optional[str]
-    recording_msid: str
-    artist_msid: str
+    recording_msid: constr(min_length=1)
+
+    _validate_uuids: classmethod = validator(
+        "recording_mbid",
+        "recording_msid",
+        allow_reuse=True
+    )(check_valid_uuid)
 
 
-class NotificationMetadata(pydantic.BaseModel):
-    creator: str
-    message: str
+class NotificationMetadata(BaseModel):
+    creator: constr(min_length=1)
+    message: constr(min_length=1)
 
 
 UserTimelineEventMetadata = Union[RecordingRecommendationMetadata, NotificationMetadata]
 
 
-class UserTimelineEvent(pydantic.BaseModel):
-    id: int
-    user_id: int
+class UserTimelineEvent(BaseModel):
+    id: NonNegativeInt
+    user_id: NonNegativeInt
     metadata: UserTimelineEventMetadata
     event_type: UserTimelineEventType
     created: Optional[datetime]
 
 
-class APINotificationEvent(pydantic.BaseModel):
-    message: str
+class APINotificationEvent(BaseModel):
+    message: constr(min_length=1)
 
 
-class APIFollowEvent(pydantic.BaseModel):
-    user_name_0: str
-    user_name_1: str
-    relationship_type: str
-    created: int
+class APIFollowEvent(BaseModel):
+    user_name_0: constr(min_length=1)
+    user_name_1: constr(min_length=1)
+    relationship_type: constr(min_length=1)
+    created: NonNegativeInt
 
 
 class APIPinEvent(APIListen):
@@ -76,9 +82,9 @@ class APIPinEvent(APIListen):
 APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent]
 
 
-class APITimelineEvent(pydantic.BaseModel):
+class APITimelineEvent(BaseModel):
     id: Optional[int]
     event_type: UserTimelineEventType
-    user_name: str
-    created: int
+    user_name: constr(min_length=1)
+    created: NonNegativeInt
     metadata: APIEventMetadata
