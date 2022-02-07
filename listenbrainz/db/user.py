@@ -451,7 +451,7 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT musicbrainz_id AS user_name
-                 , value->0 AS similarity -- first element of array is similarity, second is global_similarity
+                 , value->1 AS similarity -- first element of array is local similarity, second is global_similarity
               FROM recommendation.similar_user r 
               JOIN jsonb_each(r.similar_users) j
                 ON TRUE
