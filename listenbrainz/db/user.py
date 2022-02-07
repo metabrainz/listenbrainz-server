@@ -450,20 +450,17 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, similar_users
-              FROM recommendation.similar_user
+            SELECT musicbrainz_id AS user_name
+                 , value->0 AS similarity -- first element of array is similarity, second is global_similarity
+              FROM recommendation.similar_user r 
+              JOIN jsonb_each(r.similar_users) j
+                ON TRUE
+              JOIN "user" u
+                ON j.key::int = u.id 
              WHERE user_id = :user_id
-        """), {
-            'user_id': user_id,
-        })
-        row = result.fetchone()
-        if row:
-            users = {}
-            for user in row['similar_users']:
-                # first element of array is similarity, second is global_similarity
-                users[user] = row['similar_users'][user][0]
-            return SimilarUsers(user_id=row['user_id'], similar_users=users)
-        return None
+        """), user_id=user_id)
+        users = {row["user_name"]: row["similarity"] for row in result.fetchall()}
+        return SimilarUsers(user_id=user_id, similar_users=users)
 
 
 def get_users_by_id(user_ids: List[int]):

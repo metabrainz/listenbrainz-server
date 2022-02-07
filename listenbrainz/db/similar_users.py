@@ -34,7 +34,7 @@ def import_user_similarities(data):
             curs.execute(
                 """DROP TABLE IF EXISTS recommendation.similar_user_import""")
             curs.execute("""CREATE TABLE recommendation.similar_user_import  (
-                                user_name     VARCHAR NOT NULL,
+                                user_id     INTEGER NOT NULL,
                                 similar_users JSONB)""")
             query = "INSERT INTO recommendation.similar_user_import VALUES %s"
             values = []
@@ -68,7 +68,7 @@ def import_user_similarities(data):
                                         SELECT id AS user_id, similar_users
                                           FROM recommendation.similar_user_import
                                           JOIN "user"
-                                            ON user_name = musicbrainz_id""")
+                                            ON user_id = "user".id""")
 
             curs.execute("""DROP TABLE recommendation.similar_user_import""")
 
@@ -134,7 +134,7 @@ def get_top_similar_users(count: int = 200, global_similarity: bool = False):
     try:
         with conn.cursor() as curs:
             curs.execute("""SELECT musicbrainz_id AS user_name, similar_users
-                             FROM  recommendation.similar_user su
+                              FROM recommendation.similar_user su
                               JOIN "user" u
                                 ON user_id = u.id""")
 
