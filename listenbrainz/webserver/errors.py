@@ -208,7 +208,7 @@ def init_error_handlers(app):
 class InvalidAPIUsage(Exception):
     """ General error class for the API_compat to render errors in multiple formats """
 
-    def __init__(self, api_error, status_code=500, output_format="xml"):
+    def __init__(self, api_error: LastFMError, status_code=500, output_format="xml"):
         Exception.__init__(self)
         self.api_error = api_error
         self.status_code = status_code
