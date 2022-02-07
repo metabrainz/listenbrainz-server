@@ -117,10 +117,10 @@ class HandlersTestCase(DatabaseTestCase):
         self.assertEqual(received, expected)
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
+    @mock.patch('listenbrainz.spark.handlers.db_user.get')
     @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_listening_activity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
+    def test_handle_user_listening_activity(self, mock_send_mail, mock_new_user_stats, mock_get, mock_db_insert):
         data = {
             'user_id': 1,
             'type': 'listening_activity',
@@ -134,7 +134,7 @@ class HandlersTestCase(DatabaseTestCase):
                 'listen_count': 200,
             }],
         }
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
+        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
         mock_new_user_stats.return_value = True
 
         with self.app.app_context():
@@ -159,10 +159,10 @@ class HandlersTestCase(DatabaseTestCase):
         mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
+    @mock.patch('listenbrainz.spark.handlers.db_user.get')
     @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_daily_activity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
+    def test_handle_user_daily_activity(self, mock_send_mail, mock_new_user_stats, mock_get, mock_db_insert):
         data = {
             'user_id': 1,
             'type': 'daily_activity',
@@ -175,7 +175,7 @@ class HandlersTestCase(DatabaseTestCase):
                 'listen_count': 20,
             }],
         }
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
+        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
         mock_new_user_stats.return_value = True
 
         with self.app.app_context():
@@ -244,8 +244,8 @@ class HandlersTestCase(DatabaseTestCase):
         self.assertTrue(is_new_user_stats_batch())
 
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    def test_handle_recommendations(self, mock_get_by_mb_id, mock_db_insert):
+    @mock.patch('listenbrainz.spark.handlers.db_user.get')
+    def test_handle_recommendations(self, mock_get, mock_db_insert):
         data = {
             'user_id': 1,
             'type': 'cf_recording_recommendations',
@@ -264,7 +264,7 @@ class HandlersTestCase(DatabaseTestCase):
             }
         }
 
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
+        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
         with self.app.app_context():
             handle_recommendations(data)
 
@@ -462,8 +462,8 @@ class HandlersTestCase(DatabaseTestCase):
             mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    def test_handle_missing_musicbrainz_data(self, mock_get_by_mb_id, mock_db_insert):
+    @mock.patch('listenbrainz.spark.handlers.db_user.get')
+    def test_handle_missing_musicbrainz_data(self, mock_get, mock_db_insert):
         data = {
             'type': 'missing_musicbrainz_data',
             'user_id': 1,
@@ -478,7 +478,7 @@ class HandlersTestCase(DatabaseTestCase):
             'source': 'cf'
         }
 
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
+        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
 
         with self.app.app_context():
             handle_missing_musicbrainz_data(data)
