@@ -121,7 +121,6 @@ def insert_multiple_user_jsonb_data(data):
     try:
         with connection.cursor() as cursor:
             execute_values(cursor, formatted_query, values)
-            current_app.logger.info("Row Count: %d", cursor.rowcount)
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
