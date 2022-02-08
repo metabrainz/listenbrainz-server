@@ -1,41 +1,133 @@
-from datetime import datetime, timedelta
+import logging
+import subprocess
+from datetime import datetime
+
 import psycopg2
 import sqlalchemy
-import subprocess
-import logging
-
-from brainzutils import cache
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz.utils import init_cache
 from listenbrainz import db
 from listenbrainz.db import timescale
-from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_TIMESTAMPS
-from listenbrainz import config
-
 
 logger = logging.getLogger(__name__)
 
 SECONDS_IN_A_YEAR = 31536000
 
 
-def update_user_listen_counts():
+def delete_listens_update_stats():
+    delete_listens = """
+        DELETE FROM listen l
+         USING listen_delete_metadata ldm
+         WHERE ldm.created < :created
+           AND l.user_id = ldm.user_id
+           AND l.listened_at = ldm.listened_at
+           AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid'::uuid = ldm.recording_msid
+    """
+    update_listen_counts = """
+        WITH update_counts AS (
+            SELECT user_id
+                 , count(*) FILTER (WHERE dl.created < lm.created) AS deleted_count
+              FROM listen_delete_metadata dl
+              JOIN listen_user_metadata lm
+             USING (user_id)
+          GROUP BY user_id   
+        ) 
+            UPDATE listen_user_metadata lm
+               SET count = count - deleted_count
+              FROM update_counts uc
+             WHERE lm.user_id = uc.user_id
+    """
+    update_listen_min_ts = """
+        WITH update_min_ts AS (
+            SELECT user_id, min_listened_at
+              FROM listen_delete_metadata dl
+              JOIN listen_user_metadata lm
+             USING (user_id)
+          GROUP BY user_id, min_listened_at 
+            HAVING min(dl.listened_at) = min_listened_at
+        ), calculate_new_min_ts AS (
+            SELECT user_id
+                 , new_ts.min_listened_ts AS new_min_listened_at
+              FROM update_min_ts u
+              JOIN LATERAL (
+                    SELECT min(listened_at) AS min_listened_ts
+                      FROM listen l
+                     WHERE l.user_id = u.user_id
+                   ) AS new_ts
+                ON TRUE
+        )
+            UPDATE listen_user_metadata lm
+               SET min_listened_at = new_min_listened_at
+              FROM calculate_new_min_ts mt
+             WHERE lm.user_id = mt.user_id
+    """
+    update_listen_max_ts = """
+        WITH update_max_ts AS (
+            SELECT user_id, max_listened_at
+              FROM listen_delete_metadata dl
+              JOIN listen_user_metadata lm
+             USING (user_id)
+          GROUP BY user_id, max_listened_at 
+            HAVING max(dl.listened_at) = max_listened_at
+        ), calculate_new_max_ts AS (
+            SELECT user_id
+                 , new_ts.max_listened_ts AS new_max_listened_at
+              FROM update_max_ts u
+              JOIN LATERAL (
+                    SELECT max(listened_at) AS max_listened_ts
+                      FROM listen l
+                     WHERE l.user_id = u.user_id
+                   ) AS new_ts
+                ON TRUE
+        )
+            UPDATE listen_user_metadata lm
+               SET max_listened_at = new_max_listened_at
+              FROM calculate_new_max_ts mt
+             WHERE lm.user_id = mt.user_id
+    """
+    delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE created < :created"
+
+    with db.engine.begin() as connection:
+        created = datetime.now()
+
+        logger.info("Deleting Listens")
+        connection.execute(text(delete_listens), created=created)
+
+        logger.info("Update listens counts affected by deleted listens")
+        connection.execute(text(update_listen_counts))
+
+        logger.info("Update minimum listen timestamp affected by deleted listens")
+        connection.execute(text(update_listen_min_ts))
+
+        logger.info("Update maximum listen timestamp affected by deleted listens")
+        connection.execute(text(update_listen_max_ts))
+
+        logger.info("Clean up delete user metadata table")
+        connection.execute(text(delete_user_metadata), created=created)
+
+
+def update_user_listen_data():
     query = """
-        WITH nm AS (
-            SELECT l.user_id, count(*) as count
+        WITH new AS (
+            SELECT user_id
+                 , count(*) as count
+                 , min(listened_at) AS min_listened_at
+                 , max(listened_at) AS max_listened_at
               FROM listen l
               JOIN listen_user_metadata lm
              USING (user_id)
              WHERE l.created > lm.created
                AND l.created <= :until
-          GROUP BY l.user_id
+          GROUP BY user_id
         )
-            UPDATE listen_user_metadata om
-               SET count = om.count + nm.count
-                 , created = :until
-              FROM nm
-             WHERE om.user_id = nm.user_id
+        UPDATE listen_user_metadata old
+           SET count = old.count + new.count
+             , min_listened_at = least(old.min_listened_at, new.min_listened_at)
+             , max_listened_at = greatest(old.max_listened_at, new.max_listened_at)
+             , created = :until
+          FROM new
+         WHERE old.user_id = new.user_id
     """
     # There is something weird going on here, I do not completely understand why but using engine.connect instead
     # of engine.begin causes the changes to not be persisted. Reading up on sqlalchemy transaction handling etc.
@@ -85,42 +177,16 @@ def add_missing_to_listen_users_metadata():
 
 
 def recalculate_all_user_data():
-
-    timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
-    db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-    init_cache(host=config.REDIS_HOST, port=config.REDIS_PORT,
-               namespace=config.REDIS_NAMESPACE)
-
-    # Find the created timestamp of the last listen
-    query = "SELECT max(created) FROM listen WHERE created > :date"
-    try:
-        with timescale.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(
-                query), date=datetime.now() - timedelta(weeks=4))
-            row = result.fetchone()
-            last_created_ts = row[0]
-    except psycopg2.OperationalError as e:
-        logger.error("Cannot query ts to fetch latest listen." %
-                     str(e), exc_info=True)
-        raise
-
-    logger.info("Last created timestamp: " + str(last_created_ts))
-
-    # Select a list of users
-    user_list = []
     query = 'SELECT id FROM "user"'
     try:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(query))
-            for row in result:
-                user_list.append(row[0])
-    except psycopg2.OperationalError as e:
-        logger.error("Cannot query db to fetch user list." %
-                     str(e), exc_info=True)
+            user_list = [row["id"] for row in result]
+    except psycopg2.OperationalError:
+        logger.error("Cannot query db to fetch user list", exc_info=True)
         raise
 
-    logger.info("Fetched %d users. Setting empty cache entries." %
-                len(user_list))
+    logger.info("Fetched %d users. Resetting created timestamps for all users.", len(user_list))
 
     query = """
         INSERT INTO listen_user_metadata (user_id, count, min_listened_at, max_listened_at, created)
@@ -132,7 +198,7 @@ def recalculate_all_user_data():
                   , max_listened_at = NULL
                   , created = 'epoch'
     """
-    values = [(user_id, ) for user_id in user_list]
+    values = [(user_id,) for user_id in user_list]
     template = "(%s, 0, NULL, NULL, 'epoch')"
     connection = timescale.engine.raw_connection()
     try:
@@ -144,49 +210,11 @@ def recalculate_all_user_data():
         logger.error("Error while resetting created timestamps:", exc_info=True)
         raise
 
-    # Reset the timestamps to 0 for all users
-    for user_id in user_list:
-        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", expirein=0)
-
-    # Tabulate all of the listen timestamps for all users
-    logger.info("Scan the whole listen table...")
-    user_timestamps = {}
-    query = "SELECT listened_at, user_id FROM listen where created <= :ts"
     try:
-        with timescale.engine.connect() as connection:
-            result = connection.execute(
-                sqlalchemy.text(query), ts=last_created_ts)
-            for row in result:
-                ts = row[0]
-                user_id = row[1]
-                if user_id not in user_timestamps:
-                    user_timestamps[user_id] = [ts, ts]
-                else:
-                    if ts > user_timestamps[user_id][1]:
-                        user_timestamps[user_id][1] = ts
-                    if ts < user_timestamps[user_id][0]:
-                        user_timestamps[user_id][0] = ts
+        update_user_listen_data()
     except psycopg2.OperationalError as e:
-        logger.error("Cannot query db to fetch user list." %
-                     str(e), exc_info=True)
+        logger.error("Cannot update user data:", exc_info=True)
         raise
-
-    logger.info("Setting updated cache entries.")
-    # Set the timestamps for all users
-    for user_id in user_list:
-        try:
-            tss = cache.get(REDIS_USER_TIMESTAMPS + str(user_id))
-            (min_ts, max_ts) = tss.split(",")
-            min_ts = int(min_ts)
-            max_ts = int(max_ts)
-            if min_ts and min_ts < user_timestamps[user_id][0]:
-                user_timestamps[user_id][0] = min_ts
-            if max_ts and max_ts > user_timestamps[user_id][1]:
-                user_timestamps[user_id][1] = max_ts
-            cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "%d,%d" %
-                      (user_timestamps[user_id][0], user_timestamps[user_id][1]), expirein=0)
-        except KeyError:
-            pass
 
 
 def unlock_cron():

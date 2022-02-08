@@ -115,8 +115,7 @@ class TimescaleListenStore:
             cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "%d,%d" % (cached_min_ts, cached_max_ts), expirein=0)
 
     def get_timestamps_for_user(self, user_id: int):
-        """ Return the max_ts and min_ts for a given user and cache the result in brainzutils cache
-        """
+        """ Return the max_ts and min_ts for a given user """
         tss = cache.get(REDIS_USER_TIMESTAMPS + str(user_id))
         if tss:
             (min_ts, max_ts) = tss.split(",")
@@ -497,10 +496,13 @@ class TimescaleListenStore:
         Raises: Exception if unable to delete the user in 5 retries
         """
         query = """
-            UPDATE listen_user_metadata SET count = 0 WHERE user_id = :user_id;
+            UPDATE listen_user_metadata 
+               SET count = 0
+                 , min_listened_at = NULL
+                 , max_listened_at = NULL
+             WHERE user_id = :user_id;
             DELETE FROM listen WHERE user_id = :user_id;
         """
-        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
         try:
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), user_id=user_id)
@@ -517,26 +519,10 @@ class TimescaleListenStore:
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
         query = """
-            WITH delete_listen AS (
-                DELETE FROM listen
-                      WHERE listened_at = :listened_at
-                        AND user_id = :user_id
-                        AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid
-                  RETURNING user_id, created
-            )
-            UPDATE listen_user_metadata lc
-               SET count = count - 1
-              FROM delete_listen dl
-             WHERE lc.user_id = dl.user_id
-               AND lc.created > dl.created
-            -- only decrement count if the listen deleted has a created earlier than the created timestamp
-            -- in the listen count table
+            INSERT INTO listen_delete_metadata(user_id, listened_at, recording_msid) 
+                 VALUES (:user_id, :listened_at, :recording_msid)
         """
         try:
-            # There is something weird going on here, I do not completely understand why but using engine.connect instead
-            # of engine.begin causes the changes to not be persisted. Reading up on sqlalchemy transaction handling etc.
-            # it makes sense that we need begin for an explicit transaction but how CRUD statements work fine with connect
-            # in remaining LB is beyond me then.
             with timescale.engine.begin() as connection:
                 connection.execute(sqlalchemy.text(query), listened_at=listened_at,
                                    user_id=user_id, recording_msid=recording_msid)
