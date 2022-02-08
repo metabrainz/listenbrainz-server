@@ -6,7 +6,7 @@
         "to_ts": 1628511763,
         "data": [
             {
-                "musicbrainz_id": "amCap1712",
+                "user_id": 2,
                 "data": [
                     {
                         "time_range": "2002",
@@ -131,7 +131,7 @@
                 ]
             },
             {
-                "musicbrainz_id": "rob",
+                "user_id": 1,
                 "data": [
                     {
                         "time_range": "2002",

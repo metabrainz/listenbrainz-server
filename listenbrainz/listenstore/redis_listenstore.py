@@ -1,14 +1,12 @@
 from datetime import datetime
-from time import time
+from typing import Optional
 
 import redis
-from typing import Optional
 import ujson
+from brainzutils import cache
 
 from listenbrainz.listen import Listen, NowPlayingListen
 from listenbrainz.listenstore import ListenStore
-from brainzutils import cache
-from listenbrainz.utils import create_path, init_cache
 
 
 class RedisListenStore(ListenStore):
@@ -18,16 +16,6 @@ class RedisListenStore(ListenStore):
     PLAYING_NOW_KEY = "pn."
     LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
     LISTEN_COUNT_PER_DAY_KEY = "lc-day-"
-
-
-    def __init__(self, log, conf):
-        super(RedisListenStore, self).__init__(log)
-
-        # Initialize brainzutils cache
-        init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'],
-                   namespace=conf['REDIS_NAMESPACE'])
-        # This is used in tests. Leave for cleanup in LB-879
-        self.redis = cache._r
 
     def get_playing_now(self, user_id):
         """ Return the current playing song of the user
@@ -63,9 +51,8 @@ class RedisListenStore(ListenStore):
             self.log.error("Redis ping didn't work: {}".format(str(e)))
             raise
 
-
     def update_recent_listens(self, unique):
-        """ 
+        """
             Store the most recent listens in redis so we can fetch them easily for a recent listens page. This
             is not a critical action, so if it fails, it fails. Let's live with it.
         """
@@ -78,11 +65,10 @@ class RedisListenStore(ListenStore):
         if recent:
             cache._r.zadd(cache._prep_key(self.RECENT_LISTENS_KEY), recent, nx=True)
 
-            # Don't prune the sorted list each time, but only when it reaches twice the desired size 
+            # Don't prune the sorted list each time, but only when it reaches twice the desired size
             count = cache._r.zcard(cache._prep_key(self.RECENT_LISTENS_KEY))
             if count > (self.RECENT_LISTENS_MAX * 2):
                 cache._r.zpopmin(cache._prep_key(self.RECENT_LISTENS_KEY), count - self.RECENT_LISTENS_MAX - 1)
-
 
     def get_recent_listens(self, max = RECENT_LISTENS_MAX):
         """

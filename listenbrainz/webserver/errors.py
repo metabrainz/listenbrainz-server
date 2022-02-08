@@ -138,7 +138,9 @@ def init_error_handlers(app):
                 otherwise
         """
         if current_app.config.get('IS_API_COMPAT_APP') or request.path.startswith(API_PREFIX):
-            return jsonify({'code': code, 'error': error.description}), code
+            response = jsonify({'code': code, 'error': error.description})
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            return response, code
         return error_wrapper('errors/{code}.html'.format(code=code), error, code)
 
     @app.errorhandler(400)
@@ -206,7 +208,7 @@ def init_error_handlers(app):
 class InvalidAPIUsage(Exception):
     """ General error class for the API_compat to render errors in multiple formats """
 
-    def __init__(self, api_error, status_code=500, output_format="xml"):
+    def __init__(self, api_error: LastFMError, status_code=500, output_format="xml"):
         Exception.__init__(self)
         self.api_error = api_error
         self.status_code = status_code

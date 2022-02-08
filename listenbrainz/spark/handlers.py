@@ -64,7 +64,7 @@ def handle_user_entity(data):
 
 
 def _handle_user_activity_stats(stats_type, data):
-    values = [(entry["musicbrainz_id"], 0, json.dumps(entry["data"])) for entry in data["data"]]
+    values = [(entry["user_id"], 0, json.dumps(entry["data"])) for entry in data["data"]]
     db_stats.insert_multiple_user_jsonb_data(
         stats_type,
         data["stats_range"],
@@ -148,13 +148,13 @@ def handle_dataframes(data):
 def handle_missing_musicbrainz_data(data):
     """ Insert user missing musicbrainz data i.e data submitted to ListenBrainz but not MusicBrainz.
     """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
+    user_id = data['user_id']
+    user = db_user.get(user_id)
 
     if not user:
         return
 
-    current_app.logger.debug("Inserting missing musicbrainz data for {}".format(musicbrainz_id))
+    current_app.logger.debug(f"Inserting missing musicbrainz data for {user['musicbrainz_id']}")
 
     missing_musicbrainz_data = data['missing_musicbrainz_data']
     source = data['source']
@@ -162,16 +162,15 @@ def handle_missing_musicbrainz_data(data):
     try:
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
             user['id'],
-            UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
+            UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source
         )
     except ValidationError:
-        current_app.logger.error("""ValidationError while inserting missing MusicBrainz data from source "{source}" for user
-                                 with musicbrainz_id: {musicbrainz_id}. Data: {data}""".format(musicbrainz_id=musicbrainz_id,
-                                                                                               data=json.dumps(data, indent=3),
-                                                                                               source=source), exc_info=True)
+        current_app.logger.error(f"""
+        ValidationError while inserting missing MusicBrainz data from source "{source}" for user with musicbrainz_id:
+         {user["musicbrainz_id"]}. Data: {json.dumps(data, indent=3)}""", exc_info=True)
 
-    current_app.logger.debug("Missing musicbrainz data for {} inserted".format(musicbrainz_id))
+    current_app.logger.debug(f"Missing musicbrainz data for {user['musicbrainz_id']} inserted")
 
 
 def handle_model(data):
@@ -215,29 +214,28 @@ def handle_candidate_sets(data):
 def handle_recommendations(data):
     """ Take recommended recordings for a user and save it in the db.
     """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
+    user_id = data['user_id']
+    user = db_user.get(user_id)
     if not user:
-        current_app.logger.info("Generated recommendations for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        current_app.logger.info(f"Generated recommendations for a user that doesn't exist in the Postgres database: {user_id}")
         return
 
-    current_app.logger.debug("inserting recommendation for {}".format(musicbrainz_id))
+    current_app.logger.debug("inserting recommendation for {}".format(user["musicbrainz_id"]))
     recommendations = data['recommendations']
 
     try:
         db_recommendations_cf_recording.insert_user_recommendation(
-            user['id'],
+            user_id,
             UserRecommendationsJson(**{
                 'top_artist': recommendations['top_artist'],
                 'similar_artist': recommendations['similar_artist']
             })
         )
     except ValidationError:
-        current_app.logger.error("""ValidationError while inserting recommendations for user with musicbrainz_id:
-                                 {musicbrainz_id}. \nData: {data}""".format(musicbrainz_id=musicbrainz_id,
-                                                                            data=json.dumps(data, indent=3)))
+        current_app.logger.error(f"""ValidationError while inserting recommendations for user with musicbrainz_id:
+                                 {user["musicbrainz_id"]}. \nData: {json.dumps(data, indent=3)}""")
 
-    current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))
+    current_app.logger.debug("recommendation for {} inserted".format(user["musicbrainz_id"]))
 
 
 def notify_mapping_import(data):
@@ -334,11 +332,12 @@ def handle_similar_users_year_end(message):
 
 
 def handle_new_releases_of_top_artists(message):
-    musicbrainz_id = message["user_name"]
-    user = db_user.get_by_mb_id(musicbrainz_id)
+    user_id = message["user_id"]
+    # need to check whether user exists before inserting otherwise possible FK error.
+    user = db_user.get(user_id)
     if not user:
         return
-    year_in_music.insert_new_releases_of_top_artists(user["id"], message["data"])
+    year_in_music.insert_new_releases_of_top_artists(user_id, message["data"])
 
 
 def handle_most_prominent_color(message):
@@ -354,25 +353,26 @@ def handle_most_listened_year(message):
 
 
 def handle_top_stats(message):
-    musicbrainz_id = message["musicbrainz_id"]
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        return
-    year_in_music.handle_top_stats(user["id"], message["entity"], message["data"])
+    year_in_music.handle_top_stats(message["entity"], message["data"])
 
     # for top_releases, look up cover art
     if message["entity"] == "releases":
-        release_mbids = [rel["release_mbid"] for rel in message["data"] if "release_mbid" in rel]
-        coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
-        year_in_music.handle_coverart(user["id"], "top_releases_coverart", coverart)
+        data = message["data"]
+        for user_data in data:
+            user = db_user.get(user_data["user_id"])
+            if not user:
+                return
+            release_mbids = [rel["release_mbid"] for rel in user_data["data"] if "release_mbid" in rel]
+            coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
+            year_in_music.handle_coverart(user_data["user_id"], "top_releases_coverart", coverart)
 
 
 def handle_listens_per_day(message):
-    musicbrainz_id = message["musicbrainz_id"]
-    user = db_user.get_by_mb_id(musicbrainz_id)
+    user_id = message["user_id"]
+    user = db_user.get(user_id)
     if not user:
         return
-    year_in_music.handle_listens_per_day(user["id"], message["data"])
+    year_in_music.handle_listens_per_day(user_id, message["data"])
 
 
 def handle_yearly_listen_counts(message):

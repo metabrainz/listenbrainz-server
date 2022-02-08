@@ -45,7 +45,7 @@ class HandlersTestCase(DatabaseTestCase):
             'to_ts': 10,
             'data': [
                 {
-                    'musicbrainz_id': 'iliekcomputers',
+                    'user_id': 1,
                     'data': [{
                         'artist_name': 'Kanye West',
                         'listen_count': 200,
@@ -53,7 +53,7 @@ class HandlersTestCase(DatabaseTestCase):
                     'count': 1,
                 },
                 {
-                    'musicbrainz_id': 'lucifer',
+                    'user_id': 2,
                     'data': [
                         {
                             'artist_name': 'Selena Gomez',
@@ -124,7 +124,7 @@ class HandlersTestCase(DatabaseTestCase):
             'to_ts': 10,
             'data': [
                 {
-                    'musicbrainz_id': 'iliekcomputers',
+                    'user_id': 1,
                     'data': [
                         {
                             'from_ts': 1,
@@ -141,7 +141,7 @@ class HandlersTestCase(DatabaseTestCase):
                     ]
                 },
                 {
-                    'musicbrainz_id': 'lucifer',
+                    'user_id': 2,
                     'data': [
                         {
                             'from_ts': 2,
@@ -208,7 +208,7 @@ class HandlersTestCase(DatabaseTestCase):
             'to_ts': 10,
             'data': [
                 {
-                    'musicbrainz_id': 'iliekcomputers',
+                    'user_id': 1,
                     'data': [
                         {
                             'day': 'Monday',
@@ -218,7 +218,7 @@ class HandlersTestCase(DatabaseTestCase):
                     ]
                 },
                 {
-                    'musicbrainz_id': 'lucifer',
+                    'user_id': 2,
                     'data': [
                         {
                             'day': 'Wednesday',
@@ -324,10 +324,10 @@ class HandlersTestCase(DatabaseTestCase):
         self.assertTrue(is_new_user_stats_batch())
 
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    def test_handle_recommendations(self, mock_get_by_mb_id, mock_db_insert):
+    @mock.patch('listenbrainz.spark.handlers.db_user.get')
+    def test_handle_recommendations(self, mock_get, mock_db_insert):
         data = {
-            'musicbrainz_id': 'vansika',
+            'user_id': 1,
             'type': 'cf_recording_recommendations',
             'recommendations': {
                 'top_artist': [
@@ -344,7 +344,7 @@ class HandlersTestCase(DatabaseTestCase):
             }
         }
 
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
+        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
         with self.app.app_context():
             handle_recommendations(data)
 
@@ -542,11 +542,11 @@ class HandlersTestCase(DatabaseTestCase):
             mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    def test_handle_missing_musicbrainz_data(self, mock_get_by_mb_id, mock_db_insert):
+    @mock.patch('listenbrainz.spark.handlers.db_user.get')
+    def test_handle_missing_musicbrainz_data(self, mock_get, mock_db_insert):
         data = {
             'type': 'missing_musicbrainz_data',
-            'musicbrainz_id': 'vansika',
+            'user_id': 1,
             'missing_musicbrainz_data': [
                 {
                     "artist_name": "Katty Peri",
@@ -558,17 +558,19 @@ class HandlersTestCase(DatabaseTestCase):
             'source': 'cf'
         }
 
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
+        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
 
         with self.app.app_context():
             handle_missing_musicbrainz_data(data)
 
-        mock_db_insert.assert_called_with(1, UserMissingMusicBrainzDataJson(
-            missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
-                artist_name="Katty Peri",
-                listened_at="2020-04-29 23:56:23",
-                release_name="No Place Is Home",
-                recording_name="How High"
-            )]),
-                                          'cf'
-                                          )
+        mock_db_insert.assert_called_with(
+            1,
+            UserMissingMusicBrainzDataJson(
+                missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
+                    artist_name="Katty Peri",
+                    listened_at="2020-04-29 23:56:23",
+                    release_name="No Place Is Home",
+                    recording_name="How High"
+                )]),
+            'cf'
+        )

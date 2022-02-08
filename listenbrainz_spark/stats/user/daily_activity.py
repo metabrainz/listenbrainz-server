@@ -32,7 +32,7 @@ def calculate_daily_activity():
 
     # Truncate listened_at to day and hour to improve matching speed
     formatted_listens = run_query("""
-                            SELECT user_name
+                            SELECT user_id
                                  , date_format(listened_at, 'EEEE') as day
                                  , date_format(listened_at, 'H') as hour
                               FROM listens
@@ -42,7 +42,7 @@ def calculate_daily_activity():
 
     # Calculate the number of listens in each time range for each user except the time ranges which have zero listens.
     result = run_query("""
-                SELECT listens.user_name
+                SELECT listens.user_id
                      , time_range.day
                      , time_range.hour
                      , count(*) as listen_count
@@ -50,7 +50,7 @@ def calculate_daily_activity():
                   JOIN time_range
                     ON listens.day == time_range.day
                    AND listens.hour == time_range.hour
-              GROUP BY listens.user_name
+              GROUP BY listens.user_id
                      , time_range.day
                      , time_range.hour
                   """)
@@ -58,7 +58,7 @@ def calculate_daily_activity():
     # Create a table with a list of time ranges and corresponding listen count for each user
     iterator = result \
         .withColumn("daily_activity", struct("hour", "day", "listen_count")) \
-        .groupBy("user_name") \
+        .groupBy("user_id") \
         .agg(sort_array(collect_list("daily_activity")).alias("daily_activity")) \
         .toLocalIterator()
 
@@ -101,7 +101,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
             _dict = entry.asDict(recursive=True)
             try:
                 user_stat = UserStatRecords[DailyActivityRecord](
-                    musicbrainz_id=_dict["user_name"],
+                    user_id=_dict["user_id"],
                     data=_dict["daily_activity"]
                 )
                 multiple_user_stats.append(user_stat)

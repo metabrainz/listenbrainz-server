@@ -26,8 +26,8 @@ class CreateDataframeTestCase(RecommendationsTestCase):
         self.assertEqual(users_df.count(), 2)
 
         expected_users_df = listenbrainz_spark.session.createDataFrame([
-            Row(user_name='amCap1712', user_id=1),
-            Row(user_name='rob', user_id=2)
+            Row(user_id=1, spark_user_id=1),
+            Row(user_id=2, spark_user_id=2)
         ])
         self.assertListEqual(list(expected_users_df.toLocalIterator()), list(users_df.toLocalIterator()))
         self.assertCountEqual(expected_users_df.columns, users_df.columns)
@@ -52,7 +52,7 @@ class CreateDataframeTestCase(RecommendationsTestCase):
         mapped_listens = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_MAPPED_LISTENS)
         listens_df = create_dataframes.get_listens_df(mapped_listens, metadata)
         self.assertEqual(listens_df.count(), 24)
-        self.assertCountEqual(['recording_mbid', 'user_name'], listens_df.columns)
+        self.assertCountEqual(['recording_mbid', 'user_id'], listens_df.columns)
         self.assertEqual(metadata['listens_count'], 24)
 
     def test_save_playcounts_df(self):
@@ -66,7 +66,7 @@ class CreateDataframeTestCase(RecommendationsTestCase):
         playcounts_df = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
         self.assertEqual(playcounts_df.count(), 20)
 
-        self.assertListEqual(['user_id', 'recording_id', 'count'], playcounts_df.columns)
+        self.assertListEqual(['spark_user_id', 'recording_id', 'count'], playcounts_df.columns)
         self.assertEqual(metadata['playcounts_count'], 20)
 
     def test_save_dataframe_metadata_to_HDFS(self):
@@ -95,4 +95,4 @@ class CreateDataframeTestCase(RecommendationsTestCase):
 
         with open(os.path.join(TEST_DATA_PATH, 'missing_musicbrainz_data.json')) as f:
             expected_missing_mb_data = json.load(f)
-        self.assertEqual(expected_missing_mb_data, messages)
+        self.assertCountEqual(expected_missing_mb_data, messages)

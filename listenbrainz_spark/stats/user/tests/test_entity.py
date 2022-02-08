@@ -75,7 +75,7 @@ class UserEntityTestCase(StatsTestCase):
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            'user_name': "test",
+            'user_id': 1,
             'recordings': recordings
         }
 
@@ -99,7 +99,7 @@ class UserEntityTestCase(StatsTestCase):
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            'user_name': "test",
+            'user_id': 1,
             'artists': data
         }
 
@@ -117,7 +117,7 @@ class UserEntityTestCase(StatsTestCase):
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            'user_name': "test",
+            'user_id': 1,
             'releases': data
         }
 
@@ -135,7 +135,7 @@ class UserEntityTestCase(StatsTestCase):
 
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
-            'user_name': "test",
+            'user_id': 1,
             'recordings': data
         }
 

@@ -1,5 +1,3 @@
-import listenbrainz_spark
-from listenbrainz_spark import path
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
@@ -16,15 +14,15 @@ def get_listen_count(year):
 def _get_yearly_listen_counts():
     return """
         WITH user_listen_counts AS (
-            SELECT user_name
+            SELECT user_id
                  , count(listened_at) AS listen_count
               FROM listens_of_year
-          GROUP BY user_name  
+          GROUP BY user_id  
         )
         SELECT to_json(
                     map_from_entries(
                         collect_list(
-                            struct(user_name, listen_count)
+                            struct(user_id, listen_count)
                         )
                     )
                 ) AS yearly_listen_counts
