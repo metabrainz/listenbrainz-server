@@ -6,11 +6,12 @@ from typing import Iterator, Optional, Dict
 from more_itertools import chunked
 from pydantic import ValidationError
 
-from data.model.user_artist_stat import UserArtistRecord
-from data.model.user_entity import UserEntityStatMessage, MultipleUserEntityRecords
-from data.model.user_recording_stat import UserRecordingRecord
-from data.model.user_release_stat import UserReleaseRecord
+from data.model.user_artist_stat import ArtistRecord
+from data.model.user_entity import UserEntityStatMessage, UserEntityRecords
+from data.model.user_recording_stat import RecordingRecord
+from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.stats import get_dates_for_stats_range
+from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
@@ -25,12 +26,10 @@ entity_handler_map = {
 }
 
 entity_model_map = {
-    "artists": UserArtistRecord,
-    "releases": UserReleaseRecord,
-    "recordings": UserRecordingRecord
+    "artists": ArtistRecord,
+    "releases": ReleaseRecord,
+    "recordings": RecordingRecord
 }
-
-USERS_PER_MESSAGE = 10
 
 
 def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
@@ -61,7 +60,7 @@ def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str,
 
 
 def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str) \
-        -> Optional[MultipleUserEntityRecords]:
+        -> Optional[UserEntityRecords]:
     _dict = entry.asDict(recursive=True)
     total_entity_count = len(_dict[entity])
 
@@ -81,7 +80,7 @@ def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str
             logger.error("Invalid entry in entity stats", exc_info=True)
 
     try:
-        return MultipleUserEntityRecords(
+        return UserEntityRecords(
             user_id=_dict["user_id"],
             data=entity_list,
             count=total_entity_count

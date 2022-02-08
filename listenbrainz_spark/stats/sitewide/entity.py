@@ -4,9 +4,9 @@ from datetime import datetime
 from typing import List, Optional
 
 from data.model.sitewide_entity import SitewideEntityStatMessage
-from data.model.user_artist_stat import UserArtistRecord
-from data.model.user_recording_stat import UserRecordingRecord
-from data.model.user_release_stat import UserReleaseRecord
+from data.model.user_artist_stat import ArtistRecord
+from data.model.user_recording_stat import RecordingRecord
+from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.sitewide.artist import get_artists
 from listenbrainz_spark.stats.sitewide.recording import get_recordings
@@ -25,9 +25,9 @@ entity_handler_map = {
 }
 
 entity_model_map = {
-    "artists": UserArtistRecord,
-    "releases": UserReleaseRecord,
-    "recordings": UserRecordingRecord
+    "artists": ArtistRecord,
+    "releases": ReleaseRecord,
+    "recordings": RecordingRecord
 }
 
 

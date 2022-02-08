@@ -6,9 +6,9 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.common_stat import StatRange
 from data.model.user_artist_map import UserArtistMapRecord
-from data.model.user_daily_activity import UserDailyActivityRecord
-from data.model.user_entity import UserEntityRecord
-from data.model.user_listening_activity import UserListeningActivityRecord
+from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_entity import EntityRecord
+from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db.testing import DatabaseTestCase
 
 
@@ -26,7 +26,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             artists_data = json.load(f)
 
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='artists',
-                                        stats=StatRange[UserEntityRecord](**artists_data))
+                                        stats=StatRange[EntityRecord](**artists_data))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='artists')
         self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), artists_data)
@@ -36,7 +36,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         with open(self.path_to_data_file('user_top_releases_db.json')) as f:
             releases_data = json.load(f)
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='releases',
-                                        stats=StatRange[UserEntityRecord](**releases_data))
+                                        stats=StatRange[EntityRecord](**releases_data))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='releases')
         self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), releases_data)
@@ -46,7 +46,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         with open(self.path_to_data_file('user_top_recordings_db.json')) as f:
             recordings_data = json.load(f)
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='recordings',
-                                        stats=StatRange[UserEntityRecord](**recordings_data))
+                                        stats=StatRange[EntityRecord](**recordings_data))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='recordings')
         self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), recordings_data)
@@ -57,7 +57,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             listening_activity_data = json.load(f)
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='listening_activity',
-            stats=StatRange[UserListeningActivityRecord](**listening_activity_data)
+            stats=StatRange[ListeningActivityRecord](**listening_activity_data)
         )
 
     def test_insert_user_daily_activity(self):
@@ -66,7 +66,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             daily_activity_data = json.load(f)
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='daily_activity',
-            stats=StatRange[UserDailyActivityRecord](**daily_activity_data)
+            stats=StatRange[DailyActivityRecord](**daily_activity_data)
         )
 
         result = db_stats.get_user_daily_activity(user_id=self.user['id'], stats_range='all_time')
@@ -92,9 +92,9 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         artists_data_year['stats_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='artists',
-                                        stats=StatRange[UserEntityRecord](**artists_data))
+                                        stats=StatRange[EntityRecord](**artists_data))
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='artists',
-                                        stats=StatRange[UserEntityRecord](**artists_data_year))
+                                        stats=StatRange[EntityRecord](**artists_data_year))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='artists')
         self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), artists_data)
@@ -110,9 +110,9 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         releases_data_year['stats_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='releases',
-                                        stats=StatRange[UserEntityRecord](**releases_data))
+                                        stats=StatRange[EntityRecord](**releases_data))
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='releases',
-                                        stats=StatRange[UserEntityRecord](**releases_data_year))
+                                        stats=StatRange[EntityRecord](**releases_data_year))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='releases')
         self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), releases_data)
@@ -128,9 +128,9 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         recordings_data_year['stats_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='recordings',
-                                        stats=StatRange[UserEntityRecord](**recordings_data))
+                                        stats=StatRange[EntityRecord](**recordings_data))
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='recordings',
-                                        stats=StatRange[UserEntityRecord](**recordings_data_year))
+                                        stats=StatRange[EntityRecord](**recordings_data_year))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='recordings')
         self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), recordings_data)
@@ -147,11 +147,11 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='listening_activity',
-            stats=StatRange[UserListeningActivityRecord](**listening_activity_data)
+            stats=StatRange[ListeningActivityRecord](**listening_activity_data)
         )
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='listening_activity',
-            stats=StatRange[UserListeningActivityRecord](**listening_activity_data_year)
+            stats=StatRange[ListeningActivityRecord](**listening_activity_data_year)
         )
 
         result = db_stats.get_user_listening_activity(1, 'all_time')
@@ -169,11 +169,11 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='daily_activity',
-            stats=StatRange[UserDailyActivityRecord](**daily_activity_data)
+            stats=StatRange[DailyActivityRecord](**daily_activity_data)
         )
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='daily_activity',
-            stats=StatRange[UserDailyActivityRecord](**daily_activity_data_year)
+            stats=StatRange[DailyActivityRecord](**daily_activity_data_year)
         )
 
         result = db_stats.get_user_daily_activity(1, 'all_time')
@@ -209,7 +209,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db.json')) as f:
             artists_data = json.load(f)
 
-        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**artists_data))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[EntityRecord](**artists_data))
 
         result = db_stats.get_sitewide_stats('all_time', 'artists')
         self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), artists_data)
@@ -233,24 +233,24 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             sitewide_artists = json.load(f)
 
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='artists',
-                                        stats=StatRange[UserEntityRecord](**user_artists))
+                                        stats=StatRange[EntityRecord](**user_artists))
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='releases',
-                                        stats=StatRange[UserEntityRecord](**releases))
+                                        stats=StatRange[EntityRecord](**releases))
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='recordings',
-                                        stats=StatRange[UserEntityRecord](**recordings))
+                                        stats=StatRange[EntityRecord](**recordings))
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='listening_activity',
-            stats=StatRange[UserListeningActivityRecord](**listening_activity)
+            stats=StatRange[ListeningActivityRecord](**listening_activity)
         )
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='daily_activity',
-            stats=StatRange[UserDailyActivityRecord](**daily_activity)
+            stats=StatRange[DailyActivityRecord](**daily_activity)
         )
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='artist_map',
             stats=StatRange[UserArtistMapRecord](**artist_map)
         )
-        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**sitewide_artists))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[EntityRecord](**sitewide_artists))
 
         return {
             'user_artists': user_artists,
