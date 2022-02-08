@@ -78,7 +78,7 @@ def create_json_blob(row):
 
     artists = []
     for begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
-        rels = { name: url for name, url in rels }
+        rels = { name: url for name, url in rels or [] }
         artists.append({"begin_year": begin_year,
                         "end_year": end_year,
                         "type": artist_type,
