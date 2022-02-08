@@ -242,10 +242,7 @@ def get_recent_listens_for_user_list(user_list):
         raise APIBadRequest("user_list is empty or invalid.")
 
     users = db_user.get_many_users_by_mb_id(users)
-    listens = timescale_connection._ts.fetch_recent_listens_for_users(
-        users,
-        limit=limit
-    )
+    listens = timescale_connection._ts.fetch_recent_listens_for_users(users.values(), limit=limit)
     listen_data = []
     for listen in listens:
         listen_data.append(listen.to_api())
