@@ -53,7 +53,7 @@ def notify_user_stats_update(stat_type):
 
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
-    values = [(entry["musicbrainz_id"], entry["count"], json.dumps(entry["data"])) for entry in data["data"]]
+    values = [(entry["user_id"], entry["count"], json.dumps(entry["data"])) for entry in data["data"]]
     db_stats.insert_multiple_user_jsonb_data(
         data["entity"],
         data["stats_range"],
