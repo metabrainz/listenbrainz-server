@@ -9,6 +9,8 @@ from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 import config
 
+from icecream import ic
+
 BATCH_SIZE = 5000
 
 
@@ -70,21 +72,32 @@ def swap_table_and_indexes(conn):
         conn.rollback()
         raise
 
+
 def create_json_blob(row):
+    """ Format the data returned into a sane JSONB blob for easy consumption. """
 
-    artist = {
-        "begin_year": row["begin_date_year"],
-        "end_year": row["end_date_year"],
-        "type": row["type"],
-        "gender": row["gender"],
-        "area": row["area"],
-        "relationships": "" }
+    artists = []
+    for begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
+        rels = { name: url for name, url in rels }
+        artists.append({"begin_year": begin_year,
+                        "end_year": end_year,
+                        "type": artist_type,
+                        "gender": gender,
+                        "area": area,
+                        "relationships": rels })
 
-    recording = {
+    recording_links = []
+    for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
+        recording_links.append({"type": rel_type,
+                                "name": artist_name,
+                                "mbid": artist_mbid,
+                                "instrument": instrument})
+
+    return {
         "length": row["length"],
+        "links": recording_links,
+        "artists": artists
     }
-
-    return dict(row)
 
 
 def create_mb_metadata_cache():
@@ -103,13 +116,13 @@ def create_mb_metadata_cache():
                                 ON acn.artist_credit = ac.id
                               JOIN artist a
                                 ON acn.artist = a.id
-                         FULL JOIN l_artist_url lau
+                         LEFT JOIN l_artist_url lau
                                 ON lau.entity0 = a.id
-                         FULL JOIN url u
+                         LEFT JOIN url u
                                 ON lau.entity1 = u.id
-                         FULL JOIN link l
+                         LEFT JOIN link l
                                 ON lau.link = l.id
-                         FULL JOIN link_type lt
+                         LEFT JOIN link_type lt
                                 ON l.link_type = lt.id
                              WHERE (lt.gid IN ('99429741-f3f6-484b-84f8-23af51991770'
                                               ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
@@ -136,17 +149,17 @@ def create_mb_metadata_cache():
                                 ON acn.artist_credit = ac.id
                               JOIN artist a0
                                 ON a0.id = acn.artist
-                         FULL JOIN l_artist_recording lar
+                         LEFT JOIN l_artist_recording lar
                                 ON lar.entity1 = r.id
                               JOIN artist a1
                                 ON lar.entity0 = a1.id
-                         FULL JOIN link l
+                         LEFT JOIN link l
                                 ON lar.link = l.id
-                         FULL JOIN link_type lt
+                         LEFT JOIN link_type lt
                                 ON l.link_type = lt.id
-                         FULL JOIN link_attribute la
+                         LEFT JOIN link_attribute la
                                 ON la.link = l.id
-                         FULL JOIN link_attribute_type lat
+                         LEFT JOIN link_attribute_type lat
                                 ON la.attribute_type = lat.id
                              WHERE (lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
                                                ,'59054b12-01ac-43ee-a618-285fd397e461'
@@ -159,17 +172,14 @@ def create_mb_metadata_cache():
                                                ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                    OR lt.gid IS NULL)
                            GROUP BY r.gid
-               )
-                        SELECT a.name
-                             , a.begin_date_year
-                             , a.end_date_year
-                             , at.name AS type
-                             , ag.name AS gender
-                             , ar.name AS area
-                             , recording_links
-                             , artist_links
-                             , r.length
-                             , r.gid as recording_mbid
+               ), artist_data AS (
+                        SELECT r.gid
+                             , array_agg(jsonb_build_array(a.begin_date_year
+                                                          ,a.end_date_year
+                                                          ,at.name
+                                                          ,ag.name
+                                                          ,ar.name
+                                                          ,artist_links)) AS artist_data
                           FROM recording r
                           JOIN artist_credit ac
                             ON r.artist_credit = ac.id
@@ -181,20 +191,14 @@ def create_mb_metadata_cache():
                             ON a.type = at.id
                           JOIN gender ag
                             ON a.type = ag.id
-                     FULL JOIN area ar
+                     LEFT JOIN area ar
                             ON a.area = ar.id
-                     FULL JOIN artist_rels arl
+                     LEFT JOIN artist_rels arl
                             ON arl.gid = r.gid
-                     FULL JOIN recording_rels rrl
-                            ON rrl.gid = r.gid"""
-
-
-    query2 = """        SELECT a.name
-                             , a.begin_date_year
-                             , a.end_date_year
-                             , at.name AS type
-                             , ag.name AS gender
-                             , ar.name AS area
+                      GROUP BY r.gid
+               )
+                        SELECT recording_links
+                             , artist_data
                              , r.length
                              , r.gid as recording_mbid
                           FROM recording r
@@ -208,9 +212,14 @@ def create_mb_metadata_cache():
                             ON a.type = at.id
                           JOIN gender ag
                             ON a.type = ag.id
-                     FULL JOIN area ar
-                            ON a.area = ar.id
-                         LIMIT 10"""
+                     LEFT JOIN artist_data ard
+                            ON ard.gid = r.gid
+                     LEFT JOIN recording_rels rrl
+                            ON rrl.gid = r.gid
+                      GROUP BY r.gid, r.length, recording_links, artist_data"""
+
+#WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
+#AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
 
     log("mb metadata cache: start")
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
@@ -241,7 +250,7 @@ def create_mb_metadata_cache():
                     rows.append((serial, row["recording_mbid"], "false", ujson.dumps(data)))
                     serial += 1
 
-                    if len(rows) >= 10:
+                    if len(rows) >= BATCH_SIZE:
                         try:
                             insert_rows(mb_curs2, "mapping.tmp_mb_metadata_cache", rows)
                         except Exception:
