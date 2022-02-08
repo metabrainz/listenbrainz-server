@@ -22,7 +22,7 @@ def delete_listens_update_stats():
          WHERE ldm.created < :created
            AND l.user_id = ldm.user_id
            AND l.listened_at = ldm.listened_at
-           AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid'::uuid = ldm.recording_msid
+           AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = ldm.recording_msid::text
     """
     update_listen_counts = """
         WITH update_counts AS (
@@ -88,7 +88,7 @@ def delete_listens_update_stats():
     """
     delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE created < :created"
 
-    with db.engine.begin() as connection:
+    with timescale.engine.begin() as connection:
         created = datetime.now()
 
         logger.info("Deleting Listens")
