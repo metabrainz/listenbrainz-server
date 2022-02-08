@@ -9,8 +9,8 @@ from listenbrainz import webserver
 from listenbrainz.db import timescale as ts
 from listenbrainz.listenstore import timescale_fill_userid
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
-    update_user_listen_counts as ts_update_user_listen_counts,\
-    add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata
+    update_user_listen_data as ts_update_user_listen_data, \
+    add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata, delete_listens_update_stats
 from listenbrainz.webserver import create_app
 
 
@@ -267,7 +267,15 @@ def update_all_user_listen_counts():
     """ Scans listen table and update listen counts for all users """
     application = webserver.create_app()
     with application.app_context():
-        ts_update_user_listen_counts()
+        ts_update_user_listen_data()
+
+
+@cli.command(name="delete_pending_listens")
+def delete_pending_listens():
+    """ Scans listen table and update listen counts for all users """
+    application = webserver.create_app()
+    with application.app_context():
+        delete_listens_update_stats()
 
 
 @cli.command(name="add_missing_to_listen_users_metadata")
