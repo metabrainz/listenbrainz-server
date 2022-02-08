@@ -14,7 +14,7 @@ from mapping.utils import log, CRON_LOG_FILE
 from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
-
+from mapping.mb_metadata_cache import create_mb_metadata_cache
 
 @click.group()
 def cli():
@@ -111,6 +111,14 @@ def top_tracks(year):
         of which tracks and how many times a user played for a given year.
     """
     calculate_tracks_of_the_year(year)
+
+
+@cli.command()
+def build_mb_metadata_cache():
+    """
+        Build the MB metadata cache that LB uses
+    """
+    create_mb_metadata_cache()
 
 
 def usage(command):
