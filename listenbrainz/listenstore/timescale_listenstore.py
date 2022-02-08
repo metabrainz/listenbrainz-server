@@ -237,7 +237,7 @@ class TimescaleListenStore:
 
         return inserted_rows
 
-    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
+    def fetch_listens(self, user, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
@@ -248,7 +248,7 @@ class TimescaleListenStore:
         else:
             order = ORDER_DESC
 
-        return self.fetch_listens_from_storage(user_name, from_ts, to_ts, limit, order)
+        return self.fetch_listens_from_storage(user, from_ts, to_ts, limit, order)
 
     def fetch_listens_from_storage(self, user, from_ts, to_ts, limit, order):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving

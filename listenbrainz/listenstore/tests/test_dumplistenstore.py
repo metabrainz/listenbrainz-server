@@ -25,7 +25,9 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.app = create_app()
         self.logstore = TimescaleListenStore(self.app.logger)
         self.dumpstore = DumpListenStore(self.app)
-        self.testuser_name = db_user.get_or_create(1, "test")["musicbrainz_id"]
+        self.testuser = db_user.get_or_create(1, "test")
+        self.testuser_name = self.testuser["musicbrainz_id"]
+        self.testuser_id = self.testuser["id"]
 
     def tearDown(self):
         self.logstore = None
@@ -33,8 +35,8 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         DatabaseTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
 
-    def _create_test_data(self, user_name, test_data_file_name=None):
-        test_data = create_test_data_for_timescalelistenstore(user_name, test_data_file_name)
+    def _create_test_data(self, user_name, user_id, test_data_file_name=None):
+        test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
         self.logstore.insert(test_data)
         return len(test_data)
 
@@ -45,9 +47,9 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         for listen in listens:
             submit.append((*listen.to_timescale(), listen.inserted_timestamp))
 
-        query = """INSERT INTO listen (listened_at, track_name, user_name, data, created)
+        query = """INSERT INTO listen (listened_at, track_name, user_name, user_id, data, created)
                         VALUES %s
-                   ON CONFLICT (listened_at, track_name, user_name)
+                   ON CONFLICT (listened_at, track_name, user_id)
                     DO NOTHING
                 """
 
@@ -58,7 +60,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         conn.commit()
 
     def test_dump_listens(self):
-        self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name, self.testuser_id)
         temp_dir = tempfile.mkdtemp()
         dump = self.dumpstore.dump_listens(
             location=temp_dir,
@@ -84,7 +86,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=base + 11)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -108,7 +110,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=base + 11)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -123,7 +125,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
     # and timescale will not allow blank created timestamps, so this test is pointless
 
     def test_import_listens(self):
-        self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name, self.testuser_id)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.dumpstore.dump_listens(
             location=temp_dir,
@@ -133,7 +135,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -144,9 +146,9 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def test_dump_and_import_listens_escaped(self):
         user = db_user.get_or_create(3, 'i have a\\weird\\user, na/me"\n')
-        self._create_test_data(user['musicbrainz_id'])
+        self._create_test_data(user['musicbrainz_id'], user['id'])
 
-        self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name, self.testuser_id)
 
         temp_dir = tempfile.mkdtemp()
         dump_location = self.dumpstore.dump_listens(
@@ -159,7 +161,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
 
         self.logstore.import_listens_dump(dump_location)
 
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=user, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -167,7 +169,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -180,13 +182,11 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def create_test_dump(self, archive_name, archive_path, schema_version=None):
         """ Creates a test dump to test the import listens functionality.
-
         Args:
             archive_name (str): the name of the archive
             archive_path (str): the full path to the archive
             schema_version (int): the version of the schema to be written into SCHEMA_SEQUENCE
                                   if not provided, the SCHEMA_SEQUENCE file is not added to the archive
-
         Returns:
             the full path to the archive created
         """
@@ -223,10 +223,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         archive_name = 'temp_dump'
         archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
 
-        archive_path = self.create_test_dump(
-            archive_name=archive_name,
-            archive_path=archive_path
-        )
+        archive_path = self.create_test_dump(archive_name=archive_name, archive_path=archive_path)
 
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
