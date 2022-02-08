@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import sys
+import time
 from datetime import datetime
-from time import sleep, monotonic
+from time import monotonic
 
 import pika
 import psycopg2
@@ -10,9 +11,8 @@ from brainzutils import metrics, cache
 from flask import current_app
 from more_itertools import chunked
 
-from listenbrainz import messybrainz
+from listenbrainz import messybrainz, utils
 from listenbrainz.listen import Listen
-from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.webserver import create_app, redis_connection, timescale_connection
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
@@ -20,10 +20,15 @@ METRIC_UPDATE_INTERVAL = 60  # seconds
 LISTEN_INSERT_ERROR_SENTINEL = -1  #
 
 
-class TimescaleWriterSubscriber(ListenWriter):
+class TimescaleWriterSubscriber:
 
     def __init__(self):
-        super().__init__()
+        self.redis = None
+        self.connection = None
+
+        self.REPORT_FREQUENCY = 5000
+        self.DUMP_JSON_WITH_ERRORS = False
+        self.ERROR_RETRY_DELAY = 3  # number of seconds to wait until retrying an operation
 
         self.ls = None
         self.incoming_ch = None
@@ -34,6 +39,34 @@ class TimescaleWriterSubscriber(ListenWriter):
         self.incoming_listens = 0
         self.unique_listens = 0
         self.metric_submission_time = monotonic() + METRIC_UPDATE_INTERVAL
+
+    def connect_to_rabbitmq(self):
+        connection_config = {
+            'username': current_app.config['RABBITMQ_USERNAME'],
+            'password': current_app.config['RABBITMQ_PASSWORD'],
+            'host': current_app.config['RABBITMQ_HOST'],
+            'port': current_app.config['RABBITMQ_PORT'],
+            'virtual_host': current_app.config['RABBITMQ_VHOST'],
+        }
+        self.connection = utils.connect_to_rabbitmq(**connection_config,
+                                                    error_logger=current_app.logger.error,
+                                                    error_retry_delay=self.ERROR_RETRY_DELAY)
+
+    def _verify_hosts_in_config(self):
+        if "REDIS_HOST" not in current_app.config:
+            current_app.logger.critical(f"Redis service not defined. Sleeping {self.ERROR_RETRY_DELAY} seconds and exiting.")
+            time.sleep(self.ERROR_RETRY_DELAY)
+            sys.exit(-1)
+
+        if "RABBITMQ_HOST" not in current_app.config:
+            current_app.logger.critical(f"RabbitMQ service not defined. Sleeping {self.ERROR_RETRY_DELAY} seconds and exiting.")
+            time.sleep(self.ERROR_RETRY_DELAY)
+            sys.exit(-1)
+
+        if "SQLALCHEMY_TIMESCALE_URI" not in current_app.config:
+            current_app.logger.critical(f"Timescale service not defined. Sleeping {self.ERROR_RETRY_DELAY} seconds and exiting.")
+            time.sleep(self.ERROR_RETRY_DELAY)
+            sys.exit(-1)
 
     def callback(self, ch, method, properties, body):
 
@@ -155,7 +188,7 @@ class TimescaleWriterSubscriber(ListenWriter):
             rows_inserted = self.ls.insert(data)
         except psycopg2.OperationalError as err:
             current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(err), exc_info=True)
-            sleep(self.ERROR_RETRY_DELAY)
+            time.sleep(self.ERROR_RETRY_DELAY)
             return LISTEN_INSERT_ERROR_SENTINEL
 
         if not rows_inserted:
@@ -209,12 +242,6 @@ class TimescaleWriterSubscriber(ListenWriter):
             current_app.logger.info("timescale-writer init")
             self._verify_hosts_in_config()
 
-            if "SQLALCHEMY_TIMESCALE_URI" not in current_app.config:
-                current_app.logger.critical("Timescale service not defined. Sleeping {0} seconds and exiting."
-                                            .format(self.ERROR_RETRY_DELAY))
-                sleep(self.ERROR_RETRY_DELAY)
-                sys.exit(-1)
-
             try:
                 while True:
                     try:
@@ -223,7 +250,7 @@ class TimescaleWriterSubscriber(ListenWriter):
                     except Exception as err:
                         current_app.logger.error("Cannot connect to timescale: %s. Retrying in 2 seconds and trying again." %
                                                  str(err), exc_info=True)
-                        sleep(self.ERROR_RETRY_DELAY)
+                        time.sleep(self.ERROR_RETRY_DELAY)
 
                 while True:
                     try:
@@ -233,7 +260,7 @@ class TimescaleWriterSubscriber(ListenWriter):
                     except Exception as err:
                         current_app.logger.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." %
                                                  str(err), exc_info=True)
-                        sleep(self.ERROR_RETRY_DELAY)
+                        time.sleep(self.ERROR_RETRY_DELAY)
 
                 while True:
                     self.connect_to_rabbitmq()
@@ -244,7 +271,7 @@ class TimescaleWriterSubscriber(ListenWriter):
                                                 queue=current_app.config['INCOMING_QUEUE'])
                     self.incoming_ch.basic_consume(
                         queue=current_app.config['INCOMING_QUEUE'],
-                        on_message_callback=lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self)
+                        on_message_callback=lambda ch, method, properties, body: self.callback(ch, method, properties, body)
                     )
 
                     self.unique_ch = self.connection.channel()
