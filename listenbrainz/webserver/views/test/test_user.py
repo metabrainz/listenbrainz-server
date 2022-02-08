@@ -7,6 +7,7 @@ from flask import url_for
 
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
+
 from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.tests.integration import IntegrationTestCase

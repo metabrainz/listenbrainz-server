@@ -3,13 +3,16 @@ import json
 import calendar
 import logging
 from datetime import datetime
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Dict
 
+from more_itertools import chunked
 from pydantic import ValidationError
 
 import listenbrainz_spark
-from data.model.user_daily_activity import UserDailyActivityStatMessage
+from data.model.common_stat_spark import UserStatRecords, StatMessage
+from data.model.user_daily_activity import DailyActivityRecord
 from listenbrainz_spark.stats import run_query, get_dates_for_stats_range
+from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.utils import get_listens_from_new_dump
 from pyspark.sql.functions import collect_list, sort_array, struct
 
@@ -62,7 +65,7 @@ def calculate_daily_activity():
     return iterator
 
 
-def get_daily_activity(stats_range: str) -> Iterator[Optional[UserDailyActivityStatMessage]]:
+def get_daily_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     """ Calculate number of listens for an user for the specified time range """
     logger.debug(f"Calculating daily_activity_{stats_range}")
 
@@ -77,7 +80,7 @@ def get_daily_activity(stats_range: str) -> Iterator[Optional[UserDailyActivityS
 
 
 def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime) \
-        -> Iterator[Optional[UserDailyActivityStatMessage]]:
+        -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to webserver via RabbitMQ
 
@@ -91,20 +94,31 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
     """
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
-    for entry in data:
-        _dict = entry.asDict(recursive=True)
+
+    for entries in chunked(data, USERS_PER_MESSAGE):
+        multiple_user_stats = []
+        for entry in entries:
+            _dict = entry.asDict(recursive=True)
+            try:
+                user_stat = UserStatRecords[DailyActivityRecord](
+                    user_id=_dict["user_id"],
+                    data=_dict["daily_activity"]
+                )
+                multiple_user_stats.append(user_stat)
+            except ValidationError:
+                logger.error(f"""ValidationError while calculating {stats_range} daily_activity for user:
+                {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+
         try:
-            model = UserDailyActivityStatMessage(**{
-                "user_id": _dict["user_id"],
+            model = StatMessage[UserStatRecords[DailyActivityRecord]](**{
                 "type": "user_daily_activity",
+                "stats_range": stats_range,
                 "from_ts": from_ts,
                 "to_ts": to_ts,
-                "stats_range": stats_range,
-                "data": _dict["daily_activity"]
+                "data": multiple_user_stats
             })
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error(f"""ValidationError while calculating {stats_range} daily_activity for user:
-            {_dict["user_id"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+            logger.error(f"ValidationError while calculating {stats_range} daily_activity:", exc_info=True)
             yield None
