@@ -14,7 +14,7 @@ import config
 
 MAX_SIMILAR_RECORDINGS_PER_RECORDING = 100
 MIN_SIMILARITY_THRESHOLD = 2.0
-LOOKAHEAD_STEPS = 3
+LOOKAHEAD_STEPS = 1
 BATCH_SIZE = 5000
 
 def create_tables(mb_conn):
@@ -114,12 +114,12 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
           FULL OUTER JOIN mbid_mapping_metadata m
                        ON mm.recording_mbid = m.recording_mbid
-                    WHERE listened_at >= 1577836800
+                    WHERE listened_at >= 1483228800
                  ORDER BY user_name, listened_at"""
 
 #                    WHERE listened_at >= 1640995200
-#                    WHERE listened_at >= 1483228800
 #                    WHERE listened_at >= 1642694270
+#                    WHERE listened_at >= 1577836800
 
     log("execute query")
     lb_curs.execute(query)
