@@ -39,7 +39,9 @@ def create_messages(similar_users_df: DataFrame) -> dict:
     message = {}
     for row in itr:
         message[row.user_id] = {
-            user.other_user_id: (user.similarity, user.global_similarity) for user in row.similar_users}
+            user.other_user_id: (user.similarity, user.global_similarity)
+            for user in row.similar_users
+        }
     yield {
         'type': 'similar_users',
         'data': message
@@ -119,7 +121,7 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
 
 def get_vectors_df(playcounts_df):
     """
-    Each row of playcounts_df has the following columns: recording_id, user_id and a play count denoting how many times
+    Each row of playcounts_df has the following columns: recording_id, spark_user_id and a play count denoting how many times
     a user has played that recording. However, the correlation matrix requires a dataframe having a column of user
     vectors. Spark has various representations built-in for storing sparse matrices. Of these, two are Coordinate
     Matrix and Indexed Row Matrix. A coordinate matrix stores the matrix as tuples of (i, j, x) where matrix[i, j] = x.
@@ -131,7 +133,7 @@ def get_vectors_df(playcounts_df):
     form. Spark ML and MLlib have different representations of vectors, hence we need to manually convert between the
     two. Finally, we take the rows and create a dataframe from them.
     """
-    tuple_mapped_rdd = playcounts_df.rdd.map(lambda x: MatrixEntry(x["recording_id"], x["user_id"], x["count"]))
+    tuple_mapped_rdd = playcounts_df.rdd.map(lambda x: MatrixEntry(x["recording_id"], x["spark_user_id"], x["count"]))
     coordinate_matrix = CoordinateMatrix(tuple_mapped_rdd)
     indexed_row_matrix = coordinate_matrix.toIndexedRowMatrix()
     vectors_mapped_rdd = indexed_row_matrix.rows.map(lambda r: (r.index, r.vector.asML()))
@@ -164,15 +166,17 @@ def get_similar_users_df(max_num_users: int):
     # Due to an unresolved bug in Spark (https://issues.apache.org/jira/browse/SPARK-10925), we cannot join twice on
     # the same dataframe. Hence, we create a modified dataframe with the columns renamed.
     other_users_df = users_df\
-        .withColumnRenamed('user_id', 'other_user_id')\
-        .withColumnRenamed('user_name', 'other_user_name')
+        .withColumnRenamed('spark_user_id', 'other_spark_user_id')\
+        .withColumnRenamed('user_id', 'other_user_id')
 
-    similar_users_df = listenbrainz_spark.session.createDataFrame(similar_users, ['user_id', 'other_user_id',
-        'similarity', 'global_similarity'])\
-        .join(users_df, 'user_id', 'inner')\
-        .join(other_users_df, 'other_user_id', 'inner')\
-        .select('user_name', struct('other_user_name', 'similarity', 'global_similarity').alias('similar_user'))\
-        .groupBy('user_name')\
+    similar_users_df = listenbrainz_spark.session.createDataFrame(
+        similar_users,
+        ['spark_user_id', 'other_spark_user_id', 'similarity', 'global_similarity']
+    )\
+        .join(users_df, 'spark_user_id', 'inner')\
+        .join(other_users_df, 'other_spark_user_id', 'inner')\
+        .select('user_id', struct('other_user_id', 'similarity', 'global_similarity').alias('similar_user'))\
+        .groupBy('user_id')\
         .agg(collect_list('similar_user').alias('similar_users'))
 
     logger.info('Finishing generating similar user matrix')

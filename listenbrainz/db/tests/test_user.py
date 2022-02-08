@@ -181,14 +181,14 @@ class UserTestCase(DatabaseTestCase):
         user_id_22 = db_user.create(22, "twenty_two")
         user_id_23 = db_user.create(23, "twenty_three")
 
-        similar_users_21 = {"twenty_two": [0.4, .01], "twenty_three": [0.7, 0.001]}
-        similar_users_22 = {"twenty_one": [0.4, .01]}
-        similar_users_23 = {"twenty_one": [0.7, .02]}
+        similar_users_21 = {str(user_id_22): [0.4, .01], str(user_id_23): [0.7, 0.001]}
+        similar_users_22 = {str(user_id_21): [0.4, .01]}
+        similar_users_23 = {str(user_id_21): [0.7, .02]}
 
         similar_users = {
-            "twenty_one": similar_users_21,
-            "twenty_two": similar_users_22,
-            "twenty_three": similar_users_23,
+            str(user_id_21): similar_users_21,
+            str(user_id_22): similar_users_22,
+            str(user_id_23): similar_users_23,
         }
 
         import_user_similarities(similar_users)
@@ -227,16 +227,20 @@ class UserTestCase(DatabaseTestCase):
 
     def test_search(self):
         searcher_id = db_user.create(0, "Cécile")
-        db_user.create(1, "Cecile")
-        db_user.create(2, "lucifer")
-        db_user.create(3, "rob")
+        user_id_c = db_user.create(1, "Cecile")
+        user_id_l = db_user.create(2, "lucifer")
+        user_id_r = db_user.create(3, "rob")
 
         with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("""INSERT INTO recommendation.similar_user (user_id, similar_users)
-                                                       VALUES (:user_id, :similar_users)"""), {
-                "user_id": searcher_id,
-                "similar_users": json.dumps({"Cecile": [0.42, 0.20], "lucifer": [0.61, 0.25], "rob": [0.87, 0.43]})
-            })
+            connection.execute(sqlalchemy.text(
+                "INSERT INTO recommendation.similar_user (user_id, similar_users) VALUES (:user_id, :similar_users)"),
+                user_id=searcher_id,
+                similar_users=json.dumps({
+                    str(user_id_c): [0.42, 0.20],
+                    str(user_id_l): [0.61, 0.25],
+                    str(user_id_r): [0.87, 0.43]
+                })
+            )
 
         results = db_user.search("cif", 10, searcher_id)
         self.assertEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.0909091, 0.61)])
