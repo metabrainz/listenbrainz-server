@@ -411,8 +411,7 @@ class TimescaleListenStore(ListenStore):
         """
         user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
 
-        args = {'user_ids': tuple(user_id_map.keys()), 'ts': int(
-            time.time()) - max_age, 'limit': limit}
+        args = {'user_ids': tuple(user_id_map.keys()), 'ts': int(time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
                               SELECT listened_at, track_name, user_id, created, data, mm.recording_mbid, release_mbid, artist_mbids,
                                      row_number() OVER (partition by user_id ORDER BY listened_at DESC) AS rownum
