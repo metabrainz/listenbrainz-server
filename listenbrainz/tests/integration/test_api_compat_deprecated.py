@@ -19,21 +19,18 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-import time
 import logging
-import listenbrainz.db.user as db_user
+import time
 
-from hashlib import md5
 from flask import url_for
 from werkzeug.exceptions import BadRequest
+
+import listenbrainz.db.user as db_user
 from listenbrainz.db.lastfm_session import Session
-from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session, \
     _to_native_api
-
-from listenbrainz import config
 
 
 class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
@@ -43,12 +40,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.user = db_user.get_or_create(1, 'apicompatoldtestuser')
 
         self.log = logging.getLogger(__name__)
-        self.ls = init_timescale_connection(self.log, {
-            'REDIS_HOST': config.REDIS_HOST,
-            'REDIS_PORT': config.REDIS_PORT,
-            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
-        })
+        self.ls = timescale_connection._ts
 
 
     def handshake(self, user_name, auth_token, timestamp):
