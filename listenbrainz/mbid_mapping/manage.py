@@ -15,6 +15,7 @@ from mapping.release_colors import sync_release_color_table, incremental_update_
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from recording_similarity.recording_similarity_index import create_recording_similarity_index
+from recording_similarity.artist_similarity_index import create_artist_similarity_index
 
 
 @click.group()
@@ -121,6 +122,12 @@ def create_recording_similarity():
     """
     create_recording_similarity_index()
 
+@cli.command()
+def create_artist_similarity():
+    """
+        Update the artist_similarity index
+    """
+    create_artist_similarity_index()
 
 def usage(command):
     with click.Context(command) as ctx:
