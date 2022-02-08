@@ -30,7 +30,7 @@ def prepare_query(text):
     return unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text)).strip().lower())
 
 
-class MBIDMapper():
+class MBIDMapper:
     """
         This class performs a lookup of one or more artist credit name and recording name pairs
         to find the best possible match in MusicBrainz. This query will unaccent query
