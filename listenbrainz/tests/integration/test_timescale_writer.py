@@ -1,21 +1,18 @@
-
-import sys
-import os
-import uuid
+import json
+import time
+from datetime import datetime
 from random import randint
 
 from listenbrainz.db.testing import TimescaleTestCase
-from listenbrainz.tests.integration import IntegrationTestCase
+from brainzutils import cache
+from flask import url_for
+
+import listenbrainz.db.user as db_user
+from listenbrainz import config
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.listenstore import RedisListenStore
-from flask import url_for
-import listenbrainz.db.user as db_user
-import time
-import json
-
-from listenbrainz import config
-from datetime import datetime
+from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.webserver import redis_connection
 
 
 class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
@@ -27,12 +24,11 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
                                        'REDIS_PORT': config.REDIS_PORT,
                                        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
                                        'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI}, self.app.logger)
-        self.rs = RedisListenStore(self.app.logger, { 'REDIS_HOST': config.REDIS_HOST,
-                                   'REDIS_PORT': config.REDIS_PORT,
-                                   'REDIS_NAMESPACE': config.REDIS_NAMESPACE})
+        self.rs = redis_connection._redis
 
     def tearDown(self):
-        self.rs.redis.flushall()
+        super(TimescaleWriterTestCase, self).tearDown()
+        cache._r.flushall()
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:

@@ -1,36 +1,35 @@
 # coding=utf-8
 
 import os
+import shutil
 import subprocess
 import tarfile
 import tempfile
 import time
-import shutil
 import uuid
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-import ujson
+from typing import List, Dict
+import pandas as pd
 import psycopg2
 import psycopg2.sql
-from psycopg2.extras import execute_values
-from psycopg2.errors import UntranslatableCharacter
-from typing import List, Dict
-import sqlalchemy
-import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-
+import sqlalchemy
+import ujson
 from brainzutils import cache
+from psycopg2.errors import UntranslatableCharacter
+from psycopg2.extras import execute_values
 
-from listenbrainz.db import timescale
 from listenbrainz import DUMP_LICENSE_FILE_PATH, db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.db import timescale
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
-from listenbrainz.utils import create_path, init_cache
+from listenbrainz.utils import create_path
 
 # Append the user name for both of these keys
 REDIS_USER_LISTEN_COUNT = "lc."
@@ -71,11 +70,7 @@ class TimescaleListenStore(ListenStore):
 
         timescale.init_db_connection(conf['SQLALCHEMY_TIMESCALE_URI'])
 
-        # Initialize brainzutils cache
-        init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'],
-                   namespace=conf['REDIS_NAMESPACE'])
-        self.dump_temp_dir_root = conf.get(
-            'LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
+        self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
     def set_empty_values_for_user(self, user_id: int):
         """When a user is created, set the timestamp keys and insert an entry in the listen count
