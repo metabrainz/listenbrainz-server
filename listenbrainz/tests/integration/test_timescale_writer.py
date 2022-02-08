@@ -1,36 +1,31 @@
-
-import sys
-import os
-import uuid
+import json
+import time
+from datetime import datetime
 from random import randint
 
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.db.testing import TimescaleTestCase
+from brainzutils import cache
+from flask import url_for
+
+import listenbrainz.db.user as db_user
+from listenbrainz import config
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.listenstore import RedisListenStore
-from flask import url_for
-import listenbrainz.db.user as db_user
-import time
-import json
-
-from listenbrainz import config
-from datetime import datetime
+from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.webserver import redis_connection
 
 
-class TimescaleWriterTestCase(IntegrationTestCase):
+class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
     def setUp(self):
-        super(TimescaleWriterTestCase, self).setUp()
-        self.ls = TimescaleListenStore({'REDIS_HOST': config.REDIS_HOST,
-                                       'REDIS_PORT': config.REDIS_PORT,
-                                       'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-                                       'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI}, self.app.logger)
-        self.rs = RedisListenStore(self.app.logger, { 'REDIS_HOST': config.REDIS_HOST,
-                                   'REDIS_PORT': config.REDIS_PORT,
-                                   'REDIS_NAMESPACE': config.REDIS_NAMESPACE})
+        IntegrationTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
+        self.ls = TimescaleListenStore(self.app)
+        self.rs = redis_connection._redis
 
     def tearDown(self):
-        self.rs.redis.flushall()
+        super(TimescaleWriterTestCase, self).tearDown()
+        cache._r.flushall()
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
@@ -55,7 +50,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
@@ -74,7 +69,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
 
         self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
 
-        (min_ts, max_ts) = self.ls.get_timestamps_for_user(user_name=user.musicbrainz_id)
+        (min_ts, max_ts) = self.ls.get_timestamps_for_user(user["id"])
         self.assertEqual(min_ts, 1486449409)
         self.assertEqual(max_ts, 1486449409)
 
@@ -92,7 +87,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -104,7 +99,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -125,10 +120,10 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)  # sleep to allow timescale-writer to do its thing
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user1['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user1, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-        listens, _, _ = self.ls.fetch_listens(user2['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user2, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -154,5 +149,5 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 4)

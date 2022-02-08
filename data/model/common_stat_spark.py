@@ -8,7 +8,7 @@ SparkT = TypeVar("SparkT")
 
 
 class UserStatRecords(GenericModel, Generic[SparkT]):
-    musicbrainz_id: constr(min_length=1)
+    user_id: NonNegativeInt
     data: List[SparkT]
 
 

@@ -27,16 +27,16 @@ def get_artists(table: str) -> Iterator[ArtistRecord]:
 
     result = run_query(f"""
         WITH intermediate_table as (
-            SELECT user_name
+            SELECT user_id
                  , first(artist_name) AS any_artist_name
                  , artist_credit_mbids
                  , count(*) as listen_count
               FROM {table}
-          GROUP BY user_name
+          GROUP BY user_id
                  , lower(artist_name)
                  , artist_credit_mbids
         )
-        SELECT user_name
+        SELECT user_id
              , sort_array(
                     collect_list(
                         struct(
@@ -48,7 +48,7 @@ def get_artists(table: str) -> Iterator[ArtistRecord]:
                     , false
                ) as artists
           FROM intermediate_table
-      GROUP BY user_name 
+      GROUP BY user_id 
     """)
 
     return result.toLocalIterator()

@@ -4,8 +4,8 @@
 .. role:: py(code)
    :language: python
 
-API Usage Examples
-==================
+Usage Examples
+==============
 
 .. note::
 

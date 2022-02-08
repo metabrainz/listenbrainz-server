@@ -99,9 +99,10 @@ def insert_multiple_user_jsonb_data(stats_type, stats_range, from_ts, to_ts, val
                   , {from_ts}
                   , {to_ts}
                   , NOW()
-               FROM (VALUES %s) AS t(user_name, count, stats)
-               JOIN "user"
-                 ON "user".musicbrainz_id = user_name
+               FROM (VALUES %s) AS t(user_id, count, stats)
+               -- this JOIN serves no other purpose than to filter out users for whom stats were calculated but
+               -- no longer exist in LB. if we don't filter, we'll get a FK conflict when such a case occurs
+               JOIN "user" ON "user".id = user_id 
         ON CONFLICT (user_id, stats_type, stats_range)
       DO UPDATE SET data = EXCLUDED.data
                   , count = EXCLUDED.count

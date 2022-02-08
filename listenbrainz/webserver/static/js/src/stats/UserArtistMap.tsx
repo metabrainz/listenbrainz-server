@@ -140,6 +140,7 @@ export default class UserArtistMap extends React.Component<
           selectedMetric === "artist"
             ? country.artist_count
             : country.listen_count,
+        artists: country.artists,
       };
     });
   };

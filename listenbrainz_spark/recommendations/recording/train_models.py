@@ -2,7 +2,7 @@
 This script is responsible for training models and saving the best model to HDFS. The general flow is as follows:
 
 playcounts_df is loaded from HDFS and is split into training_data, validation_data and test_data. The dataframe is converted
-to an RDD and each row is converted to a Rating(row['user_id'], row['recording_id'], row['count']) object.
+to an RDD and each row is converted to a Rating(row['spark_user_id'], row['recording_id'], row['count']) object.
 
 Eight models are trained using the training_data RDD. Each model uses a different value of `rank`, `lambda` and `iteration`.
 Refer to https://spark.apache.org/docs/2.2.0/ml-collaborative-filtering.html to know more about these params.
@@ -55,7 +55,7 @@ def parse_dataset(row):
         Args:
             row: An RDD row or element.
     """
-    return Rating(row['user_id'], row['recording_id'], row['count'])
+    return Rating(row['spark_user_id'], row['recording_id'], row['count'])
 
 
 def compute_rmse(model, data, n, model_id):

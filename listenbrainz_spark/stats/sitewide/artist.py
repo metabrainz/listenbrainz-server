@@ -18,12 +18,12 @@ def get_artists(table: str, user_listen_count_limit, top_artists_limit: int = SI
     # with sort_array.
     result = run_query(f"""
         WITH user_counts as (
-            SELECT user_name
+            SELECT user_id
                  , first(artist_name) AS artist_name
                  , artist_credit_mbids
                  , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM {table}
-          GROUP BY user_name
+          GROUP BY user_id
                  , lower(artist_name)
                  , artist_credit_mbids
         ), intermediate_table AS (

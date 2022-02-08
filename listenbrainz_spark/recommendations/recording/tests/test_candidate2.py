@@ -49,11 +49,11 @@ class CandidateSetsTestClass(SparkNewTestCase):
         top_artist_candidate_set_df, top_artist_candidate_set_df_html = candidate_sets.get_top_artist_candidate_set(
             top_artist_df, self.recordings_df, self.users_df, self.mapped_listens_subset
         )
-        self.assertCountEqual(['recording_id', 'user_id', 'user_name'], top_artist_candidate_set_df.columns)
+        self.assertCountEqual(['recording_id', 'spark_user_id', 'user_id'], top_artist_candidate_set_df.columns)
         self.assertEqual(top_artist_candidate_set_df.count(), 2)
 
         self.assertCountEqual(
-            ['top_artist_credit_id', 'artist_credit_id', 'recording_mbid', 'recording_id', 'user_name', 'user_id'],
+            ['top_artist_credit_id', 'artist_credit_id', 'recording_mbid', 'recording_id', 'user_id', 'spark_user_id'],
             top_artist_candidate_set_df_html.columns
         )
         self.assertEqual(top_artist_candidate_set_df_html.count(), 2)
@@ -61,19 +61,19 @@ class CandidateSetsTestClass(SparkNewTestCase):
     @pytest.mark.skip
     def test_get_similar_artist_candidate_set_df(self):
         similar_artist_df = listenbrainz_spark.session.createDataFrame([
-            Row(similar_artist_credit_id=2, similar_artist_name='martinkemp', user_name='rob'),
-            Row(similar_artist_credit_id=2, similar_artist_name='martinkemp', user_name='vansika_1'),
+            Row(similar_artist_credit_id=2, similar_artist_name='martinkemp', user_id=1),
+            Row(similar_artist_credit_id=2, similar_artist_name='martinkemp', user_id=4),
         ])
 
         similar_artist_candidate_set_df, similar_artist_candidate_set_df_html = candidate_sets.get_similar_artist_candidate_set(
             similar_artist_df, self.recordings_df, self.users_df, self.mapped_listens_subset
         )
 
-        self.assertCountEqual(['recording_id', 'user_id', 'user_name'], similar_artist_candidate_set_df.columns)
+        self.assertCountEqual(['recording_id', 'spark_user_id', 'user_id'], similar_artist_candidate_set_df.columns)
         self.assertEqual(similar_artist_candidate_set_df.count(), 2)
 
         self.assertCountEqual(
-            ['similar_artist_credit_id', 'artist_credit_id', 'recording_mbid', 'recording_id', 'user_name', 'user_id'],
+            ['similar_artist_credit_id', 'artist_credit_id', 'recording_mbid', 'recording_id', 'user_id', 'spark_user_id'],
             similar_artist_candidate_set_df_html.columns
         )
         self.assertEqual(similar_artist_candidate_set_df_html.count(), 2)
@@ -88,8 +88,8 @@ class CandidateSetsTestClass(SparkNewTestCase):
 
         df = candidate_sets.filter_last_x_days_recordings(candidate_set_df, self.mapped_listens_subset)
 
-        user_name = [row.user_name for row in df.collect()]
-        self.assertEqual(sorted(user_name), ['rob', 'vansika_1'])
+        users = [row.user_id for row in df.collect()]
+        self.assertEqual(sorted(users), [1, 4])
         received_recording_mbid = sorted([row.recording_mbid for row in df.collect()])
         expected_recording_mbid = sorted(
             ["sf5a56f4-1f83-4681-b319-70a734d0d047", "sf5a56f4-1f83-4681-b319-70a734d0d047"]
