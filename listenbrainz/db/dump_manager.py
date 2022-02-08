@@ -34,6 +34,7 @@ from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.year_in_music import insert_playlists
+from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 from listenbrainz.db.dump import check_ftp_dump_ages
@@ -86,7 +87,7 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
     """
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.timescale_connection import _ts as ls
+        ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -149,7 +150,7 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
 def create_incremental(location, threads, dump_id):
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.timescale_connection import _ts as ls
+        ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -322,11 +323,9 @@ def check_dump_ages():
 def create_test_parquet_files():
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.timescale_connection import _ts as ls
-
+        ls = DumpListenStore(app)
         start = datetime.now() - timedelta(days=30)
         ls.dump_listens_for_spark("/tmp", 1000, "full", start)
-
         sys.exit(-2)
 
 

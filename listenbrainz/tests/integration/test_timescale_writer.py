@@ -8,11 +8,9 @@ from brainzutils import cache
 from flask import url_for
 
 import listenbrainz.db.user as db_user
-from listenbrainz import config
 from listenbrainz.listen import Listen
-from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.webserver import redis_connection
+from listenbrainz.webserver import redis_connection, timescale_connection
 
 
 class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
@@ -20,7 +18,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
     def setUp(self):
         IntegrationTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
-        self.ls = TimescaleListenStore(self.app)
+        self.ls = timescale_connection._ts
         self.rs = redis_connection._redis
 
     def tearDown(self):
