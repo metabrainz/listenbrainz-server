@@ -298,23 +298,16 @@ def get_listen_events(
 ) -> List[APITimelineEvent]:
     """ Gets all listen events in the feed.
     """
-
-    # NOTE: For now, we get a bunch of listens for the users the current
-    # user is following and take a max of 2 out of them per user. This
-    # could be done better by writing a complex query to get exactly 2 listens for each user,
-    # but I'm happy with this heuristic for now and we can change later.
-    listens, _, _ = timescale_connection._ts.fetch_listens_for_multiple_users_from_storage(
+    listens, _, _ = timescale_connection._ts.fetch_recent_listens_for_users(
         users,
+        min_ts=min_ts,
+        max_ts=max_ts,
         limit=count,
-        from_ts=min_ts,
-        to_ts=max_ts,
-        order=0,  # descending
     )
 
     user_listens_map = defaultdict(list)
     for listen in listens:
-        if len(user_listens_map[listen.user_name]) < MAX_LISTEN_EVENTS_PER_USER:
-            user_listens_map[listen.user_name].append(listen)
+        user_listens_map[listen.user_name].append(listen)
 
     events = []
     for user in user_listens_map:
