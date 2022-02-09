@@ -1,3 +1,4 @@
+import time
 from operator import itemgetter
 
 import psycopg2
@@ -242,7 +243,12 @@ def get_recent_listens_for_user_list(user_list):
         raise APIBadRequest("user_list is empty or invalid.")
 
     users = db_user.get_many_users_by_mb_id(users)
-    listens = timescale_connection._ts.fetch_recent_listens_for_users(users.values(), limit=limit)
+    listens = timescale_connection._ts.fetch_recent_listens_for_users(
+        users.values(),
+        min_ts=int(time.time()) - 3600,
+        max_ts=None,
+        limit=limit
+    )
     listen_data = []
     for listen in listens:
         listen_data.append(listen.to_api())
