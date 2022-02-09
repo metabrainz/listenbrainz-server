@@ -81,8 +81,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         payload = response.json['payload']
 
-        print(payload)
-
         # the payload contains events for the users we've followed, but we don't care about those
         # for now, so let's remove them for this test.
         payload = self.remove_own_follow_events(payload)
@@ -157,7 +155,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'min_ts': ts + 1}
         )
         self.assert200(r)
-        print(payload)
         payload = self.remove_own_follow_events(r.json['payload'])
         self.assertEqual(4, payload['count'])
 
