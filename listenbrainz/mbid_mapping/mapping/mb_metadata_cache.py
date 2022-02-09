@@ -4,6 +4,7 @@ import psycopg2
 from psycopg2.errors import OperationalError
 from unidecode import unidecode
 import ujson
+import json
 
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
@@ -93,11 +94,13 @@ def create_json_blob(row):
                                 "mbid": artist_mbid,
                                 "instrument": instrument})
 
-    return {
+    data = {
         "length": row["length"],
         "links": recording_links,
         "artists": artists
     }
+
+    return json.dumps(data)
 
 
 def create_mb_metadata_cache():
@@ -200,7 +203,7 @@ def create_mb_metadata_cache():
                         SELECT recording_links
                              , artist_data
                              , r.length
-                             , r.gid as recording_mbid
+                             , r.gid::TEXT as recording_mbid
                           FROM recording r
                           JOIN artist_credit ac
                             ON r.artist_credit = ac.id
@@ -247,7 +250,13 @@ def create_mb_metadata_cache():
                         break
 
                     data = create_json_blob(row)
-                    rows.append((serial, row["recording_mbid"], "false", ujson.dumps(data)))
+                    try:
+                        rows.append((serial, row["recording_mbid"], "false", data))
+                    except Exception as err:
+                        print(row["recording_mbid"])
+                        print(str(err))
+                        return
+
                     serial += 1
 
                     if len(rows) >= BATCH_SIZE:
