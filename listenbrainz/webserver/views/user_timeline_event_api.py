@@ -186,7 +186,7 @@ def user_feed(user_name: str):
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events(users_following, min_ts, max_ts, count)
+        listen_events = get_listen_events(users_following, min_ts, max_ts)
 
     # for events like "follow" and "recording recommendations", we want to show the user
     # their own events as well
@@ -294,7 +294,6 @@ def get_listen_events(
     users: List[Dict],
     min_ts: int,
     max_ts: int,
-    count: int,
 ) -> List[APITimelineEvent]:
     """ Gets all listen events in the feed.
     """
@@ -302,7 +301,7 @@ def get_listen_events(
         users,
         min_ts=min_ts,
         max_ts=max_ts,
-        limit=count,
+        limit=MAX_LISTEN_EVENTS_PER_USER,
     )
 
     events = []
