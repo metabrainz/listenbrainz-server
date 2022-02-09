@@ -393,7 +393,7 @@ def latest_import():
         return jsonify({'status': 'ok'})
 
 
-@api_bp.route('/validate-token', methods=['GET'])
+@api_bp.route('/validate-token', methods=['GET', 'OPTIONS'])
 @crossdomain(headers='Authorization')
 @ratelimit()
 def validate_token():
