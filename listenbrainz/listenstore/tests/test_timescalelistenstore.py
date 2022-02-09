@@ -191,6 +191,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(len(recent), 4)
 
         recent = self.logstore.fetch_recent_listens_for_users([user], min_ts=int(time()) - recent[0].ts_since_epoch + 1)
+        print(recent)
         self.assertEqual(len(recent), 1)
         self.assertEqual(recent[0].ts_since_epoch, 1400000200)
 
