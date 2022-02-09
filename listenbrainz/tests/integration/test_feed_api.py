@@ -81,6 +81,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         payload = response.json['payload']
 
+        print(payload)
+
         # the payload contains events for the users we've followed, but we don't care about those
         # for now, so let's remove them for this test.
         payload = self.remove_own_follow_events(payload)
@@ -155,6 +157,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'min_ts': ts + 1}
         )
         self.assert200(r)
+        print(payload)
         payload = self.remove_own_follow_events(r.json['payload'])
         self.assertEqual(4, payload['count'])
 
@@ -223,7 +226,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][2]['metadata']['user_name_0'])
         self.assertEqual(self.following_user_1['musicbrainz_id'], r.json['payload']['events'][2]['metadata']['user_name_1'])
         self.assertEqual('follow', r.json['payload']['events'][2]['metadata']['relationship_type'])
-
 
     def test_it_returns_recording_recommendation_events(self):
         # create a recording recommendation ourselves
