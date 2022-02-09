@@ -298,34 +298,28 @@ def get_listen_events(
 ) -> List[APITimelineEvent]:
     """ Gets all listen events in the feed.
     """
-    listens, _, _ = timescale_connection._ts.fetch_recent_listens_for_users(
+    listens = timescale_connection._ts.fetch_recent_listens_for_users(
         users,
         min_ts=min_ts,
         max_ts=max_ts,
         limit=count,
     )
 
-    user_listens_map = defaultdict(list)
-    for listen in listens:
-        user_listens_map[listen.user_name].append(listen)
-
     events = []
-    for user in user_listens_map:
-        for listen in user_listens_map[user]:
-            try:
-                listen_dict = listen.to_api()
-                listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
-                api_listen = APIListen(**listen_dict)
-                events.append(APITimelineEvent(
-                    event_type=UserTimelineEventType.LISTEN,
-                    user_name=api_listen.user_name,
-                    created=api_listen.listened_at,
-                    metadata=api_listen,
-                ))
-            except pydantic.ValidationError as e:
-                current_app.logger.error('Validation error: ' + str(e), exc_info=True)
-                continue
-
+    for listen in listens:
+        try:
+            listen_dict = listen.to_api()
+            listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
+            api_listen = APIListen(**listen_dict)
+            events.append(APITimelineEvent(
+                event_type=UserTimelineEventType.LISTEN,
+                user_name=api_listen.user_name,
+                created=api_listen.listened_at,
+                metadata=api_listen,
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            continue
     return events
 
 
