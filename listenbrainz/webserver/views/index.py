@@ -70,11 +70,6 @@ def data():
     return render_template("index/data.html")
 
 
-@index_bp.route("/contribute/")
-def contribute():
-    return render_template("index/contribute.html")
-
-
 @index_bp.route("/add-data/")
 def add_data_info():
     return render_template("index/add-data.html")
@@ -85,19 +80,14 @@ def import_data_info():
     return render_template("index/import-data.html")
 
 
-@index_bp.route("/goals/")
-def goals():
-    return render_template("index/goals.html")
-
-
 @index_bp.route("/lastfm-proxy/")
 def proxy():
     return render_template("index/lastfm-proxy.html")
 
 
-@index_bp.route("/roadmap/")
-def roadmap():
-    return render_template("index/roadmap.html")
+@index_bp.route("/about/")
+def about():
+    return render_template("index/about.html")
 
 
 @index_bp.route("/current-status/")
