@@ -27,7 +27,7 @@ import UserSocialNetwork from "../follow/UserSocialNetwork";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import * as timelineProps from "./__mocks__/timelineProps.json";
 import GlobalAppContext from "../GlobalAppContext";
-import APIService from "../utils/APIService";
+import APIService from "../APIService";
 
 // typescript doesn't recognise string literal values
 const props = {

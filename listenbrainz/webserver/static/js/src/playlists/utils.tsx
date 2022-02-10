@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 
 import { padStart } from "lodash";
-import { getRecordingMBID } from "../utils/utils";
+import { getRecordingMBID } from "../utils";
 
 export const MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION =
   "https://musicbrainz.org/doc/jspf#playlist";

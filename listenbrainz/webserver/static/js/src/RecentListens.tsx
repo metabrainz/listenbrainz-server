@@ -21,11 +21,11 @@ import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./utils/AlertNotificationsHOC";
+} from "./AlertNotificationsHOC";
 
-import APIServiceClass from "./utils/APIService";
+import APIServiceClass from "./APIService";
 import BrainzPlayer from "./brainzplayer/BrainzPlayer";
-import ErrorBoundary from "./utils/ErrorBoundary";
+import ErrorBoundary from "./ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
 import PinRecordingModal from "./PinRecordingModal";
@@ -38,7 +38,7 @@ import {
   getArtistMBIDs,
   getReleaseMBID,
   getReleaseGroupMBID,
-} from "./utils/utils";
+} from "./utils";
 import CBReviewModal from "./CBReviewModal";
 import ListenControl from "./listens/ListenControl";
 

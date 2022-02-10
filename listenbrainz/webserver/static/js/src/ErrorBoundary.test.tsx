@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import ErrorBoundary from "./utils/ErrorBoundary";
+import ErrorBoundary from "./ErrorBoundary";
 
 const ChildComponent = () => {
   return <div>Child Component</div>;

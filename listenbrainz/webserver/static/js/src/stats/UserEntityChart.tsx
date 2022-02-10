@@ -7,19 +7,19 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual, isNil } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import APIServiceClass from "../utils/APIService";
+import APIServiceClass from "../APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../utils/AlertNotificationsHOC";
+} from "../AlertNotificationsHOC";
 
 import Bar from "./Bar";
 import Loader from "../components/Loader";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
-import { getPageProps } from "../utils/utils";
+import { getPageProps } from "../utils";
 import {
   getAllStatRanges,
   getChartEntityDetails,

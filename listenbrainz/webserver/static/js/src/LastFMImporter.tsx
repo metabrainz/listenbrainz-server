@@ -5,10 +5,10 @@ import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Integrations } from "@sentry/tracing";
-import APIService from "./utils/APIService";
-import Scrobble from "./utils/Scrobble";
+import APIService from "./APIService";
+import Scrobble from "./Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
-import { getPageProps } from "./utils/utils";
+import { getPageProps } from "./utils";
 
 export const LASTFM_RETRIES = 3;
 

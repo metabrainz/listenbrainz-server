@@ -1,6 +1,6 @@
 import * as React from "react";
 import { shallow, mount } from "enzyme";
-import { withAlertNotifications } from "./utils/AlertNotificationsHOC";
+import { withAlertNotifications } from "./AlertNotificationsHOC";
 
 const fakeComponent = function FakeComponent() {
   return <div />;

@@ -6,18 +6,18 @@ import * as React from "react";
 import { get } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import * as Sentry from "@sentry/react";
-import ErrorBoundary from "./utils/ErrorBoundary";
+import ErrorBoundary from "./ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./utils/AlertNotificationsHOC";
+} from "./AlertNotificationsHOC";
 
-import APIServiceClass from "./utils/APIService";
+import APIServiceClass from "./APIService";
 import BrainzPlayer from "./brainzplayer/BrainzPlayer";
 import Loader from "./components/Loader";
 import PinnedRecordingCard from "./PinnedRecordingCard";
-import { getPageProps, getListenablePin } from "./utils/utils";
+import { getPageProps, getListenablePin } from "./utils";
 
 export type UserPinsProps = {
   user: ListenBrainzUser;

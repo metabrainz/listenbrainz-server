@@ -20,20 +20,20 @@ import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
-} from "../utils/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
+} from "../AlertNotificationsHOC";
+import APIServiceClass from "../APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import ErrorBoundary from "../ErrorBoundary";
 import {
   getPlaylistExtension,
   getPlaylistId,
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
 } from "./utils";
-import { getPageProps } from "../utils/utils";
+import { getPageProps } from "../utils";
 
 export type UserPlaylistsProps = {
   playlists?: JSPFObject[];

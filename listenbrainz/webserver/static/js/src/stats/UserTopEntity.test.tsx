@@ -1,11 +1,11 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import APIError from "../utils/APIError";
+import APIError from "../APIError";
 import UserTopEntity, { UserTopEntityProps } from "./UserTopEntity";
-import * as userArtists from "../../tests/__mocks__/userArtists.json";
-import * as userReleases from "../../tests/__mocks__/userReleases.json";
-import * as userRecordings from "../../tests/__mocks__/userRecordings.json";
+import * as userArtists from "../__mocks__/userArtists.json";
+import * as userReleases from "../__mocks__/userReleases.json";
+import * as userRecordings from "../__mocks__/userRecordings.json";
 
 const props: UserTopEntityProps = {
   range: "week",
