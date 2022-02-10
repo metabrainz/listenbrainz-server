@@ -87,7 +87,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('Sign in', data)
         self.assertIn('Import', data)
         # item in user menu doesn't exist
-        self.assertNotIn('My Listens', data)
+        self.assertNotIn('Examine', data)
         mock_user_get.assert_not_called()
 
     @mock.patch('listenbrainz.db.user.get_by_login_id')
@@ -107,7 +107,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('Import', data)
         # item in user menu
 
-        self.assertIn('My Listens', data)
+        self.assertIn('Examine', data)
         mock_user_get.assert_called_with(user['login_id'])
 
     @mock.patch('listenbrainz.db.user.get_by_login_id')
@@ -135,7 +135,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('Import', data)
         # item in user menu
 
-        self.assertIn('My Listens', data)
+        self.assertIn('Examine', data)
         mock_user_get.assert_called_with(user['login_id'])
 
         resp = self.client.get('/page_that_returns_404')
@@ -146,7 +146,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('Import', data)
         # item in user menu
 
-        self.assertIn('My Listens', data)
+        self.assertIn('Examine', data)
         mock_user_get.assert_called_with(user['login_id'])
 
     @mock.patch('listenbrainz.db.user.get')
@@ -165,7 +165,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get('/page_that_returns_500')
         data = resp.data.decode('utf-8')
         # item not in user menu
-        self.assertNotIn('My Listens', data)
+        self.assertNotIn('Examine', data)
         self.assertNotIn('Sign in', data)
         self.assertIn('Import', data)
 
@@ -193,7 +193,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         data = resp.data.decode('utf-8')
         self.assertIn('Import', data)
         # item not in user menu
-        self.assertNotIn('My Listens', data)
+        self.assertNotIn('Examine', data)
         self.assertNotIn('Sign in', data)
         # Even after rendering the template, the database has only been queried once (before the exception)
         mock_user_get.assert_called_once()
