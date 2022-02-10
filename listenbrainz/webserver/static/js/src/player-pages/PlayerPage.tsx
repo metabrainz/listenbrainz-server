@@ -29,18 +29,18 @@ import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
 import ErrorBoundary from "../ErrorBoundary";
 
-export type ReleasePageProps = {
+export type PlayerPageProps = {
   playlist: JSPFObject;
 } & WithAlertNotificationsInjectedProps;
 
-export interface ReleasePageState {
+export interface PlayerPageState {
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
 }
 
-export default class ReleasePage extends React.Component<
-  ReleasePageProps,
-  ReleasePageState
+export default class PlayerPage extends React.Component<
+  PlayerPageProps,
+  PlayerPageState
 > {
   static contextType = GlobalAppContext;
 
@@ -55,7 +55,7 @@ export default class ReleasePage extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
   private APIService!: APIServiceClass;
 
-  constructor(props: ReleasePageProps) {
+  constructor(props: PlayerPageProps) {
     super(props);
 
     // React-SortableJS expects an 'id' attribute and we can't change it, so add it to each object
@@ -104,6 +104,18 @@ export default class ReleasePage extends React.Component<
     return [];
   };
 
+  getAlbumDetails(): JSX.Element {
+    const { playlist } = this.state;
+    return (
+      <>
+        <div>Release date: </div>
+        <div>Label:</div>
+        <div>Tags:</div>
+        <div>Links:</div>
+      </>
+    );
+  }
+
   loadFeedback = async (mbids?: string[]): Promise<RecordingFeedbackMap> => {
     const { recordingFeedbackMap } = this.state;
     const feedback = await this.getFeedback(mbids);
@@ -137,6 +149,88 @@ export default class ReleasePage extends React.Component<
     newAlert("danger", "Error", error.message);
   };
 
+  getHeader = (): JSX.Element => {
+    const { playlist } = this.state;
+    const { track: tracks } = playlist;
+    const releaseLink =
+      tracks?.[0]?.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]
+        ?.release_identifier;
+    const isPlayerPage = false;
+    return (
+      <div className="playlist-details row">
+        <h1 className="title">
+          <div>
+            {playlist.title ?? "BrainzPlayer"}
+            {isPlayerPage && (
+              <span className="dropdown pull-right">
+                <button
+                  className="btn btn-info dropdown-toggle"
+                  type="button"
+                  id="playlistOptionsDropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="true"
+                >
+                  <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
+                  &nbsp;Options
+                </button>
+                <ul
+                  className="dropdown-menu dropdown-menu-right"
+                  aria-labelledby="playlistOptionsDropdown"
+                >
+                  {releaseLink && (
+                    <li>
+                      See on MusicBrainz
+                      <ListenControl
+                        icon={faExternalLinkAlt}
+                        title="Open in MusicBrainz"
+                        link={releaseLink}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    </li>
+                  )}
+                </ul>
+              </span>
+            )}
+          </div>
+        </h1>
+        <div className="info">
+          {tracks?.length && (
+            <div>
+              {tracks.length} tracks
+              {isPlayerPage && (
+                <>
+                  {" "}
+                  — Total duration:{" "}
+                  {tracks
+                    .filter((track) => Boolean(track?.duration))
+                    .reduce(
+                      (sum, { duration }) => sum + (duration as number),
+                      0
+                    )}
+                </>
+              )}
+            </div>
+          )}
+          {isPlayerPage && this.getAlbumDetails()}
+        </div>
+        {playlist.annotation && (
+          <div
+            // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{
+              __html: sanitize(playlist.annotation),
+            }}
+          />
+        )}
+        <hr />
+      </div>
+    );
+  };
+
   render() {
     const { playlist } = this.state;
     const { APIService } = this.context;
@@ -145,83 +239,11 @@ export default class ReleasePage extends React.Component<
     if (!playlist) {
       return <div>Nothing to see here.</div>;
     }
-    const releaseLink =
-      tracks?.[0]?.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]
-        ?.release_identifier;
     return (
       <div role="main">
         <div className="row">
           <div id="playlist" className="col-md-8">
-            <div className="playlist-details row">
-              <h1 className="title">
-                <div>
-                  {playlist.title ?? "Player"}
-                  <span className="dropdown pull-right">
-                    <button
-                      className="btn btn-info dropdown-toggle"
-                      type="button"
-                      id="playlistOptionsDropdown"
-                      data-toggle="dropdown"
-                      aria-haspopup="true"
-                      aria-expanded="true"
-                    >
-                      <FontAwesomeIcon
-                        icon={faCog as IconProp}
-                        title="Options"
-                      />
-                      &nbsp;Options
-                    </button>
-                    <ul
-                      className="dropdown-menu dropdown-menu-right"
-                      aria-labelledby="playlistOptionsDropdown"
-                    >
-                      <li>
-                        See on MusicBrainz
-                        {releaseLink && (
-                          <ListenControl
-                            icon={faExternalLinkAlt}
-                            title="Open in MusicBrainz"
-                            link={releaseLink}
-                            anchorTagAttributes={{
-                              target: "_blank",
-                              rel: "noopener noreferrer",
-                            }}
-                          />
-                        )}
-                      </li>
-                    </ul>
-                  </span>
-                </div>
-              </h1>
-              <hr />
-              <div className="info">
-                {tracks?.length && (
-                  <div>
-                    {tracks.length} tracks — Total duration:{" "}
-                    {tracks
-                      .filter((track) => Boolean(track?.duration))
-                      .reduce(
-                        (sum, { duration }) => sum + (duration as number),
-                        0
-                      )}
-                  </div>
-                )}
-                {/* <div>Release date: </div>
-                <div>Label:</div>
-                <div>Tags:</div>
-                <div>Links:</div> */}
-              </div>
-              {playlist.annotation && (
-                <div
-                  // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
-                  // eslint-disable-next-line react/no-danger
-                  dangerouslySetInnerHTML={{
-                    __html: sanitize(playlist.annotation),
-                  }}
-                />
-              )}
-              <hr />
-            </div>
+            {this.getHeader()}
             <div id="listens row">
               {tracks?.map((track: JSPFTrack, index) => {
                 const listen = JSPFTrackToListen(track);
@@ -283,7 +305,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const ReleasePageWithAlertNotifications = withAlertNotifications(ReleasePage);
+  const PlayerPageWithAlertNotifications = withAlertNotifications(PlayerPage);
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -299,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <ReleasePageWithAlertNotifications
+        <PlayerPageWithAlertNotifications
           initialAlerts={optionalAlerts}
           playlist={playlist}
         />

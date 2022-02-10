@@ -113,7 +113,7 @@ def load_instant():
     fetch_playlist_recording_metadata(playlist)
 
     return render_template(
-        "entity-pages/release-page.html",
+        "player/player-page.html",
         props={"playlist": ujson.dumps(serialize_jspf(playlist)) }
     )
 
@@ -151,6 +151,6 @@ def load_release(release_mbid):
     fetch_playlist_recording_metadata(playlist)
 
     return render_template(
-        "entity-pages/release-page.html",
+        "player/player-page.html",
         props={"playlist": ujson.dumps(serialize_jspf(playlist)) }
     )
