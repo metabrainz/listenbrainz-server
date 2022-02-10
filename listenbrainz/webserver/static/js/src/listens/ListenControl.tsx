@@ -55,7 +55,8 @@ const ListenControl = (props: ListenControlProps) => {
         icon={icon as IconProp}
         className={iconClassName}
         title={title}
-        onClick={disabled ? undefined : action}
+        // eslint-disable-next-line no-nested-ternary
+        onClick={disabled ? undefined : iconOnly ? action : undefined}
       />
     );
   }
