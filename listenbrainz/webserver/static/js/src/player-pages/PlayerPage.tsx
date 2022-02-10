@@ -236,7 +236,7 @@ export default class PlayerPage extends React.Component<
     const { APIService } = this.context;
     const { newAlert } = this.props;
     const { track: tracks } = playlist;
-    if (!playlist) {
+    if (!playlist || !playlist.track) {
       return <div>Nothing to see here.</div>;
     }
     return (
