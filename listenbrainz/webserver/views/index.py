@@ -90,11 +90,6 @@ def goals():
     return render_template("index/goals.html")
 
 
-@index_bp.route("/faq/")
-def faq():
-    return render_template("index/faq.html")
-
-
 @index_bp.route("/lastfm-proxy/")
 def proxy():
     return render_template("index/lastfm-proxy.html")
