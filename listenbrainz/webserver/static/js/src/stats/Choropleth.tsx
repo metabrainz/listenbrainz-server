@@ -1,13 +1,16 @@
 import { Theme } from "@nivo/core";
 import { Choropleth } from "@nivo/geo";
 import { BoxLegendSvg, LegendProps } from "@nivo/legends";
-import { BasicTooltip } from "@nivo/tooltip";
+import { Chip } from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
 import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
 import { maxBy } from "lodash";
 import * as React from "react";
 import { useMediaQuery } from "react-responsive";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import * as worldCountries from "./world_countries.json";
 
 export type ChoroplethProps = {
@@ -133,14 +136,51 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     if (feature.formattedValue !== "1") {
       suffix = `${suffix}s`;
     }
+    const { artists } = feature.data;
 
     return (
-      <BasicTooltip
-        id={feature.label}
-        color={feature.color}
-        value={`${feature.formattedValue} ${suffix}`}
-        enableChip
-      />
+      <div
+        style={{
+          background: "white",
+          color: "inherit",
+          fontSize: "inherit",
+          borderRadius: "2px",
+          boxShadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
+          padding: "5px 9px",
+        }}
+      >
+        <div
+          style={{
+            whiteSpace: "pre",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Chip color={feature.color!} style={{ marginRight: 7 }} />
+          <span>
+            {feature.label}:{" "}
+            <strong>
+              {feature.formattedValue} {suffix}
+            </strong>
+          </span>
+        </div>
+        <hr style={{ margin: "0.5em 0" }} />
+        {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
+          <div key={artist.artist_mbid}>
+            <span className="badge color-purple" style={{ marginRight: "4px" }}>
+              <FontAwesomeIcon
+                style={{ marginRight: "4px" }}
+                icon={faHeadphones as IconProp}
+              />
+              {artist.listen_count}
+            </span>
+            <a href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}>
+              {artist.artist_name}
+            </a>
+            <br />
+          </div>
+        ))}
+      </div>
     );
   };
 

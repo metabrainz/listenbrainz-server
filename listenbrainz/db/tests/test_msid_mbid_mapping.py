@@ -124,3 +124,21 @@ class MappingTestCase(TimescaleTestCase):
             self.assertEqual(metadata["additional_info"]["recording_msid"], recording["recording_msid"])
             self.assertEqual(metadata["additional_info"]["release_mbid"], recording["release_mbid"])
             self.assertEqual(metadata["additional_info"]["artist_mbids"], recording["artist_mbids"])
+
+    def test_fetch_track_metadata_for_items_with_same_mbid(self):
+        recording = self.insert_recordings()[0]
+        models = [
+            MsidMbidModel(recording_msid=recording["recording_msid"], recording_mbid=recording["recording_mbid"]),
+            MsidMbidModel(recording_msid=recording["recording_msid"], recording_mbid=recording["recording_mbid"]),
+        ]
+        models = fetch_track_metadata_for_items(models)
+        for model in models:
+            metadata = model.track_metadata
+            self.assertEqual(metadata["track_name"], recording["title"])
+            self.assertEqual(metadata["artist_name"], recording["artist"])
+            self.assertEqual(metadata["release_name"], recording["release"])
+            self.assertEqual(metadata["additional_info"]["recording_mbid"], recording["recording_mbid"])
+            self.assertEqual(metadata["additional_info"]["recording_msid"], recording["recording_msid"])
+            self.assertEqual(metadata["additional_info"]["release_mbid"], recording["release_mbid"])
+            self.assertEqual(metadata["additional_info"]["artist_mbids"], recording["artist_mbids"])
+

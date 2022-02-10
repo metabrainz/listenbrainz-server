@@ -70,4 +70,4 @@ class User(object):
         """ Get playcount from the given user name.
         """
         user = User.load_by_id(user_id)
-        return listenstore.get_listen_count_for_user(user.name)
+        return listenstore.get_listen_count_for_user(user.id)

@@ -6,23 +6,23 @@ def get_day_of_week(year):
     setup_listens_for_year(year)
     query = """
         WITH listen_weekday AS (
-              SELECT user_name
+              SELECT user_id
                    , date_format(listened_at, 'EEEE') AS weekday
                    , count(*) AS listen_count
                 FROM listens_of_year
-            GROUP BY user_name
+            GROUP BY user_id
                    , weekday
         ), top_listen_weekday AS (
-              SELECT user_name
+              SELECT user_id
                    , weekday
                    , listen_count
-                   , row_number() OVER(PARTITION BY user_name ORDER BY listen_count DESC) AS row_number
+                   , row_number() OVER(PARTITION BY user_id ORDER BY listen_count DESC) AS row_number
                 FROM listen_weekday
         )
         SELECT to_json(
                     map_from_entries(
                         collect_list(
-                            struct(user_name, weekday)
+                            struct(user_id, weekday)
                         )
                     )
                 ) AS all_users_weekday

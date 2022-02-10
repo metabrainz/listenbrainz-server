@@ -95,7 +95,7 @@ elif [ "$DUMP_TYPE" == "incremental" ]; then
 elif [ "$DUMP_TYPE" == "feedback" ]; then
     SUB_DIR="spark"
 else
-    echo "Dump type must be one of 'full', 'incremental' or 'feedback'"
+    echo "ERROR: Dump Type $DUMP_TYPE is invalid. Dump type must be one of 'full', 'incremental' or 'feedback'"
     exit
 fi
 

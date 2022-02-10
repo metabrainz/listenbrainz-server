@@ -3,14 +3,14 @@ from time import sleep
 
 import click
 import sqlalchemy
-from werkzeug.serving import run_simple
 
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.db import timescale as ts
 from listenbrainz.listenstore import timescale_fill_userid
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
-    refresh_listen_count_aggregate as ts_refresh_listen_count_aggregate
+    update_user_listen_counts as ts_update_user_listen_counts,\
+    add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata
 from listenbrainz.webserver import create_app
 
 
@@ -262,11 +262,20 @@ def recalculate_all_user_data():
     ts_recalculate_all_user_data()
 
 
-@cli.command(name="refresh_continuous_aggregates")
-def refresh_continuous_aggregates():
-    """ Update the continuous aggregates in timescale.
-    """
-    ts_refresh_listen_count_aggregate()
+@cli.command(name="update_all_user_listen_counts")
+def update_all_user_listen_counts():
+    """ Scans listen table and update listen counts for all users """
+    application = webserver.create_app()
+    with application.app_context():
+        ts_update_user_listen_counts()
+
+
+@cli.command(name="add_missing_to_listen_users_metadata")
+def add_missing_to_listen_users_metadata():
+    application = webserver.create_app()
+    with application.app_context():
+        ts_add_missing_to_listen_users_metadata()
+
 
 @cli.command()
 @click.option("-u", "--user", type=str)

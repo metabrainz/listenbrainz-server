@@ -25,7 +25,7 @@
                         "https://musicbrainz.org/doc/jspf#track": {
                             "added_at": "2020-12-24T01:41:44.821939+00:00",
                             "added_by": "troi-bot",
-                            "artist_identifier": [
+                            "artist_identifiers": [
                                 "https://musicbrainz.org/artist/bded3a41-acd7-42ff-9402-cb59e35be8f4"
                             ]
                         }
