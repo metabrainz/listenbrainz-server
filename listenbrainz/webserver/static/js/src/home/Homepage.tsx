@@ -24,6 +24,7 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { getPageProps } from "../utils";
 import Blog from "./Blog";
+import ErrorBoundary from "../ErrorBoundary";
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#blogs");
@@ -38,5 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  ReactDOM.render(<Blog />, domContainer);
+  ReactDOM.render(
+    <ErrorBoundary>
+      <Blog />
+    </ErrorBoundary>,
+    domContainer
+  );
 });
