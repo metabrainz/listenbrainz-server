@@ -24,14 +24,14 @@ import {
   getRecordingMBID,
   getAlbumArtFromListenMetadata,
   getReleaseMBID,
-} from "../utils";
+} from "../utils/utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
-import YoutubePlayer from "../YoutubePlayer";
-import SpotifyPlayer from "../SpotifyPlayer";
-import SoundcloudPlayer from "../SoundcloudPlayer";
+import YoutubePlayer from "../brainzplayer/YoutubePlayer";
+import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
+import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 

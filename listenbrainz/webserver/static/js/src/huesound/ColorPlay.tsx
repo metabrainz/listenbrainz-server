@@ -7,17 +7,17 @@ import tinycolor from "tinycolor2";
 import ColorWheel from "./ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import defaultColors from "./utils/defaultColors";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../utils/AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
-import BrainzPlayer from "../BrainzPlayer";
+import APIServiceClass from "../utils/APIService";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
-import { getPageProps } from "../utils";
+import { getPageProps } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import Card from "../components/Card";
 

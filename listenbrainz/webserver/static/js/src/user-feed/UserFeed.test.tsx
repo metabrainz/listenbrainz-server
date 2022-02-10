@@ -24,10 +24,10 @@ import * as timeago from "time-ago";
 import { sortBy } from "lodash";
 import UserFeedPage from "./UserFeed";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
-import BrainzPlayer from "../BrainzPlayer";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import * as timelineProps from "./__mocks__/timelineProps.json";
 import GlobalAppContext from "../GlobalAppContext";
-import APIService from "../APIService";
+import APIService from "../utils/APIService";
 
 // typescript doesn't recognise string literal values
 const props = {

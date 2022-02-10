@@ -8,7 +8,7 @@ import {
   isString,
   difference,
 } from "lodash";
-import { searchForSpotifyTrack, loadScriptAsync } from "./utils";
+import { searchForSpotifyTrack, loadScriptAsync } from "../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
 // Fix for LB-447 (Player does not play any sound)

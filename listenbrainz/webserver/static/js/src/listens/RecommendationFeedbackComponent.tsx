@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { get } from "lodash";
 import RecommendationControl from "../recommendations/RecommendationControl";
 import GlobalAppContext from "../GlobalAppContext";
-import { getRecordingMBID } from "../utils";
+import { getRecordingMBID } from "../utils/utils";
 
 export type RecommendationFeedbackComponentProps = {
   newAlert: (

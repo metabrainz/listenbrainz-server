@@ -26,16 +26,16 @@ import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
-} from "../AlertNotificationsHOC";
-import APIServiceClass from "../APIService";
+} from "../utils/AlertNotificationsHOC";
+import APIServiceClass from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import SpotifyAPIService from "../SpotifyAPIService";
-import BrainzPlayer from "../BrainzPlayer";
+import SpotifyAPIService from "../brainzplayer/SpotifyAPIService";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../utils/ErrorBoundary";
 import PlaylistItemCard from "./PlaylistItemCard";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
@@ -46,7 +46,7 @@ import {
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "./utils";
-import { getPageProps } from "../utils";
+import { getPageProps } from "../utils/utils";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;
