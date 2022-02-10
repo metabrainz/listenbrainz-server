@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, current_app, request
+from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required
 from werkzeug.exceptions import BadRequest, ServiceUnavailable
 import ujson
@@ -90,11 +90,11 @@ def load_instant():
 
     recording_mbids = []
     for mbid in recordings.split(","):
-        mbid = mbid.strip(mbid)
-        if not is_valid_uuid(mbid):
+        mbid_clean = mbid.strip() 
+        if not is_valid_uuid(mbid_clean):
             raise BadRequest(f"Recording mbid {mbid} is not valid.")
 
-        recording_mbids.append(mbid)
+        recording_mbids.append(mbid_clean)
 
     desc = request.args.get("desc", default="")
     if not desc:
@@ -114,7 +114,7 @@ def load_instant():
 
     return render_template(
         "player/player-page.html",
-        props={"playlist": ujson.dumps(serialize_jspf(playlist)) }
+        props=ujson.dumps({ "playlist": serialize_jspf(playlist) })
     )
 
 
@@ -128,29 +128,31 @@ def load_release(release_mbid):
     :statuscode 400: invalid recording_mbid arguments
     """
 
-    if not mb_engine:
-        raise ServiceUnavailable("No MusicBrainz database is currently available for this lookup.")
-
     release_mbid = release_mbid.strip()
     if not is_valid_uuid(release_mbid):
         raise BadRequest(f"Recording mbid {release_mbid} is not valid.")
 
-    release = get_release_by_mbid(release_mbid, includes=["media"])
-    current_app.logger.info(release)
-        
-    name = "Release %s"
-    desc = "Release %s by artist <moo>"
+    if mb_engine:
+        release = get_release_by_mbid(release_mbid, includes=["media", "artists"])
+            
+        name = "Release %s" % release["name"]
+        desc = "Release %s by artist %s" % (release["name"], release["artist-credit-phrase"])
 
-    now = datetime.now()
-    playlist = WritablePlaylist(description=desc, name=name, creator="listenbrainz", creator_id=1, created=now)
-    for medium in release["medium-list"]:
-        for recording in medium["track-list"]:
-            rec = WritablePlaylistRecording(position=recording["position"], mbid=recording["mbid"], added_by_id=1, created=now)
-            playlist.recordings.append(rec)
-
-    fetch_playlist_recording_metadata(playlist)
+        now = datetime.now()
+        playlist = WritablePlaylist(description=desc, name=name, creator="listenbrainz", creator_id=1, created=now)
+        for medium in release["medium-list"]:
+            for recording in medium["track-list"]:
+                rec = WritablePlaylistRecording(title=recording["name"],
+                                                artist_credit=release["artist-credit-phrase"],
+                                                artist_mbids=[ a["artist"]["mbid"] for a in recording["artist-credit"]],
+                                                release_name=release["name"],
+                                                release_mbid=release["mbid"],
+                                                position=recording["position"],
+                                                mbid=recording["mbid"],
+                                                added_by_id=1, created=now)
+                playlist.recordings.append(rec)
 
     return render_template(
         "player/player-page.html",
-        props={"playlist": ujson.dumps(serialize_jspf(playlist)) }
+        props=ujson.dumps({ "playlist": serialize_jspf(playlist) })
     )
