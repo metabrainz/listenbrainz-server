@@ -8,6 +8,7 @@ import ujson
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.db.model.playlist import WritablePlaylistRecording, WritablePlaylist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
+from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
 
 player_bp = Blueprint("player", __name__)
 
@@ -94,6 +95,8 @@ def load_instant():
     for i, mbid in enumerate(recording_mbids):
         rec = WritablePlaylistRecording(position=i, mbid=mbid, added_by_id=1, created=now)
         playlist.recordings.append(rec)
+
+    fetch_playlist_recording_metadata(playlist)
 
     return render_template(
         "index/player.html",
