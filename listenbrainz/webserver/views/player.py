@@ -100,5 +100,5 @@ def load_instant():
 
     return render_template(
         "index/entity-pages/release-page.html",
-        props={ "playlist" : ujson.dumps(serialize_jspf(playlist)) }
+        props=ujson.dumps(serialize_jspf(playlist))
     )
