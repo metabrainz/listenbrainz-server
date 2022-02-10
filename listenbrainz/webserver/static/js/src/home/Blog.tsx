@@ -4,19 +4,24 @@ const Blog = () => {
   const [blogDetails, setBlogDetails] = useState([{}]);
 
   const fetchBlogDetails = async () => {
-    let response: any = await fetch(
-      `https://public-api.wordpress.com/rest/v1.1/sites/blog.metabrainz.org/posts/`
-    );
-    response = await response.json();
-    const objectArray: any = [];
-    for (let postIndex = 0; postIndex <= 6; postIndex += 1) {
-      const object: any = {};
-      object.id = response.posts[postIndex].ID;
-      object.title = response.posts[postIndex].title;
-      object.link = response.posts[postIndex].URL;
-      objectArray.push(object);
+    try {
+      let response: any = await fetch(
+        `https://public-api.wordpress.com/rest/v1.1/sites/blog.metabrainz.org/posts/`
+      );
+      response = await response.json();
+      const objectArray: any = [];
+      for (let postIndex = 0; postIndex <= 6; postIndex += 1) {
+        const object: any = {};
+        object.id = response.posts[postIndex].ID;
+        object.title = response.posts[postIndex].title;
+        object.link = response.posts[postIndex].URL;
+        objectArray.push(object);
+      }
+      setBlogDetails(objectArray);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
-    setBlogDetails(objectArray);
   };
   useEffect(() => {
     fetchBlogDetails();
@@ -43,7 +48,7 @@ const Blog = () => {
       </div>
       <div className="panel-footer center-p">
         <a
-          href="https://twitter.com/MusicBrainz"
+          href="https://twitter.com/ListenBrainz"
           target="_blank"
           rel="noopener noreferrer"
           className="card-link"
