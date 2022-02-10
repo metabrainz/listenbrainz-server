@@ -1,8 +1,8 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import * as missingDataProps from "./__mocks__/missingMBDataProps.json";
-import { youtube, spotify, user } from "./__mocks__/missingMBDataProps.json";
+import * as missingDataProps from "../tests/__mocks__/missingMBDataProps.json";
+import { youtube, spotify, user } from "../tests/__mocks__/missingMBDataProps.json";
 
 import MissingMBDataPage from "./MissingMBData";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";

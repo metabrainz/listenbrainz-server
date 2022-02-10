@@ -5,7 +5,7 @@ import { mount } from "enzyme";
 import { GlobalAppContextT } from "../GlobalAppContext";
 import APIService from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
-import * as colorPlayProps from "../__mocks__/colorPlayProps.json";
+import * as colorPlayProps from "../../tests/__mocks__/colorPlayProps.json";
 import ColorPlay from "./ColorPlay";
 import ColorWheel from "./ColorWheel";
 
