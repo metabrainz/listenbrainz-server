@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required
-from werkzeug.exceptions import BadRequest, ServiceUnavailable
+from werkzeug.exceptions import BadRequest, ServiceUnavailable, NotFound
 import ujson
 
 from brainzutils.musicbrainz_db import engine as mb_engine
@@ -134,10 +134,13 @@ def load_release(release_mbid):
 
     if mb_engine:
         release = get_release_by_mbid(release_mbid, includes=["media", "artists"])
+        if not release:
+            raise NotFound("This release was not found in our database. It may not have replicated to this server yet.")
             
-        name = "Release %s" % release["name"]
-        desc = "Release %s by artist %s" % (release["name"], release["artist-credit-phrase"])
-
+        name = "Release %s by %s" % (release["name"], release["artist-credit-phrase"])
+        desc = 'Release <a href="https://musicbrainz.org/release/%s">%s</a> by %s' % (release["mbid"],
+                                                                                      release["name"],
+                                                                                      release["artist-credit-phrase"])
         now = datetime.now()
         playlist = WritablePlaylist(description=desc, name=name, creator="listenbrainz", creator_id=1, created=now)
         for medium in release["medium-list"]:
