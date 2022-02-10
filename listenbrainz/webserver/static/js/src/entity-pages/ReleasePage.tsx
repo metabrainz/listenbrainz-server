@@ -142,20 +142,20 @@ export default class ReleasePage extends React.Component<
     const { APIService } = this.context;
     const { newAlert } = this.props;
     const { track: tracks } = playlist;
-
-    const customFields = getPlaylistExtension(playlist);
+    if (!playlist) {
+      return <div>Nothing to see here.</div>;
+    }
     const releaseLink =
-      playlist.track[0]?.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]
+      tracks?.[0]?.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]
         ?.release_identifier;
     return (
       <div role="main">
         <div className="row">
           <div id="playlist" className="col-md-8">
             <div className="playlist-details row">
-              <div>Album art here</div>
               <h1 className="title">
                 <div>
-                  {playlist.title}
+                  {playlist.title ?? "Player"}
                   <span className="dropdown pull-right">
                     <button
                       className="btn btn-info dropdown-toggle"
@@ -195,11 +195,21 @@ export default class ReleasePage extends React.Component<
               </h1>
               <hr />
               <div className="info">
-                <div>Release date: </div>
-                <div>{playlist.track?.length} tracks — Total duration:</div>
+                {tracks?.length && (
+                  <div>
+                    {tracks.length} tracks — Total duration:{" "}
+                    {tracks
+                      .filter((track) => Boolean(track?.duration))
+                      .reduce(
+                        (sum, { duration }) => sum + (duration as number),
+                        0
+                      )}
+                  </div>
+                )}
+                {/* <div>Release date: </div>
                 <div>Label:</div>
                 <div>Tags:</div>
-                <div>Links:</div>
+                <div>Links:</div> */}
               </div>
               {playlist.annotation && (
                 <div
@@ -213,7 +223,7 @@ export default class ReleasePage extends React.Component<
               <hr />
             </div>
             <div id="listens row">
-              {tracks.map((track: JSPFTrack, index) => {
+              {tracks?.map((track: JSPFTrack, index) => {
                 const listen = JSPFTrackToListen(track);
                 return (
                   <ListenCard
@@ -235,7 +245,7 @@ export default class ReleasePage extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              listens={tracks.map(JSPFTrackToListen)}
+              listens={tracks?.map(JSPFTrackToListen)}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}
               refreshSpotifyToken={APIService.refreshSpotifyToken}
