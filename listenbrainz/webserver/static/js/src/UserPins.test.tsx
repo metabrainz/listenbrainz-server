@@ -4,13 +4,13 @@ import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import { GlobalAppContextT } from "./GlobalAppContext";
-import APIService from "./APIService";
-import BrainzPlayer from "./BrainzPlayer";
+import APIService from "./utils/APIService";
+import BrainzPlayer from "./brainzplayer/BrainzPlayer";
 
-import * as pinsPageProps from "./__mocks__/userPinsProps.json";
-import * as APIPins from "./__mocks__/pinProps.json";
+import * as pinsPageProps from "../tests/__mocks__/userPinsProps.json";
+import * as APIPins from "../tests/__mocks__/pinProps.json";
 
-import { getListenablePin } from "./utils";
+import { getListenablePin } from "./utils/utils";
 
 import UserPins from "./UserPins";
 

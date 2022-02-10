@@ -2,7 +2,7 @@ import * as React from "react";
 import { mount } from "enzyme";
 
 import PinRecordingModal from "./PinRecordingModal";
-import APIServiceClass from "./APIService";
+import APIServiceClass from "./utils/APIService";
 import GlobalAppContext from "./GlobalAppContext";
 
 const recordingToPin: Listen = {

@@ -4,15 +4,15 @@ import { mount, shallow } from "enzyme";
 import UserListeningActivity, {
   UserListeningActivityProps,
 } from "./UserListeningActivity";
-import APIError from "../APIError";
-import * as userListeningActivityResponseWeek from "../__mocks__/userListeningActivityWeek.json";
-import * as userListeningActivityResponseMonth from "../__mocks__/userListeningActivityMonth.json";
-import * as userListeningActivityResponseYear from "../__mocks__/userListeningActivityYear.json";
-import * as userListeningActivityResponseAllTime from "../__mocks__/userListeningActivityAllTime.json";
-import * as userListeningActivityProcessedDataWeek from "../__mocks__/userListeningActivityProcessDataWeek.json";
-import * as userListeningActivityProcessedDataMonth from "../__mocks__/userListeningActivityProcessDataMonth.json";
-import * as userListeningActivityProcessedDataYear from "../__mocks__/userListeningActivityProcessDataYear.json";
-import * as userListeningActivityProcessedDataAllTime from "../__mocks__/userListeningActivityProcessDataAllTime.json";
+import APIError from "../utils/APIError";
+import * as userListeningActivityResponseWeek from "../../tests/__mocks__/userListeningActivityWeek.json";
+import * as userListeningActivityResponseMonth from "../../tests/__mocks__/userListeningActivityMonth.json";
+import * as userListeningActivityResponseYear from "../../tests/__mocks__/userListeningActivityYear.json";
+import * as userListeningActivityResponseAllTime from "../../tests/__mocks__/userListeningActivityAllTime.json";
+import * as userListeningActivityProcessedDataWeek from "../../tests/__mocks__/userListeningActivityProcessDataWeek.json";
+import * as userListeningActivityProcessedDataMonth from "../../tests/__mocks__/userListeningActivityProcessDataMonth.json";
+import * as userListeningActivityProcessedDataYear from "../../tests/__mocks__/userListeningActivityProcessDataYear.json";
+import * as userListeningActivityProcessedDataAllTime from "../../tests/__mocks__/userListeningActivityProcessDataAllTime.json";
 
 const props: UserListeningActivityProps = {
   user: {

@@ -1,5 +1,5 @@
 import * as timeago from "time-ago";
-import { formatWSMessageToListen, preciseTimestamp } from "./utils";
+import { formatWSMessageToListen, preciseTimestamp } from "./utils/utils";
 
 describe("formatWSMessageToListen", () => {
   const mockListen: Listen = {

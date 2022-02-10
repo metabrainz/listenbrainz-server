@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import GlobalAppContext from "./GlobalAppContext";
 
-import { countWords } from "./utils";
+import { countWords } from "./utils/utils";
 import Loader from "./components/Loader";
 
 export type CBReviewModalProps = {

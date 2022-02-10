@@ -2,7 +2,7 @@ import * as React from "react";
 import { mount } from "enzyme";
 import SimilarUsersModal from "./SimilarUsersModal";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import APIService from "../APIService";
+import APIService from "../utils/APIService";
 
 const props = {
   user: { name: "shivam-kapila" },

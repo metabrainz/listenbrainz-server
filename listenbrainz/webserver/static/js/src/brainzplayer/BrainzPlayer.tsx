@@ -15,7 +15,7 @@ import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import PlaybackControls from "./PlaybackControls";
-import GlobalAppContext from "./GlobalAppContext";
+import GlobalAppContext from "../GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
@@ -26,7 +26,7 @@ import {
   overwriteMediaSession,
   updateMediaSession,
   updateWindowTitle,
-} from "./Notifications";
+} from "../utils/Notifications";
 
 export type DataSourceType = {
   name: string;
