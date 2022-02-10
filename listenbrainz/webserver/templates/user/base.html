@@ -1,11 +1,22 @@
 {% extends 'base-react.html' %}
 
-{% block title %}User "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
+{% block title %}
+    User "{{ user.musicbrainz_id }}" - ListenBrainz
+{% endblock %}
 
 {% block content %}
   <div id="user-profile">
     <div id="user-page-heading-container"></div>
-
+      <p>
+          See profile on&nbsp;
+          <img
+              src="/static/img/musicbrainz-16.svg"
+              alt="MusicBrainz Logo"
+          />
+          <a href={'https://musicbrainz.org/user/${user.musicbrainz_id}'}>
+              MusicBrainz
+          </a>
+      </p>
     <ul class="nav nav-tabs" role="tablist">
         <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
         <li {{ 'class=active' if active_section=='reports' }}><a href="{{ url_for('user.reports', user_name=user.musicbrainz_id) }}">Reports</a></li>
