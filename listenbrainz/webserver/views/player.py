@@ -135,14 +135,18 @@ def load_release(release_mbid):
     if not is_valid_uuid(release_mbid):
         raise BadRequest(f"Recording mbid {release_mbid} is not valid.")
 
-    release = get_release_by_mbid(release_mbid)
-    print(release)
+    release = get_release_by_mbid(release_mbid, includes=["media"])
+    current_app.logger.info(release)
+        
+    name = "Release %s"
+    desc = "Release %s by artist <moo>"
 
     now = datetime.now()
     playlist = WritablePlaylist(description=desc, name=name, creator="listenbrainz", creator_id=1, created=now)
-    for i, mbid in enumerate(recording_mbids):
-        rec = WritablePlaylistRecording(position=i, mbid=mbid, added_by_id=1, created=now)
-        playlist.recordings.append(rec)
+    for medium in release["medium-list"]:
+        for recording in medium["track-list"]:
+            rec = WritablePlaylistRecording(position=recording["position"], mbid=recording["mbid"], added_by_id=1, created=now)
+            playlist.recordings.append(rec)
 
     fetch_playlist_recording_metadata(playlist)
 
