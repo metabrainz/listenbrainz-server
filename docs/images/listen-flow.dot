@@ -1,0 +1,42 @@
+digraph G {
+
+    tooltip = " ";
+    rankdir = "LR";
+
+    "Listens" [shape=record, label="{ { ListenBrainz API | Spotify Reader | API Compat | API Compat Deprecated}}"]
+
+    "Playing Now" -> "Websockets";
+
+    "Unique" -> "MBID Mapper";
+    "Unique" -> "Websockets";
+
+    "Playing Now" [shape=diamond];
+    "Incoming"    [shape=diamond];
+    "Unique"      [shape=diamond];
+
+    "Incoming" -> "Unique" [style="invis"];
+
+    {
+        rank=same;
+        "Incoming";
+        "Playing Now";
+    }
+
+    "Listens" -> "Playing Now" [ltail="cluster_submit"];
+    "Listens" -> "Incoming"    [ltail="cluster_submit"];
+
+
+    "MessyBrainz" -> "Timescale Writer" [label="MSIDs"];
+    "Database"    -> "Timescale Writer" [label="Unique Listens"];
+
+    "Timescale Writer" -> "MessyBrainz" [label="Metadata", constraint=false];
+    "Timescale Writer" -> "Database"    [label="Insert Listens", constraint=false];
+
+
+    "Incoming" -> "Timescale Writer";
+    "Incoming" -> "MessyBrainz" [style="invis", constraint=false];
+    "MessyBrainz" -> "Database" [style="invis", constraint=false];
+
+    "Timescale Writer" -> "Unique";
+
+}

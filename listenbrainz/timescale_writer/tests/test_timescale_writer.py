@@ -1,13 +1,14 @@
 import unittest
 from unittest.mock import patch
-from listenbrainz.listen_writer import ListenWriter
+
+from listenbrainz.timescale_writer.timescale_writer import TimescaleWriterSubscriber
 from listenbrainz.webserver import create_app
 
-class ListenWriterTestCase(unittest.TestCase):
+
+class TimescaleWriterTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.lwriter = ListenWriter()
-
+        self.lwriter = TimescaleWriterSubscriber()
 
     @patch('time.sleep', return_value=None)
     def test_verify_hosts_in_config(self, mock_sleep):

@@ -11,6 +11,7 @@ export const MUSICBRAINZ_JSPF_TRACK_EXTENSION =
 
 export const PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/";
 export const PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/";
+export const PLAYLIST_ARTIST_URI_PREFIX = "https://musicbrainz.org/artist/";
 
 export function getPlaylistExtension(
   playlist?: JSPFPlaylist
@@ -36,6 +37,9 @@ export function getPlaylistId(playlist?: JSPFPlaylist): string {
 
 export function getRecordingMBIDFromJSPFTrack(track: JSPFTrack): string {
   return track.identifier?.substr(PLAYLIST_TRACK_URI_PREFIX.length) ?? "";
+}
+export function getArtistMBIDFromURI(URI: string): string {
+  return URI?.substr(PLAYLIST_ARTIST_URI_PREFIX.length) ?? "";
 }
 
 // Credit goes to Dmitry Sheiko https://stackoverflow.com/a/53006402/4904467
@@ -81,8 +85,9 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
     listen.listened_at_iso = customFields.added_at;
   }
   if (listen.track_metadata.additional_info) {
-    listen.track_metadata.additional_info.artist_mbids =
-      customFields?.artist_mbids || customFields?.artist_identifier;
+    listen.track_metadata.additional_info.artist_mbids = customFields?.artist_identifiers?.map(
+      getArtistMBIDFromURI
+    );
   }
   return listen;
 }

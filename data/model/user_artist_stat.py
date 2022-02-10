@@ -4,7 +4,7 @@ from data.model.validators import check_valid_uuid
 from typing import Optional, List
 
 
-class UserArtistRecord(BaseModel):
+class ArtistRecord(BaseModel):
     """ Each individual record for top artists
 
     Contains the artist name, MessyBrainz ID, MusicBrainz IDs and listen count.

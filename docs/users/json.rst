@@ -8,7 +8,7 @@ JSON Documentation
 Submission JSON
 ---------------
 
-To submit a listen via our API (see: :doc:`api`), ``POST`` a JSON document to
+To submit a listen via our API (see: :doc:`api/core`), ``POST`` a JSON document to
 the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
 - ``single``: Submit single listen

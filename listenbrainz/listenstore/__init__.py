@@ -9,19 +9,11 @@ DEFAULT_LISTENS_PER_FETCH = 25
 # when the format of the json document in the public dumps changes
 LISTENS_DUMP_SCHEMA_VERSION = 1
 
+LISTEN_MINIMUM_DATE = datetime(2002, 10, 1)
 # October 2002 is date before which most Last.FM data is rubbish
 #: The minimum acceptable value for listened_at field
-LISTEN_MINIMUM_TS = int(datetime(2002, 10, 1).timestamp())
-
-
-from listenbrainz.listenstore import listenstore
-import listenbrainz.listen as listen
-ListenStore = listenstore.ListenStore
-Listen = listen.Listen
-
+LISTEN_MINIMUM_TS = int(LISTEN_MINIMUM_DATE.timestamp())
 
 # ╭∩╮
-from listenbrainz.listenstore import redis_listenstore
-from listenbrainz.listenstore import timescale_listenstore
-RedisListenStore = redis_listenstore.RedisListenStore
-TimescaleListenStore = timescale_listenstore.TimescaleListenStore
+from listenbrainz.listenstore.redis_listenstore import RedisListenStore
+from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStore

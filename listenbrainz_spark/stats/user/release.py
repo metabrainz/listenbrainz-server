@@ -27,7 +27,7 @@ def get_releases(table):
     """
     result = run_query(f"""
         WITH intermediate_table as (
-            SELECT user_name
+            SELECT user_id
                 , first(release_name) AS any_release_name
                 , release_mbid
                 , first(artist_name) AS any_artist_name
@@ -35,13 +35,13 @@ def get_releases(table):
                 , count(*) as listen_count
               FROM {table}
              WHERE release_name != ''
-          GROUP BY user_name
+          GROUP BY user_id
                 , lower(release_name)
                 , release_mbid
                 , lower(artist_name)
                 , artist_credit_mbids
         )
-        SELECT user_name
+        SELECT user_id
              , sort_array(
                     collect_list(
                         struct(
@@ -55,7 +55,7 @@ def get_releases(table):
                    , false
                 ) as releases
           FROM intermediate_table
-      GROUP BY user_name
+      GROUP BY user_id
         """)
 
     return result.toLocalIterator()
