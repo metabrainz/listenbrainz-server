@@ -69,6 +69,7 @@ module.exports = function (env, argv) {
         "src/recommendations/Recommendations.tsx"
       ),
       missingMBData: path.resolve(jsDir, "src/MissingMBData.tsx"),
+      releasePage: path.resolve(jsDir, "src/entity-pages/ReleasePage.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
