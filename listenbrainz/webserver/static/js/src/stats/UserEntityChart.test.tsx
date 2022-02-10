@@ -2,14 +2,14 @@ import * as React from "react";
 import { mount } from "enzyme";
 
 import UserEntityChart from "./UserEntityChart";
-import APIError from "../utils/APIError";
-import APIService from "../utils/APIService";
-import * as userArtistsResponse from "../../tests/__mocks__/userArtists.json";
-import * as userArtistsProcessDataOutput from "../../tests/__mocks__/userArtistsProcessData.json";
-import * as userReleasesResponse from "../../tests/__mocks__/userReleases.json";
-import * as userReleasesProcessDataOutput from "../../tests/__mocks__/userReleasesProcessData.json";
-import * as userRecordingsResponse from "../../tests/__mocks__/userRecordings.json";
-import * as userRecordingsProcessDataOutput from "../../tests/__mocks__/userRecordingsProcessData.json";
+import APIError from "../APIError";
+import APIService from "../APIService";
+import * as userArtistsResponse from "../__mocks__/userArtists.json";
+import * as userArtistsProcessDataOutput from "../__mocks__/userArtistsProcessData.json";
+import * as userReleasesResponse from "../__mocks__/userReleases.json";
+import * as userReleasesProcessDataOutput from "../__mocks__/userReleasesProcessData.json";
+import * as userRecordingsResponse from "../__mocks__/userRecordings.json";
+import * as userRecordingsProcessDataOutput from "../__mocks__/userRecordingsProcessData.json";
 
 const props = {
   user: {

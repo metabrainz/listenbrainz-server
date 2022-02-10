@@ -26,8 +26,8 @@ import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
-} from "../utils/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
+} from "../AlertNotificationsHOC";
+import APIServiceClass from "../APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import SpotifyAPIService from "../brainzplayer/SpotifyAPIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
@@ -35,7 +35,7 @@ import Card from "../components/Card";
 import Loader from "../components/Loader";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import ErrorBoundary from "../ErrorBoundary";
 import PlaylistItemCard from "./PlaylistItemCard";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
@@ -46,7 +46,7 @@ import {
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "./utils";
-import { getPageProps } from "../utils/utils";
+import { getPageProps } from "../utils";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;

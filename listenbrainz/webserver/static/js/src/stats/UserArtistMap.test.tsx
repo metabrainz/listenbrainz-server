@@ -2,10 +2,10 @@ import * as React from "react";
 import { mount, shallow } from "enzyme";
 
 import UserArtistMap, { UserArtistMapProps } from "./UserArtistMap";
-import APIError from "../utils/APIError";
-import * as userArtistMapResponse from "../../tests/__mocks__/userArtistMap.json";
-import * as userArtistMapProcessedDataArtist from "../../tests/__mocks__/userArtistMapProcessDataArtist.json";
-import * as userArtistMapProcessedDataListen from "../../tests/__mocks__/userArtistMapProcessDataListen.json";
+import APIError from "../APIError";
+import * as userArtistMapResponse from "../__mocks__/userArtistMap.json";
+import * as userArtistMapProcessedDataArtist from "../__mocks__/userArtistMapProcessDataArtist.json";
+import * as userArtistMapProcessedDataListen from "../__mocks__/userArtistMapProcessDataListen.json";
 
 const props: UserArtistMapProps = {
   user: {

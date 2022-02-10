@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import APIService from "./utils/APIService";
+import APIService from "./APIService";
 
 export type GlobalAppContextT = {
   APIService: APIService;

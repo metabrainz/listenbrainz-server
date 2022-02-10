@@ -14,17 +14,17 @@ import {
   capitalize,
   toPairs,
 } from "lodash";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../utils/AlertNotificationsHOC";
+} from "../AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
-import { getPageProps } from "../utils/utils";
+import APIServiceClass from "../APIService";
+import { getPageProps } from "../utils";
 import { getEntityLink } from "../stats/utils";
 import ComponentToImage from "./ComponentToImage";
 

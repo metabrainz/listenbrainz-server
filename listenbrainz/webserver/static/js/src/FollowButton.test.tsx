@@ -22,7 +22,7 @@ import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 import FollowButton from "./FollowButton";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import APIService from "./utils/APIService";
+import APIService from "./APIService";
 
 const user = {
   id: 1,
