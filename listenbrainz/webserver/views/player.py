@@ -147,6 +147,6 @@ def load_release(release_mbid):
     fetch_playlist_recording_metadata(playlist)
 
     return render_template(
-        "index/entity-pages/release-page.html",
+        "entity-pages/release-page.html",
         props={"playlist": ujson.dumps(serialize_jspf(playlist)) }
     )
