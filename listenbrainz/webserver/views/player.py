@@ -55,3 +55,13 @@ def load():
         props=ujson.dumps(props),
         user=current_user
     )
+
+@player_bp.route("/instant", methods=["GET"])
+def load_instant():
+    """
+    """
+
+    return render_template(
+        "index/player.html",
+        props=ujson.dumps(jspf)
+    )
