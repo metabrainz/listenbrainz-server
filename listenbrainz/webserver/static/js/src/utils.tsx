@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import * as timeago from "time-ago";
 import SpotifyPlayer from "./brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "./brainzplayer/YoutubePlayer";
-import SpotifyAPIService from "./brainzplayer/SpotifyAPIService";
+import SpotifyAPIService from "./SpotifyAPIService";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
