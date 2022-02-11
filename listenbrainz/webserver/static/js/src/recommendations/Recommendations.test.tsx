@@ -1,10 +1,10 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import * as recommendationProps from "../__mocks__/recommendations.json";
+import * as recommendationProps from "../../tests/__mocks__/recommendations.json";
 
 import Recommendations, { RecommendationsProps } from "./Recommendations";
-import * as recommendationPropsOne from "../__mocks__/recommendationPropsOne.json";
+import * as recommendationPropsOne from "../../tests/__mocks__/recommendationPropsOne.json";
 
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import APIService from "../APIService";
