@@ -1,12 +1,12 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
-import BrainzPlayer, { DataSourceType } from "./brainzplayer/BrainzPlayer";
-import SoundcloudPlayer from "./brainzplayer/SoundcloudPlayer";
-import YoutubePlayer from "./brainzplayer/YoutubePlayer";
-import SpotifyPlayer from "./brainzplayer/SpotifyPlayer";
-import APIService from "./APIService";
-import GlobalAppContext from "./GlobalAppContext";
+import BrainzPlayer, { DataSourceType } from "../../src/brainzplayer/BrainzPlayer";
+import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
+import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
+import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
+import APIService from "../../src/APIService";
+import GlobalAppContext from "../../src/GlobalAppContext";
 
 const props = {
   listens: [],
