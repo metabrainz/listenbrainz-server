@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SoundcloudPlayer renders 1`] = `
+<SoundcloudPlayer
+  handleError={[Function]}
+  handleSuccess={[Function]}
+  handleWarning={[Function]}
+  onDurationChange={[Function]}
+  onInvalidateDataSource={[Function]}
+  onPlayerPausedChange={[Function]}
+  onProgressChange={[Function]}
+  onTrackEnd={[Function]}
+  onTrackInfoChange={[Function]}
+  onTrackNotFound={[Function]}
+  playerPaused={false}
+  show={true}
+>
+  <div
+    className="soundcloud "
+  >
+    <iframe
+      allow="autoplay"
+      frameBorder="no"
+      height="420px"
+      id="soundcloud-iframe"
+      scrolling="no"
+      src="https://w.soundcloud.com/player/?auto_play=false"
+      title="Soundcloud player"
+      width="100%"
+    />
+  </div>
+</SoundcloudPlayer>
+`;
