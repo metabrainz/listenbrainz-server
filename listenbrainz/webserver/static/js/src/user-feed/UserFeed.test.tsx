@@ -25,7 +25,7 @@ import { sortBy } from "lodash";
 import UserFeedPage from "./UserFeed";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import BrainzPlayer from "../BrainzPlayer";
-import * as timelineProps from "./__mocks__/timelineProps.json";
+import * as timelineProps from "../../tests/__mocks__/timelineProps.json";
 import GlobalAppContext from "../GlobalAppContext";
 import APIService from "../APIService";
 

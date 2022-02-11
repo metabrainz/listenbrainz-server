@@ -25,7 +25,7 @@ import UserSocialNetwork from "./UserSocialNetwork";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 
-import * as userSocialNetworkProps from "./__mocks__/userSocialNetworkProps.json";
+import * as userSocialNetworkProps from "../../tests/__mocks__/userSocialNetworkProps.json";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import APIService from "../APIService";
 

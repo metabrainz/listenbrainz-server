@@ -3,12 +3,12 @@ import { mount, shallow } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 import LastFmImporter, { LASTFM_RETRIES } from "./LastFMImporter";
 // Mock data to test functions
-import * as page from "./__mocks__/page.json";
-import * as getInfo from "./__mocks__/getInfo.json";
-import * as getInfoNoPlayCount from "./__mocks__/getInfoNoPlayCount.json";
+import * as page from "../tests/__mocks__/page.json";
+import * as getInfo from "../tests/__mocks__/getInfo.json";
+import * as getInfoNoPlayCount from "../tests/__mocks__/getInfoNoPlayCount.json";
 // Output for the mock data
-import * as encodeScrobbleOutput from "./__mocks__/encodeScrobbleOutput.json";
-import * as lastFMPrivateUser from "./__mocks__/lastFMPrivateUser.json";
+import * as encodeScrobbleOutput from "../tests/__mocks__/encodeScrobbleOutput.json";
+import * as lastFMPrivateUser from "../tests/__mocks__/lastFMPrivateUser.json";
 
 jest.useFakeTimers();
 const props = {
