@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SpotifyPlayer renders 1`] = `
+<SpotifyPlayer
+  handleError={[Function]}
+  handleSuccess={[Function]}
+  handleWarning={[Function]}
+  onDurationChange={[Function]}
+  onInvalidateDataSource={[Function]}
+  onPlayerPausedChange={[Function]}
+  onProgressChange={[Function]}
+  onTrackEnd={[Function]}
+  onTrackInfoChange={[Function]}
+  onTrackNotFound={[Function]}
+  playerPaused={false}
+  refreshSpotifyToken={[Function]}
+  show={true}
+  spotifyUser={
+    Object {
+      "access_token": "heyo",
+      "permission": Array [
+        "user-read-currently-playing",
+      ],
+    }
+  }
+>
+  <div />
+</SpotifyPlayer>
+`;
