@@ -11,7 +11,7 @@ import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../APIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";

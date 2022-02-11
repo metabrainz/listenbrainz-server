@@ -17,7 +17,7 @@ import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./AlertNotificationsHOC";
+} from "./notifications/AlertNotificationsHOC";
 
 import Pill from "./components/Pill";
 import APIServiceClass from "./APIService";
