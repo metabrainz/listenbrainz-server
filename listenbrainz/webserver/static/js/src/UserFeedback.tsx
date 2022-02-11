@@ -25,7 +25,7 @@ import BrainzPlayer from "./brainzplayer/BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
-import PinRecordingModal from "./PinRecordingModal";
+import PinRecordingModal from "./pins/PinRecordingModal";
 import { getPageProps, handleNavigationClickEvent } from "./utils";
 import ListenControl from "./listens/ListenControl";
 

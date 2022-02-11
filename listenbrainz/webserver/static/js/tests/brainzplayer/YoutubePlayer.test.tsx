@@ -1,9 +1,9 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import YoutubePlayer from "./brainzplayer/YoutubePlayer";
-import { DataSourceTypes } from "./brainzplayer/BrainzPlayer";
-import APIService from "./APIService";
+import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
+import { DataSourceTypes } from "../../src/brainzplayer/BrainzPlayer";
+import APIService from "../../src/APIService";
 
 const props = {
   show: true,

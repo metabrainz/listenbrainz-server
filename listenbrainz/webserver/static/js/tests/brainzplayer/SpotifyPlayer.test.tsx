@@ -1,9 +1,9 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import SpotifyPlayer from "./brainzplayer/SpotifyPlayer";
-import APIService from "./APIService";
-import { DataSourceTypes } from "./brainzplayer/BrainzPlayer";
+import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
+import APIService from "../../src/APIService";
+import { DataSourceTypes } from "../../src/brainzplayer/BrainzPlayer";
 
 const props = {
   spotifyUser: {
