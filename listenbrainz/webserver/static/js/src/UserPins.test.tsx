@@ -7,8 +7,8 @@ import { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 import BrainzPlayer from "./BrainzPlayer";
 
-import * as pinsPageProps from "./__mocks__/userPinsProps.json";
-import * as APIPins from "./__mocks__/pinProps.json";
+import * as pinsPageProps from "../tests/__mocks__/userPinsProps.json";
+import * as APIPins from "../tests/__mocks__/pinProps.json";
 
 import { getListenablePin } from "./utils";
 
