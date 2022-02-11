@@ -15,7 +15,7 @@ import {
 } from "../AlertNotificationsHOC";
 
 import APIServiceClass from "../APIService";
-import BrainzPlayer from "../BrainzPlayer";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
 import { getPageProps } from "../utils";
 import ListenCard from "../listens/ListenCard";

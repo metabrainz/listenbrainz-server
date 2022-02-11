@@ -21,7 +21,7 @@ import {
 
 import Pill from "./components/Pill";
 import APIServiceClass from "./APIService";
-import BrainzPlayer from "./BrainzPlayer";
+import BrainzPlayer from "./brainzplayer/BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";

@@ -1,10 +1,10 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
-import BrainzPlayer, { DataSourceType } from "./BrainzPlayer";
-import SoundcloudPlayer from "./SoundcloudPlayer";
-import YoutubePlayer from "./YoutubePlayer";
-import SpotifyPlayer from "./SpotifyPlayer";
+import BrainzPlayer, { DataSourceType } from "./brainzplayer/BrainzPlayer";
+import SoundcloudPlayer from "./brainzplayer/SoundcloudPlayer";
+import YoutubePlayer from "./brainzplayer/YoutubePlayer";
+import SpotifyPlayer from "./brainzplayer/SpotifyPlayer";
 import APIService from "./APIService";
 import GlobalAppContext from "./GlobalAppContext";
 

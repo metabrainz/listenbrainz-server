@@ -5,7 +5,7 @@ import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
-import BrainzPlayer from "./BrainzPlayer";
+import BrainzPlayer from "./brainzplayer/BrainzPlayer";
 
 import * as pinsPageProps from "../tests/__mocks__/userPinsProps.json";
 import * as APIPins from "../tests/__mocks__/pinProps.json";

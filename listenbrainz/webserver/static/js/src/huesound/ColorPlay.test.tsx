@@ -4,7 +4,7 @@ import * as React from "react";
 import { mount } from "enzyme";
 import { GlobalAppContextT } from "../GlobalAppContext";
 import APIService from "../APIService";
-import BrainzPlayer from "../BrainzPlayer";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import * as colorPlayProps from "../../tests/__mocks__/colorPlayProps.json";
 import ColorPlay from "./ColorPlay";
 import ColorWheel from "./ColorWheel";
