@@ -173,8 +173,14 @@ def charts(user_name):
         "id": user.id,
     }
 
+    logged_in_user_follows_user = None
+    if current_user.is_authenticated:
+        logged_in_user_follows_user = db_user_relationship.is_following_user(
+            current_user.id, user.id)
+
     props = {
         "user": user_data,
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template(
@@ -195,8 +201,14 @@ def reports(user_name: str):
         "id": user.id,
     }
 
+    logged_in_user_follows_user = None
+    if current_user.is_authenticated:
+        logged_in_user_follows_user = db_user_relationship.is_following_user(
+            current_user.id, user.id)
+
     props = {
         "user": user_data,
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template(
@@ -243,6 +255,11 @@ def playlists(user_name: str):
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
 
+    logged_in_user_follows_user = None
+    if current_user.is_authenticated:
+        logged_in_user_follows_user = db_user_relationship.is_following_user(
+            current_user.id, user.id)
+
     props = {
         "playlists": playlists,
         "user": user_data,
@@ -250,6 +267,7 @@ def playlists(user_name: str):
         "playlist_count": playlist_count,
         "pagination_offset": offset,
         "playlists_per_page": count,
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template(
@@ -290,11 +308,17 @@ def recommendation_playlists(user_name: str):
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
 
+    logged_in_user_follows_user = None
+    if current_user.is_authenticated:
+        logged_in_user_follows_user = db_user_relationship.is_following_user(
+            current_user.id, user.id)
+
     props = {
         "playlists": playlists,
         "user": user_data,
         "active_section": "recommendations",
         "playlist_count": playlist_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template(
@@ -341,11 +365,17 @@ def collaborations(user_name: str):
     for playlist in colalborative_playlists:
         playlists.append(serialize_jspf(playlist))
 
+    logged_in_user_follows_user = None
+    if current_user.is_authenticated:
+        logged_in_user_follows_user = db_user_relationship.is_following_user(
+            current_user.id, user.id)
+
     props = {
         "playlists": playlists,
         "user": user_data,
         "active_section": "collaborations",
         "playlist_count": playlist_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template(
@@ -370,11 +400,17 @@ def pins(user_name: str):
     pins = [dict(pin) for pin in fetch_track_metadata_for_items(pins)]
     total_count = get_pin_count_for_user(user_id=user.id)
 
+    logged_in_user_follows_user = None
+    if current_user.is_authenticated:
+        logged_in_user_follows_user = db_user_relationship.is_following_user(
+            current_user.id, user.id)
+
     props = {
         "user": user_data,
         "pins": pins,
         "profile_url": url_for('user.profile', user_name=user_name),
-        "total_count": total_count
+        "total_count": total_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template(
@@ -484,11 +520,17 @@ def feedback(user_name: str):
     feedback_count = get_feedback_count_for_user(user.id, score)
     feedback = get_feedback_for_user(user.id, count, offset, score, True)
 
+    logged_in_user_follows_user = None
+    if current_user.is_authenticated:
+        logged_in_user_follows_user = db_user_relationship.is_following_user(
+            current_user.id, user.id)
+
     props = {
         "feedback": [f.to_api() for f in feedback],
         "feedback_count": feedback_count,
         "user": user_data,
         "active_section": "feedback",
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template(
