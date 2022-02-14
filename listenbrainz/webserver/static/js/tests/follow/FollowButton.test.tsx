@@ -20,9 +20,11 @@
 
 import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
-import FollowButton from "./FollowButton";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import APIService from "./APIService";
+import FollowButton from "../../src/follow/FollowButton";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/GlobalAppContext";
+import APIService from "../../src/APIService";
 
 const user = {
   id: 1,

@@ -21,7 +21,7 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 import UserPageHeading from "./UserPageHeading";
-import FollowButton from "./FollowButton";
+import FollowButton from "./follow/FollowButton";
 import ReportUserButton from "./report-user/ReportUser";
 import ReportUserModal from "./report-user/ReportUserModal";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";

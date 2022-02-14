@@ -1,7 +1,9 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import ListenCountCard, { ListenCountCardProps } from "./ListenCountCard";
+import ListenCountCard, {
+  ListenCountCardProps,
+} from "../../src/listens/ListenCountCard";
 
 const props: ListenCountCardProps = {
   listenCount: 100,
