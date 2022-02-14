@@ -1,7 +1,7 @@
 import subprocess
 import tarfile
 import time
-from typing import List, Dict
+from typing import Dict, Tuple, Optional
 
 import psycopg2
 import psycopg2.sql
@@ -10,6 +10,7 @@ import ujson
 from brainzutils import cache
 from psycopg2.errors import UntranslatableCharacter
 from psycopg2.extras import execute_values
+from sqlalchemy import text
 
 from listenbrainz.db import timescale, DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
@@ -50,8 +51,7 @@ class TimescaleListenStore:
     def set_empty_values_for_user(self, user_id: int):
         """When a user is created, set the timestamp keys and insert an entry in the listen count
          table so that we can avoid the expensive lookup for a brand new user."""
-        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", 0)
-        query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, 0, 0, NOW())"""
+        query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, NULL, NULL, NOW())"""
         with timescale.engine.connect() as connection:
             connection.execute(sqlalchemy.text(query), user_id=user_id)
 
@@ -97,74 +97,20 @@ class TimescaleListenStore:
             cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), total_count, REDIS_USER_LISTEN_COUNT_EXPIRY)
             return total_count
 
-    def update_timestamps_for_user(self, user_id, min_ts, max_ts):
+    def get_timestamps_for_user(self, user_id: int) -> Tuple[Optional[int], Optional[int]]:
+        """ Return the min_ts and max_ts for the given list of users """
+        query = """
+            SELECT COALESCE(min(min_listened_at), 0) AS min_ts
+                 , COALESCE(max(max_listened_at), 0) AS max_ts
+              FROM listen_user_metadata
+             WHERE user_id = :user_id 
         """
-            If any code adds/removes listens it should update the timestamps for the user
-            using this function, so that they values in redis are always current.
-
-            If the given timestamps represent a new min or max value, these values will be
-            saved in the cache, otherwise the user timestamps remain unchanged.
-        """
-
-        cached_min_ts, cached_max_ts = self.get_timestamps_for_user(user_id)
-        if min_ts < cached_min_ts or max_ts > cached_max_ts:
-            if min_ts < cached_min_ts:
-                cached_min_ts = min_ts
-            if max_ts > cached_max_ts:
-                cached_max_ts = max_ts
-            cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "%d,%d" % (cached_min_ts, cached_max_ts), expirein=0)
-
-    def get_timestamps_for_user(self, user_id: int):
-        """ Return the max_ts and min_ts for a given user """
-        tss = cache.get(REDIS_USER_TIMESTAMPS + str(user_id))
-        if tss:
-            (min_ts, max_ts) = tss.split(",")
-            min_ts = int(min_ts)
-            max_ts = int(max_ts)
-        else:
-            t0 = time.monotonic()
-            min_ts = self._select_single_timestamp(True, user_id)
-            max_ts = self._select_single_timestamp(False, user_id)
-            cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "%d,%d" % (min_ts, max_ts), expirein=0)
-            # intended for production monitoring
-            self.log.info("timestamps %s %.2fs" % (user_id, time.monotonic() - t0))
-
-        return min_ts, max_ts
-
-    def _select_single_timestamp(self, select_min_timestamp, user_id):
-        """ Fetch a single timestamp (min or max) from the listenstore for a given user.
-
-            Args:
-                select_min_timestamp: boolean. Select the min timestamp if true, max if false.
-                user_id: the user for whom to fetch the timestamp.
-
-            Returns:
-
-                The selected timestamp for the user or 0 if no timestamp was found.
-        """
-
-        function = "max"
-        if select_min_timestamp:
-            function = "min"
-
-        query = """SELECT %s(listened_at) AS ts
-                     FROM listen
-                     WHERE user_id = :user_id""" % function
-        try:
-            with timescale.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text(query), {
-                    "user_id": user_id
-                })
-                row = result.fetchone()
-                if row is None or row['ts'] is None:
-                    return 0
-
-                return row['ts']
-
-        except psycopg2.OperationalError as e:
-            self.log.error("Cannot fetch min/max timestamp: %s" %
-                           str(e), exc_info=True)
-            raise
+        with timescale.engine.connect() as connection:
+            result = connection.execute(text(query), user_id=user_id)
+            row = result.fetchone()
+            if row is None:
+                return 0, 0
+            return row["min_ts"], row["max_ts"]
 
     def get_total_listen_count(self):
         """ Returns the total number of listens stored in the ListenStore.
@@ -219,21 +165,6 @@ class TimescaleListenStore:
 
         conn.commit()
 
-        # update the timestamps for the users
-        user_timestamps = {}
-        for ts, _, _, user_id in inserted_rows:
-            if user_id in user_timestamps:
-                if ts < user_timestamps[user_id][0]:
-                    user_timestamps[user_id][0] = ts
-                if ts > user_timestamps[user_id][1]:
-                    user_timestamps[user_id][1] = ts
-            else:
-                user_timestamps[user_id] = [ts, ts]
-
-        for user in user_timestamps:
-            self.update_timestamps_for_user(
-                user, user_timestamps[user][0], user_timestamps[user][1])
-
         return inserted_rows
 
     def fetch_listens(self, user: Dict, from_ts: int = None, to_ts: int = None, limit: int = DEFAULT_LISTENS_PER_FETCH):
@@ -258,11 +189,11 @@ class TimescaleListenStore:
 
         min_user_ts, max_user_ts = self.get_timestamps_for_user(user["id"])
 
-        if to_ts is None and from_ts is None:
-            to_ts = max_user_ts + 1
-
         if min_user_ts == 0 and max_user_ts == 0:
             return [], min_user_ts, max_user_ts
+
+        if to_ts is None and from_ts is None:
+            to_ts = max_user_ts + 1
 
         window_size = DEFAULT_FETCH_WINDOW
         query = """SELECT listened_at, track_name, user_id, created, data, mm.recording_mbid, release_mbid, artist_mbids

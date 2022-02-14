@@ -16,22 +16,22 @@ SECONDS_IN_A_YEAR = 31536000
 
 
 def delete_listens_update_stats():
-    delete_listens = """
-        DELETE FROM listen l
-         USING listen_delete_metadata ldm
-         WHERE ldm.created < :created
-           AND l.user_id = ldm.user_id
-           AND l.listened_at = ldm.listened_at
-           AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = ldm.recording_msid::text
-    """
-    update_listen_counts = """
-        WITH update_counts AS (
+    delete_listens_and_update_listen_counts = """
+        WITH deleted_listens AS (
+            DELETE FROM listen l
+             USING listen_delete_metadata ldm
+             WHERE ldm.created < :created
+               AND l.user_id = ldm.user_id
+               AND l.listened_at = ldm.listened_at
+               AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = ldm.recording_msid::text
+         RETURNING l.user_id, l.created
+           ), update_counts AS (
             SELECT user_id
                  , count(*) FILTER (WHERE dl.created < lm.created) AS deleted_count
-              FROM listen_delete_metadata dl
+              FROM deleted_listens dl
               JOIN listen_user_metadata lm
              USING (user_id)
-          GROUP BY user_id   
+          GROUP BY user_id
         ) 
             UPDATE listen_user_metadata lm
                SET count = count - deleted_count
@@ -44,7 +44,7 @@ def delete_listens_update_stats():
               FROM listen_delete_metadata dl
               JOIN listen_user_metadata lm
              USING (user_id)
-          GROUP BY user_id, min_listened_at 
+          GROUP BY user_id, min_listened_at
             HAVING min(dl.listened_at) = min_listened_at
         ), calculate_new_min_ts AS (
             SELECT user_id
@@ -68,7 +68,7 @@ def delete_listens_update_stats():
               FROM listen_delete_metadata dl
               JOIN listen_user_metadata lm
              USING (user_id)
-          GROUP BY user_id, max_listened_at 
+          GROUP BY user_id, max_listened_at
             HAVING max(dl.listened_at) = max_listened_at
         ), calculate_new_max_ts AS (
             SELECT user_id
@@ -91,11 +91,8 @@ def delete_listens_update_stats():
     with timescale.engine.begin() as connection:
         created = datetime.now()
 
-        logger.info("Deleting Listens")
-        connection.execute(text(delete_listens), created=created)
-
-        logger.info("Update listens counts affected by deleted listens")
-        connection.execute(text(update_listen_counts))
+        logger.info("Deleting Listens and updating affected listens counts")
+        connection.execute(text(delete_listens_and_update_listen_counts), created=created)
 
         logger.info("Update minimum listen timestamp affected by deleted listens")
         connection.execute(text(update_listen_min_ts))
