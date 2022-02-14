@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import { mount } from "enzyme";
-import { GlobalAppContextT } from "../GlobalAppContext";
-import APIService from "../APIService";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import * as colorPlayProps from "../../tests/__mocks__/colorPlayProps.json";
-import ColorPlay from "./ColorPlay";
-import ColorWheel from "./ColorWheel";
+import { GlobalAppContextT } from "../../src/GlobalAppContext";
+import APIService from "../../src/APIService";
+import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
+import * as colorPlayProps from "../__mocks__/colorPlayProps.json";
+import ColorPlay from "../../src/huesound/ColorPlay";
+import ColorWheel from "../../src/huesound/ColorWheel";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

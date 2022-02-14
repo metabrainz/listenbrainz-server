@@ -2,11 +2,11 @@ import * as React from "react";
 import { shallow, mount } from "enzyme";
 import * as timeago from "time-ago";
 import AsyncSelect from "react-select/async";
-import PlaylistPage from "./Playlist";
-import * as playlistPageProps from "../../tests/__mocks__/playlistPageProps.json";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import APIService from "../APIService";
-import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "./utils";
+import PlaylistPage from "../../src/playlists/Playlist";
+import * as playlistPageProps from "../__mocks__/playlistPageProps.json";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/GlobalAppContext";
+import APIService from "../../src/APIService";
+import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "../../src/playlists/utils";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075

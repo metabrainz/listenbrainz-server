@@ -1,0 +1,90 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SimilarityScore renders correctly for type = 'compact' 1`] = `
+<SimilarityScore
+  similarityScore={0.239745792}
+  type="compact"
+  user={
+    Object {
+      "auth_token": "baz",
+      "name": "test",
+    }
+  }
+>
+  <div
+    className="similarity-score compact"
+    title="Your similarity score with that user"
+  >
+    <div
+      aria-label="Similarity score"
+      aria-valuemax={100}
+      aria-valuemin={0}
+      aria-valuenow={24}
+      className="progress"
+      role="progressbar"
+      tabIndex={0}
+    >
+      <div
+        className="progress-bar red"
+        style={
+          Object {
+            "width": "24%",
+          }
+        }
+      />
+    </div>
+    <p
+      className="small text-muted"
+    >
+      2.4
+      /10
+    </p>
+  </div>
+</SimilarityScore>
+`;
+
+exports[`SimilarityScore renders correctly for type = 'regular' 1`] = `
+<SimilarityScore
+  similarityScore={0.239745792}
+  type="regular"
+  user={
+    Object {
+      "auth_token": "baz",
+      "name": "test",
+    }
+  }
+>
+  <div
+    className="similarity-score regular"
+    title="Your similarity score with that user"
+  >
+    <div
+      aria-label="Similarity score"
+      aria-valuemax={100}
+      aria-valuemin={0}
+      aria-valuenow={24}
+      className="progress"
+      role="progressbar"
+      tabIndex={0}
+    >
+      <div
+        className="progress-bar red"
+        style={
+          Object {
+            "width": "24%",
+          }
+        }
+      />
+    </div>
+    <p
+      className="text-muted"
+    >
+      Your compatibility with 
+      test
+       is 
+      2.4
+      /10
+    </p>
+  </div>
+</SimilarityScore>
+`;

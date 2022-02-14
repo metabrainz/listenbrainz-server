@@ -21,13 +21,13 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import UserSocialNetwork from "./UserSocialNetwork";
-import FollowerFollowingModal from "./FollowerFollowingModal";
-import SimilarUsersModal from "./SimilarUsersModal";
+import UserSocialNetwork from "../../src/follow/UserSocialNetwork";
+import FollowerFollowingModal from "../../src/follow/FollowerFollowingModal";
+import SimilarUsersModal from "../../src/follow/SimilarUsersModal";
 
-import * as userSocialNetworkProps from "../../tests/__mocks__/userSocialNetworkProps.json";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import APIService from "../APIService";
+import * as userSocialNetworkProps from "../__mocks__/userSocialNetworkProps.json";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/GlobalAppContext";
+import APIService from "../../src/APIService";
 
 jest.useFakeTimers();
 
