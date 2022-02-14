@@ -259,7 +259,9 @@ def recalculate_all_user_data():
     .. note::
         **ONLY USE THIS WHEN YOU KNOW WHAT YOU ARE DOING!**
     """
-    ts_recalculate_all_user_data()
+    application = webserver.create_app()
+    with application.app_context():
+        ts_recalculate_all_user_data()
 
 
 @cli.command(name="update_all_user_listen_counts")
