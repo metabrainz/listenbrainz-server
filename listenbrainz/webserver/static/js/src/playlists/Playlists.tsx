@@ -20,7 +20,7 @@ import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import Card from "../components/Card";
