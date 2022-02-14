@@ -32,20 +32,8 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get(url_for('index.data'))
         self.assert200(resp)
 
-    def test_contribute(self):
-        resp = self.client.get(url_for('index.contribute'))
-        self.assert200(resp)
-
-    def test_goals(self):
-        resp = self.client.get(url_for('index.goals'))
-        self.assert200(resp)
-
-    def test_faq(self):
-        resp = self.client.get(url_for('index.faq'))
-        self.assert200(resp)
-
-    def test_roadmap(self):
-        resp = self.client.get(url_for('index.roadmap'))
+    def test_about(self):
+        resp = self.client.get(url_for('index.about'))
         self.assert200(resp)
 
     def test_add_data_info(self):

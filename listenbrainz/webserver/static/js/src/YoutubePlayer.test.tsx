@@ -1,8 +1,8 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import YoutubePlayer from "./YoutubePlayer";
-import { DataSourceTypes } from "./BrainzPlayer";
+import YoutubePlayer from "./brainzplayer/YoutubePlayer";
+import { DataSourceTypes } from "./brainzplayer/BrainzPlayer";
 import APIService from "./APIService";
 
 const props = {
