@@ -1,8 +1,8 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import SoundcloudPlayer from "./brainzplayer/SoundcloudPlayer";
-import { DataSourceTypes } from "./brainzplayer/BrainzPlayer";
+import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
+import { DataSourceTypes } from "../../src/brainzplayer/BrainzPlayer";
 
 const props = {
   show: true,

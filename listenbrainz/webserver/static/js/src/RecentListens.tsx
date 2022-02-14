@@ -21,15 +21,15 @@ import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./AlertNotificationsHOC";
+} from "./notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "./APIService";
 import BrainzPlayer from "./brainzplayer/BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
-import PinRecordingModal from "./PinRecordingModal";
-import PinnedRecordingCard from "./PinnedRecordingCard";
+import PinRecordingModal from "./pins/PinRecordingModal";
+import PinnedRecordingCard from "./pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
   getPageProps,
