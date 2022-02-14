@@ -9,16 +9,16 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./notifications/AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "./APIService";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import BrainzPlayer from "./brainzplayer/BrainzPlayer";
-import ErrorBoundary from "./ErrorBoundary";
-import { getPageProps } from "./utils";
-import ListenCard from "./listens/ListenCard";
-import ListenControl from "./listens/ListenControl";
-import Loader from "./components/Loader";
+import APIServiceClass from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import ErrorBoundary from "../ErrorBoundary";
+import { getPageProps } from "../utils";
+import ListenCard from "../listens/ListenCard";
+import ListenControl from "../listens/ListenControl";
+import Loader from "../components/Loader";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;

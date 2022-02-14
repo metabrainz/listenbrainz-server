@@ -10,10 +10,10 @@ import * as _ from "lodash";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import GlobalAppContext from "./GlobalAppContext";
+import GlobalAppContext from "../GlobalAppContext";
 
-import { countWords } from "./utils";
-import Loader from "./components/Loader";
+import { countWords } from "../utils";
+import Loader from "../components/Loader";
 
 export type CBReviewModalProps = {
   listen: Listen;

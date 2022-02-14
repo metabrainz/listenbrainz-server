@@ -17,7 +17,7 @@
  */
 
 import * as React from "react";
-import GlobalAppContext from "./GlobalAppContext";
+import GlobalAppContext from "../GlobalAppContext";
 import ReportUserModal from "./ReportUserModal";
 
 type ReportUserButtonProps = {
