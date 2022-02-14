@@ -64,6 +64,7 @@ module.exports = function (env, argv) {
       playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
       huesound: path.resolve(jsDir, "src/huesound/ColorPlay.tsx"),
       yearInMusic: path.resolve(jsDir, "src/year-in-music/YearInMusic.tsx"),
+      homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
       recommendations: path.resolve(
         jsDir,
         "src/recommendations/Recommendations.tsx"

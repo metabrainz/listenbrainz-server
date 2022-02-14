@@ -2,8 +2,8 @@ import * as React from "react";
 import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 
-import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
-import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidResponse.json";
+import * as recentListensPropsOneListen from "../tests/__mocks__/recentListensPropsOneListen.json";
+import * as getFeedbackByMsidResponse from "../tests/__mocks__/getFeedbackByMsidResponse.json";
 import GlobalAppContext from "./GlobalAppContext";
 import APIService from "./APIService";
 import RecentListens, { RecentListensProps } from "./RecentListens";

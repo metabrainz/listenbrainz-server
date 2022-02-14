@@ -33,22 +33,24 @@ SEARCH_USER_LIMIT = 100  # max number of users to return in search username resu
 
 @index_bp.route("/")
 def index():
-
     if _ts:
-        # get total listen count
         try:
             listen_count = _ts.get_total_listen_count()
+            user_count = format(int(_get_user_count()), ',d')
         except Exception as e:
             current_app.logger.error('Error while trying to get total listen count: %s', str(e))
             listen_count = None
+            user_count = 'Unknown'
+
     else:
         listen_count = None
+        user_count = 'Unknown'
 
     return render_template(
         "index/index.html",
-        listen_count=listen_count,
+        listen_count=format(int(listen_count), ",d") if listen_count else "0",
+        user_count=user_count,
     )
-
 
 @index_bp.route("/import/")
 def import_data():
@@ -68,11 +70,6 @@ def data():
     return render_template("index/data.html")
 
 
-@index_bp.route("/contribute/")
-def contribute():
-    return render_template("index/contribute.html")
-
-
 @index_bp.route("/add-data/")
 def add_data_info():
     return render_template("index/add-data.html")
@@ -83,24 +80,14 @@ def import_data_info():
     return render_template("index/import-data.html")
 
 
-@index_bp.route("/goals/")
-def goals():
-    return render_template("index/goals.html")
-
-
-@index_bp.route("/faq/")
-def faq():
-    return render_template("index/faq.html")
-
-
 @index_bp.route("/lastfm-proxy/")
 def proxy():
     return render_template("index/lastfm-proxy.html")
 
 
-@index_bp.route("/roadmap/")
-def roadmap():
-    return render_template("index/roadmap.html")
+@index_bp.route("/about/")
+def about():
+    return render_template("index/about.html")
 
 
 @index_bp.route("/current-status/")
