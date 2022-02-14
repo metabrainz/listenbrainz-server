@@ -444,12 +444,14 @@ def delete_listens_history(musicbrainz_id):
     listens_importer.update_latest_listened_at(user.id, ExternalServiceType.LASTFM, 0)
     db_stats.delete_user_stats(user.id)
 
+
 def logged_in_user_follows_user(user):
     if current_user.is_authenticated:
         return db_user_relationship.is_following_user(
             current_user.id, user.id
         )
     return None
+
 
 @user_bp.route("/<user_name>/feedback/")
 @web_listenstore_needed
