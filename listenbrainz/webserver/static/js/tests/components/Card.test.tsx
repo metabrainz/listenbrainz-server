@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import Card from "./Card";
+import Card from "../../src/components/Card";
 
 describe("Card", () => {
   it("renders correctly", () => {

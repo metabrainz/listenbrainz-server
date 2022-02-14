@@ -1,8 +1,8 @@
 import * as React from "react";
 import { mount } from "enzyme";
-import SimilarUsersModal from "./SimilarUsersModal";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import APIService from "../APIService";
+import SimilarUsersModal from "../../src/follow/SimilarUsersModal";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/GlobalAppContext";
+import APIService from "../../src/APIService";
 
 const props = {
   user: { name: "shivam-kapila" },

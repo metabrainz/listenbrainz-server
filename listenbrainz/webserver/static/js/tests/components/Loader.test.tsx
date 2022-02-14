@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import Loader from "./Loader";
+import Loader from "../../src/components/Loader";
 
 const ChildComponent = () => {
   return <div>Child Component</div>;

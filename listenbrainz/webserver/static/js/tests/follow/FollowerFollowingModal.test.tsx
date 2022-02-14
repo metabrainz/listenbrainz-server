@@ -20,9 +20,9 @@
 
 import * as React from "react";
 import { mount } from "enzyme";
-import FollowerFollowingModal from "./FollowerFollowingModal";
-import APIService from "../APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import FollowerFollowingModal from "../../src/follow/FollowerFollowingModal";
+import APIService from "../../src/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/GlobalAppContext";
 
 const props = {
   user: { name: "foobar" },
