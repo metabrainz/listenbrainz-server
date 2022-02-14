@@ -13,7 +13,7 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
 import Bar from "./Bar";
 import Loader from "../components/Loader";

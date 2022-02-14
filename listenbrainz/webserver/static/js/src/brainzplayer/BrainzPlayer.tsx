@@ -26,7 +26,7 @@ import {
   overwriteMediaSession,
   updateMediaSession,
   updateWindowTitle,
-} from "../Notifications";
+} from "../notifications/Notifications";
 
 export type DataSourceType = {
   name: string;

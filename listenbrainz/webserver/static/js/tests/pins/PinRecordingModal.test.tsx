@@ -1,9 +1,9 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import PinRecordingModal from "./PinRecordingModal";
-import APIServiceClass from "./APIService";
-import GlobalAppContext from "./GlobalAppContext";
+import PinRecordingModal from "../../src/pins/PinRecordingModal";
+import APIServiceClass from "../../src/APIService";
+import GlobalAppContext from "../../src/GlobalAppContext";
 
 const recordingToPin: Listen = {
   listened_at: 1605927742,

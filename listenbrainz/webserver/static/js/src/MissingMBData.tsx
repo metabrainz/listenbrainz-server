@@ -9,7 +9,7 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./AlertNotificationsHOC";
+} from "./notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";

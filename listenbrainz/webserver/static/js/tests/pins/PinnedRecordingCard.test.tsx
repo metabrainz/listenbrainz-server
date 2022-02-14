@@ -3,10 +3,10 @@ import { mount, shallow } from "enzyme";
 
 import PinnedRecordingCard, {
   PinnedRecordingCardProps,
-} from "./PinnedRecordingCard";
-import * as utils from "./utils";
-import APIServiceClass from "./APIService";
-import GlobalAppContext from "./GlobalAppContext";
+} from "../../src/pins/PinnedRecordingCard";
+import * as utils from "../../src/utils";
+import APIServiceClass from "../../src/APIService";
+import GlobalAppContext from "../../src/GlobalAppContext";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
