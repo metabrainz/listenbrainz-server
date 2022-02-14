@@ -9,11 +9,11 @@ import {
   preciseTimestamp,
   getListenablePin,
   pinnedRecordingToListen,
-} from "./utils";
-import GlobalAppContext from "./GlobalAppContext";
-import Card from "./components/Card";
-import ListenControl from "./listens/ListenControl";
-import ListenCard from "./listens/ListenCard";
+} from "../utils";
+import GlobalAppContext from "../GlobalAppContext";
+import Card from "../components/Card";
+import ListenControl from "../listens/ListenControl";
+import ListenCard from "../listens/ListenCard";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 

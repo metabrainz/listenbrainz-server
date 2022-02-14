@@ -17,7 +17,7 @@ import RecentListens, {
   RecentListensProps,
   RecentListensState,
 } from "./RecentListens";
-import PinRecordingModal from "./PinRecordingModal";
+import PinRecordingModal from "./pins/PinRecordingModal";
 import CBReviewModal from "./CBReviewModal";
 
 // Font Awesome generates a random hash ID for each icon everytime.

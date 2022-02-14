@@ -21,7 +21,7 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../APIService";
 import { getPageProps } from "../utils";
