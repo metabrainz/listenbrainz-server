@@ -26,7 +26,7 @@ import { isEmpty, isNil } from "lodash";
 import FollowButton from "./FollowButton";
 import APIService from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import ReportUserButton from "./ReportUser";
+import ReportUserButton from "./report-user/ReportUser";
 import { getPageProps } from "./utils";
 
 const UserPageHeading = ({
