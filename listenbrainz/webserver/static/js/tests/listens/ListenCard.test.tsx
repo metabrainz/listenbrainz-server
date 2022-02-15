@@ -1,11 +1,11 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import ListenCard, { ListenCardProps } from "./ListenCard";
-import * as utils from "../utils";
-import APIServiceClass from "../APIService";
-import GlobalAppContext from "../GlobalAppContext";
-import RecommendationControl from "../recommendations/RecommendationControl";
+import ListenCard, { ListenCardProps } from "../../src/listens/ListenCard";
+import * as utils from "../../src/utils";
+import APIServiceClass from "../../src/APIService";
+import GlobalAppContext from "../../src/GlobalAppContext";
+import RecommendationControl from "../../src/recommendations/RecommendationControl";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075

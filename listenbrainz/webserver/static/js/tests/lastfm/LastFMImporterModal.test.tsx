@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import LastFMImporterModal from "./LastFMImporterModal";
+import LastFMImporterModal from "../../src/lastfm/LastFMImporterModal";
 
 const props = {
   disable: false,

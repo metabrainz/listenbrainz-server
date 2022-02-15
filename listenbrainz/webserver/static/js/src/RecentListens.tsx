@@ -39,7 +39,7 @@ import {
   getReleaseMBID,
   getReleaseGroupMBID,
 } from "./utils";
-import CBReviewModal from "./CBReviewModal";
+import CBReviewModal from "./cb-review/CBReviewModal";
 import ListenControl from "./listens/ListenControl";
 
 export type RecentListensProps = {

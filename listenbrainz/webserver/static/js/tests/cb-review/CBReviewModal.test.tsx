@@ -1,12 +1,12 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
-import APIServiceClass from "./APIService";
-import GlobalAppContext from "./GlobalAppContext";
+import APIServiceClass from "../../src/APIService";
+import GlobalAppContext from "../../src/GlobalAppContext";
 
-import * as lookupMBRelease from "../tests/__mocks__/lookupMBRelease.json";
-import * as lookupMBReleaseFromTrack from "../tests/__mocks__/lookupMBReleaseFromTrack.json";
+import * as lookupMBRelease from "../__mocks__/lookupMBRelease.json";
+import * as lookupMBReleaseFromTrack from "../__mocks__/lookupMBReleaseFromTrack.json";
 
-import CBReviewModal from "./CBReviewModal";
+import CBReviewModal from "../../src/cb-review/CBReviewModal";
 
 const listen: Listen = {
   track_metadata: {
