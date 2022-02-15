@@ -16,6 +16,7 @@ SECONDS_IN_A_YEAR = 31536000
 
 
 def delete_listens_update_stats():
+    # count deleted listens, checked created and update listen counts
     delete_listens_and_update_listen_counts = """
         WITH deleted_listens AS (
             DELETE FROM listen l
@@ -27,6 +28,8 @@ def delete_listens_update_stats():
          RETURNING l.user_id, l.created
            ), update_counts AS (
             SELECT user_id
+                 -- count only listens which were created earlier than the the existing count high
+                 -- watermark in listen metadata table
                  , count(*) FILTER (WHERE dl.created < lm.created) AS deleted_count
               FROM deleted_listens dl
               JOIN listen_user_metadata lm
@@ -38,52 +41,62 @@ def delete_listens_update_stats():
               FROM update_counts uc
              WHERE lm.user_id = uc.user_id
     """
+
+    # check for which users the listen of minimum listened_at was deleted, for those users
+    # calculate new minimum listened_at
     update_listen_min_ts = """
-        WITH update_min_ts AS (
+        WITH update_ts AS (
             SELECT user_id, min_listened_at
               FROM listen_delete_metadata dl
               JOIN listen_user_metadata lm
              USING (user_id)
           GROUP BY user_id, min_listened_at
             HAVING min(dl.listened_at) = min_listened_at
-        ), calculate_new_min_ts AS (
+        ), calculate_new_ts AS (
             SELECT user_id
-                 , new_ts.min_listened_ts AS new_min_listened_at
-              FROM update_min_ts u
+                 , new_ts.min_listened_ts AS new_listened_at
+              FROM update_ts u
               JOIN LATERAL (
                     SELECT min(listened_at) AS min_listened_ts
                       FROM listen l
                      WHERE l.user_id = u.user_id
+                       -- new minimum will be greater than the last one
+                       AND l.listened_at >= u.min_listened_at
                    ) AS new_ts
                 ON TRUE
         )
             UPDATE listen_user_metadata lm
-               SET min_listened_at = new_min_listened_at
-              FROM calculate_new_min_ts mt
+               SET min_listened_at = new_listened_at
+              FROM calculate_new_ts mt
              WHERE lm.user_id = mt.user_id
     """
+
+    # check for which users the listen of maximum listened_at was deleted, for those users
+    # calculate new maximum listened_at
     update_listen_max_ts = """
-        WITH update_max_ts AS (
+        WITH update_ts AS (
             SELECT user_id, max_listened_at
               FROM listen_delete_metadata dl
               JOIN listen_user_metadata lm
              USING (user_id)
           GROUP BY user_id, max_listened_at
             HAVING max(dl.listened_at) = max_listened_at
-        ), calculate_new_max_ts AS (
+        ), calculate_new_ts AS (
             SELECT user_id
-                 , new_ts.max_listened_ts AS new_max_listened_at
-              FROM update_max_ts u
+                 , new_ts.max_listened_ts AS new_listened_at
+              FROM update_ts u
               JOIN LATERAL (
                     SELECT max(listened_at) AS max_listened_ts
                       FROM listen l
                      WHERE l.user_id = u.user_id
+                       -- new maximum will be lesser than the last one
+                       AND l.listened_at <= u.max_listened_at
                    ) AS new_ts
                 ON TRUE
         )
             UPDATE listen_user_metadata lm
-               SET max_listened_at = new_max_listened_at
-              FROM calculate_new_max_ts mt
+               SET max_listened_at = new_listened_at
+              FROM calculate_new_ts mt
              WHERE lm.user_id = mt.user_id
     """
     delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE created < :created"
