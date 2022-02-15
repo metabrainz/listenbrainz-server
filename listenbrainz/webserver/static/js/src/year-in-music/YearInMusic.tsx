@@ -16,12 +16,12 @@ import {
 } from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import BrainzPlayer from "../BrainzPlayer";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../APIService";
 import { getPageProps } from "../utils";
@@ -35,7 +35,7 @@ import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../playlists/utils";
-import FollowButton from "../FollowButton";
+import FollowButton from "../follow/FollowButton";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
