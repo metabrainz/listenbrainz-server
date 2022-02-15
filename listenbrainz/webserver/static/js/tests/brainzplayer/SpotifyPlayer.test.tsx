@@ -2,7 +2,7 @@ import * as React from "react";
 import { mount, shallow } from "enzyme";
 
 import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
-import APIService from "../../src/APIService";
+import APIService from "../../src/utils/APIService";
 import { DataSourceTypes } from "../../src/brainzplayer/BrainzPlayer";
 
 const props = {

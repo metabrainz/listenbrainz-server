@@ -5,8 +5,8 @@ import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
 import { io } from "socket.io-client";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import APIServiceClass from "./APIService";
+import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
+import APIServiceClass from "./utils/APIService";
 
 import * as recentListensProps from "../tests/__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "../tests/__mocks__/recentListensPropsTooManyListens.json";

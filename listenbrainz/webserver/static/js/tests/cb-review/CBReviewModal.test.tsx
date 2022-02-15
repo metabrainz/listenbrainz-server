@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
-import APIServiceClass from "../../src/APIService";
-import GlobalAppContext from "../../src/GlobalAppContext";
+import APIServiceClass from "../../src/utils/APIService";
+import GlobalAppContext from "../../src/utils/GlobalAppContext";
 
 import * as lookupMBRelease from "../__mocks__/lookupMBRelease.json";
 import * as lookupMBReleaseFromTrack from "../__mocks__/lookupMBReleaseFromTrack.json";
