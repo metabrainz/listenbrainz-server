@@ -6,7 +6,7 @@ import { faMeh } from "@fortawesome/free-solid-svg-icons";
 import { faMeh as faMehRegular } from "@fortawesome/free-regular-svg-icons";
 import RecommendationControl, {
   RecommendationControlProps,
-} from "./RecommendationControl";
+} from "../../src/recommendations/RecommendationControl";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

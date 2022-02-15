@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { mount } from "enzyme";
-import { GlobalAppContextT } from "../../src/GlobalAppContext";
-import APIService from "../../src/APIService";
+import { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
 import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 import * as colorPlayProps from "../__mocks__/colorPlayProps.json";
 import ColorPlay from "../../src/huesound/ColorPlay";

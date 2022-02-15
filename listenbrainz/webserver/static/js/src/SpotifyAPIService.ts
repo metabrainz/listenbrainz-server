@@ -3,7 +3,7 @@
 
 /* eslint-disable camelcase */
 
-import { searchForSpotifyTrack } from "./utils";
+import { searchForSpotifyTrack } from "./utils/utils";
 
 export default class SpotifyAPIService {
   static async checkStatus(response: Response) {

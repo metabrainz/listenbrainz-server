@@ -4,8 +4,8 @@ import * as timeago from "time-ago";
 import AsyncSelect from "react-select/async";
 import PlaylistPage from "../../src/playlists/Playlist";
 import * as playlistPageProps from "../__mocks__/playlistPageProps.json";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/GlobalAppContext";
-import APIService from "../../src/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
 import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "../../src/playlists/utils";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

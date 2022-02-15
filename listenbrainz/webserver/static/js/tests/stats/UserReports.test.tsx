@@ -1,7 +1,7 @@
 import * as React from "react";
 import { shallow } from "enzyme";
 
-import UserReports, { UserReportsProps } from "./UserReports";
+import UserReports, { UserReportsProps } from "../../src/stats/UserReports";
 
 const props: UserReportsProps = {
   user: {

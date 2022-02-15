@@ -6,8 +6,8 @@ import UserFeedback, {
   UserFeedbackProps,
   UserFeedbackState,
 } from "./UserFeedback";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import APIService from "./APIService";
+import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
+import APIService from "./utils/APIService";
 import * as userFeedbackProps from "../tests/__mocks__/userFeedbackProps.json";
 import * as userFeedbackAPIResponse from "../tests/__mocks__/userFeedbackAPIResponse.json";
 import ListenCard from "./listens/ListenCard";
