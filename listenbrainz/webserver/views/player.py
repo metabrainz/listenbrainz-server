@@ -90,7 +90,7 @@ def load_instant():
 
     recording_mbids = []
     for mbid in recordings.split(","):
-        mbid_clean = mbid.strip() 
+        mbid_clean = mbid.strip()
         if not is_valid_uuid(mbid_clean):
             raise BadRequest(f"Recording mbid {mbid} is not valid.")
 
@@ -114,7 +114,7 @@ def load_instant():
 
     return render_template(
         "player/player-page.html",
-        props=ujson.dumps({ "playlist": serialize_jspf(playlist) })
+        props=ujson.dumps({"playlist": serialize_jspf(playlist)})
     )
 
 
@@ -137,7 +137,7 @@ def load_release(release_mbid):
         release = get_release_by_mbid(release_mbid, includes=["media", "artists"])
         if not release:
             raise NotFound("This release was not found in our database. It may not have replicated to this server yet.")
-            
+
         name = "Release %s by %s" % (release["name"], release["artist-credit-phrase"])
         desc = 'Release <a href="https://musicbrainz.org/release/%s">%s</a> by %s' % (release["mbid"],
                                                                                       release["name"],
@@ -148,7 +148,7 @@ def load_release(release_mbid):
             for recording in medium["track-list"]:
                 rec = WritablePlaylistRecording(title=recording["name"],
                                                 artist_credit=release["artist-credit-phrase"],
-                                                artist_mbids=[ a["artist"]["mbid"] for a in recording["artist-credit"]],
+                                                artist_mbids=[a["artist"]["mbid"] for a in recording["artist-credit"]],
                                                 release_name=release["name"],
                                                 release_mbid=release["mbid"],
                                                 position=recording["position"],
@@ -158,5 +158,5 @@ def load_release(release_mbid):
 
     return render_template(
         "player/player-page.html",
-        props=ujson.dumps({ "playlist": serialize_jspf(playlist) if playlist is not None else {} })
+        props=ujson.dumps({"playlist": serialize_jspf(playlist) if playlist is not None else {}})
     )
