@@ -304,3 +304,11 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_similar_users(self):
         resp = self.client.get(url_for('index.similar_users'))
         self.assert200(resp)
+
+    def test_instant_playlist(self):
+        resp = self.client.get(url_for('player.load_instant', recording_mbids="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
+        self.assert200(resp)
+
+    def test_release_playlist(self):
+        resp = self.client.get(url_for('player.load_release', release_mbid="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
+        self.assert200(resp)

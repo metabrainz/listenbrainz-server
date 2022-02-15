@@ -132,6 +132,7 @@ def load_release(release_mbid):
     if not is_valid_uuid(release_mbid):
         raise BadRequest(f"Recording mbid {release_mbid} is not valid.")
 
+    playlist = None
     if mb_engine:
         release = get_release_by_mbid(release_mbid, includes=["media", "artists"])
         if not release:
@@ -157,5 +158,5 @@ def load_release(release_mbid):
 
     return render_template(
         "player/player-page.html",
-        props=ujson.dumps({ "playlist": serialize_jspf(playlist) })
+        props=ujson.dumps({ "playlist": serialize_jspf(playlist) if playlist is not None else {} })
     )
