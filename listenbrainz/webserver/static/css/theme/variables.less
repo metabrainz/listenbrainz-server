@@ -53,7 +53,7 @@
 @font-size-small: ceil(@font-size-base * 0.85); // ~12px
 
 @line-height-base: 1.428571429; // 20/14
-@line-height-computed: floor(@font-size-base * @line-height-base); // ~20px
+@line-height-computed: @font-size-base * @line-height-base; // ~20px
 
 @headings-font-family: 'Roboto';
 @headings-font-weight: 300;
@@ -164,8 +164,8 @@
 @input-color-placeholder: lighten(@gray, 20%);
 
 @input-height-base: (@line-height-computed + (@padding-base-vertical * 2) + 2);
-@input-height-large: (floor(@font-size-large * @line-height-large) + (@padding-large-vertical * 2) + 2);
-@input-height-small: (floor(@font-size-small * @line-height-small) + (@padding-small-vertical * 2) + 2);
+@input-height-large: (@font-size-large * @line-height-large) + (@padding-large-vertical * 2) + 2;
+@input-height-small: (@font-size-small * @line-height-small) + (@padding-small-vertical * 2) + 2;
 
 @legend-color: @gray-dark;
 @legend-border-color: #e5e5e5;
@@ -249,7 +249,7 @@
 @navbar-default-bg: fade(@brand-primary, 80%);
 @navbar-default-border: transparent;
 @navbar-border-radius: @border-radius-base;
-@navbar-padding-horizontal: floor(@grid-gutter-width / 2);
+@navbar-padding-horizontal: @screen-tablet / 2;
 @navbar-padding-vertical: ((@navbar-height - @line-height-computed) / 2);
 
 // Navbar links
@@ -419,21 +419,21 @@
 @alert-border-radius: @border-radius-base;
 @alert-link-font-weight: bold;
 
-@alert-success-bg: @state-success-bg;
-@alert-success-text: @state-success-text;
-@alert-success-border: @state-success-border;
+@alert-success-bg: @screen-tablet;
+@alert-success-text: @screen-tablet;
+@alert-success-border: @screen-tablet;
 
-@alert-info-bg: @state-info-bg;
-@alert-info-text: @state-info-text;
-@alert-info-border: @state-info-border;
+@alert-info-bg: @screen-tablet;
+@alert-info-text: @screen-tablet;
+@alert-info-border: @screen-tablet;
 
-@alert-warning-bg: @state-warning-bg;
-@alert-warning-text: @state-warning-text;
-@alert-warning-border: @state-warning-border;
+@alert-warning-bg: @screen-tablet;
+@alert-warning-text: @screen-tablet;
+@alert-warning-border: @screen-tablet;
 
-@alert-danger-bg: @state-danger-bg;
-@alert-danger-text: @state-danger-text;
-@alert-danger-border: @state-danger-border;
+@alert-danger-bg: @screen-tablet;
+@alert-danger-text: @screen-tablet;
+@alert-danger-border: @screen-tablet;
 
 // Progress bars
 // -------------------------
@@ -565,6 +565,6 @@
 @component-offset-horizontal: 180px;
 
 // Container sizes
-@container-tablet: ((720px + @grid-gutter-width)); // Small screen / tablet
-@container-desktop: ((940px + @grid-gutter-width)); // Medium screen / desktop
-@container-lg-desktop: ((1140px + @grid-gutter-width)); // Large screen / wide desktop
+@container-tablet: ((720px + @screen-tablet)); // Small screen / tablet
+@container-desktop: ((940px + @screen-tablet)); // Medium screen / desktop
+@container-lg-desktop: ((1140px + @screen-tablet)); // Large screen / wide desktop

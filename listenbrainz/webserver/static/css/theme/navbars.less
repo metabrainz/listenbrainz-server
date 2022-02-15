@@ -14,7 +14,7 @@
       color: @link-color;
       font-size: 1.1em;
       font-family: @headings-font-family;
-      @media (min-width: @grid-float-breakpoint) {
+      @media (min-width: @screen-tablet) {
         padding-top: @padding-large-vertical;
         padding-bottom: @padding-large-vertical;
       }
@@ -107,7 +107,7 @@
     border-color: @color;
     border-bottom: 2px solid @color;
 
-    @media (min-width: @grid-float-breakpoint) {
+    @media (min-width: @screen-tablet) {
       padding: 14px 0 0; // Figure out why 14px
       width: 75%; //Fallback overriden by magic just below:
       width: ~"calc(100% - @{logo-width} - @{navbar-padding-horizontal})";

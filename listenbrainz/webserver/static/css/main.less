@@ -1,3 +1,4 @@
+@import (less) "@akshaaatt/design-system/dist/bootstrap-lb.css";
 @import "theme/theme.less";
 @import "colors.less";
 @import "listens-page.less";
@@ -44,10 +45,9 @@ body {
 }
 
 // Navbar
-@grid-float-breakpoint: @screen-md-min; // Point at which the navbar becomes uncollapsed
+@screen-tablet: @screen-md; // Point at which the navbar becomes uncollapsed
 .navbar {
   .beta {
-    .pull-right;
     color: @red;
   }
   @logo-width: 166px + 15px;
@@ -124,8 +124,6 @@ body {
 }
 #homepage {
   #big-logo {
-    .pull-left;
-    .visible-lg;
     height: 128px;
     margin-top: 27px;
     margin-bottom: 6px;
