@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import Pill from "./Pill";
+import Pill from "../../src/components/Pill";
 
 describe("Pill", () => {
   it("renders correctly for primary active", () => {

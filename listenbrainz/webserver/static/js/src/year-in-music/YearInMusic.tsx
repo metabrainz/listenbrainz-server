@@ -35,7 +35,7 @@ import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../playlists/utils";
-import FollowButton from "../FollowButton";
+import FollowButton from "../follow/FollowButton";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;

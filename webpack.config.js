@@ -53,7 +53,7 @@ module.exports = function (env, argv) {
         path.resolve(jsDir, "src/RecentListens.tsx"),
         path.resolve(cssDir, "main.less"),
       ],
-      import: path.resolve(jsDir, "src/LastFMImporter.tsx"),
+      import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
       userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
       userPageHeading: path.resolve(jsDir, "src/UserPageHeading.tsx"),
@@ -69,7 +69,7 @@ module.exports = function (env, argv) {
         jsDir,
         "src/recommendations/Recommendations.tsx"
       ),
-      missingMBData: path.resolve(jsDir, "src/MissingMBData.tsx"),
+      missingMBData: path.resolve(jsDir, "src/missing-mb-data/MissingMBData.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
