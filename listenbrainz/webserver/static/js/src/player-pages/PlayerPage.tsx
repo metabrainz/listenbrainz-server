@@ -12,10 +12,10 @@ import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import BrainzPlayer from "../BrainzPlayer";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
