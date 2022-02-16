@@ -6,15 +6,16 @@ from time import time
 import psycopg2
 import sqlalchemy
 from brainzutils import cache
+from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db import timescale as ts
+from listenbrainz.db import timescale as ts, timescale
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, \
     TimescaleListenStore
-
-TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
+from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data, \
+    update_user_listen_data, recalculate_all_user_data
 
 
 class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
@@ -38,6 +39,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
     def _create_test_data(self, user_name, user_id, test_data_file_name=None):
         test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
         self.logstore.insert(test_data)
+        recalculate_all_user_data()
         return len(test_data)
 
     def _insert_mapping_metadata(self, msid):
@@ -225,6 +227,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
         self._create_test_data(testuser_name, testuser["id"])
+
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=testuser, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -234,6 +237,18 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
         self.logstore.delete_listen(1400000050, testuser["id"], "c7a41965-9f1e-456c-8b1d-27c0f0dde280")
+
+        pending = self._get_pending_deletes()
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(pending[0]["listened_at"], 1400000050)
+        self.assertEqual(pending[0]["user_id"], testuser["id"])
+        self.assertEqual(str(pending[0]["recording_msid"]), "c7a41965-9f1e-456c-8b1d-27c0f0dde280")
+
+        delete_listens_and_update_user_listen_data()
+
+        # clear cache entry so that count is fetched from db again
+        cache.delete(REDIS_USER_LISTEN_COUNT + str(testuser["id"]))
+
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=testuser, to_ts=1400000300)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -246,14 +261,27 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(min_ts, 1400000000)
         self.assertEqual(max_ts, 1400000200)
 
+    def _get_pending_deletes(self):
+        with timescale.engine.connect() as connection:
+            result = connection.execute(text("SELECT * FROM listen_delete_metadata"))
+            return result.fetchall()
+
+    def _get_count_and_timestamps(self, user_id):
+        with timescale.engine.connect() as connection:
+            result = connection.execute(
+                text("""
+                    SELECT count, min_listened_at, max_listened_at
+                      FROM listen_user_metadata
+                     WHERE user_id = :user_id
+                """), user_id=user_id)
+            return dict(**result.fetchone())
+
     def test_for_empty_timestamps(self):
-        """
-            Even if a user has no listens they should have the sentinel timestamps of 0,0 stored in the
-            cache to avoid continually recomputing them
-        """
+        """Test newly created user has empty timestamps and count stored in the database."""
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
-        min_ts, max_ts = self.logstore.get_timestamps_for_user(testuser["id"])
-        self.assertEqual(min_ts, 0)
-        self.assertEqual(max_ts, 0)
-        self.assertEqual(cache.get(REDIS_USER_TIMESTAMPS + str(testuser["id"])), "0,0")
+        self.logstore.set_empty_values_for_user(testuser["id"])
+        data = self._get_count_and_timestamps(testuser["id"])
+        self.assertEqual(data["count"], 0)
+        self.assertEqual(data["min_listened_at"], None)
+        self.assertEqual(data["max_listened_at"], None)
