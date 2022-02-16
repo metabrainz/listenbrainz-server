@@ -1,14 +1,15 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UserFeedback, {
   UserFeedbackProps,
   UserFeedbackState,
 } from "./UserFeedback";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
-import * as userFeedbackProps from "./__mocks__/userFeedbackProps.json";
-import * as userFeedbackAPIResponse from "./__mocks__/userFeedbackAPIResponse.json";
+import * as userFeedbackProps from "../tests/__mocks__/userFeedbackProps.json";
+import * as userFeedbackAPIResponse from "../tests/__mocks__/userFeedbackAPIResponse.json";
 import ListenCard from "./listens/ListenCard";
 import ListenFeedbackComponent from "./listens/ListenFeedbackComponent";
 
@@ -193,28 +194,58 @@ describe("UserFeedback", () => {
     // Score = 1 (loved) for first item
     const firstListenCard = listens.at(0).find(".listen-controls").first();
     expect(
-      firstListenCard.find("[title='Love']").first().hasClass("loved")
+      firstListenCard
+        .find("[title='Love']")
+        .first()
+        .find(FontAwesomeIcon)
+        .first()
+        .hasClass("loved")
     ).toBeTruthy();
     // Score = 0 (neutral) for second item
     const secondListenCard = listens.at(1).find(".listen-controls").first();
     expect(
-      secondListenCard.find("[title='Love']").first().hasClass("loved")
+      secondListenCard
+        .find("[title='Love']")
+        .first()
+        .find(FontAwesomeIcon)
+        .first()
+        .hasClass("loved")
     ).toBeFalsy();
     expect(
-      secondListenCard.find("[title='Hate']").first().hasClass("hated")
+      secondListenCard
+        .find("[title='Hate']")
+        .first()
+        .find(FontAwesomeIcon)
+        .first()
+        .hasClass("hated")
     ).toBeFalsy();
     // Score = -1 (hated) for third item
     const thirdListenCard = listens.at(2).find(".listen-controls").first();
     expect(
-      thirdListenCard.find("[title='Hate']").first().hasClass("hated")
+      thirdListenCard
+        .find("[title='Hate']")
+        .first()
+        .find(FontAwesomeIcon)
+        .first()
+        .hasClass("hated")
     ).toBeTruthy();
     // No score (neutral) for fourth item
     const fourthListenCard = listens.at(3).find(".listen-controls").first();
     expect(
-      fourthListenCard.find("[title='Love']").first().hasClass("loved")
+      fourthListenCard
+        .find("[title='Love']")
+        .first()
+        .find(FontAwesomeIcon)
+        .first()
+        .hasClass("loved")
     ).toBeFalsy();
     expect(
-      fourthListenCard.find("[title='Hate']").first().hasClass("hated")
+      fourthListenCard
+        .find("[title='Hate']")
+        .first()
+        .find(FontAwesomeIcon)
+        .first()
+        .hasClass("hated")
     ).toBeFalsy();
   });
   it("updates recordingFeedbackMap when clicking on a feedback button", async () => {

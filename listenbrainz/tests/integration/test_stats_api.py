@@ -11,9 +11,9 @@ from data.model.common_stat import StatRange
 from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecord
 from flask import current_app, url_for
 
-from data.model.user_daily_activity import UserDailyActivityRecord
-from data.model.user_entity import UserEntityRecord
-from data.model.user_listening_activity import UserListeningActivityRecord
+from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_entity import EntityRecord
+from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.tests.integration import IntegrationTestCase
 from redis import Redis
@@ -37,31 +37,31 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             self.user_artist_payload = json.load(f)
         db_stats.insert_user_jsonb_data(self.user['id'], 'artists',
-                                        StatRange[UserEntityRecord](**self.user_artist_payload))
+                                        StatRange[EntityRecord](**self.user_artist_payload))
 
         # Insert release data
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             self.user_release_payload = json.load(f)
         db_stats.insert_user_jsonb_data(self.user['id'], 'releases',
-                                        StatRange[UserEntityRecord](**self.user_release_payload))
+                                        StatRange[EntityRecord](**self.user_release_payload))
 
         # Insert recording data
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
             self.recording_payload = json.load(f)
         db_stats.insert_user_jsonb_data(self.user['id'], 'recordings',
-                                        StatRange[UserEntityRecord](**self.recording_payload))
+                                        StatRange[EntityRecord](**self.recording_payload))
 
         # Insert listening activity data
         with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test.json')) as f:
             self.listening_activity_payload = json.load(f)
         db_stats.insert_user_jsonb_data(self.user['id'], 'listening_activity',
-                                        StatRange[UserListeningActivityRecord](**self.listening_activity_payload))
+                                        StatRange[ListeningActivityRecord](**self.listening_activity_payload))
 
         # Insert daily activity data
         with open(self.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
             data = json.load(f)
         db_stats.insert_user_jsonb_data(self.user['id'], 'daily_activity',
-                                        StatRange[UserDailyActivityRecord](**data))
+                                        StatRange[DailyActivityRecord](**data))
 
         # Insert artist map data
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
@@ -72,7 +72,7 @@ class StatsAPITestCase(IntegrationTestCase):
         # Insert all_time sitewide top artists
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
             self.sitewide_artist_payload = json.load(f)
-        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**self.sitewide_artist_payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[EntityRecord](**self.sitewide_artist_payload))
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
@@ -106,7 +106,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test_too_many.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_user_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'count': 105})
@@ -144,7 +144,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_user_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
@@ -163,7 +163,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_user_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
@@ -182,7 +182,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_user_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
@@ -208,7 +208,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_user_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'count': 5})
@@ -244,7 +244,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_user_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'offset': 5})
@@ -320,7 +320,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test_too_many.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
                                            user_name=self.user['musicbrainz_id']), query_string={'count': 105})
@@ -358,7 +358,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
@@ -377,7 +377,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
@@ -396,7 +396,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
@@ -422,7 +422,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
                                            user_name=self.user['musicbrainz_id']), query_string={'count': 5})
@@ -458,7 +458,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
                                            user_name=self.user['musicbrainz_id']), query_string={'offset': 5})
@@ -534,7 +534,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test_too_many.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_recording',
                                            user_name=self.user['musicbrainz_id']), query_string={'count': 105})
@@ -572,7 +572,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_recording',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
@@ -591,7 +591,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_recording',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
@@ -610,7 +610,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_recording',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
@@ -636,7 +636,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_recording',
                                            user_name=self.user['musicbrainz_id']), query_string={'count': 5})
@@ -672,7 +672,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_recording',
                                            user_name=self.user['musicbrainz_id']), query_string={'offset': 5})
@@ -729,7 +729,7 @@ class StatsAPITestCase(IntegrationTestCase):
         db_stats.delete_user_stats(self.user['id'])
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_user_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
@@ -743,7 +743,7 @@ class StatsAPITestCase(IntegrationTestCase):
         db_stats.delete_user_stats(self.user['id'])
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
@@ -784,7 +784,7 @@ class StatsAPITestCase(IntegrationTestCase):
             payload = json.load(f)
 
         db_stats.insert_user_jsonb_data(self.user['id'], 'listening_activity',
-                                        StatRange[UserListeningActivityRecord](**payload))
+                                        StatRange[ListeningActivityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_listening_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
@@ -802,7 +802,7 @@ class StatsAPITestCase(IntegrationTestCase):
             payload = json.load(f)
 
         db_stats.insert_user_jsonb_data(self.user['id'], 'listening_activity',
-                                        StatRange[UserListeningActivityRecord](**payload))
+                                        StatRange[ListeningActivityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_listening_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
@@ -820,7 +820,7 @@ class StatsAPITestCase(IntegrationTestCase):
             payload = json.load(f)
 
         db_stats.insert_user_jsonb_data(self.user['id'], 'listening_activity',
-                                        StatRange[UserListeningActivityRecord](**payload))
+                                        StatRange[ListeningActivityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_listening_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
@@ -887,7 +887,7 @@ class StatsAPITestCase(IntegrationTestCase):
             payload = json.load(f)
 
         db_stats.insert_user_jsonb_data(self.user['id'], 'daily_activity',
-                                        StatRange[UserDailyActivityRecord](**payload))
+                                        StatRange[DailyActivityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_daily_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
@@ -906,7 +906,7 @@ class StatsAPITestCase(IntegrationTestCase):
             payload = json.load(f)
 
         db_stats.insert_user_jsonb_data(self.user['id'], 'daily_activity',
-                                        StatRange[UserDailyActivityRecord](**payload))
+                                        StatRange[DailyActivityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_daily_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
@@ -925,7 +925,7 @@ class StatsAPITestCase(IntegrationTestCase):
             payload = json.load(f)
 
         db_stats.insert_user_jsonb_data(self.user['id'], 'daily_activity',
-                                        StatRange[UserDailyActivityRecord](**payload))
+                                        StatRange[DailyActivityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_daily_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
@@ -1037,7 +1037,7 @@ class StatsAPITestCase(IntegrationTestCase):
         db_stats.delete_user_stats(user_id=self.user['id'])
         # Reinsert artist stats
         db_stats.insert_user_jsonb_data(self.user['id'], 'artists',
-                                        StatRange[UserEntityRecord](**self.user_artist_payload))
+                                        StatRange[EntityRecord](**self.user_artist_payload))
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
@@ -1120,6 +1120,13 @@ class StatsAPITestCase(IntegrationTestCase):
         expected = [
             {
                 "country": "GBR",
+                'artists': [
+                    {
+                        'artist_mbid': 'cc197bad-dc9c-440d-a5b5-d52ba2e14234',
+                        'artist_name': 'Coldplay',
+                        'listen_count': 321
+                    }
+                ],
                 "artist_count": 1,
                 "listen_count": 321,
             }
@@ -1156,7 +1163,7 @@ class StatsAPITestCase(IntegrationTestCase):
             artist['artist_mbids'] = []
             artist['artist_msid'] = None
         db_stats.insert_user_jsonb_data(self.user['id'], 'artists',
-                                        StatRange[UserEntityRecord](**artist_stats))
+                                        StatRange[EntityRecord](**artist_stats))
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
                                                                                                  'force_recalculate': 'true'})
@@ -1188,7 +1195,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test_too_many.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'),
                                    query_string={'count': 101})
@@ -1212,7 +1219,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'range': 'week'})
         self.assert200(response)
@@ -1236,7 +1243,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'range': 'month'})
         self.assert200(response)
@@ -1260,7 +1267,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[EntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'range': 'year'})
         self.assert200(response)

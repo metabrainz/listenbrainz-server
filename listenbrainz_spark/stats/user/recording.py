@@ -28,7 +28,7 @@ def get_recordings(table):
     """
     result = run_query(f"""
         WITH intermediate_table as (
-            SELECT user_name
+            SELECT user_id
                  , first(recording_name) AS any_recording_name
                  , recording_mbid
                  , first(artist_name) AS any_artist_name
@@ -37,7 +37,7 @@ def get_recordings(table):
                  , release_mbid
                  , count(*) as listen_count
               FROM {table}
-          GROUP BY user_name
+          GROUP BY user_id
                  , lower(recording_name)
                  , recording_mbid
                  , lower(artist_name)
@@ -45,7 +45,7 @@ def get_recordings(table):
                  , lower(release_name)
                  , release_mbid
         )
-        SELECT user_name
+        SELECT user_id
              , sort_array(
                     collect_list(
                         struct(
@@ -61,7 +61,7 @@ def get_recordings(table):
                    , false
                 ) as recordings
           FROM intermediate_table
-      GROUP BY user_name
+      GROUP BY user_id
         """)
 
     return result.toLocalIterator()

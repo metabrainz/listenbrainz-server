@@ -15,6 +15,7 @@ class ListenTestCase(unittest.TestCase):
             "created": 1525557084,
             "track_name": "Every Step Every Way",
             "user_name": "iliekcomputers",
+            "user_id": 1,
             "data": {
                 'track_metadata': {
                     "artist_name": "Majid Jordan",
@@ -39,11 +40,7 @@ class ListenTestCase(unittest.TestCase):
             }
         }
 
-        listen = Listen.from_timescale(timescale_row['listened_at'],
-                                       timescale_row['track_name'],
-                                       timescale_row['user_name'],
-                                       timescale_row['created'],
-                                       timescale_row['data'])
+        listen = Listen.from_timescale(**timescale_row)
 
         # Check user name
         self.assertEqual(listen.user_name, timescale_row['user_name'])
@@ -97,7 +94,7 @@ class ListenTestCase(unittest.TestCase):
             }
         )
 
-        listened_at, track_name, user_name, data = listen.to_timescale()
+        listened_at, track_name, user_name, user_id, data = listen.to_timescale()
 
         # Check data is of type string
         self.assertIsInstance(data, str)
@@ -113,6 +110,7 @@ class ListenTestCase(unittest.TestCase):
         self.assertEqual(listened_at, listen.ts_since_epoch)
         self.assertEqual(track_name, listen.data['track_name'])
         self.assertEqual(user_name, listen.user_name)
+        self.assertEqual(user_id, listen.user_id)
         self.assertEqual(json_data['user_id'], listen.user_id)
         self.assertEqual(json_data['track_metadata']['artist_name'], listen.data['artist_name'])
 

@@ -6,6 +6,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
+from listenbrainz.db import year_in_music
 
 from flask import current_app, render_template
 from pydantic import ValidationError
@@ -13,10 +14,9 @@ from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 
 from data.model.common_stat import StatRange
-from data.model.sitewide_artist_stat import SitewideArtistRecord
-from data.model.user_daily_activity import UserDailyActivityRecord
-from data.model.user_entity import UserEntityRecord
-from data.model.user_listening_activity import UserListeningActivityRecord
+from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_entity import EntityRecord
+from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from listenbrainz.db.similar_users import import_user_similarities
@@ -53,54 +53,35 @@ def notify_user_stats_update(stat_type):
 
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-
-    stats_range = data['stats_range']
-    entity = data['entity']
-
-    try:
-        db_stats.insert_user_jsonb_data(user['id'], entity, StatRange[UserEntityRecord](**data))
-    except ValidationError:
-        current_app.logger.error(f"""ValidationError while inserting {stats_range} top {entity} for user
-        with user_id: {user['id']}. Data: {json.dumps({stats_range: data}, indent=3)}""", exc_info=True)
+    values = [(entry["user_id"], entry["count"], json.dumps(entry["data"])) for entry in data["data"]]
+    db_stats.insert_multiple_user_jsonb_data(
+        data["entity"],
+        data["stats_range"],
+        data["from_ts"],
+        data["to_ts"],
+        values
+    )
 
 
-def _handle_user_activity_stats(stats_type, stats_model, data):
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-    stats_range = data['stats_range']
-
-    try:
-        db_stats.insert_user_jsonb_data(user['id'], stats_type, stats_model(**data))
-    except ValidationError:
-        current_app.logger.error(f"""ValidationError while inserting {stats_range} {stats_type} for 
-        user with user_id: {user['id']}. Data: {json.dumps(data, indent=3)}""", exc_info=True)
+def _handle_user_activity_stats(stats_type, data):
+    values = [(entry["user_id"], 0, json.dumps(entry["data"])) for entry in data["data"]]
+    db_stats.insert_multiple_user_jsonb_data(
+        stats_type,
+        data["stats_range"],
+        data["from_ts"],
+        data["to_ts"],
+        values
+    )
 
 
 def handle_user_listening_activity(data):
     """ Take listening activity stats for user and save it in database. """
-    _handle_user_activity_stats('listening_activity', StatRange[UserListeningActivityRecord], data)
+    _handle_user_activity_stats("listening_activity", data)
 
 
 def handle_user_daily_activity(data):
     """ Take daily activity stats for user and save it in database. """
-    _handle_user_activity_stats('daily_activity', StatRange[UserDailyActivityRecord], data)
+    _handle_user_activity_stats("daily_activity", data)
 
 
 def handle_sitewide_entity(data):
@@ -113,15 +94,14 @@ def handle_sitewide_entity(data):
     entity = data['entity']
 
     try:
-        db_stats.insert_sitewide_jsonb_data(entity, StatRange[UserEntityRecord](**data))
+        db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**data))
     except ValidationError:
         current_app.logger.error(f"""ValidationError while inserting {stats_range} sitewide top {entity}.
         Data: {json.dumps(data, indent=3)}""", exc_info=True)
 
 
 def handle_sitewide_listening_activity(data):
-    data["musicbrainz_id"] = "listenbrainz-prod"
-    _handle_user_activity_stats('listening_activity', StatRange[UserListeningActivityRecord], data)
+    db_stats.insert_sitewide_jsonb_data("listening_activity", StatRange[ListeningActivityRecord](**data))
 
 
 def handle_dump_imported(data):
@@ -168,13 +148,13 @@ def handle_dataframes(data):
 def handle_missing_musicbrainz_data(data):
     """ Insert user missing musicbrainz data i.e data submitted to ListenBrainz but not MusicBrainz.
     """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
+    user_id = data['user_id']
+    user = db_user.get(user_id)
 
     if not user:
         return
 
-    current_app.logger.debug("Inserting missing musicbrainz data for {}".format(musicbrainz_id))
+    current_app.logger.debug(f"Inserting missing musicbrainz data for {user['musicbrainz_id']}")
 
     missing_musicbrainz_data = data['missing_musicbrainz_data']
     source = data['source']
@@ -182,16 +162,15 @@ def handle_missing_musicbrainz_data(data):
     try:
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
             user['id'],
-            UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
+            UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source
         )
     except ValidationError:
-        current_app.logger.error("""ValidationError while inserting missing MusicBrainz data from source "{source}" for user
-                                 with musicbrainz_id: {musicbrainz_id}. Data: {data}""".format(musicbrainz_id=musicbrainz_id,
-                                                                                               data=json.dumps(data, indent=3),
-                                                                                               source=source), exc_info=True)
+        current_app.logger.error(f"""
+        ValidationError while inserting missing MusicBrainz data from source "{source}" for user with musicbrainz_id:
+         {user["musicbrainz_id"]}. Data: {json.dumps(data, indent=3)}""", exc_info=True)
 
-    current_app.logger.debug("Missing musicbrainz data for {} inserted".format(musicbrainz_id))
+    current_app.logger.debug(f"Missing musicbrainz data for {user['musicbrainz_id']} inserted")
 
 
 def handle_model(data):
@@ -235,29 +214,28 @@ def handle_candidate_sets(data):
 def handle_recommendations(data):
     """ Take recommended recordings for a user and save it in the db.
     """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
+    user_id = data['user_id']
+    user = db_user.get(user_id)
     if not user:
-        current_app.logger.info("Generated recommendations for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        current_app.logger.info(f"Generated recommendations for a user that doesn't exist in the Postgres database: {user_id}")
         return
 
-    current_app.logger.debug("inserting recommendation for {}".format(musicbrainz_id))
+    current_app.logger.debug("inserting recommendation for {}".format(user["musicbrainz_id"]))
     recommendations = data['recommendations']
 
     try:
         db_recommendations_cf_recording.insert_user_recommendation(
-            user['id'],
+            user_id,
             UserRecommendationsJson(**{
                 'top_artist': recommendations['top_artist'],
                 'similar_artist': recommendations['similar_artist']
             })
         )
     except ValidationError:
-        current_app.logger.error("""ValidationError while inserting recommendations for user with musicbrainz_id:
-                                 {musicbrainz_id}. \nData: {data}""".format(musicbrainz_id=musicbrainz_id,
-                                                                            data=json.dumps(data, indent=3)))
+        current_app.logger.error(f"""ValidationError while inserting recommendations for user with musicbrainz_id:
+                                 {user["musicbrainz_id"]}. \nData: {json.dumps(data, indent=3)}""")
 
-    current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))
+    current_app.logger.debug("recommendation for {} inserted".format(user["musicbrainz_id"]))
 
 
 def notify_mapping_import(data):
@@ -347,3 +325,55 @@ def handle_similar_users(message):
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
         )
+
+
+def handle_similar_users_year_end(message):
+    year_in_music.insert_similar_users(message["data"])
+
+
+def handle_new_releases_of_top_artists(message):
+    user_id = message["user_id"]
+    # need to check whether user exists before inserting otherwise possible FK error.
+    user = db_user.get(user_id)
+    if not user:
+        return
+    year_in_music.insert_new_releases_of_top_artists(user_id, message["data"])
+
+
+def handle_most_prominent_color(message):
+    year_in_music.insert_most_prominent_color(message["data"])
+
+
+def handle_day_of_week(message):
+    year_in_music.insert_day_of_week(message["data"])
+
+
+def handle_most_listened_year(message):
+    year_in_music.insert_most_listened_year(message["data"])
+
+
+def handle_top_stats(message):
+    year_in_music.handle_top_stats(message["entity"], message["data"])
+
+    # for top_releases, look up cover art
+    if message["entity"] == "releases":
+        data = message["data"]
+        for user_data in data:
+            user = db_user.get(user_data["user_id"])
+            if not user:
+                return
+            release_mbids = [rel["release_mbid"] for rel in user_data["data"] if "release_mbid" in rel]
+            coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
+            year_in_music.handle_coverart(user_data["user_id"], "top_releases_coverart", coverart)
+
+
+def handle_listens_per_day(message):
+    user_id = message["user_id"]
+    user = db_user.get(user_id)
+    if not user:
+        return
+    year_in_music.handle_listens_per_day(user_id, message["data"])
+
+
+def handle_yearly_listen_counts(message):
+    year_in_music.handle_yearly_listen_counts(message["data"])

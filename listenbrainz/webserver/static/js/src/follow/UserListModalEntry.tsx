@@ -1,7 +1,7 @@
 import { isEmpty, isNil } from "lodash";
 import * as React from "react";
 import { useContext } from "react";
-import FollowButton from "../FollowButton";
+import FollowButton from "./FollowButton";
 import GlobalAppContext from "../GlobalAppContext";
 import SimilarityScore from "../SimilarityScore";
 

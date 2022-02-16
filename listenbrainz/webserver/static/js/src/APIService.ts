@@ -860,7 +860,7 @@ export default class APIService {
     recordingMSID: string,
     recordingMBID?: string,
     blurb_content?: string
-  ): Promise<number> => {
+  ): Promise<{ status: string; data: PinnedRecording }> => {
     const url = `${this.APIBaseURI}/pin`;
     const response = await fetch(url, {
       method: "POST",
@@ -875,7 +875,7 @@ export default class APIService {
       }),
     });
     await this.checkStatus(response);
-    return response.status;
+    return response.json();
   };
 
   unpinRecording = async (userToken: string): Promise<number> => {
@@ -968,5 +968,27 @@ export default class APIService {
     const response = await fetch(query);
     await this.checkStatus(response);
     return response.json();
+  };
+
+  deleteFeedEvent = async (
+    eventType: string,
+    username: string,
+    userToken: string,
+    id: number
+  ): Promise<any> => {
+    if (!id) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/feed/events/delete`;
+    const response = await fetch(query, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ event_type: eventType, id }),
+    });
+    await this.checkStatus(response);
+    return response.status;
   };
 }

@@ -1,7 +1,7 @@
 import APIService from "./APIService";
 
-const feedProps = require("./__mocks__/feedProps.json");
-const pinProps = require("./__mocks__/pinProps.json");
+const feedProps = require("../tests/__mocks__/feedProps.json");
+const pinProps = require("../tests/__mocks__/pinProps.json");
 
 const apiService = new APIService("foobar");
 
@@ -783,7 +783,6 @@ describe("recommendTrackToFollowers", () => {
     const metadata: UserTrackRecommendationMetadata = {
       artist_name: "Hans Zimmer",
       track_name: "Flight",
-      artist_msid: "artist_msid",
       recording_msid: "recording_msid",
     };
     await apiService.recommendTrackToFollowers(
@@ -808,7 +807,6 @@ describe("recommendTrackToFollowers", () => {
     const metadata: UserTrackRecommendationMetadata = {
       artist_name: "Hans Zimmer",
       track_name: "Flight",
-      artist_msid: "artist_msid",
       recording_msid: "recording_msid",
     };
     await apiService.recommendTrackToFollowers(
@@ -823,7 +821,6 @@ describe("recommendTrackToFollowers", () => {
     const metadata: UserTrackRecommendationMetadata = {
       artist_name: "Hans Zimmer",
       track_name: "Flight",
-      artist_msid: "artist_msid",
       recording_msid: "recording_msid",
     };
     await expect(
@@ -832,12 +829,31 @@ describe("recommendTrackToFollowers", () => {
   });
 
   describe("submitPinRecording", () => {
+    const pinnedRecordingFromAPI: PinnedRecording = {
+      created: 1605927742,
+      pinned_until: 1605927893,
+      blurb_content:
+        "Our perception of the passing of time is really just a side-effect of gravity",
+      recording_mbid: "recording_mbid",
+      row_id: 1,
+      track_metadata: {
+        artist_name: "TWICE",
+        track_name: "Feel Special",
+        additional_info: {
+          release_mbid: "release_mbid",
+          recording_msid: "recording_msid",
+          recording_mbid: "recording_mbid",
+          artist_msid: "artist_msid",
+        },
+      },
+    };
     beforeEach(() => {
       // Mock function for fetch
       window.fetch = jest.fn().mockImplementation(() => {
         return Promise.resolve({
           ok: true,
           status: 200,
+          json: async () => pinnedRecordingFromAPI,
         });
       });
 
@@ -878,10 +894,10 @@ describe("recommendTrackToFollowers", () => {
       expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
     });
 
-    it("returns the response code if successful", async () => {
+    it("returns the json content if successful", async () => {
       await expect(
         apiService.submitPinRecording("foobar", "foo")
-      ).resolves.toEqual(200);
+      ).resolves.toEqual(pinnedRecordingFromAPI);
     });
   });
 
@@ -1057,5 +1073,74 @@ describe("submitReviewToCB", () => {
     await expect(
       apiService.submitReviewToCB(accessToken, reviewToSubmit)
     ).resolves.toEqual({ id: "bf24ca37-25f4-4e34-9aec-460b94364cfc" });
+  });
+});
+
+describe("deleteFeedEvent", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.deleteFeedEvent(
+      "recording_recommendation",
+      "riksucks",
+      "testToken",
+      1337
+    );
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/user/riksucks/feed/events/delete",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token testToken",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          event_type: "recording_recommendation",
+          id: 1337,
+        }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.deleteFeedEvent(
+      "recording_recommendation",
+      "riksucks",
+      "testToken",
+      1337
+    );
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws appropriate error if id is missing", async () => {
+    await expect(
+      apiService.deleteFeedEvent(
+        "recording_recommendation",
+        "riksucks",
+        "testToken",
+        (undefined as unknown) as number
+      )
+    ).rejects.toThrow(SyntaxError("Event ID not present"));
+  });
+
+  it("returns the response code if successful", async () => {
+    await expect(
+      apiService.deleteFeedEvent(
+        "recording_recommendation",
+        "riksucks",
+        "testToken",
+        1337
+      )
+    ).resolves.toEqual(200);
   });
 });

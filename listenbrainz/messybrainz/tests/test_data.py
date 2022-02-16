@@ -94,12 +94,6 @@ class DataTestCase(MessyBrainzTestCase):
             result = data.load_recordings_from_msids(connection, [recording_msid])[0]
             self.assertDictEqual(result['payload'], recording)
 
-    def test_load_recordings_from_mbids(self):
-        with messybrainz.engine.connect() as connection:
-            data.submit_recording(connection, recording)
-            result = data.load_recordings_from_mbids(connection, [recording["recording_mbid"]])[0]
-            self.assertDictEqual(result['payload'], recording)
-
     def test_convert_to_messybrainz_json(self):
         sorted_keys, transformed_json = data.convert_to_messybrainz_json(recording)
         result = json.loads(transformed_json)

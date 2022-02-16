@@ -12,8 +12,8 @@ if __name__ == "__main__":
                              "in config file.")
     parser.add_argument("-t", "--host", default="0.0.0.0", type=str,
                         help="Which interfaces to listen on. Default: 0.0.0.0.")
-    parser.add_argument("-p", "--port", default="8080", type=int,
-                        help="Which port to listen on. Default: 8080.")
+    parser.add_argument("-p", "--port", default="7080", type=int,
+                        help="Which port to listen on. Default: 7080.")
     args = parser.parse_args()
     application.run(debug=True if args.debug else None,
                     host=args.host, port=args.port)

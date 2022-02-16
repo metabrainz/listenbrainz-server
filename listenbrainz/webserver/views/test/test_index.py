@@ -1,19 +1,17 @@
-import ujson
 from unittest import mock
 from unittest.mock import MagicMock
 
+import ujson
 from flask import url_for
-from flask_login import login_required, AnonymousUserMixin
+from flask_login import login_required
 from requests.exceptions import HTTPError
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
-from pika.exceptions import ConnectionClosed, ChannelClosed
 
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.login
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.webserver import create_app
+from listenbrainz.webserver import create_web_app
 from listenbrainz.webserver.testing import ServerTestCase
-
 
 
 class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -34,20 +32,8 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get(url_for('index.data'))
         self.assert200(resp)
 
-    def test_contribute(self):
-        resp = self.client.get(url_for('index.contribute'))
-        self.assert200(resp)
-
-    def test_goals(self):
-        resp = self.client.get(url_for('index.goals'))
-        self.assert200(resp)
-
-    def test_faq(self):
-        resp = self.client.get(url_for('index.faq'))
-        self.assert200(resp)
-
-    def test_roadmap(self):
-        resp = self.client.get(url_for('index.roadmap'))
+    def test_about(self):
+        resp = self.client.get(url_for('index.about'))
         self.assert200(resp)
 
     def test_add_data_info(self):
@@ -73,9 +59,8 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         Creating an app with default config so that debug is True
         and SECRET_KEY is defined.
         """
-        app = create_app(debug=True)
-        client = app.test_client()
-        resp = client.get('/data/')
+        app = create_web_app()
+        resp = app.test_client().get('/data/')
         self.assert200(resp)
         self.assertIn('flDebug', str(resp.data))
 

@@ -18,31 +18,41 @@ PINNED_REC_GET_COLUMNS = [
 ]
 
 
-def pin(pinnedRecording: WritablePinnedRecording):
+def pin(pinned_recording: WritablePinnedRecording):
     """ Inserts a pinned recording record into the database for the user.
         If the user already has an active pinned recording, it will be unpinned before the new one is pinned.
 
         Args:
-            pinnedRecording: An object of class WritablePinnedRecording
+            pinned_recording: An object of class WritablePinnedRecording
+
+        Returns:
+            a PinnedRecording based on the input argument with the addition of a user_id field
     """
     args = {
-        'user_id': pinnedRecording.user_id,
-        'recording_msid': pinnedRecording.recording_msid,
-        'recording_mbid': pinnedRecording.recording_mbid,
-        'blurb_content': pinnedRecording.blurb_content,
-        'pinned_until': pinnedRecording.pinned_until,
-        'created': pinnedRecording.created
+        'user_id': pinned_recording.user_id,
+        'recording_msid': pinned_recording.recording_msid,
+        'recording_mbid': pinned_recording.recording_mbid,
+        'blurb_content': pinned_recording.blurb_content,
+        'pinned_until': pinned_recording.pinned_until,
+        'created': pinned_recording.created
     }
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             UPDATE pinned_recording
                SET pinned_until = NOW()
-             WHERE (user_id = :user_id AND pinned_until >= NOW());
+             WHERE (user_id = :user_id AND pinned_until >= NOW())
+        """), {"user_id": pinned_recording.user_id})
 
+        result = connection.execute(sqlalchemy.text("""
             INSERT INTO pinned_recording (user_id, recording_msid, recording_mbid, blurb_content, pinned_until, created)
-            VALUES (:user_id, :recording_msid, :recording_mbid, :blurb_content, :pinned_until, :created)
+                 VALUES (:user_id, :recording_msid, :recording_mbid, :blurb_content, :pinned_until, :created)
+              RETURNING (id)
             """), args)
+
+        row_id = result.fetchone()["id"]
+        pinned_recording.row_id = row_id
+        return PinnedRecording.parse_obj(pinned_recording.dict())
 
 
 def unpin(user_id: int):

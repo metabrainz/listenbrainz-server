@@ -1,10 +1,11 @@
+import logging
 import os
 import pprint
 import sys
 from time import sleep
 
-from brainzutils.flask import CustomFlask
 from brainzutils import cache, metrics
+from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect
 from flask_login import current_user
 
@@ -18,31 +19,6 @@ deploy_env = os.environ.get('DEPLOY_ENV', '')
 
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
-
-
-def create_timescale(app):
-    from listenbrainz.webserver.timescale_connection import init_timescale_connection
-    return init_timescale_connection(app.logger, {
-        'SQLALCHEMY_TIMESCALE_URI': app.config['SQLALCHEMY_TIMESCALE_URI'],
-        'REDIS_HOST': app.config['REDIS_HOST'],
-        'REDIS_PORT': app.config['REDIS_PORT'],
-        'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
-        'LISTEN_DUMP_TEMP_DIR_ROOT': app.config['LISTEN_DUMP_TEMP_DIR_ROOT'],
-    })
-
-
-def create_redis(app):
-    from listenbrainz.webserver.redis_connection import init_redis_connection
-    init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'], app.config['REDIS_NAMESPACE'])
-
-
-def create_rabbitmq(app):
-    from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
-    try:
-        init_rabbitmq_connection(app)
-    except ConnectionError as e:
-        app.logger.error('Could not connect to RabbitMQ: %s', str(e))
-        return
 
 
 def load_config(app):
@@ -62,21 +38,32 @@ def load_config(app):
 
     app.config.from_pyfile(config_file)
     # Output config values and some other info
-    if deploy_env in ['prod', 'test']:
+    if deploy_env in ['prod', 'beta', 'test']:
         print('Configuration values are as follows: ')
         print(pprint.pformat(app.config, indent=4))
-    try:
-        with open('.git-version') as git_version_file:
-            print('Running on git commit: %s' % git_version_file.read().strip())
-    except IOError as e:
-        print('Unable to retrieve git commit. Error: %s', str(e))
+
+        try:
+            with open('.git-version') as git_version_file:
+                print('Running on git commit: %s' % git_version_file.read().strip())
+        except IOError as e:
+            print('Unable to retrieve git commit. Error: %s', str(e))
 
 
-def gen_app(debug=None):
+def check_ratelimit_token_whitelist(auth_token):
+    """
+        Check to see if the given auth_token is a whitelisted auth token.
+    """
+
+    from flask import current_app
+    return auth_token in current_app.config["WHITELISTED_AUTH_TOKENS"]
+
+
+def create_app(debug=None):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
     """
+
     app = CustomFlask(
         import_name=__name__,
         use_flask_uuid=True,
@@ -85,6 +72,11 @@ def gen_app(debug=None):
     load_config(app)
     if debug is not None:
         app.debug = debug
+    # As early as possible, if debug is True, set the log level of our 'listenbrainz' logger to DEBUG
+    # to prevent flask from creating a new log handler
+    if app.debug:
+        logger = logging.getLogger('listenbrainz')
+        logger.setLevel(logging.DEBUG)
 
     # initialize Flask-DebugToolbar if the debug option is True
     if app.debug and app.config['SECRET_KEY']:
@@ -100,18 +92,6 @@ def gen_app(debug=None):
     cache.init(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
     metrics.init("listenbrainz")
 
-    # Redis connection
-    create_redis(app)
-
-    # Timescale connection
-    create_timescale(app)
-
-    # RabbitMQ connection
-    try:
-        create_rabbitmq(app)
-    except ConnectionError:
-        app.logger.critical("RabbitMQ service is not up!", exc_info=True)
-
     # Database connections
     from listenbrainz import db
     from listenbrainz.db import timescale as ts
@@ -119,6 +99,21 @@ def gen_app(debug=None):
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
     ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
     msb.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+
+    # Redis connection
+    from listenbrainz.webserver.redis_connection import init_redis_connection
+    init_redis_connection(app.logger)
+
+    # Timescale connection
+    from listenbrainz.webserver.timescale_connection import init_timescale_connection
+    init_timescale_connection(app)
+
+    # RabbitMQ connection
+    from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
+    try:
+        init_rabbitmq_connection(app)
+    except ConnectionError:
+        app.logger.critical("RabbitMQ service is not up!", exc_info=True)
 
     if app.config['MB_DATABASE_URI']:
         from brainzutils import musicbrainz_db
@@ -134,7 +129,8 @@ def gen_app(debug=None):
     from listenbrainz.webserver.errors import init_error_handlers
     init_error_handlers(app)
 
-    from brainzutils.ratelimit import inject_x_rate_headers
+    from brainzutils.ratelimit import inject_x_rate_headers, set_user_validation_function
+    set_user_validation_function(check_ratelimit_token_whitelist)
     @app.after_request
     def after_request_callbacks(response):
         return inject_x_rate_headers(response)
@@ -148,8 +144,9 @@ def gen_app(debug=None):
     return app
 
 
-def create_app(debug=None):
-    app = gen_app(debug=debug)
+def create_web_app(debug=None):
+    """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
+    app = create_app(debug=debug)
 
     # Static files
     import listenbrainz.webserver.static_manager
@@ -213,7 +210,7 @@ def create_api_compat_app(debug=None):
     need to create a different app and only register the api_compat blueprints
     """
 
-    app = gen_app(debug=debug)
+    app = create_app(debug=debug)
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp

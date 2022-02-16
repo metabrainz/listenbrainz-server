@@ -10,7 +10,7 @@ from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataR
 class UserMissingMusicBrainzDataMessage(BaseModel):
     """ Format of missing musicbrainz data messages sent to the ListenBrainz Server """
     type: constr(min_length=1)
-    musicbrainz_id: constr(min_length=1)
+    user_id: NonNegativeInt
     missing_musicbrainz_data: List[UserMissingMusicBrainzDataRecord]
     source: constr(min_length=1)
 
@@ -51,5 +51,5 @@ class UserRecommendationsData(BaseModel):
 class UserRecommendationsMessage(BaseModel):
     """ Format of recommendations messages sent to the ListenBrainz Server """
     type: constr(min_length=1)
-    musicbrainz_id: constr(min_length=1)
+    user_id: NonNegativeInt
     recommendations: UserRecommendationsJson

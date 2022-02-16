@@ -9,6 +9,14 @@ import listenbrainz_spark.stats.sitewide.listening_activity
 import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
 import listenbrainz_spark.stats.user.listening_activity
+import listenbrainz_spark.year_in_music.new_releases_of_top_artists
+import listenbrainz_spark.year_in_music.most_prominent_color
+import listenbrainz_spark.year_in_music.similar_users
+import listenbrainz_spark.year_in_music.day_of_week
+import listenbrainz_spark.year_in_music.most_listened_year
+import listenbrainz_spark.year_in_music.top_stats
+import listenbrainz_spark.year_in_music.listens_per_day
+import listenbrainz_spark.year_in_music.listen_count
 
 functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
@@ -25,7 +33,17 @@ functions = {
     'cf.recommendations.recording.candidate_sets': listenbrainz_spark.recommendations.recording.candidate_sets.main,
     'cf.recommendations.recording.recommendations': listenbrainz_spark.recommendations.recording.recommend.main,
     'import.artist_relation': listenbrainz_spark.request_consumer.jobs.import_dump.import_artist_relation_to_hdfs,
-    'similarity.similar_users': listenbrainz_spark.user_similarity.user_similarity.main
+    'import.musicbrainz_release_dump': listenbrainz_spark.request_consumer.jobs.import_dump.import_release_json_dump_to_hdfs,
+    'similarity.similar_users': listenbrainz_spark.user_similarity.user_similarity.main,
+    'year_in_music.new_releases_of_top_artists':
+        listenbrainz_spark.year_in_music.new_releases_of_top_artists.get_new_releases_of_top_artists,
+    'year_in_music.most_prominent_color': listenbrainz_spark.year_in_music.most_prominent_color.get_most_prominent_color,
+    'year_in_music.most_listened_year': listenbrainz_spark.year_in_music.most_listened_year.get_most_listened_year,
+    'year_in_music.day_of_week': listenbrainz_spark.year_in_music.day_of_week.get_day_of_week,
+    'year_in_music.similar_users': listenbrainz_spark.year_in_music.similar_users.get_similar_users,
+    'year_in_music.top_stats': listenbrainz_spark.year_in_music.top_stats.calculate_top_entity_stats,
+    'year_in_music.listens_per_day': listenbrainz_spark.year_in_music.listens_per_day.calculate_listens_per_day,
+    'year_in_music.listen_count': listenbrainz_spark.year_in_music.listen_count.get_listen_count,
 }
 
 

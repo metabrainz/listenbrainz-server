@@ -5,7 +5,8 @@ import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslin
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export type ListenControlProps = {
-  className?: string;
+  buttonClassName?: string;
+  iconClassName?: string;
   action?: (event: React.MouseEvent) => void;
   icon?: IconDefinition;
   iconOnly?: boolean;
@@ -23,7 +24,8 @@ export type ListenControlProps = {
 
 const ListenControl = (props: ListenControlProps) => {
   const {
-    className,
+    buttonClassName,
+    iconClassName,
     action,
     icon,
     iconOnly,
@@ -51,7 +53,7 @@ const ListenControl = (props: ListenControlProps) => {
     iconElement = (
       <FontAwesomeIcon
         icon={icon as IconProp}
-        className={className}
+        className={iconClassName}
         title={title}
         onClick={disabled ? undefined : action}
       />
@@ -63,7 +65,7 @@ const ListenControl = (props: ListenControlProps) => {
   ) : (
     <button
       disabled={disabled ?? false}
-      className={className}
+      className={buttonClassName}
       title={title}
       onClick={disabled ? undefined : action}
       type="button"

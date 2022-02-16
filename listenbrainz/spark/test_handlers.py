@@ -1,22 +1,20 @@
-import unittest
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
-from data.model.common_stat import StatRange, StatRecordList
-from data.model.user_daily_activity import UserDailyActivityRecord
-from data.model.user_entity import UserEntityRecord
-from data.model.user_listening_activity import UserListeningActivityRecord
-from data.model.user_artist_stat import UserArtistRecord
-
-from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
-                                                      UserMissingMusicBrainzDataJson)
-
-from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
-                                                                  UserRecommendationsRecord)
-
-
 from flask import current_app
 
+from data.model.common_stat import StatRange, StatRecordList, StatApi
+from data.model.user_artist_stat import ArtistRecord
+from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
+                                                                  UserRecommendationsRecord)
+from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_entity import EntityRecord
+from data.model.user_listening_activity import ListeningActivityRecord
+from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
+                                                      UserMissingMusicBrainzDataJson)
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db import user as db_user
+from listenbrainz.db import stats as db_stats
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
@@ -26,138 +24,259 @@ from listenbrainz.spark.handlers import (
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     notify_cf_recording_recommendations_generation)
-
 from listenbrainz.webserver import create_app
 
 
-class HandlersTestCase(unittest.TestCase):
+class HandlersTestCase(DatabaseTestCase):
 
     def setUp(self):
+        super(HandlersTestCase, self).setUp()
         self.app = create_app()
+        db_user.create(1, 'iliekcomputers')
+        db_user.create(2, 'lucifer')
+        self.maxDiff = None
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_entity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
+    def test_handle_user_entity(self):
         data = {
-            'musicbrainz_id': 'iliekcomputers',
             'type': 'user_entity',
             'entity': 'artists',
             'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
-            'count': 1,
-            'data': [{
-                'artist_name': 'Kanye West',
-                'listen_count': 200,
-            }],
+            'data': [
+                {
+                    'user_id': 1,
+                    'data': [{
+                        'artist_name': 'Kanye West',
+                        'listen_count': 200,
+                    }],
+                    'count': 1,
+                },
+                {
+                    'user_id': 2,
+                    'data': [
+                        {
+                            'artist_name': 'Selena Gomez',
+                            'listen_count': 100,
+                        },
+                        {
+                            'artist_name': 'Tom Ellis',
+                            'listen_count': 50,
+                        }
+                    ],
+                    'count': 2,
+                }
+            ]
         }
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
-        mock_new_user_stats.return_value = True
 
-        with self.app.app_context():
-            current_app.config['TESTING'] = False  # set testing to false to check the notifications
-            handle_user_entity(data)
+        handle_user_entity(data)
 
-        mock_db_insert.assert_called_with(1, 'artists', StatRange[UserEntityRecord](
+        received = db_stats.get_user_stats(1, 'all_time', 'artists')
+        expected = StatApi[EntityRecord](
+            user_id=1,
             to_ts=10,
             from_ts=1,
             count=1,
             stats_range='all_time',
-            data=StatRecordList[UserEntityRecord](
+            data=StatRecordList[EntityRecord](
                 __root__=[
-                    UserArtistRecord(
+                    ArtistRecord(
                         artist_mbids=[],
                         listen_count=200,
                         artist_name='Kanye West',
                     )
                 ]
-            )
-        ))
-        mock_send_mail.assert_called_once()
+            ),
+            last_updated=received.last_updated
+        )
+        self.assertEqual(received, expected)
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_listening_activity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
+        received = db_stats.get_user_stats(2, 'all_time', 'artists')
+        expected = StatApi[EntityRecord](
+            user_id=2,
+            to_ts=10,
+            from_ts=1,
+            count=2,
+            stats_range='all_time',
+            data=StatRecordList[EntityRecord](
+                __root__=[
+                    ArtistRecord(
+                        artist_mbids=[],
+                        listen_count=100,
+                        artist_name='Selena Gomez',
+                    ),
+                    ArtistRecord(
+                        artist_mbids=[],
+                        listen_count=50,
+                        artist_name='Tom Ellis',
+                    )
+                ]
+            ),
+            last_updated=received.last_updated
+        )
+        self.assertEqual(received, expected)
+
+    def test_handle_user_listening_activity(self):
         data = {
-            'musicbrainz_id': 'iliekcomputers',
             'type': 'listening_activity',
             'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
-            'data': [{
-                'from_ts': 1,
-                'to_ts': 5,
-                'time_range': '2020',
-                'listen_count': 200,
-            }],
+            'data': [
+                {
+                    'user_id': 1,
+                    'data': [
+                        {
+                            'from_ts': 1,
+                            'to_ts': 5,
+                            'time_range': '2020',
+                            'listen_count': 200,
+                        },
+                        {
+                            'from_ts': 6,
+                            'to_ts': 10,
+                            'time_range': '2021',
+                            'listen_count': 150,
+                        },
+                    ]
+                },
+                {
+                    'user_id': 2,
+                    'data': [
+                        {
+                            'from_ts': 2,
+                            'to_ts': 7,
+                            'time_range': '2020',
+                            'listen_count': 20,
+                        }
+                    ]
+                }
+            ]
         }
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
-        mock_new_user_stats.return_value = True
 
-        with self.app.app_context():
-            current_app.config['TESTING'] = False  # set testing to false to check the notifications
-            handle_user_listening_activity(data)
+        handle_user_listening_activity(data)
 
-        mock_db_insert.assert_called_with(1, 'listening_activity', StatRange[UserListeningActivityRecord](
+        received = db_stats.get_user_listening_activity(1, 'all_time')
+        self.assertEqual(received, StatApi[ListeningActivityRecord](
+            user_id=1,
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            data=StatRecordList[UserListeningActivityRecord](
+            data=StatRecordList[ListeningActivityRecord](
                 __root__=[
-                    UserListeningActivityRecord(
+                    ListeningActivityRecord(
                         from_ts=1,
                         to_ts=5,
                         time_range='2020',
                         listen_count=200,
+                    ),
+                    ListeningActivityRecord(
+                        from_ts=6,
+                        to_ts=10,
+                        time_range='2021',
+                        listen_count=150,
+                    ),
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+        received = db_stats.get_user_listening_activity(2, 'all_time')
+        self.assertEqual(received, StatApi[ListeningActivityRecord](
+            user_id=2,
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[ListeningActivityRecord](
+                __root__=[
+                    ListeningActivityRecord(
+                        from_ts=2,
+                        to_ts=7,
+                        time_range='2020',
+                        listen_count=20,
                     )
                 ]
-            )
+            ),
+            last_updated=received.last_updated
         ))
-        mock_send_mail.assert_called_once()
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_daily_activity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
+    def test_handle_user_daily_activity(self):
         data = {
-            'musicbrainz_id': 'iliekcomputers',
             'type': 'daily_activity',
             'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
-            'daily_activity': [{
-                'day': 'Monday',
-                'hour': 20,
-                'listen_count': 20,
-            }],
+            'data': [
+                {
+                    'user_id': 1,
+                    'data': [
+                        {
+                            'day': 'Monday',
+                            'hour': 20,
+                            'listen_count': 20,
+                        }
+                    ]
+                },
+                {
+                    'user_id': 2,
+                    'data': [
+                        {
+                            'day': 'Wednesday',
+                            'hour': 10,
+                            'listen_count': 25,
+                        },
+                        {
+                            'day': 'Friday',
+                            'hour': 11,
+                            'listen_count': 22,
+                        }
+                    ]
+                }
+            ],
         }
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
-        mock_new_user_stats.return_value = True
 
-        with self.app.app_context():
-            current_app.config['TESTING'] = False  # set testing to false to check the notifications
-            handle_user_daily_activity(data)
+        handle_user_daily_activity(data)
 
-        mock_db_insert.assert_called_with(1, StatRange[UserDailyActivityRecord](
+        received = db_stats.get_user_daily_activity(1, 'all_time')
+        self.assertEqual(received, StatApi[DailyActivityRecord](
+            user_id=1,
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            data=StatRecordList[UserDailyActivityRecord](
+            data=StatRecordList[DailyActivityRecord](
                 __root__=[
-                    UserDailyActivityRecord(
+                    DailyActivityRecord(
                         day='Monday',
                         hour=20,
                         listen_count=20,
                     )
                 ]
-            )
+            ),
+            last_updated=received.last_updated
         ))
-        mock_send_mail.assert_called_once()
+
+        received = db_stats.get_user_daily_activity(2, 'all_time')
+        self.assertEqual(received, StatApi[DailyActivityRecord](
+            user_id=2,
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[DailyActivityRecord](
+                __root__=[
+                    DailyActivityRecord(
+                        day='Wednesday',
+                        hour=10,
+                        listen_count=25,
+                    ),
+                    DailyActivityRecord(
+                        day='Friday',
+                        hour=11,
+                        listen_count=22,
+                    ),
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.insert_sitewide_jsonb_data')
     @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
@@ -183,13 +302,13 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_sitewide_entity(data)
 
-        mock_db_insert.assert_called_with('artists', StatRange[UserArtistRecord](
+        mock_db_insert.assert_called_with('artists', StatRange[ArtistRecord](
             to_ts=10,
             from_ts=1,
             count=1,
             stats_range='all_time',
-            data=StatRecordList[UserArtistRecord](__root__=[
-                UserArtistRecord(
+            data=StatRecordList[ArtistRecord](__root__=[
+                ArtistRecord(
                     artist_name='Coldplay',
                     artist_mbid=[],
                     listen_count=20,
@@ -205,10 +324,10 @@ class HandlersTestCase(unittest.TestCase):
         self.assertTrue(is_new_user_stats_batch())
 
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    def test_handle_recommendations(self, mock_get_by_mb_id, mock_db_insert):
+    @mock.patch('listenbrainz.spark.handlers.db_user.get')
+    def test_handle_recommendations(self, mock_get, mock_db_insert):
         data = {
-            'musicbrainz_id': 'vansika',
+            'user_id': 1,
             'type': 'cf_recording_recommendations',
             'recommendations': {
                 'top_artist': [
@@ -225,7 +344,7 @@ class HandlersTestCase(unittest.TestCase):
             }
         }
 
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
+        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
         with self.app.app_context():
             handle_recommendations(data)
 
@@ -423,11 +542,11 @@ class HandlersTestCase(unittest.TestCase):
             mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    def test_handle_missing_musicbrainz_data(self, mock_get_by_mb_id, mock_db_insert):
+    @mock.patch('listenbrainz.spark.handlers.db_user.get')
+    def test_handle_missing_musicbrainz_data(self, mock_get, mock_db_insert):
         data = {
             'type': 'missing_musicbrainz_data',
-            'musicbrainz_id': 'vansika',
+            'user_id': 1,
             'missing_musicbrainz_data': [
                 {
                     "artist_name": "Katty Peri",
@@ -439,17 +558,19 @@ class HandlersTestCase(unittest.TestCase):
             'source': 'cf'
         }
 
-        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
+        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
 
         with self.app.app_context():
             handle_missing_musicbrainz_data(data)
 
-        mock_db_insert.assert_called_with(1, UserMissingMusicBrainzDataJson(
-            missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
-                artist_name="Katty Peri",
-                listened_at="2020-04-29 23:56:23",
-                release_name="No Place Is Home",
-                recording_name="How High"
-            )]),
+        mock_db_insert.assert_called_with(
+            1,
+            UserMissingMusicBrainzDataJson(
+                missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
+                    artist_name="Katty Peri",
+                    listened_at="2020-04-29 23:56:23",
+                    release_name="No Place Is Home",
+                    recording_name="How High"
+                )]),
             'cf'
         )

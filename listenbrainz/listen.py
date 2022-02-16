@@ -1,12 +1,9 @@
 # coding=utf-8
 import calendar
-import time
-import ujson
-import yaml
 from copy import deepcopy
-
 from datetime import datetime
-from listenbrainz.utils import escape
+
+import ujson
 
 
 def flatten_dict(d, seperator='', parent_key=''):
@@ -132,27 +129,27 @@ class Listen(object):
         )
 
     @classmethod
-    def from_timescale(cls, listened_at, track_name, user_name, created, j,
-                       recording_mbid=None, release_mbid=None, artist_mbids=None):
+    def from_timescale(cls, listened_at, track_name, user_id, created, data,
+                       recording_mbid=None, release_mbid=None, artist_mbids=None, user_name=None):
         """Factory to make Listen() objects from a timescale dict"""
 
-        j['listened_at'] = datetime.utcfromtimestamp(float(listened_at))
-        j['track_metadata']['track_name'] = track_name
+        data['listened_at'] = datetime.utcfromtimestamp(float(listened_at))
+        data['track_metadata']['track_name'] = track_name
         if recording_mbid is not None and release_mbid is not None and artist_mbids is not None:
-            j["track_metadata"]["mbid_mapping"] = {
+            data["track_metadata"]["mbid_mapping"] = {
                 "recording_mbid": str(recording_mbid),
                 "release_mbid": str(release_mbid),
                 "artist_mbids": [ str(m) for m in artist_mbids ] }
         return cls(
-            user_id=j.get('user_id'),
+            user_id=user_id,
             user_name=user_name,
-            timestamp=j['listened_at'],
-            artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
-            release_msid=j['track_metadata']['additional_info'].get('release_msid'),
-            recording_msid=j['track_metadata']['additional_info'].get('recording_msid'),
-            dedup_tag=j.get('dedup_tag', 0),
+            timestamp=data['listened_at'],
+            artist_msid=data['track_metadata']['additional_info'].get('artist_msid'),
+            release_msid=data['track_metadata']['additional_info'].get('release_msid'),
+            recording_msid=data['track_metadata']['additional_info'].get('recording_msid'),
+            dedup_tag=data.get('dedup_tag', 0),
             inserted_timestamp=created,
-            data=j.get('track_metadata')
+            data=data.get('track_metadata')
         )
 
     def to_api(self):
@@ -193,7 +190,7 @@ class Listen(object):
         track_metadata['additional_info']['recording_msid'] = self.recording_msid
         track_name = track_metadata['track_name']
         del track_metadata['track_name']
-        return (self.ts_since_epoch, track_name, self.user_name, ujson.dumps({
+        return (self.ts_since_epoch, track_name, self.user_name, self.user_id, ujson.dumps({
             'user_id': self.user_id,
             'track_metadata': track_metadata
         }))
