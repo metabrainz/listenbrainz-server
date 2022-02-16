@@ -118,7 +118,7 @@ def load_instant():
     )
 
 
-@player_bp.route("/release/<release_mbid>", methods=["GET"])
+@player_bp.route("/release/<release_mbid>/", methods=["GET"])
 def load_release(release_mbid):
     """
     This endpoint takes a release mbid, loads the tracks for this release and makes a playlist from it and
