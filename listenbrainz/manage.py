@@ -10,7 +10,9 @@ from listenbrainz.db import timescale as ts
 from listenbrainz.listenstore import timescale_fill_userid
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
-    add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata, delete_listens_update_stats
+    add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
+    delete_listens as ts_delete_listens, \
+    delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data
 from listenbrainz.webserver import create_app
 
 
@@ -264,9 +266,9 @@ def recalculate_all_user_data():
         ts_recalculate_all_user_data()
 
 
-@cli.command(name="update_all_user_listen_counts")
-def update_all_user_listen_counts():
-    """ Scans listen table and update listen counts for all users """
+@cli.command(name="update_user_listen_data")
+def update_user_listen_data():
+    """ Scans listen table and update listen metadata for all users """
     application = webserver.create_app()
     with application.app_context():
         ts_update_user_listen_data()
@@ -274,10 +276,19 @@ def update_all_user_listen_counts():
 
 @cli.command(name="delete_pending_listens")
 def delete_pending_listens():
-    """ Scans listen table and update listen counts for all users """
+    """ Complete all pending listen deletes since last cron run """
     application = webserver.create_app()
     with application.app_context():
-        delete_listens_update_stats()
+        ts_delete_listens()
+
+
+@cli.command(name="delete_listens_and_update_metadata")
+def delete_listens_and_update_metadata():
+    """ Complete all pending listen deletes and also run update script for
+    updating listen metadata since last cron run """
+    application = webserver.create_app()
+    with application.app_context():
+        ts_delete_listens_and_update_user_listen_data()
 
 
 @cli.command(name="add_missing_to_listen_users_metadata")

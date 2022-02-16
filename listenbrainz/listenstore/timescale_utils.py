@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 SECONDS_IN_A_YEAR = 31536000
 
 
-def delete_listens_update_stats():
+def delete_listens():
     # count deleted listens, checked created and update listen counts
     delete_listens_and_update_listen_counts = """
         WITH deleted_listens AS (
@@ -147,6 +147,11 @@ def update_user_listen_data():
         logger.info("Starting to update listen counts")
         connection.execute(text(query), until=datetime.now())
         logger.info("Completed updating listen counts")
+
+
+def delete_listens_and_update_user_listen_data():
+    delete_listens()
+    update_user_listen_data()
 
 
 def add_missing_to_listen_users_metadata():
