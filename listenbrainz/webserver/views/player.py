@@ -152,7 +152,7 @@ def load_release(release_mbid):
                                                 release_name=release["name"],
                                                 release_mbid=release["mbid"],
                                                 position=recording["position"],
-                                                mbid=recording["mbid"],
+                                                mbid=recording["recording_id"],
                                                 added_by_id=1, created=now)
                 playlist.recordings.append(rec)
 
