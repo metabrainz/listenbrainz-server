@@ -16,13 +16,14 @@ import sentry_sdk
 
 from flask import current_app, request
 
+from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
 
-#: Maximum overall listen size in bytes, to prevent egregious spamming.
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 
+#: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
 
 #: The maximum number of tags per listen.
@@ -44,10 +45,6 @@ MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
-
-# October 2002 is date before which most Last.FM data is rubbish
-#: The minimum acceptable value for listened_at field
-LISTEN_MINIMUM_TS = int(datetime(2002, 10, 1).timestamp())
 
 
 def insert_payload(payload, user: SubmitListenUserMetadata, listen_type=LISTEN_TYPE_IMPORT):

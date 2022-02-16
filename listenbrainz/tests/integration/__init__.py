@@ -74,11 +74,12 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         )
 
 
-class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase):
+class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):
         APICompatServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
 
     def tearDown(self):
         APICompatServerTestCase.tearDown(self)

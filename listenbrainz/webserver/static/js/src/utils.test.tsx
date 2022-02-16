@@ -47,7 +47,9 @@ describe("preciseTimestamp", () => {
 
   it("uses no-year formatting if timestamp is 'yesterday'", () => {
     const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
-    const testDate: number = date.getTime() - 1000 * 3600 * 6; // 6 hours prior was yesterday
+    const epoch = date.getTime();
+    const testDate: number = epoch - 1000 * 3600 * 6; // 6 hours prior was yesterday
+    const dateNowMock = jest.spyOn(Date, "now").mockImplementation(() => epoch);
     expect(preciseTimestamp(testDate)).toMatch(
       new Date(testDate).toLocaleString(undefined, {
         day: "2-digit",
@@ -57,10 +59,15 @@ describe("preciseTimestamp", () => {
         hour12: true,
       })
     );
+    dateNowMock.mockRestore();
   });
 
   it("uses no-year formatting for <1y dates", () => {
-    const testDate: number = currentDate.getTime() - 1000 * 3600 * 24 * 7; // 1 week ago
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const testDate: number = date.getTime() - 1000 * 3600 * 24 * 7; // 1 week ago
+    const dateNowMock = jest
+      .spyOn(Date, "now")
+      .mockImplementation(() => date.getTime());
     expect(preciseTimestamp(testDate)).toMatch(
       new Date(testDate).toLocaleString(undefined, {
         day: "2-digit",
@@ -70,6 +77,7 @@ describe("preciseTimestamp", () => {
         hour12: true,
       })
     );
+    dateNowMock.mockRestore();
   });
 
   it("uses with-year formatting for >1y dates", () => {

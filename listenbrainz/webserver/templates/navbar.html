@@ -40,6 +40,7 @@
           <ul class="dropdown-menu" role="menu">
             <li><a href="{{ url_for('index.huesound') }}">Hue Sound</a></li>
             <li><a href="{{ url_for('index.similar_users') }}">Top similar users</a></li>
+            <li><a href="{{ url_for('user.year_in_music', user_name=current_user.musicbrainz_id) }}">Your Year In Music</a></li>
           </ul>
         </li>
         <li class="dropdown">
@@ -47,11 +48,8 @@
              About<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('index.faq') }}">FAQ</a></li>
-            <li><a href="{{ url_for('index.goals') }}">Goals</a></li>
-            <li><a href="{{ url_for('index.roadmap') }}">Roadmap</a></li>
+            <li><a href="{{ url_for('index.about') }}">About ListenBrainz</a></li>
             <li><a href="https://listenbrainz.readthedocs.io">API Docs</a></li>
-            <li><a href="{{ url_for('index.contribute') }}">Contribute</a></li>
             <li><a href="{{ url_for('index.current_status') }}">Current site status</a></li>
             <li><a href="https://metabrainz.org/gdpr">GDPR compliance</a></li>
             <li><a href="https://metabrainz.org/privacy">Privacy policy</a></li>
@@ -80,6 +78,7 @@
               <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
               <li><a href="{{ url_for('profile.export_data') }}">Export</a></li>
               <li><a href="{{ url_for('profile.info') }}">My profile</a></li>
+              <li><a href="{{ url_for('profile.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Add Missing MusicBrainz Data</a></li>
               <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
             </ul>
           </li>

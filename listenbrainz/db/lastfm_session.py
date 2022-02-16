@@ -66,7 +66,7 @@ class Session(object):
         """ Create a new session for the user by consuming the token.
             If session already exists for the user then renew the session_key(sid).
         """
-        sid = binascii.b2a_hex(os.urandom(20))
+        sid = os.urandom(20).hex()
         session = Session.generate(token.user.id, sid, token.api_key)
         token.consume()
         return session

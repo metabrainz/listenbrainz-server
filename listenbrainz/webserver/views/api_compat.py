@@ -8,7 +8,7 @@ from flask import Blueprint, request, render_template, current_app
 from flask_login import login_required, current_user
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
-from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenValidationError
+from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenValidationError, LastFMError
 import xmltodict
 
 from listenbrainz.webserver.models import SubmitListenUserMetadata
@@ -225,7 +225,7 @@ def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
         if 'trackNumber' in data:
             listen['track_metadata']['additional_info']['tracknumber'] = data['trackNumber']
         if 'mbid' in data:
-            listen['track_metadata']['release_mbid'] = data['mbid']
+            listen['track_metadata']['track_mbid'] = data['mbid']
         if 'duration' in data:
             listen['track_metadata']['additional_info']['duration'] = data['duration']
         # Choosen_by_user is 1 by default
@@ -277,7 +277,9 @@ def record_listens(request, data):
     try:
         validated_payload = [validate_listen(listen, listen_type) for listen in native_payload]
     except ListenValidationError as err:
-        raise InvalidAPIUsage(err.message, 400, output_format)
+        # Unsure about which LastFMError code to use but 5 or 6 probably make the most sense.
+        # see listenbrainz.webserver.errors.py for a detailed list of all available codes
+        raise InvalidAPIUsage(LastFMError(code=6, message=err.message), 400, output_format)
 
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     augmented_listens = insert_payload(validated_payload, user_metadata, listen_type=listen_type)
@@ -373,7 +375,7 @@ def format_response(data, format="xml"):
     elif format == 'json':
         # Remove the <lfm> tag and its attributes
         jsonData = xmltodict.parse(data)['lfm']
-        for k in jsonData.keys():
+        for k in list(jsonData.keys()):
             if k[0] == '@':
                 jsonData.pop(k)
 

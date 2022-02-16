@@ -1,12 +1,10 @@
 import sqlalchemy
+from sqlalchemy import text, select
 
 from listenbrainz import db
-from listenbrainz.db import timescale
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.feedback import Feedback
-from listenbrainz import messybrainz as msb_db
-from listenbrainz.messybrainz.data import load_recordings_from_msids
 from typing import List
-from listenbrainz.messybrainz.exceptions import NoDataFoundException
 
 
 def insert(feedback: Feedback):
@@ -17,20 +15,50 @@ def insert(feedback: Feedback):
         Args:
             feedback: An object of class Feedback
     """
+    query_only_msid = """
+        INSERT INTO recording_feedback (user_id, recording_msid, score)
+             VALUES (:user_id, :recording_msid, :score)
+        ON CONFLICT (user_id, recording_msid)
+      DO UPDATE SET score = :score
+                  , created = NOW()
+    """
+
+    query_only_mbid = """
+        INSERT INTO recording_feedback (user_id, recording_mbid, score)
+             VALUES (:user_id, :recording_mbid, :score)
+        ON CONFLICT (user_id, recording_mbid)
+      DO UPDATE SET score = :score
+                  , created = NOW()
+    """
+
+    query_both_msid_mbid = """
+        INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
+             VALUES (:user_id, :recording_mbid, :recording_msid, :score)
+        ON CONFLICT (user_id, recording_mbid)
+      DO UPDATE SET score = :score
+                  , recording_msid = :recording_msid
+                  , created = NOW()
+    """
+
+    params = {
+        'user_id': feedback.user_id,
+        'score': feedback.score,
+    }
+
+    if feedback.recording_msid is not None and feedback.recording_mbid is not None:
+        # both recording_msid and recording_mbid available
+        params['recording_msid'] = feedback.recording_msid
+        params['recording_mbid'] = feedback.recording_mbid
+        query = query_both_msid_mbid
+    elif feedback.recording_mbid is not None:  # only recording_mbid available
+        params['recording_mbid'] = feedback.recording_mbid
+        query = query_only_mbid
+    else: # only recording_msid available
+        params['recording_msid'] = feedback.recording_msid
+        query = query_only_msid
 
     with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO recording_feedback (user_id, recording_msid, score)
-                 VALUES (:user_id, :recording_msid, :score)
-            ON CONFLICT (user_id, recording_msid)
-          DO UPDATE SET score = :score,
-                        created = NOW()
-            """), {
-            'user_id': feedback.user_id,
-            'recording_msid': feedback.recording_msid,
-            'score': feedback.score,
-        }
-        )
+        connection.execute(text(query), params)
 
 
 def delete(feedback: Feedback):
@@ -39,17 +67,20 @@ def delete(feedback: Feedback):
         Args:
             feedback: An object of class Feedback
     """
+    conditions = ["user_id = :user_id"]
+    args = {"user_id": feedback.user_id}
 
+    if feedback.recording_msid:
+        conditions.append("recording_msid = :recording_msid")
+        args["recording_msid"] = feedback.recording_msid
+
+    if feedback.recording_mbid:
+        conditions.append("recording_mbid = :recording_mbid")
+        args["recording_mbid"] = feedback.recording_mbid
+
+    where_clause = " AND ".join(conditions)
     with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            DELETE FROM recording_feedback
-             WHERE user_id = :user_id
-               AND recording_msid = :recording_msid
-            """), {
-            'user_id': feedback.user_id,
-            'recording_msid': feedback.recording_msid,
-        }
-        )
+        connection.execute(text("DELETE FROM recording_feedback WHERE " + where_clause), args)
 
 
 def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None, metadata: bool = False) -> List[Feedback]:
@@ -68,14 +99,17 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
     """
 
     args = {"user_id": user_id, "limit": limit, "offset": offset}
-    query = """ SELECT user_id,
-                       "user".musicbrainz_id AS user_name,
-                       recording_msid::text, score,
-                       recording_feedback.created
+    query = """ SELECT user_id
+                     , "user".musicbrainz_id AS user_name
+                     , recording_msid::text
+                     , recording_mbid::text
+                     , score
+                     , recording_feedback.created
                   FROM recording_feedback
                   JOIN "user"
                     ON "user".id = recording_feedback.user_id
-                 WHERE user_id = :user_id """
+                 WHERE user_id = :user_id
+    """
 
     if score:
         query += " AND score = :score"
@@ -89,44 +123,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         feedback = [Feedback(**dict(row)) for row in result.fetchall()]
 
     if metadata and len(feedback) > 0:
-        msids = [f.recording_msid for f in feedback]
-        index = {f.recording_msid: f for f in feedback}
-
-        # Fetch the artist and track names from MSB
-        with msb_db.engine.connect() as connection:
-            try:
-                msb_recordings = load_recordings_from_msids(connection, msids)
-            except NoDataFoundException:
-                msb_recordings = []
-
-        artist_msids = {}
-        if msb_recordings:
-            for rec in msb_recordings:
-                index[rec["ids"]["recording_msid"]].track_metadata = {
-                    "artist_name": rec["payload"]["artist"],
-                    "release_name": rec["payload"].get("release_name", ""),
-                    "track_name": rec["payload"]["title"]}
-                artist_msids[rec["ids"]["recording_msid"]
-                             ] = rec["ids"]["artist_msid"]
-
-        # Fetch the mapped MBIDs from the mapping
-        query = """SELECT recording_msid::TEXT, m.recording_mbid::TEXT, release_mbid::TEXT, artist_mbids::TEXT[]
-                     FROM mbid_mapping m
-                     JOIN mbid_mapping_metadata mm
-                       ON m.recording_mbid = mm.recording_mbid
-                    WHERE recording_msid in :msids
-                 ORDER BY recording_msid"""
-
-        with timescale.engine.connect() as connection:
-            result = connection.execute(
-                sqlalchemy.text(query), msids=tuple(msids))
-            for row in result.fetchall():
-                if row["recording_mbid"] is not None:
-                    index[row["recording_msid"]].track_metadata['additional_info'] = {
-                        "recording_mbid": row["recording_mbid"],
-                        "release_mbid": row["release_mbid"],
-                        "artist_mbids": row["artist_mbids"],
-                        "artist_msid": artist_msids[row["recording_msid"]]}
+        feedback = fetch_track_metadata_for_items(feedback)
 
     return feedback
 
@@ -136,7 +133,7 @@ def get_feedback_count_for_user(user_id: int, score=None) -> int:
 
         Args:
             user_id: the row ID of the user in the DB
-            score: If 1, fetch count for all the loved feedback, 
+            score: If 1, fetch count for all the loved feedback,
                    if -1 fetch count for all the hated feedback,
                    if None, fetch count for all feedback
 
@@ -158,11 +155,13 @@ def get_feedback_count_for_user(user_id: int, score=None) -> int:
     return count
 
 
-def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, score: int = None) -> List[Feedback]:
+def get_feedback_for_recording(recording_type: str, recording: str, limit: int, offset: int, score: int = None)\
+        -> List[Feedback]:
     """ Get a list of recording feedback for a given recording in descending order of their creation
 
         Args:
-            recording_msid: the MessyBrainz ID of the recording
+            recording_type: type of id, recording_msid or recording_mbid
+            recording: the msid or mbid of the recording
             score: the score value by which the results are to be filtered. If 1 then returns the loved recordings,
                    if -1 returns hated recordings.
             limit: number of rows to be returned
@@ -172,15 +171,18 @@ def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, sco
             A list of Feedback objects
     """
 
-    args = {"recording_msid": recording_msid, "limit": limit, "offset": offset}
-    query = """ SELECT user_id,
-                       "user".musicbrainz_id AS user_name,
-                       recording_msid::text, score,
-                       recording_feedback.created
-                  FROM recording_feedback
-                  JOIN "user"
-                    ON "user".id = recording_feedback.user_id
-                 WHERE recording_msid = :recording_msid """
+    args = {"recording": recording, "limit": limit, "offset": offset}
+    query = """
+        SELECT user_id
+             , "user".musicbrainz_id AS user_name
+             , recording_msid::text
+             , recording_mbid::text
+             , score
+             , recording_feedback.created
+          FROM recording_feedback
+          JOIN "user"
+            ON "user".id = recording_feedback.user_id
+         WHERE """ + recording_type + " = :recording"
 
     if score:
         query += " AND score = :score"
@@ -190,61 +192,89 @@ def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, sco
                  LIMIT :limit OFFSET :offset """
 
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), args)
+        result = connection.execute(text(query), args)
         return [Feedback(**dict(row)) for row in result.fetchall()]
 
 
-def get_feedback_count_for_recording(recording_msid: str) -> int:
+def get_feedback_count_for_recording(recording_type: str, recording: str) -> int:
     """ Get total number of recording feedback for a given recording
 
         Args:
-            recording_msid: the MessyBrainz ID of the recording
+            recording_type: type of id, recording_msid or recording_mbid
+            recording: the ID of the recording
 
         Returns:
             The total number of recording feedback for a given recording
     """
-
-    query = "SELECT count(*) AS value FROM recording_feedback WHERE recording_msid = :recording_msid"
-
+    query = "SELECT count(*) AS value FROM recording_feedback WHERE " + recording_type + " = :recording"
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), {
-            'recording_msid': recording_msid,
-        }
-        )
+        result = connection.execute(text(query), recording=recording)
         count = int(result.fetchone()["value"])
-
     return count
 
 
-def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: List[str]) -> List[Feedback]:
+def get_feedback_for_multiple_recordings_for_user(user_id: int, user_name: str, recording_msids: List[str],
+                                                  recording_mbids: List[str]) -> List[Feedback]:
     """ Get a list of recording feedback given by the user for given recordings
+
+        For each recording msid and recording mbid,
+            - if record is present then return it
+            - if record is not present then return a pseudo record with score = 0
 
         Args:
             user_id: the row ID of the user in the DB
-            recording_list: list of recording_msid for which feedback records are to be obtained
-                            - if record is present then return it
-                            - if record is not present then return a pseudo record with score = 0
+            user_name: the user name of the user, not used in the query but only for creating the
+                response to be returned from the api
+            recording_msids: list of recording_msid for which feedback records are to be obtained
+            recording_mbids: list of recording_mbid for which feedback records are to be obtained
 
         Returns:
             A list of Feedback objects
     """
+    params = {
+        "user_id": user_id
+    }
 
-    args = {"user_id": user_id, "recording_list": recording_list}
-    query = """ WITH rf AS (
-              SELECT user_id, recording_msid::text, score
+    query_base = """
+            WITH rf AS (
+              SELECT user_id, recording_msid::text, recording_mbid::text, score
                 FROM recording_feedback
-               WHERE recording_feedback.user_id=:user_id
-                )
-              SELECT COALESCE(rf.user_id, :user_id) AS user_id,
-                     "user".musicbrainz_id AS user_name,
-                     rec_msid AS recording_msid,
-                     COALESCE(rf.score, 0) AS score
-                FROM UNNEST(:recording_list) rec_msid
-     LEFT OUTER JOIN rf
-                  ON rf.recording_msid::text = rec_msid
-                JOIN "user"
-                  ON "user".id = :user_id """
+               WHERE recording_feedback.user_id = :user_id
+            )
+    """
 
+    query_msid = """
+              SELECT recording_msid
+                   , recording_mbid
+                   , COALESCE(rf.score, 0) AS score
+                FROM UNNEST(:recording_msids) recording_msid
+     LEFT OUTER JOIN rf
+               USING (recording_msid)
+    """
+
+    query_mbid = """
+              SELECT recording_msid
+                   , recording_mbid
+                   , COALESCE(rf.score, 0) AS score
+                FROM UNNEST(:recording_mbids) recording_mbid
+     LEFT OUTER JOIN rf
+               USING (recording_mbid)
+    """
+
+    # we cannot use single query here because recordings parameter passed to UNNEST should
+    # not be empty so that we check which list is not empty and construct the query accordingly
+    if recording_msids and recording_mbids:  # both msid and mbid list are not empty
+        params["recording_msids"] = recording_msids
+        params["recording_mbids"] = recording_mbids
+        query_remaining = query_msid + " UNION " + query_mbid
+    elif recording_msids:  # only msid list is not empty
+        params["recording_msids"] = recording_msids
+        query_remaining = query_msid
+    else:  # only mbid list is not empty
+        params["recording_mbids"] = recording_mbids
+        query_remaining = query_mbid
+
+    query = query_base + query_remaining
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), args)
-        return [Feedback(**dict(row)) for row in result.fetchall()]
+        result = connection.execute(text(query), params)
+        return [Feedback(user_id=user_id, user_name=user_name, **dict(row)) for row in result.fetchall()]

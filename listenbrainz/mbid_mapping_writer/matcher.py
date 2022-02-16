@@ -4,7 +4,8 @@ from operator import itemgetter
 import sqlalchemy
 import psycopg2
 from psycopg2.extras import execute_values
-from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MATCH_TYPES, MATCH_TYPE_NO_MATCH, MATCH_TYPE_EXACT_MATCH
+from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
+from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_NO_MATCH, MATCH_TYPE_EXACT_MATCH
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.db import timescale
 
@@ -14,11 +15,13 @@ MAX_QUEUED_JOBS = MAX_THREADS * 2
 SEARCH_TIMEOUT = 3600  # basically, don't have searches timeout.
 
 
-def process_listens(app, listens, is_legacy_listen=False):
+def process_listens(app, listens, priority):
     """Given a set of listens, look up each one and then save the results to
        the DB. Note: Legacy listens to not need to be checked to see if
        a result alrady exists in the DB -- the selection of legacy listens
        has already taken care of this."""
+
+    from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
 
     stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
     for typ in MATCH_TYPES:
@@ -28,15 +31,19 @@ def process_listens(app, listens, is_legacy_listen=False):
 
     msids = {str(listen['recording_msid']): listen for listen in listens}
     stats["total"] = len(msids)
-    if not is_legacy_listen:
+    if priority == NEW_LISTEN:
         stats["listen_count"] += len(msids)
+
+    # To debug the mapping, set this to True or a specific priority
+    # e.g. (priority == RECHECK_LISTEN)
+    debug = False   
 
     if len(msids):
 
         # Remove msids for which we already have a match, unless
         # its timestamp is 0, which means we should re-check the item
         with timescale.engine.connect() as connection:
-            query = """SELECT recording_msid 
+            query = """SELECT recording_msid, match_type
                          FROM mbid_mapping
                         WHERE recording_msid IN :msids
                           AND last_updated != '1970-01-01'"""
@@ -46,8 +53,14 @@ def process_listens(app, listens, is_legacy_listen=False):
                 result = curs.fetchone()
                 if not result:
                     break
+
+                if debug:
+                    app.logger.info(f"Remove {str(result[0])}, since a match exists")
+
                 del msids[str(result[0])]
                 stats["processed"] += 1
+                if result[1] != 'no_match':
+                    stats["listens_matched"] += 1
                 skipped += 1
 
         if len(msids) == 0:
@@ -58,15 +71,15 @@ def process_listens(app, listens, is_legacy_listen=False):
             try:
                 # Try an exact lookup (in postgres) first.
                 matches, remaining_listens, stats = lookup_listens(
-                    app, list(msids.values()), stats, True)
+                    app, list(msids.values()), stats, True, debug)
 
                 # For all remaining listens, do a fuzzy lookup.
                 if remaining_listens:
                     new_matches, remaining_listens, stats = lookup_listens(
-                        app, remaining_listens, stats, False)
+                        app, remaining_listens, stats, False, debug)
                     matches.extend(new_matches)
 
-                if not is_legacy_listen:
+                if priority == NEW_LISTEN:
                     stats["listens_matched"] += len(matches)
 
                 # For all listens that are not matched, enter a no match entry, so we don't
@@ -98,12 +111,12 @@ def process_listens(app, listens, is_legacy_listen=False):
                                               , now()
                                               )
                                     ON CONFLICT (recording_mbid) DO UPDATE
-                                            SET release_mbid = mbid.release_mbid
-                                              , release_name = mbid.release_name
-                                              , artist_mbids = mbid.artist_mbids
-                                              , artist_credit_id = mbid.artist_credit_id
-                                              , artist_credit_name = mbid.artist_credit_name
-                                              , recording_name = mbid.recording_name
+                                            SET release_mbid = EXCLUDED.release_mbid
+                                              , release_name = EXCLUDED.release_name
+                                              , artist_mbids = EXCLUDED.artist_mbids
+                                              , artist_credit_id = EXCLUDED.artist_credit_id
+                                              , artist_credit_name = EXCLUDED.artist_credit_name
+                                              , recording_name = EXCLUDED.recording_name
                                               , last_updated = now()"""
 
                 mapping_query = """INSERT INTO mbid_mapping AS m
@@ -119,9 +132,9 @@ def process_listens(app, listens, is_legacy_listen=False):
                                              , now()
                                              )
                                    ON CONFLICT (recording_msid) DO UPDATE
-                                           SET recording_msid = m.recording_msid
-                                             , recording_mbid = m.recording_mbid
-                                             , match_type = m.match_type
+                                           SET recording_msid = EXCLUDED.recording_msid
+                                             , recording_mbid = EXCLUDED.recording_mbid
+                                             , match_type = EXCLUDED.match_type
                                              , last_updated = now()"""
 
                 # Finally insert matches to PG
@@ -149,19 +162,21 @@ def process_listens(app, listens, is_legacy_listen=False):
     return stats
 
 
-def lookup_listens(app, listens, stats, exact):
+def lookup_listens(app, listens, stats, exact, debug):
     """ Attempt an exact string lookup on the passed in listens. Return the maches and the
         listens that were NOT matched. if exact == True, use an exact PG lookup otherwise
         use a typesense fuzzy lookup.
     """
-
     if len(listens) == 0:
         return ([], [], stats)
 
+    if debug:
+        app.logger.info(f"""Lookup (exact {exact}) '{listens[0]["data"]["artist_name"]}', '{listens[0]["data"]["track_name"]}'""")
+
     if exact:
-        q = ArtistCreditRecordingLookupQuery()
+        q = ArtistCreditRecordingLookupQuery(debug=debug)
     else:
-        q = MBIDMappingQuery(timeout=SEARCH_TIMEOUT, remove_stop_words=True)
+        q = MBIDMappingQuery(timeout=SEARCH_TIMEOUT, remove_stop_words=True, debug=debug)
 
     params = []
     for listen in listens:
@@ -172,6 +187,7 @@ def lookup_listens(app, listens, stats, exact):
     hits = q.fetch(params)
     for hit in sorted(hits, key=itemgetter("index"), reverse=True):
         listen = listens[hit["index"]]
+
         if exact:
             hit["match_type"] = MATCH_TYPE_EXACT_MATCH
         stats[MATCH_TYPES[hit["match_type"]]] += 1
@@ -185,8 +201,15 @@ def lookup_listens(app, listens, stats, exact):
                      hit["recording_name"],
                      MATCH_TYPES[hit["match_type"]]))
 
+        if debug:
+            app.logger.info("\n".join(q.get_debug_log_lines()))
+
         listens.pop(hit["index"])
         if len(listens) == 0:
             break
+
+    else:
+        if debug:
+            app.logger.info("No matches returned.")
 
     return rows, listens, stats

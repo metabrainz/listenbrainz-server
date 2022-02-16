@@ -24,8 +24,8 @@ import * as timeago from "time-ago";
 import { sortBy } from "lodash";
 import UserFeedPage from "./UserFeed";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
-import BrainzPlayer from "../BrainzPlayer";
-import * as timelineProps from "./__mocks__/timelineProps.json";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import * as timelineProps from "../../tests/__mocks__/timelineProps.json";
 import GlobalAppContext from "../GlobalAppContext";
 import APIService from "../APIService";
 
@@ -93,6 +93,10 @@ describe("<UserFeed />", () => {
   });
 
   it("renders recording recommendation events", () => {
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const dateNowMock = jest
+      .spyOn(Date, "now")
+      .mockImplementation(() => date.getTime());
     const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
@@ -106,9 +110,14 @@ describe("<UserFeed />", () => {
     expect(content.children()).toHaveLength(1);
     const time = recEvent.find(".event-time");
     expect(time.text()).toEqual("Mar 02, 7:48 PM");
+    dateNowMock.mockRestore();
   });
 
   it("renders follow relationship events", () => {
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const dateNowMock = jest
+      .spyOn(Date, "now")
+      .mockImplementation(() => date.getTime());
     const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
@@ -129,9 +138,14 @@ describe("<UserFeed />", () => {
     expect(content.exists()).toBeFalsy();
     time = followEvent.find(".event-time");
     expect(time.text()).toEqual("Feb 16, 11:20 AM");
+    dateNowMock.mockRestore();
   });
 
   it("renders notification events", () => {
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const dateNowMock = jest
+      .spyOn(Date, "now")
+      .mockImplementation(() => date.getTime());
     const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
@@ -152,9 +166,14 @@ describe("<UserFeed />", () => {
     expect(content.exists()).toBeFalsy();
     const time = notificationEvent.find(".event-time");
     expect(time.text()).toEqual("Feb 16, 11:17 AM");
+    dateNowMock.mockRestore();
   });
 
   it("renders recording pin events", () => {
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const dateNowMock = jest
+      .spyOn(Date, "now")
+      .mockImplementation(() => date.getTime());
     const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
@@ -172,6 +191,7 @@ describe("<UserFeed />", () => {
     // Ensure additional details are rendered if provided
     const additionalContent = content.find(".additional-content");
     expect(additionalContent.text()).toEqual('"Very good..."');
+    dateNowMock.mockRestore();
   });
 
   describe("Pagination", () => {

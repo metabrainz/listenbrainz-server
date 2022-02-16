@@ -29,9 +29,9 @@ import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
-import YoutubePlayer from "../YoutubePlayer";
-import SpotifyPlayer from "../SpotifyPlayer";
-import SoundcloudPlayer from "../SoundcloudPlayer";
+import YoutubePlayer from "../brainzplayer/YoutubePlayer";
+import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
+import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -61,6 +61,8 @@ export type ListenCardProps = {
   feedbackComponent?: JSX.Element;
   // These go in the dropdown menu
   additionalMenuItems?: JSX.Element;
+  // This optional JSX element is for a custom icon
+  additionalActions?: JSX.Element;
 };
 
 type ListenCardState = {
@@ -166,7 +168,6 @@ export default class ListenCard extends React.Component<
           listen,
           "track_metadata.additional_info.recording_msid"
         ),
-        artist_msid: _get(listen, "track_metadata.additional_info.artist_msid"),
       };
       try {
         const status = await APIService.recommendTrackToFollowers(
@@ -220,6 +221,7 @@ export default class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
+    const { additionalActions } = this.props;
 
     const recordingMSID = _get(
       listen,
@@ -443,6 +445,7 @@ export default class ListenCard extends React.Component<
                   <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
                 )}
               </button>
+              {additionalActions}
             </div>
           </div>
         </div>

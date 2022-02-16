@@ -1,8 +1,8 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import SpotifyPlayer from "./SpotifyPlayer";
-import YoutubePlayer from "./YoutubePlayer";
+import SpotifyPlayer from "./brainzplayer/SpotifyPlayer";
+import YoutubePlayer from "./brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
 
 const searchForSpotifyTrack = async (

@@ -1,32 +1,29 @@
-import sqlalchemy
-from flask_wtf import FlaskForm
-
-import listenbrainz.db.feedback as db_feedback
-import listenbrainz.db.user as db_user
-from listenbrainz.db import listens_importer
-from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
-from listenbrainz.webserver.decorators import web_listenstore_needed
-from data.model.external_service import ExternalServiceType
-from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
-from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.domain.youtube import YoutubeService, YOUTUBE_SCOPES
-from listenbrainz.webserver.decorators import crossdomain
-import ujson
-
-
 from datetime import datetime
+from time import time
+
+import ujson
 from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
-from werkzeug.exceptions import NotFound, BadRequest, Unauthorized
-from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIBadRequest
+from flask_wtf import FlaskForm
+from werkzeug.exceptions import NotFound, BadRequest
 
-from listenbrainz import webserver
+import listenbrainz.db.feedback as db_feedback
+import listenbrainz.db.user as db_user
+from data.model.external_service import ExternalServiceType
+from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
+from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
+from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
+from listenbrainz.domain.youtube import YoutubeService, YOUTUBE_SCOPES
 from listenbrainz.webserver import flash
+from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver.decorators import web_listenstore_needed
+from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
-from time import time
 
 profile_bp = Blueprint("profile", __name__)
 
@@ -124,9 +121,8 @@ def fetch_listens(musicbrainz_id, to_ts):
     to listenstore until we get all the data. Returns a generator that streams
     the results.
     """
-    db_conn = webserver.create_timescale(current_app)
     while True:
-        batch, _, _ = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        batch, _, _ = timescale_connection._ts.fetch_listens(current_user.to_dict(), to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
         if not batch:
             break
         yield from batch
@@ -162,7 +158,6 @@ def stream_json_array(elements):
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
-        db_conn = webserver.create_timescale(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Build a generator that streams the json response. We never load all
@@ -395,3 +390,33 @@ def music_services_disconnect(service_name: str):
                 return redirect(service.get_authorize_url(CRITIQUEBRAINZ_SCOPES))
 
     return redirect(url_for('profile.music_services_details'))
+
+
+@profile_bp.route("/<user_name>/missing-data/")
+def missing_mb_data(user_name: str):
+    """ Shows missing musicbrainz data """
+
+    # user = _get_user(user_name)
+    user_data = {
+        "name": current_user.musicbrainz_id,
+        "id": current_user.id,
+    }
+    source = "cf"
+    missing_data = get_user_missing_musicbrainz_data(current_user.id, source)
+    if missing_data is None:
+        missing_data_list = []
+    else:
+        missing_data_list = getattr(missing_data, 'data').dict()['missing_musicbrainz_data']
+
+    for index in range(len(missing_data_list)):
+        missing_data_list[index]["listened_at"] += "Z"
+
+    props = {
+        "missingData": missing_data_list,
+        "user": user_data,
+    }
+
+    return render_template("user/missing_data.html",
+        user=current_user,
+        props=ujson.dumps(props),
+    )

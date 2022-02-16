@@ -4,7 +4,7 @@ from data.model.validators import check_valid_uuid
 from typing import Optional, List
 
 
-class UserRecordingRecord(BaseModel):
+class RecordingRecord(BaseModel):
     """ Each individual record for a user's recording stats
     """
     artist_name: constr(min_length=1)

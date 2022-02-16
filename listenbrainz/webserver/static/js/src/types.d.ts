@@ -4,6 +4,7 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "time-ago";
 declare module "debounce-async";
+declare module "react-coverflow";
 
 declare module "react-bs-notifier";
 declare type AlertType = "danger" | "warning" | "success" | "info";
@@ -279,7 +280,14 @@ declare type UserEntityResponse =
   | UserReleasesResponse
   | UserRecordingsResponse;
 
-declare type UserStatsAPIRange = "all_time" | "year" | "month" | "week";
+declare type UserStatsAPIRange =
+  | "all_time"
+  | "year"
+  | "month"
+  | "week"
+  | "this_year"
+  | "this_month"
+  | "this_week";
 
 declare type UserEntityDatum = {
   id: string;
@@ -347,6 +355,12 @@ declare type UserDailyActivityResponse = {
   };
 };
 
+declare type UserArtistMapArtist = {
+  artist_name: string;
+  artist_mbid: string;
+  listen_count: number;
+};
+
 declare type UserArtistMapResponse = {
   payload: {
     from_ts: number;
@@ -358,6 +372,7 @@ declare type UserArtistMapResponse = {
       country: string;
       artist_count: number;
       listen_count: number;
+      artists: Array<UserArtistMapArtist>;
     }>;
   };
 };
@@ -365,6 +380,7 @@ declare type UserArtistMapResponse = {
 declare type UserArtistMapDatum = {
   id: string;
   value: number;
+  artists?: Array<UserArtistMapArtist>;
 };
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
@@ -431,7 +447,7 @@ declare type JSPFPlaylistExtension = {
 
 declare type JSPFTrackExtension = {
   added_by: string;
-  artist_identifier: string[]; // Full MusicBrainz artist URIs
+  artist_identifiers: string[]; // Full MusicBrainz artist URIs
   added_at: string; // ISO date string
   release_identifier?: string; // Full MusicBrainz release URI
 };
@@ -497,7 +513,6 @@ declare type UserTrackRecommendationMetadata = {
   release_name?: string;
   recording_mbid?: string;
   recording_msid: string;
-  artist_msid: string;
 };
 
 declare type PinEventMetadata = Listen & {
@@ -537,6 +552,7 @@ type EventMetadata =
 
 type TimelineEvent = {
   event_type: EventTypeT;
+  id?: number;
   user_name: string;
   created: number;
   metadata: EventMetadata;
@@ -599,4 +615,11 @@ type ColorReleasesResponse = {
   payload: {
     releases: Array<ColorReleaseItem>;
   };
+};
+
+type MissingMBData = {
+  artist_name: string;
+  listened_at: string;
+  recording_name: string;
+  release_name?: string;
 };

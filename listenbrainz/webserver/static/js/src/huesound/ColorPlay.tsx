@@ -12,10 +12,10 @@ import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../APIService";
-import BrainzPlayer from "../BrainzPlayer";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
 import { getPageProps } from "../utils";
 import ListenCard from "../listens/ListenCard";

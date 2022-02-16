@@ -1,14 +1,15 @@
 from listenbrainz_spark.stats import run_query, SITEWIDE_STATS_ENTITY_LIMIT
 
 
-def get_recordings(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
+def get_recordings(table: str, user_listen_count_limit, top_recordings_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     """
     Get recordings information (artist_name, artist_msid etc) for every
     time range specified ordered by listen count.
 
     Args:
         table: Name of the temporary table.
-        limit: number of top artists to retain
+        user_listen_count_limit: per user per entity listen count above which it should be capped
+        top_recordings_limit: number of top artists to retain
     Returns:
         iterator (iter): An iterator over result
     """
@@ -17,33 +18,50 @@ def get_recordings(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     # order of collected results is not guaranteed so sort again
     # with sort_array.
     result = run_query(f"""
-        WITH intermediate_table as (
-            SELECT first(recording_name) AS any_recording_name
+        WITH user_counts as (
+            SELECT user_id
+                 , first(recording_name) AS recording_name
                  , recording_mbid
-                 , first(artist_name) AS any_artist_name
+                 , first(artist_name) AS artist_name
                  , artist_credit_mbids
-                 , nullif(first(release_name), '') as any_release_name
+                 , nullif(first(release_name), '') as release_name
                  , release_mbid
-                 , count(*) as listen_count
+                 , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM {table}
+          GROUP BY user_id
+                 , lower(recording_name)
+                 , recording_mbid
+                 , lower(artist_name)
+                 , artist_credit_mbids
+                 , lower(release_name)
+                 , release_mbid
+        ), intermediate_table AS (
+            SELECT first(recording_name) AS recording_name
+                 , recording_mbid
+                 , first(artist_name) AS artist_name
+                 , artist_credit_mbids
+                 , nullif(first(release_name), '') as release_name
+                 , release_mbid
+                 , SUM(listen_count) as total_listen_count
+              FROM user_counts
           GROUP BY lower(recording_name)
                  , recording_mbid
                  , lower(artist_name)
                  , artist_credit_mbids
                  , lower(release_name)
                  , release_mbid
-          ORDER BY listen_count DESC
-             LIMIT {limit}
+          ORDER BY total_listen_count DESC
+             LIMIT {top_recordings_limit}
         )
         SELECT sort_array(
                     collect_list(
                         struct(
-                            listen_count
-                          , any_recording_name AS track_name
+                            total_listen_count AS listen_count
+                          , recording_name AS track_name
                           , recording_mbid
-                          , any_artist_name AS artist_name
+                          , artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids
-                          , any_release_name AS release_name
+                          , release_name
                           , release_mbid
                         )
                     )

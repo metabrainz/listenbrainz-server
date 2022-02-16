@@ -1,24 +1,87 @@
-import time
-from collections import defaultdict
 from datetime import datetime, timedelta
 import psycopg2
-from psycopg2.errors import UntranslatableCharacter
 import sqlalchemy
 import subprocess
 import logging
 
 from brainzutils import cache
+from psycopg2.extras import execute_values
+from sqlalchemy import text
+
 from listenbrainz.utils import init_cache
 from listenbrainz import db
 from listenbrainz.db import timescale
-from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, DATA_START_YEAR_IN_SECONDS
+from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_TIMESTAMPS
 from listenbrainz import config
 
 
 logger = logging.getLogger(__name__)
 
-NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH = 3
 SECONDS_IN_A_YEAR = 31536000
+
+
+def update_user_listen_counts():
+    query = """
+        WITH nm AS (
+            SELECT l.user_id, count(*) as count
+              FROM listen l
+              JOIN listen_user_metadata lm
+             USING (user_id)
+             WHERE l.created > lm.created
+               AND l.created <= :until
+          GROUP BY l.user_id
+        )
+            UPDATE listen_user_metadata om
+               SET count = om.count + nm.count
+                 , created = :until
+              FROM nm
+             WHERE om.user_id = nm.user_id
+    """
+    # There is something weird going on here, I do not completely understand why but using engine.connect instead
+    # of engine.begin causes the changes to not be persisted. Reading up on sqlalchemy transaction handling etc.
+    # it makes sense that we need begin for an explicit transaction but how CRUD statements work fine with connect
+    # in remaining LB is beyond me then.
+    with timescale.engine.begin() as connection:
+        logger.info("Starting to update listen counts")
+        connection.execute(text(query), until=datetime.now())
+        logger.info("Completed updating listen counts")
+
+
+def add_missing_to_listen_users_metadata():
+    """ Fetch users from LB and add an entry those users which are missing from listen_user_metadata """
+    # Select a list of users
+    user_list = []
+    query = 'SELECT id FROM "user"'
+    try:
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text(query))
+            for row in result:
+                user_list.append(row[0])
+    except psycopg2.OperationalError as e:
+        logger.error("Cannot query db to fetch user list." %
+                     str(e), exc_info=True)
+        raise
+
+    logger.info("Fetched %d users. Setting empty cache entries." %
+                len(user_list))
+
+    query = """
+        INSERT INTO listen_user_metadata (user_id, count, min_listened_at, max_listened_at, created)
+             VALUES %s
+        ON CONFLICT (user_id)
+         DO NOTHING
+    """
+    values = [(user_id, ) for user_id in user_list]
+    template = "(%s, 0, NULL, NULL, 'epoch')"
+    connection = timescale.engine.raw_connection()
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, values, template=template)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        logger.error("Error while resetting created timestamps:", exc_info=True)
+        raise
 
 
 def recalculate_all_user_data():
@@ -45,7 +108,7 @@ def recalculate_all_user_data():
 
     # Select a list of users
     user_list = []
-    query = 'SELECT musicbrainz_id FROM "user"'
+    query = 'SELECT id FROM "user"'
     try:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(query))
@@ -59,58 +122,69 @@ def recalculate_all_user_data():
     logger.info("Fetched %d users. Setting empty cache entries." %
                 len(user_list))
 
-    # Reset the timestamps and listen counts to 0 for all users
-    for user_name in user_list:
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
-        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", expirein=0)
+    query = """
+        INSERT INTO listen_user_metadata (user_id, count, min_listened_at, max_listened_at, created)
+             VALUES %s
+        ON CONFLICT (user_id)
+          DO UPDATE
+                SET count = 0
+                  , min_listened_at = NULL
+                  , max_listened_at = NULL
+                  , created = 'epoch'
+    """
+    values = [(user_id, ) for user_id in user_list]
+    template = "(%s, 0, NULL, NULL, 'epoch')"
+    connection = timescale.engine.raw_connection()
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, values, template=template)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        logger.error("Error while resetting created timestamps:", exc_info=True)
+        raise
 
-    # Tabulate all of the listen counts/timestamps for all users
+    # Reset the timestamps to 0 for all users
+    for user_id in user_list:
+        cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "0,0", expirein=0)
+
+    # Tabulate all of the listen timestamps for all users
     logger.info("Scan the whole listen table...")
-    listen_counts = defaultdict(int)
     user_timestamps = {}
-    query = "SELECT listened_at, user_name FROM listen where created <= :ts"
+    query = "SELECT listened_at, user_id FROM listen where created <= :ts"
     try:
         with timescale.engine.connect() as connection:
             result = connection.execute(
                 sqlalchemy.text(query), ts=last_created_ts)
             for row in result:
                 ts = row[0]
-                user_name = row[1]
-                if user_name not in user_timestamps:
-                    user_timestamps[user_name] = [ts, ts]
+                user_id = row[1]
+                if user_id not in user_timestamps:
+                    user_timestamps[user_id] = [ts, ts]
                 else:
-                    if ts > user_timestamps[user_name][1]:
-                        user_timestamps[user_name][1] = ts
-                    if ts < user_timestamps[user_name][0]:
-                        user_timestamps[user_name][0] = ts
-
-                listen_counts[user_name] += 1
-
+                    if ts > user_timestamps[user_id][1]:
+                        user_timestamps[user_id][1] = ts
+                    if ts < user_timestamps[user_id][0]:
+                        user_timestamps[user_id][0] = ts
     except psycopg2.OperationalError as e:
         logger.error("Cannot query db to fetch user list." %
                      str(e), exc_info=True)
         raise
 
     logger.info("Setting updated cache entries.")
-    # Set the timestamps and listen counts for all users
-    for user_name in user_list:
+    # Set the timestamps for all users
+    for user_id in user_list:
         try:
-            cache.increment(REDIS_USER_LISTEN_COUNT + user_name, amount=listen_counts[user_name])
-        except KeyError:
-            pass
-
-        try:
-            tss = cache.get(REDIS_USER_TIMESTAMPS + user_name)
+            tss = cache.get(REDIS_USER_TIMESTAMPS + str(user_id))
             (min_ts, max_ts) = tss.split(",")
             min_ts = int(min_ts)
             max_ts = int(max_ts)
-            if min_ts and min_ts < user_timestamps[user_name][0]:
-                user_timestamps[user_name][0] = min_ts
-            if max_ts and max_ts > user_timestamps[user_name][1]:
-                user_timestamps[user_name][1] = max_ts
-            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" %
-                      (user_timestamps[user_name][0], user_timestamps[user_name][1]), expirein=0)
+            if min_ts and min_ts < user_timestamps[user_id][0]:
+                user_timestamps[user_id][0] = min_ts
+            if max_ts and max_ts > user_timestamps[user_id][1]:
+                user_timestamps[user_id][1] = max_ts
+            cache.set(REDIS_USER_TIMESTAMPS + str(user_id), "%d,%d" %
+                      (user_timestamps[user_id][0], user_timestamps[user_id][1]), expirein=0)
         except KeyError:
             pass
 
@@ -123,63 +197,6 @@ def unlock_cron():
         subprocess.run(["/usr/local/bin/python", "admin/cron_lock.py", "unlock-cron", "cont-agg"])
     except subprocess.CalledProcessError as err:
         logger.error("Cannot unlock cron after updating continuous aggregates: %s" % str(err))
-
-
-def refresh_listen_count_aggregate():
-    """
-        Manually refresh the listen_count continuous aggregate.
-
-        Arg:
-
-          year_offset: How many years into the past should we start refreshing (e.g 1 year, 
-                       will refresh everything that is 1 year or older.
-          year_count: How many years from year_offset should we update.
-
-        Example:
-
-           Assuming today is 2022-01-01 and this function is called for year_offset 1 and
-           year_count 1 then all of 2021 will be refreshed.
-    """
-
-    # Lock the cron container
-    try:
-        subprocess.run(["/usr/local/bin/python", "admin/cron_lock.py", "lock-cron", "cont-agg", "Updating continuous aggregates"])
-    except subprocess.CalledProcessError as err:
-        logger.error("Cannot lock cron for updating continuous aggregates: %s" % str(err))
-        sys.exit(-1)
-
-    logger.info("Starting to refresh continuous aggregates:")
-    timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
-
-    end_ts = int(datetime.now().timestamp()) - SECONDS_IN_A_YEAR
-    start_ts = end_ts - \
-        (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR) + 1
-
-    while True:
-        query = "call refresh_continuous_aggregate('listen_count_30day', :start_ts, :end_ts)"
-        t0 = time.monotonic()
-        try:
-            with timescale.engine.connect() as connection:
-                connection.connection.set_isolation_level(0)
-                connection.execute(sqlalchemy.text(query), {
-                    "start_ts": start_ts,
-                    "end_ts": end_ts
-                })
-        except psycopg2.OperationalError as e:
-            logger.error("Cannot refresh listen_count_30day cont agg: %s" % str(e), exc_info=True)
-            unlock_cron()
-            raise
-
-        t1 = time.monotonic()
-        logger.info("Refreshed continuous aggregate for: %s to %s in %.2fs" % (str(
-            datetime.fromtimestamp(start_ts)), str(datetime.fromtimestamp(end_ts)), t1-t0))
-
-        end_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR)
-        start_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR)
-        if end_ts < DATA_START_YEAR_IN_SECONDS:
-            break
-
-    unlock_cron()
 
 
 class TimescaleListenStoreException(Exception):
