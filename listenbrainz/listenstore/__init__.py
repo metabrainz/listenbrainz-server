@@ -14,15 +14,6 @@ LISTEN_MINIMUM_DATE = datetime(2002, 10, 1)
 #: The minimum acceptable value for listened_at field
 LISTEN_MINIMUM_TS = int(LISTEN_MINIMUM_DATE.timestamp())
 
-
-from listenbrainz.listenstore import listenstore
-import listenbrainz.listen as listen
-ListenStore = listenstore.ListenStore
-Listen = listen.Listen
-
-
 # ╭∩╮
-from listenbrainz.listenstore import redis_listenstore
-from listenbrainz.listenstore import timescale_listenstore
-RedisListenStore = redis_listenstore.RedisListenStore
-TimescaleListenStore = timescale_listenstore.TimescaleListenStore
+from listenbrainz.listenstore.redis_listenstore import RedisListenStore
+from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStore

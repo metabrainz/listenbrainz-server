@@ -19,29 +19,27 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA"
 
-import listenbrainz.db.dump as db_dump
-import listenbrainz.db.dump_manager as dump_manager
-import listenbrainz.db.user as db_user
-import logging
 import os
 import shutil
 import tempfile
 import time
+from time import sleep
+from unittest.mock import patch
 
 from click.testing import CliRunner
 from flask import current_app, render_template
+
+import listenbrainz.db.dump as db_dump
+import listenbrainz.db.feedback as db_feedback
+import listenbrainz.db.recommendations_cf_recording_feedback as db_rec_feedback
+import listenbrainz.db.user as db_user
 from listenbrainz.db import dump_manager
+from listenbrainz.db.model.feedback import Feedback
+from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listenstore.tests.util import generate_data
-from listenbrainz.db.model.feedback import Feedback
-import listenbrainz.db.feedback as db_feedback
-from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
-import listenbrainz.db.recommendations_cf_recording_feedback as db_rec_feedback
 from listenbrainz.utils import create_path
-from listenbrainz.webserver import create_app
-from listenbrainz.webserver.timescale_connection import init_timescale_connection
-from time import sleep
-from unittest.mock import patch
+from listenbrainz.webserver import create_app, timescale_connection
 
 
 class DumpManagerTestCase(DatabaseTestCase):
@@ -51,12 +49,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.app = create_app()
         self.tempdir = tempfile.mkdtemp()
         self.runner = CliRunner()
-        self.listenstore = init_timescale_connection(logging.getLogger(__name__), {
-            'REDIS_HOST': self.app.config['REDIS_HOST'],
-            'REDIS_PORT': self.app.config['REDIS_PORT'],
-            'REDIS_NAMESPACE': self.app.config['REDIS_NAMESPACE'],
-            'SQLALCHEMY_TIMESCALE_URI': self.app.config['SQLALCHEMY_TIMESCALE_URI']
-        })
+        self.listenstore = timescale_connection._ts
         self.user_id = db_user.create(1, 'iliekcomputers')
         self.user_name = db_user.get(self.user_id)['musicbrainz_id']
 

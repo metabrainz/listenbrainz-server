@@ -1,17 +1,14 @@
 from datetime import datetime
-from time import time
+from typing import Optional
 
 import redis
-from typing import Optional
 import ujson
+from brainzutils import cache
 
 from listenbrainz.listen import Listen, NowPlayingListen
-from listenbrainz.listenstore import ListenStore
-from brainzutils import cache
-from listenbrainz.utils import create_path, init_cache
 
 
-class RedisListenStore(ListenStore):
+class RedisListenStore:
 
     RECENT_LISTENS_KEY = "rl-"
     RECENT_LISTENS_MAX = 100
@@ -19,15 +16,8 @@ class RedisListenStore(ListenStore):
     LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
     LISTEN_COUNT_PER_DAY_KEY = "lc-day-"
 
-
-    def __init__(self, log, conf):
-        super(RedisListenStore, self).__init__(log)
-
-        # Initialize brainzutils cache
-        init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'],
-                   namespace=conf['REDIS_NAMESPACE'])
-        # This is used in tests. Leave for cleanup in LB-879
-        self.redis = cache._r
+    def __init__(self, logger):
+        self.log = logger
 
     def get_playing_now(self, user_id):
         """ Return the current playing song of the user

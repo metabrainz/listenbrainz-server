@@ -1,14 +1,12 @@
 import json
 import time
 
-from flask import url_for, current_app, g
-from redis import Redis
 from brainzutils import cache
+from flask import url_for, g
 
 import listenbrainz.db.user as db_user
-from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
-from listenbrainz.utils import init_cache
+from listenbrainz.tests.integration import IntegrationTestCase
 
 
 class ProfileViewsTestCase(IntegrationTestCase):
@@ -16,11 +14,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         super().setUp()
         self.user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(self.user['musicbrainz_id'])
-
-        # Initialize brainzutils cache
-        init_cache(host=current_app.config['REDIS_HOST'],
-                   port=current_app.config['REDIS_PORT'],
-                   namespace=current_app.config['REDIS_NAMESPACE'])
         self.redis = cache._r
 
     def tearDown(self):

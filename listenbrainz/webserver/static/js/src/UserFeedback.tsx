@@ -13,20 +13,20 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { isNaN, get, clone, has } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./AlertNotificationsHOC";
+} from "./notifications/AlertNotificationsHOC";
 
 import Pill from "./components/Pill";
-import APIServiceClass from "./APIService";
-import BrainzPlayer from "./BrainzPlayer";
-import ErrorBoundary from "./ErrorBoundary";
+import APIServiceClass from "./utils/APIService";
+import BrainzPlayer from "./brainzplayer/BrainzPlayer";
+import ErrorBoundary from "./utils/ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
-import PinRecordingModal from "./PinRecordingModal";
-import { getPageProps, handleNavigationClickEvent } from "./utils";
+import PinRecordingModal from "./pins/PinRecordingModal";
+import { getPageProps, handleNavigationClickEvent } from "./utils/utils";
 import ListenControl from "./listens/ListenControl";
 
 export type UserFeedbackProps = {

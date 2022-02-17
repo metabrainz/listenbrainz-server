@@ -14,10 +14,9 @@ from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 
 from data.model.common_stat import StatRange
-from data.model.sitewide_artist_stat import SitewideArtistRecord
-from data.model.user_daily_activity import UserDailyActivityRecord
-from data.model.user_entity import UserEntityRecord
-from data.model.user_listening_activity import UserListeningActivityRecord
+from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_entity import EntityRecord
+from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from listenbrainz.db.similar_users import import_user_similarities
@@ -54,36 +53,35 @@ def notify_user_stats_update(stat_type):
 
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
-    db_stats.insert_multiple_user_jsonb_data(data)
+    values = [(entry["user_id"], entry["count"], json.dumps(entry["data"])) for entry in data["data"]]
+    db_stats.insert_multiple_user_jsonb_data(
+        data["entity"],
+        data["stats_range"],
+        data["from_ts"],
+        data["to_ts"],
+        values
+    )
 
 
-def _handle_user_activity_stats(stats_type, stats_model, data):
-    user = db_user.get(data['user_id'])
-    if not user:
-        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", data["user_id"])
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", user["musicbrainz_id"])
-    stats_range = data['stats_range']
-
-    try:
-        db_stats.insert_user_jsonb_data(user['id'], stats_type, stats_model(**data))
-    except ValidationError:
-        current_app.logger.error(f"""ValidationError while inserting {stats_range} {stats_type} for 
-        user with user_id: {user['id']}. Data: {json.dumps(data, indent=3)}""", exc_info=True)
+def _handle_user_activity_stats(stats_type, data):
+    values = [(entry["user_id"], 0, json.dumps(entry["data"])) for entry in data["data"]]
+    db_stats.insert_multiple_user_jsonb_data(
+        stats_type,
+        data["stats_range"],
+        data["from_ts"],
+        data["to_ts"],
+        values
+    )
 
 
 def handle_user_listening_activity(data):
     """ Take listening activity stats for user and save it in database. """
-    _handle_user_activity_stats('listening_activity', StatRange[UserListeningActivityRecord], data)
+    _handle_user_activity_stats("listening_activity", data)
 
 
 def handle_user_daily_activity(data):
     """ Take daily activity stats for user and save it in database. """
-    _handle_user_activity_stats('daily_activity', StatRange[UserDailyActivityRecord], data)
+    _handle_user_activity_stats("daily_activity", data)
 
 
 def handle_sitewide_entity(data):
@@ -96,15 +94,14 @@ def handle_sitewide_entity(data):
     entity = data['entity']
 
     try:
-        db_stats.insert_sitewide_jsonb_data(entity, StatRange[UserEntityRecord](**data))
+        db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**data))
     except ValidationError:
         current_app.logger.error(f"""ValidationError while inserting {stats_range} sitewide top {entity}.
         Data: {json.dumps(data, indent=3)}""", exc_info=True)
 
 
 def handle_sitewide_listening_activity(data):
-    data["user_id"] = db_stats.SITEWIDE_STATS_USER_ID
-    _handle_user_activity_stats('listening_activity', StatRange[UserListeningActivityRecord], data)
+    db_stats.insert_sitewide_jsonb_data("listening_activity", StatRange[ListeningActivityRecord](**data))
 
 
 def handle_dump_imported(data):

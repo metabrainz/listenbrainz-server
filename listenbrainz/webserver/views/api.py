@@ -1,30 +1,30 @@
+import time
 from operator import itemgetter
 
-import ujson
 import psycopg2
-from flask import Blueprint, request, jsonify, current_app
+import ujson
 from brainzutils.musicbrainz_db import engine as mb_engine
+from brainzutils.ratelimit import ratelimit
+from flask import Blueprint, request, jsonify, current_app
 
-from data.model.external_service import ExternalServiceType
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
-    APIUnauthorized, ListenValidationError
-from listenbrainz.webserver.decorators import api_listenstore_needed
-from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz import webserver
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-from listenbrainz.db import listens_importer
-from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
+from data.model.external_service import ExternalServiceType
+from listenbrainz.db import listens_importer
+from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
+from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver.decorators import api_listenstore_needed
+from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
+    APIUnauthorized, ListenValidationError
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list, \
     is_valid_uuid, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, \
     _parse_int_arg, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
-from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
-from listenbrainz.webserver.timescale_connection import _ts
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -123,8 +123,6 @@ def get_listens(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    db_conn = webserver.create_timescale(current_app)
-
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
@@ -133,7 +131,7 @@ def get_listens(user_name):
     if min_ts and max_ts and min_ts >= max_ts:
         raise APIBadRequest("min_ts should be less than max_ts")
 
-    listens, _, max_ts_per_user = db_conn.fetch_listens(
+    listens, _, max_ts_per_user = timescale_connection._ts.fetch_listens(
         user,
         limit=count,
         from_ts=min_ts,
@@ -171,8 +169,7 @@ def get_listen_count(user_name):
         raise APINotFound("Cannot find user: %s" % user_name)
 
     try:
-        db_conn = webserver.create_timescale(current_app)
-        listen_count = db_conn.get_listen_count_for_user(user["id"])
+        listen_count = timescale_connection._ts.get_listen_count_for_user(user["id"])
     except psycopg2.OperationalError as err:
         current_app.logger.error("cannot fetch user listen count: ", str(err))
         raise APIServiceUnavailable(
@@ -219,45 +216,6 @@ def get_playing_now(user_name):
             'listens': listen_data,
         },
     })
-
-
-@api_bp.route("/users/<user_list>/recent-listens")
-@crossdomain(headers='Authorization, Content-Type')
-@ratelimit()
-@api_listenstore_needed
-def get_recent_listens_for_user_list(user_list):
-    """
-    Fetch the most recent listens for a comma separated list of users. Take care to properly HTTP escape
-    user names that contain commas!
-
-    .. note::
-
-        This is a bulk lookup endpoint. Hence, any non-existing users in the list will be simply ignored
-        without raising any error.
-
-    :statuscode 200: Fetched listens successfully.
-    :statuscode 400: Your user list was incomplete or otherwise invalid.
-    :resheader Content-Type: *application/json*
-    """
-
-    limit = _parse_int_arg("limit", 2)
-    users = parse_param_list(user_list)
-    if not len(users):
-        raise APIBadRequest("user_list is empty or invalid.")
-
-    db_conn = webserver.create_timescale(current_app)
-    users = db_user.get_many_users_by_mb_id(users)
-    listens = db_conn.fetch_recent_listens_for_users(users.values(), limit=limit)
-
-    listen_data = []
-    for listen in listens:
-        listen_data.append(listen.to_api())
-
-    return jsonify({'payload': {
-        'user_list': user_list,
-        'count': len(listen_data),
-        'listens': listen_data,
-    }})
 
 
 @api_bp.route("/user/<user_name>/similar-users", methods=['GET', 'OPTIONS'])
@@ -399,7 +357,7 @@ def latest_import():
         return jsonify({'status': 'ok'})
 
 
-@api_bp.route('/validate-token', methods=['GET'])
+@api_bp.route('/validate-token', methods=['GET', 'OPTIONS'])
 @crossdomain(headers='Authorization')
 @ratelimit()
 def validate_token():
@@ -511,7 +469,8 @@ def delete_listen():
         log_raise_400("%s: Recording MSID format invalid." % recording_msid)
 
     try:
-        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_id=user["id"])
+        timescale_connection._ts.delete_listen(listened_at=listened_at,
+                                               recording_msid=recording_msid, user_id=user["id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(

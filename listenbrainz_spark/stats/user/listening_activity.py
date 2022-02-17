@@ -1,13 +1,16 @@
 import json
 import logging
 from datetime import datetime
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Dict
 
+from more_itertools import chunked
 from pydantic import ValidationError
 
-from data.model.user_listening_activity import UserListeningActivityStatMessage
+from data.model.common_stat_spark import UserStatRecords, StatMessage
+from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.common.listening_activity import setup_time_range
+from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.utils import get_listens_from_new_dump
 
 
@@ -27,20 +30,20 @@ def calculate_listening_activity():
     # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
     # group without listens are counted as 0, count(*) gives 1.
     result = run_query(""" 
-        WITH dist_user_name AS (
+        WITH dist_user_id AS (
             SELECT DISTINCT user_id FROM listens
         ), intermediate_table AS (
-            SELECT dist_user_name.user_id AS user_id
+            SELECT dist_user_id.user_id AS user_id
                  , to_unix_timestamp(first(time_range.start)) as from_ts
                  , to_unix_timestamp(first(time_range.end)) as to_ts
                  , time_range.time_range AS time_range
                  , count(listens.listened_at) as listen_count
-              FROM dist_user_name
+              FROM dist_user_id
         CROSS JOIN time_range
          LEFT JOIN listens
                 ON listens.listened_at BETWEEN time_range.start AND time_range.end
-               AND listens.user_id = dist_user_name.user_id
-          GROUP BY dist_user_name.user_id
+               AND listens.user_id = dist_user_id.user_id
+          GROUP BY dist_user_id.user_id
                  , time_range.time_range
         )
             SELECT user_id
@@ -55,7 +58,8 @@ def calculate_listening_activity():
     return result.toLocalIterator()
 
 
-def get_listening_activity(stats_range: str, message_type="user_listening_activity"):
+def get_listening_activity(stats_range: str, message_type="user_listening_activity")\
+        -> Iterator[Optional[Dict]]:
     """ Compute the number of listens for a time range compared to the previous range
 
     Given a time range, this computes a histogram of a users' listens for that range
@@ -76,7 +80,7 @@ def get_listening_activity(stats_range: str, message_type="user_listening_activi
 
 
 def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime, message_type) \
-        -> Iterator[Optional[UserListeningActivityStatMessage]]:
+        -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to webserver via RabbitMQ
 
@@ -92,20 +96,31 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
     """
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
-    for entry in data:
-        _dict = entry.asDict(recursive=True)
+
+    for entries in chunked(data, USERS_PER_MESSAGE):
+        multiple_user_stats = []
+        for entry in entries:
+            _dict = entry.asDict(recursive=True)
+            try:
+                user_stat = UserStatRecords[ListeningActivityRecord](
+                    user_id=_dict["user_id"],
+                    data=_dict["listening_activity"]
+                )
+                multiple_user_stats.append(user_stat)
+            except ValidationError:
+                logger.error(f"""ValidationError while calculating {stats_range} listening_activity for user:
+                {_dict["user_id"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+
         try:
-            model = UserListeningActivityStatMessage(**{
-                "user_id": _dict["user_id"],
+            model = StatMessage[UserStatRecords[ListeningActivityRecord]](**{
                 "type": message_type,
                 "stats_range": stats_range,
                 "from_ts": from_ts,
                 "to_ts": to_ts,
-                "data": _dict["listening_activity"]
+                "data": multiple_user_stats
             })
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error(f"""ValidationError while calculating {stats_range} listening_activity for user: 
-            {_dict["user_id"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+            logger.error(f"ValidationError while calculating {stats_range} listening_activity:", exc_info=True)
             yield None
