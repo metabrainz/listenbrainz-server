@@ -131,8 +131,11 @@ exports[`ListenCard renders correctly 1`] = `
               newAlert={[Function]}
               updateFeedbackCallback={[Function]}
             >
-              <ListenControl
-                action={[Function]}
+              <FontAwesomeIcon
+                border={false}
+                className=" loved"
+                fixedWidth={false}
+                flip={null}
                 icon={
                   Object {
                     "icon": Array [
@@ -146,69 +149,49 @@ exports[`ListenCard renders correctly 1`] = `
                     "prefix": "fas",
                   }
                 }
-                iconClassName=" loved"
-                iconOnly={true}
+                inverse={false}
+                listItem={false}
+                mask={null}
+                onClick={[Function]}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                size={null}
+                spin={false}
+                swapOpacity={false}
+                symbol={false}
                 title="Love"
+                transform={null}
               >
-                <FontAwesomeIcon
-                  border={false}
-                  className=" loved"
-                  fixedWidth={false}
-                  flip={null}
-                  icon={
-                    Object {
-                      "icon": Array [
-                        512,
-                        512,
-                        Array [],
-                        "f004",
-                        "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
-                      ],
-                      "iconName": "heart",
-                      "prefix": "fas",
-                    }
-                  }
-                  inverse={false}
-                  listItem={false}
-                  mask={null}
+                <svg
+                  aria-labelledby="svg-inline--fa-title-000000000000"
+                  className="svg-inline--fa fa-heart fa-w-16  loved"
+                  data-icon="heart"
+                  data-prefix="fas"
                   onClick={[Function]}
-                  pull={null}
-                  pulse={false}
-                  rotation={null}
-                  size={null}
-                  spin={false}
-                  swapOpacity={false}
-                  symbol={false}
-                  title="Love"
-                  transform={null}
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <svg
-                    aria-labelledby="svg-inline--fa-title-000000000000"
-                    className="svg-inline--fa fa-heart fa-w-16  loved"
-                    data-icon="heart"
-                    data-prefix="fas"
-                    onClick={[Function]}
-                    role="img"
+                  <title
+                    id="svg-inline--fa-title-000000000000"
                     style={Object {}}
-                    viewBox="0 0 512 512"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <title
-                      id="svg-inline--fa-title-000000000000"
-                      style={Object {}}
-                    >
-                      Love
-                    </title>
-                    <path
-                      d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
-                      fill="currentColor"
-                      style={Object {}}
-                    />
-                  </svg>
-                </FontAwesomeIcon>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
+                    Love
+                  </title>
+                  <path
+                    d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+              <FontAwesomeIcon
+                border={false}
+                className=""
+                fixedWidth={false}
+                flip={null}
                 icon={
                   Object {
                     "icon": Array [
@@ -222,67 +205,44 @@ exports[`ListenCard renders correctly 1`] = `
                     "prefix": "fas",
                   }
                 }
-                iconClassName=""
-                iconOnly={true}
+                inverse={false}
+                listItem={false}
+                mask={null}
+                onClick={[Function]}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                size={null}
+                spin={false}
+                swapOpacity={false}
+                symbol={false}
                 title="Hate"
+                transform={null}
               >
-                <FontAwesomeIcon
-                  border={false}
-                  className=""
-                  fixedWidth={false}
-                  flip={null}
-                  icon={
-                    Object {
-                      "icon": Array [
-                        512,
-                        512,
-                        Array [],
-                        "f7a9",
-                        "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
-                      ],
-                      "iconName": "heart-broken",
-                      "prefix": "fas",
-                    }
-                  }
-                  inverse={false}
-                  listItem={false}
-                  mask={null}
+                <svg
+                  aria-labelledby="svg-inline--fa-title-000000000000"
+                  className="svg-inline--fa fa-heart-broken fa-w-16 "
+                  data-icon="heart-broken"
+                  data-prefix="fas"
                   onClick={[Function]}
-                  pull={null}
-                  pulse={false}
-                  rotation={null}
-                  size={null}
-                  spin={false}
-                  swapOpacity={false}
-                  symbol={false}
-                  title="Hate"
-                  transform={null}
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <svg
-                    aria-labelledby="svg-inline--fa-title-000000000000"
-                    className="svg-inline--fa fa-heart-broken fa-w-16 "
-                    data-icon="heart-broken"
-                    data-prefix="fas"
-                    onClick={[Function]}
-                    role="img"
+                  <title
+                    id="svg-inline--fa-title-000000000000"
                     style={Object {}}
-                    viewBox="0 0 512 512"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <title
-                      id="svg-inline--fa-title-000000000000"
-                      style={Object {}}
-                    >
-                      Hate
-                    </title>
-                    <path
-                      d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
-                      fill="currentColor"
-                      style={Object {}}
-                    />
-                  </svg>
-                </FontAwesomeIcon>
-              </ListenControl>
+                    Hate
+                  </title>
+                  <path
+                    d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
             </ListenFeedbackComponent>
             <FontAwesomeIcon
               aria-expanded="true"
@@ -476,7 +436,6 @@ exports[`ListenCard renders correctly 1`] = `
                     inverse={false}
                     listItem={false}
                     mask={null}
-                    onClick={[Function]}
                     pull={null}
                     pulse={false}
                     rotation={null}
@@ -492,7 +451,6 @@ exports[`ListenCard renders correctly 1`] = `
                       className="svg-inline--fa fa-comment-dots fa-w-16 "
                       data-icon="comment-dots"
                       data-prefix="fas"
-                      onClick={[Function]}
                       role="img"
                       style={Object {}}
                       viewBox="0 0 512 512"
@@ -711,8 +669,11 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               newAlert={[Function]}
               updateFeedbackCallback={[Function]}
             >
-              <ListenControl
-                action={[Function]}
+              <FontAwesomeIcon
+                border={false}
+                className=" loved"
+                fixedWidth={false}
+                flip={null}
                 icon={
                   Object {
                     "icon": Array [
@@ -726,69 +687,49 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     "prefix": "fas",
                   }
                 }
-                iconClassName=" loved"
-                iconOnly={true}
+                inverse={false}
+                listItem={false}
+                mask={null}
+                onClick={[Function]}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                size={null}
+                spin={false}
+                swapOpacity={false}
+                symbol={false}
                 title="Love"
+                transform={null}
               >
-                <FontAwesomeIcon
-                  border={false}
-                  className=" loved"
-                  fixedWidth={false}
-                  flip={null}
-                  icon={
-                    Object {
-                      "icon": Array [
-                        512,
-                        512,
-                        Array [],
-                        "f004",
-                        "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
-                      ],
-                      "iconName": "heart",
-                      "prefix": "fas",
-                    }
-                  }
-                  inverse={false}
-                  listItem={false}
-                  mask={null}
+                <svg
+                  aria-labelledby="svg-inline--fa-title-000000000000"
+                  className="svg-inline--fa fa-heart fa-w-16  loved"
+                  data-icon="heart"
+                  data-prefix="fas"
                   onClick={[Function]}
-                  pull={null}
-                  pulse={false}
-                  rotation={null}
-                  size={null}
-                  spin={false}
-                  swapOpacity={false}
-                  symbol={false}
-                  title="Love"
-                  transform={null}
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <svg
-                    aria-labelledby="svg-inline--fa-title-000000000000"
-                    className="svg-inline--fa fa-heart fa-w-16  loved"
-                    data-icon="heart"
-                    data-prefix="fas"
-                    onClick={[Function]}
-                    role="img"
+                  <title
+                    id="svg-inline--fa-title-000000000000"
                     style={Object {}}
-                    viewBox="0 0 512 512"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <title
-                      id="svg-inline--fa-title-000000000000"
-                      style={Object {}}
-                    >
-                      Love
-                    </title>
-                    <path
-                      d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
-                      fill="currentColor"
-                      style={Object {}}
-                    />
-                  </svg>
-                </FontAwesomeIcon>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
+                    Love
+                  </title>
+                  <path
+                    d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+              <FontAwesomeIcon
+                border={false}
+                className=""
+                fixedWidth={false}
+                flip={null}
                 icon={
                   Object {
                     "icon": Array [
@@ -802,67 +743,44 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     "prefix": "fas",
                   }
                 }
-                iconClassName=""
-                iconOnly={true}
+                inverse={false}
+                listItem={false}
+                mask={null}
+                onClick={[Function]}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                size={null}
+                spin={false}
+                swapOpacity={false}
+                symbol={false}
                 title="Hate"
+                transform={null}
               >
-                <FontAwesomeIcon
-                  border={false}
-                  className=""
-                  fixedWidth={false}
-                  flip={null}
-                  icon={
-                    Object {
-                      "icon": Array [
-                        512,
-                        512,
-                        Array [],
-                        "f7a9",
-                        "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
-                      ],
-                      "iconName": "heart-broken",
-                      "prefix": "fas",
-                    }
-                  }
-                  inverse={false}
-                  listItem={false}
-                  mask={null}
+                <svg
+                  aria-labelledby="svg-inline--fa-title-000000000000"
+                  className="svg-inline--fa fa-heart-broken fa-w-16 "
+                  data-icon="heart-broken"
+                  data-prefix="fas"
                   onClick={[Function]}
-                  pull={null}
-                  pulse={false}
-                  rotation={null}
-                  size={null}
-                  spin={false}
-                  swapOpacity={false}
-                  symbol={false}
-                  title="Hate"
-                  transform={null}
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <svg
-                    aria-labelledby="svg-inline--fa-title-000000000000"
-                    className="svg-inline--fa fa-heart-broken fa-w-16 "
-                    data-icon="heart-broken"
-                    data-prefix="fas"
-                    onClick={[Function]}
-                    role="img"
+                  <title
+                    id="svg-inline--fa-title-000000000000"
                     style={Object {}}
-                    viewBox="0 0 512 512"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <title
-                      id="svg-inline--fa-title-000000000000"
-                      style={Object {}}
-                    >
-                      Hate
-                    </title>
-                    <path
-                      d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
-                      fill="currentColor"
-                      style={Object {}}
-                    />
-                  </svg>
-                </FontAwesomeIcon>
-              </ListenControl>
+                    Hate
+                  </title>
+                  <path
+                    d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
             </ListenFeedbackComponent>
             <FontAwesomeIcon
               aria-expanded="true"
@@ -1056,7 +974,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     inverse={false}
                     listItem={false}
                     mask={null}
-                    onClick={[Function]}
                     pull={null}
                     pulse={false}
                     rotation={null}
@@ -1072,7 +989,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                       className="svg-inline--fa fa-comment-dots fa-w-16 "
                       data-icon="comment-dots"
                       data-prefix="fas"
-                      onClick={[Function]}
                       role="img"
                       style={Object {}}
                       viewBox="0 0 512 512"
@@ -1291,8 +1207,11 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               newAlert={[Function]}
               updateFeedbackCallback={[Function]}
             >
-              <ListenControl
-                action={[Function]}
+              <FontAwesomeIcon
+                border={false}
+                className=" loved"
+                fixedWidth={false}
+                flip={null}
                 icon={
                   Object {
                     "icon": Array [
@@ -1306,69 +1225,49 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                     "prefix": "fas",
                   }
                 }
-                iconClassName=" loved"
-                iconOnly={true}
+                inverse={false}
+                listItem={false}
+                mask={null}
+                onClick={[Function]}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                size={null}
+                spin={false}
+                swapOpacity={false}
+                symbol={false}
                 title="Love"
+                transform={null}
               >
-                <FontAwesomeIcon
-                  border={false}
-                  className=" loved"
-                  fixedWidth={false}
-                  flip={null}
-                  icon={
-                    Object {
-                      "icon": Array [
-                        512,
-                        512,
-                        Array [],
-                        "f004",
-                        "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
-                      ],
-                      "iconName": "heart",
-                      "prefix": "fas",
-                    }
-                  }
-                  inverse={false}
-                  listItem={false}
-                  mask={null}
+                <svg
+                  aria-labelledby="svg-inline--fa-title-000000000000"
+                  className="svg-inline--fa fa-heart fa-w-16  loved"
+                  data-icon="heart"
+                  data-prefix="fas"
                   onClick={[Function]}
-                  pull={null}
-                  pulse={false}
-                  rotation={null}
-                  size={null}
-                  spin={false}
-                  swapOpacity={false}
-                  symbol={false}
-                  title="Love"
-                  transform={null}
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <svg
-                    aria-labelledby="svg-inline--fa-title-000000000000"
-                    className="svg-inline--fa fa-heart fa-w-16  loved"
-                    data-icon="heart"
-                    data-prefix="fas"
-                    onClick={[Function]}
-                    role="img"
+                  <title
+                    id="svg-inline--fa-title-000000000000"
                     style={Object {}}
-                    viewBox="0 0 512 512"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <title
-                      id="svg-inline--fa-title-000000000000"
-                      style={Object {}}
-                    >
-                      Love
-                    </title>
-                    <path
-                      d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
-                      fill="currentColor"
-                      style={Object {}}
-                    />
-                  </svg>
-                </FontAwesomeIcon>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
+                    Love
+                  </title>
+                  <path
+                    d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+              <FontAwesomeIcon
+                border={false}
+                className=""
+                fixedWidth={false}
+                flip={null}
                 icon={
                   Object {
                     "icon": Array [
@@ -1382,67 +1281,44 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                     "prefix": "fas",
                   }
                 }
-                iconClassName=""
-                iconOnly={true}
+                inverse={false}
+                listItem={false}
+                mask={null}
+                onClick={[Function]}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                size={null}
+                spin={false}
+                swapOpacity={false}
+                symbol={false}
                 title="Hate"
+                transform={null}
               >
-                <FontAwesomeIcon
-                  border={false}
-                  className=""
-                  fixedWidth={false}
-                  flip={null}
-                  icon={
-                    Object {
-                      "icon": Array [
-                        512,
-                        512,
-                        Array [],
-                        "f7a9",
-                        "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
-                      ],
-                      "iconName": "heart-broken",
-                      "prefix": "fas",
-                    }
-                  }
-                  inverse={false}
-                  listItem={false}
-                  mask={null}
+                <svg
+                  aria-labelledby="svg-inline--fa-title-000000000000"
+                  className="svg-inline--fa fa-heart-broken fa-w-16 "
+                  data-icon="heart-broken"
+                  data-prefix="fas"
                   onClick={[Function]}
-                  pull={null}
-                  pulse={false}
-                  rotation={null}
-                  size={null}
-                  spin={false}
-                  swapOpacity={false}
-                  symbol={false}
-                  title="Hate"
-                  transform={null}
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <svg
-                    aria-labelledby="svg-inline--fa-title-000000000000"
-                    className="svg-inline--fa fa-heart-broken fa-w-16 "
-                    data-icon="heart-broken"
-                    data-prefix="fas"
-                    onClick={[Function]}
-                    role="img"
+                  <title
+                    id="svg-inline--fa-title-000000000000"
                     style={Object {}}
-                    viewBox="0 0 512 512"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <title
-                      id="svg-inline--fa-title-000000000000"
-                      style={Object {}}
-                    >
-                      Hate
-                    </title>
-                    <path
-                      d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
-                      fill="currentColor"
-                      style={Object {}}
-                    />
-                  </svg>
-                </FontAwesomeIcon>
-              </ListenControl>
+                    Hate
+                  </title>
+                  <path
+                    d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
             </ListenFeedbackComponent>
             <FontAwesomeIcon
               aria-expanded="true"
@@ -1636,7 +1512,6 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                     inverse={false}
                     listItem={false}
                     mask={null}
-                    onClick={[Function]}
                     pull={null}
                     pulse={false}
                     rotation={null}
@@ -1652,7 +1527,6 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                       className="svg-inline--fa fa-comment-dots fa-w-16 "
                       data-icon="comment-dots"
                       data-prefix="fas"
-                      onClick={[Function]}
                       role="img"
                       style={Object {}}
                       viewBox="0 0 512 512"
