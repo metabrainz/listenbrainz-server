@@ -446,6 +446,13 @@ def delete_listens_history(musicbrainz_id):
 
 
 def logged_in_user_follows_user(user):
+    """ Check if user is being followed by the current user.
+    Args:
+        user : User object
+    Raises:
+        NotFound if user isn't present in the database
+    """
+
     if current_user.is_authenticated:
         return db_user_relationship.is_following_user(
             current_user.id, user.id
