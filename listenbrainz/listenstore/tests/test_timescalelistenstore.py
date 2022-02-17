@@ -10,7 +10,7 @@ from brainzutils import cache
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
-from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
+from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, \
     TimescaleListenStore
 
@@ -184,14 +184,13 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         user_name2 = user2['musicbrainz_id']
         self._create_test_data(user_name2, user2["id"])
 
-        recent = self.logstore.fetch_recent_listens_for_users([user, user2], limit=1, max_age=10000000000)
+        recent = self.logstore.fetch_recent_listens_for_users([user, user2], limit=1, min_ts=int(time()) - 10000000000)
         self.assertEqual(len(recent), 2)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user, user2], max_age=10000000000)
+        recent = self.logstore.fetch_recent_listens_for_users([user, user2], min_ts=int(time()) - 10000000000)
         self.assertEqual(len(recent), 4)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user], max_age=int(time()) -
-                                                              recent[0].ts_since_epoch + 1)
+        recent = self.logstore.fetch_recent_listens_for_users([user], min_ts=recent[0].ts_since_epoch - 1)
         self.assertEqual(len(recent), 1)
         self.assertEqual(recent[0].ts_since_epoch, 1400000200)
 
