@@ -9,7 +9,6 @@ export type ListenControlProps = {
   iconClassName?: string;
   action?: (event: React.MouseEvent) => void;
   icon?: IconDefinition;
-  iconOnly?: boolean;
   title: string;
   dataToggle?: string;
   dataTarget?: string;
@@ -28,7 +27,6 @@ const ListenControl = (props: ListenControlProps) => {
     iconClassName,
     action,
     icon,
-    iconOnly,
     title,
     dataToggle,
     dataTarget,
@@ -55,15 +53,11 @@ const ListenControl = (props: ListenControlProps) => {
         icon={icon as IconProp}
         className={iconClassName}
         title={title}
-        // eslint-disable-next-line no-nested-ternary
-        onClick={disabled ? undefined : iconOnly ? action : undefined}
       />
     );
   }
 
-  return iconOnly ? (
-    iconElement ?? <>No icon to render</>
-  ) : (
+  return (
     <button
       disabled={disabled ?? false}
       className={buttonClassName}

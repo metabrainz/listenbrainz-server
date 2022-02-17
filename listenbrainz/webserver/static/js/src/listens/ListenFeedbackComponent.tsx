@@ -1,7 +1,7 @@
 import * as React from "react";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { get } from "lodash";
-import ListenControl from "./ListenControl";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import GlobalAppContext from "../GlobalAppContext";
 
 export type ListenFeedbackComponentProps = {
@@ -66,19 +66,17 @@ export default class ListenFeedbackComponent extends React.Component<
     }
     return (
       <>
-        <ListenControl
-          iconOnly
+        <FontAwesomeIcon
           icon={faHeart}
           title="Love"
-          action={() => this.submitFeedback(currentFeedback === 1 ? 0 : 1)}
-          iconClassName={`${currentFeedback === 1 ? " loved" : ""}`}
+          onClick={() => this.submitFeedback(currentFeedback === 1 ? 0 : 1)}
+          className={`${currentFeedback === 1 ? " loved" : ""}`}
         />
-        <ListenControl
-          iconOnly
+        <FontAwesomeIcon
           icon={faHeartBroken}
           title="Hate"
-          action={() => this.submitFeedback(currentFeedback === -1 ? 0 : -1)}
-          iconClassName={`${currentFeedback === -1 ? " hated" : ""}`}
+          onClick={() => this.submitFeedback(currentFeedback === -1 ? 0 : -1)}
+          className={`${currentFeedback === -1 ? " hated" : ""}`}
         />
       </>
     );
