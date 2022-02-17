@@ -28,6 +28,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import traceback
 from datetime import datetime, timedelta
 from ftplib import FTP
 
@@ -893,8 +894,7 @@ def _update_sequences():
 
 def _fetch_latest_file_info_from_ftp_dir(server, dir):
     """
-        Given a FTP server and dir, fetch the latst dump file info, parse it and
-        return a tuple containing (dump_id, datetime_of_dump_file).
+        Given a FTP server and dir, fetch the latest dump directory name and return it
     """
 
     line = ""
@@ -909,9 +909,38 @@ def _fetch_latest_file_info_from_ftp_dir(server, dir):
     ftp.login()
     ftp.cwd(dir)
     ftp.retrlines('LIST', add_line)
-    _, _, id, d, t, _ = line[56:].strip().split("-")
 
-    return int(id), datetime.strptime(d + t, "%Y%m%d%H%M%S")
+    return line[56:].strip()
+
+
+def _parse_ftp_name_with_id(name):
+    """Parse a name like
+        listenbrainz-dump-712-20220201-040003-full
+    into its id (712), and a datetime.datetime object representing the datetime (2022-02-01 04:00:03)
+
+    Returns:
+        a tuple (id, datetime of file)
+    """
+    parts = name.split("-")
+    if len(parts) != 6:
+        raise ValueError("Filename '{}' expected to have 6 parts separated by -".format(name))
+    _, _, dumpid, d, t, _ = parts
+    return int(dumpid), datetime.strptime(d + t, "%Y%m%d%H%M%S")
+
+
+def _parse_ftp_name_without_id(name):
+    """Parse a name like
+        listenbrainz-feedback-20220207-060003-full
+    into an id (20220207-060003), and a datetime.datetime object representing the datetime (2022-02-07 06:00:03)
+
+    Returns:
+        a tuple (id, datetime of file)
+    """
+    parts = name.split("-")
+    if len(parts) != 5:
+        raise ValueError("Filename '{}' expected to have 5 parts separated by -".format(name))
+    _, _, d, t, _ = parts
+    return d + '-' + t, datetime.strptime(d + t, "%Y%m%d%H%M%S")
 
 
 def check_ftp_dump_ages():
@@ -922,8 +951,9 @@ def check_ftp_dump_ages():
 
     msg = ""
     try:
-        id, dt = _fetch_latest_file_info_from_ftp_dir(
+        latest_file = _fetch_latest_file_info_from_ftp_dir(
             MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/fullexport')
+        id, dt = _parse_ftp_name_with_id(latest_file)
         age = datetime.now() - dt
         if age > timedelta(days=FULLEXPORT_MAX_AGE):
             msg = "Full dump %d is more than %d days old: %s\n" % (
@@ -932,11 +962,12 @@ def check_ftp_dump_ages():
         else:
             print("Full dump %s is %s old, good!" % (id, str(age)))
     except Exception as err:
-        msg = "Cannot fetch full dump age: %s" % str(err)
+        msg = "Cannot fetch full dump age: %s\n\n%s" % (str(err), traceback.format_exc())
 
     try:
-        id, dt = _fetch_latest_file_info_from_ftp_dir(
+        latest_file = _fetch_latest_file_info_from_ftp_dir(
             MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/incremental')
+        id, dt = _parse_ftp_name_with_id(latest_file)
         age = datetime.now() - dt
         if age > timedelta(hours=INCREMENTAL_MAX_AGE):
             msg = "Incremental dump %s is more than %s hours old: %s\n" % (
@@ -945,11 +976,12 @@ def check_ftp_dump_ages():
         else:
             print("Incremental dump %s is %s old, good!" % (id, str(age)))
     except Exception as err:
-        msg = "Cannot fetch incremental dump age: %s" % str(err)
+        msg = "Cannot fetch incremental dump age: %s\n\n%s" % (str(err), traceback.format_exc())
 
     try:
-        id, dt = _fetch_latest_file_info_from_ftp_dir(
+        latest_file = _fetch_latest_file_info_from_ftp_dir(
             MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/spark')
+        id, dt = _parse_ftp_name_without_id(latest_file)
         age = datetime.now() - dt
         if age > timedelta(days=FEEDBACK_MAX_AGE):
             msg = "Feedback dump %s is more than %s days old: %s\n" % (
@@ -958,7 +990,7 @@ def check_ftp_dump_ages():
         else:
             print("Feedback dump %s is %s old, good!" % (id, str(age)))
     except Exception as err:
-        msg = "Cannot fetch feedback dump age: %s" % str(err)
+        msg = "Cannot fetch feedback dump age: %s\n\n%s" % (str(err), traceback.format_exc())
 
     app = create_app()
     with app.app_context():
@@ -970,6 +1002,8 @@ def check_ftp_dump_ages():
                 from_name='ListenBrainz',
                 from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
             )
+        elif msg:
+            print(msg)
 
 
 class SchemaMismatchException(Exception):

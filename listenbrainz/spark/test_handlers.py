@@ -4,12 +4,12 @@ from unittest import mock
 from flask import current_app
 
 from data.model.common_stat import StatRange, StatRecordList, StatApi
-from data.model.user_artist_stat import UserArtistRecord
+from data.model.user_artist_stat import ArtistRecord
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
                                                                   UserRecommendationsRecord)
-from data.model.user_daily_activity import UserDailyActivityRecord
-from data.model.user_entity import UserEntityRecord
-from data.model.user_listening_activity import UserListeningActivityRecord
+from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_entity import EntityRecord
+from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
                                                       UserMissingMusicBrainzDataJson)
 from listenbrainz.db.testing import DatabaseTestCase
@@ -32,11 +32,11 @@ class HandlersTestCase(DatabaseTestCase):
     def setUp(self):
         super(HandlersTestCase, self).setUp()
         self.app = create_app()
+        db_user.create(1, 'iliekcomputers')
+        db_user.create(2, 'lucifer')
         self.maxDiff = None
 
     def test_handle_user_entity(self):
-        db_user.create(1, 'iliekcomputers')
-        db_user.create(2, 'lucifer')
         data = {
             'type': 'user_entity',
             'entity': 'artists',
@@ -72,15 +72,15 @@ class HandlersTestCase(DatabaseTestCase):
         handle_user_entity(data)
 
         received = db_stats.get_user_stats(1, 'all_time', 'artists')
-        expected = StatApi[UserEntityRecord](
+        expected = StatApi[EntityRecord](
             user_id=1,
             to_ts=10,
             from_ts=1,
             count=1,
             stats_range='all_time',
-            data=StatRecordList[UserEntityRecord](
+            data=StatRecordList[EntityRecord](
                 __root__=[
-                    UserArtistRecord(
+                    ArtistRecord(
                         artist_mbids=[],
                         listen_count=200,
                         artist_name='Kanye West',
@@ -92,20 +92,20 @@ class HandlersTestCase(DatabaseTestCase):
         self.assertEqual(received, expected)
 
         received = db_stats.get_user_stats(2, 'all_time', 'artists')
-        expected = StatApi[UserEntityRecord](
+        expected = StatApi[EntityRecord](
             user_id=2,
             to_ts=10,
             from_ts=1,
             count=2,
             stats_range='all_time',
-            data=StatRecordList[UserEntityRecord](
+            data=StatRecordList[EntityRecord](
                 __root__=[
-                    UserArtistRecord(
+                    ArtistRecord(
                         artist_mbids=[],
                         listen_count=100,
                         artist_name='Selena Gomez',
                     ),
-                    UserArtistRecord(
+                    ArtistRecord(
                         artist_mbids=[],
                         listen_count=50,
                         artist_name='Tom Ellis',
@@ -116,87 +116,167 @@ class HandlersTestCase(DatabaseTestCase):
         )
         self.assertEqual(received, expected)
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get')
-    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_listening_activity(self, mock_send_mail, mock_new_user_stats, mock_get, mock_db_insert):
+    def test_handle_user_listening_activity(self):
         data = {
-            'user_id': 1,
             'type': 'listening_activity',
             'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
-            'data': [{
-                'from_ts': 1,
-                'to_ts': 5,
-                'time_range': '2020',
-                'listen_count': 200,
-            }],
+            'data': [
+                {
+                    'user_id': 1,
+                    'data': [
+                        {
+                            'from_ts': 1,
+                            'to_ts': 5,
+                            'time_range': '2020',
+                            'listen_count': 200,
+                        },
+                        {
+                            'from_ts': 6,
+                            'to_ts': 10,
+                            'time_range': '2021',
+                            'listen_count': 150,
+                        },
+                    ]
+                },
+                {
+                    'user_id': 2,
+                    'data': [
+                        {
+                            'from_ts': 2,
+                            'to_ts': 7,
+                            'time_range': '2020',
+                            'listen_count': 20,
+                        }
+                    ]
+                }
+            ]
         }
-        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
-        mock_new_user_stats.return_value = True
 
-        with self.app.app_context():
-            current_app.config['TESTING'] = False  # set testing to false to check the notifications
-            handle_user_listening_activity(data)
+        handle_user_listening_activity(data)
 
-        mock_db_insert.assert_called_with(1, 'listening_activity', StatRange[UserListeningActivityRecord](
+        received = db_stats.get_user_listening_activity(1, 'all_time')
+        self.assertEqual(received, StatApi[ListeningActivityRecord](
+            user_id=1,
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            data=StatRecordList[UserListeningActivityRecord](
+            data=StatRecordList[ListeningActivityRecord](
                 __root__=[
-                    UserListeningActivityRecord(
+                    ListeningActivityRecord(
                         from_ts=1,
                         to_ts=5,
                         time_range='2020',
                         listen_count=200,
+                    ),
+                    ListeningActivityRecord(
+                        from_ts=6,
+                        to_ts=10,
+                        time_range='2021',
+                        listen_count=150,
+                    ),
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+        received = db_stats.get_user_listening_activity(2, 'all_time')
+        self.assertEqual(received, StatApi[ListeningActivityRecord](
+            user_id=2,
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[ListeningActivityRecord](
+                __root__=[
+                    ListeningActivityRecord(
+                        from_ts=2,
+                        to_ts=7,
+                        time_range='2020',
+                        listen_count=20,
                     )
                 ]
-            )
+            ),
+            last_updated=received.last_updated
         ))
-        mock_send_mail.assert_called_once()
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.db_user.get')
-    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_daily_activity(self, mock_send_mail, mock_new_user_stats, mock_get, mock_db_insert):
+    def test_handle_user_daily_activity(self):
         data = {
-            'user_id': 1,
             'type': 'daily_activity',
             'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
-            'daily_activity': [{
-                'day': 'Monday',
-                'hour': 20,
-                'listen_count': 20,
-            }],
+            'data': [
+                {
+                    'user_id': 1,
+                    'data': [
+                        {
+                            'day': 'Monday',
+                            'hour': 20,
+                            'listen_count': 20,
+                        }
+                    ]
+                },
+                {
+                    'user_id': 2,
+                    'data': [
+                        {
+                            'day': 'Wednesday',
+                            'hour': 10,
+                            'listen_count': 25,
+                        },
+                        {
+                            'day': 'Friday',
+                            'hour': 11,
+                            'listen_count': 22,
+                        }
+                    ]
+                }
+            ],
         }
-        mock_get.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
-        mock_new_user_stats.return_value = True
 
-        with self.app.app_context():
-            current_app.config['TESTING'] = False  # set testing to false to check the notifications
-            handle_user_daily_activity(data)
+        handle_user_daily_activity(data)
 
-        mock_db_insert.assert_called_with(1, StatRange[UserDailyActivityRecord](
+        received = db_stats.get_user_daily_activity(1, 'all_time')
+        self.assertEqual(received, StatApi[DailyActivityRecord](
+            user_id=1,
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            data=StatRecordList[UserDailyActivityRecord](
+            data=StatRecordList[DailyActivityRecord](
                 __root__=[
-                    UserDailyActivityRecord(
+                    DailyActivityRecord(
                         day='Monday',
                         hour=20,
                         listen_count=20,
                     )
                 ]
-            )
+            ),
+            last_updated=received.last_updated
         ))
-        mock_send_mail.assert_called_once()
+
+        received = db_stats.get_user_daily_activity(2, 'all_time')
+        self.assertEqual(received, StatApi[DailyActivityRecord](
+            user_id=2,
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[DailyActivityRecord](
+                __root__=[
+                    DailyActivityRecord(
+                        day='Wednesday',
+                        hour=10,
+                        listen_count=25,
+                    ),
+                    DailyActivityRecord(
+                        day='Friday',
+                        hour=11,
+                        listen_count=22,
+                    ),
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.insert_sitewide_jsonb_data')
     @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
@@ -222,13 +302,13 @@ class HandlersTestCase(DatabaseTestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_sitewide_entity(data)
 
-        mock_db_insert.assert_called_with('artists', StatRange[UserArtistRecord](
+        mock_db_insert.assert_called_with('artists', StatRange[ArtistRecord](
             to_ts=10,
             from_ts=1,
             count=1,
             stats_range='all_time',
-            data=StatRecordList[UserArtistRecord](__root__=[
-                UserArtistRecord(
+            data=StatRecordList[ArtistRecord](__root__=[
+                ArtistRecord(
                     artist_name='Coldplay',
                     artist_mbid=[],
                     listen_count=20,
