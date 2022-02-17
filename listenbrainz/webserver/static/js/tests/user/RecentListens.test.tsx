@@ -16,7 +16,7 @@ import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPl
 import RecentListens, {
   RecentListensProps,
   RecentListensState,
-} from "../../src/stats/RecentListens";
+} from "../../src/user/RecentListens";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 

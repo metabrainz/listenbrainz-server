@@ -28,7 +28,6 @@ import { getPageProps } from "../utils/utils";
 import { getEntityLink } from "../stats/utils";
 import ComponentToImage from "./ComponentToImage";
 
-import fakeData from "../../tests/__mocks__/year-in-music-data.json";
 import ListenCard from "../listens/ListenCard";
 import UserListModalEntry from "../follow/UserListModalEntry";
 import {

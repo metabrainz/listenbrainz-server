@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UserFeedback, {
   UserFeedbackProps,
   UserFeedbackState,
-} from "../../src/stats/UserFeedback";
+} from "../../src/user/UserFeedback";
 import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import * as userFeedbackProps from "../__mocks__/userFeedbackProps.json";
