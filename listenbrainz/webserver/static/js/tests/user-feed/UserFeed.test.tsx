@@ -22,12 +22,12 @@ import * as React from "react";
 import { mount, shallow } from "enzyme";
 import * as timeago from "time-ago";
 import { sortBy } from "lodash";
-import UserFeedPage from "./UserFeed";
-import UserSocialNetwork from "../follow/UserSocialNetwork";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import * as timelineProps from "../../tests/__mocks__/timelineProps.json";
-import GlobalAppContext from "../GlobalAppContext";
-import APIService from "../APIService";
+import UserFeedPage from "../../src/user-feed/UserFeed";
+import UserSocialNetwork from "../../src/follow/UserSocialNetwork";
+import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
+import * as timelineProps from "../__mocks__/timelineProps.json";
+import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
 
 // typescript doesn't recognise string literal values
 const props = {

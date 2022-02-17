@@ -24,10 +24,10 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { isEmpty, isNil } from "lodash";
 import FollowButton from "./follow/FollowButton";
-import APIService from "./APIService";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import APIService from "./utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
 import ReportUserButton from "./report-user/ReportUser";
-import { getPageProps } from "./utils";
+import { getPageProps } from "./utils/utils";
 
 const UserPageHeading = ({
   user,

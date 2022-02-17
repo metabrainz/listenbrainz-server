@@ -24,8 +24,8 @@ import UserPageHeading from "./UserPageHeading";
 import FollowButton from "./follow/FollowButton";
 import ReportUserButton from "./report-user/ReportUser";
 import ReportUserModal from "./report-user/ReportUserModal";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import APIService from "./APIService";
+import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
+import APIService from "./utils/APIService";
 
 const user = {
   id: 1,

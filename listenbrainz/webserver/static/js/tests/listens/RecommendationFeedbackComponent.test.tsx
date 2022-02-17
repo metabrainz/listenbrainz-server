@@ -16,9 +16,9 @@ import {
 import RecommendationFeedbackComponent, {
   RecommendationFeedbackComponentProps,
 } from "../../src/listens/RecommendationFeedbackComponent";
-import * as utils from "../../src/utils";
-import APIServiceClass from "../../src/APIService";
-import GlobalAppContext from "../../src/GlobalAppContext";
+import * as utils from "../../src/utils/utils";
+import APIServiceClass from "../../src/utils/APIService";
+import GlobalAppContext from "../../src/utils/GlobalAppContext";
 import RecommendationControl from "../../src/recommendations/RecommendationControl";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
