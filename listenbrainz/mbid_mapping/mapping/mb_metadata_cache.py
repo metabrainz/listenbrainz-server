@@ -76,26 +76,36 @@ def create_json_blob(row):
     """ Format the data returned into a sane JSONB blob for easy consumption. """
 
     artists = []
-    for begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
+    entities = {
+        "artist": [],
+        "recording": row["recording_mbid"]
+    }
+
+    for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
         rels = { name: url for name, url in rels or [] }
-        artists.append({"begin_year": begin_year,
-                        "end_year": end_year,
-                        "type": artist_type,
-                        "gender": gender,
-                        "area": area,
-                        "relationships": rels })
+        data = {"mbid": mbid,
+                "begin_year": begin_year,
+                "end_year": end_year,
+                "type": artist_type,
+                "area": area,
+                "rels": rels }
+        if artist_type == "Person":
+            data["gender"] = gender
+        artists.append(data)
+        entities["artist"].append(mbid)
 
     recording_links = []
     for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
         recording_links.append({"type": rel_type,
-                                "name": artist_name,
-                                "mbid": artist_mbid,
+                                "artist_name": artist_name,
+                                "artist_mbid": artist_mbid,
                                 "instrument": instrument})
 
     data = {
         "length": row["length"],
-        "links": recording_links,
-        "artists": artists
+        "rels": recording_links,
+        "artists": artists,
+        "entities": entities
     }
 
     return json.dumps(data)
@@ -139,6 +149,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                               ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
                                               ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
                                     OR lt.gid IS NULL)
+AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                           GROUP BY r.gid
                ), recording_rels AS (
                             SELECT r.gid
@@ -172,10 +183,12 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                                ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
                                                ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                    OR lt.gid IS NULL)
+AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                            GROUP BY r.gid
                ), artist_data AS (
                         SELECT r.gid
-                             , array_agg(jsonb_build_array(a.begin_date_year
+                             , array_agg(jsonb_build_array(a.gid
+                                                          ,a.begin_date_year
                                                           ,a.end_date_year
                                                           ,at.name
                                                           ,ag.name
@@ -196,6 +209,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON a.area = ar.id
                      LEFT JOIN artist_rels arl
                             ON arl.gid = r.gid
+WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                       GROUP BY r.gid
                )
                         SELECT recording_links
@@ -217,6 +231,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON ard.gid = r.gid
                      LEFT JOIN recording_rels rrl
                             ON rrl.gid = r.gid
+WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                       GROUP BY r.gid, r.length, recording_links, artist_data"""
 
 #WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
@@ -253,7 +268,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
         serial += 1
 
         if len(rows) >= BATCH_SIZE:
-            insert_rows(lb_curs, "mapping.tmp_mb_metadata_cache", rows)
+            insert_rows(lb_curs, "tmp_mb_metadata_cache", rows)
             mb_conn.commit()
             rows = []
 
@@ -261,7 +276,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                 log("mb metadata cache: inserted %d rows. %.1f%%" % (serial, 100 * serial / total_rows))
 
     if rows:
-        insert_rows(lb_curs, "mapping.tmp_mb_metadata_cache", rows)
+        insert_rows(lb_curs, "tmp_mb_metadata_cache", rows)
         lb_conn.commit()
 
     log("mb metadata cache: inserted %d rows total." % (serial - 1))
@@ -277,6 +292,6 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
 def create_mb_metadata_cache():
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            with psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as lb_conn:
+            with psycopg2.connect(config.TIMESCALE_DATABASE_URI) as lb_conn:
                 with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
                     create_cache(mb_conn, mb_curs, lb_conn, lb_curs)
