@@ -109,7 +109,7 @@ describe("<UserFeed />", () => {
     expect(content.exists()).toBeTruthy();
     expect(content.children()).toHaveLength(1);
     const time = recEvent.find(".event-time");
-    expect(time.text()).toEqual("Mar 02, 7:48 PM");
+    expect(time.text().includes("Mar 02, 7:48 PM")).toBe(true);
     dateNowMock.mockRestore();
   });
 
@@ -129,7 +129,7 @@ describe("<UserFeed />", () => {
     let content = followedEvent.find(".event-content");
     expect(content.exists()).toBeFalsy();
     let time = followedEvent.find(".event-time");
-    expect(time.text()).toEqual("Feb 16, 11:21 AM");
+    expect(time.text().includes("Feb 16, 11:21 AM")).toBe(true);
 
     const followEvent = wrapper.find("#timeline > ul >li").at(4);
     description = followEvent.find(".event-description-text");
@@ -137,7 +137,7 @@ describe("<UserFeed />", () => {
     content = followEvent.find(".event-content");
     expect(content.exists()).toBeFalsy();
     time = followEvent.find(".event-time");
-    expect(time.text()).toEqual("Feb 16, 11:20 AM");
+    expect(time.text().includes("Feb 16, 11:20 AM")).toBe(true);
     dateNowMock.mockRestore();
   });
 
@@ -165,7 +165,7 @@ describe("<UserFeed />", () => {
     const content = notificationEvent.find(".event-content");
     expect(content.exists()).toBeFalsy();
     const time = notificationEvent.find(".event-time");
-    expect(time.text()).toEqual("Feb 16, 11:17 AM");
+    expect(time.text().includes("Feb 16, 11:17 AM")).toBe(true);
     dateNowMock.mockRestore();
   });
 
@@ -186,7 +186,7 @@ describe("<UserFeed />", () => {
     expect(content.exists()).toBeTruthy();
     expect(content.children()).toHaveLength(1);
     const time = recEvent.find(".event-time");
-    expect(time.text()).toEqual("Feb 16, 10:44 AM");
+    expect(time.text().includes("Feb 16, 10:44 AM")).toBe(true);
 
     // Ensure additional details are rendered if provided
     const additionalContent = content.find(".additional-content");
