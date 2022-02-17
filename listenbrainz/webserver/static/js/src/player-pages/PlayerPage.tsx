@@ -13,21 +13,20 @@ import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import APIServiceClass from "../utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   PLAYLIST_TRACK_URI_PREFIX,
-  getPlaylistExtension,
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../playlists/utils";
-import { getPageProps } from "../utils";
+import { getPageProps } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../utils/ErrorBoundary";
 
 export type PlayerPageProps = {
   playlist: JSPFObject;
