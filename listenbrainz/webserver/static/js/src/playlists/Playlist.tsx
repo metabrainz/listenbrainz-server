@@ -29,7 +29,7 @@ import {
 } from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
-import SpotifyAPIService from "../SpotifyAPIService";
+import SpotifyAPIService from "../utils/SpotifyAPIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
