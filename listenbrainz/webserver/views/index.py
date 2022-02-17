@@ -33,24 +33,27 @@ SEARCH_USER_LIMIT = 100  # max number of users to return in search username resu
 
 @index_bp.route("/")
 def index():
-    if _ts:
-        try:
-            listen_count = _ts.get_total_listen_count()
-            user_count = format(int(_get_user_count()), ',d')
-        except Exception as e:
-            current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+    if not current_user.is_authenticated:
+        if _ts:
+            try:
+                listen_count = _ts.get_total_listen_count()
+                user_count = format(int(_get_user_count()), ',d')
+            except Exception as e:
+                current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+                listen_count = None
+                user_count = 'Unknown'
+
+        else:
             listen_count = None
             user_count = 'Unknown'
 
+        return render_template(
+            "index/index.html",
+            listen_count=format(int(listen_count), ",d") if listen_count else "0",
+            user_count=user_count,
+        )
     else:
-        listen_count = None
-        user_count = 'Unknown'
-
-    return render_template(
-        "index/index.html",
-        listen_count=format(int(listen_count), ",d") if listen_count else "0",
-        user_count=user_count,
-    )
+        return redirect(url_for('user.profile', user_name=current_user.musicbrainz_id))
 
 @index_bp.route("/import/")
 def import_data():
