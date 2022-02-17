@@ -74,6 +74,9 @@ def load_instant():
     the recording_mbid's metadata and creates a JSPF file from this data and sends it to the front end
     so a playlist can be instantly played.
 
+    NOTE: We recommend that you do not send more than 100 recording_mbids in one request -- our
+    server infrastructure will likely give you a gateway error (502) if you do.
+
     :param recording_mbids: A comma separated list of recording_mbids
     :type recording_mbids: ``str``
     :param desc: A description for this instant playlist (optional).
