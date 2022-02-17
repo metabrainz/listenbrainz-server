@@ -10,12 +10,10 @@ from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 import config
 
-from icecream import ic
-
 BATCH_SIZE = 5000
 
 
-def create_tables(mb_conn):
+def create_tables(lb_conn):
     """
         Create tables needed to create the MBID metadata cache. If old
         temp tables exist, drop them.
@@ -23,17 +21,17 @@ def create_tables(mb_conn):
 
     # drop/create finished table
     try:
-        with mb_conn.cursor() as curs:
-            curs.execute("DROP TABLE IF EXISTS mapping.tmp_mb_metadata_cache")
-            curs.execute("""CREATE TABLE mapping.tmp_mb_metadata_cache (
+        with lb_conn.cursor() as curs:
+            curs.execute("DROP TABLE IF EXISTS tmp_mb_metadata_cache")
+            curs.execute("""CREATE TABLE tmp_mb_metadata_cache (
                                          id                        SERIAL,
                                          recording_mbid            UUID NOT NULL,
                                          dirty                     BOOLEAN DEFAULT FALSE,
-                                         data                      JSONB)""")
-            mb_conn.commit()
+                                         data                      JSONB NOT NULL)""")
+            lb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
         log("mb metadata cache: failed to mb metadata cache tables", err)
-        mb_conn.rollback()
+        lb_conn.rollback()
         raise
 
 
@@ -46,7 +44,7 @@ def create_indexes(conn):
         # TODO: Create GIN index on entity list 
         with conn.cursor() as curs:
             curs.execute("""CREATE UNIQUE INDEX tmp_mb_metadata_cache_idx_recording_mbid
-                                      ON mapping.tmp_mb_metadata_cache(recording_mbid)""")
+                                      ON tmp_mb_metadata_cache(recording_mbid)""")
         conn.commit()
     except OperationalError as err:
         log("mb metadata cache: failed to mb metadata cache", err)
@@ -61,11 +59,11 @@ def swap_table_and_indexes(conn):
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-            curs.execute("DROP TABLE IF EXISTS mapping.mb_metadata_cache")
-            curs.execute("""ALTER TABLE mapping.tmp_mb_metadata_cache
+            curs.execute("DROP TABLE IF EXISTS mb_metadata_cache")
+            curs.execute("""ALTER TABLE tmp_mb_metadata_cache
                             RENAME TO mb_metadata_cache""")
 
-            curs.execute("""ALTER INDEX mapping.tmp_mb_metadata_cache_idx_recording_mbid
+            curs.execute("""ALTER INDEX tmp_mb_metadata_cache_idx_recording_mbid
                             RENAME TO mb_metadata_cache_idx_recording_mbid""")
         conn.commit()
     except OperationalError as err:
@@ -103,7 +101,7 @@ def create_json_blob(row):
     return json.dumps(data)
 
 
-def create_mb_metadata_cache():
+def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     """
         This function is the heart of the mb metadata cache. It fetches all the data for
         the cache in one go and then creates JSONB dicts for insertion into the cache.
@@ -225,61 +223,60 @@ def create_mb_metadata_cache():
 #AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
 
     log("mb metadata cache: start")
-    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
-        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
 
-            # Create the dest table (perhaps dropping the old one first)
-            log("mb metadata cache: create schema")
-            create_schema(mb_conn)
+    # Create the dest table (perhaps dropping the old one first)
 
-            log("mb metadata cache: drop old tables, create new tables")
-            create_tables(mb_conn)
+    log("mb metadata cache: drop old tables, create new tables")
+    create_tables(lb_conn)
 
-            with mb_conn.cursor() as mb_curs2:
-                rows = []
-                serial = 1
-                log("mb metadata cache: fetch recordings")
-                mb_curs.execute(query)
-                total_rows = mb_curs.rowcount
-                log(f"mb metadata cache: {total_rows} recordings in result")
+    rows = []
+    serial = 1
+    log("mb metadata cache: fetch recordings")
+    mb_curs.execute(query)
+    total_rows = mb_curs.rowcount
+    log(f"mb metadata cache: {total_rows} recordings in result")
 
-                row_count = 0
-                while True:
-                    row = mb_curs.fetchone()
-                    if not row:
-                        break
+    row_count = 0
+    while True:
+        row = mb_curs.fetchone()
+        if not row:
+            break
 
-                    data = create_json_blob(row)
-                    try:
-                        rows.append((serial, row["recording_mbid"], "false", data))
-                    except Exception as err:
-                        print(row["recording_mbid"])
-                        print(str(err))
-                        return
+        data = create_json_blob(row)
+        try:
+            rows.append((serial, row["recording_mbid"], "false", data))
+        except Exception as err:
+            print(row["recording_mbid"])
+            print(str(err))
+            return
 
-                    serial += 1
+        serial += 1
 
-                    if len(rows) >= BATCH_SIZE:
-                        try:
-                            insert_rows(mb_curs2, "mapping.tmp_mb_metadata_cache", rows)
-                        except Exception:
-                            print(rows)
-                        mb_conn.commit()
-                        rows = []
+        if len(rows) >= BATCH_SIZE:
+            insert_rows(lb_curs, "mapping.tmp_mb_metadata_cache", rows)
+            mb_conn.commit()
+            rows = []
 
-                        if serial % 1000000 == 0:
-                            log("mb metadata cache: inserted %d rows. %.1f%%" % (serial, 100 * serial / total_rows))
+            if serial % 1000000 == 0:
+                log("mb metadata cache: inserted %d rows. %.1f%%" % (serial, 100 * serial / total_rows))
 
+    if rows:
+        insert_rows(lb_curs, "mapping.tmp_mb_metadata_cache", rows)
+        lb_conn.commit()
 
-                if rows:
-                    insert_rows(mb_curs2, "mapping.tmp_mb_metadata_cache", rows)
-                    mb_conn.commit()
+    log("mb metadata cache: inserted %d rows total." % (serial - 1))
+    log("mb metadata cache: create indexes")
+    create_indexes(lb_conn)
 
-            log("mb metadata cache: inserted %d rows total." % (serial - 1))
-            log("mb metadata cache: create indexes")
-            create_indexes(mb_conn)
-
-            log("mb metadata cache: swap tables and indexes into production.")
-            swap_table_and_indexes(mb_conn)
+    log("mb metadata cache: swap tables and indexes into production.")
+    swap_table_and_indexes(lb_conn)
 
     log("mb metadata cache: done")
+
+
+def create_mb_metadata_cache():
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
+        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+            with psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as lb_conn:
+                with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
+                    create_cache(mb_conn, mb_curs, lb_conn, lb_curs)
