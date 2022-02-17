@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import PlaybackControls from "./brainzplayer/PlaybackControls";
+import PlaybackControls from "../../src/brainzplayer/PlaybackControls";
 
 const props = {
   playPreviousTrack: () => {},

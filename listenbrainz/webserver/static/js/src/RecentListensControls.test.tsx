@@ -4,8 +4,8 @@ import fetchMock from "jest-fetch-mock";
 
 import * as recentListensPropsOneListen from "../tests/__mocks__/recentListensPropsOneListen.json";
 import * as getFeedbackByMsidResponse from "../tests/__mocks__/getFeedbackByMsidResponse.json";
-import GlobalAppContext from "./GlobalAppContext";
-import APIService from "./APIService";
+import GlobalAppContext from "./utils/GlobalAppContext";
+import APIService from "./utils/APIService";
 import RecentListens, { RecentListensProps } from "./RecentListens";
 
 // Font Awesome generates a random hash ID for each icon everytime.

@@ -17,15 +17,15 @@ import {
   faThumbtack,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
 } from "./notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "./APIService";
+import APIServiceClass from "./utils/APIService";
 import BrainzPlayer from "./brainzplayer/BrainzPlayer";
-import ErrorBoundary from "./ErrorBoundary";
+import ErrorBoundary from "./utils/ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
 import PinRecordingModal from "./pins/PinRecordingModal";
@@ -38,7 +38,7 @@ import {
   getArtistMBIDs,
   getReleaseMBID,
   getReleaseGroupMBID,
-} from "./utils";
+} from "./utils/utils";
 import CBReviewModal from "./cb-review/CBReviewModal";
 import ListenControl from "./listens/ListenControl";
 
