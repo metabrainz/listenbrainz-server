@@ -1,0 +1,12 @@
+{% extends 'base-react.html' %}
+
+{% block content %}
+
+    <div id="react-container"></div>
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ get_static_path('playerPage.js') }}" type="text/javascript"></script>
+{% endblock %}
