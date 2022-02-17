@@ -11,7 +11,7 @@ import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
-import * as worldCountries from "./world_countries.json";
+import * as worldCountries from "../../tests/__mocks__/world_countries.json";
 
 export type ChoroplethProps = {
   data: UserArtistMapData;
