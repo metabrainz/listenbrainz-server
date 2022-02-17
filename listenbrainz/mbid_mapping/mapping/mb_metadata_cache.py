@@ -149,7 +149,6 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                               ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
                                               ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
                                     OR lt.gid IS NULL)
-AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                           GROUP BY r.gid
                ), recording_rels AS (
                             SELECT r.gid
@@ -183,7 +182,6 @@ AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                                                ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
                                                ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                    OR lt.gid IS NULL)
-AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                            GROUP BY r.gid
                ), artist_data AS (
                         SELECT r.gid
@@ -209,7 +207,6 @@ AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                             ON a.area = ar.id
                      LEFT JOIN artist_rels arl
                             ON arl.gid = r.gid
-WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                       GROUP BY r.gid
                )
                         SELECT recording_links
@@ -231,7 +228,6 @@ WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                             ON ard.gid = r.gid
                      LEFT JOIN recording_rels rrl
                             ON rrl.gid = r.gid
-WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                       GROUP BY r.gid, r.length, recording_links, artist_data"""
 
 #WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
