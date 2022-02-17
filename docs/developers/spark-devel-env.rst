@@ -1,11 +1,7 @@
-Set up ListenBrainz Spark development environment
-=================================================
+Spark development
+=================
 
-There are two distinct part of the ListenBrainz development environment:
-
-1. listenbrainz -- the actual webserver components of ListenBrainz
-2. listenbrainz_spark -- the spark environment used for features that involve data processing (stats, recommendations etc.)
-
+The ListenBrainz Spark environment is used for computing statistics and computing recommendations.
 If you're just working on adding a feature to the ListenBrainz webserver, you **do not** need
 to set up the Spark development environment. However, if you're looking to add
 a new stat or improve our fledgling recommender system, you'll need both the webserver

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, time
 
 from listenbrainz_spark.recommendations.recording.create_dataframes import calculate_dataframes
 from listenbrainz_spark.user_similarity import user_similarity
@@ -12,7 +12,7 @@ def get_similar_users(year):
 
     itr = similar_users_df.toLocalIterator()
     message = {
-        row.user_name: {
+        row.user_id: {
             user.other_user_name: user.similarity
             for user in row.similar_users
         }

@@ -134,7 +134,7 @@ def serialize_jspf(playlist: Playlist):
         extension = {"added_by": rec.added_by,
                      "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
         if rec.artist_mbids:
-            extension["artist_identifier"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
+            extension["artist_identifiers"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
 
         if rec.release_mbid:
             extension["release_identifier"] = PLAYLIST_RELEASE_URI_PREFIX + str(rec.release_mbid)

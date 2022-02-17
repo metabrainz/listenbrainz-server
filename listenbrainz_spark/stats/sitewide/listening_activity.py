@@ -1,11 +1,12 @@
 import json
 import logging
 from datetime import datetime
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Dict
 
 from pydantic import ValidationError
 
-from data.model.user_listening_activity import UserListeningActivityStatMessage, SitewideListeningActivityStatMessage
+from data.model.common_stat_spark import StatMessage
+from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.common.listening_activity import setup_time_range
 from listenbrainz_spark.utils import get_listens_from_new_dump
@@ -65,7 +66,7 @@ def calculate_listening_activity(spark_date_format):
     return result.toLocalIterator()
 
 
-def get_listening_activity(stats_range: str):
+def get_listening_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     """ Compute the number of listens for a time range compared to the previous range
 
     Given a time range, this computes a histogram of all listens for that range
@@ -84,7 +85,7 @@ def get_listening_activity(stats_range: str):
 
 
 def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime) \
-        -> Iterator[Optional[UserListeningActivityStatMessage]]:
+        -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to webserver via RabbitMQ
 
@@ -106,7 +107,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
     _dict = next(data).asDict(recursive=True)
     message["data"] = _dict["listening_activity"]
     try:
-        model = SitewideListeningActivityStatMessage(**message)
+        model = StatMessage[ListeningActivityRecord](**message)
         result = model.dict(exclude_none=True)
         yield result
     except ValidationError:

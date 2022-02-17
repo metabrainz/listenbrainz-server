@@ -1,7 +1,7 @@
 import APIService from "./APIService";
 
-const feedProps = require("./__mocks__/feedProps.json");
-const pinProps = require("./__mocks__/pinProps.json");
+const feedProps = require("../tests/__mocks__/feedProps.json");
+const pinProps = require("../tests/__mocks__/pinProps.json");
 
 const apiService = new APIService("foobar");
 
@@ -1073,5 +1073,74 @@ describe("submitReviewToCB", () => {
     await expect(
       apiService.submitReviewToCB(accessToken, reviewToSubmit)
     ).resolves.toEqual({ id: "bf24ca37-25f4-4e34-9aec-460b94364cfc" });
+  });
+});
+
+describe("deleteFeedEvent", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.deleteFeedEvent(
+      "recording_recommendation",
+      "riksucks",
+      "testToken",
+      1337
+    );
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/user/riksucks/feed/events/delete",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token testToken",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          event_type: "recording_recommendation",
+          id: 1337,
+        }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.deleteFeedEvent(
+      "recording_recommendation",
+      "riksucks",
+      "testToken",
+      1337
+    );
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws appropriate error if id is missing", async () => {
+    await expect(
+      apiService.deleteFeedEvent(
+        "recording_recommendation",
+        "riksucks",
+        "testToken",
+        (undefined as unknown) as number
+      )
+    ).rejects.toThrow(SyntaxError("Event ID not present"));
+  });
+
+  it("returns the response code if successful", async () => {
+    await expect(
+      apiService.deleteFeedEvent(
+        "recording_recommendation",
+        "riksucks",
+        "testToken",
+        1337
+      )
+    ).resolves.toEqual(200);
   });
 });

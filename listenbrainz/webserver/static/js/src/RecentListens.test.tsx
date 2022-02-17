@@ -8,17 +8,17 @@ import { io } from "socket.io-client";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
 
-import * as recentListensProps from "./__mocks__/recentListensProps.json";
-import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
-import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
-import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
+import * as recentListensProps from "../tests/__mocks__/recentListensProps.json";
+import * as recentListensPropsTooManyListens from "../tests/__mocks__/recentListensPropsTooManyListens.json";
+import * as recentListensPropsOneListen from "../tests/__mocks__/recentListensPropsOneListen.json";
+import * as recentListensPropsPlayingNow from "../tests/__mocks__/recentListensPropsPlayingNow.json";
 
 import RecentListens, {
   RecentListensProps,
   RecentListensState,
 } from "./RecentListens";
-import PinRecordingModal from "./PinRecordingModal";
-import CBReviewModal from "./CBReviewModal";
+import PinRecordingModal from "./pins/PinRecordingModal";
+import CBReviewModal from "./cb-review/CBReviewModal";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
