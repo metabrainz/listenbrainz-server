@@ -20,7 +20,7 @@
 
 import * as React from "react";
 import { mount, shallow } from "enzyme";
-import UserPageHeading from "../../src/stats/UserPageHeading";
+import UserPageHeading from "../../src/user/UserPageHeading";
 import FollowButton from "../../src/follow/FollowButton";
 import ReportUserButton from "../../src/report-user/ReportUser";
 import ReportUserModal from "../../src/report-user/ReportUserModal";
