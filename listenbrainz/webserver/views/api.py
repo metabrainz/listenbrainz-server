@@ -218,48 +218,6 @@ def get_playing_now(user_name):
     })
 
 
-@api_bp.route("/users/<user_list>/recent-listens")
-@crossdomain(headers='Authorization, Content-Type')
-@ratelimit()
-@api_listenstore_needed
-def get_recent_listens_for_user_list(user_list):
-    """
-    Fetch the most recent listens for a comma separated list of users. Take care to properly HTTP escape
-    user names that contain commas!
-
-    .. note::
-
-        This is a bulk lookup endpoint. Hence, any non-existing users in the list will be simply ignored
-        without raising any error.
-
-    :statuscode 200: Fetched listens successfully.
-    :statuscode 400: Your user list was incomplete or otherwise invalid.
-    :resheader Content-Type: *application/json*
-    """
-
-    limit = _parse_int_arg("limit", 2)
-    users = parse_param_list(user_list)
-    if not len(users):
-        raise APIBadRequest("user_list is empty or invalid.")
-
-    users = db_user.get_many_users_by_mb_id(users)
-    listens = timescale_connection._ts.fetch_recent_listens_for_users(
-        users.values(),
-        min_ts=int(time.time()) - 3600,
-        max_ts=None,
-        limit=limit
-    )
-    listen_data = []
-    for listen in listens:
-        listen_data.append(listen.to_api())
-
-    return jsonify({'payload': {
-        'user_list': user_list,
-        'count': len(listen_data),
-        'listens': listen_data,
-    }})
-
-
 @api_bp.route("/user/<user_name>/similar-users", methods=['GET', 'OPTIONS'])
 @crossdomain(headers='Content-Type')
 @ratelimit()

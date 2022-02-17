@@ -129,14 +129,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['listens'][0]['track_metadata']
                          ['release_name'], 'The Life of Pablo')
 
-        # check that recent listens are fetched correctly
-        url = url_for('api_v1.get_recent_listens_for_user_list',
-                      user_list=self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'limit': '1'})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        self.assertEqual(data['count'], 1)
-
         url = url_for('api_v1.get_listen_count',
                       user_name=self.user['musicbrainz_id'])
         response = self.client.get(url)
