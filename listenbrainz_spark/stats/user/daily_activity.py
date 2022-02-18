@@ -107,7 +107,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
                 multiple_user_stats.append(user_stat)
             except ValidationError:
                 logger.error(f"""ValidationError while calculating {stats_range} daily_activity for user:
-                {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+                {_dict["user_id"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
 
         try:
             model = StatMessage[UserStatRecords[DailyActivityRecord]](**{

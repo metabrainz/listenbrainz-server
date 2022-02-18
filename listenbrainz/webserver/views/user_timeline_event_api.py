@@ -18,6 +18,7 @@
 
 import time
 from collections import defaultdict
+from datetime import datetime, timedelta
 from typing import List, Tuple, Dict
 
 import pydantic
@@ -42,6 +43,7 @@ from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter
     _validate_get_endpoint_params
 
 MAX_LISTEN_EVENTS_PER_USER = 2 # the maximum number of listens we want to return in the feed per user
+DEFAULT_LISTEN_EVENT_WINDOW = 14 * 24 * 60 * 60  # 14 days, to limit the search space of listen events and avoid timeouts
 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
@@ -186,7 +188,7 @@ def user_feed(user_name: str):
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events(users_following, min_ts, max_ts, count)
+        listen_events = get_listen_events(users_following, min_ts, max_ts)
 
     # for events like "follow" and "recording recommendations", we want to show the user
     # their own events as well
@@ -294,45 +296,44 @@ def get_listen_events(
     users: List[Dict],
     min_ts: int,
     max_ts: int,
-    count: int,
 ) -> List[APITimelineEvent]:
     """ Gets all listen events in the feed.
     """
+    # to avoid timeouts while fetching listen events, we want to make
+    # sure that both min_ts and max_ts are defined. if only one of those
+    # is set, calculate the other from it using a default window length.
+    # if neither is set, use current time as max_ts and subtract window
+    # length to get min_ts.
+    if not min_ts and max_ts:
+        min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
+    elif min_ts and not max_ts:
+        max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW
+    elif not min_ts and not max_ts:
+        max_ts = int(datetime.now().timestamp())
+        min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
 
-    # NOTE: For now, we get a bunch of listens for the users the current
-    # user is following and take a max of 2 out of them per user. This
-    # could be done better by writing a complex query to get exactly 2 listens for each user,
-    # but I'm happy with this heuristic for now and we can change later.
-    listens, _, _ = timescale_connection._ts.fetch_listens_for_multiple_users_from_storage(
+    listens = timescale_connection._ts.fetch_recent_listens_for_users(
         users,
-        limit=count,
-        from_ts=min_ts,
-        to_ts=max_ts,
-        order=0,  # descending
+        min_ts=min_ts,
+        max_ts=max_ts,
+        limit=MAX_LISTEN_EVENTS_PER_USER,
     )
 
-    user_listens_map = defaultdict(list)
-    for listen in listens:
-        if len(user_listens_map[listen.user_name]) < MAX_LISTEN_EVENTS_PER_USER:
-            user_listens_map[listen.user_name].append(listen)
-
     events = []
-    for user in user_listens_map:
-        for listen in user_listens_map[user]:
-            try:
-                listen_dict = listen.to_api()
-                listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
-                api_listen = APIListen(**listen_dict)
-                events.append(APITimelineEvent(
-                    event_type=UserTimelineEventType.LISTEN,
-                    user_name=api_listen.user_name,
-                    created=api_listen.listened_at,
-                    metadata=api_listen,
-                ))
-            except pydantic.ValidationError as e:
-                current_app.logger.error('Validation error: ' + str(e), exc_info=True)
-                continue
-
+    for listen in listens:
+        try:
+            listen_dict = listen.to_api()
+            listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
+            api_listen = APIListen(**listen_dict)
+            events.append(APITimelineEvent(
+                event_type=UserTimelineEventType.LISTEN,
+                user_name=api_listen.user_name,
+                created=api_listen.listened_at,
+                metadata=api_listen,
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            continue
     return events
 
 

@@ -30,20 +30,20 @@ def calculate_listening_activity():
     # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
     # group without listens are counted as 0, count(*) gives 1.
     result = run_query(""" 
-        WITH dist_user_name AS (
+        WITH dist_user_id AS (
             SELECT DISTINCT user_id FROM listens
         ), intermediate_table AS (
-            SELECT dist_user_name.user_id AS user_id
+            SELECT dist_user_id.user_id AS user_id
                  , to_unix_timestamp(first(time_range.start)) as from_ts
                  , to_unix_timestamp(first(time_range.end)) as to_ts
                  , time_range.time_range AS time_range
                  , count(listens.listened_at) as listen_count
-              FROM dist_user_name
+              FROM dist_user_id
         CROSS JOIN time_range
          LEFT JOIN listens
                 ON listens.listened_at BETWEEN time_range.start AND time_range.end
-               AND listens.user_id = dist_user_name.user_id
-          GROUP BY dist_user_name.user_id
+               AND listens.user_id = dist_user_id.user_id
+          GROUP BY dist_user_id.user_id
                  , time_range.time_range
         )
             SELECT user_id
@@ -109,7 +109,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
                 multiple_user_stats.append(user_stat)
             except ValidationError:
                 logger.error(f"""ValidationError while calculating {stats_range} listening_activity for user:
-                {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
+                {_dict["user_id"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
 
         try:
             model = StatMessage[UserStatRecords[ListeningActivityRecord]](**{

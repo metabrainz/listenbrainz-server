@@ -9,8 +9,8 @@ import {
   preciseTimestamp,
   getListenablePin,
   pinnedRecordingToListen,
-} from "../utils";
-import GlobalAppContext from "../GlobalAppContext";
+} from "../utils/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
