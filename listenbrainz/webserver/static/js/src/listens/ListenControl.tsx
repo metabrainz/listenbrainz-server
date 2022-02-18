@@ -19,6 +19,7 @@ export type ListenControlProps = {
   link?: string;
   // optional anchor tag attributes such as {target:"_blank", rel:"noopener noreferrer"}
   anchorTagAttributes?: any;
+  ariaLabel?: string;
 };
 
 const ListenControl = (props: ListenControlProps) => {
@@ -33,6 +34,7 @@ const ListenControl = (props: ListenControlProps) => {
     disabled,
     link,
     anchorTagAttributes,
+    ariaLabel,
   } = props;
 
   if (link) {
@@ -66,6 +68,7 @@ const ListenControl = (props: ListenControlProps) => {
       type="button"
       data-toggle={dataToggle}
       data-target={dataTarget}
+      aria-label={ariaLabel ?? title}
     >
       {iconElement} {title}
     </button>
