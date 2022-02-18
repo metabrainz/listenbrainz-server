@@ -18,6 +18,7 @@ exports[`ListenCountCard renders correctly 1`] = `
   title="foobar"
 >
   <button
+    aria-label="foobar"
     disabled={false}
     title="foobar"
     type="button"

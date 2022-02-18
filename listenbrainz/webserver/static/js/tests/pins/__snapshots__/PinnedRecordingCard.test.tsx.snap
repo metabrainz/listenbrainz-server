@@ -292,6 +292,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
                   title="Unpin"
                 >
                   <button
+                    aria-label="Unpin"
                     disabled={false}
                     onClick={[Function]}
                     title="Unpin"
@@ -306,6 +307,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
                   title="Delete Pin"
                 >
                   <button
+                    aria-label="Delete Pin"
                     disabled={false}
                     onClick={[Function]}
                     title="Delete Pin"
