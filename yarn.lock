@@ -2,11 +2,6 @@
 # yarn lockfile v1
 
 
-"@akshaaatt/design-system@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@akshaaatt/design-system/-/design-system-1.0.3.tgz#16532989a4ab6e8f206aa664f4c5a2f6c70bce65"
-  integrity sha512-7YuHhjsjqaOVz9udSdItDyfVADErPGA2ZKpkaHTcZscS1n7kLOvRI7ekRaZmEa4aO5d4+JQoHgsqai5Tkvvo9A==
-
 "@ampproject/remapping@^2.0.0":
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/@ampproject/remapping/-/remapping-2.1.1.tgz#7922fb0817bf3166d8d9e258c57477e3fd1c3610"
@@ -1379,6 +1374,11 @@
   dependencies:
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
+
+"@metabrainz/design-system@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@metabrainz/design-system/-/design-system-1.0.3.tgz#6df6bcb5755c3d5f475d03c8b66912191ce2dbb1"
+  integrity sha512-w9uXCmvWmw86hVosj9QfAJuJRgtu8l5jNKikkN+5xGH66kaLtFp5B5dujkPVWiiIuwH3hz4Y8yiGfuqunCj5YQ==
 
 "@nivo/annotations@0.62.0":
   version "0.62.0"
