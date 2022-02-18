@@ -373,7 +373,7 @@ class TimescaleListenStore:
         user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
 
         filters_list = ["user_id IN :user_ids"]
-        args = {"user_ids": tuple(user_id_map.keys()), "per_user_limit": per_user_limit}
+        args = {"user_ids": tuple(user_id_map.keys()), "per_user_limit": per_user_limit, "limit": limit}
         if min_ts:
             filters_list.append("listened_at > :min_ts")
             args["min_ts"] = min_ts
