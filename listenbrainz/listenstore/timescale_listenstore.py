@@ -360,19 +360,20 @@ class TimescaleListenStore:
 
         return listens, min_user_ts, max_user_ts
 
-    def fetch_recent_listens_for_users(self, users, min_ts: int = None, max_ts: int = None, limit=2):
+    def fetch_recent_listens_for_users(self, users, min_ts: int = None, max_ts: int = None, per_user_limit=2, limit=10):
         """ Fetch recent listens for a list of users, given a limit which applies per user. If you
             have a limit of 3 and 3 users you should get 9 listens if they are available.
 
             user_ids: A list containing the users for which you'd like to retrieve recent listens.
             min_ts: Only return listens with listened_at after this timestamp
             max_ts: Only return listens with listened_at before this timestamp
-            limit: the maximum number of listens for each user to fetch.
+            per_user_limit: the maximum number of listens for each user to fetch
+            limit: the maximum number of listens overall to fetch
         """
         user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
 
         filters_list = ["user_id IN :user_ids"]
-        args = {"user_ids": tuple(user_id_map.keys()), "limit": limit}
+        args = {"user_ids": tuple(user_id_map.keys()), "per_user_limit": per_user_limit}
         if min_ts:
             filters_list.append("listened_at > :min_ts")
             args["min_ts"] = min_ts
@@ -392,7 +393,9 @@ class TimescaleListenStore:
                                WHERE {filters}
                             GROUP BY user_id, listened_at, track_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
                             ORDER BY listened_at DESC) tmp
-                               WHERE rownum <= :limit"""
+                               WHERE rownum <= :per_user_limit
+                            ORDER BY listened_at DESC   
+                               LIMIT :limit"""
 
         listens = []
         with timescale.engine.connect() as connection:
