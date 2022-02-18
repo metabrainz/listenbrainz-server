@@ -42,7 +42,8 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
 from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html, \
     _validate_get_endpoint_params
 
-MAX_LISTEN_EVENTS_PER_USER = 2 # the maximum number of listens we want to return in the feed per user
+MAX_LISTEN_EVENTS_PER_USER = 2  # the maximum number of listens we want to return in the feed per user
+MAX_LISTEN_EVENTS_OVERALL = 10  # the maximum number of listens we want to return in the feed overall across users
 DEFAULT_LISTEN_EVENT_WINDOW = 14 * 24 * 60 * 60  # 14 days, to limit the search space of listen events and avoid timeouts
 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
@@ -316,7 +317,8 @@ def get_listen_events(
         users,
         min_ts=min_ts,
         max_ts=max_ts,
-        limit=MAX_LISTEN_EVENTS_PER_USER,
+        per_user_limit=MAX_LISTEN_EVENTS_PER_USER,
+        limit=MAX_LISTEN_EVENTS_OVERALL
     )
 
     events = []
