@@ -30,10 +30,10 @@ def delete_listens():
     # listen_delete_metadata table without deleting the actual listens.
     #
     # This issue exists because our transaction isolation level is READ COMMITTED. This issue can be prevented by using
-    # the REPEATABLE READ isolation level but that comes with its own issues. To alleviate this issue, the created
+    # the REPEATABLE READ isolation level but that comes with its own issues. To alleviate this issue, the id
     # column has been added to the listen_delete_metadata table. Before the start of the transaction, we record the
-    # current time. This time is used to select the rows from listen_delete_metadata table and the same rows are then
-    # later deleted.
+    # maximum id in the table. This id is used to select the rows from listen_delete_metadata table and the same rows
+    # are then later deleted.
     #
     # 2) "Fake/Double" Delete
     #
@@ -87,12 +87,16 @@ def delete_listens():
     #
     # TODO: Check effect of using created.
 
+    # select the maximum id in the table till now, we are only to process
+    # deletes with row id earlier than this.
+    select_max_id = "SELECT max(id) AS max_id FROM listen_delete_metadata"
+
     # count deleted listens, checked created and update listen counts
     delete_listens_and_update_listen_counts = """
         WITH deleted_listens AS (
             DELETE FROM listen l
              USING listen_delete_metadata ldm
-             WHERE ldm.created < :created
+             WHERE ldm.id <= :max_id
                AND l.user_id = ldm.user_id
                AND l.listened_at = ldm.listened_at
                AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = ldm.recording_msid::text
@@ -172,13 +176,21 @@ def delete_listens():
               FROM calculate_new_ts mt
              WHERE lm.user_id = mt.user_id
     """
-    delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE created < :created"
+    delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE id <= :max_id"
 
     with timescale.engine.begin() as connection:
-        created = datetime.now()
+        result = connection.execute(select_max_id)
+        row = result.fetchone()
+
+        if not row:
+            logger.info("No pending deletes")
+            return
+
+        max_id = row["max_id"]
+        logger.info("Found max id in listen_delete_metadata table: %d", max_id)
 
         logger.info("Deleting Listens and updating affected listens counts")
-        connection.execute(text(delete_listens_and_update_listen_counts), created=created)
+        connection.execute(text(delete_listens_and_update_listen_counts), max_id=max_id)
 
         logger.info("Update minimum listen timestamp affected by deleted listens")
         connection.execute(text(update_listen_min_ts))
@@ -187,7 +199,7 @@ def delete_listens():
         connection.execute(text(update_listen_max_ts))
 
         logger.info("Clean up delete user metadata table")
-        connection.execute(text(delete_user_metadata), created=created)
+        connection.execute(text(delete_user_metadata), max_id=max_id)
 
 
 def update_user_listen_data():
