@@ -180,7 +180,7 @@ def get_listen_count(user_name):
     }})
 
 
-@api_bp.route("/user/<user_name>/playing-now")
+@api_bp.route("/user/<user_name>/playing-now", methods=['GET', 'OPTIONS'])
 @crossdomain()
 @ratelimit()
 def get_playing_now(user_name):
