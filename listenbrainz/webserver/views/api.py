@@ -104,7 +104,7 @@ def submit_listen():
     return jsonify({'status': 'ok'})
 
 
-@api_bp.route("/user/<user_name>/listens")
+@api_bp.route("/user/<user_name>/listens", methods=['GET', 'OPTIONS'])
 @crossdomain()
 @ratelimit()
 @api_listenstore_needed
@@ -149,7 +149,7 @@ def get_listens(user_name):
     }})
 
 
-@api_bp.route("/user/<user_name>/listen-count")
+@api_bp.route("/user/<user_name>/listen-count", methods=['GET', 'OPTIONS'])
 @crossdomain()
 @ratelimit()
 @api_listenstore_needed
@@ -498,7 +498,7 @@ def serialize_playlists(playlists, playlist_count, count, offset):
             "count": count}
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists", methods=["GET", "OPTIONS"])
+@api_bp.route("/user/<playlist_user_name>/playlists", methods=['GET', 'OPTIONS'])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def get_playlists_for_user(playlist_user_name):
@@ -533,7 +533,7 @@ def get_playlists_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=["GET", "OPTIONS"])
+@api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=['GET', 'OPTIONS'])
 @crossdomain(headers="Content-Type")
 @ratelimit()
 def get_playlists_created_for_user(playlist_user_name):
@@ -564,7 +564,7 @@ def get_playlists_created_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=["GET", "OPTIONS"])
+@api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=['GET', 'OPTIONS'])
 @crossdomain(headers="Content-Type")
 @ratelimit()
 def get_playlists_collaborated_on_for_user(playlist_user_name):
