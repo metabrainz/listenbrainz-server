@@ -545,7 +545,6 @@ export default class UserFeedback extends React.Component<
           style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
         >
           <BrainzPlayer
-            direction={direction}
             listens={listensFromFeedback}
             newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
