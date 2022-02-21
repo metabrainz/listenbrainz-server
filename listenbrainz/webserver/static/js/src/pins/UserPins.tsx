@@ -350,19 +350,13 @@ export default class UserPins extends React.Component<
             </div>
           )}
         </div>
-        <div
-          // @ts-ignore
-          // eslint-disable-next-line no-dupe-keys
-          style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-        >
-          <BrainzPlayer
-            listens={pinsAsListens}
-            newAlert={newAlert}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-          />
-        </div>
+        <BrainzPlayer
+          listens={pinsAsListens}
+          newAlert={newAlert}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+        />
       </div>
     );
   }

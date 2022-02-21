@@ -248,25 +248,13 @@ export default class MissingMBDataPage extends React.Component<
             </ul>
           </div>
         </div>
-        <div
-          className="col-xs-12 col-md-4"
-          /* eslint-disable no-dupe-keys */
-          style={{
-            position: "-webkit-sticky",
-            // @ts-ignore
-            position: "sticky",
-            top: "20px",
-          }}
-          /* eslint-enable no-dupe-keys */
-        >
-          <BrainzPlayer
-            listens={missingMBDataAsListen}
-            newAlert={newAlert}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-          />
-        </div>
+        <BrainzPlayer
+          listens={missingMBDataAsListen}
+          newAlert={newAlert}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+        />
       </div>
     );
   }
