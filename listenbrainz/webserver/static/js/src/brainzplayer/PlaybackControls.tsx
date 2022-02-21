@@ -148,20 +148,22 @@ export default class PlaybackControls extends React.Component<
           />
         </div>
         <div className="content">
-          {children}
-          <div className="no-album-art" />
-        </div>
-        <div className={isPlayingATrack ? "currently-playing" : ""}>
-          {trackName && (
-            <div title={trackName} className="ellipsis-2-lines">
-              {trackName}
-            </div>
-          )}
-          {artistName && (
-            <span className="small text-muted ellipsis" title={artistName}>
-              {artistName}
-            </span>
-          )}
+          <div className="cover-art">
+            {children}
+            <div className="no-album-art" />
+          </div>
+          <div className={isPlayingATrack ? "currently-playing" : ""}>
+            {trackName && (
+              <div title={trackName} className="ellipsis-2-lines">
+                {trackName}
+              </div>
+            )}
+            {artistName && (
+              <span className="small text-muted ellipsis" title={artistName}>
+                {artistName}
+              </span>
+            )}
+          </div>
         </div>
         <div className="controls">
           <PlaybackControlButton
