@@ -21,8 +21,8 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import FollowerFollowingModal from "../../src/follow/FollowerFollowingModal";
-import APIService from "../../src/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 
 const props = {
   user: { name: "foobar" },

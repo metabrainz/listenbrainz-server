@@ -1,7 +1,7 @@
 import { isEmpty, isNil } from "lodash";
 import * as React from "react";
 
-import GlobalAppContext from "../GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 
