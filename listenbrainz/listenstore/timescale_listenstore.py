@@ -180,7 +180,9 @@ class TimescaleListenStore:
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query))
-                count = result.fetchone()["value"] or 0
+                # psycopg2 returns the `value` as a DECIMAL type which is not recognized
+                # by msgpack/redis. so cast to python int first.
+                count = int(result.fetchone()["value"] or 0)
         except psycopg2.OperationalError:
             self.log.error("Cannot query listen counts:", exc_info=True)
             raise
