@@ -1,6 +1,7 @@
 import eventlet
 from threading import Thread
 
+from brainzutils.sentry import init_sentry
 from flask_login import current_user
 from flask_socketio import SocketIO, join_room, emit, disconnect
 from werkzeug.exceptions import BadRequest
@@ -12,10 +13,7 @@ from listenbrainz.websockets.listens_dispatcher import ListensDispatcher
 eventlet.monkey_patch()
 
 app = create_app()
-app.init_loggers(
-    file_config=app.config.get('LOG_FILE'),
-    sentry_config=app.config.get('LOG_SENTRY')
-)
+init_sentry(**app.config.get('LOG_SENTRY'))
 
 socketio = SocketIO(app, cors_allowed_origins='*', logger=True, engineio_logger=True)
 
