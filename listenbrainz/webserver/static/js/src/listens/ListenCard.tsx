@@ -24,8 +24,8 @@ import {
   getRecordingMBID,
   getAlbumArtFromListenMetadata,
   getReleaseMBID,
-} from "../utils";
-import GlobalAppContext from "../GlobalAppContext";
+} from "../utils/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";

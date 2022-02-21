@@ -22,9 +22,9 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import { getPageProps } from "../utils";
+import { getPageProps } from "../utils/utils";
 import Blog from "./Blog";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../utils/ErrorBoundary";
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#blogs");

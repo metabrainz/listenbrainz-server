@@ -5,8 +5,8 @@ import BrainzPlayer, { DataSourceType } from "../../src/brainzplayer/BrainzPlaye
 import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
 import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
-import APIService from "../../src/APIService";
-import GlobalAppContext from "../../src/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
+import GlobalAppContext from "../../src/utils/GlobalAppContext";
 
 const props = {
   listens: [],

@@ -4,7 +4,7 @@ import { faPlusCircle, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { getPlaylistExtension, getPlaylistId } from "./utils";
-import GlobalAppContext from "../GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
