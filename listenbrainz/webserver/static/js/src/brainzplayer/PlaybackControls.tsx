@@ -27,6 +27,8 @@ type PlaybackControlsProps = {
   progressMs: number;
   durationMs: number;
   seekToPositionMs: (msTimeCode: number) => void;
+  currentFeedback: ListenFeedBack;
+  submitFeedback: (score: ListenFeedBack) => Promise<void>;
 };
 
 type PlaybackControlButtonProps = {
@@ -119,6 +121,8 @@ export default class PlaybackControls extends React.Component<
       playPreviousTrack,
       togglePlay,
       playNextTrack,
+      currentFeedback,
+      submitFeedback,
     } = this.props;
 
     const progressPercentage = Math.round(
@@ -187,10 +191,20 @@ export default class PlaybackControls extends React.Component<
           />
         </div>
         <div className="actions">
-          <FontAwesomeIcon icon={faHeart} />
-          <FontAwesomeIcon icon={faHeartBroken} />
-          <FontAwesomeIcon icon={faEllipsisV} />
-          <FontAwesomeIcon icon={faCog} />
+          <FontAwesomeIcon
+            icon={faHeart}
+            title="Love"
+            onClick={() => submitFeedback(currentFeedback === 1 ? 0 : 1)}
+            className={`${currentFeedback === 1 ? " loved" : ""}`}
+          />
+          <FontAwesomeIcon
+            icon={faHeartBroken}
+            title="Hate"
+            onClick={() => submitFeedback(currentFeedback === -1 ? 0 : -1)}
+            className={`${currentFeedback === -1 ? " hated" : ""}`}
+          />
+          {/* <FontAwesomeIcon icon={faEllipsisV} />
+          <FontAwesomeIcon icon={faCog} /> */}
         </div>
       </div>
     );
