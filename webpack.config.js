@@ -50,14 +50,14 @@ module.exports = function (env, argv) {
       // Otherwise with a standalone entrypoint Webpack would generate a superfluous js file.
       // All the Less/CSS will be exported separately to a main.css file and not appear in the recentListens module
       recentListens: [
-        path.resolve(jsDir, "src/RecentListens.tsx"),
+        path.resolve(jsDir, "src/user/RecentListens.tsx"),
         path.resolve(cssDir, "main.less"),
       ],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
       userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
-      userPageHeading: path.resolve(jsDir, "src/UserPageHeading.tsx"),
-      userFeedback: path.resolve(jsDir, "src/UserFeedback.tsx"),
+      userPageHeading: path.resolve(jsDir, "src/user/UserPageHeading.tsx"),
+      userFeedback: path.resolve(jsDir, "src/user/UserFeedback.tsx"),
       userPins: path.resolve(jsDir, "src/pins/UserPins.tsx"),
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
@@ -69,7 +69,11 @@ module.exports = function (env, argv) {
         jsDir,
         "src/recommendations/Recommendations.tsx"
       ),
-      missingMBData: path.resolve(jsDir, "src/missing-mb-data/MissingMBData.tsx"),
+      missingMBData: path.resolve(
+        jsDir,
+        "src/missing-mb-data/MissingMBData.tsx"
+      ),
+      playerPage: path.resolve(jsDir, "src/player-pages/PlayerPage.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

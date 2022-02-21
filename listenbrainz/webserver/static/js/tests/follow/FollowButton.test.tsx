@@ -23,8 +23,8 @@ import { mount, ReactWrapper } from "enzyme";
 import FollowButton from "../../src/follow/FollowButton";
 import GlobalAppContext, {
   GlobalAppContextT,
-} from "../../src/GlobalAppContext";
-import APIService from "../../src/APIService";
+} from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
 
 const user = {
   id: 1,

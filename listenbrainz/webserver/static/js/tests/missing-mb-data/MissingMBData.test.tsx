@@ -9,8 +9,8 @@ import {
 } from "../__mocks__/missingMBDataProps.json";
 
 import MissingMBDataPage from "../../src/missing-mb-data/MissingMBData";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/GlobalAppContext";
-import APIService from "../../src/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // // Mocking Math.random() fixes this
