@@ -6,6 +6,7 @@
 @brainzplayer-height: 60px;
 @brainzplayer-padding: 0px;
 @cover-art-size: @brainzplayer-height - @brainzplayer-padding*2;
+@big-cover-art-size: 500px;
 @progress-bar-height: 6px;
 
 #brainz-player {
@@ -32,13 +33,21 @@
 			height: 100%;
 			flex:0;
 			margin-right:1em;
+			// Show big preview of the cover art when hovering over it
+			&:hover > *:not(.hidden):not(.no-album-art) {
+				// 80% of screen width max, capped at the width in pixel of big-cover-art-size
+				height: min(80vw, @big-cover-art-size);
+				width: min(80vw, @big-cover-art-size);
+			}
 
 			>* {
 				height: @cover-art-size;
 				width: @cover-art-size;
-				// border-radius: 7px;
-				overflow: hidden;
+				position: absolute;
+				transition: height, width 0.4s;
+				bottom: 0;
 			}
+
 			img {
 				height: inherit;
 				width: inherit;
@@ -46,14 +55,8 @@
 			}
 
 			// Youtube iframe
-			.youtube {
-				padding-top: 100%;
-				position: relative;
-				iframe {
-					position: absolute;
-					top: 0;
-					left: 0;
-				}
+			.youtube > * {
+				height: inherit;
 			}
 		}
 	}
