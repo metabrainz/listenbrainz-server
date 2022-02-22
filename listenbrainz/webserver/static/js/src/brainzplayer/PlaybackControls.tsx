@@ -27,7 +27,7 @@ type PlaybackControlsProps = {
   progressMs: number;
   durationMs: number;
   seekToPositionMs: (msTimeCode: number) => void;
-  currentListen?: Listen;
+  currentListen?: Listen | JSPFTrack;
   currentFeedback: ListenFeedBack;
   submitFeedback: (score: ListenFeedBack) => Promise<void>;
 };

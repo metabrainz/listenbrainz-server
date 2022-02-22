@@ -13,6 +13,8 @@ const props = {
   progressMs: 0,
   durationMs: 10000,
   seekToPositionMs: (msTimeCode: number) => {},
+  currentFeedback: 0 as ListenFeedBack,
+  submitFeedback: (score: ListenFeedBack): any => {},
 };
 describe("PlaybackControls", () => {
   it("renders", () => {
