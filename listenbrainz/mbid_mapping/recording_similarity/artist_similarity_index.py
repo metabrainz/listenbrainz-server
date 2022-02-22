@@ -1,3 +1,4 @@
+from datetime import datetime
 import uuid
 from collections import defaultdict
 from struct import pack, unpack
@@ -90,9 +91,6 @@ def get_mbid_offset(mbid_index, inverse_mbid_index, mbid):
         inverse_mbid_index[offset] = mbid.bytes
         return offset
 
-def prune(recordings, max_items):
-    return defaultdict(float, { k: recordings[k] for k in sorted(recordings, key=lambda x: recordings[x], reverse=True)[:max_items] })
-
 def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
 
     row_count = 0
@@ -102,6 +100,8 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
     artist_index = defaultdict(lambda: defaultdict(float))
     decrement = 1.0 / LOOKAHEAD_STEPS
 
+    min_ts = datetime(year=2018, month=1, day=1, hour=0, minute=0)
+    max_ts = datetime(year=2020, month=1, day=1, hour=0, minute=0)
     query = """    SELECT listened_at
                         , user_name
                         , mm.recording_mbid
@@ -114,19 +114,18 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
           FULL OUTER JOIN mbid_mapping_metadata m
                        ON mm.recording_mbid = m.recording_mbid
-                    WHERE listened_at >= 1483228800
-                 ORDER BY user_name, listened_at"""
-
-#                    WHERE listened_at >= 1640995200
-#                    WHERE listened_at >= 1642694270
-#                    WHERE listened_at >= 1577836800
+                    WHERE created >= %s
+                      AND created <= %s
+                      AND user_id != 0
+                 ORDER BY user_name, listened_at, mm.recording_mbid"""
 
     log("execute query")
-    lb_curs.execute(query)
+    lb_curs.execute(query, (min_ts, max_ts))
 
     total_rows = lb_curs.rowcount
 
-    log("build index")
+    log(f"build index: {total_rows:,} rows")
+    pairs = 0
     while True:
         row = lb_curs.fetchone()
         if not row:
@@ -135,7 +134,7 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
         if row["recording_mbid"] is None:
             continue
 
-        row["artist_mbids"] = row["artist_mbids"][1:-1].split(",")
+        row["artist_mbids"] = sorted(row["artist_mbids"][1:-1].split(","))
 
         row_count += 1
 
@@ -166,25 +165,25 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
                         mbid_1_offset = get_mbid_offset(mbid_index, inverse_mbid_index, mbid_1)
                         if mbid_0 < mbid_1:
                             artist_index[mbid_0_offset][mbid_1_offset] += value
-                            if len(artist_index[mbid_0_offset]) > MAX_SIMILAR_RECORDINGS_PER_RECORDING * 2:
-                                artist_index[mbid_0_offset] = prune(artist_index[mbid_0_offset], MAX_SIMILAR_RECORDINGS_PER_RECORDING)
                         else:
                             artist_index[mbid_1_offset][mbid_0_offset] += value
-                            if len(artist_index[mbid_1_offset]) > MAX_SIMILAR_RECORDINGS_PER_RECORDING * 2:
-                                artist_index[mbid_1_offset] = prune(artist_index[mbid_1_offset], MAX_SIMILAR_RECORDINGS_PER_RECORDING)
+
+                        pairs += 1
  
             value -= decrement
 
         buffer.pop(0)
 
         if row_count % 1000000 == 0:
-            log("processed %d rows, %.1f%%" % (row_count, 100.0 * row_count / total_rows))
+            log("indexed %d rows, %.1f%%" % (row_count, 100.0 * row_count / total_rows))
 
-    count = 0
-    for mbid_0_offset in artist_index:
-        count += len(artist_index[mbid_0_offset])
+    unique_pairs = 0
+    for mbid0 in artist_index:
+        unique_pairs += len(artist_index[mbid0])
 
-    log(f"Processing complete. Generated {count:,} pairs. Inserting results")
+
+    log(f"Indexing complete. Generated {unique_pairs:,} unique pairs from {pairs:,} pairs. Inserting results")
+
     create_tables(mb_conn)
     values = []
     inserted = 0
@@ -197,17 +196,18 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
             if sim > MIN_SIMILARITY_THRESHOLD:
                 values.append((str(mbid_0), str(mbid_1), sim))
             else:
-                count -= 1
+                pairs -= 1
 
             if len(values) == BATCH_SIZE:
                 insert_rows(mb_curs, "mapping.tmp_artist_similarity", values, cols=None)
                 values = []
                 inserted += BATCH_SIZE
                 if inserted % 1000000 == 0:
-                    log("inserted %s rows, %.1f%%" % (inserted, 100.0 * inserted / count))
+                    log("inserted %s rows, %.1f%%" % (inserted, 100.0 * inserted / pairs))
 
     if len(values) > 0:
         insert_rows(mb_curs, "mapping.tmp_artist_similarity", values, cols=None)
+        inserted += len(values)
         values = []
 
     # Free up space immediately
