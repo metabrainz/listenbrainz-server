@@ -153,8 +153,8 @@ export default class PlaybackControls extends React.Component<
         </div>
         <div className="content">
           <div className="cover-art">
-            {children}
             <div className="no-album-art" />
+            {children}
           </div>
           <div className={isPlayingATrack ? "currently-playing" : ""}>
             {trackName && (
