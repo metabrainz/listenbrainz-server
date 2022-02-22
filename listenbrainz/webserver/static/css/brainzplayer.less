@@ -38,13 +38,14 @@
 				// 80% of screen width max, capped at the width in pixel of big-cover-art-size
 				height: min(80vw, @big-cover-art-size);
 				width: min(80vw, @big-cover-art-size);
+				bottom: @brainzplayer-height + @progress-bar-height;
 			}
 
 			>* {
 				height: @cover-art-size;
 				width: @cover-art-size;
 				position: absolute;
-				transition: height, width 0.4s;
+				// transition: height, width 0.4s;
 				bottom: 0;
 			}
 
