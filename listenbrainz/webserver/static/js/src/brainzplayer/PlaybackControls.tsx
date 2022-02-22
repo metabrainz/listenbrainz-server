@@ -27,6 +27,7 @@ type PlaybackControlsProps = {
   progressMs: number;
   durationMs: number;
   seekToPositionMs: (msTimeCode: number) => void;
+  currentListen?: Listen;
   currentFeedback: ListenFeedBack;
   submitFeedback: (score: ListenFeedBack) => Promise<void>;
 };
@@ -121,6 +122,7 @@ export default class PlaybackControls extends React.Component<
       playPreviousTrack,
       togglePlay,
       playNextTrack,
+      currentListen,
       currentFeedback,
       submitFeedback,
     } = this.props;
@@ -194,14 +196,26 @@ export default class PlaybackControls extends React.Component<
           <FontAwesomeIcon
             icon={faHeart}
             title="Love"
-            onClick={() => submitFeedback(currentFeedback === 1 ? 0 : 1)}
-            className={`${currentFeedback === 1 ? " loved" : ""}`}
+            onClick={
+              currentListen
+                ? () => submitFeedback(currentFeedback === 1 ? 0 : 1)
+                : undefined
+            }
+            className={`${currentFeedback === 1 ? " loved" : ""}${
+              !currentListen ? " disabled" : ""
+            }`}
           />
           <FontAwesomeIcon
             icon={faHeartBroken}
             title="Hate"
-            onClick={() => submitFeedback(currentFeedback === -1 ? 0 : -1)}
-            className={`${currentFeedback === -1 ? " hated" : ""}`}
+            onClick={
+              currentListen
+                ? () => submitFeedback(currentFeedback === -1 ? 0 : -1)
+                : undefined
+            }
+            className={`${currentFeedback === -1 ? " hated" : ""}${
+              !currentListen ? " disabled" : ""
+            }`}
           />
           {/* <FontAwesomeIcon icon={faEllipsisV} />
           <FontAwesomeIcon icon={faCog} /> */}

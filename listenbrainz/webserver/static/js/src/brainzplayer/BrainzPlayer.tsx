@@ -855,6 +855,7 @@ export default class BrainzPlayer extends React.Component<
       durationMs,
       isActivated,
       currentListenFeedback,
+      currentListen,
     } = this.state;
     const { refreshSpotifyToken, refreshYoutubeToken } = this.props;
     const { youtubeAuth, spotifyAuth } = this.context;
@@ -878,6 +879,7 @@ export default class BrainzPlayer extends React.Component<
           durationMs={durationMs}
           seekToPositionMs={this.seekToPositionMs}
           submitFeedback={this.submitFeedback}
+          currentListen={currentListen}
           currentFeedback={currentListenFeedback}
         >
           <SpotifyPlayer
