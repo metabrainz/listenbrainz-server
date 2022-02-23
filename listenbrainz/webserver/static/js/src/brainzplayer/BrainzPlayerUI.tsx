@@ -237,6 +237,7 @@ const BrainzPlayerUI = (
             !isPlayingATrack ? " disabled" : ""
           }`}
         />
+        <MenuOptions currentListen={currentListen} />
         {/* <FontAwesomeIcon icon={faCog} /> */}
       </div>
     </div>
