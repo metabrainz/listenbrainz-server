@@ -448,6 +448,13 @@ class TimescaleListenStore:
 
     def delete_listen(self, listened_at: int, user_id: int, recording_msid: str):
         """ Delete a particular listen for user with specified MusicBrainz ID.
+
+        .. note::
+
+            These details are stored in a separate table for some time because the listen is not deleted
+            immediately. Every hour a cron job runs and uses these details to delete the actual listens.
+            After the listens are deleted, these details are also removed from storage.
+
         Args:
             listened_at: The timestamp of the listen
             user_id: the listenbrainz row id of the user
