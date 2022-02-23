@@ -16,6 +16,7 @@ SECONDS_IN_A_YEAR = 31536000
 
 
 def delete_listens():
+    """ Delete listens and update counts, listen min/max timestamps """
     # Implementation Notes:
     #
     # While working on this, I encountered the following issues. These notes also explain some peculiarities of the SQL
@@ -134,8 +135,8 @@ def delete_listens():
               JOIN LATERAL (
                     SELECT min(listened_at) AS min_listened_ts
                       FROM listen l
+                        -- new minimum will be greater than the last one
                      WHERE l.listened_at >= u.min_listened_at
-                       -- new minimum will be greater than the last one
                        AND l.user_id = u.user_id
                        AND l.created <= u.created
                    ) AS new_ts
@@ -164,9 +165,9 @@ def delete_listens():
               JOIN LATERAL (
                     SELECT max(listened_at) AS max_listened_ts
                       FROM listen l
+                        -- new maximum will be lesser than the last one
                      WHERE l.listened_at <= u.max_listened_at
                        AND l.user_id = u.user_id
-                       -- new maximum will be lesser than the last one
                        AND l.created <= u.created
                    ) AS new_ts
                 ON TRUE
@@ -201,8 +202,11 @@ def delete_listens():
         logger.info("Clean up listen delete metadata table")
         connection.execute(text(delete_user_metadata), max_id=max_id)
 
+        logger.info("Completed deleting listens and updating affected metadata")
+
 
 def update_user_listen_data():
+    """ Scan listens created since last run and update metadata in listen_user_metadata accordingly """
     query = """
         WITH new AS (
             SELECT user_id
@@ -235,6 +239,7 @@ def update_user_listen_data():
 
 
 def delete_listens_and_update_user_listen_data():
+    """ Delete listens and update user metadata to reflect deleted listens and listens created since last run """
     delete_listens()
     update_user_listen_data()
 
@@ -277,6 +282,7 @@ def add_missing_to_listen_users_metadata():
 
 
 def recalculate_all_user_data():
+    """ Recalculate entire listen user metadata from scratch """
     query = 'SELECT id FROM "user"'
     try:
         with db.engine.connect() as connection:

@@ -44,18 +44,6 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
                 """), user_id=user["id"])
             return dict(**result.fetchone())
 
-    def _get_pending_deletes(self):
-        with timescale.engine.connect() as connection:
-            results = connection.execute("SELECT * FROM listen_delete_metadata")
-            for row in results.fetchall():
-                print(row)
-
-    def _get_listens(self):
-        with timescale.engine.connect() as connection:
-            results = connection.execute("SELECT listened_at, user_id, data->'track_metadata'->'additional_info'->>'recording_msid' FROM listen WHERE user_id = 1")
-            for row in results.fetchall():
-                print(row)
-
     def test_delete_listens_update_metadata(self):
         user_1 = db_user.get_or_create(1, "user_1")
         user_2 = db_user.get_or_create(2, "user_2")
@@ -87,14 +75,7 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
         # test normal listen delete updates correctly
         self.logstore.delete_listen(1400000100, user_2["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
 
-        self._get_pending_deletes()
-        self._get_listens()
-
         delete_listens()
-
-        print()
-        print()
-        self._get_listens()
 
         metadata_1 = self._get_count_and_timestamp(user_1)
         self.assertEqual(metadata_1["min_listened_at"], 1400000050)
