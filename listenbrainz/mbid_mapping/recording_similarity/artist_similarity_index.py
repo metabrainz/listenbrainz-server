@@ -16,7 +16,7 @@ import config
 
 BATCH_SIZE = 5000
 MAX_SESSION_DURATION = 60 * 60 * 2  # 2 hours
-MIN_SIMILARITY_THRESHOLD = 2
+MIN_SIMILARITY_THRESHOLD = 100
 
 def create_tables(mb_conn):
     """
@@ -128,7 +128,7 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
     min_ts = datetime(year=2010, month=1, day=1, hour=0, minute=0)
     max_ts = datetime(year=2015, month=1, day=1, hour=0, minute=0)
     query = """    SELECT listened_at
-                        , user_name
+                        , user_id
                         , mm.recording_mbid
                         , m.artist_mbids
                         , m.artist_credit_id
@@ -141,8 +141,7 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
                        ON mm.recording_mbid = m.recording_mbid
                     WHERE created >= %s
                       AND created <= %s
-                      AND user_id != 0
-                 ORDER BY user_name, listened_at, mm.recording_mbid"""
+                 ORDER BY user_id, listened_at, mm.recording_mbid"""
 
     log("execute query")
     lb_curs.execute(query, (min_ts, max_ts))
@@ -165,7 +164,7 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
 
         # If this is a different user or sufficient time has passed,
         # index the buffer and start a new session
-        if (len(buffer) > 0 and row["user_name"] != buffer[0]["user_name"]) or \
+        if (len(buffer) > 0 and row["user_id"] != buffer[0]["user_id"]) or \
             (session_start is not None and row["listened_at"] - session_start >= MAX_SESSION_DURATION):
             if len(buffer) > 1:
                 pairs += index_buffer(artist_index, mbid_index, inverse_mbid_index, buffer)
@@ -200,14 +199,14 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
             if sim > MIN_SIMILARITY_THRESHOLD:
                 values.append((str(mbid_0), str(mbid_1), sim))
             else:
-                pairs -= 1
+                unique_pairs -= 1
 
             if len(values) == BATCH_SIZE:
                 insert_rows(mb_curs, "mapping.tmp_artist_similarity", values, cols=None)
                 values = []
                 inserted += BATCH_SIZE
                 if inserted % 1000000 == 0:
-                    log("inserted %s rows, %.1f%%" % (inserted, 100.0 * inserted / pairs))
+                    log("inserted %s rows, %.1f%%" % (inserted, 100.0 * inserted / unique_pairs))
 
     if len(values) > 0:
         insert_rows(mb_curs, "mapping.tmp_artist_similarity", values, cols=None)
