@@ -14,8 +14,8 @@ from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, \
     TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
-from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data, \
-    update_user_listen_data, recalculate_all_user_data, add_missing_to_listen_users_metadata
+from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data,\
+    recalculate_all_user_data, add_missing_to_listen_users_metadata, update_user_listen_data
 
 
 class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
@@ -297,7 +297,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
         cache.delete(REDIS_TOTAL_LISTEN_COUNT)
         add_missing_to_listen_users_metadata()
-        update_user_listen_counts()
+        update_user_listen_data()
 
         total_count = self.logstore.get_total_listen_count()
         self.assertEqual(total_count, count_user_1 + count_user_2)
