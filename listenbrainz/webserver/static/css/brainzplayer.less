@@ -7,7 +7,8 @@
 @brainzplayer-padding: 0px;
 @cover-art-size: @brainzplayer-height - @brainzplayer-padding*2;
 @big-cover-art-size: 500px;
-@progress-bar-height: 6px;
+@progress-bar-height: 4px;
+@progress-bar-hover-height: 6px;
 
 #brainz-player {
 	position: fixed;
@@ -198,6 +199,9 @@
 			height: 100%;
 			background-color: @primary-color;
 			border-right: 2px solid @dark-color;
+		}
+		&:hover{
+			height: @progress-bar-hover-height;
 		}
 	}
 
