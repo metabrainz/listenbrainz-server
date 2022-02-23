@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import PlaybackControls from "../../src/brainzplayer/PlaybackControls";
+import BrainzPlayerUI from "../../src/brainzplayer/BrainzPlayerUI";
 
 const props = {
   playPreviousTrack: () => {},
@@ -13,12 +13,12 @@ const props = {
   progressMs: 0,
   durationMs: 10000,
   seekToPositionMs: (msTimeCode: number) => {},
-  currentFeedback: 0 as ListenFeedBack,
-  submitFeedback: (score: ListenFeedBack): any => {},
+  listenBrainzAPIBaseURI: "api.example.com",
+  newAlert: (): any => {},
 };
-describe("PlaybackControls", () => {
+describe("BrainzPlayerUI", () => {
   it("renders", () => {
-    const wrapper = mount(<PlaybackControls {...props} />);
+    const wrapper = mount(<BrainzPlayerUI {...props} />);
     expect(wrapper).toMatchSnapshot();
   });
 });
