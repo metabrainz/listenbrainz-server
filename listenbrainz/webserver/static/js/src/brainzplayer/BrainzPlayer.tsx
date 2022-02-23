@@ -15,7 +15,7 @@ import {
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import PlaybackControls from "./PlaybackControls";
+import BrainzPlayerUI from "./BrainzPlayerUI";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
@@ -78,7 +78,6 @@ type BrainzPlayerProps = {
 
 type BrainzPlayerState = {
   currentListen?: Listen | JSPFTrack;
-  currentListenFeedback: ListenFeedBack;
   currentDataSourceIndex: number;
   currentTrackName: string;
   currentTrackArtist?: string;
@@ -161,7 +160,6 @@ export default class BrainzPlayer extends React.Component<
       currentDataSourceIndex: 0,
       currentTrackName: "",
       currentTrackArtist: "",
-      currentListenFeedback: 0,
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
@@ -362,15 +360,12 @@ export default class BrainzPlayer extends React.Component<
     listen: Listen | JSPFTrack,
     datasourceIndex: number = 0
   ): void => {
-    this.setState(
-      {
-        isActivated: true,
-        currentListen: listen,
-        listenSubmitted: false,
-        continuousPlaybackTime: 0,
-      },
-      this.getFeedback
-    );
+    this.setState({
+      isActivated: true,
+      currentListen: listen,
+      listenSubmitted: false,
+      continuousPlaybackTime: 0,
+    });
 
     window.postMessage(
       { brainzplayer_event: "current-listen-change", payload: listen },
@@ -715,92 +710,6 @@ export default class BrainzPlayer extends React.Component<
     }
   };
 
-  getFeedback = async () => {
-    const { listenBrainzAPIBaseURI, newAlert } = this.props;
-    const { currentListen } = this.state;
-    const { currentUser } = this.context;
-    if (!currentUser?.name) {
-      return;
-    }
-    const recordingMBID = get(
-      currentListen,
-      "track_metadata.additional_info.recording_mbid"
-    );
-    const recordingMSID = get(
-      currentListen,
-      "track_metadata.additional_info.recording_msid"
-    );
-    if (!recordingMBID && !recordingMSID) {
-      return;
-    }
-    try {
-      const baseURL = `${listenBrainzAPIBaseURI}/feedback/user/${currentUser.name}/get-feedback-for-recordings?`;
-      // get feedback by either MBID or MSID
-      const params = [];
-      if (recordingMBID) {
-        params.push(`recording_mbids=${recordingMBID}`);
-      }
-      if (recordingMSID) {
-        params.push(`recording_msids=${recordingMSID}`);
-      }
-
-      const response = await fetch(`${baseURL}${params.join("&")}`);
-      if (!response.ok) {
-        throw response.statusText;
-      }
-      const parsedFeedback = await response.json();
-
-      this.setState({
-        currentListenFeedback: parsedFeedback.feedback?.[0]?.score ?? 0,
-      });
-    } catch (error) {
-      // What do we do here?
-      // Is there any point in showing an error message?
-    }
-  };
-
-  submitFeedback = async (score: ListenFeedBack) => {
-    const { listenBrainzAPIBaseURI, newAlert } = this.props;
-    const { currentListen } = this.state;
-    const { currentUser } = this.context;
-    if (currentUser?.auth_token) {
-      const recordingMSID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_msid"
-      );
-      const recordingMBID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_mbid"
-      );
-
-      try {
-        const url = `${listenBrainzAPIBaseURI}/feedback/recording-feedback`;
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${currentUser.auth_token}`,
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify({
-            recording_msid: recordingMSID,
-            recording_mbid: recordingMBID,
-            score,
-          }),
-        });
-        if (!response.ok) {
-          throw response.statusText;
-        }
-        this.setState({ currentListenFeedback: score });
-      } catch (error) {
-        newAlert(
-          "danger",
-          "Error while submitting feedback",
-          error?.message ?? error.toString()
-        );
-      }
-    }
-  };
-
   /* Updating the progress bar without calling any API to check current player state */
 
   startPlayerStateTimer = (): void => {
@@ -854,10 +763,14 @@ export default class BrainzPlayer extends React.Component<
       progressMs,
       durationMs,
       isActivated,
-      currentListenFeedback,
       currentListen,
     } = this.state;
-    const { refreshSpotifyToken, refreshYoutubeToken } = this.props;
+    const {
+      refreshSpotifyToken,
+      refreshYoutubeToken,
+      listenBrainzAPIBaseURI,
+      newAlert,
+    } = this.props;
     const { youtubeAuth, spotifyAuth } = this.context;
     // Determine if the user is authenticated to search & play tracks with any of the datasources
     // const hasDatasourceToSearch =
@@ -866,7 +779,7 @@ export default class BrainzPlayer extends React.Component<
     //   ) !== -1;
     return (
       <div>
-        <PlaybackControls
+        <BrainzPlayerUI
           playPreviousTrack={this.playPreviousTrack}
           playNextTrack={this.playNextTrack}
           togglePlay={
@@ -878,9 +791,9 @@ export default class BrainzPlayer extends React.Component<
           progressMs={progressMs}
           durationMs={durationMs}
           seekToPositionMs={this.seekToPositionMs}
-          submitFeedback={this.submitFeedback}
+          listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
           currentListen={currentListen}
-          currentFeedback={currentListenFeedback}
+          newAlert={newAlert}
         >
           <SpotifyPlayer
             show={
@@ -943,7 +856,7 @@ export default class BrainzPlayer extends React.Component<
             handleWarning={this.handleWarning}
             handleSuccess={this.handleSuccess}
           />
-        </PlaybackControls>
+        </BrainzPlayerUI>
       </div>
     );
   }
