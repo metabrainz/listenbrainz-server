@@ -13,9 +13,9 @@ from listenbrainz.db import timescale as ts, timescale
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, \
-    TimescaleListenStore
+    TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
 from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data, \
-    update_user_listen_data, recalculate_all_user_data
+    update_user_listen_data, recalculate_all_user_data, add_missing_to_listen_users_metadata
 
 
 class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
@@ -186,7 +186,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         user_name2 = user2['musicbrainz_id']
         self._create_test_data(user_name2, user2["id"])
 
-        recent = self.logstore.fetch_recent_listens_for_users([user, user2], limit=1, min_ts=int(time()) - 10000000000)
+        recent = self.logstore.fetch_recent_listens_for_users([user, user2], per_user_limit=1, min_ts=int(time()) - 10000000000)
         self.assertEqual(len(recent), 2)
 
         recent = self.logstore.fetch_recent_listens_for_users([user, user2], min_ts=int(time()) - 10000000000)
@@ -285,3 +285,19 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(data["count"], 0)
         self.assertEqual(data["min_listened_at"], None)
         self.assertEqual(data["max_listened_at"], None)
+
+    def test_get_total_listen_count(self):
+        total_count = self.logstore.get_total_listen_count()
+        self.assertEqual(total_count, 0)
+
+        count_user_1 = self._create_test_data(self.testuser["musicbrainz_id"], self.testuser["id"])
+        uid = random.randint(2000, 1 << 31)
+        testuser2 = db_user.get_or_create(uid, f"user_{uid}")
+        count_user_2 = self._create_test_data(testuser2["musicbrainz_id"], testuser2["id"])
+
+        cache.delete(REDIS_TOTAL_LISTEN_COUNT)
+        add_missing_to_listen_users_metadata()
+        update_user_listen_counts()
+
+        total_count = self.logstore.get_total_listen_count()
+        self.assertEqual(total_count, count_user_1 + count_user_2)
