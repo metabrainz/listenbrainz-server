@@ -65,8 +65,13 @@ def delete_listens():
     #
     # Listens which have a created value later than the created value in the listen_user_metadata table haven't yet
     # been counted in the listen_user_metadata table. So when deleted the count of these listens should not be
-    # subtracted from listen_user_metadata. The FILTER clause with count(*) is responsible for that. For min/max
-    # listened_at fields, see next point.
+    # subtracted from listen_user_metadata. The FILTER clause with count(*) is responsible for that.
+    #
+    # Similarly, a listen with listened_at greater than max_listened_at can be created later than the created value
+    # in the listen_user_metadata table. If this listen is deleted and the listen with max_listened_at is also deleted,
+    # max(listened_at) of deleted listens != max_listened_at of listened_user_metadata. So, we will have missed to
+    # update listen timestamps in this case. To avoid this, we need to check max_listened_at is in the list of
+    # listened_at of delete listens. The same situation can happen with min_listened_at.
     #
     # 4) Redundant work in updating min/max listened_at
     #
@@ -126,12 +131,16 @@ def delete_listens():
               FROM listen_delete_metadata dl
               JOIN listen_user_metadata lm
              USING (user_id)
+             WHERE dl.id <= :max_id
           GROUP BY user_id, min_listened_at, lm.created
+            -- check if min_listened_at is in list of listened_at of deleted listens,
+            -- cannot use = min(dl.listened_at). see note 3
             HAVING min_listened_at = ANY(array_agg(dl.listened_at))
         ), calculate_new_ts AS (
             SELECT user_id
                  , new_ts.min_listened_ts AS new_listened_at
               FROM update_ts u
+              -- for each user calculate the new minimum timestamp
               JOIN LATERAL (
                     SELECT min(listened_at) AS min_listened_ts
                       FROM listen l
@@ -156,12 +165,16 @@ def delete_listens():
               FROM listen_delete_metadata dl
               JOIN listen_user_metadata lm
              USING (user_id)
+             WHERE dl.id <= :max_id
           GROUP BY user_id, max_listened_at, lm.created
+            -- check if max_listened_at is in list of listened_at of deleted listens,
+            -- cannot use = max(dl.listened_at). see note 3
             HAVING max_listened_at = ANY(array_agg(dl.listened_at))
         ), calculate_new_ts AS (
             SELECT user_id
                  , new_ts.max_listened_ts AS new_listened_at
               FROM update_ts u
+                -- for each user calculate the new maximum timestamp
               JOIN LATERAL (
                     SELECT max(listened_at) AS max_listened_ts
                       FROM listen l
@@ -194,10 +207,10 @@ def delete_listens():
         connection.execute(text(delete_listens_and_update_listen_counts), max_id=max_id)
 
         logger.info("Update minimum listen timestamp affected by deleted listens")
-        connection.execute(text(update_listen_min_ts))
+        connection.execute(text(update_listen_min_ts), max_id=max_id)
 
         logger.info("Update maximum listen timestamp affected by deleted listens")
-        connection.execute(text(update_listen_max_ts))
+        connection.execute(text(update_listen_max_ts), max_id=max_id)
 
         logger.info("Clean up listen delete metadata table")
         connection.execute(text(delete_user_metadata), max_id=max_id)
