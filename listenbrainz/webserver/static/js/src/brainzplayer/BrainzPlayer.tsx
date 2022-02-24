@@ -772,11 +772,7 @@ export default class BrainzPlayer extends React.Component<
       newAlert,
     } = this.props;
     const { youtubeAuth, spotifyAuth } = this.context;
-    // Determine if the user is authenticated to search & play tracks with any of the datasources
-    // const hasDatasourceToSearch =
-    //   this.dataSources.findIndex((ds) =>
-    //     ds.current?.canSearchAndPlayTracks()
-    //   ) !== -1;
+
     return (
       <div>
         <BrainzPlayerUI
