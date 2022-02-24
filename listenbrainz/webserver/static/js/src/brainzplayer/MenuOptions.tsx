@@ -8,7 +8,7 @@ import {
   faExternalLinkAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ListenControl from "../listens/ListenControl";
 import { getRecordingMBID } from "../utils/utils";
 import SoundcloudPlayer from "./SoundcloudPlayer";
@@ -20,87 +20,110 @@ type MenuOptionsProps = {
 };
 
 const MenuOptions = (props: MenuOptionsProps) => {
+  const [dropdownActionsOpen, setDropdownActionsOpen] = useState(false);
   const { currentListen } = props;
-  if (!currentListen) {
-    return (
-      <FontAwesomeIcon
-        icon={faEllipsisV}
-        title="Actions"
-        id="listenControlsDropdown"
-        aria-haspopup="false"
-        className="disabled"
-      />
-    );
+  let recordingMBID;
+  let spotifyURL;
+  let youtubeURL;
+  let soundcloudURL;
+  if (currentListen) {
+    recordingMBID = getRecordingMBID(currentListen as Listen);
+    spotifyURL = SpotifyPlayer.getSpotifyURLFromListen(currentListen);
+    youtubeURL = YoutubePlayer.getYoutubeURLFromListen(currentListen);
+    soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(currentListen);
   }
 
-  const recordingMBID = getRecordingMBID(currentListen as Listen);
-  const spotifyURL = SpotifyPlayer.getSpotifyURLFromListen(currentListen);
-  const youtubeURL = YoutubePlayer.getYoutubeURLFromListen(currentListen);
-  const soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(
-    currentListen
-  );
+  const toggleDropupMenu = () => {
+    setDropdownActionsOpen(!dropdownActionsOpen);
+  };
+  // Handle clicking outside dropdown
+  const wrapperRef = useRef(null);
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownActionsOpen &&
+        wrapperRef.current &&
+        !wrapperRef.current?.contains(event.target)
+      ) {
+        setDropdownActionsOpen(false);
+      }
+    }
+    // Bind
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      // dispose
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [wrapperRef, dropdownActionsOpen]);
 
   return (
-    <>
+    <div
+      ref={wrapperRef}
+      aria-label="Actions menu"
+      aria-haspopup="true"
+      aria-expanded={dropdownActionsOpen}
+      onClick={toggleDropupMenu}
+      onKeyDown={toggleDropupMenu}
+      role="menu"
+      tabIndex={0}
+    >
       <FontAwesomeIcon
         icon={faEllipsisV}
-        title="Actions"
-        className="dropdown-toggle"
-        id="listenControlsDropdown"
-        data-toggle="dropdown"
-        aria-haspopup="true"
-        aria-expanded="true"
+        title="More actions"
+        aria-hidden="true"
       />
-      <ul
-        className="dropdown-menu dropdown-menu-right"
-        aria-labelledby="listenControlsDropdown"
-      >
-        {recordingMBID && (
-          <ListenControl
-            icon={faExternalLinkAlt}
-            title="Open in MusicBrainz"
-            link={`https://musicbrainz.org/recording/${recordingMBID}`}
-            anchorTagAttributes={{
-              target: "_blank",
-              rel: "noopener noreferrer",
-            }}
-          />
-        )}
-        {spotifyURL && (
-          <ListenControl
-            icon={faSpotify}
-            title="Open in Spotify"
-            link={spotifyURL}
-            anchorTagAttributes={{
-              target: "_blank",
-              rel: "noopener noreferrer",
-            }}
-          />
-        )}
-        {youtubeURL && (
-          <ListenControl
-            icon={faYoutube}
-            title="Open in YouTube"
-            link={youtubeURL}
-            anchorTagAttributes={{
-              target: "_blank",
-              rel: "noopener noreferrer",
-            }}
-          />
-        )}
-        {soundcloudURL && (
-          <ListenControl
-            icon={faSoundcloud}
-            title="Open in Soundcloud"
-            link={soundcloudURL}
-            anchorTagAttributes={{
-              target: "_blank",
-              rel: "noopener noreferrer",
-            }}
-          />
-        )}
-      </ul>
-    </>
+      {currentListen && (
+        <ul
+          className={`dropup-content ${dropdownActionsOpen ? " open" : ""}`}
+          aria-label="actions submenu"
+        >
+          {recordingMBID && (
+            <ListenControl
+              icon={faExternalLinkAlt}
+              title="Open in MusicBrainz"
+              link={`https://musicbrainz.org/recording/${recordingMBID}`}
+              anchorTagAttributes={{
+                target: "_blank",
+                rel: "noopener noreferrer",
+              }}
+            />
+          )}
+          {spotifyURL && (
+            <ListenControl
+              icon={faSpotify}
+              title="Open in Spotify"
+              link={spotifyURL}
+              anchorTagAttributes={{
+                target: "_blank",
+                rel: "noopener noreferrer",
+              }}
+            />
+          )}
+          {youtubeURL && (
+            <ListenControl
+              icon={faYoutube}
+              title="Open in YouTube"
+              link={youtubeURL}
+              anchorTagAttributes={{
+                target: "_blank",
+                rel: "noopener noreferrer",
+              }}
+            />
+          )}
+          {soundcloudURL && (
+            <ListenControl
+              icon={faSoundcloud}
+              title="Open in Soundcloud"
+              link={soundcloudURL}
+              anchorTagAttributes={{
+                target: "_blank",
+                rel: "noopener noreferrer",
+              }}
+            />
+          )}
+        </ul>
+      )}
+    </div>
   );
 };
 

@@ -129,6 +129,7 @@
 	
 	.actions {
 		align-self: center;
+		align-items: center;
 		justify-content: flex-end;
 		display: flex;
 		
@@ -214,4 +215,53 @@
 		opacity: 0.3;
 	}
 
+	.dropup-content {
+		// A lot of these styles are copied part from Bootstrap
+		// and part from ListenBrainz (ListenCard).
+		// We copy them so that we don't have to rely on them for a standalone package
+		&.open{
+			display: block;
+		}
+		display: none;
+		position: absolute;
+		background-color: #f9f9f9;
+		min-width: 140px;
+		box-shadow: 0px 6px 12px rgba(0,0,0,.175);
+		z-index: 6;
+		border-radius: 4px;
+		padding: 10px 0px;
+		width: 260px;
+		color:#46433a;
+		
+		//From Bootstrap styles
+		top: auto;
+		bottom: 100%;
+		right:0;
+		margin-bottom: 2px;
+		list-style: none; // In case the elements are <li> items inside a <ul>
+		font-size: 14px;
+		background-color: #fff;
+		border: 1px solid #ccc; // IE8 fallback
+		border: 1px solid rgba(0,0,0,.15);
+		background-clip: padding-box;
+
+		// Links within the dropdown menu
+		> a, > button {
+			display: block;// necessary for <a> tags
+			width: 100%;
+			background: none;
+			color: inherit;
+			border: none;
+			padding: 5px 20px;
+			font: inherit;
+			cursor: pointer;
+			outline: inherit;
+			text-align: left;
+			
+			&:hover {
+				color: #ffffff;
+				background-color: #eb743b;
+			}
+		}
+	}
 }
