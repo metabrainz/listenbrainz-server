@@ -51,11 +51,7 @@ const ListenControl = (props: ListenControlProps) => {
   let iconElement;
   if (icon) {
     iconElement = (
-      <FontAwesomeIcon
-        icon={icon as IconProp}
-        className={iconClassName}
-        title={title}
-      />
+      <FontAwesomeIcon icon={icon as IconProp} className={iconClassName} />
     );
   }
 

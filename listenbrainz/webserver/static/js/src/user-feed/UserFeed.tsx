@@ -615,18 +615,11 @@ export default class UserFeedPage extends React.Component<
                               <ListenControl
                                 title=""
                                 icon={faTrash}
-                                buttonClassName="btn btn-link"
+                                buttonClassName="btn btn-link btn-xs"
                                 // eslint-disable-next-line react/jsx-no-bind
                                 action={this.deleteFeedEvent.bind(this, event)}
                               />
-                            ) : (
-                              <ListenControl
-                                title=""
-                                icon={faTrash}
-                                buttonClassName="btn"
-                                disabled
-                              />
-                            )}
+                            ) : null}
                           </span>
                         </div>
 
