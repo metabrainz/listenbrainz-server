@@ -37,13 +37,13 @@ const MenuOptions = (props: MenuOptionsProps) => {
     setDropdownActionsOpen(!dropdownActionsOpen);
   };
   // Handle clicking outside dropdown
-  const wrapperRef = useRef(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
         dropdownActionsOpen &&
         wrapperRef.current &&
-        !wrapperRef.current?.contains(event.target)
+        !wrapperRef.current?.contains(event.target as Node)
       ) {
         setDropdownActionsOpen(false);
       }
