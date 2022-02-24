@@ -1,5 +1,5 @@
-@primary-color: #08949b;
-@secondary-color: #0d696e;
+@listenbrainz-blue: #353070;
+@primary-color: @listenbrainz-blue;
 @love-color: #C62828;
 @hate-color: #353070;
 @dark-color: #053b47;
@@ -7,7 +7,7 @@
 @brainzplayer-padding: 0px;
 @cover-art-size: @brainzplayer-height - @brainzplayer-padding*2;
 @big-cover-art-size: 500px;
-@progress-bar-height: 4px;
+@progress-bar-height: 3px;
 @progress-bar-hover-height: 6px;
 
 #brainz-player {
@@ -67,7 +67,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-evenly;
-		color: @secondary-color;
+		color: @primary-color;
 		font-size: 1.2em;
 		flex-grow: 0;
 		
@@ -78,7 +78,7 @@
 			transition: all .5s ease;
 			background: none;
 			&:hover {
-				color: darken(@secondary-color, 10%);
+				color: darken(@primary-color, 10%);
 			}
 		}
 	}
@@ -195,6 +195,7 @@
     	left: 0;
 		width: 100%;
 		cursor: crosshair;
+		z-index: 2;
 		
 		.progress-bar {
 			height: 100%;
@@ -203,6 +204,7 @@
 		}
 		&:hover{
 			height: @progress-bar-hover-height;
+			top: -@progress-bar-height - (@progress-bar-hover-height - @progress-bar-height)/2
 		}
 	}
 
