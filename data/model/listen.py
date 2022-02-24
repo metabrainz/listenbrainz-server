@@ -43,7 +43,8 @@ class AdditionalInfo(BaseModel):
     origin_url: Optional[str]
     tags: Optional[List[str]]
     track_mbid: Optional[str]
-    tracknumber: Optional[NonNegativeInt]
+    # tracknumber should be int but we don't validate it during submission
+    tracknumber: Optional[str]
     work_mbids: Optional[List[str]]
 
     _validate_uuids: classmethod = validator(

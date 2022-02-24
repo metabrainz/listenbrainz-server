@@ -13,21 +13,21 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { isNaN, get, clone, has } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./notifications/AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
-import Pill from "./components/Pill";
-import APIServiceClass from "./utils/APIService";
-import BrainzPlayer from "./brainzplayer/BrainzPlayer";
-import ErrorBoundary from "./utils/ErrorBoundary";
-import ListenCard from "./listens/ListenCard";
-import Loader from "./components/Loader";
-import PinRecordingModal from "./pins/PinRecordingModal";
-import { getPageProps, handleNavigationClickEvent } from "./utils/utils";
-import ListenControl from "./listens/ListenControl";
+import Pill from "../components/Pill";
+import APIServiceClass from "../utils/APIService";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import ListenCard from "../listens/ListenCard";
+import Loader from "../components/Loader";
+import PinRecordingModal from "../pins/PinRecordingModal";
+import { getPageProps, handleNavigationClickEvent } from "../utils/utils";
+import ListenControl from "../listens/ListenControl";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;

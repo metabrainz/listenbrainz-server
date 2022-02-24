@@ -6,6 +6,7 @@ from flask import url_for, g
 
 import listenbrainz.db.user as db_user
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import IntegrationTestCase
 
 
@@ -23,12 +24,15 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def send_listens(self):
         with open(self.path_to_data_file('user_export_test.json')) as f:
             payload = json.load(f)
-        return self.client.post(
+        response = self.client.post(
             url_for('api_v1.submit_listen'),
             data=json.dumps(payload),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
             content_type='application/json'
         )
+        time.sleep(1)
+        recalculate_all_user_data()
+        return response
 
     def test_export(self):
         """
@@ -43,8 +47,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         resp = self.send_listens()
         self.assert200(resp)
 
-        time.sleep(2)
-
         # now export data and check if contains all the listens we just sent
         resp = self.client.post(url_for('profile.export_data'))
         self.assert200(resp)
@@ -54,8 +56,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def test_user_page_latest_listen(self):
         resp = self.send_listens()
         self.assert200(resp)
-
-        time.sleep(1)
 
         r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
@@ -74,8 +74,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         # send three listens for the user
         resp = self.send_listens()
         self.assert200(resp)
-
-        time.sleep(2)
 
         # set the latest_import ts to a non-default value, so that we can check it was
         # reset later
