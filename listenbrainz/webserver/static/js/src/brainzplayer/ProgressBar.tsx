@@ -1,5 +1,5 @@
 import { isNaN } from "lodash";
-import React from "react";
+import * as React from "react";
 
 type ProgressBarProps = {
   progressMs: number;

@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useState } from "react";
 import {
   faCog,
   faFastBackward,
@@ -65,7 +64,7 @@ const BrainzPlayerUI = (
   props: React.PropsWithChildren<BrainzPlayerUIProps>
 ) => {
   const { listenBrainzAPIBaseURI, currentListen, newAlert } = props;
-  const [currentListenFeedback, setCurrentListenFeedback] = useState(0);
+  const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const { currentUser } = React.useContext(GlobalAppContext);
   // const { currentListenFeedback } = this.state;
   React.useEffect(() => {

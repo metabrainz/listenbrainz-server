@@ -8,7 +8,7 @@ import {
   faExternalLinkAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useEffect, useRef, useState } from "react";
+import * as React from "react";
 import ListenControl from "../listens/ListenControl";
 import { getRecordingMBID } from "../utils/utils";
 import SoundcloudPlayer from "./SoundcloudPlayer";
@@ -20,7 +20,7 @@ type MenuOptionsProps = {
 };
 
 const MenuOptions = (props: MenuOptionsProps) => {
-  const [dropdownActionsOpen, setDropdownActionsOpen] = useState(false);
+  const [dropdownActionsOpen, setDropdownActionsOpen] = React.useState(false);
   const { currentListen } = props;
   let recordingMBID;
   let spotifyURL;
@@ -37,8 +37,8 @@ const MenuOptions = (props: MenuOptionsProps) => {
     setDropdownActionsOpen(!dropdownActionsOpen);
   };
   // Handle clicking outside dropdown
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
         dropdownActionsOpen &&
