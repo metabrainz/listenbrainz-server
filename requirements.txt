@@ -51,3 +51,4 @@ pyarrow==4.0.1
 more-itertools==8.8.0
 librabbitmq-fork==2.0.2.dev1
 kombu==5.1.0
+itsdangerous==2.0.1

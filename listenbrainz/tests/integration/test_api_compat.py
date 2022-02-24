@@ -29,6 +29,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
 from listenbrainz.webserver import timescale_connection
 
@@ -181,7 +182,8 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '1')
 
         # Check if listen reached the timescale listenstore
-        time.sleep(2)
+        time.sleep(1)
+        recalculate_all_user_data()
         listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
 
@@ -241,6 +243,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
         # Check if listens reached the timescale listenstore
         time.sleep(1)
+        recalculate_all_user_data()
         listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
         self.assertEqual(len(listens), 2)
 
