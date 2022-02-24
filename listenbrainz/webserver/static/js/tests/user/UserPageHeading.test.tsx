@@ -20,12 +20,12 @@
 
 import * as React from "react";
 import { mount, shallow } from "enzyme";
-import UserPageHeading from "./UserPageHeading";
-import FollowButton from "./follow/FollowButton";
-import ReportUserButton from "./report-user/ReportUser";
-import ReportUserModal from "./report-user/ReportUserModal";
-import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
-import APIService from "./utils/APIService";
+import UserPageHeading from "../../src/user/UserPageHeading";
+import FollowButton from "../../src/follow/FollowButton";
+import ReportUserButton from "../../src/report-user/ReportUser";
+import ReportUserModal from "../../src/report-user/ReportUserModal";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
 
 const user = {
   id: 1,

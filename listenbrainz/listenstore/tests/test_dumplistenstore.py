@@ -14,6 +14,7 @@ from listenbrainz.db.testing import TimescaleTestCase, DatabaseTestCase
 from listenbrainz.listenstore import TimescaleListenStore, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.webserver import create_app
 
 
@@ -84,8 +85,11 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
             end_time=datetime.utcfromtimestamp(base + 10)
         )
         self.assertTrue(os.path.isfile(dump_location))
+
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
+        recalculate_all_user_data()
+
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=base + 11)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
@@ -108,8 +112,11 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
             end_time=datetime.utcfromtimestamp(base + 5)
         )
         self.assertTrue(os.path.isfile(dump_location))
+
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
+        recalculate_all_user_data()
+
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=base + 11)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
@@ -133,8 +140,11 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
             end_time=datetime.now(),
         )
         self.assertTrue(os.path.isfile(dump_location))
+
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
+        recalculate_all_user_data()
+
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -157,9 +167,10 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
             end_time=datetime.now(),
         )
         self.assertTrue(os.path.isfile(dump_location))
-        self.reset_timescale_db()
 
+        self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
+        recalculate_all_user_data()
 
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=user, to_ts=1400000300)
         self.assertEqual(len(listens), 5)

@@ -188,6 +188,10 @@ def search():
     return render_template("index/search-users.html", search_term=search_term, users=users)
 
 
+@index_bp.route('/messybrainz/', methods=['GET', 'OPTIONS'])
+def messybrainz():
+    return render_template("index/messybrainz.html")
+
 
 @index_bp.route('/delete-user/<int:musicbrainz_row_id>')
 def mb_user_deleter(musicbrainz_row_id):

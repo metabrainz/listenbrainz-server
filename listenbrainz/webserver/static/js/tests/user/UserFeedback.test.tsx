@@ -5,13 +5,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UserFeedback, {
   UserFeedbackProps,
   UserFeedbackState,
-} from "./UserFeedback";
-import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
-import APIService from "./utils/APIService";
-import * as userFeedbackProps from "../tests/__mocks__/userFeedbackProps.json";
-import * as userFeedbackAPIResponse from "../tests/__mocks__/userFeedbackAPIResponse.json";
-import ListenCard from "./listens/ListenCard";
-import ListenFeedbackComponent from "./listens/ListenFeedbackComponent";
+} from "../../src/user/UserFeedback";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
+import * as userFeedbackProps from "../__mocks__/userFeedbackProps.json";
+import * as userFeedbackAPIResponse from "../__mocks__/userFeedbackAPIResponse.json";
+import ListenCard from "../../src/listens/ListenCard";
+import ListenFeedbackComponent from "../../src/listens/ListenFeedbackComponent";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
 

@@ -4,7 +4,7 @@ import pprint
 import sys
 from time import sleep
 
-from brainzutils import cache, metrics
+from brainzutils import cache, metrics, sentry
 from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect
 from flask_login import current_user
@@ -82,11 +82,9 @@ def create_app(debug=None):
     if app.debug and app.config['SECRET_KEY']:
         app.init_debug_toolbar()
 
-    # Logging
-    app.init_loggers(
-        file_config=app.config.get('LOG_FILE'),
-        sentry_config=app.config.get('LOG_SENTRY')
-    )
+    sentry_config = app.config.get('LOG_SENTRY')
+    if sentry_config:
+        sentry.init_sentry(**sentry_config)
 
     # Initialize BU cache and metrics
     cache.init(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
