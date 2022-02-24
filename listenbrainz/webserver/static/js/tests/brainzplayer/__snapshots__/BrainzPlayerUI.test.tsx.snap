@@ -342,7 +342,7 @@ exports[`BrainzPlayerUI renders 1`] = `
         transform={null}
       >
         <svg
-          aria-labelledby="svg-inline--fa-title-4pgKEt7Tgojt"
+          aria-labelledby="svg-inline--fa-title-000000000000"
           className="svg-inline--fa fa-heart fa-w-16  disabled"
           data-icon="heart"
           data-prefix="fas"
@@ -352,7 +352,7 @@ exports[`BrainzPlayerUI renders 1`] = `
           xmlns="http://www.w3.org/2000/svg"
         >
           <title
-            id="svg-inline--fa-title-4pgKEt7Tgojt"
+            id="svg-inline--fa-title-000000000000"
             style={Object {}}
           >
             Love
@@ -396,7 +396,7 @@ exports[`BrainzPlayerUI renders 1`] = `
         transform={null}
       >
         <svg
-          aria-labelledby="svg-inline--fa-title-9AOxO0e7sqGH"
+          aria-labelledby="svg-inline--fa-title-000000000000"
           className="svg-inline--fa fa-heart-broken fa-w-16  disabled"
           data-icon="heart-broken"
           data-prefix="fas"
@@ -406,7 +406,7 @@ exports[`BrainzPlayerUI renders 1`] = `
           xmlns="http://www.w3.org/2000/svg"
         >
           <title
-            id="svg-inline--fa-title-9AOxO0e7sqGH"
+            id="svg-inline--fa-title-000000000000"
             style={Object {}}
           >
             Hate
@@ -462,7 +462,7 @@ exports[`BrainzPlayerUI renders 1`] = `
           >
             <svg
               aria-hidden="true"
-              aria-labelledby="svg-inline--fa-title-cnDv1lVbLfjl"
+              aria-labelledby="svg-inline--fa-title-000000000000"
               className="svg-inline--fa fa-ellipsis-v fa-w-6 "
               data-icon="ellipsis-v"
               data-prefix="fas"
@@ -472,7 +472,7 @@ exports[`BrainzPlayerUI renders 1`] = `
               xmlns="http://www.w3.org/2000/svg"
             >
               <title
-                id="svg-inline--fa-title-cnDv1lVbLfjl"
+                id="svg-inline--fa-title-000000000000"
                 style={Object {}}
               >
                 More actions

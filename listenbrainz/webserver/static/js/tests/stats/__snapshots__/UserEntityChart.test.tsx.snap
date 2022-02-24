@@ -5648,7 +5648,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   transform={null}
                 >
                   <svg
-                    aria-labelledby="svg-inline--fa-title-PxIGO3ZUS51Q"
+                    aria-labelledby="svg-inline--fa-title-000000000000"
                     className="svg-inline--fa fa-heart fa-w-16  disabled"
                     data-icon="heart"
                     data-prefix="fas"
@@ -5658,7 +5658,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <title
-                      id="svg-inline--fa-title-PxIGO3ZUS51Q"
+                      id="svg-inline--fa-title-000000000000"
                       style={Object {}}
                     >
                       Love
@@ -5702,7 +5702,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   transform={null}
                 >
                   <svg
-                    aria-labelledby="svg-inline--fa-title-f2QMLxBDBuUm"
+                    aria-labelledby="svg-inline--fa-title-000000000000"
                     className="svg-inline--fa fa-heart-broken fa-w-16  disabled"
                     data-icon="heart-broken"
                     data-prefix="fas"
@@ -5712,7 +5712,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <title
-                      id="svg-inline--fa-title-f2QMLxBDBuUm"
+                      id="svg-inline--fa-title-000000000000"
                       style={Object {}}
                     >
                       Hate
@@ -5768,7 +5768,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     >
                       <svg
                         aria-hidden="true"
-                        aria-labelledby="svg-inline--fa-title-sbSeRfZd4LZi"
+                        aria-labelledby="svg-inline--fa-title-000000000000"
                         className="svg-inline--fa fa-ellipsis-v fa-w-6 "
                         data-icon="ellipsis-v"
                         data-prefix="fas"
@@ -5778,7 +5778,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <title
-                          id="svg-inline--fa-title-sbSeRfZd4LZi"
+                          id="svg-inline--fa-title-000000000000"
                           style={Object {}}
                         >
                           More actions
@@ -12280,7 +12280,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   transform={null}
                 >
                   <svg
-                    aria-labelledby="svg-inline--fa-title-y8itCtPXYr8a"
+                    aria-labelledby="svg-inline--fa-title-000000000000"
                     className="svg-inline--fa fa-heart fa-w-16  disabled"
                     data-icon="heart"
                     data-prefix="fas"
@@ -12290,7 +12290,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <title
-                      id="svg-inline--fa-title-y8itCtPXYr8a"
+                      id="svg-inline--fa-title-000000000000"
                       style={Object {}}
                     >
                       Love
@@ -12334,7 +12334,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   transform={null}
                 >
                   <svg
-                    aria-labelledby="svg-inline--fa-title-Uy9UvZp8X2ci"
+                    aria-labelledby="svg-inline--fa-title-000000000000"
                     className="svg-inline--fa fa-heart-broken fa-w-16  disabled"
                     data-icon="heart-broken"
                     data-prefix="fas"
@@ -12344,7 +12344,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <title
-                      id="svg-inline--fa-title-Uy9UvZp8X2ci"
+                      id="svg-inline--fa-title-000000000000"
                       style={Object {}}
                     >
                       Hate
@@ -12400,7 +12400,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     >
                       <svg
                         aria-hidden="true"
-                        aria-labelledby="svg-inline--fa-title-cLDpBBWBnJlK"
+                        aria-labelledby="svg-inline--fa-title-000000000000"
                         className="svg-inline--fa fa-ellipsis-v fa-w-6 "
                         data-icon="ellipsis-v"
                         data-prefix="fas"
@@ -12410,7 +12410,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <title
-                          id="svg-inline--fa-title-cLDpBBWBnJlK"
+                          id="svg-inline--fa-title-000000000000"
                           style={Object {}}
                         >
                           More actions
@@ -18382,7 +18382,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   transform={null}
                 >
                   <svg
-                    aria-labelledby="svg-inline--fa-title-ygq1Ep2CUebQ"
+                    aria-labelledby="svg-inline--fa-title-000000000000"
                     className="svg-inline--fa fa-heart fa-w-16  disabled"
                     data-icon="heart"
                     data-prefix="fas"
@@ -18392,7 +18392,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <title
-                      id="svg-inline--fa-title-ygq1Ep2CUebQ"
+                      id="svg-inline--fa-title-000000000000"
                       style={Object {}}
                     >
                       Love
@@ -18436,7 +18436,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   transform={null}
                 >
                   <svg
-                    aria-labelledby="svg-inline--fa-title-KleAVGtxExFC"
+                    aria-labelledby="svg-inline--fa-title-000000000000"
                     className="svg-inline--fa fa-heart-broken fa-w-16  disabled"
                     data-icon="heart-broken"
                     data-prefix="fas"
@@ -18446,7 +18446,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <title
-                      id="svg-inline--fa-title-KleAVGtxExFC"
+                      id="svg-inline--fa-title-000000000000"
                       style={Object {}}
                     >
                       Hate
@@ -18502,7 +18502,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     >
                       <svg
                         aria-hidden="true"
-                        aria-labelledby="svg-inline--fa-title-8dk9JobzTGgN"
+                        aria-labelledby="svg-inline--fa-title-000000000000"
                         className="svg-inline--fa fa-ellipsis-v fa-w-6 "
                         data-icon="ellipsis-v"
                         data-prefix="fas"
@@ -18512,7 +18512,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <title
-                          id="svg-inline--fa-title-8dk9JobzTGgN"
+                          id="svg-inline--fa-title-000000000000"
                           style={Object {}}
                         >
                           More actions
@@ -19269,7 +19269,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                   transform={null}
                 >
                   <svg
-                    aria-labelledby="svg-inline--fa-title-6RWx2g5b5cB7"
+                    aria-labelledby="svg-inline--fa-title-000000000000"
                     className="svg-inline--fa fa-heart fa-w-16  disabled"
                     data-icon="heart"
                     data-prefix="fas"
@@ -19279,7 +19279,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <title
-                      id="svg-inline--fa-title-6RWx2g5b5cB7"
+                      id="svg-inline--fa-title-000000000000"
                       style={Object {}}
                     >
                       Love
@@ -19323,7 +19323,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                   transform={null}
                 >
                   <svg
-                    aria-labelledby="svg-inline--fa-title-W388WYqYYiE7"
+                    aria-labelledby="svg-inline--fa-title-000000000000"
                     className="svg-inline--fa fa-heart-broken fa-w-16  disabled"
                     data-icon="heart-broken"
                     data-prefix="fas"
@@ -19333,7 +19333,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <title
-                      id="svg-inline--fa-title-W388WYqYYiE7"
+                      id="svg-inline--fa-title-000000000000"
                       style={Object {}}
                     >
                       Hate
@@ -19389,7 +19389,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                     >
                       <svg
                         aria-hidden="true"
-                        aria-labelledby="svg-inline--fa-title-3hLuZxdBszjo"
+                        aria-labelledby="svg-inline--fa-title-000000000000"
                         className="svg-inline--fa fa-ellipsis-v fa-w-6 "
                         data-icon="ellipsis-v"
                         data-prefix="fas"
@@ -19399,7 +19399,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <title
-                          id="svg-inline--fa-title-3hLuZxdBszjo"
+                          id="svg-inline--fa-title-000000000000"
                           style={Object {}}
                         >
                           More actions
