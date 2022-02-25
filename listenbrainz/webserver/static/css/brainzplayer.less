@@ -9,6 +9,7 @@
 @big-cover-art-size: 500px;
 @progress-bar-height: 3px;
 @progress-bar-hover-height: 6px;
+@white-background: #fff;
 
 #brainz-player {
 	position: fixed;
@@ -16,7 +17,7 @@
     left: 0;
     width: 100%;
 	height: @brainzplayer-height;
-	background: #FFF;
+	background: @white-background;
 	display: flex;
 	
 	padding: @brainzplayer-padding;
@@ -158,7 +159,7 @@
 
 		.fa-ellipsis-v {
 			//Thin down ellipsis icon
-			stroke: #ffffff;
+			stroke: @white-background;
 		}
 
 		.fa-heart {
@@ -242,7 +243,7 @@
 		margin-bottom: 2px;
 		list-style: none; // In case the elements are <li> items inside a <ul>
 		font-size: 14px;
-		background-color: #fff;
+		background-color: @white-background;
 		border: 1px solid #ccc; // IE8 fallback
 		border: 1px solid rgba(0,0,0,.15);
 		background-clip: padding-box;
@@ -261,7 +262,7 @@
 			text-align: left;
 			
 			&:hover {
-				color: #ffffff;
+				color: @white-background;
 				background-color: #eb743b;
 			}
 		}
