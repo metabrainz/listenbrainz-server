@@ -435,7 +435,7 @@ def delete_listen():
 
     .. note::
 
-        This listen has not been deleted yet, but is scheduled for deletion, which
+        The listen is not deleted immediately, but is scheduled for deletion, which
         usually happens shortly after the hour.
 
     The format of the JSON to be POSTed to this endpoint is:

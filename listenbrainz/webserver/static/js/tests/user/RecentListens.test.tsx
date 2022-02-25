@@ -385,7 +385,7 @@ describe("deleteListen", () => {
 
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} />
+        <RecentListens {...props} newAlert={newAlertMock} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
