@@ -433,6 +433,11 @@ def delete_listen():
     Delete a particular listen from a user's listen history.
     This checks for the correct authorization token and deletes the listen.
 
+    .. note::
+
+        The listen is not deleted immediately, but is scheduled for deletion, which
+        usually happens shortly after the hour.
+
     The format of the JSON to be POSTed to this endpoint is:
 
     .. code-block:: json
