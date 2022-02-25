@@ -478,6 +478,12 @@ export default class RecentListens extends React.Component<
         );
         if (status === 200) {
           this.setState({ deletedListen: listen });
+          newAlert(
+            "info",
+            "Success",
+            "This listen has not been deleted yet, but is scheduled for deletion," +
+              " which usually happens shortly after the hour."
+          );
           // wait for the delete animation to finish
           setTimeout(() => {
             this.removeListenFromListenList(listen);
