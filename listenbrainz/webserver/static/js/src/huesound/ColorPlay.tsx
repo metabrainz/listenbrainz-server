@@ -223,15 +223,13 @@ export default class ColorPlay extends React.Component<
                   )}
                 </div>
               </div>
-              <div className="col-md-4 sticky-top">
-                <BrainzPlayer
-                  newAlert={newAlert}
-                  listens={selectedReleaseTracks}
-                  listenBrainzAPIBaseURI={APIService.APIBaseURI}
-                  refreshSpotifyToken={APIService.refreshSpotifyToken}
-                  refreshYoutubeToken={APIService.refreshYoutubeToken}
-                />
-              </div>
+              <BrainzPlayer
+                newAlert={newAlert}
+                listens={selectedReleaseTracks}
+                listenBrainzAPIBaseURI={APIService.APIBaseURI}
+                refreshSpotifyToken={APIService.refreshSpotifyToken}
+                refreshYoutubeToken={APIService.refreshYoutubeToken}
+              />
             </div>
           )}
         </div>
