@@ -686,10 +686,23 @@ export default class RecentListens extends React.Component<
                         listen,
                         "track_metadata.additional_info.recording_msid"
                       );
+                      const recordingMBID = getRecordingMBID(listen);
+                      const artistMBIDs = getArtistMBIDs(listen);
+                      const trackMBID = get(
+                        listen,
+                        "track_metadata.additional_info.track_mbid"
+                      );
+                      const releaseGroupMBID = getReleaseGroupMBID(listen);
                       const canDelete =
                         isCurrentUser &&
                         Boolean(listenedAt) &&
                         Boolean(recordingMSID);
+
+                      const isListenReviewable =
+                        Boolean(recordingMBID) ||
+                        artistMBIDs?.length ||
+                        Boolean(trackMBID) ||
+                        Boolean(releaseGroupMBID);
                       /* eslint-disable react/jsx-no-bind */
                       const additionalMenuItems = (
                         <>
@@ -703,6 +716,18 @@ export default class RecentListens extends React.Component<
                             dataToggle="modal"
                             dataTarget="#PinRecordingModal"
                           />
+                          {isListenReviewable && (
+                            <ListenControl
+                              title="Write a review"
+                              icon={faPencilAlt}
+                              action={this.updateRecordingToReview.bind(
+                                this,
+                                listen
+                              )}
+                              dataToggle="modal"
+                              dataTarget="#CBReviewModal"
+                            />
+                          )}
                           {canDelete && (
                             <ListenControl
                               title="Delete Listen"
