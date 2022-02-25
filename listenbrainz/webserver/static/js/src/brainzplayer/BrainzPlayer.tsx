@@ -10,11 +10,12 @@ import {
   debounce,
   cloneDeep,
   omit,
+  get,
 } from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import PlaybackControls from "./PlaybackControls";
+import BrainzPlayerUI from "./BrainzPlayerUI";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
@@ -762,17 +763,19 @@ export default class BrainzPlayer extends React.Component<
       progressMs,
       durationMs,
       isActivated,
+      currentListen,
     } = this.state;
-    const { refreshSpotifyToken, refreshYoutubeToken } = this.props;
+    const {
+      refreshSpotifyToken,
+      refreshYoutubeToken,
+      listenBrainzAPIBaseURI,
+      newAlert,
+    } = this.props;
     const { youtubeAuth, spotifyAuth } = this.context;
-    // Determine if the user is authenticated to search & play tracks with any of the datasources
-    const hasDatasourceToSearch =
-      this.dataSources.findIndex((ds) =>
-        ds.current?.canSearchAndPlayTracks()
-      ) !== -1;
+
     return (
       <div>
-        <PlaybackControls
+        <BrainzPlayerUI
           playPreviousTrack={this.playPreviousTrack}
           playNextTrack={this.playNextTrack}
           togglePlay={
@@ -784,17 +787,10 @@ export default class BrainzPlayer extends React.Component<
           progressMs={progressMs}
           durationMs={durationMs}
           seekToPositionMs={this.seekToPositionMs}
+          listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
+          currentListen={currentListen}
+          newAlert={newAlert}
         >
-          {!hasDatasourceToSearch && (
-            <div className="connect-services-message">
-              You need to{" "}
-              <a href="/profile/music-services/details/" target="_blank">
-                connect to a music service
-              </a>{" "}
-              and refresh this page in order to search for and play songs on
-              ListenBrainz.
-            </div>
-          )}
           <SpotifyPlayer
             show={
               isActivated &&
@@ -856,7 +852,7 @@ export default class BrainzPlayer extends React.Component<
             handleWarning={this.handleWarning}
             handleSuccess={this.handleSuccess}
           />
-        </PlaybackControls>
+        </BrainzPlayerUI>
       </div>
     );
   }
