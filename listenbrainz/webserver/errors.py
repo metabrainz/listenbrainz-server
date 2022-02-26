@@ -69,8 +69,11 @@ class CompatError(object):
     INVALID_SERVICE          = LastFMError(code = 2, message = "Invalid service -This service does not exist")
     INVALID_METHOD           = LastFMError(code = 3, message = "Invalid Method - No method with that name in this package")
     INVALID_TOKEN            = LastFMError(code = 4, message = "Invalid Token - Invalid authentication token supplied")
-    NO_EMAIL                 = LastFMError(code = 4, message = REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
+    NO_EMAIL                 = LastFMError(code = 4, message = REJECT_LISTENS_WITHOUT_EMAIL_ERROR)  # custom LB error
     INVALID_FORMAT           = LastFMError(code = 5, message = "Invalid format - This service doesn't exist in that format")
+    INVALID_SCROBBLE_METHOD  = LastFMError(code = 5, message = "Invalid Request Method - track.updatenowplaying and "
+                                                               "track.scrobble are write requests and can only be "
+                                                               "accessed using POST. ")  # custom LB error
     INVALID_PARAMETERS       = LastFMError(code = 6, message = "Invalid parameters - " \
                                                                "Your request is missing a required parameter")
     INVALID_RESOURCE         = LastFMError(code = 7, message = "Invalid resource specified")
