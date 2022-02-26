@@ -4,8 +4,7 @@ from typing import Optional, List
 from pydantic import validator, constr, NonNegativeInt
 
 from data.model.validators import check_datetime_has_tzinfo
-from listenbrainz.db.msid_mbid_mapping import MsidMbidModel, load_recordings_from_mapping
-from listenbrainz.messybrainz import load_recordings_from_msids
+from listenbrainz.db.msid_mbid_mapping import MsidMbidModel
 
 DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
 MAX_BLURB_CONTENT_LENGTH = 280  # maximum length of blurb content
