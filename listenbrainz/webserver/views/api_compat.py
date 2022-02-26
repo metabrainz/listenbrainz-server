@@ -4,7 +4,7 @@ import listenbrainz.db.user as db_user
 from collections import defaultdict
 from yattag import Doc
 import yattag
-from flask import Blueprint, request, render_template, current_app
+from flask import Blueprint, request, render_template, current_app, make_response, Response
 from flask_login import login_required, current_user
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
@@ -373,9 +373,7 @@ def format_response(data, format="xml"):
 
         (The #text notation is rarely used in XML responses.)
     """
-    if format == 'xml':
-        return data
-    elif format == 'json':
+    if format == 'json':
         # Remove the <lfm> tag and its attributes
         jsonData = xmltodict.parse(data)['lfm']
         for k in list(jsonData.keys()):
@@ -402,7 +400,13 @@ def format_response(data, format="xml"):
                     print(type(data[k]))
             return data
 
-        return json.dumps(remove_attrib_prefix(jsonData), indent=4)
+        data = json.dumps(remove_attrib_prefix(jsonData), indent=4)
+        content_type = "application/json; charset=utf-8"
+    else:
+        content_type = "application/xml; charset=utf-8"
+
+    response = Response(data, mimetype=content_type)
+    return response
 
 
 def user_info(data):
