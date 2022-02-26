@@ -56,7 +56,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         }
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
-        token = json.loads(r.data)['token']
+        token = r.json['token']
 
         # login as user
         with self.client.session_transaction() as session:
@@ -78,7 +78,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         }
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
-        sk = json.loads(r.data)['session']['key']
+        sk = r.json['session']['key']
 
         data = {
             'method': 'track.scrobble',
@@ -122,7 +122,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
                 "ignored": "0"
             }
         }
-        self.assertEqual(expected, json.loads(r.data))
+        self.assertEqual(expected, r.json)
 
         # Check if listen reached the timescale listenstore
         time.sleep(1)
@@ -187,6 +187,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         }
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
+        self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
@@ -207,6 +208,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         }
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
+        self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'failed')
@@ -230,6 +232,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
+        self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
         expected_message = b"""<?xml version="1.0" encoding="utf-8"?>
 <lfm status="failed">
@@ -258,6 +261,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
+        self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
