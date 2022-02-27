@@ -32,14 +32,15 @@ document.getElementById("copy-token").addEventListener("click", function () {
   copyButton.textContent = "Copied!";
 });
 
+const caller = document.getElementById("delete-account");
+caller.addEventListener("mouseenter", function () {
+  const randX = Math.floor(Math.random() * (window.innerWidth - 100));
+  const randY = Math.floor(Math.random() * (window.innerHeight - 100));
+  console.log([randX, randY]);
+  caller.style.left = `${randX}px`;
+  caller.style.top = `${randY}px`;
+});
+
 document
   .getElementById("delete-account")
-  .addEventListener("mouseenter", function () {
-    const randX = Math.floor(Math.random() * (window.innerWidth - 100));
-    const randY = Math.floor(Math.random() * (window.innerHeight - 100));
-    console.log([randX, randY]);
-    document
-      .getElementById("delete-account")
-      .stop()
-      .animate({ left: `${randX}px`, top: `${randY}px` });
-  });
+  .addEventListener("click", function () {});
