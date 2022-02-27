@@ -40,7 +40,3 @@ caller.addEventListener("mouseenter", function () {
   caller.style.left = `${randX}px`;
   caller.style.top = `${randY}px`;
 });
-
-document
-  .getElementById("delete-account")
-  .addEventListener("click", function () {});
