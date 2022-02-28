@@ -190,6 +190,7 @@ environment by running ``develop.sh up``.
 
         ports:
         - "8100:80"
+
     To change the listening port, change only the value before the ":" to the port of your choice
     and point your browser to ``http://localhost:<Port>``
 
