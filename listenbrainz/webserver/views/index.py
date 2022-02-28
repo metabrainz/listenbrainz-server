@@ -212,7 +212,7 @@ def mb_user_deleter(musicbrainz_row_id):
     user = db_user.get_by_mb_row_id(musicbrainz_row_id)
     if user is None:
         raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
-    delete_user(user['musicbrainz_id'])
+    delete_user(user['id'])
     return jsonify({'status': 'ok'}), 200
 
 
