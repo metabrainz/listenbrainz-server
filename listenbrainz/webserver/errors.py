@@ -1,4 +1,5 @@
-from flask import render_template, make_response, jsonify, request, has_request_context, _request_ctx_stack, current_app
+from flask import render_template, make_response, jsonify, request, has_request_context, _request_ctx_stack, \
+    current_app, Response
 from yattag import Doc
 import yattag
 import ujson
@@ -219,10 +220,13 @@ class InvalidAPIUsage(Exception):
 
     def render_error(self):
         if self.output_format == "json":
-            return self.to_json()
+            data = self.to_json()
+            content_type = "application/json; charset=utf-8"
         else:
             # default to xml if the output format isn't known or is missing
-            return self.to_xml()
+            data = self.to_xml()
+            content_type = "application/xml; charset=utf-8"
+        return Response(data, mimetype=content_type)
 
     def to_json(self):
         return ujson.dumps({
