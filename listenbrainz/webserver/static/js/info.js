@@ -31,12 +31,3 @@ document.getElementById("copy-token").addEventListener("click", function () {
   const copyButton = document.getElementById("copy-token");
   copyButton.textContent = "Copied!";
 });
-
-const caller = document.getElementById("delete-account");
-caller.addEventListener("mouseenter", function () {
-  const randX = Math.floor(Math.random() * (window.innerWidth - 100));
-  const randY = Math.floor(Math.random() * (window.innerHeight - 100));
-  console.log([randX, randY]);
-  caller.style.left = `${randX}px`;
-  caller.style.top = `${randY}px`;
-});
