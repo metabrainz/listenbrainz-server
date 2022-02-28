@@ -63,25 +63,6 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
             connection.execute(sqlalchemy.text(query))
             connection.execute(sqlalchemy.text(join_query))
 
-    def test_check_listen_count_view_exists(self):
-        try:
-            with ts.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text("""SELECT column_name
-                                                                 FROM information_schema.columns
-                                                                WHERE table_name = 'listen_count_30day'
-                                                             ORDER BY column_name"""))
-                cols = result.fetchall()
-        except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
-            raise
-        self.assertEqual(cols[0][0], "count")
-        self.assertEqual(cols[1][0], "listened_at_bucket")
-        self.assertEqual(cols[2][0], "user_name")
-
-    # The test test_aaa_get_total_listen_count is gone because all it did was test to see if the
-    # timescale continuous aggregate works and often times it didn't work fast enough. We don't care
-    # about immediate correctness, but eventual correctness, so test tossed.
-
     def test_insert_timescale(self):
         count = self._create_test_data(self.testuser_name, self.testuser_id)
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, from_ts=1399999999)
