@@ -6,7 +6,6 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts
 from listenbrainz import messybrainz as msb_db
 from listenbrainz.messybrainz.testing import MessyBrainzTestCase
-from listenbrainz.messybrainz.data import submit_recording, load_recordings_from_msids, get_id_from_meta_hash
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 
