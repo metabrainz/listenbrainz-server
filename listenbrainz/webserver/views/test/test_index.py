@@ -190,11 +190,11 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
     def test_mb_user_deleter_valid_account(self, mock_delete_user, mock_authorize_mb_user_deleter):
-        user1 = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_authorize_mb_user_deleter.assert_called_once_with('132')
-        mock_delete_user.assert_called_once_with('iliekcomputers')
+        mock_delete_user.assert_called_once_with(user_id)
 
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
@@ -213,14 +213,14 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007538,
         }
-        user1 = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_requests_get.assert_called_with(
             'https://musicbrainz.org/oauth2/userinfo',
             headers={'Authorization': 'Bearer 132'},
         )
-        mock_delete_user.assert_called_with('iliekcomputers')
+        mock_delete_user.assert_called_with(user_id)
 
     @mock.patch('listenbrainz.webserver.views.index.requests.get')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
@@ -230,7 +230,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007531, # incorrect musicbrainz row id for UserDeleter
         }
-        user1 = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
