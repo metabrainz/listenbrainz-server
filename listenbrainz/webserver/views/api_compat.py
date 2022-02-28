@@ -90,21 +90,24 @@ def api_methods():
         raise InvalidAPIUsage(CompatError.SERVICE_UNAVAILABLE, output_format=data.get('format', "xml"))
 
     if method in ('track.updatenowplaying', 'track.scrobble'):
-        return record_listens(request, data)
-    elif method == 'auth.getsession':
-        return get_session(request, data)
+        if request.method != 'POST':
+            raise InvalidAPIUsage(CompatError.SERVICE_UNAVAILABLE, output_format=data.get('format', "xml"))
+        return record_listens(data)
+
+    if method == 'auth.getsession':
+        return get_session(data)
     elif method == 'auth.gettoken':
-        return get_token(request, data)
+        return get_token(data)
     elif method == 'user.getinfo':
-        return user_info(request, data)
+        return user_info(data)
     elif method == 'auth.getsessioninfo':
-        return session_info(request, data)
+        return session_info(data)
     else:
         # Invalid Method
         raise InvalidAPIUsage(CompatError.INVALID_METHOD, output_format=data.get('format', "xml"))
 
 
-def session_info(request, data):
+def session_info(data):
     try:
         sk = data['sk']
         api_key = data['api_key']
@@ -136,7 +139,7 @@ def session_info(request, data):
                            output_format)
 
 
-def get_token(request, data):
+def get_token(data):
     """ Issue a token to user after verying his API_KEY
     """
     output_format = data.get('format', 'xml')
@@ -157,7 +160,7 @@ def get_token(request, data):
                            output_format)
 
 
-def get_session(request, data):
+def get_session(data):
     """ Create new session after validating the API_key and token.
     """
     output_format = data.get('format', 'xml')
@@ -192,7 +195,7 @@ def get_session(request, data):
                            data.get('format', "xml"))
 
 
-def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
+def _to_native_api(lookup, method, output_format="xml"):
     """ Converts the list of listens received in the new Last.fm submission format
         to the native ListenBrainz API format.
         Returns: type_of_listen and listen_payload
@@ -235,7 +238,7 @@ def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
     return listen_type, listens
 
 
-def record_listens(request, data):
+def record_listens(data):
     """ Submit the listen in the lastfm format to be inserted in db.
         Accepts listens for both track.updateNowPlaying and track.scrobble methods.
     """
@@ -257,7 +260,7 @@ def record_listens(request, data):
 
     lookup = defaultdict(dict)
     for key, value in data.items():
-        if key in ["sk", "token", "api_key", "method", "api_sig"]:
+        if key in ["sk", "token", "api_key", "method", "api_sig", "format"]:
             continue
         matches = re.match('(.*)\[(\d+)\]', key)
         if matches:
@@ -267,7 +270,7 @@ def record_listens(request, data):
             number = 0
         lookup[number][key] = value
 
-    if request.form['method'].lower() == 'track.updatenowplaying':
+    if data['method'].lower() == 'track.updatenowplaying':
         for i, listen in lookup.items():
             if 'timestamp' not in listen:
                 listen['timestamp'] = calendar.timegm(datetime.now().utctimetuple())
@@ -402,7 +405,7 @@ def format_response(data, format="xml"):
         return json.dumps(remove_attrib_prefix(jsonData), indent=4)
 
 
-def user_info(request, data):
+def user_info(data):
     """ Gives information about the user specified in the parameters.
     """
     try:
