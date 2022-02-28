@@ -1,45 +1,31 @@
-# coding=utf-8
-
-import os
 import subprocess
 import tarfile
-import tempfile
 import time
-import shutil
-import uuid
-from collections import defaultdict
-from datetime import datetime, timedelta
-import ujson
+from typing import Dict, Tuple, Optional
+
 import psycopg2
 import psycopg2.sql
-from psycopg2.extras import execute_values
-from psycopg2.errors import UntranslatableCharacter
-from typing import List
 import sqlalchemy
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
-
+import ujson
 from brainzutils import cache
+from psycopg2.errors import UntranslatableCharacter
+from psycopg2.extras import execute_values
+from sqlalchemy import text
 
-from listenbrainz.db import timescale
-from listenbrainz import DUMP_LICENSE_FILE_PATH
-from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.db import timescale, DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listen import Listen
-from listenbrainz.listenstore import ListenStore
-from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.utils import create_path, init_cache
+from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
+from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH
 
 # Append the user name for both of these keys
 REDIS_USER_LISTEN_COUNT = "lc."
 REDIS_USER_TIMESTAMPS = "ts."
 REDIS_TOTAL_LISTEN_COUNT = "lc-total"
-REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY = 86400  # 24 hours
+# cache listen counts for 5 minutes only, so that listen counts are always up-to-date in 5 minutes.
+REDIS_USER_LISTEN_COUNT_EXPIRY = 300
 
 DUMP_CHUNK_SIZE = 100000
-NUMBER_OF_USERS_PER_DIRECTORY = 1000
-DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024  # 1 GB
 DATA_START_YEAR = 2005
 DATA_START_YEAR_IN_SECONDS = 1104537600
 
@@ -51,206 +37,107 @@ WINDOW_SIZE_MULTIPLIER = 3
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
-# These values are defined to create spark parquet files that are at most 128MB in size.
-# This compression ration allows us to roughly estimate how full we can make files before starting a new one
-PARQUET_APPROX_COMPRESSION_RATIO = .57
-
-# This is the approximate amount of data to write to a parquet file in order to meet the max size
-PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
+MAX_FUTURE_SECONDS = 600  # 10 mins in future - max fwd clock skew
 
 
-class TimescaleListenStore(ListenStore):
+class TimescaleListenStore:
     '''
         The listenstore implementation for the timescale DB.
     '''
 
-    def __init__(self, conf, logger):
-        super(TimescaleListenStore, self).__init__(logger)
+    def __init__(self, logger):
+        self.log = logger
 
-        timescale.init_db_connection(conf['SQLALCHEMY_TIMESCALE_URI'])
+    def set_empty_values_for_user(self, user_id: int):
+        """When a user is created, set the timestamp keys and insert an entry in the listen count
+         table so that we can avoid the expensive lookup for a brand new user."""
+        query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, NULL, NULL, NOW())"""
+        with timescale.engine.connect() as connection:
+            connection.execute(sqlalchemy.text(query), user_id=user_id)
 
-        # Initialize brainzutils cache
-        init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'],
-                   namespace=conf['REDIS_NAMESPACE'])
-        self.dump_temp_dir_root = conf.get(
-            'LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
+    def get_listen_count_for_user(self, user_id: int):
+        """Get the total number of listens for a user.
 
-    def set_empty_cache_values_for_user(self, user_name):
-        """When a user is created, set the listen_count and timestamp keys so that we
-           can avoid the expensive lookup for a brand new user."""
-
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
-        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", expirein=0)
-
-    def get_listen_count_for_user(self, user_name):
-        """Get the total number of listens for a user. The number of listens comes from
-           brainzutils cache unless an exact number is asked for.
+         The number of listens comes from cache if available otherwise the get the
+         listen count from the database. To get the listen count from the database,
+         query listen_user_metadata table for the count and the timestamp till which we
+         already have counted. Then scan the listens created later than that timestamp
+         to get the remaining count. Add the two counts to get total listen count.
 
         Args:
-            user_name: the user to get listens for
+            user_id: the user to get listens for
         """
+        cached_count = cache.get(REDIS_USER_LISTEN_COUNT + str(user_id))
+        if cached_count:
+            return cached_count
 
-        count = cache.get(REDIS_USER_LISTEN_COUNT + user_name, decode=False)
-        # count < 0, yeah that's possible. when a user imports from last.fm,
-        # we call set_listen_count_expiry_for_user to set a TTL on the count.
-        # the intent is that when the key expires and the listen counts will
-        # be recalculated and put into redis again. the issue is that listen
-        # counts are only calculated when the listen-count api endpoint is
-        # called. So imagine this, I do a last.fm import at 13:00 on 2021-10-23.
-        # The key expires at 13:00 on 2021-10-24. From this moment, redis has no
-        # key for my listens. Then, I delete a listen using the API at say 13:05.
-        # The listen is deleted and the listenstore tries to decrement the listen
-        # count but hey redis has no key. So what does it do, it creates one with
-        # a value of 0 and decrements that. Voila, we have the key with a negative
-        # value.
-        # Note that the check is still incomplete. If instead of deleting, one had
-        # inserted a listen. redis would create a key with value 0 and increment it
-        # by 1. only now we don't have a way to detect this.
-        if count is None or int(count) < 0:
-            return self.reset_listen_count(user_name)
-        else:
-            return int(count)
+        with timescale.engine.connect() as connection:
+            query = "SELECT count, created FROM listen_user_metadata WHERE user_id = :user_id"
+            result = connection.execute(sqlalchemy.text(query), user_id=user_id)
+            row = result.fetchone()
+            if row:
+                count, created = row["count"], row["created"]
+            else:
+                # we can reach here only in tests, because we create entries in listen_user_metadata
+                # table when user signs up and for existing users an entry should always exist.
+                count, created = 0, LISTEN_MINIMUM_DATE
 
-    def reset_listen_count(self, user_name):
-        """ Reset the listen count of a user from cache and put in a new calculated value.
-            returns the re-calculated listen count.
+            query_remaining = """
+                SELECT count(*) AS remaining_count
+                  FROM listen
+                 WHERE user_id = :user_id
+                   AND created > :created
+            """
+            result = connection.execute(sqlalchemy.text(query_remaining),
+                                        user_id=user_id,
+                                        created=created)
+            remaining_count = result.fetchone()["remaining_count"]
 
-            Args:
-                user_name: the musicbrainz id of user whose listen count needs to be reset
+            total_count = count + remaining_count
+            cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), total_count, REDIS_USER_LISTEN_COUNT_EXPIRY)
+            return total_count
+
+    def get_timestamps_for_user(self, user_id: int) -> Tuple[Optional[int], Optional[int]]:
+        """ Return the min_ts and max_ts for the given list of users """
+        query = """
+            SELECT COALESCE(min(min_listened_at), 0) AS min_ts
+                 , COALESCE(max(max_listened_at), 0) AS max_ts
+              FROM listen_user_metadata
+             WHERE user_id = :user_id 
         """
-        query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
-        t0 = time.monotonic()
-        try:
-            with timescale.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text(query), {
-                    "user_name": user_name,
-                })
-                count = int(result.fetchone()[0] or 0)
+        with timescale.engine.connect() as connection:
+            result = connection.execute(text(query), user_id=user_id)
+            row = result.fetchone()
+            if row is None:
+                return 0, 0
+            return row["min_ts"], row["max_ts"]
 
-        except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count: %s" %
-                           str(e), exc_info=True)
-            raise
-
-        # intended for production monitoring
-        self.log.info("listen counts %s %.2fs" % (user_name, time.monotonic() - t0))
-        # put this value into brainzutils cache without an expiry time
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name,
-                  count, expirein=0, encode=False)
-        return count
-
-    def set_listen_count_expiry_for_user(self, user_name):
-        """ Set an expire time for the listen count cache item. This is called after
-            a bulk import which allows for timescale continuous aggregates to catch up
-            to listen counts. Once the key expires, the correct value can be calculated
-            from the aggregate.
-
-            Args:
-                user_name: the musicbrainz id of user whose listen count needs an expiry time
-        """
-        cache._r.expire(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY)
-
-    def update_timestamps_for_user(self, user_name, min_ts, max_ts):
-        """
-            If any code adds/removes listens it should update the timestamps for the user
-            using this function, so that they values in redis are always current.
-
-            If the given timestamps represent a new min or max value, these values will be
-            saved in the cache, otherwise the user timestamps remain unchanged.
-        """
-
-        cached_min_ts, cached_max_ts = self.get_timestamps_for_user(user_name)
-        if min_ts < cached_min_ts or max_ts > cached_max_ts:
-            if min_ts < cached_min_ts:
-                cached_min_ts = min_ts
-            if max_ts > cached_max_ts:
-                cached_max_ts = max_ts
-            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" %
-                      (cached_min_ts, cached_max_ts), expirein=0)
-
-    def get_timestamps_for_user(self, user_name):
-        """ Return the max_ts and min_ts for a given user and cache the result in brainzutils cache
-        """
-
-        tss = cache.get(REDIS_USER_TIMESTAMPS + user_name)
-        if tss:
-            (min_ts, max_ts) = tss.split(",")
-            min_ts = int(min_ts)
-            max_ts = int(max_ts)
-        else:
-            t0 = time.monotonic()
-            min_ts = self._select_single_timestamp(True, user_name)
-            max_ts = self._select_single_timestamp(False, user_name)
-            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts), expirein=0)
-            # intended for production monitoring
-            self.log.info("timestamps %s %.2fs" % (user_name, time.monotonic() - t0))
-
-        return min_ts, max_ts
-
-    def _select_single_timestamp(self, select_min_timestamp, user_name):
-        """ Fetch a single timestamp (min or max) from the listenstore for a given user.
-
-            Args:
-                select_min_timestamp: boolean. Select the min timestamp if true, max if false.
-                user_name: the user for whom to fetch the timestamp.
-
-            Returns:
-
-                The selected timestamp for the user or 0 if no timestamp was found.
-        """
-
-        function = "max"
-        if select_min_timestamp:
-            function = "min"
-
-        query = """SELECT %s(listened_at) AS ts
-                     FROM listen
-                     WHERE user_name = :user_name""" % function
-        try:
-            with timescale.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text(query), {
-                    "user_name": user_name
-                })
-                row = result.fetchone()
-                if row is None or row['ts'] is None:
-                    return 0
-
-                return row['ts']
-
-        except psycopg2.OperationalError as e:
-            self.log.error("Cannot fetch min/max timestamp: %s" %
-                           str(e), exc_info=True)
-            raise
-
-    def get_total_listen_count(self, cache_value=True):
+    def get_total_listen_count(self):
         """ Returns the total number of listens stored in the ListenStore.
             First checks the brainzutils cache for the value, if not present there
             makes a query to the db and caches it in brainzutils cache.
         """
+        count = cache.get(REDIS_TOTAL_LISTEN_COUNT)
+        if count:
+            return count
 
-        if cache_value:
-            count = cache.get(REDIS_TOTAL_LISTEN_COUNT)
-            if count:
-                return int(count)
-
-        query = "SELECT SUM(count) AS value FROM listen_count_30day"
-
+        query = "SELECT SUM(count) AS value FROM listen_user_metadata"
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query))
-                count = int(result.fetchone()["value"] or "0")
-        except psycopg2.OperationalError as e:
-            self.log.error(
-                "Cannot query timescale listen_count_30day: %s" % str(e), exc_info=True)
+                # psycopg2 returns the `value` as a DECIMAL type which is not recognized
+                # by msgpack/redis. so cast to python int first.
+                count = int(result.fetchone()["value"] or 0)
+        except psycopg2.OperationalError:
+            self.log.error("Cannot query listen counts:", exc_info=True)
             raise
 
-        if cache_value:
-            cache.set(REDIS_TOTAL_LISTEN_COUNT, count, expirein=0)
+        cache.set(REDIS_TOTAL_LISTEN_COUNT, count, expirein=REDIS_USER_LISTEN_COUNT_EXPIRY)
         return count
 
     def insert(self, listens):
         """
-            Insert a batch of listens. Returns a list of (listened_at, track_name, user_name) that indicates
+            Insert a batch of listens. Returns a list of (listened_at, track_name, user_name, user_id) that indicates
             which rows were inserted into the DB. If the row is not listed in the return values, it was a duplicate.
         """
 
@@ -258,11 +145,11 @@ class TimescaleListenStore(ListenStore):
         for listen in listens:
             submit.append(listen.to_timescale())
 
-        query = """INSERT INTO listen (listened_at, track_name, user_name, data)
+        query = """INSERT INTO listen (listened_at, track_name, user_name, user_id, data)
                         VALUES %s
-                   ON CONFLICT (listened_at, track_name, user_name)
+                   ON CONFLICT (listened_at, track_name, user_id)
                     DO NOTHING
-                     RETURNING listened_at, track_name, user_name"""
+                     RETURNING listened_at, track_name, user_name, user_id"""
 
         inserted_rows = []
         conn = timescale.engine.raw_connection()
@@ -273,37 +160,16 @@ class TimescaleListenStore(ListenStore):
                     result = curs.fetchone()
                     if not result:
                         break
-                    inserted_rows.append((result[0], result[1], result[2]))
+                    inserted_rows.append((result[0], result[1], result[2], result[3]))
             except UntranslatableCharacter:
                 conn.rollback()
                 return
 
         conn.commit()
 
-        # update the listen counts and timestamps for the users
-        user_timestamps = {}
-        user_counts = defaultdict(int)
-        for ts, _, user_name in inserted_rows:
-            if user_name in user_timestamps:
-                if ts < user_timestamps[user_name][0]:
-                    user_timestamps[user_name][0] = ts
-                if ts > user_timestamps[user_name][1]:
-                    user_timestamps[user_name][1] = ts
-            else:
-                user_timestamps[user_name] = [ts, ts]
-
-            user_counts[user_name] += 1
-
-        for user_name in user_counts:
-            cache.increment(REDIS_USER_LISTEN_COUNT + user_name, amount=user_counts[user_name])
-
-        for user in user_timestamps:
-            self.update_timestamps_for_user(
-                user, user_timestamps[user][0], user_timestamps[user][1])
-
         return inserted_rows
 
-    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
+    def fetch_listens(self, user: Dict, from_ts: int = None, to_ts: int = None, limit: int = DEFAULT_LISTENS_PER_FETCH):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -311,48 +177,34 @@ class TimescaleListenStore(ListenStore):
             If neither from_ts nor to_ts is provided, the latest listens for the user are returned.
             Returns a tuple of (listens, min_user_timestamp, max_user_timestamp)
 
-            from_ts: seconds since epoch, in float
+            from_ts: seconds since epoch, in float. if specified, listens will be returned in ascending order. otherwise
+                listens will be returned in descending order
             to_ts: seconds since epoch, in float
             limit: the maximum number of items to return
-            order: 0 for ASCending order, 1 for DESCending order
         """
+        if from_ts and to_ts and from_ts >= to_ts:
+            raise ValueError("from_ts should be less than to_ts")
+        if from_ts:
+            order = ORDER_ASC
+        else:
+            order = ORDER_DESC
 
-        return self.fetch_listens_for_multiple_users_from_storage([user_name], from_ts, to_ts, limit, order)
+        min_user_ts, max_user_ts = self.get_timestamps_for_user(user["id"])
 
-    def fetch_listens_for_multiple_users_from_storage(self, user_names: List[str], from_ts: float, to_ts: float, limit: int, order: int):
-        """ The timestamps are stored as UTC in the postgres datebase while on retrieving
-            the value they are converted to the local server's timezone. So to compare
-            datetime object we need to create a object in the same timezone as the server.
-
-            If neither from_ts nor to_ts is provided, the latest listens for the user are returned.
-            Returns a tuple of (listens, min_user_timestamp, max_user_timestamp)
-
-            from_ts: seconds since epoch, in float
-            to_ts: seconds since epoch, in float
-            limit: the maximum number of items to return
-            order: 0 for DESCending order, 1 for ASCending order
-        """
-
-        min_user_ts = max_user_ts = None
-        for user_name in user_names:
-            min_ts, max_ts = self.get_timestamps_for_user(user_name)
-            min_user_ts = min(min_ts, min_user_ts or min_ts)
-            max_user_ts = max(max_ts, max_user_ts or max_ts)
+        if min_user_ts == 0 and max_user_ts == 0:
+            return [], min_user_ts, max_user_ts
 
         if to_ts is None and from_ts is None:
             to_ts = max_user_ts + 1
 
-        if min_user_ts == 0 and max_user_ts == 0:
-            return ([], min_user_ts, max_user_ts)
-
         window_size = DEFAULT_FETCH_WINDOW
-        query = """SELECT listened_at, track_name, user_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
+        query = """SELECT listened_at, track_name, user_id, created, data, mm.recording_mbid, release_mbid, artist_mbids
                      FROM listen
           FULL OUTER JOIN mbid_mapping mm
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
           FULL OUTER JOIN mbid_mapping_metadata m
                        ON mm.recording_mbid = m.recording_mbid
-                    WHERE user_name IN :user_names
+                    WHERE user_id = :user_id
                       AND listened_at > :from_ts
                       AND listened_at < :to_ts
                  ORDER BY listened_at """ + ORDER_TEXT[order] + " LIMIT :limit"
@@ -383,7 +235,7 @@ class TimescaleListenStore(ListenStore):
                     done = True
                     break
 
-                curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names),
+                curs = connection.execute(sqlalchemy.text(query), user_id=user["id"],
                                           from_ts=from_ts, to_ts=to_ts, limit=limit)
                 while True:
                     result = curs.fetchone()
@@ -396,7 +248,7 @@ class TimescaleListenStore(ListenStore):
                             done = True
                             break
 
-                        if to_ts > int(time.time()) + ListenStore.MAX_FUTURE_SECONDS:
+                        if to_ts > int(time.time()) + MAX_FUTURE_SECONDS:
                             done = True
                             break
 
@@ -412,7 +264,18 @@ class TimescaleListenStore(ListenStore):
 
                         break
 
-                    listens.append(Listen.from_timescale(*result))
+                    listens.append(Listen.from_timescale(
+                        listened_at=result["listened_at"],
+                        track_name=result["track_name"],
+                        user_id=result["user_id"],
+                        created=result["created"],
+                        data=result["data"],
+                        recording_mbid=result["recording_mbid"],
+                        release_mbid=result["release_mbid"],
+                        artist_mbids=result["artist_mbids"],
+                        user_name=user["musicbrainz_id"]
+                    ))
+
                     if len(listens) == limit:
                         done = True
                         break
@@ -425,35 +288,46 @@ class TimescaleListenStore(ListenStore):
         if order == ORDER_ASC:
             listens.reverse()
 
-        self.log.info("fetch listens %s %.2fs (%d passes)" %
-                      (str(user_names), fetch_listens_time, passes))
+        self.log.info("fetch listens %s %.2fs (%d passes)" % (user["musicbrainz_id"], fetch_listens_time, passes))
 
-        return (listens, min_user_ts, max_user_ts)
+        return listens, min_user_ts, max_user_ts
 
-    def fetch_recent_listens_for_users(self, user_list, limit=2, max_age=3600):
+    def fetch_recent_listens_for_users(self, users, min_ts: int = None, max_ts: int = None, per_user_limit=2, limit=10):
         """ Fetch recent listens for a list of users, given a limit which applies per user. If you
             have a limit of 3 and 3 users you should get 9 listens if they are available.
 
-            user_list: A list containing the users for which you'd like to retrieve recent listens.
-            limit: the maximum number of listens for each user to fetch.
-            max_age: Only return listens if they are no more than max_age seconds old. Default 3600 seconds
+            user_ids: A list containing the users for which you'd like to retrieve recent listens.
+            min_ts: Only return listens with listened_at after this timestamp
+            max_ts: Only return listens with listened_at before this timestamp
+            per_user_limit: the maximum number of listens for each user to fetch
+            limit: the maximum number of listens overall to fetch
         """
+        user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
 
-        args = {'user_list': tuple(user_list), 'ts': int(
-            time.time()) - max_age, 'limit': limit}
-        query = """SELECT * FROM (
-                              SELECT listened_at, track_name, user_name, created, data, mm.recording_mbid, release_mbid, artist_mbids,
-                                     row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
+        filters_list = ["user_id IN :user_ids"]
+        args = {"user_ids": tuple(user_id_map.keys()), "per_user_limit": per_user_limit, "limit": limit}
+        if min_ts:
+            filters_list.append("listened_at > :min_ts")
+            args["min_ts"] = min_ts
+        if max_ts:
+            filters_list.append("listened_at < :max_ts")
+            args["max_ts"] = max_ts
+        filters = " AND ".join(filters_list)
+
+        query = f"""SELECT * FROM (
+                              SELECT listened_at, track_name, user_id, created, data, mm.recording_mbid, release_mbid, artist_mbids,
+                                     row_number() OVER (partition by user_id ORDER BY listened_at DESC) AS rownum
                                 FROM listen l
                      FULL OUTER JOIN mbid_mapping m
                                   ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = m.recording_msid
                      FULL OUTER JOIN mbid_mapping_metadata mm
                                   ON mm.recording_mbid = m.recording_mbid
-                               WHERE user_name IN :user_list
-                                 AND listened_at > :ts
-                            GROUP BY user_name, listened_at, track_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
+                               WHERE {filters}
+                            GROUP BY user_id, listened_at, track_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
                             ORDER BY listened_at DESC) tmp
-                               WHERE rownum <= :limit"""
+                               WHERE rownum <= :per_user_limit
+                            ORDER BY listened_at DESC   
+                               LIMIT :limit"""
 
         listens = []
         with timescale.engine.connect() as connection:
@@ -462,460 +336,19 @@ class TimescaleListenStore(ListenStore):
                 result = curs.fetchone()
                 if not result:
                     break
-
-                listens.append(Listen.from_timescale(*result[0:8]))
-
+                user_name = user_id_map[result["user_id"]]
+                listens.append(Listen.from_timescale(
+                    listened_at=result["listened_at"],
+                    track_name=result["track_name"],
+                    user_id=result["user_id"],
+                    created=result["created"],
+                    data=result["data"],
+                    recording_mbid=result["recording_mbid"],
+                    release_mbid=result["release_mbid"],
+                    artist_mbids=result["artist_mbids"],
+                    user_name=user_name
+                ))
         return listens
-
-    def get_listens_query_for_dump(self, start_time, end_time):
-        """
-            Get a query and its args dict to select a batch for listens for the full dump.
-            Use listened_at timestamp, since not all listens have the created timestamp.
-        """
-
-        query = """SELECT listened_at, track_name, user_name, created, data
-                     FROM listen
-                    WHERE listened_at >= :start_time
-                      AND listened_at <= :end_time
-                 ORDER BY listened_at ASC"""
-        args = {
-            'start_time': start_time,
-            'end_time': end_time
-        }
-
-        return (query, args)
-
-    def get_incremental_listens_query(self, start_time, end_time):
-        """
-            Get a query for a batch of listens for an incremental listen dump.
-            This uses the `created` column to fetch listens.
-        """
-
-        query = """SELECT listened_at, track_name, user_name, created, data
-                     FROM listen
-                    WHERE created > :start_ts
-                      AND created <= :end_ts
-                 ORDER BY created ASC"""
-
-        args = {
-            'start_ts': start_time,
-            'end_ts': end_time,
-        }
-        return (query, args)
-
-    def write_dump_metadata(self, archive_name, start_time, end_time, temp_dir, tar, full_dump=True):
-        """ Write metadata files (schema version, timestamps, license) into the dump archive.
-
-        Args:
-            archive_name: the name of the archive
-            start_time and end_time: the time range of the dump
-            temp_dir: the directory to use for writing files before addition into the archive
-            tar (TarFile object): The tar file to add the files into
-            full_dump (bool): flag to specify whether the archive is a full dump or an incremental dump
-        """
-        try:
-            if full_dump:
-                # add timestamp
-                timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
-                with open(timestamp_path, 'w') as f:
-                    f.write(end_time.isoformat(' '))
-                tar.add(timestamp_path,
-                        arcname=os.path.join(archive_name, 'TIMESTAMP'))
-            else:
-                start_timestamp_path = os.path.join(
-                    temp_dir, 'START_TIMESTAMP')
-                with open(start_timestamp_path, 'w') as f:
-                    f.write(start_time.isoformat(' '))
-                tar.add(start_timestamp_path,
-                        arcname=os.path.join(archive_name, 'START_TIMESTAMP'))
-                end_timestamp_path = os.path.join(temp_dir, 'END_TIMESTAMP')
-                with open(end_timestamp_path, 'w') as f:
-                    f.write(end_time.isoformat(' '))
-                tar.add(end_timestamp_path,
-                        arcname=os.path.join(archive_name, 'END_TIMESTAMP'))
-
-            # add schema version
-            schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
-            with open(schema_version_path, 'w') as f:
-                f.write(str(LISTENS_DUMP_SCHEMA_VERSION))
-            tar.add(schema_version_path,
-                    arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
-
-            # add copyright notice
-            tar.add(DUMP_LICENSE_FILE_PATH,
-                    arcname=os.path.join(archive_name, 'COPYING'))
-
-        except IOError as e:
-            self.log.critical(
-                'IOError while writing metadata dump files: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            self.log.error(
-                'Exception while adding dump metadata: %s', str(e), exc_info=True)
-            raise
-
-    def write_listens(self, temp_dir, tar_file, archive_name, start_time_range=None, end_time_range=None, full_dump=True):
-        """ Dump listens in the format for the ListenBrainz dump.
-
-        Args:
-            end_time_range (datetime): the range of time for the listens dump.
-            temp_dir (str): the dir to use to write files before adding to archive
-            full_dump (bool): the type of dump
-        """
-        t0 = time.monotonic()
-        listen_count = 0
-
-        # This right here is why we should ONLY be using seconds timestamps. Someone could
-        # pass in a timezone aware timestamp (when listens have no timezones) or one without.
-        # If you pass the wrong one and a test invokes a command line any failures are
-        # invisible causing massive hair-pulling. FUCK DATETIME.
-        if start_time_range:
-            start_time_range = datetime.utcfromtimestamp(
-                datetime.timestamp(start_time_range))
-        if end_time_range:
-            end_time_range = datetime.utcfromtimestamp(
-                datetime.timestamp(end_time_range))
-
-        year = start_time_range.year
-        month = start_time_range.month
-        while True:
-            start_time = datetime(year, month, 1)
-            start_time = max(start_time_range, start_time)
-            if start_time > end_time_range:
-                break
-
-            next_month = month + 1
-            next_year = year
-            if next_month > 12:
-                next_month = 1
-                next_year += 1
-
-            end_time = datetime(next_year, next_month, 1)
-            end_time = end_time - timedelta(seconds=1)
-            if end_time > end_time_range:
-                end_time = end_time_range
-
-            filename = os.path.join(temp_dir, str(year), "%d.listens" % month)
-            try:
-                os.makedirs(os.path.join(temp_dir, str(year)))
-            except FileExistsError:
-                pass
-
-            query, args = None, None
-            if full_dump:
-                query, args = self.get_listens_query_for_dump(int(start_time.strftime('%s')),
-                                                              int(end_time.strftime('%s')))
-            else:
-                query, args = self.get_incremental_listens_query(
-                    start_time, end_time)
-
-            rows_added = 0
-            with timescale.engine.connect() as connection:
-                curs = connection.execute(sqlalchemy.text(query), args)
-                if curs.rowcount:
-                    with open(filename, "w") as out_file:
-                        while True:
-                            result = curs.fetchone()
-                            if not result:
-                                break
-
-                            listen = Listen.from_timescale(
-                                result[0], result[1], result[2], result[3], result[4]).to_json()
-                            out_file.write(ujson.dumps(listen) + "\n")
-                            rows_added += 1
-                    tar_file.add(filename, arcname=os.path.join(
-                        archive_name, 'listens', str(year), "%d.listens" % month))
-
-                    listen_count += rows_added
-                    self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count, start_time.strftime("%Y-%m-%d"),
-                                  listen_count / (time.monotonic() - t0))
-
-            month = next_month
-            year = next_year
-            rows_added = 0
-
-    def dump_listens(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None,
-                     threads=DUMP_DEFAULT_THREAD_COUNT):
-        """ Dumps all listens in the ListenStore into a .tar.xz archive.
-
-        Files are created with UUIDs as names. Each file can contain listens for a number of users.
-        An index.json file is used to save which file contains the listens of which users.
-
-        This creates an incremental dump if start_time is specified (with range start_time to end_time),
-        otherwise it creates a full dump with all listens.
-
-        Args:
-            location: the directory where the listens dump archive should be created
-            dump_id (int): the ID of the dump in the dump sequence
-            start_time and end_time (datetime): the time range for which listens should be dumped
-                start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
-            threads (int): the number of threads to use for compression
-
-        Returns:
-            the path to the dump archive
-        """
-
-        if end_time is None:
-            end_time = datetime.now()
-
-        self.log.info('Beginning dump of listens from TimescaleDB...')
-        full_dump = bool(start_time == datetime.utcfromtimestamp(0))
-        archive_name = 'listenbrainz-listens-dump-{dump_id}-{time}'.format(dump_id=dump_id,
-                                                                           time=end_time.strftime('%Y%m%d-%H%M%S'))
-        if full_dump:
-            archive_name = '{}-full'.format(archive_name)
-        else:
-            archive_name = '{}-incremental'.format(archive_name)
-        archive_path = os.path.join(
-            location, '{filename}.tar.xz'.format(filename=archive_name))
-        with open(archive_path, 'w') as archive:
-
-            pxz_command = ['pxz', '--compress',
-                           '-T{threads}'.format(threads=threads)]
-            pxz = subprocess.Popen(
-                pxz_command, stdin=subprocess.PIPE, stdout=archive)
-
-            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
-
-                temp_dir = os.path.join(
-                    self.dump_temp_dir_root, str(uuid.uuid4()))
-                create_path(temp_dir)
-                self.write_dump_metadata(
-                    archive_name, start_time, end_time, temp_dir, tar, full_dump)
-
-                listens_path = os.path.join(temp_dir, 'listens')
-                self.write_listens(listens_path, tar, archive_name,
-                                   start_time, end_time, full_dump)
-
-                # remove the temporary directory
-                shutil.rmtree(temp_dir)
-
-            pxz.stdin.close()
-
-        pxz.wait()
-        self.log.info('ListenBrainz listen dump done!')
-        self.log.info('Dump present at %s!', archive_path)
-        return archive_path
-
-    def write_parquet_files(self,
-                            archive_dir,
-                            temp_dir,
-                            tar_file,
-                            dump_type,
-                            start_time: datetime,
-                            end_time: datetime,
-                            parquet_file_id=0):
-        """
-            Carry out fetching listens from the DB, joining them to the MBID mapping table and
-            then writing them to parquet files.
-
-        Args:
-            archive_dir: the directory where the listens dump archive should be created
-            temp_dir: the directory where tmp files should be written
-            tar_file: the tarfile object that the dumps are being written to
-            dump_type: type of dump, full or incremental
-            start_time: the start of the time range for which listens should be dumped
-            end_time: the end of the time range for which listens should be dumped
-            parquet_file_id: the file id number to use for indexing parquet files
-
-        Returns:
-            the next parquet_file_id to use.
-
-        """
-        # the spark listens dump is sorted using this column. full dumps are sorted on
-        # listened_at because so during loading listens in spark for stats calculation
-        # we can load a subset of files. however, sorting on listened_at creates the
-        # issue that the data imported today with listened_at in the past won't show up
-        # in the stats until the next full dump. to solve this, we sort and dump incremental
-        # listens using the created column. all incremental listens are always loaded by spark
-        # , so we can get upto date stats sooner.
-        if dump_type == "full":
-            criteria = "listened_at"
-            # listened_at column is bigint so need to convert datetime to timestamp
-            args = {
-                "start": int(start_time.timestamp()),
-                "end": int(end_time.timestamp())
-            }
-        else:  # incremental dump
-            criteria = "created"
-            args = {
-                "start": start_time,
-                "end": end_time
-            }
-
-        query = psycopg2.sql.SQL("""
-                    SELECT listened_at,
-                          user_name,
-                          artist_credit_id,
-                          artist_mbids::TEXT[] AS artist_credit_mbids,
-                          artist_credit_name AS m_artist_name,
-                          data->'track_metadata'->>'artist_name' AS l_artist_name,
-                          release_name AS m_release_name,
-                          data->'track_metadata'->>'release_name' AS l_release_name,
-                          release_mbid::TEXT,
-                          recording_name AS m_recording_name,
-                          track_name AS l_recording_name,
-                          mm.recording_mbid::TEXT
-                     FROM listen l
-          FULL OUTER JOIN mbid_mapping mm
-                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
-          FULL OUTER JOIN mbid_mapping_metadata m
-                       ON mm.recording_mbid = m.recording_mbid
-                    WHERE {criteria} > %(start)s
-                      AND {criteria} <= %(end)s
-                 ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
-
-        listen_count = 0
-        current_listened_at = None
-        conn = timescale.engine.raw_connection()
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
-            curs.execute(query, args)
-            while True:
-                t0 = time.monotonic()
-                written = 0
-                approx_size = 0
-                data = {
-                    'listened_at': [],
-                    'user_name': [],
-                    'artist_name': [],
-                    'artist_credit_id': [],
-                    'release_name': [],
-                    'release_mbid': [],
-                    'recording_name': [],
-                    'recording_mbid': [],
-                    'artist_credit_mbids': []
-                }
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-
-                    # Either take the original listen metadata or the mapping metadata
-                    if result["artist_credit_id"] is None:
-                        data["artist_name"].append(result["l_artist_name"])
-                        data["release_name"].append(result["l_release_name"])
-                        data["recording_name"].append(result["l_recording_name"])
-                        data["artist_credit_id"].append(None)
-                        approx_size += len(result["l_artist_name"]) + len(result["l_release_name"] or "0") + \
-                            len(result["l_recording_name"])
-                    else:
-                        data["artist_name"].append(result["m_artist_name"])
-                        data["release_name"].append(result["m_release_name"])
-                        data["recording_name"].append(result["m_recording_name"])
-                        data["artist_credit_id"].append(result["artist_credit_id"])
-                        approx_size += len(result["m_artist_name"]) + len(result["m_release_name"]) + \
-                            len(result["m_recording_name"]) + len(str(result["artist_credit_id"]))
-
-                    for col in data:
-                        if col == 'listened_at':
-                            current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
-                            data[col].append(current_listened_at)
-                            approx_size += len(str(result[col]))
-                        elif col in ['artist_name', 'release_name', 'recording_name', 'artist_credit_id']:
-                            pass
-                        else:
-                            data[col].append(result[col])
-                            approx_size += len(str(result[col]))
-
-                    written += 1
-                    listen_count += 1
-                    if approx_size > PARQUET_TARGET_SIZE:
-                        break
-
-                if written == 0:
-                    break
-
-                filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
-
-                # Create a pandas dataframe, then write that to a parquet files
-                df = pd.DataFrame(data, dtype=object)
-                table = pa.Table.from_pandas(df, preserve_index=False)
-                pq.write_table(table, filename)
-                file_size = os.path.getsize(filename)
-                tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
-                os.unlink(filename)
-                parquet_file_id += 1
-
-                self.log.info("%d listens dumped for %s at %.2f listens/s (%sMB)",
-                              listen_count, current_listened_at.strftime("%Y-%m-%d"),
-                              written / (time.monotonic() - t0),
-                              str(round(file_size / (1024 * 1024), 3)))
-
-        return parquet_file_id
-
-    def dump_listens_for_spark(self, location,
-                               dump_id: int,
-                               dump_type: str,
-                               start_time: datetime = datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS),
-                               end_time: datetime = None):
-        """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
-
-        Listens are dumped into files ideally no larger than 128MB, sorted from oldest to newest. Files
-        are named #####.parguet with monotonically increasing integers starting with 0.
-
-        This creates an incremental dump if start_time is specified (with range start_time to end_time),
-        otherwise it creates a full dump with all listens.
-
-        Args:
-            location: the directory where the listens dump archive should be created
-            dump_id: the ID of the dump in the dump sequence
-            dump_type: type of dump, full or incremental
-            start_time: the start of the time range for which listens should be dumped. defaults to
-                utc 0 (meaning a full dump)
-            end_time: the end of time range for which listens should be dumped. defaults to the current time
-
-        Returns:
-            the path to the dump archive
-        """
-
-        if end_time is None:
-            end_time = datetime.now()
-
-        self.log.info('Beginning spark dump of listens from TimescaleDB...')
-        full_dump = bool(start_time == datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS))
-        archive_name = 'listenbrainz-spark-dump-{dump_id}-{time}'.format(dump_id=dump_id,
-                                                                         time=end_time.strftime('%Y%m%d-%H%M%S'))
-        if full_dump:
-            archive_name = '{}-full'.format(archive_name)
-        else:
-            archive_name = '{}-incremental'.format(archive_name)
-        archive_path = os.path.join(
-            location, '{filename}.tar'.format(filename=archive_name))
-
-        parquet_index = 0
-        with tarfile.open(archive_path, "w") as tar:
-
-            temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
-            create_path(temp_dir)
-            self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
-
-            for year in range(start_time.year, end_time.year + 1):
-                if year == start_time.year:
-                    start = start_time
-                else:
-                    start = datetime(year=year, day=1, month=1)
-                if year == end_time.year:
-                    end = end_time
-                else:
-                    end = datetime(year=year + 1, day=1, month=1)
-
-                self.log.info("dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
-
-                # This try block is here in an effort to expose bugs that occur during testing
-                # Without it sometimes test pass and sometimes they give totally unrelated errors.
-                # Keeping this block should help with future testing...
-                try:
-                    parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, dump_type,
-                                                             start, end, parquet_index)
-                except Exception as err:
-                    self.log.info("likely test failure: " + str(err))
-                    raise
-
-            shutil.rmtree(temp_dir)
-
-        self.log.info('ListenBrainz spark listen dump done!')
-        self.log.info('Dump present at %s!', archive_path)
-        return archive_path
 
     def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):
         """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
@@ -987,49 +420,55 @@ class TimescaleListenStore(ListenStore):
 
         return total_imported
 
-    def delete(self, musicbrainz_id):
-        """ Delete all listens for user with specified MusicBrainz ID.
+    def delete(self, user_id):
+        """ Delete all listens for user with specified user ID.
 
         Note: this method tries to delete the user 5 times before giving up.
 
         Args:
-            musicbrainz_id (str): the MusicBrainz ID of the user
+            musicbrainz_id: the MusicBrainz ID of the user
+            user_id: the listenbrainz row id of the user
 
         Raises: Exception if unable to delete the user in 5 retries
         """
-
-        self.set_empty_cache_values_for_user(musicbrainz_id)
-        args = {'user_name': musicbrainz_id}
-        query = "DELETE FROM listen WHERE user_name = :user_name"
-
+        query = """
+            UPDATE listen_user_metadata 
+               SET count = 0
+                 , min_listened_at = NULL
+                 , max_listened_at = NULL
+             WHERE user_id = :user_id;
+            DELETE FROM listen WHERE user_id = :user_id;
+        """
         try:
             with timescale.engine.connect() as connection:
-                connection.execute(sqlalchemy.text(query), args)
+                connection.execute(sqlalchemy.text(query), user_id=user_id)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise
 
-    def delete_listen(self, listened_at: int, user_name: str, recording_msid: str):
+    def delete_listen(self, listened_at: int, user_id: int, recording_msid: str):
         """ Delete a particular listen for user with specified MusicBrainz ID.
+
+        .. note::
+
+            These details are stored in a separate table for some time because the listen is not deleted
+            immediately. Every hour a cron job runs and uses these details to delete the actual listens.
+            After the listens are deleted, these details are also removed from storage.
+
         Args:
             listened_at: The timestamp of the listen
-            user_name: the username of the user
+            user_id: the listenbrainz row id of the user
             recording_msid: the MessyBrainz ID of the recording
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
-
-        args = {'listened_at': listened_at, 'user_name': user_name,
-                'recording_msid': recording_msid}
-        query = """DELETE FROM listen
-                    WHERE listened_at = :listened_at
-                      AND user_name = :user_name
-                      AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid """
-
+        query = """
+            INSERT INTO listen_delete_metadata(user_id, listened_at, recording_msid) 
+                 VALUES (:user_id, :listened_at, :recording_msid)
+        """
         try:
-            with timescale.engine.connect() as connection:
-                connection.execute(sqlalchemy.text(query), args)
-
-            cache._r.decrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name))
+            with timescale.engine.begin() as connection:
+                connection.execute(sqlalchemy.text(query), listened_at=listened_at,
+                                   user_id=user_id, recording_msid=recording_msid)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException

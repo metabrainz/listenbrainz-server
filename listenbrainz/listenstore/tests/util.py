@@ -46,14 +46,15 @@ def to_epoch(date):
     return int((date - datetime.utcfromtimestamp(0)).total_seconds())
 
 
-def create_test_data_for_timescalelistenstore(user_name, test_data_file_name=None):
+def create_test_data_for_timescalelistenstore(user_name: str, user_id: int, test_data_file_name: str = None):
     """Create listens for timescalelistenstore tests.
 
     From a json file in testdata it creates Listen objects with a specified user_name for tests.
 
     Args:
-        user_name (str): MusicBrainz username of a user.
-        test_data_file_name (str): If specified use the given file to create Listen objects.
+        user_name: MusicBrainz username of a user.
+        user_id: listenbrainz row id of the user
+        test_data_file_name: If specified use the given file to create Listen objects.
                                    DEFAULT = 'timescale_listenstore_test_listens.json'
 
     Returns:
@@ -69,6 +70,7 @@ def create_test_data_for_timescalelistenstore(user_name, test_data_file_name=Non
     test_data = []
     for listen in listens['payload']:
         listen['user_name'] = user_name
+        listen['user_id'] = user_id
         test_data.append(Listen().from_json(listen))
 
     return test_data

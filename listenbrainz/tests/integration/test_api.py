@@ -53,7 +53,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # send a listen
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload)
+        response = self.send_data(payload, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -129,14 +129,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['listens'][0]['track_metadata']
                          ['release_name'], 'The Life of Pablo')
 
-        # check that recent listens are fetched correctly
-        url = url_for('api_v1.get_recent_listens_for_user_list',
-                      user_list=self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'limit': '1'})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        self.assertEqual(data['count'], 1)
-
         url = url_for('api_v1.get_listen_count',
                       user_name=self.user['musicbrainz_id'])
         response = self.client.get(url)
@@ -159,7 +151,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         user = db_user.get_or_create(1, 'test_order')
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts + (100 * i)
-            response = self.send_data(payload, user)
+            response = self.send_data(payload, user, recalculate=True)
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
@@ -507,7 +499,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         payload['payload'][0]['listened_at'] = 1280258690
-        response = self.send_data(payload)
+        response = self.send_data(payload, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -557,7 +549,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test mbid fields with [], "", null values are dropped without error """
         with open(self.path_to_data_file('invalid_mbid_listens.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -583,7 +575,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         conn = db.engine.raw_connection()
         with conn.cursor() as curs:
-            data = {self.user2['musicbrainz_id']: (.123, 0.01)}
+            data = {self.user2['id']: (.123, 0.01)}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
                          (self.user['id'], json.dumps(data)))
         conn.commit()

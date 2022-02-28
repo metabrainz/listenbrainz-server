@@ -33,6 +33,8 @@ import psycopg2
 from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.db.year_in_music import insert_playlists
+from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 from listenbrainz.db.dump import check_ftp_dump_ages
@@ -61,15 +63,19 @@ def send_dump_creation_notification(dump_name, dump_type):
 
 
 @cli.command(name="create_full")
-@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
-@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
-@click.option('--dump-id', type=int, default=None)
+@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
+              help="path to the directory where the dump should be made")
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
+              help="the number of threads to be used while compression")
+@click.option('--dump-id', type=int, default=None,
+              help="the ID of the ListenBrainz data dump")
 @click.option('--listen/--no-listen', 'do_listen_dump', default=True)
 @click.option('--spark/--no-spark', 'do_spark_dump', type=bool, default=True)
-@click.option('--db/--no-db', 'do_db_dump', type=bool, default=True)
+@click.option('--db/--no-db', 'do_db_dump', type=bool, default=True,
+              help="flag indicating whether to create a full dump from the last entry in the dump table")
 def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump: bool, do_db_dump: bool):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
-        and a dump of the actual listens from the listenstore
+        and a dump of the actual listens from the listenstore.
 
         Args:
             location (str): path to the directory where the dump should be made
@@ -81,7 +87,7 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
     """
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.timescale_connection import _ts as ls
+        ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -144,7 +150,7 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
 def create_incremental(location, threads, dump_id):
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.timescale_connection import _ts as ls
+        ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -201,15 +207,12 @@ def create_incremental(location, threads, dump_id):
 
 
 @cli.command(name="create_feedback")
-@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
-@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
+@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
+              help="path to the directory where the dump should be made")
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
+              help="the number of threads to be used while compression")
 def create_feedback(location, threads):
-    """ Create a spark formatted dump of user/recommendation feedback data.
-
-        Args:
-            location (str): path to the directory where the dump should be made
-            threads (int): the number of threads to be used while compression
-    """
+    """ Create a spark formatted dump of user/recommendation feedback data."""
     app = create_app()
     with app.app_context():
 
@@ -247,29 +250,35 @@ def create_feedback(location, threads):
 
 
 @cli.command(name="import_dump")
-@click.option('--private-archive', '-pr', default=None, required=False)
-@click.option('--private-timescale-archive', default=None, required=False)
-@click.option('--public-archive', '-pu', default=None, required=False)
-@click.option('--public-timescale-archive', default=None, required=False)
-@click.option('--listen-archive', '-l', default=None, required=True)
-@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
+@click.option('--private-archive', '-pr', default=None, required=False,
+              help="the path to the ListenBrainz private dump to be imported")
+@click.option('--private-timescale-archive', default=None, required=False,
+              help="the path to the ListenBrainz private timescale dump to be imported")
+@click.option('--public-archive', '-pu', default=None, required=False,
+              help="the path to the ListenBrainz public dump to be imported")
+@click.option('--public-timescale-archive', default=None, required=False,
+              help="the path to the ListenBrainz public timescale dump to be imported")
+@click.option('--listen-archive', '-l', default=None, required=True,
+              help="the path to the ListenBrainz listen dump archive to be imported")
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
+              help="the number of threads to use during decompression, defaults to 1")
 def import_dump(private_archive, private_timescale_archive,
                 public_archive, public_timescale_archive, listen_archive, threads):
     """ Import a ListenBrainz dump into the database.
 
-        Note: This method tries to import the private db dump first, followed by the public db
-            dump. However, in absence of a private dump, it imports sanitized versions of the
-            user table in the public dump in order to satisfy foreign key constraints.
+    Args:
+        private_archive (str): the path to the ListenBrainz private dump to be imported
+        private_timescale_archive (str): the path to the ListenBrainz private timescale dump to be imported
+        public_archive (str): the path to the ListenBrainz public dump to be imported
+        public_timescale_archive (str): the path to the ListenBrainz public timescale dump to be imported
+        listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
+        threads (int): the number of threads to use during decompression, defaults to 1
 
-        Then it imports the listen dump.
-
-        Args:
-            private_archive (str): the path to the ListenBrainz private dump to be imported
-            private_timescale_archive (str): the path to the ListenBrainz private timescale dump to be imported
-            public_archive (str): the path to the ListenBrainz public dump to be imported
-            public_timescale_archive (str): the path to the ListenBrainz public timescale dump to be imported
-            listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
-            threads (int): the number of threads to use during decompression, defaults to 1
+    .. note::
+        This method tries to import the private db dump first, followed by the public db
+        dump. However, in absence of a private dump, it imports sanitized versions of the user
+        table in the public dump in order to satisfy foreign key constraints. Then it imports
+        the listen dump.
     """
     app = create_app()
     with app.app_context():
@@ -309,16 +318,35 @@ def check_dump_ages():
     check_ftp_dump_ages()
     sys.exit(0)
 
+
 @cli.command(name="create_parquet")
 def create_test_parquet_files():
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.timescale_connection import _ts as ls
-
+        ls = DumpListenStore(app)
         start = datetime.now() - timedelta(days=30)
         ls.dump_listens_for_spark("/tmp", 1000, "full", start)
-
         sys.exit(-2)
+
+
+@cli.command(name="import_yim_playlists")
+@click.argument('patch-slug', type=str)
+@click.argument('dump-file', type=str)
+def import_yim_playlists(patch_slug, dump_file):
+    """ Import playlist excerpts into the YIM data table from a dump file.
+
+    .. note::
+        First copy the dump to inside the container from which the script is to be run.
+
+    Args:
+        patch_slug (str): The slug of the troi patch that generated these playlists.
+        dump_file (str): The dump file to import. For each user, it should contain
+        three lines: user_name, playlist_mbid, JSPF data.
+    """
+    app = create_app()
+    with app.app_context():
+        insert_playlists(patch_slug, dump_file)
+
 
 def get_dump_id(dump_name):
     return int(dump_name.split('-')[2])

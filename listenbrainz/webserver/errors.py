@@ -1,4 +1,5 @@
-from flask import render_template, make_response, jsonify, request, has_request_context, _request_ctx_stack, current_app
+from flask import render_template, make_response, jsonify, request, has_request_context, _request_ctx_stack, \
+    current_app, Response
 from yattag import Doc
 import yattag
 import ujson
@@ -69,8 +70,11 @@ class CompatError(object):
     INVALID_SERVICE          = LastFMError(code = 2, message = "Invalid service -This service does not exist")
     INVALID_METHOD           = LastFMError(code = 3, message = "Invalid Method - No method with that name in this package")
     INVALID_TOKEN            = LastFMError(code = 4, message = "Invalid Token - Invalid authentication token supplied")
-    NO_EMAIL                 = LastFMError(code = 4, message = REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
+    NO_EMAIL                 = LastFMError(code = 4, message = REJECT_LISTENS_WITHOUT_EMAIL_ERROR)  # custom LB error
     INVALID_FORMAT           = LastFMError(code = 5, message = "Invalid format - This service doesn't exist in that format")
+    INVALID_SCROBBLE_METHOD  = LastFMError(code = 5, message = "Invalid Request Method - track.updatenowplaying and "
+                                                               "track.scrobble are write requests and can only be "
+                                                               "accessed using POST. ")  # custom LB error
     INVALID_PARAMETERS       = LastFMError(code = 6, message = "Invalid parameters - " \
                                                                "Your request is missing a required parameter")
     INVALID_RESOURCE         = LastFMError(code = 7, message = "Invalid resource specified")
@@ -138,7 +142,9 @@ def init_error_handlers(app):
                 otherwise
         """
         if current_app.config.get('IS_API_COMPAT_APP') or request.path.startswith(API_PREFIX):
-            return jsonify({'code': code, 'error': error.description}), code
+            response = jsonify({'code': code, 'error': error.description})
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            return response, code
         return error_wrapper('errors/{code}.html'.format(code=code), error, code)
 
     @app.errorhandler(400)
@@ -206,7 +212,7 @@ def init_error_handlers(app):
 class InvalidAPIUsage(Exception):
     """ General error class for the API_compat to render errors in multiple formats """
 
-    def __init__(self, api_error, status_code=500, output_format="xml"):
+    def __init__(self, api_error: LastFMError, status_code=500, output_format="xml"):
         Exception.__init__(self)
         self.api_error = api_error
         self.status_code = status_code
@@ -214,10 +220,13 @@ class InvalidAPIUsage(Exception):
 
     def render_error(self):
         if self.output_format == "json":
-            return self.to_json()
+            data = self.to_json()
+            content_type = "application/json; charset=utf-8"
         else:
             # default to xml if the output format isn't known or is missing
-            return self.to_xml()
+            data = self.to_xml()
+            content_type = "application/xml; charset=utf-8"
+        return Response(data, mimetype=content_type)
 
     def to_json(self):
         return ujson.dumps({

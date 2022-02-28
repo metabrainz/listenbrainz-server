@@ -1,6 +1,3 @@
-import psycopg2
-import sqlalchemy
-
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
@@ -12,19 +9,19 @@ from flask_login import current_user, login_required
 from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
 from listenbrainz.db import listens_importer
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
-from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
+from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
-from listenbrainz.webserver import timescale_connection, flash
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
-from pydantic import ValidationError
 
 LISTENS_PER_PAGE = 25
 DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 50
@@ -64,6 +61,8 @@ redirect_bp.add_url_rule("/recommendations/",
                          redirect_user_page("user.recommendation_playlists"))
 redirect_bp.add_url_rule("/pins/", "redirect_pins",
                          redirect_user_page("user.pins"))
+redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
+                         redirect_user_page("user.year_in_music"))
 
 @user_bp.route("/<user_name>/")
 @web_listenstore_needed
@@ -100,7 +99,7 @@ def profile(user_name):
     else:
         args['from_ts'] = min_ts
     data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
-        user_name, limit=LISTENS_PER_PAGE, **args)
+        user.to_dict(), limit=LISTENS_PER_PAGE, **args)
 
     listens = []
     for listen in data:
@@ -112,17 +111,14 @@ def profile(user_name):
         if playing_now:
             listens.insert(0, playing_now.to_api())
 
-    logged_in_user_follows_user = None
     already_reported_user = False
     if current_user.is_authenticated:
-        logged_in_user_follows_user = db_user_relationship.is_following_user(
-            current_user.id, user.id)
         already_reported_user = db_user.is_user_reported(
             current_user.id, user.id)
 
     pin = get_current_pin_for_user(user_id=user.id)
     if pin:
-        pin = dict(fetch_track_metadata_for_pins([pin])[0])
+        pin = dict(fetch_track_metadata_for_items([pin])[0])
 
     props = {
         "user": {
@@ -136,7 +132,7 @@ def profile(user_name):
         "mode": "listens",
         "userPinnedRecording": pin,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
-        "logged_in_user_follows_user": logged_in_user_follows_user,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
     }
 
@@ -176,6 +172,7 @@ def charts(user_name):
 
     props = {
         "user": user_data,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -198,6 +195,7 @@ def reports(user_name: str):
 
     props = {
         "user": user_data,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -251,6 +249,7 @@ def playlists(user_name: str):
         "playlist_count": playlist_count,
         "pagination_offset": offset,
         "playlists_per_page": count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -296,6 +295,7 @@ def recommendation_playlists(user_name: str):
         "user": user_data,
         "active_section": "recommendations",
         "playlist_count": playlist_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -347,6 +347,7 @@ def collaborations(user_name: str):
         "user": user_data,
         "active_section": "collaborations",
         "playlist_count": playlist_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -368,14 +369,15 @@ def pins(user_name: str):
     }
 
     pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
-    pins = [dict(pin) for pin in fetch_track_metadata_for_pins(pins)]
+    pins = [dict(pin) for pin in fetch_track_metadata_for_items(pins)]
     total_count = get_pin_count_for_user(user_id=user.id)
 
     props = {
         "user": user_data,
         "pins": pins,
         "profile_url": url_for('user.profile', user_name=user_name),
-        "total_count": total_count
+        "total_count": total_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -384,6 +386,7 @@ def pins(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
+
 
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
 @api_login_required
@@ -414,35 +417,41 @@ def _get_user(user_name):
         return User.from_dbrow(user)
 
 
-def delete_user(musicbrainz_id):
-    """ Delete a user from ListenBrainz completely.
-    First, drops the user's listens and then deletes the user from the
-    database.
+def delete_user(user_id: int):
+    """ Delete a user from ListenBrainz completely. First, drops
+     the user's listens and then deletes the user from the database.
+
     Args:
-        musicbrainz_id (str): the MusicBrainz ID of the user
-    Raises:
-        NotFound if user isn't present in the database
+        user_id: the LB row ID of the user
     """
-
-    user = _get_user(musicbrainz_id)
-    timescale_connection._ts.delete(user.musicbrainz_id)
-    db_user.delete(user.id)
+    timescale_connection._ts.delete(user_id)
+    db_user.delete(user_id)
 
 
-def delete_listens_history(musicbrainz_id):
+def delete_listens_history(user_id: int):
     """ Delete a user's listens from ListenBrainz completely.
+
     Args:
-        musicbrainz_id (str): the MusicBrainz ID of the user
+        user_id: the LB row ID of the user
+    """
+    timescale_connection._ts.delete(user_id)
+    listens_importer.update_latest_listened_at(user_id, ExternalServiceType.LASTFM, 0)
+    db_stats.delete_user_stats(user_id)
+
+
+def logged_in_user_follows_user(user):
+    """ Check if user is being followed by the current user.
+    Args:
+        user : User object
     Raises:
         NotFound if user isn't present in the database
     """
 
-    user = _get_user(musicbrainz_id)
-    timescale_connection._ts.delete(user.musicbrainz_id)
-    timescale_connection._ts.reset_listen_count(user.musicbrainz_id)
-    listens_importer.update_latest_listened_at(
-        user.id, ExternalServiceType.LASTFM, 0)
-    db_stats.delete_user_stats(user.id)
+    if current_user.is_authenticated:
+        return db_user_relationship.is_following_user(
+            current_user.id, user.id
+        )
+    return None
 
 
 @user_bp.route("/<user_name>/feedback/")
@@ -492,6 +501,7 @@ def feedback(user_name: str):
         "feedback_count": feedback_count,
         "user": user_data,
         "active_section": "feedback",
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -499,4 +509,21 @@ def feedback(user_name: str):
         active_section="feedback",
         props=ujson.dumps(props),
         user=user
+    )
+
+
+@user_bp.route("/<user_name>/year-in-music/")
+def year_in_music(user_name):
+    """ Year in Music """
+    user = _get_user(user_name)
+    return render_template(
+        "user/year-in-music.html",
+        user_name=user_name,
+        props=ujson.dumps({
+            "data": get_year_in_music(user.id),
+            "user": {
+                "id": user.id,
+                "name": user.musicbrainz_id,
+            }
+        })
     )

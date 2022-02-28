@@ -17,25 +17,23 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-
-
-import time
+import json
 import logging
+import time
+
 import xmltodict
+from flask import url_for
 
 import listenbrainz.db.user as db_user
-from flask import url_for, current_app
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
-from listenbrainz import config
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
+from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver import timescale_connection
-from listenbrainz.webserver.timescale_connection import init_timescale_connection
-from listenbrainz.tests.integration import APICompatIntegrationTestCase
 
 
-
-class APICompatTestCase(APICompatIntegrationTestCase):
+class APICompatTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APICompatTestCase, self).setUp()
@@ -47,12 +45,90 @@ class APICompatTestCase(APICompatIntegrationTestCase):
             self.lb_user['auth_token'],
         )
         self.log = logging.getLogger(__name__)
-        self.ls = init_timescale_connection(self.log, {
-            'REDIS_HOST': config.REDIS_HOST,
-            'REDIS_PORT': config.REDIS_PORT,
-            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
-        })
+        self.ls = timescale_connection._ts
+
+    def test_complete_workflow_json(self):
+        """ Integration test for complete workflow to submit a listen using Last.fm compat api """
+        data = {
+            'method': 'auth.gettoken',
+            'api_key': self.lfm_user.api_key,
+            'format': 'json',
+        }
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+        token = r.json['token']
+
+        # login as user
+        with self.client.session_transaction() as session:
+            session['_user_id'] = self.lb_user['login_id']
+            session['_fresh'] = True
+
+        r = self.client.post(
+            url_for('api_compat.api_auth_approve'),
+            data=f"token={token}",
+            headers={'Content-Type': 'application/x-www-form-urlencoded'}
+        )
+        self.assert200(r)
+
+        data = {
+            'method': 'auth.getsession',
+            'api_key': self.lfm_user.api_key,
+            'token': token,
+            'format': 'json'
+        }
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+        sk = r.json['session']['key']
+
+        data = {
+            'method': 'track.scrobble',
+            'api_key': self.lfm_user.api_key,
+            'sk': sk,
+            'format': 'json',
+            'artist[0]': 'Kishore Kumar',
+            'track[0]': 'Saamne Ye Kaun Aya',
+            'album[0]': 'Jawani Diwani',
+            'duration[0]': 300,
+            'timestamp[0]': int(time.time()),
+        }
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+
+        expected = {
+            "scrobbles": {
+                "scrobble": {
+                    "track": {
+                        "#text": data["track[0]"],
+                        "corrected": "0"
+                    },
+                    "artist": {
+                        "#text": data["artist[0]"],
+                        "corrected": "0"
+                    },
+                    "album": {
+                        "#text": data["album[0]"],
+                        "corrected": "0"
+                    },
+                    "albumArtist": {
+                        "#text": data["artist[0]"],
+                        "corrected": "0"
+                    },
+                    "timestamp": str(data["timestamp[0]"]),
+                    "ignoredMessage": {
+                        "code": "0"
+                    }
+                },
+                "accepted": "1",
+                "ignored": "0"
+            }
+        }
+        self.assertEqual(expected, r.json)
+
+        # Check if listen reached the timescale listenstore
+        time.sleep(1)
+        recalculate_all_user_data()
+        listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=data["timestamp[0]"]-1)
+        self.assertEqual(len(listens), 1)
 
     def test_record_listen_now_playing(self):
         """ Tests if listen of type 'nowplaying' is recorded correctly
@@ -111,6 +187,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         }
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
+        self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
@@ -131,6 +208,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         }
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
+        self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'failed')
@@ -154,6 +232,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
+        self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
         expected_message = b"""<?xml version="1.0" encoding="utf-8"?>
 <lfm status="failed">
@@ -182,14 +261,16 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
+        self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '1')
 
         # Check if listen reached the timescale listenstore
-        time.sleep(2)
-        listens, _, _ = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        time.sleep(1)
+        recalculate_all_user_data()
+        listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
 
     def test_record_invalid_listen(self):
@@ -248,7 +329,8 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
         # Check if listens reached the timescale listenstore
         time.sleep(1)
-        listens, _, _ = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        recalculate_all_user_data()
+        listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
         self.assertEqual(len(listens), 2)
 
     def test_create_response_for_single_listen(self):

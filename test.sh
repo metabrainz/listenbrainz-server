@@ -43,24 +43,50 @@ if [[ ! -d "docker" ]]; then
     exit 255
 fi
 
-function build_unit_containers {
+function invoke_docker_compose {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                build lb_db redis rabbitmq listenbrainz
+                   "$@"
+}
+
+function invoke_docker_compose_spark {
+    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
+                   -p $SPARK_COMPOSE_PROJECT_NAME \
+                   "$@"
+}
+
+function invoke_docker_compose_int {
+    docker-compose -f $INT_COMPOSE_FILE_LOC \
+                   -p $INT_COMPOSE_PROJECT_NAME \
+                   "$@"
+}
+
+function docker_compose_run {
+    invoke_docker_compose run --rm --user `id -u`:`id -g` "$@"
+}
+
+function docker_compose_run_spark {
+    # We run spark tests as root and not the local user due to the requirement for
+    # the uid to exist as a real user
+    invoke_docker_compose_spark run --rm "$@"
+}
+
+function docker_compose_run_int {
+    invoke_docker_compose_int run --rm --user `id -u`:`id -g` "$@"
+}
+
+function build_unit_containers {
+    invoke_docker_compose build lb_db redis rabbitmq listenbrainz
 }
 
 function bring_up_unit_db {
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                up -d lb_db redis rabbitmq
+    invoke_docker_compose up -d lb_db redis rabbitmq
 }
 
 function unit_setup {
     echo "Running setup"
     # PostgreSQL Database initialization
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz dockerize \
+    docker_compose_run listenbrainz dockerize \
                   -wait tcp://lb_db:5432 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
@@ -91,28 +117,20 @@ function is_unit_db_exists {
 
 function unit_stop {
     # Stopping all unit test containers associated with this project
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                stop
+    invoke_docker_compose stop
 }
 
 function unit_dcdown {
     # Shutting down all unit test containers associated with this project
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                down
+    invoke_docker_compose down
 }
 
 function build_frontend_containers {
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                build frontend_tester
+    invoke_docker_compose build frontend_tester
 }
 
 function update_snapshots {
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm run test:update-snapshots
+    docker_compose_run frontend_tester npm run test:update-snapshots
 }
 
 function run_lint_check {
@@ -122,9 +140,7 @@ function run_lint_check {
         command="format"
     fi
 
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm run $command
+    docker_compose_run frontend_tester npm run $command
 }
 
 function run_frontend_tests {
@@ -133,55 +149,39 @@ function run_frontend_tests {
     else
         command="test"
     fi
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm run $command
+    docker_compose_run frontend_tester npm run $command
 }
 
 function run_type_check {
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm run type-check
+    docker_compose_run frontend_tester npm run type-check
 }
 
 function spark_setup {
     echo "Running spark test setup"
-    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
-                   -p $SPARK_COMPOSE_PROJECT_NAME \
-                  up -d namenode datanode
+    invoke_docker_compose_spark up -d namenode datanode
 }
 
 function build_spark_containers {
-    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
-                   -p $SPARK_COMPOSE_PROJECT_NAME \
-                build namenode
+    invoke_docker_compose_spark build namenode
 }
 
 function spark_dcdown {
     # Shutting down all spark test containers associated with this project
-    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
-                   -p $SPARK_COMPOSE_PROJECT_NAME \
-                down
+    invoke_docker_compose_spark down
 }
 
 function int_build {
-    docker-compose -f $INT_COMPOSE_FILE_LOC \
-                   -p $INT_COMPOSE_PROJECT_NAME \
-                build
+    invoke_docker_compose_int build
 }
 
 function int_dcdown {
     # Shutting down all integration test containers associated with this project
-    docker-compose -f $INT_COMPOSE_FILE_LOC \
-                   -p $INT_COMPOSE_PROJECT_NAME \
-                down
+    invoke_docker_compose_int down
 }
 
 function int_setup {
     echo "Running setup"
-    docker-compose -f $INT_COMPOSE_FILE_LOC \
-                   -p $INT_COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz dockerize \
+    docker_compose_run_int listenbrainz dockerize \
                   -wait tcp://lb_db:5432 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
@@ -189,9 +189,7 @@ function int_setup {
 }
 
 function bring_up_int_containers {
-    docker-compose -f $INT_COMPOSE_FILE_LOC \
-                   -p $INT_COMPOSE_PROJECT_NAME \
-                up -d lb_db redis timescale_writer rabbitmq
+    invoke_docker_compose_int up -d lb_db redis timescale_writer rabbitmq
 }
 
 # Exit immediately if a command exits with a non-zero status.
@@ -207,9 +205,7 @@ if [ "$1" == "spark" ]; then
 
     spark_setup
     echo "Running tests"
-    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
-                   -p $SPARK_COMPOSE_PROJECT_NAME \
-                run --rm request_consumer
+    docker_compose_run_spark request_consumer
     RET=$?
     spark_dcdown
     exit $RET
@@ -232,9 +228,7 @@ if [ "$1" == "int" ]; then
     fi
     echo "Running tests $TESTS_TO_RUN"
 
-    docker-compose -f $INT_COMPOSE_FILE_LOC \
-                   -p $INT_COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz dockerize \
+    docker_compose_run_int listenbrainz dockerize \
                   -wait tcp://lb_db:5432 -timeout 60s \
                   -wait tcp://redis:6379 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
@@ -315,17 +309,13 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     bring_up_unit_db
     unit_setup
     echo "Running tests"
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz pytest "$@"
+    docker_compose_run listenbrainz pytest "$@"
     RET=$?
     unit_dcdown
     exit $RET
 else
     # Else, we have containers, just run tests
     echo "Running tests"
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz pytest "$@"
+    docker_compose_run listenbrainz pytest "$@"
     exit $?
 fi

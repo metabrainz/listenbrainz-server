@@ -3,10 +3,11 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../APIService";
+import APIService from "../utils/APIService";
 import Card from "../components/Card";
 import HeatMap from "./HeatMap";
 import Loader from "../components/Loader";
+import { isInvalidStatRange } from "./utils";
 
 export type UserDailyActivityProps = {
   range: UserStatsAPIRange;
@@ -57,7 +58,7 @@ export default class UserDailyActivity extends React.Component<
     const { range: prevRange } = prevProps;
     const { range: currRange } = this.props;
     if (prevRange !== currRange) {
-      if (["week", "month", "year", "all_time"].indexOf(currRange) < 0) {
+      if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,
           hasError: true,

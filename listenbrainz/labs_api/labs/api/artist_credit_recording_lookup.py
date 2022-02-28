@@ -11,6 +11,10 @@ from listenbrainz import config
 
 class ArtistCreditRecordingLookupQuery(Query):
 
+    def __init__(self, debug=False):
+        self.debug = debug
+        self.log_lines = []
+
     def names(self):
         return ("acr-lookup", "MusicBrainz Artist Credit Recording lookup")
 
@@ -25,6 +29,11 @@ class ArtistCreditRecordingLookupQuery(Query):
         return ['index', 'artist_credit_arg', 'recording_arg',
                 'artist_credit_name', 'release_name', 'recording_name',
                 'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid']
+
+    def get_debug_log_lines(self):
+        lines = self.log_lines
+        self.log_lines = []
+        return lines
 
     def fetch(self, params, offset=-1, count=-1):
         lookup_strings = []
@@ -62,5 +71,12 @@ class ArtistCreditRecordingLookupQuery(Query):
                     data["artist_credit_arg"] = params[index]["[artist_credit_name]"]
                     data["index"] = index
                     results.append(data)
+
+                    if self.debug:
+                        self.log_lines.append(
+                            "exact match: '%s' '%s' %s" %
+                            (data['artist_credit_name'],
+                             data['recording_name'],
+                             data['recording_mbid']))
 
                 return results

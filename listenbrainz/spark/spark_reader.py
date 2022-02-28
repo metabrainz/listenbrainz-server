@@ -23,8 +23,16 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          notify_mapping_import,
                                          handle_missing_musicbrainz_data,
                                          notify_cf_recording_recommendations_generation,
-                                         handle_similar_users, handle_sitewide_listening_activity)
-
+                                         handle_sitewide_listening_activity,
+                                         handle_similar_users,
+                                         handle_new_releases_of_top_artists,
+                                         handle_most_prominent_color,
+                                         handle_similar_users_year_end,
+                                         handle_day_of_week,
+                                         handle_most_listened_year,
+                                         handle_top_stats,
+                                         handle_listens_per_day,
+                                         handle_yearly_listen_counts)
 from listenbrainz.webserver import create_app
 
 response_handler_map = {
@@ -33,6 +41,10 @@ response_handler_map = {
     'user_daily_activity': handle_user_daily_activity,
     'sitewide_entity': handle_sitewide_entity,
     'sitewide_listening_activity': handle_sitewide_listening_activity,
+    'new_releases_of_top_artists': handle_new_releases_of_top_artists,
+    'most_prominent_color': handle_most_prominent_color,
+    'day_of_week': handle_day_of_week,
+    'most_listened_year': handle_most_listened_year,
     'import_full_dump': handle_dump_imported,
     'import_incremental_dump': handle_dump_imported,
     'cf_recommendations_recording_dataframes': handle_dataframes,
@@ -44,6 +56,10 @@ response_handler_map = {
     'missing_musicbrainz_data': handle_missing_musicbrainz_data,
     'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation,
     'similar_users': handle_similar_users,
+    'similar_users_year_end': handle_similar_users_year_end,
+    'year_in_music_top_stats': handle_top_stats,
+    'year_in_music_listens_per_day': handle_listens_per_day,
+    'year_in_music_listen_count': handle_yearly_listen_counts
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds
@@ -79,7 +95,7 @@ class SparkReader:
             current_app.logger.error("Bad response sent to spark_reader: %s", json.dumps(response, indent=4),
                                      exc_info=True)
             return
-
+        current_app.logger.info("Received message for %s", response_type)
         try:
             response_handler = self.get_response_handler(response_type)
         except Exception:

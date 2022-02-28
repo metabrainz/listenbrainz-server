@@ -1,19 +1,17 @@
-import ujson
 from unittest import mock
 from unittest.mock import MagicMock
 
+import ujson
 from flask import url_for
-from flask_login import login_required, AnonymousUserMixin
+from flask_login import login_required
 from requests.exceptions import HTTPError
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
-from pika.exceptions import ConnectionClosed, ChannelClosed
 
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.login
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.webserver import create_app
+from listenbrainz.webserver import create_web_app
 from listenbrainz.webserver.testing import ServerTestCase
-
 
 
 class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -34,20 +32,8 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get(url_for('index.data'))
         self.assert200(resp)
 
-    def test_contribute(self):
-        resp = self.client.get(url_for('index.contribute'))
-        self.assert200(resp)
-
-    def test_goals(self):
-        resp = self.client.get(url_for('index.goals'))
-        self.assert200(resp)
-
-    def test_faq(self):
-        resp = self.client.get(url_for('index.faq'))
-        self.assert200(resp)
-
-    def test_roadmap(self):
-        resp = self.client.get(url_for('index.roadmap'))
+    def test_about(self):
+        resp = self.client.get(url_for('index.about'))
         self.assert200(resp)
 
     def test_add_data_info(self):
@@ -73,9 +59,8 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         Creating an app with default config so that debug is True
         and SECRET_KEY is defined.
         """
-        app = create_app(debug=True)
-        client = app.test_client()
-        resp = client.get('/data/')
+        app = create_web_app()
+        resp = app.test_client().get('/data/')
         self.assert200(resp)
         self.assertIn('flDebug', str(resp.data))
 
@@ -205,11 +190,11 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
     def test_mb_user_deleter_valid_account(self, mock_delete_user, mock_authorize_mb_user_deleter):
-        user1 = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_authorize_mb_user_deleter.assert_called_once_with('132')
-        mock_delete_user.assert_called_once_with('iliekcomputers')
+        mock_delete_user.assert_called_once_with(user_id)
 
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
@@ -228,14 +213,14 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007538,
         }
-        user1 = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_requests_get.assert_called_with(
             'https://musicbrainz.org/oauth2/userinfo',
             headers={'Authorization': 'Bearer 132'},
         )
-        mock_delete_user.assert_called_with('iliekcomputers')
+        mock_delete_user.assert_called_with(user_id)
 
     @mock.patch('listenbrainz.webserver.views.index.requests.get')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
@@ -245,7 +230,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007531, # incorrect musicbrainz row id for UserDeleter
         }
-        user1 = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
@@ -306,4 +291,12 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def test_similar_users(self):
         resp = self.client.get(url_for('index.similar_users'))
+        self.assert200(resp)
+
+    def test_instant_playlist(self):
+        resp = self.client.get(url_for('player.load_instant', recording_mbids="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
+        self.assert200(resp)
+
+    def test_release_playlist(self):
+        resp = self.client.get(url_for('player.load_release', release_mbid="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
         self.assert200(resp)

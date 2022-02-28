@@ -2,7 +2,7 @@ import * as React from "react";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { get } from "lodash";
 import ListenControl from "./ListenControl";
-import GlobalAppContext from "../GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 export type ListenFeedbackComponentProps = {
   newAlert: (
@@ -71,14 +71,14 @@ export default class ListenFeedbackComponent extends React.Component<
           icon={faHeart}
           title="Love"
           action={() => this.submitFeedback(currentFeedback === 1 ? 0 : 1)}
-          className={`${currentFeedback === 1 ? " loved" : ""}`}
+          iconClassName={`${currentFeedback === 1 ? " loved" : ""}`}
         />
         <ListenControl
           iconOnly
           icon={faHeartBroken}
           title="Hate"
           action={() => this.submitFeedback(currentFeedback === -1 ? 0 : -1)}
-          className={`${currentFeedback === -1 ? " hated" : ""}`}
+          iconClassName={`${currentFeedback === -1 ? " hated" : ""}`}
         />
       </>
     );

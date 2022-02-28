@@ -450,20 +450,17 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, similar_users
-              FROM recommendation.similar_user
+            SELECT musicbrainz_id AS user_name
+                 , value->0 AS similarity -- first element of array is local similarity, second is global_similarity
+              FROM recommendation.similar_user r 
+              JOIN jsonb_each(r.similar_users) j
+                ON TRUE
+              JOIN "user" u
+                ON j.key::int = u.id 
              WHERE user_id = :user_id
-        """), {
-            'user_id': user_id,
-        })
-        row = result.fetchone()
-        if row:
-            users = {}
-            for user in row['similar_users']:
-                # first element of array is similarity, second is global_similarity
-                users[user] = row['similar_users'][user][0]
-            return SimilarUsers(user_id=row['user_id'], similar_users=users)
-        return None
+        """), user_id=user_id)
+        users = {row["user_name"]: row["similarity"] for row in result.fetchall()}
+        return SimilarUsers(user_id=user_id, similar_users=users)
 
 
 def get_users_by_id(user_ids: List[int]):
@@ -515,12 +512,13 @@ def report_user(reporter_id: int, reported_id: int, reason: str = None):
         })
 
 
-def update_user_email(musicbrainz_id, email):
-    """ Update the email field for user with specified MusicBrainz ID
+def update_user_details(lb_id: int, musicbrainz_id: str, email: str):
+    """ Update the email field and MusicBrainz ID of the user specified by the lb_id
 
     Args:
-        musicbrainz_id (str): MusicBrainz username of a user
-        email (str): email of a user
+        lb_id: listenbrainz row id of the user
+        musicbrainz_id: MusicBrainz username of a user
+        email: email of a user
     """
 
     with db.engine.connect() as connection:
@@ -528,8 +526,10 @@ def update_user_email(musicbrainz_id, email):
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
                    SET email = :email
-                 WHERE musicbrainz_id = :musicbrainz_id
+                     , musicbrainz_id = :musicbrainz_id
+                 WHERE id = :lb_id
                 """), {
+                "lb_id": lb_id,
                 "musicbrainz_id": musicbrainz_id,
                 "email": email
             })

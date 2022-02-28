@@ -7,20 +7,25 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual, isNil } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import APIServiceClass from "../APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import BrainzPlayer from "../BrainzPlayer";
+import APIServiceClass from "../utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
 import Bar from "./Bar";
 import Loader from "../components/Loader";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../utils/ErrorBoundary";
 import Pill from "../components/Pill";
-import { getPageProps } from "../utils";
-import { getChartEntityDetails, userChartEntityToListen } from "./utils";
+import { getPageProps } from "../utils/utils";
+import {
+  getAllStatRanges,
+  getChartEntityDetails,
+  isInvalidStatRange,
+  userChartEntityToListen,
+} from "./utils";
 import ListenCard from "../listens/ListenCard";
 
 export type UserEntityChartProps = {
@@ -279,7 +284,7 @@ export default class UserEntityChart extends React.Component<
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
         // Check if given range is valid
-        if (["week", "month", "year", "all_time"].indexOf(range) < 0) {
+        if (isInvalidStatRange(range)) {
           this.setState({
             hasError: true,
             loading: false,
@@ -429,6 +434,9 @@ export default class UserEntityChart extends React.Component<
     const { newAlert } = this.props;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
+
+    const ranges = getAllStatRanges();
+
     // We receive the items in inverse order so we need to reorder them
     const listenableItems: BaseListenFormat[] =
       data?.map(userChartEntityToListen).reverse() ?? [];
@@ -477,62 +485,31 @@ export default class UserEntityChart extends React.Component<
                           data-toggle="dropdown"
                           type="button"
                         >
-                          {`${range.replace(/_/g, " ")}`}
+                          {ranges.get(range)}
                           <span className="caret" />
                         </button>
                         <ul className="dropdown-menu" role="menu">
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "week", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("week");
-                                });
-                              }}
-                            >
-                              Week
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "month", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("month");
-                                });
-                              }}
-                            >
-                              Month
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "year", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("year");
-                                });
-                              }}
-                            >
-                              Year
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "all_time", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("all_time");
-                                });
-                              }}
-                            >
-                              All Time
-                            </a>
-                          </li>
+                          {Array.from(ranges, ([stat_type, stat_name]) => {
+                            return (
+                              <li>
+                                <a
+                                  href={this.buildURLParams(
+                                    1,
+                                    stat_type,
+                                    entity
+                                  )}
+                                  role="button"
+                                  onClick={(e) => {
+                                    this.handleClickEvent(e, () => {
+                                      this.changeRange(stat_type);
+                                    });
+                                  }}
+                                >
+                                  {stat_name}
+                                </a>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </span>
                       {range !== "all_time" &&

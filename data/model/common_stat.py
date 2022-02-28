@@ -1,3 +1,5 @@
+# This file contains models for db -> api for statistics.
+
 from datetime import datetime
 from typing import TypeVar, Generic, Optional, List
 
