@@ -211,7 +211,7 @@ def delete():
     form = FlaskForm()
     if form.validate_on_submit():
         try:
-            delete_user(current_user.musicbrainz_id)
+            delete_user(current_user.id)
             flash.success("Successfully deleted account for %s." % current_user.musicbrainz_id)
             return redirect(url_for('index.index'))
         except Exception:
@@ -246,7 +246,7 @@ def delete_listens():
     form = FlaskForm()
     if form.validate_on_submit():
         try:
-            delete_listens_history(current_user.musicbrainz_id)
+            delete_listens_history(current_user.id)
             flash.info('Successfully deleted listens for %s.' % current_user.musicbrainz_id)
             return redirect(url_for('user.profile', user_name=current_user.musicbrainz_id))
         except Exception:
