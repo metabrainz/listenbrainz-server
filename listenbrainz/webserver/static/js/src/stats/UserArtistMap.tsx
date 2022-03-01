@@ -12,7 +12,7 @@ import { isInvalidStatRange } from "./utils";
 
 export type UserArtistMapProps = {
   range: UserStatsAPIRange;
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
   apiUrl: string;
 };
 
@@ -110,8 +110,13 @@ export default class UserArtistMap extends React.Component<
   getData = async (): Promise<UserArtistMapResponse> => {
     const { range, user } = this.props;
     try {
-      const data = await this.APIService.getUserArtistMap(user.name, range);
-      return data;
+      let data;
+      if (user) {
+        data = this.APIService.getUserArtistMap(user.name, range);
+      } else {
+        data = this.APIService.getSiteWideArtistMap(range);
+      }
+      return await data;
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({

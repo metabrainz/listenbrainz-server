@@ -385,11 +385,48 @@ export default class APIService {
     return response.json();
   };
 
+  getSiteWideEntity = async (
+    entity: Entity,
+    range: UserStatsAPIRange = "all_time",
+    offset: number = 0,
+    count?: number
+  ): Promise<UserEntityResponse> => {
+    let url = `${this.APIBaseURI}/stats/sitewide/${entity}s?offset=${offset}&range=${range}`;
+    if (count !== null && count !== undefined) {
+      url += `&count=${count}`;
+    }
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    // if response code is 204, then statistics havent been calculated, send empty object
+    if (response.status === 204) {
+      const error = new APIError(`HTTP Error ${response.statusText}`);
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
   getUserListeningActivity = async (
     userName: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserListeningActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(`HTTP Error ${response.statusText}`);
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getSiteWideListeningActivity = async (
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserListeningActivityResponse> => {
+    const url = `${this.APIBaseURI}/stats/sitewide/listening-activity?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
@@ -423,6 +460,22 @@ export default class APIService {
     forceRecalculate: boolean = false
   ) => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(`HTTP Error ${response.statusText}`);
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getSiteWideArtistMap = async (
+    range: UserStatsAPIRange = "all_time",
+    forceRecalculate: boolean = false
+  ) => {
+    const url = `${this.APIBaseURI}/stats/sitewide/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {

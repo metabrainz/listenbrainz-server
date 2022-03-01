@@ -11,7 +11,7 @@ import { getEntityLink, isInvalidStatRange } from "./utils";
 export type UserTopEntityProps = {
   range: UserStatsAPIRange;
   entity: Entity;
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
   apiUrl: string;
 };
 
@@ -71,14 +71,13 @@ export default class UserTopEntity extends React.Component<
   getData = async (): Promise<UserEntityResponse> => {
     const { entity, range, user } = this.props;
     try {
-      const data = await this.APIService.getUserEntity(
-        user.name,
-        entity,
-        range,
-        0,
-        10
-      );
-      return data;
+      let data;
+      if (user) {
+        data = this.APIService.getUserEntity(user.name, entity, range, 0, 10);
+      } else {
+        data = this.APIService.getSiteWideEntity(entity, range, 0, 10);
+      }
+      return await data;
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({
@@ -96,6 +95,13 @@ export default class UserTopEntity extends React.Component<
   render() {
     const { entity, range, user } = this.props;
     const { data, loading, hasError, errorMessage } = this.state;
+
+    let statsUrl;
+    if (user) {
+      statsUrl = `${window.location.origin}/user/${user.name}/charts?range=${range}&entity=${entity}`;
+    } else {
+      statsUrl = `${window.location.origin}/sitewide/charts?range=${range}&entity=${entity}`;
+    }
 
     const entityTextOnCard = `${entity}s`;
 
@@ -285,10 +291,7 @@ export default class UserTopEntity extends React.Component<
             </tbody>
           </table>
           {!hasError && (
-            <a
-              href={`${window.location.origin}/user/${user.name}/charts?range=${range}&entity=${entity}`}
-              className="mt-15"
-            >
+            <a href={statsUrl} className="mt-15">
               View More
             </a>
           )}
