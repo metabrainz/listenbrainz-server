@@ -9,7 +9,7 @@ export type ListenControlProps = {
   iconClassName?: string;
   action?: (event: React.MouseEvent) => void;
   icon?: IconDefinition;
-  title: string;
+  text: string;
   dataToggle?: string;
   dataTarget?: string;
   disabled?: boolean;
@@ -20,6 +20,7 @@ export type ListenControlProps = {
   // optional anchor tag attributes such as {target:"_blank", rel:"noopener noreferrer"}
   anchorTagAttributes?: any;
   ariaLabel?: string;
+  title?: string;
 };
 
 const ListenControl = (props: ListenControlProps) => {
@@ -28,13 +29,14 @@ const ListenControl = (props: ListenControlProps) => {
     iconClassName,
     action,
     icon,
-    title,
+    text,
     dataToggle,
     dataTarget,
     disabled,
     link,
     anchorTagAttributes,
     ariaLabel,
+    title,
   } = props;
 
   if (link) {
@@ -66,7 +68,7 @@ const ListenControl = (props: ListenControlProps) => {
       data-target={dataTarget}
       aria-label={ariaLabel ?? title}
     >
-      {iconElement} {title}
+      {iconElement} {text}
     </button>
   );
 };

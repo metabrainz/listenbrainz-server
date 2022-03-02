@@ -331,6 +331,7 @@ exports[`ListenCard renders correctly 1`] = `
                   }
                 }
                 link="https://musicbrainz.org/recording/yyyy"
+                text="Open in MusicBrainz"
                 title="Open in MusicBrainz"
               >
                 <a
@@ -407,6 +408,7 @@ exports[`ListenCard renders correctly 1`] = `
                     "prefix": "fas",
                   }
                 }
+                text="Recommend to my followers"
                 title="Recommend to my followers"
               >
                 <button
@@ -865,6 +867,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   }
                 }
                 link="https://musicbrainz.org/recording/yyyy"
+                text="Open in MusicBrainz"
                 title="Open in MusicBrainz"
               >
                 <a
@@ -941,6 +944,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     "prefix": "fas",
                   }
                 }
+                text="Recommend to my followers"
                 title="Recommend to my followers"
               >
                 <button
@@ -1399,6 +1403,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                   }
                 }
                 link="https://musicbrainz.org/recording/yyyy"
+                text="Open in MusicBrainz"
                 title="Open in MusicBrainz"
               >
                 <a
@@ -1475,6 +1480,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                     "prefix": "fas",
                   }
                 }
+                text="Recommend to my followers"
                 title="Recommend to my followers"
               >
                 <button
