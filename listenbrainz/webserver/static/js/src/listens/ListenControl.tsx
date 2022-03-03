@@ -45,7 +45,7 @@ const ListenControl = (props: ListenControlProps) => {
     return (
       <a href={link} title={title} {...anchorTagAttributes}>
         {icon && <FontAwesomeIcon icon={icon as IconProp} />}
-        &nbsp;{title}
+        &nbsp;{text}
       </a>
     );
   }
@@ -61,12 +61,12 @@ const ListenControl = (props: ListenControlProps) => {
     <button
       disabled={disabled ?? false}
       className={buttonClassName}
-      title={title}
+      title={title ?? text}
       onClick={disabled ? undefined : action}
       type="button"
       data-toggle={dataToggle}
       data-target={dataTarget}
-      aria-label={ariaLabel ?? title}
+      aria-label={ariaLabel ?? text}
     >
       {iconElement} {text}
     </button>
