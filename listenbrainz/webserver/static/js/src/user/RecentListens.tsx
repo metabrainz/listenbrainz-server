@@ -623,9 +623,7 @@ export default class RecentListens extends React.Component<
           <div className="col-md-8">
             <h3>
               {mode === "listens" || mode === "recent"
-                ? `Recent listens${
-                    _.isNil(listenCount) ? "" : ` (${listenCount} total)`
-                  }`
+                ? "Recent listens"
                 : "Playlist"}
             </h3>
 
@@ -855,6 +853,14 @@ export default class RecentListens extends React.Component<
             )}
           </div>
           <div className="col-md-4">
+            {!_.isNil(listenCount) && (
+              <div
+                className="row card flex-center"
+                style={{ marginBottom: "7px" }}
+              >
+                <h3>Listen count: {listenCount}</h3>
+              </div>
+            )}
             {playingNowListen && (
               <ListenCard
                 key={`playing-now-${playingNowListen.track_metadata?.track_name}-${playingNowListen.track_metadata?.artist_name}`}
