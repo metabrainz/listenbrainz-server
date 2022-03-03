@@ -363,35 +363,19 @@ export default class APIService {
   };
 
   getUserEntity = async (
-    userName: string,
+    userName: string | undefined,
     entity: Entity,
     range: UserStatsAPIRange = "all_time",
     offset: number = 0,
     count?: number
   ): Promise<UserEntityResponse> => {
-    let url = `${this.APIBaseURI}/stats/user/${userName}/${entity}s?offset=${offset}&range=${range}`;
-    if (count !== null && count !== undefined) {
-      url += `&count=${count}`;
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/`;
     }
-    const response = await fetch(url);
-    await this.checkStatus(response);
-    // if response code is 204, then statistics havent been calculated, send empty object
-    if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
-      error.status = response.statusText;
-      error.response = response;
-      throw error;
-    }
-    return response.json();
-  };
-
-  getSiteWideEntity = async (
-    entity: Entity,
-    range: UserStatsAPIRange = "all_time",
-    offset: number = 0,
-    count?: number
-  ): Promise<UserEntityResponse> => {
-    let url = `${this.APIBaseURI}/stats/sitewide/${entity}s?offset=${offset}&range=${range}`;
+    url += `${entity}s?offset=${offset}&range=${range}`;
     if (count !== null && count !== undefined) {
       url += `&count=${count}`;
     }
@@ -408,26 +392,16 @@ export default class APIService {
   };
 
   getUserListeningActivity = async (
-    userName: string,
+    userName: string | undefined,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserListeningActivityResponse> => {
-    const url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity?range=${range}`;
-    const response = await fetch(url);
-    await this.checkStatus(response);
-    if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
-      error.status = response.statusText;
-      error.response = response;
-      throw error;
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/listening-activity`;
     }
-    return response.json();
-  };
-
-  getSiteWideListeningActivity = async (
-    range: UserStatsAPIRange = "all_time"
-  ): Promise<UserListeningActivityResponse> => {
-    const url = `${this.APIBaseURI}/stats/sitewide/listening-activity?range=${range}`;
-    const response = await fetch(url);
+    const response = await fetch(`${url}?range=${range}`);
     await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
@@ -455,27 +429,17 @@ export default class APIService {
   };
 
   getUserArtistMap = async (
-    userName: string,
+    userName: string | undefined,
     range: UserStatsAPIRange = "all_time",
     forceRecalculate: boolean = false
   ) => {
-    const url = `${this.APIBaseURI}/stats/user/${userName}/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
-    const response = await fetch(url);
-    await this.checkStatus(response);
-    if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
-      error.status = response.statusText;
-      error.response = response;
-      throw error;
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/`;
     }
-    return response.json();
-  };
-
-  getSiteWideArtistMap = async (
-    range: UserStatsAPIRange = "all_time",
-    forceRecalculate: boolean = false
-  ) => {
-    const url = `${this.APIBaseURI}/stats/sitewide/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
+    url += `artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {

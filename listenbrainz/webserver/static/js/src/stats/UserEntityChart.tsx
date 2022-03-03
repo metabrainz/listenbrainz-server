@@ -131,18 +131,13 @@ export default class UserEntityChart extends React.Component<
   }> => {
     const { user } = this.props;
     const { APIService } = this.context;
-    let data;
-    if (user) {
-      data = await APIService.getUserEntity(
-        user.name,
-        entity,
-        range,
-        undefined,
-        1
-      );
-    } else {
-      data = await APIService.getSiteWideEntity(entity, range, undefined, 1);
-    }
+    let data = await APIService.getUserEntity(
+      user ? user.name : undefined,
+      entity,
+      range,
+      undefined,
+      1
+    );
 
     let maxListens = 0;
     let totalPages = 0;
@@ -190,25 +185,13 @@ export default class UserEntityChart extends React.Component<
     const { user } = this.props;
     const { APIService } = this.context;
     const offset = (page - 1) * this.ROWS_PER_PAGE;
-
-    let data;
-    if (user) {
-      data = await APIService.getUserEntity(
-        user.name,
-        entity,
-        range,
-        offset,
-        this.ROWS_PER_PAGE
-      );
-    } else {
-      data = await APIService.getSiteWideEntity(
-        entity,
-        range,
-        offset,
-        this.ROWS_PER_PAGE
-      );
-    }
-    return data;
+    return APIService.getUserEntity(
+      user ? user.name : undefined,
+      entity,
+      range,
+      offset,
+      this.ROWS_PER_PAGE
+    );
   };
 
   processData = (
