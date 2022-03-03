@@ -41,6 +41,7 @@ import {
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -883,6 +884,11 @@ export default class RecentListens extends React.Component<
                 removePinFromPinsList={() => {}}
                 newAlert={newAlert}
               />
+            )}
+            {user && (
+              <div className="card row">
+                <UserSocialNetwork user={user} newAlert={newAlert} />
+              </div>
             )}
           </div>
         </div>
