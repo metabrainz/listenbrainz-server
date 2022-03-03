@@ -621,7 +621,45 @@ export default class RecentListens extends React.Component<
     return (
       <div role="main">
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-4 col-md-push-8">
+            {!_.isNil(listenCount) && (
+              <div
+                className="row card flex-center"
+                style={{ marginBottom: "7px" }}
+              >
+                <h3>Listen count: {listenCount}</h3>
+              </div>
+            )}
+            {playingNowListen && (
+              <ListenCard
+                key={`playing-now-${playingNowListen.track_metadata?.track_name}-${playingNowListen.track_metadata?.artist_name}`}
+                showTimestamp
+                showUsername={false}
+                listen={playingNowListen}
+                newAlert={newAlert}
+                className="playing-now"
+              />
+            )}
+            {userPinnedRecording && (
+              <PinnedRecordingCard
+                userName={user.name}
+                pinnedRecording={userPinnedRecording}
+                isCurrentUser={currentUser?.name === user?.name}
+                currentFeedback={this.getFeedbackForRecordingMsid(
+                  userPinnedRecording?.recording_msid
+                )}
+                updateFeedbackCallback={this.updateFeedback}
+                removePinFromPinsList={() => {}}
+                newAlert={newAlert}
+              />
+            )}
+            {user && (
+              <div className="card row">
+                <UserSocialNetwork user={user} newAlert={newAlert} />
+              </div>
+            )}
+          </div>
+          <div className="col-md-8 col-md-pull-4">
             <h3>
               {mode === "listens" || mode === "recent"
                 ? "Recent listens"
@@ -850,44 +888,6 @@ export default class RecentListens extends React.Component<
                   isCurrentUser={currentUser?.name === user?.name}
                   newAlert={newAlert}
                 />
-              </div>
-            )}
-          </div>
-          <div className="col-md-4">
-            {!_.isNil(listenCount) && (
-              <div
-                className="row card flex-center"
-                style={{ marginBottom: "7px" }}
-              >
-                <h3>Listen count: {listenCount}</h3>
-              </div>
-            )}
-            {playingNowListen && (
-              <ListenCard
-                key={`playing-now-${playingNowListen.track_metadata?.track_name}-${playingNowListen.track_metadata?.artist_name}`}
-                showTimestamp
-                showUsername={false}
-                listen={playingNowListen}
-                newAlert={newAlert}
-                className="playing-now"
-              />
-            )}
-            {userPinnedRecording && (
-              <PinnedRecordingCard
-                userName={user.name}
-                pinnedRecording={userPinnedRecording}
-                isCurrentUser={currentUser?.name === user?.name}
-                currentFeedback={this.getFeedbackForRecordingMsid(
-                  userPinnedRecording?.recording_msid
-                )}
-                updateFeedbackCallback={this.updateFeedback}
-                removePinFromPinsList={() => {}}
-                newAlert={newAlert}
-              />
-            )}
-            {user && (
-              <div className="card row">
-                <UserSocialNetwork user={user} newAlert={newAlert} />
               </div>
             )}
           </div>
