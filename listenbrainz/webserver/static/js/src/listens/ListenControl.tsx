@@ -20,6 +20,7 @@ export type ListenControlProps = {
   // optional anchor tag attributes such as {target:"_blank", rel:"noopener noreferrer"}
   anchorTagAttributes?: any;
   ariaLabel?: string;
+  // If no title is passed, text element would serve as default title
   title?: string;
 };
 
@@ -43,7 +44,12 @@ const ListenControl = (props: ListenControlProps) => {
     // When using the link property,
     // render an anchor tag with an href instead of onClick
     return (
-      <a href={link} title={title} {...anchorTagAttributes}>
+      <a
+        href={link}
+        aria-label={ariaLabel ?? text}
+        title={title ?? text}
+        {...anchorTagAttributes}
+      >
         {icon && <FontAwesomeIcon icon={icon as IconProp} />}
         &nbsp;{text}
       </a>
