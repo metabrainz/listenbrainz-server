@@ -667,7 +667,7 @@ export default class PlaylistPage extends React.Component<
           className="full-page-loader"
         />
         <div className="row">
-          <div id="playlist" className="col-md-8">
+          <div id="playlist" className="col-md-8 col-md-offset-2">
             <div className="playlist-details row">
               <h1 className="title">
                 <div>
