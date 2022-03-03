@@ -866,19 +866,17 @@ export default class RecentListens extends React.Component<
               />
             )}
             {userPinnedRecording && (
-              <div id="pinned-recordings">
-                <PinnedRecordingCard
-                  userName={user.name}
-                  pinnedRecording={userPinnedRecording}
-                  isCurrentUser={currentUser?.name === user?.name}
-                  currentFeedback={this.getFeedbackForRecordingMsid(
-                    userPinnedRecording?.recording_msid
-                  )}
-                  updateFeedbackCallback={this.updateFeedback}
-                  removePinFromPinsList={() => {}}
-                  newAlert={newAlert}
-                />
-              </div>
+              <PinnedRecordingCard
+                userName={user.name}
+                pinnedRecording={userPinnedRecording}
+                isCurrentUser={currentUser?.name === user?.name}
+                currentFeedback={this.getFeedbackForRecordingMsid(
+                  userPinnedRecording?.recording_msid
+                )}
+                updateFeedbackCallback={this.updateFeedback}
+                removePinFromPinsList={() => {}}
+                newAlert={newAlert}
+              />
             )}
           </div>
         </div>
