@@ -386,7 +386,7 @@ export default class UserFeedback extends React.Component<
     return (
       <div role="main">
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-8 col-md-offset-2">
             <h3
               style={{
                 display: "inline-block",
