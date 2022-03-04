@@ -111,7 +111,7 @@ class TimescaleWriterSubscriber:
             if 'additional_info' in listen['track_metadata']:
                 ai = listen['track_metadata']['additional_info']
                 if 'artist_mbids' in ai and isinstance(ai['artist_mbids'], list):
-                    messy_dict['artist_mbids'] = ai['artist_mbids']
+                    messy_dict['artist_mbids'] = sorted(ai['artist_mbids'])
                 if 'release_mbid' in ai:
                     messy_dict['release_mbid'] = ai['release_mbid']
                 if 'recording_mbid' in ai:
@@ -149,19 +149,6 @@ class TimescaleWriterSubscriber:
                 listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
             except KeyError:
                 pass
-
-            artist_mbids = messybrainz_resp.get('artist_mbids', [])
-            release_mbid = messybrainz_resp.get('release_mbid', None)
-            recording_mbid = messybrainz_resp.get('recording_mbid', None)
-
-            if 'artist_mbids' not in listen['track_metadata']['additional_info'] and \
-                    'release_mbid' not in listen['track_metadata']['additional_info'] and \
-                    'recording_mbid' not in listen['track_metadata']['additional_info']:
-
-                if len(artist_mbids) > 0 and release_mbid and recording_mbid:
-                    listen['track_metadata']['additional_info']['artist_mbids'] = artist_mbids
-                    listen['track_metadata']['additional_info']['release_mbid'] = release_mbid
-                    listen['track_metadata']['additional_info']['recording_mbid'] = recording_mbid
 
             augmented_listens.append(listen)
         return augmented_listens
