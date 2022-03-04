@@ -91,7 +91,7 @@ export default class RecentListens extends React.Component<
     super(props);
     const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
     const playingNowListen = props.listens
-      ? _.remove(props.listens, (listen) => listen.playing_now)[0]
+      ? _.remove(props.listens, (listen) => listen.playing_now)?.[0]
       : undefined;
     this.state = {
       listens: props.listens || [],
@@ -478,6 +478,12 @@ export default class RecentListens extends React.Component<
         );
         if (status === 200) {
           this.setState({ deletedListen: listen });
+          newAlert(
+            "info",
+            "Success",
+            "This listen has not been deleted yet, but is scheduled for deletion," +
+              " which usually happens shortly after the hour."
+          );
           // wait for the delete animation to finish
           setTimeout(() => {
             this.removeListenFromListenList(listen);
@@ -620,10 +626,18 @@ export default class RecentListens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
+        <h3>
+          {mode === "listens" || mode === "recent"
+            ? "Recent listens"
+            : "Playlist"}
+        </h3>
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {!_.isNil(listenCount) && (
-              <div className="card flex-center" style={{ marginBottom: "7px" }}>
+              <div
+                className="row card flex-center"
+                style={{ marginBottom: "7px" }}
+              >
                 <h3>Listen count: {listenCount}</h3>
               </div>
             )}
@@ -651,18 +665,12 @@ export default class RecentListens extends React.Component<
               />
             )}
             {user && (
-              <div className="card">
+              <div className="card row hidden-xs hidden-sm">
                 <UserSocialNetwork user={user} newAlert={newAlert} />
               </div>
             )}
           </div>
           <div className="col-md-8 col-md-pull-4">
-            <h3>
-              {mode === "listens" || mode === "recent"
-                ? "Recent listens"
-                : "Playlist"}
-            </h3>
-
             {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
