@@ -3,7 +3,7 @@ import { mount, shallow } from "enzyme";
 
 import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
 import { DataSourceTypes } from "../../src/brainzplayer/BrainzPlayer";
-import APIService from "../../src/APIService";
+import APIService from "../../src/utils/APIService";
 
 const props = {
   show: true,

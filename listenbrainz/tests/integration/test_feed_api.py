@@ -224,7 +224,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(self.following_user_1['musicbrainz_id'], r.json['payload']['events'][2]['metadata']['user_name_1'])
         self.assertEqual('follow', r.json['payload']['events'][2]['metadata']['relationship_type'])
 
-
     def test_it_returns_recording_recommendation_events(self):
         # create a recording recommendation ourselves
         db_user_timeline_event.create_user_track_recommendation_event(

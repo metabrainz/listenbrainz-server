@@ -111,11 +111,8 @@ def profile(user_name):
         if playing_now:
             listens.insert(0, playing_now.to_api())
 
-    logged_in_user_follows_user = None
     already_reported_user = False
     if current_user.is_authenticated:
-        logged_in_user_follows_user = db_user_relationship.is_following_user(
-            current_user.id, user.id)
         already_reported_user = db_user.is_user_reported(
             current_user.id, user.id)
 
@@ -135,7 +132,7 @@ def profile(user_name):
         "mode": "listens",
         "userPinnedRecording": pin,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
-        "logged_in_user_follows_user": logged_in_user_follows_user,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
     }
 
@@ -175,6 +172,7 @@ def charts(user_name):
 
     props = {
         "user": user_data,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -197,6 +195,7 @@ def reports(user_name: str):
 
     props = {
         "user": user_data,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -250,6 +249,7 @@ def playlists(user_name: str):
         "playlist_count": playlist_count,
         "pagination_offset": offset,
         "playlists_per_page": count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -295,6 +295,7 @@ def recommendation_playlists(user_name: str):
         "user": user_data,
         "active_section": "recommendations",
         "playlist_count": playlist_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -346,6 +347,7 @@ def collaborations(user_name: str):
         "user": user_data,
         "active_section": "collaborations",
         "playlist_count": playlist_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -374,7 +376,8 @@ def pins(user_name: str):
         "user": user_data,
         "pins": pins,
         "profile_url": url_for('user.profile', user_name=user_name),
-        "total_count": total_count
+        "total_count": total_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -383,6 +386,7 @@ def pins(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
+
 
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
 @api_login_required
@@ -413,33 +417,41 @@ def _get_user(user_name):
         return User.from_dbrow(user)
 
 
-def delete_user(musicbrainz_id):
-    """ Delete a user from ListenBrainz completely.
-    First, drops the user's listens and then deletes the user from the
-    database.
+def delete_user(user_id: int):
+    """ Delete a user from ListenBrainz completely. First, drops
+     the user's listens and then deletes the user from the database.
+
     Args:
-        musicbrainz_id (str): the MusicBrainz ID of the user
-    Raises:
-        NotFound if user isn't present in the database
+        user_id: the LB row ID of the user
     """
-
-    user = _get_user(musicbrainz_id)
-    timescale_connection._ts.delete(user.id)
-    db_user.delete(user.id)
+    timescale_connection._ts.delete(user_id)
+    db_user.delete(user_id)
 
 
-def delete_listens_history(musicbrainz_id):
+def delete_listens_history(user_id: int):
     """ Delete a user's listens from ListenBrainz completely.
+
     Args:
-        musicbrainz_id (str): the MusicBrainz ID of the user
+        user_id: the LB row ID of the user
+    """
+    timescale_connection._ts.delete(user_id)
+    listens_importer.update_latest_listened_at(user_id, ExternalServiceType.LASTFM, 0)
+    db_stats.delete_user_stats(user_id)
+
+
+def logged_in_user_follows_user(user):
+    """ Check if user is being followed by the current user.
+    Args:
+        user : User object
     Raises:
         NotFound if user isn't present in the database
     """
 
-    user = _get_user(musicbrainz_id)
-    timescale_connection._ts.delete(user.id)
-    listens_importer.update_latest_listened_at(user.id, ExternalServiceType.LASTFM, 0)
-    db_stats.delete_user_stats(user.id)
+    if current_user.is_authenticated:
+        return db_user_relationship.is_following_user(
+            current_user.id, user.id
+        )
+    return None
 
 
 @user_bp.route("/<user_name>/feedback/")
@@ -489,6 +501,7 @@ def feedback(user_name: str):
         "feedback_count": feedback_count,
         "user": user_data,
         "active_section": "feedback",
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
