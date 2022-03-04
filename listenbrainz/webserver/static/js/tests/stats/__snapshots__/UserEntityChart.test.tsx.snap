@@ -279,11 +279,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -444,11 +444,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -609,11 +609,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -774,11 +774,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -939,11 +939,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -1104,11 +1104,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -1269,11 +1269,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -1434,11 +1434,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -1599,11 +1599,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -1764,11 +1764,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -1929,11 +1929,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -2094,11 +2094,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -2259,11 +2259,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -2424,11 +2424,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -2589,11 +2589,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -2754,11 +2754,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -2919,11 +2919,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -3084,11 +3084,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -3249,11 +3249,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -3414,11 +3414,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -3579,11 +3579,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -3744,11 +3744,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -3909,11 +3909,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -4074,11 +4074,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -4239,11 +4239,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -6062,11 +6062,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -6402,11 +6402,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -6738,11 +6738,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -6923,11 +6923,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -7263,11 +7263,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -7603,11 +7603,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -7943,11 +7943,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -8283,11 +8283,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -8623,11 +8623,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -8959,11 +8959,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -9144,11 +9144,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -9480,11 +9480,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -9665,11 +9665,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -10001,11 +10001,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -10186,11 +10186,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -10522,11 +10522,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -10707,11 +10707,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -11047,11 +11047,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -11387,11 +11387,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -11727,11 +11727,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -12067,11 +12067,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -12403,11 +12403,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -12588,11 +12588,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -12928,11 +12928,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -13264,11 +13264,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -15333,11 +15333,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -15504,11 +15504,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -15675,11 +15675,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -15846,11 +15846,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -16017,11 +16017,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -16188,11 +16188,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -16359,11 +16359,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -16530,11 +16530,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -16701,11 +16701,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -16872,11 +16872,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -17043,11 +17043,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -17214,11 +17214,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -17385,11 +17385,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -17556,11 +17556,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -17727,11 +17727,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -17898,11 +17898,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -18069,11 +18069,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -18240,11 +18240,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -18411,11 +18411,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -18582,11 +18582,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -18753,11 +18753,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -18924,11 +18924,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -19095,11 +19095,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -19266,11 +19266,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
@@ -19437,11 +19437,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               showUsername={false}
             >
               <ForwardRef
-                className="listen-card row   "
+                className="listen-card   "
                 onDoubleClick={[Function]}
               >
                 <div
-                  className="card listen-card row   "
+                  className="card listen-card   "
                   onDoubleClick={[Function]}
                 >
                   <div
