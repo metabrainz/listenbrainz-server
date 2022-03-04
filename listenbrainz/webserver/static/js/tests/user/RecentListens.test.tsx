@@ -277,6 +277,7 @@ describe("receiveNewListen", () => {
         {...(JSON.parse(
           JSON.stringify(recentListensPropsTooManyListens)
         ) as RecentListensProps)}
+        newAlert={jest.fn()}
       />,
       mountOptions
     );
@@ -340,6 +341,7 @@ describe("receiveNewPlayingNow", () => {
         {...(JSON.parse(
           JSON.stringify(recentListensPropsPlayingNow)
         ) as RecentListensProps)}
+        newAlert={jest.fn()}
       />
     );
     const instance = wrapper.instance();
@@ -351,11 +353,18 @@ describe("receiveNewPlayingNow", () => {
     const result = JSON.parse(
       JSON.stringify(recentListensPropsPlayingNow.listens)
     );
-    result.shift();
-    result.unshift({ ...mockListenOne, playing_now: true });
-    instance.receiveNewPlayingNow(JSON.stringify(mockListenOne));
-
+    // listens with playing_now gets removed from listens and save in playingNowListen
+    const firstPlayingNow = result.shift();
     expect(wrapper.state("listens")).toEqual(result);
+    expect(wrapper.state("playingNowListen")).toEqual(firstPlayingNow);
+
+    instance.receiveNewPlayingNow(JSON.stringify(mockListenOne));
+    wrapper.update();
+    expect(wrapper.state("listens")).toEqual(result);
+    expect(wrapper.state("playingNowListen")).toEqual({
+      ...mockListenOne,
+      playing_now: true,
+    });
   });
 });
 
