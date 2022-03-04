@@ -215,7 +215,7 @@ export default class RecentListens extends React.Component<
               </>
             )}
           </div>
-          <div className="col-md-4">stats here</div>
+          <div className="col-md-4" />
           {currentUser && (
             <>
               <PinRecordingModal
