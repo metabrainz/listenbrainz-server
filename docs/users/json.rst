@@ -27,6 +27,12 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
    - Timestamp must be omitted from a ``playing_now`` submission.
 
+.. note::
+
+    Playing Now listens are only stored temporarily. A playing now listen must be
+    submitted again as a ``single`` or ``import`` for permanent storage.
+
+
 - ``import``: Submit previously saved listens
 
    - ``payload`` should contain information about *at least one* track
