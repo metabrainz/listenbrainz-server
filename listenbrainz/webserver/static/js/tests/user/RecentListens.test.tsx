@@ -5,7 +5,9 @@ import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
 import { io } from "socket.io-client";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import APIServiceClass from "../../src/utils/APIService";
 
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
@@ -378,11 +380,12 @@ describe("updateRecordingToPin", () => {
 
 describe("deleteListen", () => {
   it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
+    const newAlertMock = jest.fn();
     jest.useFakeTimers();
 
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} />
+        <RecentListens {...props} newAlert={newAlertMock} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -411,6 +414,12 @@ describe("deleteListen", () => {
     expect(removeListenCallbackSpy).toHaveBeenCalledWith(listenToDelete);
     expect(instance.state.deletedListen).toEqual(listenToDelete);
     expect(instance.state.listens).not.toContainEqual(listenToDelete);
+    expect(newAlertMock).toHaveBeenCalledWith(
+      "info",
+      "Success",
+      "This listen has not been deleted yet, but is scheduled for deletion," +
+        " which usually happens shortly after the hour."
+    );
   });
 
   it("does nothing if isCurrentUser is false", async () => {

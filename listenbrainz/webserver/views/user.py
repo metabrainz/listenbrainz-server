@@ -387,6 +387,7 @@ def pins(user_name: str):
         user=user
     )
 
+
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
 @api_login_required
 def report_abuse(user_name):
@@ -416,33 +417,26 @@ def _get_user(user_name):
         return User.from_dbrow(user)
 
 
-def delete_user(musicbrainz_id):
-    """ Delete a user from ListenBrainz completely.
-    First, drops the user's listens and then deletes the user from the
-    database.
+def delete_user(user_id: int):
+    """ Delete a user from ListenBrainz completely. First, drops
+     the user's listens and then deletes the user from the database.
+
     Args:
-        musicbrainz_id (str): the MusicBrainz ID of the user
-    Raises:
-        NotFound if user isn't present in the database
+        user_id: the LB row ID of the user
     """
-
-    user = _get_user(musicbrainz_id)
-    timescale_connection._ts.delete(user.id)
-    db_user.delete(user.id)
+    timescale_connection._ts.delete(user_id)
+    db_user.delete(user_id)
 
 
-def delete_listens_history(musicbrainz_id):
+def delete_listens_history(user_id: int):
     """ Delete a user's listens from ListenBrainz completely.
-    Args:
-        musicbrainz_id (str): the MusicBrainz ID of the user
-    Raises:
-        NotFound if user isn't present in the database
-    """
 
-    user = _get_user(musicbrainz_id)
-    timescale_connection._ts.delete(user.id)
-    listens_importer.update_latest_listened_at(user.id, ExternalServiceType.LASTFM, 0)
-    db_stats.delete_user_stats(user.id)
+    Args:
+        user_id: the LB row ID of the user
+    """
+    timescale_connection._ts.delete(user_id)
+    listens_importer.update_latest_listened_at(user_id, ExternalServiceType.LASTFM, 0)
+    db_stats.delete_user_stats(user_id)
 
 
 def logged_in_user_follows_user(user):
