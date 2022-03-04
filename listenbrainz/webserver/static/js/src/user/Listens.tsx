@@ -43,22 +43,20 @@ import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 
-export type RecentListensProps = {
+export type ListensProps = {
   latestListenTs: number;
   listens?: Array<Listen>;
-  mode: ListensListMode;
   oldestListenTs: number;
   profileUrl?: string;
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
 } & WithAlertNotificationsInjectedProps;
 
-export interface RecentListensState {
+export interface ListensState {
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
   listenCount?: number;
   loading: boolean;
-  mode: ListensListMode;
   nextListenTs?: number;
   previousListenTs?: number;
   recordingFeedbackMap: RecordingFeedbackMap;
@@ -73,9 +71,9 @@ export interface RecentListensState {
   playingNowListen?: Listen;
 }
 
-export default class RecentListens extends React.Component<
-  RecentListensProps,
-  RecentListensState
+export default class Listens extends React.Component<
+  ListensProps,
+  ListensState
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -87,7 +85,7 @@ export default class RecentListens extends React.Component<
 
   private expectedListensPerPage = 25;
 
-  constructor(props: RecentListensProps) {
+  constructor(props: ListensProps) {
     super(props);
     const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
     const playingNowListen = props.listens
@@ -95,7 +93,6 @@ export default class RecentListens extends React.Component<
       : undefined;
     this.state = {
       listens: props.listens || [],
-      mode: props.mode,
       lastFetchedDirection: "older",
       loading: false,
       nextListenTs,
@@ -115,35 +112,32 @@ export default class RecentListens extends React.Component<
   }
 
   componentDidMount(): void {
-    const { mode } = this.state;
     const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService, currentUser } = this.context;
     this.APIService = APIService;
 
-    if (mode === "listens") {
-      this.connectWebsockets();
-      // Listen to browser previous/next events and load page accordingly
-      window.addEventListener("popstate", this.handleURLChange);
-      document.addEventListener("keydown", this.handleKeyDown);
+    this.connectWebsockets();
+    // Listen to browser previous/next events and load page accordingly
+    window.addEventListener("popstate", this.handleURLChange);
+    document.addEventListener("keydown", this.handleKeyDown);
 
-      const { user } = this.props;
-      // Get the user listen count
-      if (user?.name) {
-        this.APIService.getUserListenCount(user.name)
-          .then((listenCount) => {
-            this.setState({ listenCount });
-          })
-          .catch((error) => {
-            newAlert(
-              "danger",
-              "Sorry, we couldn't load your listens count…",
-              error?.toString()
-            );
-          });
-      }
-      this.loadFeedback();
+    const { user } = this.props;
+    // Get the user listen count
+    if (user?.name) {
+      this.APIService.getUserListenCount(user.name)
+        .then((listenCount) => {
+          this.setState({ listenCount });
+        })
+        .catch((error) => {
+          newAlert(
+            "danger",
+            "Sorry, we couldn't load your listens count…",
+            error?.toString()
+          );
+        });
     }
+    this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -599,7 +593,6 @@ export default class RecentListens extends React.Component<
       listens,
       listenCount,
       loading,
-      mode,
       nextListenTs,
       previousListenTs,
       dateTimePickerValue,
@@ -626,11 +619,7 @@ export default class RecentListens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
-        <h3>
-          {mode === "listens" || mode === "recent"
-            ? "Recent listens"
-            : "Playlist"}
-        </h3>
+        <h3>Recent listens</h3>
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {!_.isNil(listenCount) && (
@@ -756,7 +745,7 @@ export default class RecentListens extends React.Component<
                       <ListenCard
                         key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
                         showTimestamp
-                        showUsername={mode === "recent"}
+                        showUsername={false}
                         listen={listen}
                         currentFeedback={this.getFeedbackForRecordingMsid(
                           listen.track_metadata?.additional_info?.recording_msid
@@ -774,111 +763,109 @@ export default class RecentListens extends React.Component<
                 {listens.length < this.expectedListensPerPage && (
                   <h5 className="text-center">No more listens to show</h5>
                 )}
-                {mode === "listens" && (
-                  <ul className="pager" id="navigation">
-                    <li
-                      className={`previous ${
-                        isNewestButtonDisabled ? "disabled" : ""
-                      }`}
+                <ul className="pager" id="navigation">
+                  <li
+                    className={`previous ${
+                      isNewestButtonDisabled ? "disabled" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickNewest}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNewest();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isNewestButtonDisabled
+                          ? undefined
+                          : window.location.pathname
+                      }
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickNewest}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNewest();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isNewestButtonDisabled
-                            ? undefined
-                            : window.location.pathname
-                        }
-                      >
-                        &#x21E4;
-                      </a>
-                    </li>
-                    <li
-                      className={`previous ${
-                        isNewerButtonDisabled ? "disabled" : ""
-                      }`}
+                      &#x21E4;
+                    </a>
+                  </li>
+                  <li
+                    className={`previous ${
+                      isNewerButtonDisabled ? "disabled" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickNewer}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNewer();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isNewerButtonDisabled
+                          ? undefined
+                          : `?min_ts=${previousListenTs}`
+                      }
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickNewer}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNewer();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isNewerButtonDisabled
-                            ? undefined
-                            : `?min_ts=${previousListenTs}`
-                        }
-                      >
-                        &larr; Newer
-                      </a>
-                    </li>
-                    <li className="date-time-picker">
-                      <DatePicker
-                        onChange={this.onChangeDateTimePicker}
-                        value={dateTimePickerValue}
-                        clearIcon={null}
-                        maxDate={new Date(Date.now())}
-                        minDate={
-                          oldestListenTs
-                            ? new Date(oldestListenTs * 1000)
-                            : undefined
-                        }
-                        calendarIcon={
-                          <FontAwesomeIcon icon={faCalendar as IconProp} />
-                        }
-                      />
-                    </li>
-                    <li
-                      className={`next ${
-                        isOlderButtonDisabled ? "disabled" : ""
-                      }`}
-                      style={{ marginLeft: "auto" }}
+                      &larr; Newer
+                    </a>
+                  </li>
+                  <li className="date-time-picker">
+                    <DatePicker
+                      onChange={this.onChangeDateTimePicker}
+                      value={dateTimePickerValue}
+                      clearIcon={null}
+                      maxDate={new Date(Date.now())}
+                      minDate={
+                        oldestListenTs
+                          ? new Date(oldestListenTs * 1000)
+                          : undefined
+                      }
+                      calendarIcon={
+                        <FontAwesomeIcon icon={faCalendar as IconProp} />
+                      }
+                    />
+                  </li>
+                  <li
+                    className={`next ${
+                      isOlderButtonDisabled ? "disabled" : ""
+                    }`}
+                    style={{ marginLeft: "auto" }}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickOlder}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickOlder();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isOlderButtonDisabled
+                          ? undefined
+                          : `?max_ts=${nextListenTs}`
+                      }
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOlder}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOlder();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isOlderButtonDisabled
-                            ? undefined
-                            : `?max_ts=${nextListenTs}`
-                        }
-                      >
-                        Older &rarr;
-                      </a>
-                    </li>
-                    <li
-                      className={`next ${
-                        isOldestButtonDisabled ? "disabled" : ""
-                      }`}
+                      Older &rarr;
+                    </a>
+                  </li>
+                  <li
+                    className={`next ${
+                      isOldestButtonDisabled ? "disabled" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickOldest}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickOldest();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isOldestButtonDisabled
+                          ? undefined
+                          : `?min_ts=${oldestListenTs - 1}`
+                      }
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOldest}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOldest();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isOldestButtonDisabled
-                            ? undefined
-                            : `?min_ts=${oldestListenTs - 1}`
-                        }
-                      >
-                        &#x21E5;
-                      </a>
-                    </li>
-                  </ul>
-                )}
+                      &#x21E5;
+                    </a>
+                  </li>
+                </ul>
                 {currentUser && (
                   <PinRecordingModal
                     recordingToPin={recordingToPin || listens[0]}
@@ -929,7 +916,6 @@ document.addEventListener("DOMContentLoaded", () => {
     latest_listen_ts,
     listens,
     oldest_listen_ts,
-    mode,
     userPinnedRecording,
     profile_url,
     user,
@@ -947,9 +933,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const RecentListensWithAlertNotifications = withAlertNotifications(
-    RecentListens
-  );
+  const ListensWithAlertNotifications = withAlertNotifications(Listens);
 
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
@@ -962,11 +946,10 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <RecentListensWithAlertNotifications
+        <ListensWithAlertNotifications
           initialAlerts={optionalAlerts}
           latestListenTs={latest_listen_ts}
           listens={listens}
-          mode={mode}
           userPinnedRecording={userPinnedRecording}
           oldestListenTs={oldest_listen_ts}
           profileUrl={profile_url}
