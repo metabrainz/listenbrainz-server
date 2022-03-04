@@ -41,6 +41,7 @@ import {
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -69,6 +70,7 @@ export interface RecentListensState {
   before being removed from the state */
   deletedListen: Listen | null;
   userPinnedRecording?: PinnedRecording;
+  playingNowListen?: Listen;
 }
 
 export default class RecentListens extends React.Component<
@@ -88,6 +90,9 @@ export default class RecentListens extends React.Component<
   constructor(props: RecentListensProps) {
     super(props);
     const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
+    const playingNowListen = props.listens
+      ? _.remove(props.listens, (listen) => listen.playing_now)?.[0]
+      : undefined;
     this.state = {
       listens: props.listens || [],
       mode: props.mode,
@@ -103,6 +108,7 @@ export default class RecentListens extends React.Component<
         : new Date(Date.now()),
       deletedListen: null,
       userPinnedRecording: props.userPinnedRecording,
+      playingNowListen,
     };
 
     this.listensTable = React.createRef();
@@ -242,14 +248,8 @@ export default class RecentListens extends React.Component<
     const playingNow = JSON.parse(newPlayingNow) as Listen;
     playingNow.playing_now = true;
 
-    this.setState((prevState) => {
-      const indexOfPreviousPlayingNow = prevState.listens.findIndex(
-        (listen) => listen.playing_now
-      );
-      prevState.listens.splice(indexOfPreviousPlayingNow, 1);
-      return {
-        listens: [playingNow].concat(prevState.listens),
-      };
+    this.setState({
+      playingNowListen: playingNow,
     });
   };
 
@@ -607,6 +607,7 @@ export default class RecentListens extends React.Component<
       recordingToReview,
       deletedListen,
       userPinnedRecording,
+      playingNowListen,
     } = this.state;
     const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -625,32 +626,51 @@ export default class RecentListens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
+        <h3>
+          {mode === "listens" || mode === "recent"
+            ? "Recent listens"
+            : "Playlist"}
+        </h3>
         <div className="row">
-          <div className="col-md-8">
-            {userPinnedRecording && (
-              <div id="pinned-recordings">
-                <PinnedRecordingCard
-                  userName={user.name}
-                  pinnedRecording={userPinnedRecording}
-                  isCurrentUser={currentUser?.name === user?.name}
-                  currentFeedback={this.getFeedbackForRecordingMsid(
-                    userPinnedRecording?.recording_msid
-                  )}
-                  updateFeedbackCallback={this.updateFeedback}
-                  removePinFromPinsList={() => {}}
-                  newAlert={newAlert}
-                />
+          <div className="col-md-4 col-md-push-8">
+            {!_.isNil(listenCount) && (
+              <div
+                className="row card flex-center"
+                style={{ marginBottom: "7px" }}
+              >
+                <h3>Listen count: {listenCount}</h3>
               </div>
             )}
-
-            <h3>
-              {mode === "listens" || mode === "recent"
-                ? `Recent listens${
-                    _.isNil(listenCount) ? "" : ` (${listenCount} total)`
-                  }`
-                : "Playlist"}
-            </h3>
-
+            {playingNowListen && (
+              <ListenCard
+                key={`playing-now-${playingNowListen.track_metadata?.track_name}-${playingNowListen.track_metadata?.artist_name}`}
+                showTimestamp
+                showUsername={false}
+                listen={playingNowListen}
+                newAlert={newAlert}
+                className="playing-now"
+              />
+            )}
+            {userPinnedRecording && (
+              <PinnedRecordingCard
+                userName={user.name}
+                pinnedRecording={userPinnedRecording}
+                isCurrentUser={currentUser?.name === user?.name}
+                currentFeedback={this.getFeedbackForRecordingMsid(
+                  userPinnedRecording?.recording_msid
+                )}
+                updateFeedbackCallback={this.updateFeedback}
+                removePinFromPinsList={() => {}}
+                newAlert={newAlert}
+              />
+            )}
+            {user && (
+              <div className="card row hidden-xs hidden-sm">
+                <UserSocialNetwork user={user} newAlert={newAlert} />
+              </div>
+            )}
+          </div>
+          <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
@@ -673,97 +693,83 @@ export default class RecentListens extends React.Component<
                   ref={this.listensTable}
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
-                  {listens
-                    .sort((a, b) => {
-                      if (a.playing_now) {
-                        return -1;
-                      }
-                      if (b.playing_now) {
-                        return 1;
-                      }
-                      return 0;
-                    })
-                    .map((listen) => {
-                      const isCurrentUser =
-                        Boolean(listen.user_name) &&
-                        listen.user_name === currentUser?.name;
-                      const listenedAt = get(listen, "listened_at");
-                      const recordingMSID = get(
-                        listen,
-                        "track_metadata.additional_info.recording_msid"
-                      );
-                      const recordingMBID = getRecordingMBID(listen);
-                      const artistMBIDs = getArtistMBIDs(listen);
-                      const trackMBID = get(
-                        listen,
-                        "track_metadata.additional_info.track_mbid"
-                      );
-                      const releaseGroupMBID = getReleaseGroupMBID(listen);
-                      const canDelete =
-                        isCurrentUser &&
-                        Boolean(listenedAt) &&
-                        Boolean(recordingMSID);
+                  {listens.map((listen) => {
+                    const isCurrentUser =
+                      Boolean(listen.user_name) &&
+                      listen.user_name === currentUser?.name;
+                    const listenedAt = get(listen, "listened_at");
+                    const recordingMSID = get(
+                      listen,
+                      "track_metadata.additional_info.recording_msid"
+                    );
+                    const recordingMBID = getRecordingMBID(listen);
+                    const artistMBIDs = getArtistMBIDs(listen);
+                    const trackMBID = get(
+                      listen,
+                      "track_metadata.additional_info.track_mbid"
+                    );
+                    const releaseGroupMBID = getReleaseGroupMBID(listen);
+                    const canDelete =
+                      isCurrentUser &&
+                      Boolean(listenedAt) &&
+                      Boolean(recordingMSID);
 
-                      const isListenReviewable =
-                        Boolean(recordingMBID) ||
-                        artistMBIDs?.length ||
-                        Boolean(trackMBID) ||
-                        Boolean(releaseGroupMBID);
-                      /* eslint-disable react/jsx-no-bind */
-                      const additionalMenuItems = (
-                        <>
+                    const isListenReviewable =
+                      Boolean(recordingMBID) ||
+                      artistMBIDs?.length ||
+                      Boolean(trackMBID) ||
+                      Boolean(releaseGroupMBID);
+                    /* eslint-disable react/jsx-no-bind */
+                    const additionalMenuItems = (
+                      <>
+                        <ListenControl
+                          title="Pin this recording"
+                          icon={faThumbtack}
+                          action={this.updateRecordingToPin.bind(this, listen)}
+                          dataToggle="modal"
+                          dataTarget="#PinRecordingModal"
+                        />
+                        {isListenReviewable && (
                           <ListenControl
-                            title="Pin this recording"
-                            icon={faThumbtack}
-                            action={this.updateRecordingToPin.bind(
+                            title="Write a review"
+                            icon={faPencilAlt}
+                            action={this.updateRecordingToReview.bind(
                               this,
                               listen
                             )}
                             dataToggle="modal"
-                            dataTarget="#PinRecordingModal"
+                            dataTarget="#CBReviewModal"
                           />
-                          {isListenReviewable && (
-                            <ListenControl
-                              title="Write a review"
-                              icon={faPencilAlt}
-                              action={this.updateRecordingToReview.bind(
-                                this,
-                                listen
-                              )}
-                              dataToggle="modal"
-                              dataTarget="#CBReviewModal"
-                            />
-                          )}
-                          {canDelete && (
-                            <ListenControl
-                              title="Delete Listen"
-                              icon={faTrashAlt}
-                              action={this.deleteListen.bind(this, listen)}
-                            />
-                          )}
-                        </>
-                      );
-                      const shouldBeDeleted = isEqual(deletedListen, listen);
-                      /* eslint-enable react/jsx-no-bind */
-                      return (
-                        <ListenCard
-                          key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                          showTimestamp
-                          showUsername={mode === "recent"}
-                          listen={listen}
-                          currentFeedback={this.getFeedbackForRecordingMsid(
-                            listen.track_metadata?.additional_info
-                              ?.recording_msid
-                          )}
-                          updateFeedbackCallback={this.updateFeedback}
-                          newAlert={newAlert}
-                          className={`${
-                            listen.playing_now ? "playing-now " : ""
-                          }${shouldBeDeleted ? "deleted " : ""}`}
-                          additionalMenuItems={additionalMenuItems}
-                        />
-                      );
-                    })}
+                        )}
+                        {canDelete && (
+                          <ListenControl
+                            title="Delete Listen"
+                            icon={faTrashAlt}
+                            action={this.deleteListen.bind(this, listen)}
+                          />
+                        )}
+                      </>
+                    );
+                    const shouldBeDeleted = isEqual(deletedListen, listen);
+                    /* eslint-enable react/jsx-no-bind */
+                    return (
+                      <ListenCard
+                        key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                        showTimestamp
+                        showUsername={mode === "recent"}
+                        listen={listen}
+                        currentFeedback={this.getFeedbackForRecordingMsid(
+                          listen.track_metadata?.additional_info?.recording_msid
+                        )}
+                        updateFeedbackCallback={this.updateFeedback}
+                        newAlert={newAlert}
+                        className={`${
+                          listen.playing_now ? "playing-now " : ""
+                        }${shouldBeDeleted ? "deleted " : ""}`}
+                        additionalMenuItems={additionalMenuItems}
+                      />
+                    );
+                  })}
                 </div>
                 {listens.length < this.expectedListensPerPage && (
                   <h5 className="text-center">No more listens to show</h5>
