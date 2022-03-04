@@ -15,10 +15,7 @@ import * as recentListensPropsTooManyListens from "../__mocks__/recentListensPro
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
-import RecentListens, {
-  RecentListensProps,
-  RecentListensState,
-} from "../../src/user/RecentListens";
+import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 
@@ -38,7 +35,6 @@ const {
   latestListenTs,
   listenCount,
   listens,
-  mode,
   oldestListenTs,
   profileUrl,
   spotify,
@@ -52,7 +48,6 @@ const props = {
   latestListenTs,
   listenCount,
   listens,
-  mode: mode as ListensListMode,
   oldestListenTs,
   profileUrl,
   user,
@@ -72,7 +67,6 @@ const mountOptions: { context: GlobalAppContextT } = {
 
 const propsOneListen = {
   ...recentListensPropsOneListen,
-  mode: recentListensPropsOneListen.mode as ListensListMode,
   newAlert: () => {},
 };
 
@@ -94,9 +88,9 @@ describe("Recentlistens", () => {
       .mockImplementation(() => mockDate.getTime());
 
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
@@ -105,26 +99,18 @@ describe("Recentlistens", () => {
 });
 
 describe("componentDidMount", () => {
-  it('calls connectWebsockets if mode is "listens"', () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
+  it("calls connectWebsockets", () => {
+    const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
     const instance = wrapper.instance();
     instance.connectWebsockets = jest.fn();
 
-    wrapper.setState({ mode: "listens" });
     instance.componentDidMount();
 
     expect(instance.connectWebsockets).toHaveBeenCalledTimes(1);
   });
 
-  it('calls getUserListenCount if mode "listens"', async () => {
-    const extraProps = { ...props, mode: "listens" as ListensListMode };
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...extraProps} />,
-      mountOptions
-    );
+  it("calls getUserListenCount", async () => {
+    const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
     const instance = wrapper.instance();
 
     const spy = jest.fn().mockImplementation(() => {
@@ -138,10 +124,10 @@ describe("componentDidMount", () => {
     expect(wrapper.state("listenCount")).toEqual(42);
   });
 
-  it('calls loadFeedback if user is logged in and mode "listens"', () => {
-    const wrapper = mount<RecentListens>(
+  it("calls loadFeedback if user is logged in", () => {
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...propsOneListen} />
+        <Listens {...propsOneListen} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -153,11 +139,11 @@ describe("componentDidMount", () => {
   });
 
   it('does not fetch user feedback if user is not logged in"', () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider
         value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
       >
-        <RecentListens {...propsOneListen} />
+        <Listens {...propsOneListen} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -179,10 +165,7 @@ describe("createWebsocketsConnection", () => {
     jest.clearAllMocks();
   });
   it("calls io with correct parameters", () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
+    const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
     const instance = wrapper.instance();
     instance.createWebsocketsConnection();
 
@@ -208,10 +191,7 @@ describe("createWebsocketsConnection", () => {
 
 describe("addWebsocketsHandlers", () => {
   it('calls correct handler for "listen" event', () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
+    const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
     const instance = wrapper.instance();
 
     // eslint-disable-next-line dot-notation
@@ -233,10 +213,7 @@ describe("addWebsocketsHandlers", () => {
   });
 
   it('calls correct event for "playing_now" event', () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
+    const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
     const instance = wrapper.instance();
 
     // eslint-disable-next-line dot-notation
@@ -272,11 +249,11 @@ describe("receiveNewListen", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = mount<RecentListens>(
-      <RecentListens
+    const wrapper = mount<Listens>(
+      <Listens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsTooManyListens)
-        ) as RecentListensProps)}
+        ) as ListensProps)}
         newAlert={jest.fn()}
       />,
       mountOptions
@@ -291,7 +268,6 @@ describe("receiveNewListen", () => {
      * so that it doesn't get passed as a reference.
      */
     wrapper.setState({
-      mode: "listens",
       listens: JSON.parse(
         JSON.stringify(recentListensPropsTooManyListens.listens)
       ),
@@ -305,8 +281,8 @@ describe("receiveNewListen", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...propsOneListen} mode="recent" />,
+    const wrapper = mount<Listens>(
+      <Listens {...propsOneListen} />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -336,17 +312,16 @@ describe("receiveNewPlayingNow", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = mount<RecentListens>(
-      <RecentListens
+    const wrapper = mount<Listens>(
+      <Listens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsPlayingNow)
-        ) as RecentListensProps)}
+        ) as ListensProps)}
         newAlert={jest.fn()}
       />
     );
     const instance = wrapper.instance();
 
-    wrapper.setState({ mode: "listens" });
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
@@ -372,10 +347,7 @@ describe("receiveNewPlayingNow", () => {
 
 describe("updateRecordingToPin", () => {
   it("sets the recordingToPin in the state", async () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
+    const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
 
     const instance = wrapper.instance();
     const recordingToPin = props.listens[1];
@@ -392,9 +364,9 @@ describe("deleteListen", () => {
     const newAlertMock = jest.fn();
     jest.useFakeTimers();
 
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} newAlert={newAlertMock} />
+        <Listens {...props} newAlert={newAlertMock} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -432,11 +404,11 @@ describe("deleteListen", () => {
   });
 
   it("does nothing if isCurrentUser is false", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider
         value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
       >
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -454,25 +426,25 @@ describe("deleteListen", () => {
   });
 
   it("does not render delete listen control if isCurrentUser is false", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider
         value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
       >
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find("button[title='Delete Listen']")).toHaveLength(0);
   });
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider
         value={{
           ...mountOptions.context,
           currentUser: { auth_token: undefined, name: "test" },
         }}
       >
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -490,9 +462,9 @@ describe("deleteListen", () => {
   });
 
   it("doesn't call removeListenFromListenList or update state if status code is not 200", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -521,9 +493,9 @@ describe("deleteListen", () => {
 
   it("calls newAlert if error is returned", async () => {
     const newAlertMock = jest.fn();
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} newAlert={newAlertMock} />
+        <Listens {...props} newAlert={newAlertMock} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -548,10 +520,7 @@ describe("deleteListen", () => {
 
 describe("updateRecordingToReview", () => {
   it("sets the recordingToReview in the state", async () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
+    const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
     const instance = wrapper.instance();
     const recordingToReview = props.listens[1];
 
@@ -571,10 +540,7 @@ describe("Pagination", () => {
 
   describe("handleClickOlder", () => {
     it("does nothing if there is no older listens timestamp", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       wrapper.setState({ nextListenTs: undefined });
@@ -588,10 +554,7 @@ describe("Pagination", () => {
     });
 
     it("calls the API to get older listens", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       wrapper.setState({ nextListenTs: 1586450000 });
@@ -617,10 +580,7 @@ describe("Pagination", () => {
     });
 
     it("sets nextListenTs to undefined if it receives no listens from API", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       wrapper.setState({ nextListenTs: 1586450000 });
@@ -636,10 +596,7 @@ describe("Pagination", () => {
     });
 
     it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       // Random nextListenTs to ensure that is the value set in browser history
@@ -666,7 +623,7 @@ describe("Pagination", () => {
     });
 
     it("disables 'next' pagination if returned less listens than expected", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<Listens>(<Listens {...props} />);
       wrapper.setState({ nextListenTs: 1586440539 });
       const instance = wrapper.instance();
 
@@ -699,10 +656,7 @@ describe("Pagination", () => {
 
   describe("handleClickNewer", () => {
     it("does nothing if there is no newer listens timestamp", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       wrapper.setState({ previousListenTs: undefined });
@@ -716,10 +670,7 @@ describe("Pagination", () => {
     });
 
     it("calls the API to get older listens", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
       wrapper.setState({ previousListenTs: 123456 });
 
@@ -746,10 +697,7 @@ describe("Pagination", () => {
     });
 
     it("sets nextListenTs to undefined if it receives no listens from API", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       wrapper.setState({ previousListenTs: 123456 });
@@ -764,10 +712,7 @@ describe("Pagination", () => {
     });
 
     it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       wrapper.setProps({ latestListenTs: 1586623524 });
@@ -792,7 +737,7 @@ describe("Pagination", () => {
       expect(scrollSpy).toHaveBeenCalled();
     });
     it("disables pagination if returned less listens than expected", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<Listens>(<Listens {...props} />);
       const instance = wrapper.instance();
       wrapper.setState({ previousListenTs: 123456 });
 
@@ -824,10 +769,7 @@ describe("Pagination", () => {
 
   describe("handleClickOldest", () => {
     it("does nothing if last listens is the oldest", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -862,10 +804,7 @@ describe("Pagination", () => {
         listened_at: 1586440600,
       };
       const extraProps = { ...props, listens: [listen] };
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...extraProps} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...extraProps} />, mountOptions);
 
       const instance = wrapper.instance();
 
@@ -898,10 +837,7 @@ describe("Pagination", () => {
 
   describe("handleClickNewest", () => {
     it("does nothing if first listens is the newest", async () => {
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -936,10 +872,7 @@ describe("Pagination", () => {
         listened_at: 123450,
       };
       const extraProps = { ...props, listens: [listen] };
-      const wrapper = mount<RecentListens>(
-        <RecentListens {...extraProps} />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...extraProps} />, mountOptions);
       wrapper.setProps({ latestListenTs: 123456 });
       const instance = wrapper.instance();
 
@@ -975,9 +908,9 @@ describe("Pagination", () => {
 
 describe("pinRecordingModal", () => {
   it("renders the PinRecordingModal component with the correct props", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -1005,9 +938,9 @@ describe("pinRecordingModal", () => {
 
 describe("CBReviewModal", () => {
   it("renders the CBReviewModal component with the correct props", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
