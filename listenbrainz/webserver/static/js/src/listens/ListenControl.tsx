@@ -46,7 +46,7 @@ const ListenControl = (props: ListenControlProps) => {
     return (
       <a
         href={link}
-        aria-label={ariaLabel ?? text}
+        aria-label={ariaLabel ?? title ?? text}
         title={title ?? text}
         {...anchorTagAttributes}
       >
