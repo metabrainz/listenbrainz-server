@@ -665,7 +665,7 @@ export default class RecentListens extends React.Component<
               />
             )}
             {user && (
-              <div className="card row">
+              <div className="card row hidden-xs hidden-sm">
                 <UserSocialNetwork user={user} newAlert={newAlert} />
               </div>
             )}
