@@ -3,9 +3,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
-import * as _ from "lodash";
-
 import { get } from "lodash";
+
 import { Integrations } from "@sentry/tracing";
 import { faPencilAlt, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
@@ -48,8 +47,6 @@ export default class RecentListens extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  private APIService!: APIServiceClass;
-
   constructor(props: RecentListensProps) {
     super(props);
     this.state = {
@@ -61,12 +58,7 @@ export default class RecentListens extends React.Component<
   }
 
   componentDidMount(): void {
-    // Get API instance from React context provided for in top-level component
-    const { APIService } = this.context;
-    this.APIService = APIService;
-
     // TODO: Get sitewide listen count?
-
     this.loadFeedback();
   }
 
@@ -78,7 +70,7 @@ export default class RecentListens extends React.Component<
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
-        const recordingMsid = _.get(
+        const recordingMsid = get(
           listen,
           "track_metadata.additional_info.recording_msid"
         );
@@ -141,35 +133,19 @@ export default class RecentListens extends React.Component<
     recordingMsid?: string | null
   ): ListenFeedBack => {
     const { recordingFeedbackMap } = this.state;
-    return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
+    return recordingMsid ? get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
   render() {
-    const {
-      listens,
-      listenCount,
-      recordingToPin,
-      recordingToReview,
-    } = this.state;
+    const { listens, recordingToPin, recordingToReview } = this.state;
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
 
     return (
       <div role="main">
+        <h3>Recent listens</h3>
         <div className="row">
-          <div className="col-md-4 col-md-push-8">
-            {!_.isNil(listenCount) && (
-              <div
-                className="row card flex-center"
-                style={{ marginBottom: "7px" }}
-              >
-                <h3>Listen count: {listenCount}</h3>
-              </div>
-            )}
-          </div>
-          <div className="col-md-8 col-md-pull-4">
-            <h3>Recent listens</h3>
-
+          <div className="col-md-8">
             {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
@@ -239,6 +215,7 @@ export default class RecentListens extends React.Component<
               </>
             )}
           </div>
+          <div className="col-md-4">stats here</div>
           {currentUser && (
             <>
               <PinRecordingModal
@@ -288,6 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
     critiquebrainz,
     sentry_traces_sample_rate,
   } = globalReactProps;
+
   const { listens } = reactProps;
 
   const apiService = new APIServiceClass(
