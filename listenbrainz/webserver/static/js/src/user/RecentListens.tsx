@@ -91,7 +91,7 @@ export default class RecentListens extends React.Component<
     super(props);
     const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
     const playingNowListen = props.listens
-      ? _.remove(props.listens, (listen) => listen.playing_now)[0]
+      ? _.remove(props.listens, (listen) => listen.playing_now)?.[0]
       : undefined;
     this.state = {
       listens: props.listens || [],
