@@ -626,6 +626,11 @@ export default class RecentListens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
+        <h3>
+          {mode === "listens" || mode === "recent"
+            ? "Recent listens"
+            : "Playlist"}
+        </h3>
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {!_.isNil(listenCount) && (
@@ -666,12 +671,6 @@ export default class RecentListens extends React.Component<
             )}
           </div>
           <div className="col-md-8 col-md-pull-4">
-            <h3>
-              {mode === "listens" || mode === "recent"
-                ? "Recent listens"
-                : "Playlist"}
-            </h3>
-
             {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
