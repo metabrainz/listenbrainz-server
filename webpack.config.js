@@ -50,7 +50,7 @@ module.exports = function (env, argv) {
       // Otherwise with a standalone entrypoint Webpack would generate a superfluous js file.
       // All the Less/CSS will be exported separately to a main.css file and not appear in the recentListens module
       recentListens: [
-        path.resolve(jsDir, "src/home/RecentListens.tsx"),
+        path.resolve(jsDir, "src/recent/RecentListens.tsx"),
         path.resolve(cssDir, "main.less"),
       ],
       listens: [path.resolve(jsDir, "src/user/Listens.tsx")],
