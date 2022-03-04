@@ -139,12 +139,10 @@ def recent_listens():
 
     props = {
         "listens": recent,
-        "mode": "recent",
     }
 
     return render_template("index/recent.html",
         props=ujson.dumps(props),
-        mode='recent',
         active_section='listens')
 
 
