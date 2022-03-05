@@ -191,9 +191,17 @@
             "listen_count": 1,
             "artist_name": "Snow Patrol",
             "artist_msid": null
+        },
+        {
+            "artist_mbids": [
+                "20244d07-534f-4eff-b4d4-930878889970"
+            ],
+            "listen_count": 1,
+            "artist_name": "Taylor Swift",
+            "artist_msid": null
         }
     ],
-    "count": 24,
+    "count": 25,
     "from_ts": 1588632658,
     "to_ts": 1589237458,
     "stats_range": "week"
