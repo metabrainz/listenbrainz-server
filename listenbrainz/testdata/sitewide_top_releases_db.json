@@ -1,0 +1,26 @@
+{
+    "from_ts": 0,
+    "to_ts": 10,
+    "data": [
+        {
+            "artist_mbids": [],
+            "release_mbid": null,
+            "release_name": "Halycon Days",
+            "listen_count": 230,
+            "artist_name": "Ellie Goulding",
+            "artist_msid": null,
+            "release_msid": null
+        },
+        {
+            "artist_mbids": [],
+            "release_mbid": null,
+            "release_name": "Delirium",
+            "listen_count": 229,
+            "artist_name": "Ellie Goulding",
+            "artist_msid": null,
+            "release_msid": null
+        }
+    ],
+    "count": 2,
+    "stats_range": "all_time"
+}

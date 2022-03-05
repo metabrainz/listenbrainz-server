@@ -35,6 +35,8 @@ test_entity_params = [
 
 test_sitewide_entity_params = [
     ("stats_api_v1.get_sitewide_artist", "artists"),
+    ("stats_api_v1.get_sitewide_recording", "recordings"),
+    ("stats_api_v1.get_sitewide_release", "releases"),
 ]
 
 
@@ -610,7 +612,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertGreater(data['last_updated'], 0)
         mock_get_country_wise_counts.assert_called_once()
 
-    def test_artist_map_not_calculated_artist_stat_not_present(self):
+    def test_artist_map_not_calculated_stat_not_present(self):
         """ Test to make sure that if artist stats and artist_map stats both are missing from DB, we return 204 """
 
         # Delete stats
@@ -695,12 +697,12 @@ class StatsAPITestCase(IntegrationTestCase):
         """ Test to check if no error is thrown if no msids and mbids are present"""
 
         # Overwrite the artist stats so that no artist has msids or mbids present
-        artist_stats = deepcopy(self.user_artist_payload)
-        for artist in artist_stats["data"]:
+        stats = deepcopy(self.user_artist_payload)
+        for artist in stats["data"]:
             artist['artist_mbids'] = []
             artist['artist_msid'] = None
         db_stats.insert_user_jsonb_data(self.user['id'], 'artists',
-                                        StatRange[EntityRecord](**artist_stats))
+                                        StatRange[EntityRecord](**stats))
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
                                                                                                  'force_recalculate': 'true'})
@@ -723,7 +725,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(sent['stats_range'], received['range'])
         self.assertListEqual(sent['data'][offset:count + offset], received[entity])
 
-    def test_sitewide_artist_stat(self):
+    def test_sitewide_stat(self):
         """ Test to make sure valid response is received """
         for (api_name, entity) in test_sitewide_entity_params:
             with self.subTest(api_name=api_name, entity=entity):
@@ -733,9 +735,9 @@ class StatsAPITestCase(IntegrationTestCase):
                 db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**sitewide_stat_payload))
 
                 response = self.client.get(url_for(api_name))
-                self.assertSitewideStatEqual(sitewide_stat_payload, response, entity, 60, 25)
+                self.assertSitewideStatEqual(sitewide_stat_payload, response, entity, 100, 25)
 
-    def test_sitewide_artist_stat_too_many(self):
+    def test_sitewide_stat_too_many(self):
         """ Test to make sure response received has maximum 100 listens """
         for (api_name, entity) in test_sitewide_entity_params:
             with self.subTest(api_name=api_name, entity=entity):
@@ -745,21 +747,21 @@ class StatsAPITestCase(IntegrationTestCase):
                 db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**sitewide_stat_payload))
 
                 response = self.client.get(url_for(api_name), query_string={'count': 101})
-                self.assertSitewideStatEqual(sitewide_stat_payload, response, entity, 202, 100)
+                self.assertSitewideStatEqual(sitewide_stat_payload, response, entity, 102, 100)
 
     def test_sitewide_stat_range(self):
         """ Test to make sure valid response is received when range is not all_time """
         for (api_name, entity) in test_sitewide_entity_params:
-            for (stat_range, count) in [("week", 200), ("month", 60), ("year", 60)]:
+            for stat_range in ["week", "month", "year"]:
                 with self.subTest(api_name=api_name, entity=entity, stat_range=stat_range):
                     with open(self.path_to_data_file(f'sitewide_top_{entity}_db_data_for_api_test_{stat_range}.json'), 'r') as f:
                         payload = json.load(f)
                     db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**payload))
 
                     response = self.client.get(url_for(api_name), query_string={'range': stat_range})
-                    self.assertSitewideStatEqual(payload, response, entity, count, 25)
+                    self.assertSitewideStatEqual(payload, response, entity, 25, 25)
 
-    def test_sitewide_artist_stat_invalid_range(self):
+    def test_sitewide_stat_invalid_range(self):
         """ Test to make sure 400 is received if range argument is invalid """
         for (api_name, _) in test_sitewide_entity_params:
             with self.subTest(api_name=api_name):
@@ -767,7 +769,7 @@ class StatsAPITestCase(IntegrationTestCase):
                 self.assert400(response)
                 self.assertEqual("Invalid range: foobar", response.json['error'])
 
-    def test_sitewide_artist_stat_count(self):
+    def test_sitewide_stat_count(self):
         """ Test to make sure valid response is received if count argument is passed """
         for (api_name, entity) in test_sitewide_entity_params:
             with self.subTest(api_name=api_name, entity=entity):
@@ -776,7 +778,7 @@ class StatsAPITestCase(IntegrationTestCase):
                 db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**sitewide_stat_payload))
 
                 response = self.client.get(url_for(api_name), query_string={'count': 10})
-                self.assertSitewideStatEqual(sitewide_stat_payload, response, entity, 60, 10)
+                self.assertSitewideStatEqual(sitewide_stat_payload, response, entity, 100, 10)
 
     def test_sitewide_stat_invalid_count(self):
         """ Test to make sure 400 response is received if count is negative or not integer """
@@ -787,7 +789,7 @@ class StatsAPITestCase(IntegrationTestCase):
                     self.assert400(response)
                     self.assertEqual("'count' should be a non-negative integer", response.json['error'])
 
-    def test_sitewide_artist_stat_offset(self):
+    def test_sitewide_stat_offset(self):
         """ Test to make sure valid response is received if offset argument is passed """
         for (api_name, entity) in test_sitewide_entity_params:
             with self.subTest(api_name=api_name, entity=entity):
@@ -796,7 +798,7 @@ class StatsAPITestCase(IntegrationTestCase):
                 db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**sitewide_stat_payload))
 
                 response = self.client.get(url_for(api_name), query_string={'offset': 10})
-                self.assertSitewideStatEqual(sitewide_stat_payload, response, entity, 60, 25, 10)
+                self.assertSitewideStatEqual(sitewide_stat_payload, response, entity, 100, 25, 10)
 
     def test_sitewide_stat_invalid_offset(self):
         """ Test to make sure 400 response is received if offset is negative or not integer """
