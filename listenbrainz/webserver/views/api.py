@@ -105,7 +105,7 @@ def submit_listen():
 
 
 @api_bp.route("/user/<user_name>/listens", methods=['GET', 'OPTIONS'])
-@crossdomain()
+@crossdomain(headers="Authorization")
 @ratelimit()
 @api_listenstore_needed
 def get_listens(user_name):
@@ -150,7 +150,7 @@ def get_listens(user_name):
 
 
 @api_bp.route("/user/<user_name>/listen-count", methods=['GET', 'OPTIONS'])
-@crossdomain()
+@crossdomain(headers="Authorization")
 @ratelimit()
 @api_listenstore_needed
 def get_listen_count(user_name):
@@ -181,7 +181,7 @@ def get_listen_count(user_name):
 
 
 @api_bp.route("/user/<user_name>/playing-now", methods=['GET', 'OPTIONS'])
-@crossdomain()
+@crossdomain(headers="Authorization")
 @ratelimit()
 def get_playing_now(user_name):
     """
@@ -219,7 +219,7 @@ def get_playing_now(user_name):
 
 
 @api_bp.route("/user/<user_name>/similar-users", methods=['GET', 'OPTIONS'])
-@crossdomain(headers='Content-Type')
+@crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def get_similar_users(user_name):
     """
@@ -254,7 +254,7 @@ def get_similar_users(user_name):
 
 
 @api_bp.route("/user/<user_name>/similar-to/<other_user_name>", methods=['GET', 'OPTIONS'])
-@crossdomain(headers='Content-Type')
+@crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
     """
@@ -358,7 +358,7 @@ def latest_import():
 
 
 @api_bp.route('/validate-token', methods=['GET', 'OPTIONS'])
-@crossdomain(headers='Authorization')
+@crossdomain(headers="Authorization")
 @ratelimit()
 def validate_token():
     """
@@ -539,7 +539,7 @@ def get_playlists_for_user(playlist_user_name):
 
 
 @api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=['GET', 'OPTIONS'])
-@crossdomain(headers="Content-Type")
+@crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def get_playlists_created_for_user(playlist_user_name):
     """
@@ -570,7 +570,7 @@ def get_playlists_created_for_user(playlist_user_name):
 
 
 @api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=['GET', 'OPTIONS'])
-@crossdomain(headers="Content-Type")
+@crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def get_playlists_collaborated_on_for_user(playlist_user_name):
     """
