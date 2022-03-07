@@ -1,5 +1,3 @@
-/* eslint-disable jest/no-disabled-tests */
-
 import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
@@ -15,7 +13,7 @@ import * as recentListensPropsTooManyListens from "../__mocks__/recentListensPro
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
-import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
+import Listens, { ListensProps } from "../../src/user/Listens";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 
@@ -77,7 +75,7 @@ fetchMock.mockIf(
   }
 );
 
-describe("Recentlistens", () => {
+describe("Listens page", () => {
   it("renders correctly on the profile page", () => {
     // Datepicker component uses current time at load as max date,
     // and PinnedRecordingModal component uses current time at load to display recording unpin date,
