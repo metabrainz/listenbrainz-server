@@ -871,7 +871,7 @@ export default class Listens extends React.Component<
                 {currentUser && (
                   <>
                     <PinRecordingModal
-                      recordingToPin={recordingToPin || listens[0]}
+                      recordingToPin={recordingToPin}
                       newAlert={newAlert}
                       onSuccessfulPin={(pinnedListen) =>
                         this.handlePinnedRecording(pinnedListen)
