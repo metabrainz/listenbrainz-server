@@ -622,14 +622,6 @@ export default class Listens extends React.Component<
         <h3>Recent listens</h3>
         <div className="row">
           <div className="col-md-4 col-md-push-8">
-            {!_.isNil(listenCount) && (
-              <div
-                className="row card flex-center"
-                style={{ marginBottom: "7px" }}
-              >
-                <h3>Listen count: {listenCount}</h3>
-              </div>
-            )}
             {playingNowListen && (
               <ListenCard
                 key={`playing-now-${playingNowListen.track_metadata?.track_name}-${playingNowListen.track_metadata?.artist_name}`}
@@ -653,8 +645,13 @@ export default class Listens extends React.Component<
                 newAlert={newAlert}
               />
             )}
+            {!_.isNil(listenCount) && (
+              <div className="card flex-center" style={{ marginBottom: "7px" }}>
+                <h3>Listen count: {listenCount}</h3>
+              </div>
+            )}
             {user && (
-              <div className="card row hidden-xs hidden-sm">
+              <div className="card hidden-xs hidden-sm">
                 <UserSocialNetwork user={user} newAlert={newAlert} />
               </div>
             )}
