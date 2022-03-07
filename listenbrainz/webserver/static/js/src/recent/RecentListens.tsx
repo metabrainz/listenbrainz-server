@@ -214,7 +214,7 @@ export default class RecentListens extends React.Component<
           {currentUser && (
             <>
               <PinRecordingModal
-                recordingToPin={recordingToPin || listens[0]}
+                recordingToPin={recordingToPin}
                 newAlert={newAlert}
                 onSuccessfulPin={(pinnedListen) =>
                   newAlert(
