@@ -142,8 +142,7 @@ def recent_listens():
     }
 
     return render_template("index/recent.html",
-        props=ujson.dumps(props),
-        active_section='listens')
+        props=ujson.dumps(props))
 
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
