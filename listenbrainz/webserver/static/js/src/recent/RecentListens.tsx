@@ -57,70 +57,6 @@ export default class RecentListens extends React.Component<
     };
   }
 
-  componentDidMount(): void {
-    // TODO: Get sitewide listen count?
-    this.loadFeedback();
-  }
-
-  getFeedback = async () => {
-    const { newAlert } = this.props;
-    const { APIService, currentUser } = this.context;
-    const { listens } = this.state;
-    let recordings = "";
-
-    if (listens && listens.length && currentUser?.name) {
-      listens.forEach((listen) => {
-        const recordingMsid = get(
-          listen,
-          "track_metadata.additional_info.recording_msid"
-        );
-        if (recordingMsid) {
-          recordings += `${recordingMsid},`;
-        }
-      });
-      try {
-        const data = await APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recordings
-        );
-        return data.feedback;
-      } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
-      }
-    }
-    return [];
-  };
-
-  loadFeedback = async () => {
-    const feedback = await this.getFeedback();
-    if (!feedback) {
-      return;
-    }
-    const recordingFeedbackMap: RecordingFeedbackMap = {};
-    feedback.forEach((fb: FeedbackResponse) => {
-      recordingFeedbackMap[fb.recording_msid] = fb.score;
-    });
-    this.setState({ recordingFeedbackMap });
-  };
-
-  updateFeedback = (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack
-  ) => {
-    const { recordingFeedbackMap } = this.state;
-    const newFeedbackMap = {
-      ...recordingFeedbackMap,
-      [recordingMsid]: score as ListenFeedBack,
-    };
-    this.setState({ recordingFeedbackMap: newFeedbackMap });
-  };
-
   updateRecordingToPin = (recordingToPin: Listen) => {
     this.setState({ recordingToPin });
   };
@@ -198,10 +134,6 @@ export default class RecentListens extends React.Component<
                       showTimestamp
                       showUsername
                       listen={listen}
-                      currentFeedback={this.getFeedbackForRecordingMsid(
-                        listen.track_metadata?.additional_info?.recording_msid
-                      )}
-                      updateFeedbackCallback={this.updateFeedback}
                       newAlert={newAlert}
                       additionalMenuItems={additionalMenuItems}
                     />
