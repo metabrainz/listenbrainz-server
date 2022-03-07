@@ -708,6 +708,8 @@ export default class Listens extends React.Component<
                       artistMBIDs?.length ||
                       Boolean(trackMBID) ||
                       Boolean(releaseGroupMBID);
+                    // All listens in this array should have either an MSID or MBID or both,
+                    // so we can assume we can pin them. Playing_now listens are displayed separately.
                     /* eslint-disable react/jsx-no-bind */
                     const additionalMenuItems = (
                       <>
@@ -867,19 +869,21 @@ export default class Listens extends React.Component<
                   </li>
                 </ul>
                 {currentUser && (
-                  <PinRecordingModal
-                    recordingToPin={recordingToPin || listens[0]}
-                    newAlert={newAlert}
-                    onSuccessfulPin={(pinnedListen) =>
-                      this.handlePinnedRecording(pinnedListen)
-                    }
-                  />
+                  <>
+                    <PinRecordingModal
+                      recordingToPin={recordingToPin || listens[0]}
+                      newAlert={newAlert}
+                      onSuccessfulPin={(pinnedListen) =>
+                        this.handlePinnedRecording(pinnedListen)
+                      }
+                    />
+                    <CBReviewModal
+                      listen={recordingToReview || listens[0]}
+                      isCurrentUser={currentUser?.name === user?.name}
+                      newAlert={newAlert}
+                    />
+                  </>
                 )}
-                <CBReviewModal
-                  listen={recordingToReview || listens[0]}
-                  isCurrentUser={currentUser?.name === user?.name}
-                  newAlert={newAlert}
-                />
               </div>
             )}
           </div>
