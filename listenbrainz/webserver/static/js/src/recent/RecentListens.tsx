@@ -225,7 +225,7 @@ export default class RecentListens extends React.Component<
                 }
               />
               <CBReviewModal
-                listen={recordingToReview || listens[0]}
+                listen={recordingToReview}
                 isCurrentUser
                 newAlert={newAlert}
               />
