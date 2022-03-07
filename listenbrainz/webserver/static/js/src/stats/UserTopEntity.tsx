@@ -100,7 +100,7 @@ export default class UserTopEntity extends React.Component<
     if (user) {
       statsUrl = `${window.location.origin}/user/${user.name}`;
     } else {
-      statsUrl = `${window.location.origin}/sitewide`;
+      statsUrl = `${window.location.origin}/statistics`;
     }
     statsUrl += `/charts?range=${range}&entity=${entity}`;
 

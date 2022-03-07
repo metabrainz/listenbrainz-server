@@ -290,13 +290,13 @@ def huesound():
     )
 
 
-@index_bp.route("/sitewide/charts/")
+@index_bp.route("/statistics/charts/")
 def charts():
     """ Show the top sitewide entities. """
     return render_template("index/charts.html")
 
 
-@index_bp.route("/sitewide/reports/")
+@index_bp.route("/statistics/")
 def reports():
     """ Show sitewide reports """
     return render_template("index/reports.html")
