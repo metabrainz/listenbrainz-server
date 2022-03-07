@@ -11,8 +11,8 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const props: ListenControlProps = {
   title: "foobar",
+  text: "foobar",
   icon: faHeart,
-  iconOnly: true,
 };
 
 describe("ListenCountCard", () => {
