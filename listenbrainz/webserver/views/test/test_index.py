@@ -279,8 +279,6 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         response = self.client.get(url_for('index.recent_listens'))
         self.assert200(response)
         self.assertTemplateUsed('index/recent.html')
-        props = ujson.loads(self.get_context_variable('props'))
-        self.assertEqual(props['mode'], 'recent')
 
     def test_feed_page(self):
         user = db_user.get_or_create(1, 'iliekcomputers')
