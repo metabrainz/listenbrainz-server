@@ -72,7 +72,7 @@ export default class UserTopEntity extends React.Component<
     const { entity, range, user } = this.props;
     try {
       return await this.APIService.getUserEntity(
-        user ? user.name : undefined,
+        user?.name,
         entity,
         range,
         0,
@@ -98,10 +98,11 @@ export default class UserTopEntity extends React.Component<
 
     let statsUrl;
     if (user) {
-      statsUrl = `${window.location.origin}/user/${user.name}/charts?range=${range}&entity=${entity}`;
+      statsUrl = `${window.location.origin}/user/${user.name}`;
     } else {
-      statsUrl = `${window.location.origin}/sitewide/charts?range=${range}&entity=${entity}`;
+      statsUrl = `${window.location.origin}/sitewide`;
     }
+    statsUrl += `/charts?range=${range}&entity=${entity}`;
 
     const entityTextOnCard = `${entity}s`;
 
