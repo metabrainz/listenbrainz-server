@@ -4,18 +4,15 @@ import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
-import { io } from "socket.io-client";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 import APIServiceClass from "../../src/utils/APIService";
 
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
-import * as recentListensPropsTooManyListens from "../__mocks__/recentListensPropsTooManyListens.json";
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
-import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
-import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
+import RecentListens from "../../src/recent/RecentListens";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 
@@ -88,9 +85,9 @@ describe("Recentlistens", () => {
       .mockImplementation(() => mockDate.getTime());
 
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    const wrapper = mount<Listens>(
+    const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <Listens {...props} />
+        <RecentListens {...props} />
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
@@ -100,9 +97,9 @@ describe("Recentlistens", () => {
 
 describe("componentDidMount", () => {
   it("calls loadFeedback if user is logged in", () => {
-    const wrapper = mount<Listens>(
+    const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <Listens {...propsOneListen} />
+        <RecentListens {...propsOneListen} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -114,11 +111,11 @@ describe("componentDidMount", () => {
   });
 
   it('does not fetch user feedback if user is not logged in"', () => {
-    const wrapper = mount<Listens>(
+    const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider
         value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
       >
-        <Listens {...propsOneListen} />
+        <RecentListens {...propsOneListen} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -137,7 +134,10 @@ describe("componentDidMount", () => {
 
 describe("updateRecordingToPin", () => {
   it("sets the recordingToPin in the state", async () => {
-    const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
 
     const instance = wrapper.instance();
     const recordingToPin = props.listens[1];
@@ -151,7 +151,10 @@ describe("updateRecordingToPin", () => {
 
 describe("updateRecordingToReview", () => {
   it("sets the recordingToReview in the state", async () => {
-    const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
     const instance = wrapper.instance();
     const recordingToReview = props.listens[1];
 
@@ -164,9 +167,9 @@ describe("updateRecordingToReview", () => {
 
 describe("pinRecordingModal", () => {
   it("renders the PinRecordingModal component with the correct props", async () => {
-    const wrapper = mount<Listens>(
+    const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <Listens {...props} />
+        <RecentListens {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
@@ -194,9 +197,9 @@ describe("pinRecordingModal", () => {
 
 describe("CBReviewModal", () => {
   it("renders the CBReviewModal component with the correct props", async () => {
-    const wrapper = mount<Listens>(
+    const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <Listens {...props} />
+        <RecentListens {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
