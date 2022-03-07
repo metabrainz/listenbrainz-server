@@ -147,72 +147,67 @@ export default class RecentListens extends React.Component<
         <div className="row">
           <div className="col-md-8">
             {!listens.length && (
-              <div className="lead text-center">
-                <p>No listens yet</p>
-              </div>
+              <h5 className="text-center">No listens to show</h5>
             )}
             {listens.length > 0 && (
-              <>
-                <div id="listens">
-                  {listens.map((listen) => {
-                    const recordingMBID = getRecordingMBID(listen);
-                    const artistMBIDs = getArtistMBIDs(listen);
-                    const trackMBID = get(
-                      listen,
-                      "track_metadata.additional_info.track_mbid"
-                    );
-                    const releaseGroupMBID = getReleaseGroupMBID(listen);
+              <div id="listens">
+                {listens.map((listen) => {
+                  const recordingMBID = getRecordingMBID(listen);
+                  const artistMBIDs = getArtistMBIDs(listen);
+                  const trackMBID = get(
+                    listen,
+                    "track_metadata.additional_info.track_mbid"
+                  );
+                  const releaseGroupMBID = getReleaseGroupMBID(listen);
 
-                    const isListenReviewable =
-                      Boolean(recordingMBID) ||
-                      artistMBIDs?.length ||
-                      Boolean(trackMBID) ||
-                      Boolean(releaseGroupMBID);
-                    /* eslint-disable react/jsx-no-bind */
-                    const additionalMenuItems = (
-                      <>
-                        <ListenControl
-                          title="Pin this recording"
-                          icon={faThumbtack}
-                          action={this.updateRecordingToPin.bind(this, listen)}
-                          dataToggle="modal"
-                          dataTarget="#PinRecordingModal"
-                        />
-                        {isListenReviewable && (
-                          <ListenControl
-                            title="Write a review"
-                            icon={faPencilAlt}
-                            action={this.updateRecordingToReview.bind(
-                              this,
-                              listen
-                            )}
-                            dataToggle="modal"
-                            dataTarget="#CBReviewModal"
-                          />
-                        )}
-                      </>
-                    );
-                    /* eslint-enable react/jsx-no-bind */
-                    return (
-                      <ListenCard
-                        key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                        showTimestamp
-                        showUsername
-                        listen={listen}
-                        currentFeedback={this.getFeedbackForRecordingMsid(
-                          listen.track_metadata?.additional_info?.recording_msid
-                        )}
-                        updateFeedbackCallback={this.updateFeedback}
-                        newAlert={newAlert}
-                        additionalMenuItems={additionalMenuItems}
+                  const isListenReviewable =
+                    Boolean(recordingMBID) ||
+                    artistMBIDs?.length ||
+                    Boolean(trackMBID) ||
+                    Boolean(releaseGroupMBID);
+                  // On the Recent page listens should have either an MSID or MBID or both,
+                  // so we can assume we can pin them
+                  /* eslint-disable react/jsx-no-bind */
+                  const additionalMenuItems = (
+                    <>
+                      <ListenControl
+                        title="Pin this recording"
+                        icon={faThumbtack}
+                        action={this.updateRecordingToPin.bind(this, listen)}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
                       />
-                    );
-                  })}
-                </div>
-                {!listens.length && (
-                  <h5 className="text-center">No listens to show</h5>
-                )}
-              </>
+                      {isListenReviewable && (
+                        <ListenControl
+                          title="Write a review"
+                          icon={faPencilAlt}
+                          action={this.updateRecordingToReview.bind(
+                            this,
+                            listen
+                          )}
+                          dataToggle="modal"
+                          dataTarget="#CBReviewModal"
+                        />
+                      )}
+                    </>
+                  );
+                  /* eslint-enable react/jsx-no-bind */
+                  return (
+                    <ListenCard
+                      key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                      showTimestamp
+                      showUsername
+                      listen={listen}
+                      currentFeedback={this.getFeedbackForRecordingMsid(
+                        listen.track_metadata?.additional_info?.recording_msid
+                      )}
+                      updateFeedbackCallback={this.updateFeedback}
+                      newAlert={newAlert}
+                      additionalMenuItems={additionalMenuItems}
+                    />
+                  );
+                })}
+              </div>
             )}
           </div>
           <div className="col-md-4" />
