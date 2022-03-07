@@ -538,8 +538,8 @@ export default class CBReviewModal extends React.Component<
               data-toggle="dropdown"
               type="button"
             >
-              {`${entityToReview.name}
-              (${entityToReview.type.replace("_", " ")})`}
+              {`${entityToReview.name} (
+              ${entityToReview.type.replace("_", " ")})`}
               <span className="caret" />
             </button>
 
