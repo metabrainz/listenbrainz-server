@@ -110,10 +110,7 @@ export default class UserArtistMap extends React.Component<
   getData = async (): Promise<UserArtistMapResponse> => {
     const { range, user } = this.props;
     try {
-      return await this.APIService.getUserArtistMap(
-        user ? user.name : undefined,
-        range
-      );
+      return await this.APIService.getUserArtistMap(user?.name, range);
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({

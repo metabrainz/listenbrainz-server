@@ -129,10 +129,7 @@ export default class UserListeningActivity extends React.Component<
   getData = async (): Promise<UserListeningActivityResponse> => {
     const { range, user } = this.props;
     try {
-      return await this.APIService.getUserListeningActivity(
-        user ? user.name : undefined,
-        range
-      );
+      return await this.APIService.getUserListeningActivity(user?.name, range);
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({

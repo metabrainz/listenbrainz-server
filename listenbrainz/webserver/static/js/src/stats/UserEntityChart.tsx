@@ -132,7 +132,7 @@ export default class UserEntityChart extends React.Component<
     const { user } = this.props;
     const { APIService } = this.context;
     let data = await APIService.getUserEntity(
-      user ? user.name : undefined,
+      user?.name,
       entity,
       range,
       undefined,

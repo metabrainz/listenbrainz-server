@@ -392,7 +392,7 @@ export default class APIService {
   };
 
   getUserListeningActivity = async (
-    userName: string | undefined,
+    userName?: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserListeningActivityResponse> => {
     let url;
@@ -429,7 +429,7 @@ export default class APIService {
   };
 
   getUserArtistMap = async (
-    userName: string | undefined,
+    userName?: string,
     range: UserStatsAPIRange = "all_time",
     forceRecalculate: boolean = false
   ) => {
