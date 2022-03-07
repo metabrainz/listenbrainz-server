@@ -95,43 +95,6 @@ describe("Recentlistens", () => {
   });
 });
 
-describe("componentDidMount", () => {
-  it("calls loadFeedback if user is logged in", () => {
-    const wrapper = mount<RecentListens>(
-      <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...propsOneListen} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-    instance.loadFeedback = jest.fn();
-
-    instance.componentDidMount();
-
-    expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not fetch user feedback if user is not logged in"', () => {
-    const wrapper = mount<RecentListens>(
-      <GlobalAppContext.Provider
-        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
-      >
-        <RecentListens {...propsOneListen} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
-    const APIFeedbackSpy = jest.spyOn(
-      instance.context.APIService,
-      "getFeedbackForUserForRecordings"
-    );
-
-    instance.componentDidMount();
-
-    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
-    expect(APIFeedbackSpy).not.toHaveBeenCalled();
-  });
-});
-
 describe("updateRecordingToPin", () => {
   it("sets the recordingToPin in the state", async () => {
     const wrapper = mount<RecentListens>(
