@@ -16,7 +16,7 @@ import { countWords } from "../utils/utils";
 import Loader from "../components/Loader";
 
 export type CBReviewModalProps = {
-  listen: Listen;
+  listen?: Listen;
   isCurrentUser: Boolean;
   newAlert: (
     alertType: AlertType,
@@ -108,7 +108,7 @@ export default class CBReviewModal extends React.Component<
 
   async componentDidUpdate(prevProps: CBReviewModalProps) {
     const { listen } = this.props;
-    if (prevProps.listen !== listen) {
+    if (listen && prevProps.listen !== listen) {
       this.setState({
         textContent: "",
         rating: 0,
@@ -209,6 +209,9 @@ export default class CBReviewModal extends React.Component<
 
   getRecordingEntity = async () => {
     const { listen } = this.props;
+    if (!listen) {
+      return;
+    }
     const { additional_info } = listen.track_metadata;
 
     let recording_mbid = "";
@@ -238,6 +241,9 @@ export default class CBReviewModal extends React.Component<
 
   getArtistEntity = () => {
     const { listen } = this.props;
+    if (!listen) {
+      return;
+    }
     const { additional_info } = listen.track_metadata;
     let artist_mbid;
 
@@ -259,8 +265,10 @@ export default class CBReviewModal extends React.Component<
 
   getReleaseGroupEntity = async () => {
     const { listen } = this.props;
+    if (!listen) {
+      return;
+    }
     const { additional_info } = listen.track_metadata;
-
     let release_group_mbid = "";
 
     if (additional_info?.release_group_mbid) {
@@ -356,6 +364,9 @@ export default class CBReviewModal extends React.Component<
     maxRetries: number = 1
   ): Promise<null> => {
     const { isCurrentUser, newAlert, listen } = this.props;
+    if (!listen) {
+      return null;
+    }
     const { APIService, critiquebrainzAuth } = this.context;
     const accessToken = access_token ?? critiquebrainzAuth?.access_token;
     const {
@@ -485,8 +496,8 @@ export default class CBReviewModal extends React.Component<
     if (!entityToReview) {
       return (
         <div>
-          We could not link <b>{listen.track_metadata?.track_name}</b> by{" "}
-          <b>{listen.track_metadata?.artist_name}</b> to any recording, artist,
+          We could not link <b>{listen?.track_metadata?.track_name}</b> by{" "}
+          <b>{listen?.track_metadata?.artist_name}</b> to any recording, artist,
           or release group on MusicBrainz.
           <br />
           <br />
@@ -515,7 +526,7 @@ export default class CBReviewModal extends React.Component<
         {!recordingEntity && (
           <div className="alert alert-danger">
             We could not find a recording for{" "}
-            <b>{listen.track_metadata?.track_name}</b>.
+            <b>{listen?.track_metadata?.track_name}</b>.
           </div>
         )}
 
@@ -527,7 +538,7 @@ export default class CBReviewModal extends React.Component<
               data-toggle="dropdown"
               type="button"
             >
-              {`${entityToReview.name} 
+              {`${entityToReview.name}
               (${entityToReview.type.replace("_", " ")})`}
               <span className="caret" />
             </button>

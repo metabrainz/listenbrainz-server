@@ -878,7 +878,7 @@ export default class Listens extends React.Component<
                       }
                     />
                     <CBReviewModal
-                      listen={recordingToReview || listens[0]}
+                      listen={recordingToReview}
                       isCurrentUser={currentUser?.name === user?.name}
                       newAlert={newAlert}
                     />
