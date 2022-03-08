@@ -12,8 +12,12 @@ def crossdomain(origin='*', methods=None, headers=None,
     # Based on snippet by Armin Ronacher located at http://flask.pocoo.org/snippets/56/.
     if methods is not None:
         methods = ', '.join(sorted(x.upper() for x in methods))
+    default_headers = ["AUTHORIZATION", "CONTENT-TYPE"]
     if headers is not None and not isinstance(headers, string_types):
-        headers = ', '.join(x.upper() for x in headers)
+        for x in headers:
+            if x.upper() not in default_headers:
+                headers += ', '.join(x.upper())
+    headers += ', '.join(x for x in default_headers)
     if not isinstance(origin, string_types):
         origin = ', '.join(origin)
     if isinstance(max_age, timedelta):
