@@ -288,3 +288,15 @@ def huesound():
         "index/huesound.html",
         props=ujson.dumps({})
     )
+
+
+@index_bp.route("/statistics/charts/")
+def charts():
+    """ Show the top sitewide entities. """
+    return render_template("index/charts.html")
+
+
+@index_bp.route("/statistics/")
+def reports():
+    """ Show sitewide reports """
+    return render_template("index/reports.html")

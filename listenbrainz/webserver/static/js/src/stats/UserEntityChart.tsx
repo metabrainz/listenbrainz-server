@@ -29,7 +29,7 @@ import {
 import ListenCard from "../listens/ListenCard";
 
 export type UserEntityChartProps = {
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
   apiUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
@@ -132,7 +132,7 @@ export default class UserEntityChart extends React.Component<
     const { user } = this.props;
     const { APIService } = this.context;
     let data = await APIService.getUserEntity(
-      user.name,
+      user?.name,
       entity,
       range,
       undefined,
@@ -185,15 +185,13 @@ export default class UserEntityChart extends React.Component<
     const { user } = this.props;
     const { APIService } = this.context;
     const offset = (page - 1) * this.ROWS_PER_PAGE;
-
-    const data = await APIService.getUserEntity(
-      user.name,
+    return APIService.getUserEntity(
+      user?.name,
       entity,
       range,
       offset,
       this.ROWS_PER_PAGE
     );
-    return data;
   };
 
   processData = (

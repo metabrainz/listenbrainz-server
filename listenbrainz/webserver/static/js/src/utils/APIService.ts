@@ -363,13 +363,19 @@ export default class APIService {
   };
 
   getUserEntity = async (
-    userName: string,
+    userName: string | undefined,
     entity: Entity,
     range: UserStatsAPIRange = "all_time",
     offset: number = 0,
     count?: number
   ): Promise<UserEntityResponse> => {
-    let url = `${this.APIBaseURI}/stats/user/${userName}/${entity}s?offset=${offset}&range=${range}`;
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/`;
+    }
+    url += `${entity}s?offset=${offset}&range=${range}`;
     if (count !== null && count !== undefined) {
       url += `&count=${count}`;
     }
@@ -386,11 +392,16 @@ export default class APIService {
   };
 
   getUserListeningActivity = async (
-    userName: string,
+    userName?: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserListeningActivityResponse> => {
-    const url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity?range=${range}`;
-    const response = await fetch(url);
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/listening-activity`;
+    }
+    const response = await fetch(`${url}?range=${range}`);
     await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
@@ -418,11 +429,17 @@ export default class APIService {
   };
 
   getUserArtistMap = async (
-    userName: string,
+    userName?: string,
     range: UserStatsAPIRange = "all_time",
     forceRecalculate: boolean = false
   ) => {
-    const url = `${this.APIBaseURI}/stats/user/${userName}/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/`;
+    }
+    url += `artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
