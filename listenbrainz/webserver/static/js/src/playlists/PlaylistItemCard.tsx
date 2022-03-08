@@ -65,6 +65,7 @@ export default class PlaylistItemCard extends React.Component<
         {canEdit && (
           <ListenControl
             title="Remove from playlist"
+            text="Remove from playlist"
             icon={faMinusCircle}
             action={this.removeTrack}
           />

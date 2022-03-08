@@ -65,9 +65,9 @@ def _prepare_query_message(query, **params):
 
 
 def send_request_to_spark_cluster(query, **params):
-    message = _prepare_query_message(query, **params)
-
     with create_app().app_context():
+        message = _prepare_query_message(query, **params)
+
         rabbitmq_connection = utils.connect_to_rabbitmq(
             username=current_app.config['RABBITMQ_USERNAME'],
             password=current_app.config['RABBITMQ_PASSWORD'],
@@ -108,10 +108,8 @@ def request_user_stats(type_, range_, entity):
     }
     if type_ == "entity" and entity:
         params["entity"] = entity
-    try:
-        send_request_to_spark_cluster(f"stats.user.{type_}", **params)
-    except InvalidSparkRequestError:
-        click.echo("Incorrect arguments provided")
+
+    send_request_to_spark_cluster(f"stats.user.{type_}", **params)
 
 
 @cli.command(name="request_sitewide_stats")
@@ -129,10 +127,8 @@ def request_sitewide_stats(type_, range_, entity):
     }
     if type_ == "entity" and entity:
         params["entity"] = entity
-    try:
-        send_request_to_spark_cluster(f"stats.sitewide.{type_}", **params)
-    except InvalidSparkRequestError:
-        click.echo("Incorrect arguments provided")
+
+    send_request_to_spark_cluster(f"stats.sitewide.{type_}", **params)
 
 
 @cli.command(name="request_yim_new_release_stats")
@@ -360,7 +356,7 @@ def cron_request_all_stats(ctx):
             ctx.invoke(request_user_stats, type_=stat, range_=stats_range)
 
         for entity in ["artists", "releases", "recordings"]:
-            ctx.invoke(request_sitewide_stats, range_=stats_range, entity=entity)
+            ctx.invoke(request_sitewide_stats, type_="entity", range_=stats_range, entity=entity)
 
         for stat in ["listening_activity"]:
             ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)

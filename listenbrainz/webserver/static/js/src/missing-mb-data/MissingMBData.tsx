@@ -190,7 +190,8 @@ export default class MissingMBDataPage extends React.Component<
                     <ListenControl
                       buttonClassName="btn btn-sm btn-success"
                       icon={faPlus}
-                      title=""
+                      title="Add missing recording"
+                      text=""
                       // eslint-disable-next-line react/jsx-no-bind
                       action={this.submitMissingData.bind(
                         this,

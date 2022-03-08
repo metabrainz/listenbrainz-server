@@ -1,6 +1,129 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UserReports renders without crashing 1`] = `
+exports[`Sitewide Stats UserReports renders without crashing 1`] = `
+<div>
+  <div
+    className="row mt-15"
+  >
+    <div
+      className="col-xs-12"
+    >
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        This Week
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        This Month
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        This Year
+      </Pill>
+      <Pill
+        active={true}
+        onClick={[Function]}
+        type="secondary"
+      >
+        Last Week
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        Last Month
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        Last Year
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        All time
+      </Pill>
+    </div>
+  </div>
+  <section
+    id="listening-activity"
+  >
+    <ErrorBoundary>
+      <UserListeningActivity
+        apiUrl="foobar"
+        range="week"
+      />
+    </ErrorBoundary>
+  </section>
+  <section
+    id="top-entity"
+  >
+    <div
+      className="row"
+    >
+      <div
+        className="col-md-4"
+      >
+        <ErrorBoundary>
+          <UserTopEntity
+            apiUrl="foobar"
+            entity="artist"
+            range="week"
+          />
+        </ErrorBoundary>
+      </div>
+      <div
+        className="col-md-4"
+      >
+        <ErrorBoundary>
+          <UserTopEntity
+            apiUrl="foobar"
+            entity="release"
+            range="week"
+          />
+        </ErrorBoundary>
+      </div>
+      <div
+        className="col-md-4"
+      >
+        <ErrorBoundary>
+          <UserTopEntity
+            apiUrl="foobar"
+            entity="recording"
+            range="week"
+          />
+        </ErrorBoundary>
+      </div>
+    </div>
+  </section>
+  <section
+    id="artist-origin"
+  >
+    <ErrorBoundary>
+      <UserArtistMap
+        apiUrl="foobar"
+        range="week"
+      />
+    </ErrorBoundary>
+  </section>
+</div>
+`;
+
+exports[`User Stats UserReports renders without crashing 1`] = `
 <div>
   <div
     className="row mt-15"

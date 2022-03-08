@@ -241,6 +241,15 @@ def get_sitewide_stats(stats_range: str, stats_type: str) -> Optional[StatApi[En
     return get_user_stats(SITEWIDE_STATS_USER_ID, stats_range, stats_type)
 
 
+def get_sitewide_listening_activity(stats_range: str) -> Optional[StatApi[ListeningActivityRecord]]:
+    """Get sitewide listening activity in the given time range.
+
+        Args:
+            stats_range: the time range to fetch the stats for
+    """
+    return get_user_listening_activity(SITEWIDE_STATS_USER_ID, stats_range)
+
+
 def valid_stats_exist(user_id, days):
     """ Returns True if statistics for a user have been calculated in
     the last X days (where x is passed to the function), and are present in the db
