@@ -17,7 +17,7 @@ def crossdomain(origin='*', methods=None, headers=None,
         for x in headers:
             if x.upper() not in default_headers:
                 headers = headers + ', ' + x.upper()
-    headers = headers + ', '.join(x for x in default_headers)
+    headers = headers + ', '.join(default_headers)
     if not isinstance(origin, string_types):
         origin = ', '.join(origin)
     if isinstance(max_age, timedelta):
