@@ -651,7 +651,10 @@ export default class Listens extends React.Component<
               </div>
             )}
             {user && (
-              <div className="card hidden-xs hidden-sm">
+              <div
+                className="card hidden-xs hidden-sm"
+                style={{ paddingTop: "1.5em" }}
+              >
                 <UserSocialNetwork user={user} newAlert={newAlert} />
               </div>
             )}
