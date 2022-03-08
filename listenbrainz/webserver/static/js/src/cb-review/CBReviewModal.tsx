@@ -12,7 +12,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
-import { countWords } from "../utils/utils";
+import {
+  countWords,
+  getArtistMBIDs,
+  getRecordingMBID,
+  getReleaseGroupMBID,
+  getReleaseMBID,
+} from "../utils/utils";
 import Loader from "../components/Loader";
 
 export type CBReviewModalProps = {
@@ -214,20 +220,18 @@ export default class CBReviewModal extends React.Component<
     }
     const { additional_info } = listen.track_metadata;
 
-    let recording_mbid = "";
+    let recording_mbid = getRecordingMBID(listen);
 
-    if (additional_info?.recording_mbid) {
-      recording_mbid = additional_info?.recording_mbid;
-      // If listen doesn't contain recording_mbid attribute,
-      // search for it using the track mbid instead
-    } else if (additional_info?.track_mbid) {
+    // If listen doesn't contain recording_mbid attribute,
+    // search for it using the track mbid instead
+    if (!recording_mbid && additional_info?.track_mbid) {
       recording_mbid = await this.getRecordingMBIDFromTrack(
         additional_info?.track_mbid,
         listen.track_metadata.track_name
       );
     }
     // confirm that found mbid was valid
-    if (recording_mbid.length) {
+    if (recording_mbid?.length) {
       const entity: ReviewableEntity = {
         type: "recording",
         mbid: recording_mbid,
@@ -244,12 +248,8 @@ export default class CBReviewModal extends React.Component<
     if (!listen) {
       return;
     }
-    const { additional_info } = listen.track_metadata;
-    let artist_mbid;
 
-    if (additional_info?.artist_mbids) {
-      artist_mbid = additional_info?.artist_mbids[0];
-    }
+    const artist_mbid = getArtistMBIDs(listen)?.[0];
 
     if (artist_mbid) {
       const entity: ReviewableEntity = {
@@ -268,21 +268,18 @@ export default class CBReviewModal extends React.Component<
     if (!listen) {
       return;
     }
-    const { additional_info } = listen.track_metadata;
-    let release_group_mbid = "";
 
-    if (additional_info?.release_group_mbid) {
-      release_group_mbid = additional_info?.release_group_mbid;
-      // If listen doesn't contain release_group_mbid attribute,
-      // search for it using the release mbid instead
-    } else if (additional_info?.release_mbid) {
-      release_group_mbid = await this.getGroupMBIDFromRelease(
-        additional_info?.release_mbid
-      );
+    let release_group_mbid = getReleaseGroupMBID(listen);
+    const release_mbid = getReleaseMBID(listen);
+
+    // If listen doesn't contain release_group_mbid attribute,
+    // search for it using the release mbid instead
+    if (!release_group_mbid && !!release_mbid) {
+      release_group_mbid = await this.getGroupMBIDFromRelease(release_mbid);
     }
 
     // confirm that found mbid is valid
-    if (release_group_mbid.length) {
+    if (release_group_mbid?.length) {
       const entity: ReviewableEntity = {
         type: "release_group",
         mbid: release_group_mbid,

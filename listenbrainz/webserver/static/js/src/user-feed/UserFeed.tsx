@@ -437,6 +437,7 @@ export default class UserFeedPage extends React.Component<
                 <ListenControl
                   icon={faTrash}
                   title="Delete Event"
+                  text="Delete Event"
                   // eslint-disable-next-line react/jsx-no-bind
                   action={this.deleteFeedEvent.bind(this, event)}
                 />
@@ -607,6 +608,20 @@ export default class UserFeedPage extends React.Component<
 
                           <span className="event-time">
                             {preciseTimestamp(created * 1000)}
+                            {((event.event_type ===
+                              EventType.RECORDING_RECOMMENDATION ||
+                              event.event_type === EventType.RECORDING_PIN) &&
+                              event.user_name === currentUser.name) ||
+                            event.event_type === EventType.NOTIFICATION ? (
+                              <ListenControl
+                                title="Delete Event"
+                                text=""
+                                icon={faTrash}
+                                buttonClassName="btn btn-link btn-xs"
+                                // eslint-disable-next-line react/jsx-no-bind
+                                action={this.deleteFeedEvent.bind(this, event)}
+                              />
+                            ) : null}
                           </span>
                         </div>
 

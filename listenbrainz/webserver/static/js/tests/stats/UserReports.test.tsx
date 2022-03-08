@@ -3,165 +3,174 @@ import { shallow } from "enzyme";
 
 import UserReports, { UserReportsProps } from "../../src/stats/UserReports";
 
-const props: UserReportsProps = {
+const userProps: UserReportsProps = {
   user: {
     name: "test_user",
   },
   apiUrl: "foobar",
 };
 
-describe("UserReports", () => {
-  it("renders without crashing", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
+const sitewideProps: UserReportsProps = {
+  apiUrl: "foobar",
+};
 
-    expect(wrapper).toMatchSnapshot();
-  });
-});
+describe.each([
+  ["User Stats", userProps],
+  ["Sitewide Stats", sitewideProps],
+])("%s", (name, props) => {
+  describe("UserReports", () => {
+    it("renders without crashing", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
 
-describe("ComponentDidMount", () => {
-  it('adds event listener for "popstate" event', () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
-
-    const spy = jest.spyOn(window, "addEventListener");
-    spy.mockImplementationOnce(() => {});
-    instance.syncStateWithURL = jest.fn();
-    instance.componentDidMount();
-
-    expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
+      expect(wrapper).toMatchSnapshot();
+    });
   });
 
-  it("calls getURLParams once", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
+  describe("ComponentDidMount", () => {
+    it('adds event listener for "popstate" event', () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
 
-    instance.getURLParams = jest.fn();
-    instance.syncStateWithURL = jest.fn();
-    instance.componentDidMount();
+      const spy = jest.spyOn(window, "addEventListener");
+      spy.mockImplementationOnce(() => {});
+      instance.syncStateWithURL = jest.fn();
+      instance.componentDidMount();
 
-    expect(instance.getURLParams).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
+    });
+
+    it("calls getURLParams once", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
+
+      instance.getURLParams = jest.fn();
+      instance.syncStateWithURL = jest.fn();
+      instance.componentDidMount();
+
+      expect(instance.getURLParams).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls replaceState with correct parameters", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
+
+      const spy = jest.spyOn(window.history, "replaceState");
+      spy.mockImplementationOnce(() => {});
+      instance.getURLParams = jest.fn().mockImplementationOnce(() => "week");
+      instance.syncStateWithURL = jest.fn();
+      instance.componentDidMount();
+
+      expect(spy).toHaveBeenCalledWith(null, "", "?range=week");
+    });
+
+    it("calls syncStateWithURL", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
+
+      instance.syncStateWithURL = jest.fn();
+      instance.componentDidMount();
+
+      expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it("calls replaceState with correct parameters", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
+  describe("componentWillUnmount", () => {
+    it('removes "popstate" event listener', () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
 
-    const spy = jest.spyOn(window.history, "replaceState");
-    spy.mockImplementationOnce(() => {});
-    instance.getURLParams = jest.fn().mockImplementationOnce(() => "week");
-    instance.syncStateWithURL = jest.fn();
-    instance.componentDidMount();
+      const spy = jest.spyOn(window, "removeEventListener");
+      spy.mockImplementationOnce(() => {});
+      instance.syncStateWithURL = jest.fn();
+      instance.componentWillUnmount();
 
-    expect(spy).toHaveBeenCalledWith(null, "", "?range=week");
+      expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
+    });
   });
 
-  it("calls syncStateWithURL", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
+  describe("changeRange", () => {
+    it("calls setURLParams with correct parameters", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
 
-    instance.syncStateWithURL = jest.fn();
-    instance.componentDidMount();
+      instance.setURLParams = jest.fn();
+      instance.syncStateWithURL = jest.fn();
+      instance.changeRange("year");
 
-    expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
-  });
-});
+      expect(instance.setURLParams).toHaveBeenCalledWith("year");
+    });
 
-describe("componentWillUnmount", () => {
-  it('removes "popstate" event listener', () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
+    it("calls syncStateWithURL once", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
 
-    const spy = jest.spyOn(window, "removeEventListener");
-    spy.mockImplementationOnce(() => {});
-    instance.syncStateWithURL = jest.fn();
-    instance.componentWillUnmount();
+      instance.syncStateWithURL = jest.fn();
+      instance.changeRange("year");
 
-    expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
-  });
-});
-
-describe("changeRange", () => {
-  it("calls setURLParams with correct parameters", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
-
-    instance.setURLParams = jest.fn();
-    instance.syncStateWithURL = jest.fn();
-    instance.changeRange("year");
-
-    expect(instance.setURLParams).toHaveBeenCalledWith("year");
+      expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it("calls syncStateWithURL once", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
+  describe("syncStateWithUrl", () => {
+    it("calls getURLParams once", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
 
-    instance.syncStateWithURL = jest.fn();
-    instance.changeRange("year");
+      instance.getURLParams = jest.fn();
+      instance.syncStateWithURL();
 
-    expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
-  });
-});
+      expect(instance.getURLParams).toHaveBeenCalledTimes(1);
+    });
 
-describe("syncStateWithUrl", () => {
-  it("calls getURLParams once", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
+    it("sets state correcty", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
 
-    instance.getURLParams = jest.fn();
-    instance.syncStateWithURL();
+      instance.getURLParams = jest.fn().mockImplementationOnce(() => "month");
+      instance.syncStateWithURL();
 
-    expect(instance.getURLParams).toHaveBeenCalledTimes(1);
-  });
-
-  it("sets state correcty", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
-
-    instance.getURLParams = jest.fn().mockImplementationOnce(() => "month");
-    instance.syncStateWithURL();
-
-    expect(wrapper.state("range")).toEqual("month");
-  });
-});
-
-describe("getURLParams", () => {
-  it("gets default parameters if none are provided in the URL", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
-
-    delete window.location;
-    window.location = {
-      href: "https://foobar.org",
-    } as Window["location"];
-    const range = instance.getURLParams();
-
-    expect(range).toEqual("week");
+      expect(wrapper.state("range")).toEqual("month");
+    });
   });
 
-  it("gets parameters if provided in the URL", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
+  describe("getURLParams", () => {
+    it("gets default parameters if none are provided in the URL", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
 
-    delete window.location;
-    window.location = {
-      href: "https://foobar.org?range=year",
-    } as Window["location"];
-    const range = instance.getURLParams();
+      delete window.location;
+      window.location = {
+        href: "https://foobar.org",
+      } as Window["location"];
+      const range = instance.getURLParams();
 
-    expect(range).toEqual("year");
+      expect(range).toEqual("week");
+    });
+
+    it("gets parameters if provided in the URL", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
+
+      delete window.location;
+      window.location = {
+        href: "https://foobar.org?range=year",
+      } as Window["location"];
+      const range = instance.getURLParams();
+
+      expect(range).toEqual("year");
+    });
   });
-});
 
-describe("setURLParams", () => {
-  it("sets URL parameters", () => {
-    const wrapper = shallow<UserReports>(<UserReports {...props} />);
-    const instance = wrapper.instance();
+  describe("setURLParams", () => {
+    it("sets URL parameters", () => {
+      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      const instance = wrapper.instance();
 
-    const spy = jest.spyOn(window.history, "pushState");
-    spy.mockImplementationOnce(() => {});
+      const spy = jest.spyOn(window.history, "pushState");
+      spy.mockImplementationOnce(() => {});
 
-    instance.setURLParams("all_time");
-    expect(spy).toHaveBeenCalledWith(null, "", "?range=all_time");
+      instance.setURLParams("all_time");
+      expect(spy).toHaveBeenCalledWith(null, "", "?range=all_time");
+    });
   });
 });

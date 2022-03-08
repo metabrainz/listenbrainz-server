@@ -183,6 +183,7 @@ export default class PlayerPage extends React.Component<
                       <ListenControl
                         icon={faExternalLinkAlt}
                         title="Open in MusicBrainz"
+                        text="Open in MusicBrainz"
                         link={releaseLink}
                         anchorTagAttributes={{
                           target: "_blank",
