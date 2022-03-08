@@ -105,7 +105,7 @@ def submit_listen():
 
 
 @api_bp.route("/user/<user_name>/listens", methods=['GET', 'OPTIONS'])
-@crossdomain(headers="Authorization")
+@crossdomain()
 @ratelimit()
 @api_listenstore_needed
 def get_listens(user_name):
@@ -150,7 +150,7 @@ def get_listens(user_name):
 
 
 @api_bp.route("/user/<user_name>/listen-count", methods=['GET', 'OPTIONS'])
-@crossdomain(headers="Authorization")
+@crossdomain()
 @ratelimit()
 @api_listenstore_needed
 def get_listen_count(user_name):
@@ -181,7 +181,7 @@ def get_listen_count(user_name):
 
 
 @api_bp.route("/user/<user_name>/playing-now", methods=['GET', 'OPTIONS'])
-@crossdomain(headers="Authorization")
+@crossdomain()
 @ratelimit()
 def get_playing_now(user_name):
     """
@@ -286,7 +286,7 @@ def get_similar_to_user(user_name, other_user_name):
 
 
 @api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
-@crossdomain(headers='Authorization, Content-Type')
+@crossdomain()
 @ratelimit()
 def latest_import():
     """
@@ -358,7 +358,7 @@ def latest_import():
 
 
 @api_bp.route('/validate-token', methods=['GET', 'OPTIONS'])
-@crossdomain(headers="Authorization")
+@crossdomain()
 @ratelimit()
 def validate_token():
     """
