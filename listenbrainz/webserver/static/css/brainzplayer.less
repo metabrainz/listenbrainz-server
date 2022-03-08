@@ -42,6 +42,7 @@
 				height: min(80vw, @big-cover-art-size);
 				width: min(80vw, @big-cover-art-size);
 				bottom: @brainzplayer-height + @progress-bar-height;
+				max-height: calc(100vh - @brainzplayer-height - @progress-bar-height);
 			}
 
 			>* {
@@ -55,6 +56,7 @@
 			img {
 				height: inherit;
 				width: inherit;
+				max-height: inherit;
 				object-fit: cover;
 			}
 
