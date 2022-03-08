@@ -12,12 +12,10 @@ def crossdomain(origin='*', methods=None, headers=None,
     # Based on snippet by Armin Ronacher located at http://flask.pocoo.org/snippets/56/.
     if methods is not None:
         methods = ', '.join(sorted(x.upper() for x in methods))
-    default_headers = {"AUTHORIZATION", "CONTENT-TYPE"}
-    if headers is not None and not isinstance(headers, string_types):
-        headers.add(x for x in default_headers)
-        headers = ', '.join(x.upper() for x in headers)
-    else:
-        headers = ', '.join(default_headers)
+    all_headers = {"AUTHORIZATION", "CONTENT-TYPE"}
+    if headers is not None:
+        all_headers.update(headers)
+    all_headers = ', '.join(x.upper() for x in headers)
     if not isinstance(origin, string_types):
         origin = ', '.join(origin)
     if isinstance(max_age, timedelta):
@@ -44,8 +42,8 @@ def crossdomain(origin='*', methods=None, headers=None,
             h['Access-Control-Allow-Origin'] = origin
             h['Access-Control-Allow-Methods'] = get_methods()
             h['Access-Control-Max-Age'] = str(max_age)
-            if headers is not None:
-                h['Access-Control-Allow-Headers'] = headers
+            if all_headers is not None:
+                h['Access-Control-Allow-Headers'] = all_headers
             return resp
 
         f.provide_automatic_options = False
