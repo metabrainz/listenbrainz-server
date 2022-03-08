@@ -13,11 +13,9 @@ def crossdomain(origin='*', methods=None, headers=None,
     if methods is not None:
         methods = ', '.join(sorted(x.upper() for x in methods))
     default_headers = ["AUTHORIZATION", "CONTENT-TYPE"]
+    headers.add(x for x in default_headers)
     if headers is not None and not isinstance(headers, string_types):
-        for x in headers:
-            if x.upper() not in default_headers:
-                headers = headers + ', ' + x.upper()
-    headers = headers + ', '.join(default_headers)
+        headers = ', '.join(x.upper() for x in headers)
     if not isinstance(origin, string_types):
         origin = ', '.join(origin)
     if isinstance(max_age, timedelta):
