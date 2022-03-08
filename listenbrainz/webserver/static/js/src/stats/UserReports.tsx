@@ -13,7 +13,7 @@ import { getPageProps } from "../utils/utils";
 import { getAllStatRanges } from "./utils";
 
 export type UserReportsProps = {
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
   apiUrl: string;
 };
 
@@ -78,7 +78,6 @@ export default class UserReports extends React.Component<
     const { range } = this.state;
     const { apiUrl, user } = this.props;
 
-    type UserStatsPair = [UserStatsAPIRange, string];
     const ranges = getAllStatRanges();
     return (
       <div>
@@ -136,11 +135,13 @@ export default class UserReports extends React.Component<
             </div>
           </div>
         </section>
-        <section id="daily-activity">
-          <ErrorBoundary>
-            <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
-          </ErrorBoundary>
-        </section>
+        {user && (
+          <section id="daily-activity">
+            <ErrorBoundary>
+              <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
+            </ErrorBoundary>
+          </section>
+        )}
         <section id="artist-origin">
           <ErrorBoundary>
             <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
