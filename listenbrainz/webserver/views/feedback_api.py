@@ -20,7 +20,7 @@ FEEDBACK_DEFAULT_SCORE = 0
 
 
 @feedback_api_bp.route("/recording-feedback", methods=["POST", "OPTIONS"])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain()
 @ratelimit()
 def recording_feedback():
     """
