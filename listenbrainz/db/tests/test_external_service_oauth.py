@@ -53,7 +53,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
             scopes=['user-read-recently-played']
         )
         user = db_oauth.get_token(self.user['id'], ExternalServiceType.SPOTIFY)
-        self.assertEqual('token', user['new_token'])
+        self.assertEqual(user['access_token'], 'new_token')
 
     def test_update_token(self):
         db_oauth.update_token(
