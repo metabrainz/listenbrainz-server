@@ -173,7 +173,6 @@ export default class MissingMBDataPage extends React.Component<
         <div className="col-xs-12 col-md-8">
           <div>
             <div id="missingMBData" ref={this.MissingMBDataTable}>
-              <h2>Missing Data:</h2>
               <div
                 style={{
                   height: 0,
