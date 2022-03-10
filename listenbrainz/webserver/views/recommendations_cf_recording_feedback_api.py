@@ -26,7 +26,7 @@ recommendation_feedback_api_bp = Blueprint('recommendation_feedback_api_v1', __n
 
 
 @recommendation_feedback_api_bp.route("submit", methods=["POST", "OPTIONS"])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain()
 @ratelimit()
 def submit_recommendation_feedback():
     """
@@ -75,7 +75,7 @@ def submit_recommendation_feedback():
 
 
 @recommendation_feedback_api_bp.route("delete", methods=["POST", "OPTIONS"])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain()
 @ratelimit()
 def delete_recommendation_feedback():
     """
