@@ -38,6 +38,23 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         user = db_oauth.get_token(2, ExternalServiceType.SPOTIFY)
         self.assertEqual('token', user['access_token'])
 
+    def test_create_oauth_multiple(self):
+        """ Test saving the token again for a given service and user_id
+         overwrites existing one without crash. """
+        # one time already saved in db by setup method
+        # second time here
+        db_oauth.save_token(
+            user_id=self.user['id'],
+            service=ExternalServiceType.SPOTIFY,
+            access_token='new_token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=['user-read-recently-played']
+        )
+        user = db_oauth.get_token(self.user['id'], ExternalServiceType.SPOTIFY)
+        self.assertEqual('token', user['new_token'])
+
     def test_update_token(self):
         db_oauth.update_token(
             user_id=self.user['id'],
