@@ -1,30 +1,71 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ListenCountCard renders correctly 1`] = `
+exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
 <ListenCountCard
   listenCount={100}
 >
   <ForwardRef
     id="listen-count-card"
+    style={
+      Object {
+        "fontSize": 24,
+      }
+    }
   >
     <div
       className="card "
       id="listen-count-card"
+      style={
+        Object {
+          "fontSize": 24,
+        }
+      }
     >
-      <h4>
+      <p>
         You have listened to
-        <hr />
-      </h4>
-      <div>
-        <h4>
-          100
-        </h4>
+        <hr
+          style={
+            Object {
+              "marginBottom": 12,
+              "marginTop": 12,
+            }
+          }
+        />
+        100
+        <br />
         <small
           className="text-muted"
         >
           songs so far
         </small>
-      </div>
+      </p>
+    </div>
+  </ForwardRef>
+</ListenCountCard>
+`;
+
+exports[`ListenCountCard renders correctly when listen count is zero or undefined 1`] = `
+<ListenCountCard>
+  <ForwardRef
+    id="listen-count-card"
+    style={
+      Object {
+        "fontSize": 24,
+      }
+    }
+  >
+    <div
+      className="card "
+      id="listen-count-card"
+      style={
+        Object {
+          "fontSize": 24,
+        }
+      }
+    >
+      <p>
+        You have not listened to any songs so far
+      </p>
     </div>
   </ForwardRef>
 </ListenCountCard>

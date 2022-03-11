@@ -9,15 +9,17 @@ const ListenCountCard = (props: ListenCountCardProps) => {
   const { listenCount } = props;
 
   return (
-    <Card id="listen-count-card">
-      <h4>
-        You have listened to
-        <hr />
-      </h4>
-      <div>
-        <h4>{listenCount}</h4>
-        <small className="text-muted">songs so far</small>
-      </div>
+    <Card id="listen-count-card" style={{ fontSize: 24 }}>
+      {listenCount && (
+        <p>
+          You have listened to
+          <hr style={{ marginTop: 12, marginBottom: 12 }} />
+          {listenCount.toLocaleString()}
+          <br />
+          <small className="text-muted">songs so far</small>
+        </p>
+      )}
+      {!listenCount && <p>You have not listened to any songs so far</p>}
     </Card>
   );
 };
