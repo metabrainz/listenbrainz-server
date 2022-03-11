@@ -21,10 +21,18 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
     token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            INSERT INTO external_service_oauth 
+            INSERT INTO external_service_oauth
             (user_id, service, access_token, refresh_token, token_expires, scopes)
-            VALUES 
+            VALUES
             (:user_id, :service, :access_token, :refresh_token, :token_expires, :scopes)
+            ON CONFLICT (user_id, service)
+            DO UPDATE SET
+                user_id = EXCLUDED.user_id,
+                service = EXCLUDED.service,
+                access_token = EXCLUDED.access_token,
+                refresh_token = EXCLUDED.refresh_token,
+                token_expires = EXCLUDED.token_expires,
+                scopes = EXCLUDED.scopes
             RETURNING id
             """), {
                 "user_id": user_id,
@@ -42,6 +50,10 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
                 (external_service_oauth_id, user_id, service)
                 VALUES
                 (:external_service_oauth_id, :user_id, :service)
+                ON CONFLICT (user_id, service) DO UPDATE SET
+                    external_service_oauth_id = EXCLUDED.external_service_oauth_id,
+                    user_id = EXCLUDED.user_id,
+                    service = EXCLUDED.service
                 """), {
                 "external_service_oauth_id": external_service_oauth_id,
                 "user_id": user_id,
