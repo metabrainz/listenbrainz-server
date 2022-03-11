@@ -107,7 +107,7 @@ export default class RecentListens extends React.Component<
                   const additionalMenuItems = (
                     <>
                       <ListenControl
-                        title="Pin this recording"
+                        text="Pin this recording"
                         icon={faThumbtack}
                         action={this.updateRecordingToPin.bind(this, listen)}
                         dataToggle="modal"
@@ -115,7 +115,7 @@ export default class RecentListens extends React.Component<
                       />
                       {isListenReviewable && (
                         <ListenControl
-                          title="Write a review"
+                          text="Write a review"
                           icon={faPencilAlt}
                           action={this.updateRecordingToReview.bind(
                             this,
