@@ -158,10 +158,15 @@ export default class PinnedRecordingCard extends React.Component<
     const additionalMenuItems = (
       <>
         {currentlyPinned && (
-          <ListenControl title="Unpin" action={() => this.unpinRecording()} />
+          <ListenControl
+            title="Unpin"
+            text="Unpin"
+            action={() => this.unpinRecording()}
+          />
         )}
         <ListenControl
           title="Delete Pin"
+          text="Delete Pin"
           action={() => this.deletePin(pinnedRecording)}
         />
       </>

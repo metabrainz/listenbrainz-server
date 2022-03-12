@@ -32,7 +32,7 @@ DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 
 @api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain()
 @ratelimit()
 def submit_listen():
     """
@@ -104,7 +104,7 @@ def submit_listen():
     return jsonify({'status': 'ok'})
 
 
-@api_bp.route("/user/<user_name>/listens")
+@api_bp.route("/user/<user_name>/listens", methods=['GET', 'OPTIONS'])
 @crossdomain()
 @ratelimit()
 @api_listenstore_needed
@@ -149,7 +149,7 @@ def get_listens(user_name):
     }})
 
 
-@api_bp.route("/user/<user_name>/listen-count")
+@api_bp.route("/user/<user_name>/listen-count", methods=['GET', 'OPTIONS'])
 @crossdomain()
 @ratelimit()
 @api_listenstore_needed
@@ -180,7 +180,7 @@ def get_listen_count(user_name):
     }})
 
 
-@api_bp.route("/user/<user_name>/playing-now")
+@api_bp.route("/user/<user_name>/playing-now", methods=['GET', 'OPTIONS'])
 @crossdomain()
 @ratelimit()
 def get_playing_now(user_name):
@@ -219,7 +219,7 @@ def get_playing_now(user_name):
 
 
 @api_bp.route("/user/<user_name>/similar-users", methods=['GET', 'OPTIONS'])
-@crossdomain(headers='Content-Type')
+@crossdomain()
 @ratelimit()
 def get_similar_users(user_name):
     """
@@ -254,7 +254,7 @@ def get_similar_users(user_name):
 
 
 @api_bp.route("/user/<user_name>/similar-to/<other_user_name>", methods=['GET', 'OPTIONS'])
-@crossdomain(headers='Content-Type')
+@crossdomain()
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
     """
@@ -286,7 +286,7 @@ def get_similar_to_user(user_name, other_user_name):
 
 
 @api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
-@crossdomain(headers='Authorization, Content-Type')
+@crossdomain()
 @ratelimit()
 def latest_import():
     """
@@ -358,7 +358,7 @@ def latest_import():
 
 
 @api_bp.route('/validate-token', methods=['GET', 'OPTIONS'])
-@crossdomain(headers='Authorization')
+@crossdomain()
 @ratelimit()
 def validate_token():
     """
@@ -425,13 +425,18 @@ def validate_token():
 
 
 @api_bp.route('/delete-listen', methods=['POST', 'OPTIONS'])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain()
 @ratelimit()
 @api_listenstore_needed
 def delete_listen():
     """
     Delete a particular listen from a user's listen history.
     This checks for the correct authorization token and deletes the listen.
+
+    .. note::
+
+        The listen is not deleted immediately, but is scheduled for deletion, which
+        usually happens shortly after the hour.
 
     The format of the JSON to be POSTed to this endpoint is:
 
@@ -498,8 +503,8 @@ def serialize_playlists(playlists, playlist_count, count, offset):
             "count": count}
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists", methods=["GET", "OPTIONS"])
-@crossdomain(headers="Authorization, Content-Type")
+@api_bp.route("/user/<playlist_user_name>/playlists", methods=['GET', 'OPTIONS'])
+@crossdomain()
 @ratelimit()
 def get_playlists_for_user(playlist_user_name):
     """
@@ -533,8 +538,8 @@ def get_playlists_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=["GET", "OPTIONS"])
-@crossdomain(headers="Content-Type")
+@api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=['GET', 'OPTIONS'])
+@crossdomain()
 @ratelimit()
 def get_playlists_created_for_user(playlist_user_name):
     """
@@ -564,8 +569,8 @@ def get_playlists_created_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=["GET", "OPTIONS"])
-@crossdomain(headers="Content-Type")
+@api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=['GET', 'OPTIONS'])
+@crossdomain()
 @ratelimit()
 def get_playlists_collaborated_on_for_user(playlist_user_name):
     """

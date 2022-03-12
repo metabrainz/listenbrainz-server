@@ -319,6 +319,13 @@ describe("getUserEntity", () => {
     );
   });
 
+  it("calls fetch correctly when username is not passed", async () => {
+    await apiService.getUserEntity(undefined, "release", "all_time", 10, 5);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/stats/sitewide/releases?offset=10&range=all_time&count=5"
+    );
+  });
+
   it("calls fetch correctly when optional parameters are not passed", async () => {
     await apiService.getUserEntity("foobar", "artist");
     expect(window.fetch).toHaveBeenCalledWith(
@@ -364,6 +371,13 @@ describe("getUserListeningActivity", () => {
     await apiService.getUserListeningActivity("foobar", "week");
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/stats/user/foobar/listening-activity?range=week"
+    );
+  });
+
+  it("calls fetch correctly when username is not passed", async () => {
+    await apiService.getUserListeningActivity(undefined);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/stats/sitewide/listening-activity?range=all_time"
     );
   });
 
@@ -467,6 +481,13 @@ describe("getUserArtistMap", () => {
     await apiService.getUserArtistMap("foobar");
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/stats/user/foobar/artist-map?range=all_time&force_recalculate=false"
+    );
+  });
+
+  it("calls fetch correctly when username is not passed", async () => {
+    await apiService.getUserArtistMap(undefined);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/stats/sitewide/artist-map?range=all_time&force_recalculate=false"
     );
   });
 

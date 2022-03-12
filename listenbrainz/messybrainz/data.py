@@ -220,15 +220,14 @@ def load_recordings_from_msids(connection, messybrainz_ids):
         if msid not in msid_recording_map:
             raise exceptions.NoDataFoundException
         row = msid_recording_map[msid]
-
-        result = {}
-        result["payload"] = row["data"]
-        result["ids"] = {"artist_mbids": [], "release_mbid": ""}
-        result["ids"]["recording_mbid"] = str(row["data"]["recording_mbid"]) if "recording_mbid" in row["data"] else ""
-        result["ids"]["artist_msid"] = str(row["artist"])
-        result["ids"]["release_msid"] = str(row["release"]) if row["release"] else None
-        result["ids"]["recording_msid"] = str(row["gid"])
-        results.append(result)
+        results.append({
+            "payload": row["data"],
+            "ids": {
+                "artist_msid": str(row["artist"]),
+                "release_msid": str(row["release"]) if row["release"] else None,
+                "recording_msid": str(row["gid"])
+            }
+        })
 
     return results
 

@@ -188,6 +188,10 @@ def search():
     return render_template("index/search-users.html", search_term=search_term, users=users)
 
 
+@index_bp.route('/messybrainz/', methods=['GET', 'OPTIONS'])
+def messybrainz():
+    return render_template("index/messybrainz.html")
+
 
 @index_bp.route('/delete-user/<int:musicbrainz_row_id>')
 def mb_user_deleter(musicbrainz_row_id):
@@ -208,7 +212,7 @@ def mb_user_deleter(musicbrainz_row_id):
     user = db_user.get_by_mb_row_id(musicbrainz_row_id)
     if user is None:
         raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
-    delete_user(user['musicbrainz_id'])
+    delete_user(user['id'])
     return jsonify({'status': 'ok'}), 200
 
 
@@ -284,3 +288,15 @@ def huesound():
         "index/huesound.html",
         props=ujson.dumps({})
     )
+
+
+@index_bp.route("/statistics/charts/")
+def charts():
+    """ Show the top sitewide entities. """
+    return render_template("index/charts.html")
+
+
+@index_bp.route("/statistics/")
+def reports():
+    """ Show sitewide reports """
+    return render_template("index/reports.html")

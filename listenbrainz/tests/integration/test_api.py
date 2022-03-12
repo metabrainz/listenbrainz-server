@@ -53,7 +53,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # send a listen
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload)
+        response = self.send_data(payload, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -151,7 +151,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         user = db_user.get_or_create(1, 'test_order')
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts + (100 * i)
-            response = self.send_data(payload, user)
+            response = self.send_data(payload, user, recalculate=True)
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
@@ -499,7 +499,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         payload['payload'][0]['listened_at'] = 1280258690
-        response = self.send_data(payload)
+        response = self.send_data(payload, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -549,7 +549,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test mbid fields with [], "", null values are dropped without error """
         with open(self.path_to_data_file('invalid_mbid_listens.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 

@@ -9,8 +9,7 @@ export type ListenControlProps = {
   iconClassName?: string;
   action?: (event: React.MouseEvent) => void;
   icon?: IconDefinition;
-  iconOnly?: boolean;
-  title: string;
+  text: string;
   dataToggle?: string;
   dataTarget?: string;
   disabled?: boolean;
@@ -20,6 +19,9 @@ export type ListenControlProps = {
   link?: string;
   // optional anchor tag attributes such as {target:"_blank", rel:"noopener noreferrer"}
   anchorTagAttributes?: any;
+  ariaLabel?: string;
+  // If no title is passed, text element would serve as default title
+  title?: string;
 };
 
 const ListenControl = (props: ListenControlProps) => {
@@ -28,22 +30,28 @@ const ListenControl = (props: ListenControlProps) => {
     iconClassName,
     action,
     icon,
-    iconOnly,
-    title,
+    text,
     dataToggle,
     dataTarget,
     disabled,
     link,
     anchorTagAttributes,
+    ariaLabel,
+    title,
   } = props;
 
   if (link) {
     // When using the link property,
     // render an anchor tag with an href instead of onClick
     return (
-      <a href={link} title={title} {...anchorTagAttributes}>
+      <a
+        href={link}
+        aria-label={ariaLabel ?? title ?? text}
+        title={title ?? text}
+        {...anchorTagAttributes}
+      >
         {icon && <FontAwesomeIcon icon={icon as IconProp} />}
-        &nbsp;{title}
+        &nbsp;{text}
       </a>
     );
   }
@@ -51,28 +59,22 @@ const ListenControl = (props: ListenControlProps) => {
   let iconElement;
   if (icon) {
     iconElement = (
-      <FontAwesomeIcon
-        icon={icon as IconProp}
-        className={iconClassName}
-        title={title}
-        onClick={disabled ? undefined : action}
-      />
+      <FontAwesomeIcon icon={icon as IconProp} className={iconClassName} />
     );
   }
 
-  return iconOnly ? (
-    iconElement ?? <>No icon to render</>
-  ) : (
+  return (
     <button
       disabled={disabled ?? false}
       className={buttonClassName}
-      title={title}
+      title={title ?? text}
       onClick={disabled ? undefined : action}
       type="button"
       data-toggle={dataToggle}
       data-target={dataTarget}
+      aria-label={ariaLabel ?? text}
     >
-      {iconElement} {title}
+      {iconElement} {text}
     </button>
   );
 };

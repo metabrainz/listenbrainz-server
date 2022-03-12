@@ -10,7 +10,7 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand logo" href="{{ url_for('index.index') }}">
-        <img src="{{ url_for('static', filename='img/navbar_logo.svg') }}" alt="ListenBrainz" />
+          <img src="{{ url_for('static', filename='img/navbar_logo.svg') }}" alt="ListenBrainz" />
       </a>
     </div>
 
@@ -18,15 +18,15 @@
     <div class="collapse navbar-collapse" id="lb-navbar-collapse">
       <ul class="nav navbar-nav">
         {% if not hide_navbar_user_menu %}
-        {% if current_user.is_authenticated %}
-        <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
-        <li><a href="{{ url_for('index.feed') }}">My Feed</a></li>
-        {% endif %}
+          {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Home</a></li>
+            <li><a href="{{ url_for('index.feed') }}">Feed</a></li>
+          {% endif %}
         {%- endif -%}
         <li><a href="{{ url_for('index.recent_listens') }}">Recent</a></li>
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-            Data<span class="caret"></span>
+             Data<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
             <li><a href="{{ url_for('index.add_data_info') }}">Adding data</a></li>
@@ -36,7 +36,7 @@
         </li>
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-            Explore<span class="caret"></span>
+             Explore<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
             <li><a href="{{ url_for('index.huesound') }}">Hue Sound</a></li>
@@ -46,10 +46,11 @@
         </li>
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-            About<span class="caret"></span>
+             About<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
             <li><a href="{{ url_for('index.about') }}">About ListenBrainz</a></li>
+            <li><a href="{{ url_for('index.messybrainz') }}">MessyBrainz</a></li>
             <li><a href="https://listenbrainz.readthedocs.io">API Docs</a></li>
             <li><a href="{{ url_for('index.current_status') }}">Current site status</a></li>
             <li><a href="https://metabrainz.org/gdpr">GDPR compliance</a></li>
@@ -57,41 +58,39 @@
             <li><a href="https://metabrainz.org">About MetaBrainz</a></li>
           </ul>
         </li>
-      </ul>
+    </ul>
 
-      {% if not hide_navbar_user_menu %}
+    {% if not hide_navbar_user_menu %}
       <ul class="nav navbar-nav navbar-right">
         {% if not current_user.is_authenticated or current_user.is_anonymous %}
-        <li>
-          <a href="{{ url_for('login.index') }}">Sign in</a>
-        </li>
+          <li>
+            <a href="{{ url_for('login.index') }}">Sign in</a>
+          </li>
         {% else %}
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-            {{ current_user.musicbrainz_id }} <span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
-            <li><a href="{{ url_for('index.feed') }}">My Feed</a></li>
-            <li><a href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">My Playlists</a></li>
-            <li><a href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">Tracks you might like</a></li>
-            <li><a href="{{ url_for('profile.music_services_details') }}">Connect Services</a></li>
-            <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
-            <li><a href="{{ url_for('profile.export_data') }}">Export</a></li>
-            <li><a href="{{ url_for('profile.info') }}">My profile</a></li>
-            <li><a href="{{ url_for('profile.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Add Missing MusicBrainz Data</a></li>
-            <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
-          </ul>
-        </li>
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+              {{ current_user.musicbrainz_id }} <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="{{ url_for('profile.info') }}">Settings</a></li>
+              <li><a href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">Playlists</a></li>
+              <li><a href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">Tracks you might like</a></li>
+              <li><a href="{{ url_for('profile.music_services_details') }}">Connect Services</a></li>
+              <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
+              <li><a href="{{ url_for('profile.export_data') }}">Export</a></li>
+              <li><a href="{{ url_for('user.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Add Missing MusicBrainz Data</a></li>
+              <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
+            </ul>
+          </li>
         {%- endif -%}
       </ul>
-      <form class=" navbar-right" role="search" method="GET" action="/search">
+      <form class="navbar-form navbar-right" role="search" method="GET" action="/search">
         <div class="form-group">
-          <input type="text" name="search_term" class="form-control form-control-sm" placeholder="Search Listener" required>
+          <input type="text" name="search_term" class="form-control input-sm" placeholder="Search Listener" required>
         </div>
-        <button type="submit" class="btn btn-primary form-control-sm"><span class="glyphicon glyphicon-search"></span></button>
+        <button type="submit" class="btn btn-primary input-sm"><span class="glyphicon glyphicon-search"></span></button>
       </form>
-      {% endif %}
+    {% endif %}
     </div>
 
   </div>

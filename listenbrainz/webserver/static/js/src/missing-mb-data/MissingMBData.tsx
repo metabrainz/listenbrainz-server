@@ -173,7 +173,6 @@ export default class MissingMBDataPage extends React.Component<
         <div className="col-xs-12 col-md-8">
           <div>
             <div id="missingMBData" ref={this.MissingMBDataTable}>
-              <h2>Missing Data:</h2>
               <div
                 style={{
                   height: 0,
@@ -190,7 +189,8 @@ export default class MissingMBDataPage extends React.Component<
                     <ListenControl
                       buttonClassName="btn btn-sm btn-success"
                       icon={faPlus}
-                      title=""
+                      title="Add missing recording"
+                      text=""
                       // eslint-disable-next-line react/jsx-no-bind
                       action={this.submitMissingData.bind(
                         this,

@@ -478,6 +478,12 @@ export default class RecentListens extends React.Component<
         );
         if (status === 200) {
           this.setState({ deletedListen: listen });
+          newAlert(
+            "info",
+            "Success",
+            "This listen has not been deleted yet, but is scheduled for deletion," +
+              " which usually happens shortly after the hour."
+          );
           // wait for the delete animation to finish
           setTimeout(() => {
             this.removeListenFromListenList(listen);
@@ -708,6 +714,7 @@ export default class RecentListens extends React.Component<
                         <>
                           <ListenControl
                             title="Pin this recording"
+                            text="Pin this recording"
                             icon={faThumbtack}
                             action={this.updateRecordingToPin.bind(
                               this,
@@ -719,6 +726,7 @@ export default class RecentListens extends React.Component<
                           {isListenReviewable && (
                             <ListenControl
                               title="Write a review"
+                              text="Write a review"
                               icon={faPencilAlt}
                               action={this.updateRecordingToReview.bind(
                                 this,
@@ -731,6 +739,7 @@ export default class RecentListens extends React.Component<
                           {canDelete && (
                             <ListenControl
                               title="Delete Listen"
+                              text="Delete Listen"
                               icon={faTrashAlt}
                               action={this.deleteListen.bind(this, listen)}
                             />

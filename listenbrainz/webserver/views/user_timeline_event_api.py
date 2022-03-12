@@ -42,14 +42,15 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
 from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html, \
     _validate_get_endpoint_params
 
-MAX_LISTEN_EVENTS_PER_USER = 2 # the maximum number of listens we want to return in the feed per user
+MAX_LISTEN_EVENTS_PER_USER = 2  # the maximum number of listens we want to return in the feed per user
+MAX_LISTEN_EVENTS_OVERALL = 10  # the maximum number of listens we want to return in the feed overall across users
 DEFAULT_LISTEN_EVENT_WINDOW = 14 * 24 * 60 * 60  # 14 days, to limit the search space of listen events and avoid timeouts
 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recording', methods=['POST', 'OPTIONS'])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain()
 @ratelimit()
 def create_user_recording_recommendation_event(user_name):
     """ Make the user recommend a recording to their followers.
@@ -103,7 +104,7 @@ def create_user_recording_recommendation_event(user_name):
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/notification', methods=['POST', 'OPTIONS'])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain()
 @ratelimit()
 def create_user_notification_event(user_name):
     """ Post a message with a link on a user's timeline. Only approved users are allowed to perform this action.
@@ -155,7 +156,7 @@ def create_user_notification_event(user_name):
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain()
 @ratelimit()
 @api_listenstore_needed
 def user_feed(user_name: str):
@@ -236,7 +237,7 @@ def user_feed(user_name: str):
 
 
 @user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain()
 @ratelimit()
 def delete_feed_events(user_name):
     '''
@@ -316,7 +317,8 @@ def get_listen_events(
         users,
         min_ts=min_ts,
         max_ts=max_ts,
-        limit=MAX_LISTEN_EVENTS_PER_USER,
+        per_user_limit=MAX_LISTEN_EVENTS_PER_USER,
+        limit=MAX_LISTEN_EVENTS_OVERALL
     )
 
     events = []
