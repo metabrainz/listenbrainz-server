@@ -34,7 +34,8 @@ def create_tables(mb_conn):
                                          release_name              TEXT NOT NULL,
                                          recording_mbid            UUID NOT NULL,
                                          recording_name            TEXT NOT NULL,
-                                         combined_lookup           TEXT NOT NULL,
+                                         artist_lookup             TEXT NOT NULL,
+                                         recording_lookup          TEXT NOT NULL,
                                          score                     INTEGER NOT NULL)""")
             curs.execute(
                 "DROP TABLE IF EXISTS mapping.tmp_mbid_mapping_releases")
@@ -64,14 +65,16 @@ def create_indexes(conn):
                                   WHERE id IN (
                                                 SELECT id 
                                                   FROM (
-                                                          SELECT id, combined_lookup, score,
-                                                                 row_number() OVER (PARTITION BY combined_lookup ORDER BY score)
+                                                          SELECT id, artist_lookup, recording_lookup, score,
+                                                                 row_number() OVER (PARTITION BY artist_lookup, recording_lookup ORDER BY score)
                                                             FROM mapping.tmp_mbid_mapping
-                                                        GROUP BY combined_lookup, score, id
+                                                        GROUP BY artist_lookup, recording_lookup, score, id
                                                        ) AS q
                                                  WHERE row_number > 1)""")
-            curs.execute("""CREATE UNIQUE INDEX tmp_mbid_mapping_idx_combined_lookup
-                                      ON mapping.tmp_mbid_mapping(combined_lookup)""")
+            curs.execute("""CREATE UNIQUE INDEX tmp_mbid_mapping_idx_artist_recording_lookup
+                                             ON mapping.tmp_mbid_mapping(artist_lookup, recording_lookup)""")
+            curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_artist_recording_lookup_trgm
+                                      ON mapping.tmp_mbid_mapping USING GIN (artist_lookup, recording_lookup gin_trgm_ops)""")
         conn.commit()
     except OperationalError as err:
         log("mbid mapping: failed to mbid mapping", err)
@@ -170,8 +173,8 @@ def swap_table_and_indexes(conn):
 
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_artist_credit_recording_name
                             RENAME TO mbid_mapping_idx_artist_credit_recording_name""")
-            curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_combined_lookup
-                            RENAME TO mbid_mapping_idx_combined_lookup""")
+            curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_artist_recording_lookup
+                            RENAME TO mbid_mapping_idx_artist_recording_lookup""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_release
                             RENAME TO mbid_mapping_releases_idx_release""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_id
@@ -274,8 +277,8 @@ def create_mbid_mapping():
                         artist_credit_name = row['artist_credit_name']
 
                         release_name = row['release_name']
-                        combined_lookup = unidecode(
-                            re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
+                        artist_lookup = unidecode(re.sub(r'[^\w]+', '', artist_credit_name).lower())
+                        recording_lookup = unidecode(re.sub(r'[^\w]+', '', recording_name).lower())
                         if recording_name not in artist_recordings:
                             artist_recordings[recording_name] = (serial,
                                                                  row['artist_credit_id'],
@@ -285,7 +288,8 @@ def create_mbid_mapping():
                                                                  release_name,
                                                                  row['recording_mbid'],
                                                                  recording_name,
-                                                                 combined_lookup,
+                                                                 artist_lookup,
+                                                                 recording_lookup,
                                                                  row['score'])
                             serial += 1
                     except TypeError:
