@@ -106,14 +106,14 @@ class TimescaleListenStore:
                   FROM listen_user_metadata
                  WHERE user_id = :user_id
             ),
-             -- we only do this for max_ts because it means listens newer than last time 
-             -- metadata update cron job. these appear on the first page (or near to it) of
-             -- listens. the similar min_ts case would appear at the last page and is likely
-             -- no one would notice so need to do extra work
+             -- we only do this for max_ts because it means listens newer than the last time 
+             -- metadata update cron job ran. these appear on the first page (or near to it) of
+             -- listens. there is a similar case for min_ts but those listens would appear at/near
+             -- the last page and it is likely no one would notice, so need to do extra work
              listens_after_update AS (
                 SELECT max(listened_at) AS new_max_ts
                   FROM listen l
-                -- we want max(listened_at) so why bother adding a >= listened_at clause ?
+                -- we want max(listened_at) so why bother adding a >= listened_at clause?
                 -- because we want to limit the scan to a few chunks making the query run much faster
                   
                 -- do not directly join to CTE, otherwise TS generates a suboptimal query plan
