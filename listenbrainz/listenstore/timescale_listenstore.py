@@ -100,10 +100,37 @@ class TimescaleListenStore:
     def get_timestamps_for_user(self, user_id: int) -> Tuple[Optional[int], Optional[int]]:
         """ Return the min_ts and max_ts for the given list of users """
         query = """
-            SELECT COALESCE(min(min_listened_at), 0) AS min_ts
-                 , COALESCE(max(max_listened_at), 0) AS max_ts
-              FROM listen_user_metadata
-             WHERE user_id = :user_id 
+            WITH last_update AS (
+                SELECT min_listened_at AS existing_min_ts
+                     , max_listened_at AS existing_max_ts
+                  FROM listen_user_metadata
+                 WHERE user_id = :user_id
+            ),
+             -- we only do this for max_ts because it means listens newer than the last time 
+             -- metadata update cron job ran. these appear on the first page (or near to it) of
+             -- listens. there is a similar case for min_ts but those listens would appear at/near
+             -- the last page and it is likely no one would notice, so need to do extra work
+             listens_after_update AS (
+                SELECT max(listened_at) AS new_max_ts
+                  FROM listen l
+                -- we want max(listened_at) so why bother adding a >= listened_at clause?
+                -- because we want to limit the scan to a few chunks making the query run much faster
+                  
+                -- do not directly join to CTE, otherwise TS generates a suboptimal query plan
+                -- scanning all chunks. whereas doing it this way, we get runtime chunk exclusion
+                 WHERE l.listened_at >= (SELECT existing_max_ts FROM last_update)
+                   AND l.user_id = :user_id
+                -- note that we do not consider the created field here. our purpose is to know the timestamp
+                -- of the latest listen for a given user for listens that have been inserted since the cron
+                -- job ran last time and hence are unaccounted for in listen_user_metadata table. we could
+                -- add a check for created column as well here but that would probably be more inefficient.
+                -- listened_at and user_id have an index so we can get away with just reading the index and not
+                -- fetching actual table rows.
+             )
+             SELECT COALESCE(greatest(existing_max_ts, new_max_ts), 0) AS max_ts
+                  , COALESCE(existing_min_ts, 0) AS min_ts
+               FROM listens_after_update
+               JOIN last_update ON TRUE
         """
         with timescale.engine.connect() as connection:
             result = connection.execute(text(query), user_id=user_id)
