@@ -123,9 +123,12 @@ class MBIDMapper():
         ac_detuned = self.detune_query_string(ac_hit, True)
         r_detuned = self.detune_query_string(r_hit, False)
 
+        p_artist_credit_name = prepare_query(artist_credit_name)
+        p_recording_name = prepare_query(recording_name)
+
         while True:
             ac_dist, r_dist = self.compare(
-                artist_credit_name, recording_name, prepare_query(ac_hit), prepare_query(r_hit))
+                p_artist_credit_name, p_recording_name, prepare_query(ac_hit), prepare_query(r_hit))
 
             # If we detuned one or more fields and it matches, the best it can get is a low quality match
             if (self.is_ac_detuned or self.is_r_detuned) and \

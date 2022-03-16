@@ -245,7 +245,7 @@ def create_mbid_mapping():
                                  GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name
                                  ORDER BY ac.id, rpr.id""")
 
-                row_count = 0
+                row_count = mb_curs.rowcount
                 while True:
                     row = mb_curs.fetchone()
                     if not row:
@@ -266,8 +266,9 @@ def create_mbid_mapping():
                             rows = []
                             batch_count += 1
 
-                            if batch_count % 200 == 0:
-                                log("mbid mapping: inserted %d rows." % count)
+                            if batch_count % 20 == 0:
+                                log(f"mbid mapping: inserted {count:,} rows." +
+                                    " %.1f%% complete" % (100.0 * count / row_count))
 
                     try:
                         recording_name = row['recording_name']
