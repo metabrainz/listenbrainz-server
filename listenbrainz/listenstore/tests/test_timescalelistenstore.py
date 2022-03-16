@@ -11,6 +11,7 @@ from sqlalchemy import text
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts, timescale
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
+from listenbrainz.listen import Listen
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, \
     TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
@@ -36,10 +37,11 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         TimescaleTestCase.tearDown(self)
         cache._r.flushdb()
 
-    def _create_test_data(self, user_name, user_id, test_data_file_name=None):
+    def _create_test_data(self, user_name, user_id, test_data_file_name=None, recalculate=True):
         test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
         self.logstore.insert(test_data)
-        recalculate_all_user_data()
+        if recalculate:
+            recalculate_all_user_data()
         return len(test_data)
 
     def _insert_mapping_metadata(self, msid):
@@ -282,3 +284,38 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
         total_count = self.logstore.get_total_listen_count()
         self.assertEqual(total_count, count_user_1 + count_user_2)
+
+    def test_get_timestamps_for_user(self):
+        self._create_test_data(self.testuser["musicbrainz_id"], self.testuser["id"])
+        min_ts, max_ts = self.logstore.get_timestamps_for_user(self.testuser["id"])
+        self.assertEqual(1400000200, max_ts)
+        self.assertEqual(1400000000, min_ts)
+
+        # test timestamps consider listens which were created since last cron run as well
+        self._create_test_data(
+            self.testuser["musicbrainz_id"],
+            self.testuser["id"],
+            "timescale_listenstore_test_listens_2.json",
+            recalculate=False
+        )
+        # do not recalculate/update user data
+        min_ts, max_ts = self.logstore.get_timestamps_for_user(self.testuser["id"])
+        self.assertEqual(1400000500, max_ts)
+        self.assertEqual(1400000000, min_ts)
+
+    def test_fetch_listens_for_since_cron_run(self):
+        """ Test listens created since last cron run to update user metadata are returned """
+        self._create_test_data(self.testuser["musicbrainz_id"], self.testuser["id"])
+
+        # insert more data but do not call recalculate now
+        self._create_test_data(
+            self.testuser["musicbrainz_id"],
+            self.testuser["id"],
+            "timescale_listenstore_test_listens_2.json",
+            recalculate=False
+        )
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, from_ts=1400000300, limit=1)
+        self.assertEqual(len(listens), 1)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000500)
+        self.assertEqual(min_ts, 1400000000)
+        self.assertEqual(max_ts, 1400000500)
