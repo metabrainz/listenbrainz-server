@@ -386,7 +386,7 @@ export default class UserFeedback extends React.Component<
     return (
       <div role="main">
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-8 col-md-offset-2">
             <h3
               style={{
                 display: "inline-block",
@@ -545,21 +545,14 @@ export default class UserFeedback extends React.Component<
               </div>
             )}
           </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <BrainzPlayer
-              listens={listensFromFeedback}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
         </div>
+        <BrainzPlayer
+          listens={listensFromFeedback}
+          newAlert={newAlert}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+        />
       </div>
     );
   }

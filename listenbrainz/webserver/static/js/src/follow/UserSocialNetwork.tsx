@@ -17,6 +17,7 @@ export type UserSocialNetworkProps = {
 type UserSocialNetworkState = {
   followerList: Array<string>;
   followingList: Array<string>;
+  currentUserFollowingList: Array<string>;
   similarUsersList: Array<SimilarUser>;
 };
 
@@ -33,6 +34,7 @@ export default class UserSocialNetwork extends React.Component<
       followerList: [],
       followingList: [],
       similarUsersList: [],
+      currentUserFollowingList: [],
     };
   }
 
@@ -40,6 +42,7 @@ export default class UserSocialNetwork extends React.Component<
     await this.getFollowing();
     await this.getFollowers();
     await this.getSimilarUsers();
+    await this.getCurrentUserFollowing();
   }
 
   getSimilarUsers = async () => {
@@ -65,13 +68,11 @@ export default class UserSocialNetwork extends React.Component<
   };
 
   getFollowers = async () => {
-    const { APIService, currentUser } = this.context;
+    const { user } = this.props;
+    const { APIService } = this.context;
     const { getFollowersOfUser } = APIService;
-    if (isNil(currentUser) || isEmpty(currentUser)) {
-      return;
-    }
     try {
-      const response = await getFollowersOfUser(currentUser.name);
+      const response = await getFollowersOfUser(user.name);
       const { followers } = response;
 
       this.setState({ followerList: followers });
@@ -96,15 +97,32 @@ export default class UserSocialNetwork extends React.Component<
     }
   };
 
+  getCurrentUserFollowing = async () => {
+    const { APIService, currentUser } = this.context;
+    if (!currentUser?.name) {
+      return;
+    }
+    const { getFollowingForUser } = APIService;
+    try {
+      const response = await getFollowingForUser(currentUser.name);
+      const { following } = response;
+
+      this.setState({ currentUserFollowingList: following });
+    } catch (err) {
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
+    }
+  };
+
   loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
     const { currentUser } = this.context;
-    const { followingList } = this.state;
+    const { currentUserFollowingList } = this.state;
 
     if (isNil(currentUser) || isEmpty(currentUser)) {
       return false;
     }
 
-    return followingList.includes(user.name);
+    return currentUserFollowingList.includes(user.name);
   };
 
   updateFollowingList = (

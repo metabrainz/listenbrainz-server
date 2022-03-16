@@ -1,4 +1,4 @@
-// When rendering the CBReviewModal component in RecentListens,
+// When rendering the CBReviewModal component,
 // There is a problem in the way our tests import the ReactTooltip library component
 // that causes them to fail, mocking it allows them to pass.
 

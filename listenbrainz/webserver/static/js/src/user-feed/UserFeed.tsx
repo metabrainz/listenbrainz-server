@@ -289,7 +289,7 @@ export default class UserFeedPage extends React.Component<
         if (newAlert) {
           newAlert(
             "danger",
-            "Playback error",
+            "We could not load love/hate feedback",
             typeof error === "object" ? error.message : error
           );
         }
@@ -676,17 +676,15 @@ export default class UserFeedPage extends React.Component<
             </div>
             <div className="col-md-offset-1 col-md-4">
               <UserSocialNetwork user={currentUser} newAlert={newAlert} />
-              <div className="sticky-top mt-15">
-                <BrainzPlayer
-                  listens={listens}
-                  newAlert={newAlert}
-                  listenBrainzAPIBaseURI={APIService.APIBaseURI}
-                  refreshSpotifyToken={APIService.refreshSpotifyToken}
-                  refreshYoutubeToken={APIService.refreshYoutubeToken}
-                />
-              </div>
             </div>
           </div>
+          <BrainzPlayer
+            listens={listens}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
         </div>
       </>
     );
