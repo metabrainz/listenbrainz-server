@@ -1,5 +1,5 @@
 import uuid
-from typing import Dict, Bool
+from typing import List, Dict
 
 from pydantic import BaseModel, NonNegativeInt
 
@@ -12,10 +12,10 @@ class RecordingMetadata(BaseModel):
     # The recording that this metadata is about
     recording_mbid: uuid.UUID
     # Has this entry been marked dirty for immenent re-fetching?
-    dirty: Bool
-    # The dict that contains metadata about the recording
+    dirty: bool
+    # JSON which contains metadata about the recording
     recording_data: Dict
-    # The dict that contains metadata about the artist for this recording
-    artist_data: Dict
-    # The dict that contains metadata about the tags for this recording and its artist
+    # JSON which contains metadata about the artist for this recording
+    artist_data: List[Dict]
+    # JSON which contains metadata about the tags for this recording and its artist
     tag_data: Dict
