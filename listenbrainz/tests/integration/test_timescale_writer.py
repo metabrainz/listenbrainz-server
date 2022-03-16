@@ -9,6 +9,7 @@ from flask import url_for
 
 import listenbrainz.db.user as db_user
 from listenbrainz.listen import Listen
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import redis_connection, timescale_connection
 
@@ -28,12 +29,15 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
             payload = json.load(f)
-        return self.client.post(
+        response = self.client.post(
             url_for('api_v1.submit_listen'),
             data = json.dumps(payload),
             headers = {'Authorization': 'Token {}'.format(user['auth_token'])},
             content_type = 'application/json'
         )
+        time.sleep(1)  # sleep to allow timescale-writer to do its thing
+        recalculate_all_user_data()
+        return response
 
     def test_dedup(self):
 
@@ -42,10 +46,8 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         # send the same listen twice
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        time.sleep(2)
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        time.sleep(2)
 
         to_ts = int(time.time())
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
@@ -63,7 +65,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1, 50000))
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        time.sleep(2)
 
         self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
 
@@ -79,11 +80,8 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         # send the same listen twice
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        time.sleep(2)
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        time.sleep(2)
-
         to_ts = int(time.time())
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
@@ -94,7 +92,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         user = db_user.get_or_create(3, 'phifedawg')
         r = self.send_listen(user, 'same_batch_duplicates.json')
         self.assert200(r)
-        time.sleep(2)
 
         to_ts = int(time.time())
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
@@ -114,8 +111,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assert200(r)
         r = self.send_listen(user2, 'valid_single.json')
         self.assert200(r)
-
-        time.sleep(2)  # sleep to allow timescale-writer to do its thing
 
         to_ts = int(time.time())
         listens, _, _ = self.ls.fetch_listens(user1, to_ts=to_ts)
@@ -144,7 +139,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
         r = self.send_listen(user, 'same_timestamp_diff_track_valid_single_3.json')
         self.assert200(r)
-        time.sleep(2)
 
         to_ts = int(time.time())
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)

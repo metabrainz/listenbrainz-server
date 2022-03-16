@@ -26,8 +26,8 @@ import FollowerFollowingModal from "../../src/follow/FollowerFollowingModal";
 import SimilarUsersModal from "../../src/follow/SimilarUsersModal";
 
 import * as userSocialNetworkProps from "../__mocks__/userSocialNetworkProps.json";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/GlobalAppContext";
-import APIService from "../../src/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
 
 jest.useFakeTimers();
 

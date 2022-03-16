@@ -11,11 +11,11 @@ import {
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import APIServiceClass from "../utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../ErrorBoundary";
-import { getPageProps } from "../utils";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import { getPageProps } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import Loader from "../components/Loader";
@@ -173,7 +173,6 @@ export default class MissingMBDataPage extends React.Component<
         <div className="col-xs-12 col-md-8">
           <div>
             <div id="missingMBData" ref={this.MissingMBDataTable}>
-              <h2>Missing Data:</h2>
               <div
                 style={{
                   height: 0,
@@ -190,7 +189,8 @@ export default class MissingMBDataPage extends React.Component<
                     <ListenControl
                       buttonClassName="btn btn-sm btn-success"
                       icon={faPlus}
-                      title=""
+                      title="Add missing recording"
+                      text=""
                       // eslint-disable-next-line react/jsx-no-bind
                       action={this.submitMissingData.bind(
                         this,
@@ -248,25 +248,13 @@ export default class MissingMBDataPage extends React.Component<
             </ul>
           </div>
         </div>
-        <div
-          className="col-xs-12 col-md-4"
-          /* eslint-disable no-dupe-keys */
-          style={{
-            position: "-webkit-sticky",
-            // @ts-ignore
-            position: "sticky",
-            top: "20px",
-          }}
-          /* eslint-enable no-dupe-keys */
-        >
-          <BrainzPlayer
-            listens={missingMBDataAsListen}
-            newAlert={newAlert}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-          />
-        </div>
+        <BrainzPlayer
+          listens={missingMBDataAsListen}
+          newAlert={newAlert}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+        />
       </div>
     );
   }

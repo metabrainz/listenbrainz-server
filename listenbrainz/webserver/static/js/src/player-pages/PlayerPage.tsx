@@ -13,21 +13,20 @@ import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import APIServiceClass from "../utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   PLAYLIST_TRACK_URI_PREFIX,
-  getPlaylistExtension,
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../playlists/utils";
-import { getPageProps } from "../utils";
+import { getPageProps } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../utils/ErrorBoundary";
 
 export type PlayerPageProps = {
   playlist: JSPFObject;
@@ -184,6 +183,7 @@ export default class PlayerPage extends React.Component<
                       <ListenControl
                         icon={faExternalLinkAlt}
                         title="Open in MusicBrainz"
+                        text="Open in MusicBrainz"
                         link={releaseLink}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -260,20 +260,13 @@ export default class PlayerPage extends React.Component<
               })}
             </div>
           </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <BrainzPlayer
-              listens={tracks?.map(JSPFTrackToListen)}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
+          <BrainzPlayer
+            listens={tracks?.map(JSPFTrackToListen)}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
         </div>
       </div>
     );

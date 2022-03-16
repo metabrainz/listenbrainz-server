@@ -9,8 +9,8 @@ import {
   preciseTimestamp,
   getListenablePin,
   pinnedRecordingToListen,
-} from "../utils";
-import GlobalAppContext from "../GlobalAppContext";
+} from "../utils/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
@@ -158,10 +158,15 @@ export default class PinnedRecordingCard extends React.Component<
     const additionalMenuItems = (
       <>
         {currentlyPinned && (
-          <ListenControl title="Unpin" action={() => this.unpinRecording()} />
+          <ListenControl
+            title="Unpin"
+            text="Unpin"
+            action={() => this.unpinRecording()}
+          />
         )}
         <ListenControl
           title="Delete Pin"
+          text="Delete Pin"
           action={() => this.deletePin(pinnedRecording)}
         />
       </>

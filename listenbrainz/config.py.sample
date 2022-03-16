@@ -121,11 +121,11 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
 # Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
 # without going through the process of generating the stats in local environment. Otherwise,
-# set it to "http://localhost:7000"
+# set it to "http://localhost:8100"
 API_URL = 'https://api.listenbrainz.org'
-LASTFM_PROXY_URL = 'http://localhost:7080/'
-SERVER_ROOT_URL = 'http://localhost:7000'
-WEBSOCKETS_SERVER_URL = 'http://localhost:7082'
+LASTFM_PROXY_URL = 'http://localhost:8101/'
+SERVER_ROOT_URL = 'http://localhost:8100'
+WEBSOCKETS_SERVER_URL = 'http://localhost:8102'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 
@@ -144,12 +144,12 @@ WHITELISTED_AUTH_TOKENS = []
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-SPOTIFY_CALLBACK_URL = 'http://localhost/profile/music-services/spotify/callback/'
+SPOTIFY_CALLBACK_URL = 'http://localhost:8100/profile/music-services/spotify/callback/'
 
 # CRITIQUEBRAINZ
 CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change this'
 CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost/profile/music-services/critiquebrainz/callback/'
+CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
 
 # YOUTUBE
 YOUTUBE_CONFIG = {
@@ -160,12 +160,12 @@ YOUTUBE_CONFIG = {
       "token_uri": "https://oauth2.googleapis.com/token",
       "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
       "client_secret": "fake-client-secret",
-      "redirect_uris": ["http://localhost/profile/music-services/youtube/callback/"],
-      "javascript_origins": ["http://localhost"]
+      "redirect_uris": ["http://localhost:8100/profile/music-services/youtube/callback/"],
+      "javascript_origins": ["http://localhost:8100"]
    }
 }
 YOUTUBE_API_KEY = 'change me'
-YOUTUBE_REDIRECT_URI = 'http://localhost/profile/music-services/youtube/callback/'
+YOUTUBE_REDIRECT_URI = 'http://localhost:8100/profile/music-services/youtube/callback/'
 
 # This is set to False to stop a warning from flask_sqlalchemy.
 # We do not use this feature at all, so it is safe to set to False.

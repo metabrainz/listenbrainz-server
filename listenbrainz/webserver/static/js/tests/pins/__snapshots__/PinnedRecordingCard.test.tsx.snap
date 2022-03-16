@@ -36,10 +36,12 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
       <React.Fragment>
         <ListenControl
           action={[Function]}
+          text="Unpin"
           title="Unpin"
         />
         <ListenControl
           action={[Function]}
+          text="Delete Pin"
           title="Delete Pin"
         />
       </React.Fragment>
@@ -105,11 +107,11 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
     }
   >
     <ForwardRef
-      className="listen-card row  has-additional-content pinned-recording-card currently-pinned"
+      className="listen-card  has-additional-content pinned-recording-card currently-pinned"
       onDoubleClick={[Function]}
     >
       <div
-        className="card listen-card row  has-additional-content pinned-recording-card currently-pinned"
+        className="card listen-card  has-additional-content pinned-recording-card currently-pinned"
         onDoubleClick={[Function]}
       >
         <div
@@ -289,9 +291,11 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
               >
                 <ListenControl
                   action={[Function]}
+                  text="Unpin"
                   title="Unpin"
                 >
                   <button
+                    aria-label="Unpin"
                     disabled={false}
                     onClick={[Function]}
                     title="Unpin"
@@ -303,9 +307,11 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
                 </ListenControl>
                 <ListenControl
                   action={[Function]}
+                  text="Delete Pin"
                   title="Delete Pin"
                 >
                   <button
+                    aria-label="Delete Pin"
                     disabled={false}
                     onClick={[Function]}
                     title="Delete Pin"

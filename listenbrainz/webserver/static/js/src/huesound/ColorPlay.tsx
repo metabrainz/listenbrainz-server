@@ -7,17 +7,17 @@ import tinycolor from "tinycolor2";
 import ColorWheel from "./ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import defaultColors from "./utils/defaultColors";
-import ErrorBoundary from "../ErrorBoundary";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
+import APIServiceClass from "../utils/APIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
-import { getPageProps } from "../utils";
+import { getPageProps } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import Card from "../components/Card";
 
@@ -223,15 +223,13 @@ export default class ColorPlay extends React.Component<
                   )}
                 </div>
               </div>
-              <div className="col-md-4 sticky-top">
-                <BrainzPlayer
-                  newAlert={newAlert}
-                  listens={selectedReleaseTracks}
-                  listenBrainzAPIBaseURI={APIService.APIBaseURI}
-                  refreshSpotifyToken={APIService.refreshSpotifyToken}
-                  refreshYoutubeToken={APIService.refreshYoutubeToken}
-                />
-              </div>
+              <BrainzPlayer
+                newAlert={newAlert}
+                listens={selectedReleaseTracks}
+                listenBrainzAPIBaseURI={APIService.APIBaseURI}
+                refreshSpotifyToken={APIService.refreshSpotifyToken}
+                refreshYoutubeToken={APIService.refreshYoutubeToken}
+              />
             </div>
           )}
         </div>

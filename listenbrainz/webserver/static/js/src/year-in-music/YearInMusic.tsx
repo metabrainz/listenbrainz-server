@@ -14,8 +14,8 @@ import {
   capitalize,
   toPairs,
 } from "lodash";
-import ErrorBoundary from "../ErrorBoundary";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
 import {
@@ -23,12 +23,11 @@ import {
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
-import { getPageProps } from "../utils";
+import APIServiceClass from "../utils/APIService";
+import { getPageProps } from "../utils/utils";
 import { getEntityLink } from "../stats/utils";
 import ComponentToImage from "./ComponentToImage";
 
-import fakeData from "./year-in-music-data.json";
 import ListenCard from "../listens/ListenCard";
 import UserListModalEntry from "../follow/UserListModalEntry";
 import {

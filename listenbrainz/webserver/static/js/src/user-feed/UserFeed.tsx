@@ -27,13 +27,13 @@ import {
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import APIServiceClass from "../utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
 import ListenCard from "../listens/ListenCard";
-import { getPageProps, preciseTimestamp } from "../utils";
+import { getPageProps, preciseTimestamp } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
 
@@ -289,7 +289,7 @@ export default class UserFeedPage extends React.Component<
         if (newAlert) {
           newAlert(
             "danger",
-            "Playback error",
+            "We could not load love/hate feedback",
             typeof error === "object" ? error.message : error
           );
         }
@@ -437,6 +437,7 @@ export default class UserFeedPage extends React.Component<
                 <ListenControl
                   icon={faTrash}
                   title="Delete Event"
+                  text="Delete Event"
                   // eslint-disable-next-line react/jsx-no-bind
                   action={this.deleteFeedEvent.bind(this, event)}
                 />
@@ -607,6 +608,20 @@ export default class UserFeedPage extends React.Component<
 
                           <span className="event-time">
                             {preciseTimestamp(created * 1000)}
+                            {((event.event_type ===
+                              EventType.RECORDING_RECOMMENDATION ||
+                              event.event_type === EventType.RECORDING_PIN) &&
+                              event.user_name === currentUser.name) ||
+                            event.event_type === EventType.NOTIFICATION ? (
+                              <ListenControl
+                                title="Delete Event"
+                                text=""
+                                icon={faTrash}
+                                buttonClassName="btn btn-link btn-xs"
+                                // eslint-disable-next-line react/jsx-no-bind
+                                action={this.deleteFeedEvent.bind(this, event)}
+                              />
+                            ) : null}
                           </span>
                         </div>
 
@@ -661,17 +676,15 @@ export default class UserFeedPage extends React.Component<
             </div>
             <div className="col-md-offset-1 col-md-4">
               <UserSocialNetwork user={currentUser} newAlert={newAlert} />
-              <div className="sticky-top mt-15">
-                <BrainzPlayer
-                  listens={listens}
-                  newAlert={newAlert}
-                  listenBrainzAPIBaseURI={APIService.APIBaseURI}
-                  refreshSpotifyToken={APIService.refreshSpotifyToken}
-                  refreshYoutubeToken={APIService.refreshYoutubeToken}
-                />
-              </div>
             </div>
           </div>
+          <BrainzPlayer
+            listens={listens}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
         </div>
       </>
     );

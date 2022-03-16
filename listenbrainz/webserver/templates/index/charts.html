@@ -1,0 +1,12 @@
+{% extends 'base-react.html' %}
+
+{% block title %}Sitewide Statistics - ListenBrainz{% endblock %}
+
+{% block profile_content %}
+    <div id="react-container" ></div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ get_static_path('userEntityChart.js') }}" type="text/javascript"></script>
+{% endblock %}

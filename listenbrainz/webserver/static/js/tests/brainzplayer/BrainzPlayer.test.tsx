@@ -1,12 +1,19 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
-import BrainzPlayer, { DataSourceType } from "../../src/brainzplayer/BrainzPlayer";
+import BrainzPlayer, {
+  DataSourceType,
+} from "../../src/brainzplayer/BrainzPlayer";
 import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
 import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
-import APIService from "../../src/APIService";
-import GlobalAppContext from "../../src/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
+import GlobalAppContext from "../../src/utils/GlobalAppContext";
+
+// Font Awesome generates a random hash ID for each icon everytime.
+// Mocking Math.random() fixes this
+// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
+jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const props = {
   listens: [],

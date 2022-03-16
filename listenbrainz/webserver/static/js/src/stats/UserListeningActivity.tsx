@@ -4,7 +4,7 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../APIService";
+import APIService from "../utils/APIService";
 import Card from "../components/Card";
 import BarDualTone from "./BarDualTone";
 import Loader from "../components/Loader";
@@ -12,7 +12,7 @@ import { isInvalidStatRange } from "./utils";
 
 export type UserListeningActivityProps = {
   range: UserStatsAPIRange;
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
   apiUrl: string;
 };
 
@@ -129,11 +129,7 @@ export default class UserListeningActivity extends React.Component<
   getData = async (): Promise<UserListeningActivityResponse> => {
     const { range, user } = this.props;
     try {
-      const data = await this.APIService.getUserListeningActivity(
-        user.name,
-        range
-      );
-      return data;
+      return await this.APIService.getUserListeningActivity(user?.name, range);
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({

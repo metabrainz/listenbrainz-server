@@ -1,5 +1,0 @@
-BEGIN;
-
-DROP VIEW listen_count_30day CASCADE;
-
-COMMIT;

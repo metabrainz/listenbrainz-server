@@ -27,6 +27,7 @@ from werkzeug.exceptions import BadRequest
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.lastfm_session import Session
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session, \
@@ -148,6 +149,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.assertEqual(r.data.decode('utf-8'), 'OK\n')
 
         time.sleep(1)
+        recalculate_all_user_data()
         to_ts = int(time.time())
         listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)

@@ -10,13 +10,19 @@ import * as _ from "lodash";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import GlobalAppContext from "../GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
-import { countWords } from "../utils";
+import {
+  countWords,
+  getArtistMBIDs,
+  getRecordingMBID,
+  getReleaseGroupMBID,
+  getReleaseMBID,
+} from "../utils/utils";
 import Loader from "../components/Loader";
 
 export type CBReviewModalProps = {
-  listen: Listen;
+  listen?: Listen;
   isCurrentUser: Boolean;
   newAlert: (
     alertType: AlertType,
@@ -108,7 +114,7 @@ export default class CBReviewModal extends React.Component<
 
   async componentDidUpdate(prevProps: CBReviewModalProps) {
     const { listen } = this.props;
-    if (prevProps.listen !== listen) {
+    if (listen && prevProps.listen !== listen) {
       this.setState({
         textContent: "",
         rating: 0,
@@ -209,22 +215,23 @@ export default class CBReviewModal extends React.Component<
 
   getRecordingEntity = async () => {
     const { listen } = this.props;
+    if (!listen) {
+      return;
+    }
     const { additional_info } = listen.track_metadata;
 
-    let recording_mbid = "";
+    let recording_mbid = getRecordingMBID(listen);
 
-    if (additional_info?.recording_mbid) {
-      recording_mbid = additional_info?.recording_mbid;
-      // If listen doesn't contain recording_mbid attribute,
-      // search for it using the track mbid instead
-    } else if (additional_info?.track_mbid) {
+    // If listen doesn't contain recording_mbid attribute,
+    // search for it using the track mbid instead
+    if (!recording_mbid && additional_info?.track_mbid) {
       recording_mbid = await this.getRecordingMBIDFromTrack(
         additional_info?.track_mbid,
         listen.track_metadata.track_name
       );
     }
     // confirm that found mbid was valid
-    if (recording_mbid.length) {
+    if (recording_mbid?.length) {
       const entity: ReviewableEntity = {
         type: "recording",
         mbid: recording_mbid,
@@ -238,12 +245,11 @@ export default class CBReviewModal extends React.Component<
 
   getArtistEntity = () => {
     const { listen } = this.props;
-    const { additional_info } = listen.track_metadata;
-    let artist_mbid;
-
-    if (additional_info?.artist_mbids) {
-      artist_mbid = additional_info?.artist_mbids[0];
+    if (!listen) {
+      return;
     }
+
+    const artist_mbid = getArtistMBIDs(listen)?.[0];
 
     if (artist_mbid) {
       const entity: ReviewableEntity = {
@@ -259,22 +265,21 @@ export default class CBReviewModal extends React.Component<
 
   getReleaseGroupEntity = async () => {
     const { listen } = this.props;
-    const { additional_info } = listen.track_metadata;
+    if (!listen) {
+      return;
+    }
 
-    let release_group_mbid = "";
+    let release_group_mbid = getReleaseGroupMBID(listen);
+    const release_mbid = getReleaseMBID(listen);
 
-    if (additional_info?.release_group_mbid) {
-      release_group_mbid = additional_info?.release_group_mbid;
-      // If listen doesn't contain release_group_mbid attribute,
-      // search for it using the release mbid instead
-    } else if (additional_info?.release_mbid) {
-      release_group_mbid = await this.getGroupMBIDFromRelease(
-        additional_info?.release_mbid
-      );
+    // If listen doesn't contain release_group_mbid attribute,
+    // search for it using the release mbid instead
+    if (!release_group_mbid && !!release_mbid) {
+      release_group_mbid = await this.getGroupMBIDFromRelease(release_mbid);
     }
 
     // confirm that found mbid is valid
-    if (release_group_mbid.length) {
+    if (release_group_mbid?.length) {
       const entity: ReviewableEntity = {
         type: "release_group",
         mbid: release_group_mbid,
@@ -356,6 +361,9 @@ export default class CBReviewModal extends React.Component<
     maxRetries: number = 1
   ): Promise<null> => {
     const { isCurrentUser, newAlert, listen } = this.props;
+    if (!listen) {
+      return null;
+    }
     const { APIService, critiquebrainzAuth } = this.context;
     const accessToken = access_token ?? critiquebrainzAuth?.access_token;
     const {
@@ -485,8 +493,8 @@ export default class CBReviewModal extends React.Component<
     if (!entityToReview) {
       return (
         <div>
-          We could not link <b>{listen.track_metadata?.track_name}</b> by{" "}
-          <b>{listen.track_metadata?.artist_name}</b> to any recording, artist,
+          We could not link <b>{listen?.track_metadata?.track_name}</b> by{" "}
+          <b>{listen?.track_metadata?.artist_name}</b> to any recording, artist,
           or release group on MusicBrainz.
           <br />
           <br />
@@ -515,7 +523,7 @@ export default class CBReviewModal extends React.Component<
         {!recordingEntity && (
           <div className="alert alert-danger">
             We could not find a recording for{" "}
-            <b>{listen.track_metadata?.track_name}</b>.
+            <b>{listen?.track_metadata?.track_name}</b>.
           </div>
         )}
 
@@ -527,8 +535,8 @@ export default class CBReviewModal extends React.Component<
               data-toggle="dropdown"
               type="button"
             >
-              {`${entityToReview.name} 
-              (${entityToReview.type.replace("_", " ")})`}
+              {`${entityToReview.name} (
+              ${entityToReview.type.replace("_", " ")})`}
               <span className="caret" />
             </button>
 

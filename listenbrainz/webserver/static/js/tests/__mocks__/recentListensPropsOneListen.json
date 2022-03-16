@@ -27,7 +27,6 @@
   "listenCount": "72,662",
   "artistCount": null,
   "profileUrl": "/user/iliekcomputers",
-  "mode": "listens",
   "spotify": {
     "access_token": "access token",
     "permission": ["streaming", "user-read-email", "user-read-private"]
