@@ -6,31 +6,14 @@ exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
 >
   <ForwardRef
     id="listen-count-card"
-    style={
-      Object {
-        "fontSize": 24,
-      }
-    }
   >
     <div
       className="card "
       id="listen-count-card"
-      style={
-        Object {
-          "fontSize": 24,
-        }
-      }
     >
-      <p>
+      <div>
         You have listened to
-        <hr
-          style={
-            Object {
-              "marginBottom": 12,
-              "marginTop": 12,
-            }
-          }
-        />
+        <hr />
         100
         <br />
         <small
@@ -38,7 +21,7 @@ exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
         >
           songs so far
         </small>
-      </p>
+      </div>
     </div>
   </ForwardRef>
 </ListenCountCard>
@@ -48,20 +31,10 @@ exports[`ListenCountCard renders correctly when listen count is zero or undefine
 <ListenCountCard>
   <ForwardRef
     id="listen-count-card"
-    style={
-      Object {
-        "fontSize": 24,
-      }
-    }
   >
     <div
       className="card "
       id="listen-count-card"
-      style={
-        Object {
-          "fontSize": 24,
-        }
-      }
     >
       <p>
         You have not listened to any songs so far
