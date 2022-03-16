@@ -107,11 +107,11 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
     }
   >
     <ForwardRef
-      className="listen-card row  has-additional-content pinned-recording-card currently-pinned"
+      className="listen-card  has-additional-content pinned-recording-card currently-pinned"
       onDoubleClick={[Function]}
     >
       <div
-        className="card listen-card row  has-additional-content pinned-recording-card currently-pinned"
+        className="card listen-card  has-additional-content pinned-recording-card currently-pinned"
         onDoubleClick={[Function]}
       >
         <div

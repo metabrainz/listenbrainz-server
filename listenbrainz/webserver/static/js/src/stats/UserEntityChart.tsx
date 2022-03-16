@@ -440,219 +440,196 @@ export default class UserEntityChart extends React.Component<
       data?.map(userChartEntityToListen).reverse() ?? [];
     return (
       <div role="main">
-        <div className="row">
-          <div className="col-md-8">
-            <div style={{ marginTop: "1em", minHeight: 500 }}>
-              <Loader isLoading={loading}>
-                <div className="row">
-                  <div className="col-xs-12">
-                    <Pill
-                      active={entity === "artist"}
-                      type="secondary"
-                      onClick={() => this.changeEntity("artist")}
-                    >
-                      Artists
-                    </Pill>
-                    <Pill
-                      active={entity === "release"}
-                      type="secondary"
-                      onClick={() => this.changeEntity("release")}
-                    >
-                      Releases
-                    </Pill>
-                    <Pill
-                      active={entity === "recording"}
-                      type="secondary"
-                      onClick={() => this.changeEntity("recording")}
-                    >
-                      Recordings
-                    </Pill>
-                  </div>
-                </div>
-                <div className="row">
-                  <div className="col-xs-12">
-                    <h3>
-                      Top{" "}
-                      <span style={{ textTransform: "capitalize" }}>
-                        {entity ? `${entity}s` : ""}
-                      </span>{" "}
-                      of {range !== "all_time" ? "the" : ""}
-                      <span className="dropdown" style={{ fontSize: 22 }}>
-                        <button
-                          className="dropdown-toggle btn-transparent capitalize-bold"
-                          data-toggle="dropdown"
-                          type="button"
-                        >
-                          {ranges.get(range)}
-                          <span className="caret" />
-                        </button>
-                        <ul className="dropdown-menu" role="menu">
-                          {Array.from(ranges, ([stat_type, stat_name]) => {
-                            return (
-                              <li>
-                                <a
-                                  href={this.buildURLParams(
-                                    1,
-                                    stat_type,
-                                    entity
-                                  )}
-                                  role="button"
-                                  onClick={(e) => {
-                                    this.handleClickEvent(e, () => {
-                                      this.changeRange(stat_type);
-                                    });
-                                  }}
-                                >
-                                  {stat_name}
-                                </a>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </span>
-                      {range !== "all_time" &&
-                        !hasError &&
-                        `(${startDate.toLocaleString("en-us", {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                        })} - ${endDate.toLocaleString("en-us", {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                        })})`}
-                    </h3>
-                  </div>
-                </div>
-                {hasError && (
-                  <div className="row mt-15 mb-15">
-                    <div className="col-xs-12 text-center">
-                      <span style={{ fontSize: 24 }}>
-                        <FontAwesomeIcon
-                          icon={faExclamationCircle as IconProp}
-                        />{" "}
-                        {errorMessage}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {!hasError && (
-                  <>
-                    <div className="row">
-                      <div className="col-xs-12">
-                        <h4 style={{ textTransform: "capitalize" }}>
-                          {entity} count - <b>{entityCount}</b>
-                        </h4>
-                      </div>
-                    </div>
-                    <div className="row">
-                      <div className="col-xs-6" ref={this.listenContainer}>
-                        {data
-                          ?.slice()
-                          .reverse()
-                          .map((datum, index) => {
-                            const listen = listenableItems[index];
-                            const listenDetails = getChartEntityDetails(datum);
-                            return (
-                              <ListenCard
-                                key={`${datum.idx + 1}`}
-                                compact
-                                listenDetails={listenDetails}
-                                listen={listen}
-                                showTimestamp={false}
-                                showUsername={false}
-                                currentFeedback={0}
-                                newAlert={newAlert}
-                              />
-                            );
-                          })}
-                      </div>
-                      <div
-                        className="col-xs-6"
-                        style={{
-                          height:
-                            listenContainerHeight ?? `${55 * data?.length}px`,
-                          paddingLeft: 0,
-                        }}
-                      >
-                        <Bar data={data} maxValue={maxListens} />
-                      </div>
-                    </div>
-                    {entity === "release" && (
-                      <div className="row">
-                        <div className="col-xs-12">
-                          <small>
-                            <sup>*</sup>The listen count denotes the number of
-                            times you have listened to a recording from the
-                            release.
-                          </small>
-                        </div>
-                      </div>
-                    )}
-                    <div className="row">
-                      <div className="col-xs-12">
-                        <ul className="pager">
-                          <li
-                            className={`previous ${
-                              !(prevPage > 0) ? "disabled" : ""
-                            }`}
-                          >
-                            <a
-                              href=""
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changePage(prevPage);
-                                });
-                              }}
-                            >
-                              &larr; Previous
-                            </a>
-                          </li>
-                          <li
-                            className={`next ${
-                              !(nextPage <= totalPages) ? "disabled" : ""
-                            }`}
-                          >
-                            <a
-                              href={this.buildURLParams(
-                                nextPage,
-                                range,
-                                entity
-                              )}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changePage(nextPage);
-                                });
-                              }}
-                            >
-                              Next &rarr;
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </Loader>
+        <div style={{ marginTop: "1em", minHeight: 500 }}>
+          <Loader isLoading={loading}>
+            <div className="row">
+              <div className="col-xs-12">
+                <Pill
+                  active={entity === "artist"}
+                  type="secondary"
+                  onClick={() => this.changeEntity("artist")}
+                >
+                  Artists
+                </Pill>
+                <Pill
+                  active={entity === "release"}
+                  type="secondary"
+                  onClick={() => this.changeEntity("release")}
+                >
+                  Releases
+                </Pill>
+                <Pill
+                  active={entity === "recording"}
+                  type="secondary"
+                  onClick={() => this.changeEntity("recording")}
+                >
+                  Recordings
+                </Pill>
+              </div>
             </div>
-          </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <BrainzPlayer
-              listens={listenableItems}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
+            <div className="row">
+              <div className="col-xs-12">
+                <h3>
+                  Top{" "}
+                  <span style={{ textTransform: "capitalize" }}>
+                    {entity ? `${entity}s` : ""}
+                  </span>{" "}
+                  of {range !== "all_time" ? "the" : ""}
+                  <span className="dropdown" style={{ fontSize: 22 }}>
+                    <button
+                      className="dropdown-toggle btn-transparent capitalize-bold"
+                      data-toggle="dropdown"
+                      type="button"
+                    >
+                      {ranges.get(range)}
+                      <span className="caret" />
+                    </button>
+                    <ul className="dropdown-menu" role="menu">
+                      {Array.from(ranges, ([stat_type, stat_name]) => {
+                        return (
+                          <li>
+                            <a
+                              href={this.buildURLParams(1, stat_type, entity)}
+                              role="button"
+                              onClick={(e) => {
+                                this.handleClickEvent(e, () => {
+                                  this.changeRange(stat_type);
+                                });
+                              }}
+                            >
+                              {stat_name}
+                            </a>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </span>
+                  {range !== "all_time" &&
+                    !hasError &&
+                    `(${startDate.toLocaleString("en-us", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })} - ${endDate.toLocaleString("en-us", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })})`}
+                </h3>
+              </div>
+            </div>
+            {hasError && (
+              <div className="row mt-15 mb-15">
+                <div className="col-xs-12 text-center">
+                  <span style={{ fontSize: 24 }}>
+                    <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+                    {errorMessage}
+                  </span>
+                </div>
+              </div>
+            )}
+            {!hasError && (
+              <>
+                <div className="row">
+                  <div className="col-xs-12">
+                    <h4 style={{ textTransform: "capitalize" }}>
+                      {entity} count - <b>{entityCount}</b>
+                    </h4>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-xs-6" ref={this.listenContainer}>
+                    {data
+                      ?.slice()
+                      .reverse()
+                      .map((datum, index) => {
+                        const listen = listenableItems[index];
+                        const listenDetails = getChartEntityDetails(datum);
+                        return (
+                          <ListenCard
+                            key={`${datum.idx + 1}`}
+                            listenDetails={listenDetails}
+                            listen={listen}
+                            showTimestamp={false}
+                            showUsername={false}
+                            currentFeedback={0}
+                            newAlert={newAlert}
+                          />
+                        );
+                      })}
+                  </div>
+                  <div
+                    className="col-xs-6"
+                    style={{
+                      height: listenContainerHeight ?? `${65 * data?.length}px`,
+                      paddingLeft: 0,
+                    }}
+                  >
+                    <Bar data={data} maxValue={maxListens} />
+                  </div>
+                </div>
+                {entity === "release" && (
+                  <div className="row">
+                    <div className="col-xs-12">
+                      <small>
+                        <sup>*</sup>The listen count denotes the number of times
+                        you have listened to a recording from the release.
+                      </small>
+                    </div>
+                  </div>
+                )}
+                <div className="row">
+                  <div className="col-xs-12">
+                    <ul className="pager">
+                      <li
+                        className={`previous ${
+                          !(prevPage > 0) ? "disabled" : ""
+                        }`}
+                      >
+                        <a
+                          href=""
+                          role="button"
+                          onClick={(e) => {
+                            this.handleClickEvent(e, () => {
+                              this.changePage(prevPage);
+                            });
+                          }}
+                        >
+                          &larr; Previous
+                        </a>
+                      </li>
+                      <li
+                        className={`next ${
+                          !(nextPage <= totalPages) ? "disabled" : ""
+                        }`}
+                      >
+                        <a
+                          href={this.buildURLParams(nextPage, range, entity)}
+                          role="button"
+                          onClick={(e) => {
+                            this.handleClickEvent(e, () => {
+                              this.changePage(nextPage);
+                            });
+                          }}
+                        >
+                          Next &rarr;
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </>
+            )}
+          </Loader>
         </div>
+
+        <BrainzPlayer
+          listens={listenableItems}
+          newAlert={newAlert}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+        />
       </div>
     );
   }

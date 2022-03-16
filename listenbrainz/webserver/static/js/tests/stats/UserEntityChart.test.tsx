@@ -11,6 +11,11 @@ import * as userReleasesProcessDataOutput from "../__mocks__/userReleasesProcess
 import * as userRecordingsResponse from "../__mocks__/userRecordings.json";
 import * as userRecordingsProcessDataOutput from "../__mocks__/userRecordingsProcessData.json";
 
+// Font Awesome generates a random hash ID for each icon everytime.
+// Mocking Math.random() fixes this
+// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
+jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+
 const userProps = {
   user: {
     id: 0,

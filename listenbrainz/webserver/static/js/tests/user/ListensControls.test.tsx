@@ -6,7 +6,7 @@ import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOne
 import * as getFeedbackByMsidResponse from "../__mocks__/getFeedbackByMsidResponse.json";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
-import RecentListens, { RecentListensProps } from "../../src/user/RecentListens";
+import Listens, { ListensProps } from "../../src/user/Listens";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -37,16 +37,14 @@ const GlobalContextMock = {
 const {
   latestListenTs,
   listens,
-  mode,
   oldestListenTs,
   profileUrl,
   user,
 } = recentListensPropsOneListen;
 
-const props: RecentListensProps = {
+const props: ListensProps = {
   latestListenTs,
   listens,
-  mode: mode as ListensListMode,
   oldestListenTs,
   profileUrl,
   user,
@@ -62,9 +60,9 @@ fetchMock.mockIf(
 
 describe("getFeedback", () => {
   it("calls the API correctly", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
 
@@ -88,9 +86,9 @@ describe("getFeedback", () => {
   it("doesn't call the API if there are no listens", async () => {
     const propsCopy = { ...props };
     propsCopy.listens = [];
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
-        <RecentListens {...propsCopy} />
+        <Listens {...propsCopy} />
       </GlobalAppContext.Provider>
     );
 
@@ -111,9 +109,9 @@ describe("getFeedback", () => {
 
 describe("loadFeedback", () => {
   it("updates the recordingFeedbackMap state", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
 
@@ -134,9 +132,9 @@ describe("loadFeedback", () => {
 
 describe("getFeedbackForRecordingMsid", () => {
   it("returns the feedback after fetching from recordingFeedbackMap state", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
 
@@ -155,9 +153,9 @@ describe("getFeedbackForRecordingMsid", () => {
   });
 
   it("returns 0 if the recording is not in recordingFeedbackMap state", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
 
@@ -173,9 +171,9 @@ describe("getFeedbackForRecordingMsid", () => {
 
 describe("updateFeedback", () => {
   it("updates the recordingFeedbackMap state for particular recording", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
 
@@ -196,9 +194,9 @@ describe("updateFeedback", () => {
 
 describe("removeListenFromListenList", () => {
   it("updates the listens state for particular recording", async () => {
-    const wrapper = mount<RecentListens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
-        <RecentListens {...props} />
+        <Listens {...props} />
       </GlobalAppContext.Provider>
     );
 

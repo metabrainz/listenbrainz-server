@@ -385,8 +385,6 @@ declare type UserArtistMapDatum = {
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
 
-declare type ListensListMode = "listens" | "recent";
-
 declare type ListenFeedBack = 1 | 0 | -1;
 
 declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike";

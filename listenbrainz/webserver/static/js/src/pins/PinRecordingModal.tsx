@@ -4,7 +4,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import { getRecordingMBID, preciseTimestamp } from "../utils/utils";
 
 export type PinRecordingModalProps = {
-  recordingToPin: Listen;
+  recordingToPin?: Listen;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -35,7 +35,7 @@ export default class PinRecordingModal extends React.Component<
     const { blurbContent } = this.state;
     const { APIService, currentUser } = this.context;
 
-    if (currentUser?.auth_token) {
+    if (recordingToPin && currentUser?.auth_token) {
       const recordingMSID = _get(
         recordingToPin,
         "track_metadata.additional_info.recording_msid"
@@ -92,6 +92,9 @@ export default class PinRecordingModal extends React.Component<
 
   render() {
     const { recordingToPin } = this.props;
+    if (!recordingToPin) {
+      return null;
+    }
     const { blurbContent } = this.state;
     const { track_name } = recordingToPin.track_metadata;
     const { artist_name } = recordingToPin.track_metadata;

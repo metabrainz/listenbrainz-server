@@ -187,7 +187,7 @@ export default class UserPins extends React.Component<
         if (newAlert) {
           newAlert(
             "danger",
-            "Playback error",
+            "We could not load love/hate feedback",
             typeof error === "object" ? error.message : error
           );
         }
@@ -251,7 +251,7 @@ export default class UserPins extends React.Component<
     return (
       <div role="main">
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-8 col-md-offset-2">
             <h3>Pinned Recordings</h3>
 
             {pins.length === 0 && (
@@ -353,21 +353,14 @@ export default class UserPins extends React.Component<
               </div>
             )}
           </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <BrainzPlayer
-              listens={pinsAsListens}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
         </div>
+        <BrainzPlayer
+          listens={pinsAsListens}
+          newAlert={newAlert}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+        />
       </div>
     );
   }

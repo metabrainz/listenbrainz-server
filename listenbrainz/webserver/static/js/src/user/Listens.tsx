@@ -41,23 +41,23 @@ import {
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
+import ListenCountCard from "../listens/ListenCountCard";
 
-export type RecentListensProps = {
+export type ListensProps = {
   latestListenTs: number;
   listens?: Array<Listen>;
-  mode: ListensListMode;
   oldestListenTs: number;
   profileUrl?: string;
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
 } & WithAlertNotificationsInjectedProps;
 
-export interface RecentListensState {
+export interface ListensState {
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
   listenCount?: number;
   loading: boolean;
-  mode: ListensListMode;
   nextListenTs?: number;
   previousListenTs?: number;
   recordingFeedbackMap: RecordingFeedbackMap;
@@ -69,11 +69,12 @@ export interface RecentListensState {
   before being removed from the state */
   deletedListen: Listen | null;
   userPinnedRecording?: PinnedRecording;
+  playingNowListen?: Listen;
 }
 
-export default class RecentListens extends React.Component<
-  RecentListensProps,
-  RecentListensState
+export default class Listens extends React.Component<
+  ListensProps,
+  ListensState
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -85,12 +86,14 @@ export default class RecentListens extends React.Component<
 
   private expectedListensPerPage = 25;
 
-  constructor(props: RecentListensProps) {
+  constructor(props: ListensProps) {
     super(props);
     const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
+    const playingNowListen = props.listens
+      ? _.remove(props.listens, (listen) => listen.playing_now)?.[0]
+      : undefined;
     this.state = {
       listens: props.listens || [],
-      mode: props.mode,
       lastFetchedDirection: "older",
       loading: false,
       nextListenTs,
@@ -103,41 +106,39 @@ export default class RecentListens extends React.Component<
         : new Date(Date.now()),
       deletedListen: null,
       userPinnedRecording: props.userPinnedRecording,
+      playingNowListen,
     };
 
     this.listensTable = React.createRef();
   }
 
   componentDidMount(): void {
-    const { mode } = this.state;
     const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService, currentUser } = this.context;
     this.APIService = APIService;
 
-    if (mode === "listens") {
-      this.connectWebsockets();
-      // Listen to browser previous/next events and load page accordingly
-      window.addEventListener("popstate", this.handleURLChange);
-      document.addEventListener("keydown", this.handleKeyDown);
+    this.connectWebsockets();
+    // Listen to browser previous/next events and load page accordingly
+    window.addEventListener("popstate", this.handleURLChange);
+    document.addEventListener("keydown", this.handleKeyDown);
 
-      const { user } = this.props;
-      // Get the user listen count
-      if (user?.name) {
-        this.APIService.getUserListenCount(user.name)
-          .then((listenCount) => {
-            this.setState({ listenCount });
-          })
-          .catch((error) => {
-            newAlert(
-              "danger",
-              "Sorry, we couldn't load your listens count…",
-              error?.toString()
-            );
-          });
-      }
-      this.loadFeedback();
+    const { user } = this.props;
+    // Get the user listen count
+    if (user?.name) {
+      this.APIService.getUserListenCount(user.name)
+        .then((listenCount) => {
+          this.setState({ listenCount });
+        })
+        .catch((error) => {
+          newAlert(
+            "danger",
+            "Sorry, we couldn't load your listens count…",
+            error?.toString()
+          );
+        });
     }
+    this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -242,14 +243,8 @@ export default class RecentListens extends React.Component<
     const playingNow = JSON.parse(newPlayingNow) as Listen;
     playingNow.playing_now = true;
 
-    this.setState((prevState) => {
-      const indexOfPreviousPlayingNow = prevState.listens.findIndex(
-        (listen) => listen.playing_now
-      );
-      prevState.listens.splice(indexOfPreviousPlayingNow, 1);
-      return {
-        listens: [playingNow].concat(prevState.listens),
-      };
+    this.setState({
+      playingNowListen: playingNow,
     });
   };
 
@@ -410,7 +405,7 @@ export default class RecentListens extends React.Component<
         if (newAlert) {
           newAlert(
             "danger",
-            "Playback error",
+            "We could not load love/hate feedback",
             typeof error === "object" ? error.message : error
           );
         }
@@ -599,7 +594,6 @@ export default class RecentListens extends React.Component<
       listens,
       listenCount,
       loading,
-      mode,
       nextListenTs,
       previousListenTs,
       dateTimePickerValue,
@@ -607,6 +601,7 @@ export default class RecentListens extends React.Component<
       recordingToReview,
       deletedListen,
       userPinnedRecording,
+      playingNowListen,
     } = this.state;
     const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -625,32 +620,43 @@ export default class RecentListens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
+        <h3>Recent listens</h3>
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-4 col-md-push-8">
+            {playingNowListen && (
+              <ListenCard
+                key={`playing-now-${playingNowListen.track_metadata?.track_name}-${playingNowListen.track_metadata?.artist_name}`}
+                showTimestamp
+                showUsername={false}
+                listen={playingNowListen}
+                newAlert={newAlert}
+                className="playing-now"
+              />
+            )}
             {userPinnedRecording && (
-              <div id="pinned-recordings">
-                <PinnedRecordingCard
-                  userName={user.name}
-                  pinnedRecording={userPinnedRecording}
-                  isCurrentUser={currentUser?.name === user?.name}
-                  currentFeedback={this.getFeedbackForRecordingMsid(
-                    userPinnedRecording?.recording_msid
-                  )}
-                  updateFeedbackCallback={this.updateFeedback}
-                  removePinFromPinsList={() => {}}
-                  newAlert={newAlert}
-                />
+              <PinnedRecordingCard
+                userName={user.name}
+                pinnedRecording={userPinnedRecording}
+                isCurrentUser={currentUser?.name === user?.name}
+                currentFeedback={this.getFeedbackForRecordingMsid(
+                  userPinnedRecording?.recording_msid
+                )}
+                updateFeedbackCallback={this.updateFeedback}
+                removePinFromPinsList={() => {}}
+                newAlert={newAlert}
+              />
+            )}
+            <ListenCountCard listenCount={listenCount} />
+            {user && (
+              <div
+                className="card hidden-xs hidden-sm"
+                style={{ paddingTop: "1.5em" }}
+              >
+                <UserSocialNetwork user={user} newAlert={newAlert} />
               </div>
             )}
-
-            <h3>
-              {mode === "listens" || mode === "recent"
-                ? `Recent listens${
-                    _.isNil(listenCount) ? "" : ` (${listenCount} total)`
-                  }`
-                : "Playlist"}
-            </h3>
-
+          </div>
+          <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
@@ -673,241 +679,219 @@ export default class RecentListens extends React.Component<
                   ref={this.listensTable}
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
-                  {listens
-                    .sort((a, b) => {
-                      if (a.playing_now) {
-                        return -1;
-                      }
-                      if (b.playing_now) {
-                        return 1;
-                      }
-                      return 0;
-                    })
-                    .map((listen) => {
-                      const isCurrentUser =
-                        Boolean(listen.user_name) &&
-                        listen.user_name === currentUser?.name;
-                      const listenedAt = get(listen, "listened_at");
-                      const recordingMSID = get(
-                        listen,
-                        "track_metadata.additional_info.recording_msid"
-                      );
-                      const recordingMBID = getRecordingMBID(listen);
-                      const artistMBIDs = getArtistMBIDs(listen);
-                      const trackMBID = get(
-                        listen,
-                        "track_metadata.additional_info.track_mbid"
-                      );
-                      const releaseGroupMBID = getReleaseGroupMBID(listen);
-                      const canDelete =
-                        isCurrentUser &&
-                        Boolean(listenedAt) &&
-                        Boolean(recordingMSID);
+                  {listens.map((listen) => {
+                    const isCurrentUser =
+                      Boolean(listen.user_name) &&
+                      listen.user_name === currentUser?.name;
+                    const listenedAt = get(listen, "listened_at");
+                    const recordingMSID = get(
+                      listen,
+                      "track_metadata.additional_info.recording_msid"
+                    );
+                    const recordingMBID = getRecordingMBID(listen);
+                    const artistMBIDs = getArtistMBIDs(listen);
+                    const trackMBID = get(
+                      listen,
+                      "track_metadata.additional_info.track_mbid"
+                    );
+                    const releaseGroupMBID = getReleaseGroupMBID(listen);
+                    const canDelete =
+                      isCurrentUser &&
+                      Boolean(listenedAt) &&
+                      Boolean(recordingMSID);
 
-                      const isListenReviewable =
-                        Boolean(recordingMBID) ||
-                        artistMBIDs?.length ||
-                        Boolean(trackMBID) ||
-                        Boolean(releaseGroupMBID);
-                      /* eslint-disable react/jsx-no-bind */
-                      const additionalMenuItems = (
-                        <>
+                    const isListenReviewable =
+                      Boolean(recordingMBID) ||
+                      artistMBIDs?.length ||
+                      Boolean(trackMBID) ||
+                      Boolean(releaseGroupMBID);
+                    // All listens in this array should have either an MSID or MBID or both,
+                    // so we can assume we can pin them. Playing_now listens are displayed separately.
+                    /* eslint-disable react/jsx-no-bind */
+                    const additionalMenuItems = (
+                      <>
+                        <ListenControl
+                          text="Pin this recording"
+                          icon={faThumbtack}
+                          action={this.updateRecordingToPin.bind(this, listen)}
+                          dataToggle="modal"
+                          dataTarget="#PinRecordingModal"
+                        />
+                        {isListenReviewable && (
                           <ListenControl
-                            title="Pin this recording"
-                            text="Pin this recording"
-                            icon={faThumbtack}
-                            action={this.updateRecordingToPin.bind(
+                            text="Write a review"
+                            icon={faPencilAlt}
+                            action={this.updateRecordingToReview.bind(
                               this,
                               listen
                             )}
                             dataToggle="modal"
-                            dataTarget="#PinRecordingModal"
+                            dataTarget="#CBReviewModal"
                           />
-                          {isListenReviewable && (
-                            <ListenControl
-                              title="Write a review"
-                              text="Write a review"
-                              icon={faPencilAlt}
-                              action={this.updateRecordingToReview.bind(
-                                this,
-                                listen
-                              )}
-                              dataToggle="modal"
-                              dataTarget="#CBReviewModal"
-                            />
-                          )}
-                          {canDelete && (
-                            <ListenControl
-                              title="Delete Listen"
-                              text="Delete Listen"
-                              icon={faTrashAlt}
-                              action={this.deleteListen.bind(this, listen)}
-                            />
-                          )}
-                        </>
-                      );
-                      const shouldBeDeleted = isEqual(deletedListen, listen);
-                      /* eslint-enable react/jsx-no-bind */
-                      return (
-                        <ListenCard
-                          key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                          showTimestamp
-                          showUsername={mode === "recent"}
-                          listen={listen}
-                          currentFeedback={this.getFeedbackForRecordingMsid(
-                            listen.track_metadata?.additional_info
-                              ?.recording_msid
-                          )}
-                          updateFeedbackCallback={this.updateFeedback}
-                          newAlert={newAlert}
-                          className={`${
-                            listen.playing_now ? "playing-now " : ""
-                          }${shouldBeDeleted ? "deleted " : ""}`}
-                          additionalMenuItems={additionalMenuItems}
-                        />
-                      );
-                    })}
+                        )}
+                        {canDelete && (
+                          <ListenControl
+                            text="Delete Listen"
+                            icon={faTrashAlt}
+                            action={this.deleteListen.bind(this, listen)}
+                          />
+                        )}
+                      </>
+                    );
+                    const shouldBeDeleted = isEqual(deletedListen, listen);
+                    /* eslint-enable react/jsx-no-bind */
+                    return (
+                      <ListenCard
+                        key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                        showTimestamp
+                        showUsername={false}
+                        listen={listen}
+                        currentFeedback={this.getFeedbackForRecordingMsid(
+                          listen.track_metadata?.additional_info?.recording_msid
+                        )}
+                        updateFeedbackCallback={this.updateFeedback}
+                        newAlert={newAlert}
+                        className={`${
+                          listen.playing_now ? "playing-now " : ""
+                        }${shouldBeDeleted ? "deleted " : ""}`}
+                        additionalMenuItems={additionalMenuItems}
+                      />
+                    );
+                  })}
                 </div>
                 {listens.length < this.expectedListensPerPage && (
                   <h5 className="text-center">No more listens to show</h5>
                 )}
-                {mode === "listens" && (
-                  <ul className="pager" id="navigation">
-                    <li
-                      className={`previous ${
-                        isNewestButtonDisabled ? "disabled" : ""
-                      }`}
+                <ul className="pager" id="navigation">
+                  <li
+                    className={`previous ${
+                      isNewestButtonDisabled ? "disabled" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickNewest}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNewest();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isNewestButtonDisabled
+                          ? undefined
+                          : window.location.pathname
+                      }
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickNewest}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNewest();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isNewestButtonDisabled
-                            ? undefined
-                            : window.location.pathname
-                        }
-                      >
-                        &#x21E4;
-                      </a>
-                    </li>
-                    <li
-                      className={`previous ${
-                        isNewerButtonDisabled ? "disabled" : ""
-                      }`}
+                      &#x21E4;
+                    </a>
+                  </li>
+                  <li
+                    className={`previous ${
+                      isNewerButtonDisabled ? "disabled" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickNewer}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNewer();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isNewerButtonDisabled
+                          ? undefined
+                          : `?min_ts=${previousListenTs}`
+                      }
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickNewer}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNewer();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isNewerButtonDisabled
-                            ? undefined
-                            : `?min_ts=${previousListenTs}`
-                        }
-                      >
-                        &larr; Newer
-                      </a>
-                    </li>
-                    <li className="date-time-picker">
-                      <DatePicker
-                        onChange={this.onChangeDateTimePicker}
-                        value={dateTimePickerValue}
-                        clearIcon={null}
-                        maxDate={new Date(Date.now())}
-                        minDate={
-                          oldestListenTs
-                            ? new Date(oldestListenTs * 1000)
-                            : undefined
-                        }
-                        calendarIcon={
-                          <FontAwesomeIcon icon={faCalendar as IconProp} />
-                        }
-                      />
-                    </li>
-                    <li
-                      className={`next ${
-                        isOlderButtonDisabled ? "disabled" : ""
-                      }`}
-                      style={{ marginLeft: "auto" }}
+                      &larr; Newer
+                    </a>
+                  </li>
+                  <li className="date-time-picker">
+                    <DatePicker
+                      onChange={this.onChangeDateTimePicker}
+                      value={dateTimePickerValue}
+                      clearIcon={null}
+                      maxDate={new Date(Date.now())}
+                      minDate={
+                        oldestListenTs
+                          ? new Date(oldestListenTs * 1000)
+                          : undefined
+                      }
+                      calendarIcon={
+                        <FontAwesomeIcon icon={faCalendar as IconProp} />
+                      }
+                    />
+                  </li>
+                  <li
+                    className={`next ${
+                      isOlderButtonDisabled ? "disabled" : ""
+                    }`}
+                    style={{ marginLeft: "auto" }}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickOlder}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickOlder();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isOlderButtonDisabled
+                          ? undefined
+                          : `?max_ts=${nextListenTs}`
+                      }
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOlder}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOlder();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isOlderButtonDisabled
-                            ? undefined
-                            : `?max_ts=${nextListenTs}`
-                        }
-                      >
-                        Older &rarr;
-                      </a>
-                    </li>
-                    <li
-                      className={`next ${
-                        isOldestButtonDisabled ? "disabled" : ""
-                      }`}
+                      Older &rarr;
+                    </a>
+                  </li>
+                  <li
+                    className={`next ${
+                      isOldestButtonDisabled ? "disabled" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickOldest}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickOldest();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isOldestButtonDisabled
+                          ? undefined
+                          : `?min_ts=${oldestListenTs - 1}`
+                      }
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOldest}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOldest();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isOldestButtonDisabled
-                            ? undefined
-                            : `?min_ts=${oldestListenTs - 1}`
-                        }
-                      >
-                        &#x21E5;
-                      </a>
-                    </li>
-                  </ul>
-                )}
+                      &#x21E5;
+                    </a>
+                  </li>
+                </ul>
                 {currentUser && (
-                  <PinRecordingModal
-                    recordingToPin={recordingToPin || listens[0]}
-                    newAlert={newAlert}
-                    onSuccessfulPin={(pinnedListen) =>
-                      this.handlePinnedRecording(pinnedListen)
-                    }
-                  />
+                  <>
+                    <PinRecordingModal
+                      recordingToPin={recordingToPin}
+                      newAlert={newAlert}
+                      onSuccessfulPin={(pinnedListen) =>
+                        this.handlePinnedRecording(pinnedListen)
+                      }
+                    />
+                    <CBReviewModal
+                      listen={recordingToReview}
+                      isCurrentUser={currentUser?.name === user?.name}
+                      newAlert={newAlert}
+                    />
+                  </>
                 )}
-                <CBReviewModal
-                  listen={recordingToReview || listens[0]}
-                  isCurrentUser={currentUser?.name === user?.name}
-                  newAlert={newAlert}
-                />
               </div>
             )}
           </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <BrainzPlayer
-              listens={allListenables}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
         </div>
+        <BrainzPlayer
+          listens={allListenables}
+          newAlert={newAlert}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+        />
       </div>
     );
   }
@@ -933,7 +917,6 @@ document.addEventListener("DOMContentLoaded", () => {
     latest_listen_ts,
     listens,
     oldest_listen_ts,
-    mode,
     userPinnedRecording,
     profile_url,
     user,
@@ -951,9 +934,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const RecentListensWithAlertNotifications = withAlertNotifications(
-    RecentListens
-  );
+  const ListensWithAlertNotifications = withAlertNotifications(Listens);
 
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
@@ -966,11 +947,10 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <RecentListensWithAlertNotifications
+        <ListensWithAlertNotifications
           initialAlerts={optionalAlerts}
           latestListenTs={latest_listen_ts}
           listens={listens}
-          mode={mode}
           userPinnedRecording={userPinnedRecording}
           oldestListenTs={oldest_listen_ts}
           profileUrl={profile_url}

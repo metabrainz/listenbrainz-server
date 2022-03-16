@@ -280,11 +280,11 @@ export default class ListenCard extends React.Component<
       <Card
         {...otherProps}
         onDoubleClick={this.playListen}
-        className={`listen-card row ${
-          isCurrentlyPlaying ? "current-listen" : ""
-        }${compact ? " compact" : ""}${
-          additionalContent ? " has-additional-content" : " "
-        } ${className || ""}`}
+        className={`listen-card ${isCurrentlyPlaying ? "current-listen" : ""}${
+          compact ? " compact" : ""
+        }${additionalContent ? " has-additional-content" : " "} ${
+          className || ""
+        }`}
       >
         <div className="main-content">
           {thumbnail || (
