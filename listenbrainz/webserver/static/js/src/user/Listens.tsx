@@ -42,6 +42,7 @@ import {
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
+import ListenCountCard from "../listens/ListenCountCard";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -645,11 +646,7 @@ export default class Listens extends React.Component<
                 newAlert={newAlert}
               />
             )}
-            {!_.isNil(listenCount) && (
-              <div className="card flex-center" style={{ marginBottom: "7px" }}>
-                <h3>Listen count: {listenCount}</h3>
-              </div>
-            )}
+            <ListenCountCard listenCount={listenCount} />
             {user && (
               <div
                 className="card hidden-xs hidden-sm"

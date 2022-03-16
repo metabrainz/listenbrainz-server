@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ListenCountCard renders correctly 1`] = `
+exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
 <ListenCountCard
   listenCount={100}
 >
@@ -11,20 +11,34 @@ exports[`ListenCountCard renders correctly 1`] = `
       className="card "
       id="listen-count-card"
     >
-      <h4>
+      <div>
         You have listened to
         <hr />
-      </h4>
-      <div>
-        <h4>
-          100
-        </h4>
+        100
+        <br />
         <small
           className="text-muted"
         >
           songs so far
         </small>
       </div>
+    </div>
+  </ForwardRef>
+</ListenCountCard>
+`;
+
+exports[`ListenCountCard renders correctly when listen count is zero or undefined 1`] = `
+<ListenCountCard>
+  <ForwardRef
+    id="listen-count-card"
+  >
+    <div
+      className="card "
+      id="listen-count-card"
+    >
+      <p>
+        You have not listened to any songs so far
+      </p>
     </div>
   </ForwardRef>
 </ListenCountCard>
