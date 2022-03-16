@@ -13,5 +13,9 @@ class RecordingMetadata(BaseModel):
     recording_mbid: uuid.UUID
     # Has this entry been marked dirty for immenent re-fetching?
     dirty: Bool
-    # The actual dict (JSON) data that contains the metadata
-    data: Dict
+    # The dict that contains metadata about the recording
+    recording_data: Dict
+    # The dict that contains metadata about the artist for this recording
+    artist_data: Dict
+    # The dict that contains metadata about the tags for this recording and its artist
+    tag_data: Dict

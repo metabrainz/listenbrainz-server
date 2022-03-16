@@ -27,7 +27,9 @@ def create_tables(lb_conn):
                                          id                        SERIAL,
                                          recording_mbid            UUID NOT NULL,
                                          dirty                     BOOLEAN DEFAULT FALSE,
-                                         data                      JSONB NOT NULL)""")
+                                         recording_data            JSONB NOT NULL
+                                         artist_data               JSONB NOT NULL
+                                         tag_data                  JSONB NOT NULL)""")
             lb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
         log("mb metadata cache: failed to mb metadata cache tables", err)
@@ -72,8 +74,10 @@ def swap_table_and_indexes(conn):
         raise
 
 
-def create_json_blob(row):
-    """ Format the data returned into a sane JSONB blob for easy consumption. """
+def create_json_data(row):
+    """ Format the data returned into sane JSONB blobs for easy consumption. Return
+        recording_data, artist_data, tag_data JSON strings as a tuple.
+    """
 
     artists = []
     entities = {
@@ -94,21 +98,16 @@ def create_json_blob(row):
         artists.append(data)
         entities["artist"].append(mbid)
 
-    recording_links = []
+    recording_rels = []
     for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
-        recording_links.append({"type": rel_type,
+        recording_rels.append({"type": rel_type,
                                 "artist_name": artist_name,
                                 "artist_mbid": artist_mbid,
                                 "instrument": instrument})
 
-    data = {
-        "length": row["length"],
-        "rels": recording_links,
-        "artists": artists,
-        "entities": entities
-    }
-
-    return json.dumps(data)
+    return (ujson.dumps({ "rels" : recording_rels}),
+            ujson.dumps(artists),
+            ujson.dumps({}))
 
 
 def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
@@ -149,6 +148,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                               ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
                                               ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
                                     OR lt.gid IS NULL)
+AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                           GROUP BY r.gid
                ), recording_rels AS (
                             SELECT r.gid
@@ -182,6 +182,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                                ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
                                                ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                    OR lt.gid IS NULL)
+AND r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                            GROUP BY r.gid
                ), artist_data AS (
                         SELECT r.gid
@@ -208,6 +209,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                      LEFT JOIN artist_rels arl
                             ON arl.gid = r.gid
                       GROUP BY r.gid
+WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                )
                         SELECT recording_links
                              , artist_data
@@ -228,6 +230,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON ard.gid = r.gid
                      LEFT JOIN recording_rels rrl
                             ON rrl.gid = r.gid
+WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
                       GROUP BY r.gid, r.length, recording_links, artist_data"""
 
 #WHERE r.gid in ('145f5c43-0ac2-4886-8b09-63d0e92ded5d')
@@ -253,9 +256,9 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
         if not row:
             break
 
-        data = create_json_blob(row)
+        data = create_json_data(row)
         try:
-            rows.append((serial, row["recording_mbid"], "false", data))
+            rows.append((serial, row["recording_mbid"], "false", *data))
         except Exception as err:
             print(row["recording_mbid"])
             print(str(err))
