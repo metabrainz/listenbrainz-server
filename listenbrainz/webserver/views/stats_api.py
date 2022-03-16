@@ -29,7 +29,7 @@ stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 
 @stats_api_bp.route("/user/<user_name>/artists")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_user_artist(user_name):
     """
@@ -92,7 +92,7 @@ def get_user_artist(user_name):
 
 
 @stats_api_bp.route("/user/<user_name>/releases")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_release(user_name):
     """
@@ -161,7 +161,7 @@ def get_release(user_name):
 
 
 @stats_api_bp.route("/user/<user_name>/recordings")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_recording(user_name):
     """
@@ -253,7 +253,7 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
 
 
 @stats_api_bp.route("/user/<user_name>/listening-activity")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_listening_activity(user_name: str):
     """
@@ -328,7 +328,7 @@ def get_listening_activity(user_name: str):
 
 
 @stats_api_bp.route("/user/<user_name>/daily-activity")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_daily_activity(user_name: str):
     """
@@ -413,7 +413,7 @@ def get_daily_activity(user_name: str):
 
 
 @stats_api_bp.route("/user/<user_name>/artist-map")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_artist_map(user_name: str):
     """
@@ -480,7 +480,7 @@ def get_artist_map(user_name: str):
 
 
 @stats_api_bp.route("/sitewide/artists")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_sitewide_artist():
     """
@@ -538,7 +538,7 @@ def get_sitewide_artist():
 
 
 @stats_api_bp.route("/sitewide/releases")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_sitewide_release():
     """
@@ -606,7 +606,7 @@ def get_sitewide_release():
 
 
 @stats_api_bp.route("/sitewide/recordings")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_sitewide_recording():
     """
@@ -698,7 +698,7 @@ def _get_sitewide_stats(entity: str):
 
 
 @stats_api_bp.route("/sitewide/listening-activity")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_sitewide_listening_activity():
     """
@@ -771,7 +771,7 @@ def get_sitewide_listening_activity():
 
 
 @stats_api_bp.route("/sitewide/artist-map")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_sitewide_artist_map():
     """

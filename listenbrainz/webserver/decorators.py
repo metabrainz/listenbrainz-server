@@ -18,7 +18,7 @@ def crossdomain(f):
 
         h = resp.headers
         h["Access-Control-Allow-Origin"] = "*"
-        h["Access-Control-Allow-Methods"] = options_resp.headers['allow']
+        h["Access-Control-Allow-Methods"] = options_resp.headers["allow"]
         h["Access-Control-Max-Age"] = "21600"
         h["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
         return resp

@@ -224,7 +224,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
 
 @playlist_api_bp.route("/create", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 @api_listenstore_needed
 def create_playlist():
@@ -329,7 +329,7 @@ def create_playlist():
 
 
 @playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 @api_listenstore_needed
 def edit_playlist(playlist_mbid):
@@ -409,7 +409,7 @@ def edit_playlist(playlist_mbid):
 
 
 @playlist_api_bp.route("/<playlist_mbid>", methods=["GET", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 @api_listenstore_needed
 def get_playlist(playlist_mbid):
@@ -450,7 +450,7 @@ def get_playlist(playlist_mbid):
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])
 @playlist_api_bp.route("/<playlist_mbid>/item/add", methods=["POST", "OPTIONS"], defaults={'offset': None})
-@crossdomain()
+@crossdomain
 @ratelimit()
 @api_listenstore_needed
 def add_playlist_item(playlist_mbid, offset):
@@ -512,7 +512,7 @@ def add_playlist_item(playlist_mbid, offset):
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/move", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 @api_listenstore_needed
 def move_playlist_item(playlist_mbid):
@@ -564,7 +564,7 @@ def move_playlist_item(playlist_mbid):
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/delete", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 @api_listenstore_needed
 def delete_playlist_item(playlist_mbid):
@@ -614,7 +614,7 @@ def delete_playlist_item(playlist_mbid):
 
 
 @playlist_api_bp.route("/<playlist_mbid>/delete", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 @api_listenstore_needed
 def delete_playlist(playlist_mbid):
@@ -652,7 +652,7 @@ def delete_playlist(playlist_mbid):
 
 
 @playlist_api_bp.route("/<playlist_mbid>/copy", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 @api_listenstore_needed
 def copy_playlist(playlist_mbid):

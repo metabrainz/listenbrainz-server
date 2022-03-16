@@ -16,7 +16,7 @@ color_api_bp = Blueprint('color_api_v1', __name__)
 
 
 @color_api_bp.route("/<color>", methods=["GET", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def huesound(color):
     """

@@ -33,7 +33,7 @@ missing_musicbrainz_data_api_bp = Blueprint('missing_musicbrainz_data_v1', __nam
 
 
 @missing_musicbrainz_data_api_bp.route("/user/<user_name>/")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_missing_musicbrainz_data(user_name):
     """ Get musicbrainz data sorted on "listened_at" that the user has submitted to ListenBrainz but has not
