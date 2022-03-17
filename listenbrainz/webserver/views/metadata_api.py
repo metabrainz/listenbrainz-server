@@ -48,7 +48,7 @@ def metadata_recording():
         recording_mbids.append(mbid_clean)
 
     metadata = get_metadata_for_recording(recording_mbids)
-    result = []
+    result = {}
     for entry in metadata:
         data = { "recording": entry.recording_data }
         if "artist" in incs:
@@ -57,6 +57,6 @@ def metadata_recording():
         if "tag" in incs:
             data["tag"] = entry.tag_data
 
-        result.append(data)
+        result[str(entry.recording_mbid)] = data
 
     return jsonify(result)

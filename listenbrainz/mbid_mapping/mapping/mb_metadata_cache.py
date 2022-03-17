@@ -86,7 +86,7 @@ def create_json_data(row):
     }
 
     for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
-        data = {"mbid": mbid }
+        data = { }
         if begin_year is not None:
             data["begin_year"] = begin_year
         if end_year is not None:
