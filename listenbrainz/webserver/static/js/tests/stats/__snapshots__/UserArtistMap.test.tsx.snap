@@ -29,14 +29,20 @@ exports[`Sitewide Stats UserArtistMap renders corectly when range is invalid 1`]
           className="col-md-9 col-xs-6"
         >
           <h3
-            className="capitalize-bold"
             style={
               Object {
                 "marginLeft": 20,
               }
             }
           >
-            Artist Origins
+            <span
+              className="capitalize-bold"
+            >
+              Artist Origins
+            </span>
+            <small>
+               Click on a country to see more details
+            </small>
           </h3>
         </div>
         <div
@@ -71,7 +77,7 @@ exports[`Sitewide Stats UserArtistMap renders corectly when range is invalid 1`]
                   onClick={[Function]}
                   role="button"
                 >
-                  Listens
+                  number of listens
                 </a>
               </li>
               <li>
@@ -80,7 +86,7 @@ exports[`Sitewide Stats UserArtistMap renders corectly when range is invalid 1`]
                   onClick={[Function]}
                   role="button"
                 >
-                  Artists
+                  number of artists
                 </a>
               </li>
             </ul>
@@ -257,14 +263,20 @@ exports[`Sitewide Stats UserArtistMap renders correctly 1`] = `
       className="col-md-9 col-xs-6"
     >
       <h3
-        className="capitalize-bold"
         style={
           Object {
             "marginLeft": 20,
           }
         }
       >
-        Artist Origins
+        <span
+          className="capitalize-bold"
+        >
+          Artist Origins
+        </span>
+        <small>
+           Click on a country to see more details
+        </small>
       </h3>
     </div>
     <div
@@ -299,7 +311,7 @@ exports[`Sitewide Stats UserArtistMap renders correctly 1`] = `
               onClick={[Function]}
               role="button"
             >
-              Listens
+              number of listens
             </a>
           </li>
           <li>
@@ -308,7 +320,7 @@ exports[`Sitewide Stats UserArtistMap renders correctly 1`] = `
               onClick={[Function]}
               role="button"
             >
-              Artists
+              number of artists
             </a>
           </li>
         </ul>
@@ -533,14 +545,20 @@ exports[`User Stats UserArtistMap renders corectly when range is invalid 1`] = `
           className="col-md-9 col-xs-6"
         >
           <h3
-            className="capitalize-bold"
             style={
               Object {
                 "marginLeft": 20,
               }
             }
           >
-            Artist Origins
+            <span
+              className="capitalize-bold"
+            >
+              Artist Origins
+            </span>
+            <small>
+               Click on a country to see more details
+            </small>
           </h3>
         </div>
         <div
@@ -575,7 +593,7 @@ exports[`User Stats UserArtistMap renders corectly when range is invalid 1`] = `
                   onClick={[Function]}
                   role="button"
                 >
-                  Listens
+                  number of listens
                 </a>
               </li>
               <li>
@@ -584,7 +602,7 @@ exports[`User Stats UserArtistMap renders corectly when range is invalid 1`] = `
                   onClick={[Function]}
                   role="button"
                 >
-                  Artists
+                  number of artists
                 </a>
               </li>
             </ul>
@@ -761,14 +779,20 @@ exports[`User Stats UserArtistMap renders correctly 1`] = `
       className="col-md-9 col-xs-6"
     >
       <h3
-        className="capitalize-bold"
         style={
           Object {
             "marginLeft": 20,
           }
         }
       >
-        Artist Origins
+        <span
+          className="capitalize-bold"
+        >
+          Artist Origins
+        </span>
+        <small>
+           Click on a country to see more details
+        </small>
       </h3>
     </div>
     <div
@@ -803,7 +827,7 @@ exports[`User Stats UserArtistMap renders correctly 1`] = `
               onClick={[Function]}
               role="button"
             >
-              Listens
+              number of listens
             </a>
           </li>
           <li>
@@ -812,7 +836,7 @@ exports[`User Stats UserArtistMap renders correctly 1`] = `
               onClick={[Function]}
               role="button"
             >
-              Artists
+              number of artists
             </a>
           </li>
         </ul>

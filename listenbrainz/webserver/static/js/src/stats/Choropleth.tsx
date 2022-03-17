@@ -10,18 +10,14 @@ import { scaleThreshold } from "d3-scale";
 import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
 import { maxBy } from "lodash";
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from "react";
+import * as React from "react";
 import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import * as worldCountries from "../../tests/__mocks__/world_countries.json";
+
+const { useState, useCallback, useMemo, useEffect, useRef } = React;
 
 export type ChoroplethProps = {
   data: UserArtistMapData;
