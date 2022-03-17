@@ -170,8 +170,9 @@ export default class UserArtistMap extends React.Component<
       >
         <div className="row">
           <div className="col-md-9 col-xs-6">
-            <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-              Artist Origins
+            <h3 style={{ marginLeft: 20 }}>
+              <span className="capitalize-bold">Artist Origins</span>
+              <small>&nbsp;Click on a country to see more details</small>
             </h3>
           </div>
           <div
@@ -196,7 +197,7 @@ export default class UserArtistMap extends React.Component<
                       this.changeSelectedMetric("listen", event)
                     }
                   >
-                    Listens
+                    number of listens
                   </a>
                 </li>
                 <li>
@@ -207,7 +208,7 @@ export default class UserArtistMap extends React.Component<
                       this.changeSelectedMetric("artist", event)
                     }
                   >
-                    Artists
+                    number of artists
                   </a>
                 </li>
               </ul>
