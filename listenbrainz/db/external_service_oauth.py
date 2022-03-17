@@ -32,7 +32,8 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
                 access_token = EXCLUDED.access_token,
                 refresh_token = EXCLUDED.refresh_token,
                 token_expires = EXCLUDED.token_expires,
-                scopes = EXCLUDED.scopes
+                scopes = EXCLUDED.scopes,
+                last_updated = NOW()
             RETURNING id
             """), {
                 "user_id": user_id,
@@ -53,7 +54,10 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
                 ON CONFLICT (user_id, service) DO UPDATE SET
                     external_service_oauth_id = EXCLUDED.external_service_oauth_id,
                     user_id = EXCLUDED.user_id,
-                    service = EXCLUDED.service
+                    service = EXCLUDED.service,
+                    last_updated = NULL,
+                    latest_listened_at = NULL,
+                    error_message = NULL
                 """), {
                 "external_service_oauth_id": external_service_oauth_id,
                 "user_id": user_id,
