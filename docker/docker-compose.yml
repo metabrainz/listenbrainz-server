@@ -113,7 +113,7 @@ services:
 
 # Uncomment the following lines if you want to connect the LB network to a musicbrainz-docker network to access a MB replica
 # TODO: re-comment these before merging this code
-#networks:
-#  default:
-#    name: musicbrainzdocker_default
-#    external: true
+networks:
+  default:
+    name: musicbrainz-docker_default
+    external: true
