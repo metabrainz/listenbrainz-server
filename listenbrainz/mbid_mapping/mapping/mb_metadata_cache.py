@@ -86,13 +86,23 @@ def create_json_data(row):
     }
 
     for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
-        rels = { name: url for name, url in rels or [] }
-        data = {"mbid": mbid,
-                "begin_year": begin_year,
-                "end_year": end_year,
-                "type": artist_type,
-                "area": area,
-                "rels": rels }
+        data = {"mbid": mbid }
+        if begin_year is not None:
+            data["begin_year"] = begin_year
+        if end_year is not None:
+            data["end_year"] = end_year
+        if artist_type is not None:
+            data["type"] = artist_type
+        if area is not None:
+            data["area"] = area
+        if rels:
+            filtered = {}
+            for name, url in rels:
+                if name is None or url is None:
+                    continue
+                filtered[name] = url
+            if filtered:
+                data["rels"] = filtered
         if artist_type == "Person":
             data["gender"] = gender
         artists.append(data)
