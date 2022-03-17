@@ -177,7 +177,7 @@ def train(training_data, rank, iteration, lmbda, alpha, model_id):
         raise
 
 
-def get_best_model(training_data, validation_data, num_validation, ranks, lambdas, iterations, alpha):
+def get_best_model(training_data, validation_data, num_validation, ranks, lambdas, iterations, alphas):
     """ Train models and get the best model.
 
         Args:
@@ -187,7 +187,7 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
             ranks (list): Number of factors in ALS model.
             lambdas (list): Controls regularization.
             iterations (list): Number of iterations to run.
-            alpha (float): Baseline level of confidence weighting applied.
+            alphas (list): Baseline level of confidence weighting applied.
 
         Returns:
             best_model: Model with least RMSE value.
@@ -197,7 +197,7 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
     best_model_metadata = defaultdict(dict)
     model_metadata = list()
 
-    for rank, lmbda, iteration in itertools.product(ranks, lambdas, iterations):
+    for rank, lmbda, iteration, alpha in itertools.product(ranks, lambdas, iterations, alphas):
         model_id = generate_model_id()
 
         t0 = time.monotonic()

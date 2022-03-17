@@ -144,7 +144,7 @@ class RequestManageTestCase(unittest.TestCase):
                 'ranks': [1, 2],
                 'lambdas': [2.0, 3.0],
                 'iterations': [2, 3],
-                'alpha': 3.0,
+                'alpha': [3.0],
             }
         }
         expected_message = ujson.dumps(message)
