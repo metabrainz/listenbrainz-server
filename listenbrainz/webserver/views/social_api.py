@@ -12,7 +12,7 @@ social_api_bp = Blueprint('social_api_v1', __name__)
 
 
 @social_api_bp.route("/user/<user_name>/followers", methods=["GET", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_followers(user_name: str):
     """
@@ -44,7 +44,7 @@ def get_followers(user_name: str):
 
 
 @social_api_bp.route("/user/<user_name>/following", methods=["GET", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_following(user_name: str):
     """
@@ -76,7 +76,7 @@ def get_following(user_name: str):
 
 
 @social_api_bp.route("/user/<user_name>/follow", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def follow_user(user_name: str):
     """
@@ -114,7 +114,7 @@ def follow_user(user_name: str):
 
 
 @social_api_bp.route("/user/<user_name>/unfollow", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def unfollow_user(user_name: str):
     """
