@@ -26,7 +26,7 @@ recommendation_feedback_api_bp = Blueprint('recommendation_feedback_api_v1', __n
 
 
 @recommendation_feedback_api_bp.route("submit", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def submit_recommendation_feedback():
     """
@@ -75,7 +75,7 @@ def submit_recommendation_feedback():
 
 
 @recommendation_feedback_api_bp.route("delete", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def delete_recommendation_feedback():
     """
@@ -120,7 +120,7 @@ def delete_recommendation_feedback():
 
 
 @recommendation_feedback_api_bp.route("/user/<user_name>", methods=["GET"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_feedback_for_user(user_name):
     """
@@ -192,7 +192,7 @@ def get_feedback_for_user(user_name):
 
 
 @recommendation_feedback_api_bp.route("/user/<user_name>/recordings", methods=["GET"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user(user_name):
     """

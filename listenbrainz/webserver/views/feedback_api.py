@@ -20,7 +20,7 @@ FEEDBACK_DEFAULT_SCORE = 0
 
 
 @feedback_api_bp.route("/recording-feedback", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def recording_feedback():
     """
@@ -69,7 +69,7 @@ def recording_feedback():
 
 
 @feedback_api_bp.route("/user/<user_name>/get-feedback", methods=["GET"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_feedback_for_user(user_name):
     """
@@ -121,7 +121,7 @@ def get_feedback_for_user(user_name):
     })
 
 @feedback_api_bp.route("/recording/<recording_mbid>/get-feedback-mbid", methods=["GET"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_feedback_for_recording_mbid(recording_mbid):
     """
@@ -145,7 +145,7 @@ def get_feedback_for_recording_mbid(recording_mbid):
 
 
 @feedback_api_bp.route("/recording/<recording_msid>/get-feedback", methods=["GET"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_feedback_for_recording_msid(recording_msid):
     """
@@ -194,7 +194,7 @@ def _get_feedback_for_recording(recording_type, recording):
 
 
 @feedback_api_bp.route("/user/<user_name>/get-feedback-for-recordings", methods=["GET"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user(user_name):
     """
