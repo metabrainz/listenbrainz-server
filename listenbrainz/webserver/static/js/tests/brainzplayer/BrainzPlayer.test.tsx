@@ -645,12 +645,8 @@ describe("BrainzPlayer", () => {
       expect(ds).toBeInstanceOf(SpotifyPlayer);
       // GlobalContextMock.spotifyAuth includes permissions suggesting LB records Spotify listens already
       expect(ds.datasourceRecordsListens()).toBeTruthy();
-      const submitListensAPISpy = jest.spyOn(
-        instance.context.APIService,
-        "submitListens"
-      );
       await instance.submitListenToListenBrainz("single", listen);
-      expect(submitListensAPISpy).not.toHaveBeenCalled();
+      expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it("submits a playing_now with the expected metadata", async () => {
