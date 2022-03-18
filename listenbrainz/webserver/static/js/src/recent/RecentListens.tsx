@@ -152,7 +152,7 @@ export default class RecentListens extends React.Component<
                   newAlert(
                     "success",
                     "",
-                    `Successfully pinned ${pinnedListen.track_metadata.track_name}`
+                    `Successfully pinned ${pinnedListen.track_metadata?.track_name}`
                   )
                 }
               />

@@ -121,14 +121,14 @@ export default class MissingMBDataPage extends React.Component<
     const name = document.createElement("input");
     name.type = "hidden";
     name.name = "name";
-    name.value = listen.track_metadata.release_name || "";
+    name.value = listen.track_metadata?.release_name || "";
     form.appendChild(name);
     const recording = document.createElement("input");
     recording.type = "hidden";
     recording.name = "mediums.0.track.0.name";
-    recording.value = listen.track_metadata.track_name;
+    recording.value = listen.track_metadata?.track_name;
     form.appendChild(recording);
-    const artists = listen.track_metadata.artist_name.split(",");
+    const artists = listen.track_metadata?.artist_name.split(",");
     artists.forEach((artist, index) => {
       const artistCredit = document.createElement("input");
       artistCredit.type = "hidden";

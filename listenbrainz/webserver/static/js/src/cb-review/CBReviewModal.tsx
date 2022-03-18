@@ -227,7 +227,7 @@ export default class CBReviewModal extends React.Component<
     if (!recording_mbid && additional_info?.track_mbid) {
       recording_mbid = await this.getRecordingMBIDFromTrack(
         additional_info?.track_mbid,
-        listen.track_metadata.track_name
+        listen.track_metadata?.track_name
       );
     }
     // confirm that found mbid was valid
@@ -235,7 +235,7 @@ export default class CBReviewModal extends React.Component<
       const entity: ReviewableEntity = {
         type: "recording",
         mbid: recording_mbid,
-        name: listen.track_metadata.track_name,
+        name: listen.track_metadata?.track_name,
       };
       this.setState({ recordingEntity: entity });
     } else {
@@ -255,7 +255,7 @@ export default class CBReviewModal extends React.Component<
       const entity: ReviewableEntity = {
         type: "artist",
         mbid: artist_mbid,
-        name: listen.track_metadata.artist_name,
+        name: listen.track_metadata?.artist_name,
       };
       this.setState({ artistEntity: entity });
     } else {
@@ -283,7 +283,7 @@ export default class CBReviewModal extends React.Component<
       const entity: ReviewableEntity = {
         type: "release_group",
         mbid: release_group_mbid,
-        name: listen.track_metadata.release_name,
+        name: listen.track_metadata?.release_name,
       };
       this.setState({ releaseGroupEntity: entity });
     } else {
@@ -412,7 +412,7 @@ export default class CBReviewModal extends React.Component<
           newAlert(
             "success",
             `Your review was submitted to CritiqueBrainz!`,
-            `${listen.track_metadata.artist_name} - ${entityToReview?.name}`
+            `${listen.track_metadata?.artist_name} - ${entityToReview?.name}`
           );
           // show url using review mbid on success
           this.setState({
