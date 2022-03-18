@@ -5,6 +5,8 @@ from psycopg2.errors import OperationalError
 from unidecode import unidecode
 import ujson
 import json
+import uuid
+import psycopg2.extras
 
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
@@ -27,6 +29,7 @@ def create_tables(lb_conn):
                                          id                        SERIAL
                                        , recording_mbid            UUID NOT NULL
                                        , dirty                     BOOLEAN DEFAULT FALSE
+                                       , artist_mbids              UUID[] NOT NULL
                                        , recording_data            JSONB NOT NULL
                                        , artist_data               JSONB NOT NULL
                                        , tag_data                  JSONB NOT NULL)""")
@@ -80,10 +83,7 @@ def create_json_data(row):
     """
 
     artists = []
-    entities = {
-        "artist": [],
-        "recording": row["recording_mbid"]
-    }
+    artist_mbids = []
 
     for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
         data = { }
@@ -106,7 +106,7 @@ def create_json_data(row):
         if artist_type == "Person":
             data["gender"] = gender
         artists.append(data)
-        entities["artist"].append(mbid)
+        artist_mbids.append(uuid.UUID(mbid))
 
     recording_rels = []
     for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
@@ -114,6 +114,8 @@ def create_json_data(row):
                                 "artist_name": artist_name,
                                 "artist_mbid": artist_mbid,
                                 "instrument": instrument})
+        artist_mbids.append(uuid.UUID(artist_mbid))
+
     recording_tags = []
     for tag, count, genre_mbid in row["recording_tags"] or []:
         tag = { "tag": tag, "count": count }
@@ -130,7 +132,8 @@ def create_json_data(row):
            tag["genre_mbid"] = genre_mbid
         artist_tags.append(tag)
 
-    return (ujson.dumps({ "rels" : recording_rels}),
+    return (artist_mbids,
+            ujson.dumps({ "rels" : recording_rels}),
             ujson.dumps(artists),
             ujson.dumps({ "recording": recording_tags, "artist": artist_tags }))
 
@@ -173,7 +176,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                               ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
                                               ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
                                     OR lt.gid IS NULL)
--- AND r.gid in ('226a48da-a256-42df-9bd2-7566c155a61e')
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
                           GROUP BY r.gid
                ), recording_rels AS (
                             SELECT r.gid
@@ -207,7 +210,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                                ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
                                                ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                    OR lt.gid IS NULL)
---AND r.gid in ('226a48da-a256-42df-9bd2-7566c155a61e')
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
                            GROUP BY r.gid
                ), artist_data AS (
                         SELECT r.gid
@@ -233,7 +236,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON a.area = ar.id
                      LEFT JOIN artist_rels arl
                             ON arl.gid = r.gid
---WHERE r.gid in ('226a48da-a256-42df-9bd2-7566c155a61e')
+--WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
                       GROUP BY r.gid
                ), recording_tags AS (
                         SELECT r.gid AS recording_mbid
@@ -246,7 +249,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                      LEFT JOIN genre g
                             ON t.name = g.name
                          WHERE count > 0
---AND r.gid in ('226a48da-a256-42df-9bd2-7566c155a61e')
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
                          GROUP BY r.gid
                ), artist_tags AS (
                         SELECT r.gid AS recording_mbid
@@ -265,7 +268,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                      LEFT JOIN genre g
                             ON t.name = g.name
                          WHERE count > 0
---AND r.gid in ('226a48da-a256-42df-9bd2-7566c155a61e')
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
                          GROUP BY r.gid
                )
                         SELECT recording_links
@@ -293,11 +296,11 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON rt.recording_mbid = r.gid
                      LEFT JOIN artist_tags ats
                             ON ats.recording_mbid = r.gid
---WHERE r.gid in ('226a48da-a256-42df-9bd2-7566c155a61e')
+--WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
                       GROUP BY r.gid, r.length, recording_links, recording_tags, artist_data, artist_tags"""
 
-#WHERE r.gid in ('226a48da-a256-42df-9bd2-7566c155a61e')
-#AND r.gid in ('226a48da-a256-42df-9bd2-7566c155a61e')
+#WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+#AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
 
     log("mb metadata cache: start")
 
@@ -346,12 +349,13 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     create_indexes(lb_conn)
 
     log("mb metadata cache: swap tables and indexes into production.")
-    swap_table_and_indexes(lb_conn)
+#    swap_table_and_indexes(lb_conn)
 
     log("mb metadata cache: done")
 
 
 def create_mb_metadata_cache():
+    psycopg2.extras.register_uuid()
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
             with psycopg2.connect(config.TIMESCALE_DATABASE_URI) as lb_conn:
