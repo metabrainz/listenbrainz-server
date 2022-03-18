@@ -137,7 +137,7 @@ export default class YoutubePlayer
     } else {
       // Fallback to track name from the listen we are playing
       const { currentListen } = this.state;
-      title = currentListen?.track_metadata.track_name ?? "";
+      title = currentListen?.track_metadata?.track_name ?? "";
     }
     onTrackInfoChange(
       title,

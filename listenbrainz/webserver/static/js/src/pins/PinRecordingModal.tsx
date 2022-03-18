@@ -60,7 +60,7 @@ export default class PinRecordingModal extends React.Component<
       newAlert(
         "success",
         `You pinned a recording!`,
-        `${recordingToPin.track_metadata.artist_name} - ${recordingToPin.track_metadata.track_name}`
+        `${recordingToPin.track_metadata?.artist_name} - ${recordingToPin.track_metadata?.track_name}`
       );
       this.setState({ blurbContent: "" });
 

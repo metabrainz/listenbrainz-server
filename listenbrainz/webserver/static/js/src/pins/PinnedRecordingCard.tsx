@@ -97,7 +97,7 @@ export default class PinnedRecordingCard extends React.Component<
           newAlert(
             "success",
             `You unpinned a recording.`,
-            `${pinnedRecording.track_metadata.artist_name} - ${pinnedRecording.track_metadata.track_name}`
+            `${pinnedRecording.track_metadata?.artist_name} - ${pinnedRecording.track_metadata?.track_name}`
           );
         }
       } catch (error) {
