@@ -155,6 +155,25 @@ PRIVATE_TABLES = {
         'gdpr_agreed',
         'email',
     ),
+    'external_service_oauth': (
+        'id',
+        'user_id',
+        'service',
+        'access_token',
+        'refresh_token',
+        'token_expires',
+        'last_updated',
+        'scopes'
+    ),
+    'listens_importer': (
+        'id',
+        'external_service_oauth_id',
+        'user_id',
+        'service',
+        'last_updated',
+        'latest_listened_at',
+        'error_message'
+    ),
     'api_compat.token': (
         'id',
         'user_id',
@@ -857,6 +876,14 @@ def _update_sequences():
     current_app.logger.info('Updating user_id_seq...')
     _update_sequence(db.engine, 'user_id_seq', '"user"')
 
+    # external_service_oauth_id_seq
+    current_app.logger.info('Updating external_service_oauth_id_seq...')
+    _update_sequence(db.engine, 'external_service_oauth_id_seq', 'external_service_oauth')
+
+    # listens_importer_id_seq
+    current_app.logger.info('Updating listens_importer_id_seq...')
+    _update_sequence(db.engine, 'listens_importer_id_seq', 'listens_importer')
+
     # token_id_seq
     current_app.logger.info('Updating token_id_seq...')
     _update_sequence(db.engine, 'api_compat.token_id_seq', 'api_compat.token')
@@ -1000,7 +1027,7 @@ def check_ftp_dump_ages():
                 text=render_template('emails/data_dump_outdated.txt', msg=msg),
                 recipients=['listenbrainz-exceptions@metabrainz.org'],
                 from_name='ListenBrainz',
-                from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
+                from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN']
             )
         elif msg:
             print(msg)
