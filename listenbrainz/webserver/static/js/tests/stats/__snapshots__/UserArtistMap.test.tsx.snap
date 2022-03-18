@@ -53,6 +53,9 @@ exports[`Sitewide Stats UserArtistMap renders corectly when range is invalid 1`]
             }
           }
         >
+          <span>
+            Rank by
+          </span>
           <span
             className="dropdown"
           >
@@ -77,16 +80,18 @@ exports[`Sitewide Stats UserArtistMap renders corectly when range is invalid 1`]
                   onClick={[Function]}
                   role="button"
                 >
-                  number of listens
+                  Listens
                 </a>
               </li>
-              <li>
+              <li
+                className="active"
+              >
                 <a
                   href=""
                   onClick={[Function]}
                   role="button"
                 >
-                  number of artists
+                  Artists
                 </a>
               </li>
             </ul>
@@ -287,6 +292,9 @@ exports[`Sitewide Stats UserArtistMap renders correctly 1`] = `
         }
       }
     >
+      <span>
+        Rank by
+      </span>
       <span
         className="dropdown"
       >
@@ -311,16 +319,18 @@ exports[`Sitewide Stats UserArtistMap renders correctly 1`] = `
               onClick={[Function]}
               role="button"
             >
-              number of listens
+              Listens
             </a>
           </li>
-          <li>
+          <li
+            className="active"
+          >
             <a
               href=""
               onClick={[Function]}
               role="button"
             >
-              number of artists
+              Artists
             </a>
           </li>
         </ul>
@@ -569,6 +579,9 @@ exports[`User Stats UserArtistMap renders corectly when range is invalid 1`] = `
             }
           }
         >
+          <span>
+            Rank by
+          </span>
           <span
             className="dropdown"
           >
@@ -593,16 +606,18 @@ exports[`User Stats UserArtistMap renders corectly when range is invalid 1`] = `
                   onClick={[Function]}
                   role="button"
                 >
-                  number of listens
+                  Listens
                 </a>
               </li>
-              <li>
+              <li
+                className="active"
+              >
                 <a
                   href=""
                   onClick={[Function]}
                   role="button"
                 >
-                  number of artists
+                  Artists
                 </a>
               </li>
             </ul>
@@ -803,6 +818,9 @@ exports[`User Stats UserArtistMap renders correctly 1`] = `
         }
       }
     >
+      <span>
+        Rank by
+      </span>
       <span
         className="dropdown"
       >
@@ -827,16 +845,18 @@ exports[`User Stats UserArtistMap renders correctly 1`] = `
               onClick={[Function]}
               role="button"
             >
-              number of listens
+              Listens
             </a>
           </li>
-          <li>
+          <li
+            className="active"
+          >
             <a
               href=""
               onClick={[Function]}
               role="button"
             >
-              number of artists
+              Artists
             </a>
           </li>
         </ul>
