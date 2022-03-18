@@ -8,7 +8,11 @@ import {
   isFunction as _isFunction,
 } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
-import { searchForYoutubeTrack } from "../utils/utils";
+import {
+  getArtistName,
+  getTrackName,
+  searchForYoutubeTrack,
+} from "../utils/utils";
 
 type YoutubePlayerState = {
   currentListen?: Listen;
@@ -137,7 +141,7 @@ export default class YoutubePlayer
     } else {
       // Fallback to track name from the listen we are playing
       const { currentListen } = this.state;
-      title = currentListen?.track_metadata?.track_name ?? "";
+      title = getTrackName(currentListen);
     }
     onTrackInfoChange(
       title,
@@ -223,10 +227,8 @@ export default class YoutubePlayer
   };
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack) => {
-    const trackName =
-      _get(listen, "track_metadata.track_name") || _get(listen, "title");
-    const artistName =
-      _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
+    const trackName = getTrackName(listen);
+    const artistName = getArtistName(listen);
     // Using the releaseName has paradoxically given worst search results,
     // so we're only using it when track name isn't provided (for example for an album search)
     const releaseName = trackName

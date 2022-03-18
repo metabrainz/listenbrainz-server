@@ -38,6 +38,8 @@ import {
   getArtistMBIDs,
   getReleaseMBID,
   getReleaseGroupMBID,
+  getTrackName,
+  getArtistName,
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
@@ -625,7 +627,9 @@ export default class Listens extends React.Component<
           <div className="col-md-4 col-md-push-8">
             {playingNowListen && (
               <ListenCard
-                key={`playing-now-${playingNowListen.track_metadata?.track_name}-${playingNowListen.track_metadata?.artist_name}`}
+                key={`playing-now-${getTrackName(
+                  playingNowListen
+                )}-${getArtistName(playingNowListen)}`}
                 showTimestamp
                 showUsername={false}
                 listen={playingNowListen}
@@ -742,7 +746,9 @@ export default class Listens extends React.Component<
                     /* eslint-enable react/jsx-no-bind */
                     return (
                       <ListenCard
-                        key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                        key={`${listen.listened_at}-${getTrackName(listen)}-${
+                          listen.track_metadata?.additional_info?.recording_msid
+                        }-${listen.user_name}`}
                         showTimestamp
                         showUsername={false}
                         listen={listen}
