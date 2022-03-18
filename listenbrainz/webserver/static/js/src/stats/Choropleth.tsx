@@ -1,5 +1,9 @@
 import { Theme } from "@nivo/core";
-import { Choropleth } from "@nivo/geo";
+import {
+  Choropleth,
+  ChoroplethBoundFeature,
+  ChoroplethEventHandler,
+} from "@nivo/geo";
 import { BoxLegendSvg, LegendProps } from "@nivo/legends";
 import { Chip } from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
@@ -13,6 +17,8 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import * as worldCountries from "../../tests/__mocks__/world_countries.json";
 
+const { useState, useCallback, useMemo, useEffect, useRef } = React;
+
 export type ChoroplethProps = {
   data: UserArtistMapData;
   width?: number;
@@ -20,6 +26,12 @@ export type ChoroplethProps = {
 };
 
 export default function CustomChoropleth(props: ChoroplethProps) {
+  const [tooltipPosition, setTooltipPosition] = useState([0, 0]);
+  const [selectedCountry, setSelectedCountry] = useState<
+    ChoroplethBoundFeature
+  >();
+  const refContainer = useRef<HTMLDivElement>(null);
+
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
   const commonLegendProps = {
@@ -27,6 +39,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     direction: "column",
     itemDirection: "left-to-right",
     itemOpacity: 0.85,
+    itemWidth: 90,
     effects: [
       {
         on: "hover",
@@ -40,7 +53,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
 
   const legends = {
     desktop: {
-      itemWidth: 90,
       itemHeight: 18,
       symbolSize: 18,
       translateX: 50,
@@ -48,7 +60,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       ...commonLegendProps,
     } as LegendProps,
     mobile: {
-      itemWidth: 90,
       itemHeight: 10,
       symbolSize: 10,
       translateX: 20,
@@ -78,9 +89,9 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   };
 
   const { data } = props;
-  let { width } = props;
-  width = width || 1200; // Set default width to 1200
-  const height = width / 2;
+  const { width } = props;
+  const containerWidth = width || 1200; // Set default width to 1200
+  const containerHeight = containerWidth / 2;
 
   // Calculate logarithmic domain
   const domain = (() => {
@@ -103,8 +114,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   // Create a custom legend component because the default doesn't work with scaleThreshold
   const CustomLegend = () => (
     <BoxLegendSvg
-      containerHeight={height}
-      containerWidth={width!}
+      containerHeight={containerHeight}
+      containerWidth={containerWidth}
       data={colorScale.range().map((color, index) => {
         // eslint-disable-next-line prefer-const
         let [start, end] = colorScale.invertExtent(color);
@@ -125,18 +136,19 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       {...(isMobile ? legends.mobile : legends.desktop)}
     />
   );
+  const tooltipWidth = 250;
 
-  const CustomTooltip = ({ feature }: { feature: any }) => {
-    if (feature.data === undefined) {
+  const customTooltip = useMemo(() => {
+    if (!selectedCountry?.data) {
       return null;
     }
 
     const { selectedMetric } = props;
     let suffix = `${selectedMetric[0].toUpperCase()}${selectedMetric.slice(1)}`;
-    if (feature.formattedValue !== "1") {
+    if (Number(selectedCountry.formattedValue) !== 1) {
       suffix = `${suffix}s`;
     }
-    const { artists } = feature.data;
+    const { artists } = selectedCountry.data;
 
     return (
       <div
@@ -147,20 +159,20 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           borderRadius: "2px",
           boxShadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
           padding: "5px 9px",
+          maxWidth: `${tooltipWidth}px`,
         }}
       >
         <div
           style={{
-            whiteSpace: "pre",
             display: "flex",
             alignItems: "center",
           }}
         >
-          <Chip color={feature.color!} style={{ marginRight: 7 }} />
+          <Chip color={selectedCountry.color!} style={{ marginRight: 7 }} />
           <span>
-            {feature.label}:{" "}
+            {selectedCountry.label}:{" "}
             <strong>
-              {feature.formattedValue} {suffix}
+              {selectedCountry.formattedValue} {suffix}
             </strong>
           </span>
         </div>
@@ -174,7 +186,11 @@ export default function CustomChoropleth(props: ChoroplethProps) {
               />
               {artist.listen_count}
             </span>
-            <a href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}>
+            <a
+              href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {artist.artist_name}
             </a>
             <br />
@@ -182,31 +198,85 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         ))}
       </div>
     );
-  };
+  }, [selectedCountry]);
+
+  // Hide our custom tooltip when user clicks somewhere that isn't a country
+  const handleClickOutside = useCallback(
+    (event: MouseEvent) => {
+      setSelectedCountry(undefined);
+    },
+    [setSelectedCountry]
+  );
+
+  useEffect(() => {
+    document.addEventListener("click", handleClickOutside, true);
+    return () => {
+      document.removeEventListener("click", handleClickOutside, true);
+    };
+  });
+
+  const showTooltipFromEvent: ChoroplethEventHandler = useCallback(
+    (feature, event: React.MouseEvent<HTMLElement>) => {
+      // Cancel other events, such as our handleClickOutside defined above
+      event.preventDefault();
+      // relative mouse position
+      let x = event.clientX;
+      let y = event.clientY;
+      if (refContainer.current) {
+        // Make position relative to parent container
+        const bounds = refContainer.current.getBoundingClientRect();
+        x -= bounds.left;
+        y -= bounds.top;
+        // Show tooltip on the left if there isn't enough space
+        if (x > bounds.width - tooltipWidth) x -= tooltipWidth / 2;
+      }
+      setTooltipPosition([x, y]);
+      setSelectedCountry(feature);
+    },
+    [setSelectedCountry, setTooltipPosition]
+  );
 
   return (
-    <Choropleth
-      data={data}
-      width={width}
-      height={height}
-      features={worldCountries.features}
-      margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-      colors={colorScale}
-      domain={domain}
-      theme={isMobile ? themes.mobile : themes.desktop}
-      valueFormat=".2~s"
-      tooltip={CustomTooltip}
-      unknownColor="#efefef"
-      label="properties.name"
-      projectionScale={width / 5.5}
-      projectionType="naturalEarth1"
-      projectionTranslation={[0.5, 0.53]}
-      borderWidth={0.5}
-      borderColor="#152538"
-      // The typescript definition file for Choropleth is incomplete, so disable typescript
-      // until it is fixed.
-      // @ts-ignore
-      layers={["features", CustomLegend]}
-    />
+    <div ref={refContainer} style={{ position: "relative" }}>
+      <Choropleth
+        data={data}
+        width={containerWidth}
+        height={containerHeight}
+        features={worldCountries.features}
+        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        colors={colorScale}
+        domain={domain}
+        theme={isMobile ? themes.mobile : themes.desktop}
+        valueFormat=".2~s"
+        // We can't set isInteractive to false (need onClick event)
+        // But we don't want to show a tooltip, so this function returns an empty element
+        tooltip={() => <></>}
+        onClick={showTooltipFromEvent}
+        unknownColor="#efefef"
+        label="properties.name"
+        projectionScale={containerWidth / 5.5}
+        projectionType="naturalEarth1"
+        projectionTranslation={[0.5, 0.53]}
+        borderWidth={0.5}
+        borderColor="#152538"
+        // The typescript definition file for Choropleth is incomplete, so disable typescript
+        // until it is fixed.
+        // @ts-ignore
+        layers={["features", CustomLegend]}
+      />
+      {selectedCountry && (
+        <div
+          style={{
+            transform: `translate(${tooltipPosition[0]}px, ${tooltipPosition[1]}px)`,
+            position: "absolute",
+            zIndex: 10,
+            top: "0px",
+            left: "0px",
+          }}
+        >
+          {customTooltip}
+        </div>
+      )}
+    </div>
   );
 }
