@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Iterable, Dict, List, TypeVar
 from typing import Optional, Tuple
 
+from flask import current_app
 from pydantic import BaseModel, validator
 from sqlalchemy import text
 
@@ -83,17 +84,25 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
     # it is possible that multiple items have same msid/mbid. for example, pinning the
     # same recording twice. since the dict is keyed by mbid/msid the corresponding value
     # should be a iterable of all items having that mbid
-    msid_item_map, mbid_item_map = defaultdict(list), defaultdict(list)
+    msid_item_map, mbid_item_map, remaining_item_map = defaultdict(list), defaultdict(list), defaultdict(list)
+
     for item in items:
         if item.recording_mbid:
             mbid_item_map[item.recording_mbid].append(item)
         else:
             msid_item_map[item.recording_msid].append(item)
 
-    msid_metadatas = load_recordings_from_msids(msid_item_map.keys())
+    # first we try to load data from mapping using mbids and msids. however, some items may
+    # not have metadata in mapping. such items will be added to remaining items, and we'll
+    # later lookup data for these items from messybrainz.
+    mapping_mbid_metadata, mapping_msid_metadata = load_recordings_from_mapping(mbid_item_map.keys(), msid_item_map.keys())
+    _update_items_from_map(mbid_item_map, mapping_mbid_metadata, remaining_item_map)
+    _update_items_from_map(msid_item_map, mapping_msid_metadata, remaining_item_map)
+
+    msid_metadatas = load_recordings_from_msids(remaining_item_map.keys())
     for metadata in msid_metadatas:
         msid = metadata["ids"]["recording_msid"]
-        for item in msid_item_map[msid]:
+        for item in remaining_item_map[msid]:
             item.track_metadata = {
                 "track_name": metadata["payload"]["title"],
                 "artist_name": metadata["payload"]["artist"],
@@ -102,19 +111,32 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
                 }
             }
 
-    mapping_mbid_metadata, mapping_msid_metadata = load_recordings_from_mapping(mbid_item_map.keys(), msid_item_map.keys())
-    _update_items_from_map(mbid_item_map, mapping_mbid_metadata)
-    _update_items_from_map(msid_item_map, mapping_msid_metadata)
     return items
 
 
-def _update_items_from_map(models: Dict[str, Iterable[ModelT]], metadatas: Dict):
-    """ The models are updated in place with data of the corresponding mbid/msid from the metadatas. """
+def _update_items_from_map(models: Dict[str, List[ModelT]], metadatas: Dict, remaining: Dict[str, List[ModelT]]):
+    """ Updates the models in place with data of the corresponding mbid/msid from the metadatas. The models for which
+    data could not be found are added to remaining items map keyed by recording_msids.
+    """
     for _id, items in models.items():
-        if _id not in metadatas:
-            continue
-
         for item in items:
+            # this means we could not find data for this item in the mapping tables. so we now add it to
+            # remaining items map using msid as the key because this data will be looked up from messybrainz
+            # afterwards.
+            if _id not in metadatas:
+                if item.recording_msid:
+                    remaining[item.recording_msid].append(item)
+                else:
+                    # well we are in the weeds now. we have an item which has only mbid, its msid is None. but we
+                    # couldn't find the data for the mbid in the mapping table. since msid is None, we can't lookup
+                    # in messybrainz either. note that we always submit the msid from website if available so this
+                    # case shouldn't occur unless some now playing case is mishandled or someone else uses the api
+                    # to submit say a pinned recording with a mbid for which LB has never seen a listen.
+                    # this is difficult to handle and rare, not worth to handle this until it affects someone IMO.
+                    current_app.logger.critical("Couldn't find data for item in mapping and item doesn't have"
+                                                f" msid: {item}")
+                continue
+
             metadata = metadatas[_id]
             item.track_metadata = {
                 "track_name": metadata["title"],
