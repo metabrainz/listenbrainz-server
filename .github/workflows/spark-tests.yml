@@ -13,6 +13,10 @@ on:
       - 'docker/docker-compose.spark*.yml'
       - 'test.sh'
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
 
   test:
