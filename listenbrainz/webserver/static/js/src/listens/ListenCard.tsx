@@ -451,7 +451,7 @@ export default class ListenCard extends React.Component<
           </div>
         </div>
         {additionalContent && (
-          <div className="additional-content" title={getTrackName(listen)}>
+          <div className="additional-content" title={trackName}>
             {additionalContent}
           </div>
         )}
