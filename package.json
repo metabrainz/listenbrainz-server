@@ -29,7 +29,7 @@
   },
   "homepage": "https://listenbrainz.org",
   "dependencies": {
-    "@metabrainz/design-system": "^1.0.5",
+    "@metabrainz/design-system": "^1.0.6",
     "@babel/runtime": "^7.5.5",
     "@braintree/sanitize-url": "^5.0.2",
     "@cospired/i18n-iso-languages": "^3.0.0",
