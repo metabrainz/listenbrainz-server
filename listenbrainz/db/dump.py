@@ -31,6 +31,7 @@ import tempfile
 import traceback
 from datetime import datetime, timedelta
 from ftplib import FTP
+from typing import Tuple, Optional
 
 import sqlalchemy
 import ujson
@@ -230,7 +231,6 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
         Returns:
             a tuple: (path to private dump, path to public dump)
     """
-
     current_app.logger.info('Beginning dump of PostgreSQL database...')
     current_app.logger.info('dump path: %s', location)
 
@@ -252,6 +252,41 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     current_app.logger.info(
         'Dump of private data created at %s!', private_dump)
 
+    current_app.logger.info('Creating dump of public data...')
+    try:
+        public_dump = create_public_dump(location, dump_time, threads)
+    except IOError as e:
+        current_app.logger.critical(
+            'IOError while creating public dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    except Exception as e:
+        current_app.logger.critical(
+            'Unable to create public dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+
+    current_app.logger.info(
+        'ListenBrainz PostgreSQL data dump created at %s!', location)
+    return private_dump, public_dump
+
+
+def dump_timescale_db(location: str, dump_time: datetime = datetime.today(),
+                      threads: int = DUMP_DEFAULT_THREAD_COUNT) -> Optional[Tuple[str, str]]:
+    """ Create timescale database (excluding listens) dump in the specified location
+
+        Arguments:
+            location: Directory where the final dump will be stored
+            dump_time: datetime object representing when the dump was started
+            threads: Maximal number of threads to run during compression
+
+        Returns:
+            a tuple: (path to private dump, path to public dump)
+    """
+    current_app.logger.info('Beginning dump of Timescale database...')
+
     current_app.logger.info('Creating dump of timescale private data...')
     try:
         private_timescale_dump = create_private_timescale_dump(location, dump_time, threads)
@@ -269,22 +304,6 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
         return
     current_app.logger.info(
         'Dump of private timescale data created at %s!', private_timescale_dump)
-
-    current_app.logger.info('Creating dump of public data...')
-    try:
-        public_dump = create_public_dump(location, dump_time, threads)
-    except IOError as e:
-        current_app.logger.critical(
-            'IOError while creating public dump: %s', str(e), exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
-        return
-    except Exception as e:
-        current_app.logger.critical(
-            'Unable to create public dump due to error %s', str(e), exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
-        return
 
     current_app.logger.info('Creating dump of timescale public data...')
     try:
@@ -304,9 +323,7 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
 
     current_app.logger.info('Dump of public timescale data created at %s!', public_timescale_dump)
 
-    current_app.logger.info(
-        'ListenBrainz PostgreSQL data dump created at %s!', location)
-    return private_dump, private_timescale_dump, public_dump, public_timescale_dump
+    return private_timescale_dump, public_timescale_dump
 
 
 def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
