@@ -461,7 +461,7 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
                 created=pin.created.timestamp(),
                 metadata=pinEvent,
             ))
-        except pydantic.ValidationError as e:
-            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+        except (pydantic.ValidationError, TypeError, KeyError):
+            current_app.logger.error("Could not convert pinned recording to feed event", exc_info=True)
             continue
     return events
