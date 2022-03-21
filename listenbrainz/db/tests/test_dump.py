@@ -34,6 +34,7 @@ from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.webserver import create_app
 from listenbrainz.db.model.feedback import Feedback
 
+
 class DumpTestCase(DatabaseTestCase):
 
     def setUp(self):
@@ -84,7 +85,7 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 1)
 
             # do a db dump and reset the db
-            private_dump, private_ts_dump, public_dump, public_ts_dump = db_dump.dump_postgres_db(self.tempdir)
+            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
             self.reset_db()
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 0)
@@ -122,7 +123,7 @@ class DumpTestCase(DatabaseTestCase):
             db_feedback.insert(feedback)
 
             # do a db dump and reset the db
-            private_dump, private_ts_dump, public_dump, public_ts_dump = db_dump.dump_postgres_db(self.tempdir)
+            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
             self.reset_db()
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 0)
