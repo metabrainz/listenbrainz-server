@@ -21,48 +21,151 @@ exports[`YoutubePlayer renders 1`] = `
     }
   }
 >
-  <div
-    className="youtube "
-  >
-    <YouTube
-      className={null}
-      containerClassName=""
-      id={null}
-      onEnd={[Function]}
-      onError={[Function]}
-      onPause={[Function]}
-      onPlay={[Function]}
-      onPlaybackQualityChange={[Function]}
-      onPlaybackRateChange={[Function]}
-      onReady={[Function]}
-      onStateChange={[Function]}
-      opts={
-        Object {
-          "height": "100%",
-          "playerVars": Object {
-            "autoplay": 1,
-            "controls": 0,
-            "fs": 0,
-            "iv_load_policy": 3,
-            "modestbranding": 1,
-            "origin": "http://localhost",
-            "rel": 0,
-            "showinfo": 0,
-          },
-          "width": "100%",
-        }
+  <Draggable
+    allowAnyClick={false}
+    axis="both"
+    bounds={
+      Object {
+        "bottom": 60,
+        "left": 370,
+        "right": -10,
       }
-      videoId={null}
+    }
+    defaultClassName="react-draggable"
+    defaultClassNameDragged="react-draggable-dragged"
+    defaultClassNameDragging="react-draggable-dragging"
+    defaultPosition={
+      Object {
+        "x": 0,
+        "y": 0,
+      }
+    }
+    disabled={false}
+    enableUserSelectHack={true}
+    handle=".youtube-drag-handle"
+    onDrag={[Function]}
+    onMouseDown={[Function]}
+    onStart={[Function]}
+    onStop={[Function]}
+    scale={1}
+  >
+    <DraggableCore
+      allowAnyClick={false}
+      disabled={false}
+      enableUserSelectHack={true}
+      handle=".youtube-drag-handle"
+      onDrag={[Function]}
+      onMouseDown={[Function]}
+      onStart={[Function]}
+      onStop={[Function]}
+      scale={1}
     >
       <div
-        className=""
+        className="youtube-wrapper react-draggable"
+        onMouseDown={[Function]}
+        onMouseUp={[Function]}
+        onTouchEnd={[Function]}
+        style={
+          Object {
+            "transform": "translate(0px,0px)",
+          }
+        }
+        transform={null}
       >
         <div
-          className={null}
+          className="youtube-drag-handle"
+        >
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f0b2",
+                  "M352.201 425.775l-79.196 79.196c-9.373 9.373-24.568 9.373-33.941 0l-79.196-79.196c-15.119-15.119-4.411-40.971 16.971-40.97h51.162L228 284H127.196v51.162c0 21.382-25.851 32.09-40.971 16.971L7.029 272.937c-9.373-9.373-9.373-24.569 0-33.941L86.225 159.8c15.119-15.119 40.971-4.411 40.971 16.971V228H228V127.196h-51.23c-21.382 0-32.09-25.851-16.971-40.971l79.196-79.196c9.373-9.373 24.568-9.373 33.941 0l79.196 79.196c15.119 15.119 4.411 40.971-16.971 40.971h-51.162V228h100.804v-51.162c0-21.382 25.851-32.09 40.97-16.971l79.196 79.196c9.373 9.373 9.373 24.569 0 33.941L425.773 352.2c-15.119 15.119-40.971 4.411-40.97-16.971V284H284v100.804h51.23c21.382 0 32.09 25.851 16.971 40.971z",
+                ],
+                "iconName": "arrows-alt",
+                "prefix": "fas",
+              }
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size={null}
+            spin={false}
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-arrows-alt fa-w-16 "
+              data-icon="arrows-alt"
+              data-prefix="fas"
+              focusable="false"
+              role="img"
+              style={Object {}}
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M352.201 425.775l-79.196 79.196c-9.373 9.373-24.568 9.373-33.941 0l-79.196-79.196c-15.119-15.119-4.411-40.971 16.971-40.97h51.162L228 284H127.196v51.162c0 21.382-25.851 32.09-40.971 16.971L7.029 272.937c-9.373-9.373-9.373-24.569 0-33.941L86.225 159.8c15.119-15.119 40.971-4.411 40.971 16.971V228H228V127.196h-51.23c-21.382 0-32.09-25.851-16.971-40.971l79.196-79.196c9.373-9.373 24.568-9.373 33.941 0l79.196 79.196c15.119 15.119 4.411 40.971-16.971 40.971h-51.162V228h100.804v-51.162c0-21.382 25.851-32.09 40.97-16.971l79.196 79.196c9.373 9.373 9.373 24.569 0 33.941L425.773 352.2c-15.119 15.119-40.971 4.411-40.97-16.971V284H284v100.804h51.23c21.382 0 32.09 25.851 16.971 40.971z"
+                fill="currentColor"
+                style={Object {}}
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </div>
+        <YouTube
+          className="youtube-player"
+          containerClassName=""
           id={null}
-        />
+          onEnd={[Function]}
+          onError={[Function]}
+          onPause={[Function]}
+          onPlay={[Function]}
+          onPlaybackQualityChange={[Function]}
+          onPlaybackRateChange={[Function]}
+          onReady={[Function]}
+          onStateChange={[Function]}
+          opts={
+            Object {
+              "height": "100%",
+              "playerVars": Object {
+                "autoplay": 1,
+                "controls": 0,
+                "fs": 0,
+                "iv_load_policy": 3,
+                "modestbranding": 1,
+                "origin": "http://localhost",
+                "rel": 0,
+                "showinfo": 0,
+              },
+              "width": "100%",
+            }
+          }
+          videoId={null}
+        >
+          <div
+            className=""
+          >
+            <div
+              className="youtube-player"
+              id={null}
+            />
+          </div>
+        </YouTube>
       </div>
-    </YouTube>
-  </div>
+    </DraggableCore>
+  </Draggable>
 </YoutubePlayer>
 `;
