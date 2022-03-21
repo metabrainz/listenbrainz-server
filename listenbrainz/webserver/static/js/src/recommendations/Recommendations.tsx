@@ -16,7 +16,7 @@ import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
-import { getPageProps, getRecordingMBID } from "../utils/utils";
+import { getPageProps, getRecordingMBID, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
 
@@ -245,7 +245,7 @@ export default class Recommendations extends React.Component<
                   );
                   return (
                     <ListenCard
-                      key={`${recommendation.track_metadata?.track_name}-${
+                      key={`${getTrackName(recommendation)}-${
                         recommendation.track_metadata?.additional_info
                           ?.recording_msid ?? recordingMBID
                       }-${recommendation.listened_at}-${
