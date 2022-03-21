@@ -258,7 +258,7 @@ def create_feedback(location, threads):
               help="the path to the ListenBrainz public dump to be imported")
 @click.option('--public-timescale-archive', default=None, required=False,
               help="the path to the ListenBrainz public timescale dump to be imported")
-@click.option('--listen-archive', '-l', default=None, required=True,
+@click.option('--listen-archive', '-l', default=None, required=False,
               help="the path to the ListenBrainz listen dump archive to be imported")
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
               help="the number of threads to use during decompression, defaults to 1")
@@ -285,22 +285,9 @@ def import_dump(private_archive, private_timescale_archive,
         db_dump.import_postgres_dump(private_archive, private_timescale_archive,
                                      public_archive, public_timescale_archive,
                                      threads)
-
-        from listenbrainz.webserver.timescale_connection import _ts as ls
-        try:
+        if listen_archive:
+            from listenbrainz.webserver.timescale_connection import _ts as ls
             ls.import_listens_dump(listen_archive, threads)
-        except psycopg2.OperationalError as e:
-            current_app.logger.critical(
-                'OperationalError while trying to import data: %s', str(e), exc_info=True)
-            raise
-        except IOError as e:
-            current_app.logger.critical(
-                'IOError while trying to import data: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            current_app.logger.critical(
-                'Unexpected error while importing data: %s', str(e), exc_info=True)
-            raise
 
     sys.exit(0)
 
