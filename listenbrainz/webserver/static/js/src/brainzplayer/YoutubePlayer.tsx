@@ -1,18 +1,23 @@
 import * as React from "react";
+
+import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import YouTube, { Options } from "react-youtube";
 import {
-  isEqual as _isEqual,
   get as _get,
+  isEqual as _isEqual,
+  isFunction as _isFunction,
   isNil as _isNil,
   isString as _isString,
-  isFunction as _isFunction,
 } from "lodash";
-import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import {
   getArtistName,
   getTrackName,
   searchForYoutubeTrack,
 } from "../utils/utils";
+
+import Draggable from "react-draggable";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowsAlt } from "@fortawesome/free-solid-svg-icons";
 
 type YoutubePlayerState = {
   currentListen?: Listen;
@@ -391,15 +396,32 @@ export default class YoutubePlayer
       width: "100%",
       height: "100%",
     };
+    const draggableBoundPadding = 10;
+    // width of screen - padding on each side - youtube player width
+    const leftBound =
+      document.body.clientWidth - draggableBoundPadding * 2 - 350;
     return (
-      <div className={`youtube ${!show ? "hidden" : ""}`}>
-        <YouTube
-          opts={options}
-          onError={this.onError}
-          onStateChange={this.handlePlayerStateChanged}
-          onReady={this.onReady}
-        />
-      </div>
+      <Draggable
+        handle=".youtube-drag-handle"
+        bounds={{
+          left: -leftBound,
+          right: -draggableBoundPadding,
+          bottom: 60, // Brainzplaer height
+        }}
+      >
+        <div className={`youtube-wrapper${!show ? " hidden" : ""}`}>
+          <div className="youtube-drag-handle">
+            <FontAwesomeIcon icon={faArrowsAlt} />
+          </div>
+          <YouTube
+            className="youtube-player"
+            opts={options}
+            onError={this.onError}
+            onStateChange={this.handlePlayerStateChanged}
+            onReady={this.onReady}
+          />
+        </div>
+      </Draggable>
     );
   }
 }
