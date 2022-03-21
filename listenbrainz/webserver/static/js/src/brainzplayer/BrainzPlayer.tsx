@@ -28,6 +28,7 @@ import {
   updateMediaSession,
   updateWindowTitle,
 } from "../notifications/Notifications";
+import { getArtistName, getTrackName } from "../utils/utils";
 
 export type DataSourceType = {
   name: string;
@@ -441,12 +442,12 @@ export default class BrainzPlayer extends React.Component<
 
   getCurrentTrackName = (): string => {
     const { currentListen } = this.state;
-    return _get(currentListen, "track_metadata.track_name", "");
+    return getTrackName(currentListen);
   };
 
   getCurrentTrackArtists = (): string | undefined => {
     const { currentListen } = this.state;
-    return _get(currentListen, "track_metadata.artist_name", "");
+    return getArtistName(currentListen);
   };
 
   seekToPositionMs = (msTimecode: number): void => {

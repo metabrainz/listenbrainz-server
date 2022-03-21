@@ -1,7 +1,12 @@
 import * as React from "react";
 import { get as _get } from "lodash";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { getRecordingMBID, preciseTimestamp } from "../utils/utils";
+import {
+  getArtistName,
+  getRecordingMBID,
+  getTrackName,
+  preciseTimestamp,
+} from "../utils/utils";
 
 export type PinRecordingModalProps = {
   recordingToPin?: Listen;
@@ -60,7 +65,7 @@ export default class PinRecordingModal extends React.Component<
       newAlert(
         "success",
         `You pinned a recording!`,
-        `${recordingToPin.track_metadata.artist_name} - ${recordingToPin.track_metadata.track_name}`
+        `${getArtistName(recordingToPin)} - ${getTrackName(recordingToPin)}`
       );
       this.setState({ blurbContent: "" });
 

@@ -26,7 +26,11 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
 import PinRecordingModal from "../pins/PinRecordingModal";
-import { getPageProps, handleNavigationClickEvent } from "../utils/utils";
+import {
+  getPageProps,
+  getTrackName,
+  handleNavigationClickEvent,
+} from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
 
 export type UserFeedbackProps = {
@@ -62,7 +66,7 @@ export default class UserFeedback extends React.Component<
       ...listenFormat.track_metadata.additional_info,
       recording_msid: feedbackItem.recording_msid,
     };
-    if (!listenFormat.track_metadata.track_name) {
+    if (!getTrackName(listenFormat)) {
       listenFormat.track_metadata.track_name = `No metadata for MSID ${feedbackItem.recording_msid}`;
     }
     return listenFormat;

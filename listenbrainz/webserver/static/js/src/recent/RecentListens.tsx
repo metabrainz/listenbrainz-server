@@ -24,6 +24,7 @@ import {
   getRecordingMBID,
   getArtistMBIDs,
   getReleaseGroupMBID,
+  getTrackName,
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
@@ -130,7 +131,9 @@ export default class RecentListens extends React.Component<
                   /* eslint-enable react/jsx-no-bind */
                   return (
                     <ListenCard
-                      key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                      key={`${listen.listened_at}-${getTrackName(listen)}-${
+                        listen.user_name
+                      }`}
                       showTimestamp
                       showUsername
                       listen={listen}
@@ -152,7 +155,7 @@ export default class RecentListens extends React.Component<
                   newAlert(
                     "success",
                     "",
-                    `Successfully pinned ${pinnedListen.track_metadata.track_name}`
+                    `Successfully pinned ${getTrackName(pinnedListen)}`
                   )
                 }
               />
