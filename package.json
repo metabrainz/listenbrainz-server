@@ -65,6 +65,7 @@
     "react-coverflow": "^0.2.20",
     "react-date-picker": "^8.1.1",
     "react-dom": "^16.13.1",
+    "react-draggable": "^4.4.4",
     "react-loader-spinner": "^3.1.14",
     "react-responsive": "^8.1.0",
     "react-select": "^3.1.0",
