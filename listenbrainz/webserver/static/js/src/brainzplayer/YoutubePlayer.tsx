@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import YouTube, { Options } from "react-youtube";
 import {
   get as _get,
@@ -9,15 +8,16 @@ import {
   isNil as _isNil,
   isString as _isString,
 } from "lodash";
+
+import Draggable from "react-draggable";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowsAlt } from "@fortawesome/free-solid-svg-icons";
 import {
   getArtistName,
   getTrackName,
   searchForYoutubeTrack,
 } from "../utils/utils";
-
-import Draggable from "react-draggable";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowsAlt } from "@fortawesome/free-solid-svg-icons";
+import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 type YoutubePlayerState = {
   currentListen?: Listen;
