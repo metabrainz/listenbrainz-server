@@ -40,12 +40,14 @@ def create_tables(mb_conn, lb_conn):
             curs.execute(
                 "DROP TABLE IF EXISTS mapping.tmp_mbid_mapping_releases")
             curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping_releases (
-                                            id      SERIAL,
-                                            release INTEGER)""")
+                                            id           SERIAL,
+                                            release      INTEGER NOT NULL,
+                                            release_mbid UUID NOT NULL)""")
 
+            # TODO: the TS database does not have a mapping schema yet, but probably should
             with lb_conn.cursor() as lb_curs:
-                lb_curs.execute("DROP TABLE IF EXISTS tmp_canonical_recording")
-                lb_curs.execute("""CREATE TABLE tmp_canonical_recording (
+                lb_curs.execute("DROP TABLE IF EXISTS mapping.tmp_canonical_recording")
+                lb_curs.execute("""CREATE TABLE mapping.tmp_canonical_recording (
                                                 id                        SERIAL,
                                                 recording_mbid            UUID NOT NULL,
                                                 canonical_recording_mbid  UUID NOT NULL)""")
@@ -87,20 +89,20 @@ def create_indexes(mb_conn, lb_conn):
             # Remove any duplicate rows
             with lb_conn.cursor() as lb_curs:
                 log("remove dups from canonical recordings")
-                lb_curs.execute("""DELETE FROM tmp_canonical_recording
+                lb_curs.execute("""DELETE FROM mapping.tmp_canonical_recording
                                       WHERE id IN (
                                                     SELECT id 
                                                       FROM (
                                                               SELECT id, canonical_recording_mbid, recording_mbid,
                                                                      row_number() OVER (PARTITION BY canonical_recording_mbid ORDER BY recording_mbid)
-                                                                FROM tmp_canonical_recording
+                                                                FROM mapping.tmp_canonical_recording
                                                             GROUP BY canonical_recording_mbid, recording_mbid, id
                                                            ) AS q
                                                      WHERE row_number > 1)""")
                 lb_curs.execute("""CREATE INDEX tmp_canonical_recording_ndx_canonical_recording_mbid
-                                             ON tmp_canonical_recording(canonical_recording_mbid)""")
+                                             ON mapping.tmp_canonical_recording(canonical_recording_mbid)""")
                 lb_curs.execute("""CREATE UNIQUE INDEX tmp_canonical_recording_ndx_recording_mbid
-                                             ON tmp_canonical_recording(recording_mbid)""")
+                                             ON mapping.tmp_canonical_recording(recording_mbid)""")
 
         mb_conn.commit()
     except OperationalError as err:
@@ -125,16 +127,26 @@ def create_temp_release_table(conn):
 
         # The 1 in the WHERE clause refers to MB's Various Artists ID of 1 -- all the various artist albums.
         query = """             SELECT r.id AS release
+                                     , r.gid AS release_mbid
                                   FROM musicbrainz.release_group rg
-                                  JOIN musicbrainz.release r ON rg.id = r.release_group
-                             LEFT JOIN musicbrainz.release_country rc ON rc.release = r.id
-                                  JOIN musicbrainz.medium m ON m.release = r.id
-                                  JOIN musicbrainz.medium_format mf ON m.format = mf.id
-                                  JOIN mapping.format_sort fs ON mf.id = fs.format
-                                  JOIN musicbrainz.artist_credit ac ON rg.artist_credit = ac.id
-                                  JOIN musicbrainz.release_group_primary_type rgpt ON rg.type = rgpt.id
-                             LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj ON rg.id = rgstj.release_group
-                             LEFT JOIN musicbrainz.release_group_secondary_type rgst ON rgstj.secondary_type = rgst.id
+                                  JOIN musicbrainz.release r
+                                    ON rg.id = r.release_group
+                             LEFT JOIN musicbrainz.release_country rc
+                                    ON rc.release = r.id
+                                  JOIN musicbrainz.medium m
+                                    ON m.release = r.id
+                                  JOIN musicbrainz.medium_format mf
+                                    ON m.format = mf.id
+                                  JOIN mapping.format_sort fs
+                                    ON mf.id = fs.format
+                                  JOIN musicbrainz.artist_credit ac
+                                    ON rg.artist_credit = ac.id
+                                  JOIN musicbrainz.release_group_primary_type rgpt
+                                    ON rg.type = rgpt.id
+                             LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj
+                                    ON rg.id = rgstj.release_group
+                             LEFT JOIN musicbrainz.release_group_secondary_type rgst
+                                    ON rgstj.secondary_type = rgst.id
                                  WHERE rg.artist_credit %s 1
                                        %s
                                  ORDER BY rg.type, rgst.id desc, fs.sort,
@@ -163,7 +175,7 @@ def create_temp_release_table(conn):
 
                     release_index[row[0]] = 1
                     count += 1
-                    rows.append((count, row[0]))
+                    rows.append((count, row[0], row[1]))
                     if len(rows) == BATCH_SIZE:
                         insert_rows(
                             curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
@@ -208,12 +220,12 @@ def swap_table_and_indexes(mb_conn, lb_conn):
                             RENAME TO mbid_mapping_releases_idx_id""")
 
             with lb_conn.cursor() as lb_curs:
-                lb_curs.execute("DROP TABLE IF EXISTS canonical_recording")
-                lb_curs.execute("""ALTER TABLE tmp_canonical_recording
+                lb_curs.execute("DROP TABLE IF EXISTS mapping.canonical_recording")
+                lb_curs.execute("""ALTER TABLE mapping.tmp_canonical_recording
                                    RENAME TO canonical_recording""")
-                lb_curs.execute("""ALTER INDEX tmp_canonical_recording_ndx_canonical_recording_mbid
+                lb_curs.execute("""ALTER INDEX mapping.tmp_canonical_recording_ndx_canonical_recording_mbid
                                    RENAME TO canonical_recording_ndx_canonical_recording_mbid""")
-                lb_curs.execute("""ALTER INDEX tmp_canonical_recording_ndx_recording_mbid
+                lb_curs.execute("""ALTER INDEX mapping.tmp_canonical_recording_ndx_recording_mbid
                                    RENAME TO canonical_recording_ndx_recording_mbid""")
                 lb_conn.commit()
 
@@ -333,7 +345,7 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
                     if row["recording_mbid"] != artist_recordings[recording_name][6]:
                         canonical_recordings.append((serial_canon, row["recording_mbid"], artist_recordings[recording_name][6]))
                         if len(canonical_recordings) == BATCH_SIZE:
-                            insert_rows(lb_curs, "tmp_canonical_recording", canonical_recordings)
+                            insert_rows(lb_curs, "mapping.tmp_canonical_recording", canonical_recordings)
                             mb_conn.commit()
                             canonical_recordings = []
                         serial_canon += 1
@@ -352,7 +364,7 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
             count += len(rows)
 
         if len(canonical_recordings):
-            insert_rows(lb_curs, "tmp_canonical_recording", canonical_recordings)
+            insert_rows(lb_curs, "mapping.tmp_canonical_recording", canonical_recordings)
             mb_conn.commit()
             canonical_recordings = []
 
@@ -366,10 +378,10 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
     log("mbid mapping: done")
 
 
-def create_mbid_mapping():
+def create_mbid_mapping(canonical_data_db_connect_str):
 
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            with psycopg2.connect(config.TIMESCALE_DATABASE_URI) as lb_conn:
+            with psycopg2.connect(canonical_data_db_connect_str) as lb_conn:
                 with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
                     create_mapping(mb_conn, mb_curs, lb_conn, lb_curs)

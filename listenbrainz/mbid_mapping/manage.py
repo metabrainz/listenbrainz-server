@@ -14,6 +14,7 @@ from mapping.utils import log, CRON_LOG_FILE
 from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
+import config
 
 
 @click.group()
@@ -32,12 +33,20 @@ def create_all():
 
 
 @cli.command()
-def mbid_mapping():
+@click.option('--timescale', is_flag=True)
+def mbid_mapping(timescale):
     """
         Create the MBID mapping, which also creates the prerequisit artist-credit pairs table. This can be done during
-        production as new tables are moved in place atomically.
+        production as new tables are moved in place atomically. Use the --timescale option to write the generated
+        canonical_recording table to timescale, rather than the MB database.
     """
-    create_mbid_mapping()
+
+    if timescale:
+        db_connect = config.TIMESCALE_DATABASE_URI
+    else:
+        db_connect = config.MBID_MAPPING_DATABASE_URI
+
+    create_mbid_mapping(db_connect)
 
 
 @cli.command()
@@ -74,6 +83,7 @@ def sync_coverart():
 
 
 @cli.command()
+@click.argument('year', type=int)
 def update_coverart():
     """
         Update the release_color table incrementally. Designed to be called hourly by cron.
