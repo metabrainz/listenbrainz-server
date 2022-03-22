@@ -183,7 +183,7 @@ class MBIDMapper():
 
             query = " ".join(cleaned_query)
 
-        if query is None or query == "":
+        if query is None:
             return None
 
         search_parameters = {
