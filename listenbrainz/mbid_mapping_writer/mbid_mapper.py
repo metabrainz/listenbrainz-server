@@ -183,6 +183,9 @@ class MBIDMapper():
 
             query = " ".join(cleaned_query)
 
+        if not query:
+            return None
+
         search_parameters = {
             'q': query,
             'query_by': "combined",
