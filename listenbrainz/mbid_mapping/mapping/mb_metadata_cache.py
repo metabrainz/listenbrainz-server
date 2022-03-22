@@ -27,12 +27,14 @@ def create_tables(lb_conn):
             curs.execute("DROP TABLE IF EXISTS tmp_mb_metadata_cache")
             curs.execute("""CREATE TABLE tmp_mb_metadata_cache (
                                          id                        SERIAL
-                                       , recording_mbid            UUID NOT NULL
                                        , dirty                     BOOLEAN DEFAULT FALSE
+                                       , recording_mbid            UUID NOT NULL
                                        , artist_mbids              UUID[] NOT NULL
+                                       , release_mbid              UUID
                                        , recording_data            JSONB NOT NULL
                                        , artist_data               JSONB NOT NULL
-                                       , tag_data                  JSONB NOT NULL)""")
+                                       , tag_data                  JSONB NOT NULL
+                                       , release_data              JSONB NOT NULL)""")
             lb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
         log("mb metadata cache: failed to mb metadata cache tables", err)
@@ -46,7 +48,6 @@ def create_indexes(conn):
     """
 
     try:
-        # TODO: Create GIN index on entity list 
         with conn.cursor() as curs:
             curs.execute("""CREATE UNIQUE INDEX tmp_mb_metadata_cache_idx_recording_mbid
                                       ON tmp_mb_metadata_cache(recording_mbid)""")
@@ -84,6 +85,11 @@ def create_json_data(row):
 
     artists = []
     artist_mbids = []
+    release = {}
+
+    if row["release_mbid"] is not None:
+        release["mbid"] = row["release_mbid"]
+        release["caa_id"] = row["caa_id"]
 
     for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
         data = { }
@@ -132,10 +138,13 @@ def create_json_data(row):
            tag["genre_mbid"] = genre_mbid
         artist_tags.append(tag)
 
-    return (artist_mbids,
+    return (row["recording_mbid"],
+            artist_mbids,
+            row["release_mbid"],
             ujson.dumps({ "rels" : recording_rels}),
             ujson.dumps(artists),
-            ujson.dumps({ "recording": recording_tags, "artist": artist_tags }))
+            ujson.dumps({ "recording": recording_tags, "artist": artist_tags }),
+            ujson.dumps(release))
 
 
 def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
@@ -270,13 +279,33 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                          WHERE count > 0
 --AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
                          GROUP BY r.gid
+               ), release_data AS (
+                        SELECT * FROM (
+                                SELECT r.gid AS recording_mbid
+                                     , rcr.release_mbid::TEXT
+                                     , caa.id AS caa_id
+                                     , row_number() OVER (partition by release_mbid ORDER BY ordering) AS rownum
+                                  FROM recording r
+                             LEFT JOIN mapping.recording_canonical_release rcr
+                                    ON r.gid = rcr.recording_mbid
+                             LEFT JOIN release rel
+                                    ON rcr.release_mbid = rel.gid
+                             LEFT JOIN cover_art_archive.cover_art caa
+                                    ON caa.release = rel.id
+                             LEFT JOIN cover_art_archive.cover_art_type cat
+                                    ON cat.id = caa.id
+                                 WHERE type_id = 1
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+                        ) temp where rownum=1
                )
                         SELECT recording_links
                              , artist_data
                              , artist_tags
                              , recording_tags
                              , r.length
-                             , r.gid::TEXT as recording_mbid
+                             , r.gid::TEXT AS recording_mbid
+                             , rd.release_mbid::TEXT
+                             , rd.caa_id
                           FROM recording r
                           JOIN artist_credit ac
                             ON r.artist_credit = ac.id
@@ -296,8 +325,17 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON rt.recording_mbid = r.gid
                      LEFT JOIN artist_tags ats
                             ON ats.recording_mbid = r.gid
+                     LEFT JOIN release_data rd
+                            ON rd.recording_mbid = r.gid
 --WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
-                      GROUP BY r.gid, r.length, recording_links, recording_tags, artist_data, artist_tags"""
+                      GROUP BY r.gid
+                             , r.length
+                             , recording_links
+                             , recording_tags
+                             , artist_data
+                             , artist_tags
+                             , release_mbid
+                             , caa_id"""
 
 #WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
 #AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
@@ -317,6 +355,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     log(f"mb metadata cache: {total_rows} recordings in result")
 
     row_count = 0
+    batch_count = 0
     while True:
         row = mb_curs.fetchone()
         if not row:
@@ -324,7 +363,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
 
         data = create_json_data(row)
         try:
-            rows.append((serial, row["recording_mbid"], "false", *data))
+            rows.append((serial, "false", *data))
         except Exception as err:
             print(row["recording_mbid"])
             print(str(err))
@@ -336,8 +375,9 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
             insert_rows(lb_curs, "tmp_mb_metadata_cache", rows)
             mb_conn.commit()
             rows = []
+            batch_count += 1
 
-            if serial % 100000 == 0:
+            if batch_count % 100 == 0:
                 log("mb metadata cache: inserted %d rows. %.1f%%" % (serial, 100 * serial / total_rows))
 
     if rows:
@@ -349,7 +389,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     create_indexes(lb_conn)
 
     log("mb metadata cache: swap tables and indexes into production.")
-#    swap_table_and_indexes(lb_conn)
+    swap_table_and_indexes(lb_conn)
 
     log("mb metadata cache: done")
 

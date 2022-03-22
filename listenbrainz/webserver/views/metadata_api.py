@@ -27,7 +27,7 @@ def metadata_recording():
     :statuscode 400: invalid recording_mbid arguments
     """
 
-    allowed_incs = ("artist", "tag")
+    allowed_incs = ("artist", "tag", "release")
 
     recordings = request.args.get("recording_mbids", default=None)
     if recordings is None:
@@ -56,6 +56,9 @@ def metadata_recording():
 
         if "tag" in incs:
             data["tag"] = entry.tag_data
+
+        if "release" in incs:
+            data["release"] = entry.release_data
 
         result[str(entry.recording_mbid)] = data
 
