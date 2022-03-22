@@ -40,9 +40,9 @@ def create_tables(lb_conn):
         raise
 
 
-def create_indexes(conn):
+def create_indexes_and_constraints(conn):
     """
-        Create indexes for the cache
+        Create indexes and constraints for the cache
     """
 
     try:
@@ -50,9 +50,16 @@ def create_indexes(conn):
         with conn.cursor() as curs:
             curs.execute("""CREATE UNIQUE INDEX tmp_mb_metadata_cache_idx_recording_mbid
                                       ON tmp_mb_metadata_cache(recording_mbid)""")
+            curs.execute("""CREATE INDEX tmp_mb_metadata_cache_idx_artist_mbids
+                                      ON tmp_mb_metadata_cache USING gin(artist_mbids)""")
+            curs.execute("""CREATE INDEX tmp_mb_metadata_cache_idx_dirty
+                                      ON tmp_mb_metadata_cache(dirty)""")
+            curs.execute("""ALTER TABLE tmp_mb_metadata_cache
+                         ADD CONSTRAINT tmp_mb_metadata_cache_artist_mbids_check
+                                 CHECK ( array_ndims(artist_mbids) = 1 )""")
         conn.commit()
     except OperationalError as err:
-        log("mb metadata cache: failed to mb metadata cache", err)
+        log("mb metadata cache: failed to create indexes", err)
         conn.rollback()
         raise
 
@@ -70,6 +77,13 @@ def swap_table_and_indexes(conn):
 
             curs.execute("""ALTER INDEX tmp_mb_metadata_cache_idx_recording_mbid
                             RENAME TO mb_metadata_cache_idx_recording_mbid""")
+            curs.execute("""ALTER INDEX tmp_mb_metadata_cache_idx_artist_mbids
+                            RENAME TO mb_metadata_cache_idx_artist_mbids""")
+            curs.execute("""ALTER INDEX tmp_mb_metadata_cache_idx_dirty
+                            RENAME TO mb_metadata_cache_idx_dirty""")
+            curs.execute("""ALTER TABLE mb_metadata_cache
+                      RENAME CONSTRAINT tmp_mb_metadata_cache_artist_mbids_check
+                                     TO mb_metadata_cache_artist_mbids_check""")
         conn.commit()
     except OperationalError as err:
         log("mb metadata cache: failed to swap in new mb metadata cache tables", str(err))
@@ -316,7 +330,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     total_rows = mb_curs.rowcount
     log(f"mb metadata cache: {total_rows} recordings in result")
 
-    row_count = 0
+    num_batches = 1
     while True:
         row = mb_curs.fetchone()
         if not row:
@@ -334,10 +348,11 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
 
         if len(rows) >= BATCH_SIZE:
             insert_rows(lb_curs, "tmp_mb_metadata_cache", rows)
-            mb_conn.commit()
+            lb_conn.commit()
             rows = []
+            num_batches += 1
 
-            if serial % 100000 == 0:
+            if num_batches % 20 == 0:
                 log("mb metadata cache: inserted %d rows. %.1f%%" % (serial, 100 * serial / total_rows))
 
     if rows:
@@ -346,7 +361,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
 
     log("mb metadata cache: inserted %d rows total." % (serial - 1))
     log("mb metadata cache: create indexes")
-    create_indexes(lb_conn)
+    create_indexes_and_constraints(lb_conn)
 
     log("mb metadata cache: swap tables and indexes into production.")
 #    swap_table_and_indexes(lb_conn)
