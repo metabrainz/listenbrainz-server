@@ -9,7 +9,7 @@ from mapping.formats import create_formats_table
 import config
 
 BATCH_SIZE = 5000
-TEST_ARTIST_IDS = [1160983, 49627]  # Gun'n'roses, beyoncé
+TEST_ARTIST_IDS = [1160983, 49627, 65]  # Gun'n'roses, beyoncé, portishead
 
 
 def create_tables(mb_conn, lb_conn):
@@ -50,7 +50,8 @@ def create_tables(mb_conn, lb_conn):
                 lb_curs.execute("""CREATE TABLE mapping.tmp_canonical_recording (
                                                 id                        SERIAL,
                                                 recording_mbid            UUID NOT NULL,
-                                                canonical_recording_mbid  UUID NOT NULL)""")
+                                                canonical_recording_mbid  UUID NOT NULL,
+                                                canonical_release_mbid    UUID NOT NULL)""")
                 lb_conn.commit()
 
             create_formats_table(mb_conn)
@@ -343,7 +344,10 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
                     serial += 1
                 else:
                     if row["recording_mbid"] != artist_recordings[recording_name][6]:
-                        canonical_recordings.append((serial_canon, row["recording_mbid"], artist_recordings[recording_name][6]))
+                        canonical_recordings.append((serial_canon,
+                                                     row["recording_mbid"],
+                                                     artist_recordings[recording_name][6],
+                                                     artist_recordings[recording_name][4]))
                         if len(canonical_recordings) == BATCH_SIZE:
                             insert_rows(lb_curs, "mapping.tmp_canonical_recording", canonical_recordings)
                             mb_conn.commit()
