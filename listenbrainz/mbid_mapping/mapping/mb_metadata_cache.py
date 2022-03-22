@@ -1,18 +1,34 @@
-import re
+from typing import List
+import uuid
 
 import psycopg2
 from psycopg2.errors import OperationalError
-from unidecode import unidecode
-import ujson
-import json
-import uuid
 import psycopg2.extras
+import ujson
 
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 import config
 
 BATCH_SIZE = 5000
+
+
+def mark_rows_as_dirty(lb_conn, recording_mbids: List[uuid.UUID], artist_mbids: List[uuid.UUID]):
+    """Mark rows as dirty if the row is for a given recording mbid or if it's by a given artist mbid"""
+    try:
+        with lb_conn.cursor() as curs:
+            query = """UPDATE mb_metadata_cache
+                               SET dirty = 't'
+                             WHERE recording_mbid = ANY(%s)
+                                OR %s && artist_mbids
+                    """
+            curs.execute(query, (recording_mbids, artist_mbids))
+            lb_conn.commit()
+
+    except psycopg2.errors.OperationalError as err:
+        log("mb metadata cache: cannot mark rows as dirty", err)
+        lb_conn.rollback()
+        raise
 
 
 def create_tables(lb_conn):
