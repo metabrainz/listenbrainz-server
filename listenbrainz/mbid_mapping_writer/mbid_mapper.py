@@ -183,6 +183,9 @@ class MBIDMapper():
 
             query = " ".join(cleaned_query)
 
+        if query is None:
+            return None
+
         search_parameters = {
             'q': query,
             'query_by': "combined",
@@ -192,12 +195,13 @@ class MBIDMapper():
 
         while True:
             try:
-                hits = self.client.collections[COLLECTION_NAME].documents.search(
-                    search_parameters)
+                hits = self.client.collections[COLLECTION_NAME].documents.search(search_parameters)
                 break
             except requests.exceptions.ReadTimeout:
                 print("Got socket timeout, sleeping 5 seconds, trying again.")
                 sleep(5)
+            except typesense.exceptions.RequestMalformed:
+                return None
 
         if len(hits["hits"]) == 0:
             return None
