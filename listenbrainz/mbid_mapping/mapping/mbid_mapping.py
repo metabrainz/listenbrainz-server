@@ -236,6 +236,25 @@ def swap_table_and_indexes(mb_conn, lb_conn):
         conn.rollback()
         raise
 
+def crate_canonical_release_table(conn):
+
+    query = """
+CREATE TABLE mapping.recording_canonical_release (
+    id             SERIAL,
+    recording_mbid UUID NOT NULL,
+    release_mbid   UUID NOT NULL
+);
+
+INSERT INTO mapping.recording_canonical_release (recording_mbid, release_mbid)
+     SELECT recording_mbid
+          , canonical_release_mbid AS release_mbid 
+       FROM mapping.canonical_recording;
+
+INSERT INTO mapping.recording_canonical_release (recording_mbid, release_mbid)
+     SELECT recording_mbid
+          , release_mbid 
+       FROM mapping.mbid_mapping;"""
+
 
 def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
     """
