@@ -35,7 +35,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_about(self):
         resp = self.client.get(url_for('index.about'))
         self.assert200(resp)
-        
+
     def test_terms_of_service(self):
         resp = self.client.get(url_for('index.terms_of_service'))
         self.assert200(resp)
