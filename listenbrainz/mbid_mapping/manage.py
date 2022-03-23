@@ -16,6 +16,7 @@ from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache
 
+
 @click.group()
 def cli():
     pass

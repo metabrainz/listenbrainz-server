@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from pydantic import BaseModel, NonNegativeInt
 
@@ -14,7 +14,7 @@ class RecordingMetadata(BaseModel):
     recording_mbid: uuid.UUID
 
     # The release that this metadata is about -- could be None
-    release_mbid: uuid.UUID
+    release_mbid: Optional[uuid.UUID]
 
     # Has this entry been marked dirty for immenent re-fetching?
     dirty: bool

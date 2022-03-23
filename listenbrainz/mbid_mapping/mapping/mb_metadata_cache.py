@@ -122,7 +122,7 @@ def create_json_data(row):
         release["caa_id"] = row["caa_id"]
 
     for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
-        data = { }
+        data = {}
         if begin_year is not None:
             data["begin_year"] = begin_year
         if end_year is not None:
@@ -146,34 +146,36 @@ def create_json_data(row):
 
     recording_rels = []
     for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
-        recording_rels.append({"type": rel_type,
-                                "artist_name": artist_name,
-                                "artist_mbid": artist_mbid,
-                                "instrument": instrument})
+        rel = { "type": rel_type,
+                "artist_name": artist_name,
+                "artist_mbid": artist_mbid }
+        if instrument is not None:
+            rel["instrument"] = instrument
+        recording_rels.append(rel)
         artist_mbids.append(uuid.UUID(artist_mbid))
 
     recording_tags = []
     for tag, count, genre_mbid in row["recording_tags"] or []:
-        tag = { "tag": tag, "count": count }
+        tag = {"tag": tag, "count": count}
         if genre_mbid is not None:
-           tag["genre_mbid"] = genre_mbid
+            tag["genre_mbid"] = genre_mbid
         recording_tags.append(tag)
 
     artist_tags = []
     for tag, count, artist_mbid, genre_mbid in row["artist_tags"] or []:
-        tag = { "tag": tag,
-                "count": count,
-                "artist_mbid": artist_mbid }
+        tag = {"tag": tag,
+               "count": count,
+               "artist_mbid": artist_mbid}
         if genre_mbid is not None:
-           tag["genre_mbid"] = genre_mbid
+            tag["genre_mbid"] = genre_mbid
         artist_tags.append(tag)
 
     return (row["recording_mbid"],
             artist_mbids,
             row["release_mbid"],
-            ujson.dumps({ "rels" : recording_rels}),
+            ujson.dumps({"rels": recording_rels}),
             ujson.dumps(artists),
-            ujson.dumps({ "recording": recording_tags, "artist": artist_tags }),
+            ujson.dumps({"recording": recording_tags, "artist": artist_tags}),
             ujson.dumps(release))
 
 
@@ -367,8 +369,8 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                              , release_mbid
                              , caa_id"""
 
-#WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
-#AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+# WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+# AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
 
     log("mb metadata cache: start")
 
@@ -392,13 +394,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
             break
 
         data = create_json_data(row)
-        try:
-            rows.append((serial, "false", *data))
-        except Exception as err:
-            print(row["recording_mbid"])
-            print(str(err))
-            return
-
+        rows.append((serial, "false", *data))
         serial += 1
 
         if len(rows) >= BATCH_SIZE:

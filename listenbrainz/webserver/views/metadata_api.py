@@ -11,19 +11,25 @@ metadata_bp = Blueprint('metadata', __name__)
 
 
 @metadata_bp.route("/recording/", methods=["GET", "OPTIONS"])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain
 @ratelimit()
 def metadata_recording():
     """
     This endpoint takes in a list of recording_mbids and returns an array of dicts that contain
     recording metadata suitable for showing in a context that requires as much detail about
-    a recording and the artist.
+    a recording and the artist. Using the inc parameter, you can control which portions of metadata
+    to fetch.
 
-    TODO: Add a sample entry and document inc argument
+    The data returned by this endpoint can be seen here: (TODO: Changes this to a fancy link)
+
+       listenbrainz-server/listenbrainz/testdata/mb_metadata_cache_example.json 
 
     :param recording_mbids: A comma separated list of recording_mbids
     :type recording_mbids: ``str``
-    :statuscode 200: playlist generated
+    :param inc: A space separated list of "artist", "tag" and/or "release" to indicate which portions
+                of metadata you're interested in fetching. We encourage users to only fetch the data
+                they plan to consume.
+    :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid arguments
     """
 
@@ -50,7 +56,7 @@ def metadata_recording():
     metadata = get_metadata_for_recording(recording_mbids)
     result = {}
     for entry in metadata:
-        data = { "recording": entry.recording_data }
+        data = {"recording": entry.recording_data}
         if "artist" in incs:
             data["artist"] = entry.artist_data
 

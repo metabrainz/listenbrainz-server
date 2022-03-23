@@ -8,6 +8,7 @@ from flask import current_app
 
 MAX_NUMBER_OF_RECORDINGS_PER_CALL = 50
 
+
 def get_metadata_for_recording(recording_mbid_list: List[str]) -> List[RecordingMetadata]:
     """ Get a list of recording Metadata objects for a given recording in descending order of their creation.
         The list of recordings cannot exceed `~db.metadata.MAX_NUMBER_OF_RECORDINGS_PER_CALL` per call.
