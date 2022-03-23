@@ -6,7 +6,7 @@ import subprocess
 
 import click
 
-from mapping.mbid_mapping import create_mbid_mapping
+from mapping.mbid_mapping import create_mbid_mapping, create_canonical_releases
 from mapping.typesense_index import build_index as action_build_index
 from mapping.year_mapping import create_year_mapping
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
@@ -72,6 +72,14 @@ def build_index():
         Build the typesense index of the mbid mapping. The mbid mapping must be run first in order to build this index.
     """
     action_build_index()
+
+
+@cli.command()
+def build_canonical_releases():
+    """
+        Build the canonical releases table from the mapping tables.
+    """
+    create_canonical_releases()
 
 
 @cli.command()

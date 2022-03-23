@@ -236,24 +236,49 @@ def swap_table_and_indexes(mb_conn, lb_conn):
         conn.rollback()
         raise
 
-def crate_canonical_release_table(conn):
 
-    query = """
-CREATE TABLE mapping.recording_canonical_release (
-    id             SERIAL,
-    recording_mbid UUID NOT NULL,
-    release_mbid   UUID NOT NULL
-);
+def create_canonical_release_table(mb_conn):
+    """ 
+        Create the recording_canonical_release table from the mapping and the canonical_recording
+        tables.
+    """
 
-INSERT INTO mapping.recording_canonical_release (recording_mbid, release_mbid)
-     SELECT recording_mbid
-          , canonical_release_mbid AS release_mbid 
-       FROM mapping.canonical_recording;
+    try:
+        with mb_conn.cursor() as curs:
+            log("canonical releases: starting")
+            curs.execute("DROP TABLE IF EXISTS mapping.tmp_recording_canonical_release")
+            log("canonical releases: create")
+            curs.execute("""CREATE TABLE mapping.tmp_recording_canonical_release(
+                                         id             SERIAL,
+                                         recording_mbid UUID NOT NULL,
+                                         release_mbid   UUID NOT NULL)""")
 
-INSERT INTO mapping.recording_canonical_release (recording_mbid, release_mbid)
-     SELECT recording_mbid
-          , release_mbid 
-       FROM mapping.mbid_mapping;"""
+            log("canonical releases: copy data")
+            curs.execute("""INSERT INTO mapping.tmp_recording_canonical_release (recording_mbid, release_mbid)
+                                 SELECT recording_mbid
+                                      , canonical_release_mbid AS release_mbid 
+                                   FROM mapping.canonical_recording""")
+            curs.execute("""INSERT INTO mapping.tmp_recording_canonical_release (recording_mbid, release_mbid)
+                                 SELECT recording_mbid
+                                      , release_mbid 
+                                   FROM mapping.mbid_mapping""")
+
+            log("canonical releases: create index")
+            curs.execute("""CREATE INDEX tmp_recording_mbid_ndx_recording_canonical_release
+                                      ON mapping.tmp_recording_canonical_release(recording_mbid)""")
+
+            log("canonical releases: swap tables")
+            curs.execute("DROP TABLE IF EXISTS mapping.recording_canonical_release")
+            curs.execute("""ALTER TABLE mapping.tmp_recording_canonical_release
+                            RENAME TO recording_canonical_release""")
+            curs.execute("""ALTER INDEX mapping.tmp_recording_mbid_ndx_recording_canonical_release
+                            RENAME TO recording_mbid_ndx_recording_canonical_release""")
+
+        mb_conn.commit()
+    except OperationalError as err:
+        log("canonical releases: creating recording_canonical_release failed: ", str(err))
+        conn.rollback()
+        raise
 
 
 def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
@@ -398,6 +423,9 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
     log("mbid mapping: swap tables and indexes into production.")
     swap_table_and_indexes(mb_conn, lb_conn)
 
+    log("mbid mapping: create canonical release table")
+    create_canonical_release_table(mb_conn)
+
     log("mbid mapping: done")
 
 
@@ -408,3 +436,8 @@ def create_mbid_mapping(canonical_data_db_connect_str):
             with psycopg2.connect(canonical_data_db_connect_str) as lb_conn:
                 with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
                     create_mapping(mb_conn, mb_curs, lb_conn, lb_curs)
+
+def create_canonical_releases():
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
+        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+            create_canonical_release_table(mb_conn)
