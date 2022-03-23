@@ -206,6 +206,54 @@ class MBIDMapper:
 
         return hits["hits"][0]
 
+    def lookup_and_evaluate_hit(self, artist_credit_name_p, recording_name_p, is_ac_detuned, is_r_detuned):
+        hit = self.lookup(artist_credit_name_p, recording_name_p)
+
+        if hit:
+            hit, match_type = self.evaluate_hit(
+                hit,
+                artist_credit_name_p,
+                recording_name_p,
+                is_ac_detuned,
+                is_r_detuned
+            )
+
+            if hit:
+                self._log(Markup(f"""
+                    <table>
+                        <tr>
+                            <th>recording name</th>
+                            <th>release name</th>
+                            <th>artist credit name</th>
+                            <th>recording MBID</th>
+                            <th>release MBID</th>
+                            <th>artist_credit_id</th>
+                        </tr>
+                        <tr>
+                            <td>{hit['document']["recording_name"]}</td>
+                            <td>{hit['document']["release_name"]}</td>
+                            <td>{hit['document']["artist_credit_name"]}</td>
+                            <td>{hit['document']["recording_mbid"]}</td>
+                            <td>{hit['document']["release_mbid"]}</td>
+                            <td>{hit['document']["artist_credit_id"]}</td>
+                        </tr>
+                    </table>
+                """))
+
+            return {
+                'artist_credit_name': hit['document']['artist_credit_name'],
+                'artist_credit_id': hit['document']['artist_credit_id'],
+                'artist_mbids': hit['document']['artist_mbids'],
+                'release_name': hit['document']['release_name'],
+                'release_mbid': hit['document']['release_mbid'],
+                'recording_name': hit['document']['recording_name'],
+                'recording_mbid': hit['document']['recording_mbid'],
+                'year': hit['document']['year'],
+                'match_type': match_type
+            }
+
+        return None
+
     def search(self, artist_credit_name, recording_name):
         """
             Main query body: Prepare the search query terms and prepare
@@ -222,71 +270,26 @@ class MBIDMapper:
         r_detuned = prepare_query(self.detune_query_string(recording_name, False))
         self._log(f"ac_detuned: '{ac_detuned}' r_detuned: '{r_detuned}'")
 
-        is_ac_detuned = False
-        is_r_detuned = False
+        # lookup without any detuning
+        hit = self.lookup_and_evaluate_hit(artist_credit_name_p, recording_name_p, False, False)
+        if hit:
+            return hit
 
-        while True:
-            hit = self.lookup(artist_credit_name_p, recording_name_p)
+        # lookup with only artist credit detuned
+        if ac_detuned:
+            self._log("Detune only artist_credit")
+            hit = self.lookup_and_evaluate_hit(ac_detuned, recording_name_p, True, False)
             if hit:
-                (hit, match_type) = self.evaluate_hit(
-                    hit,
-                    artist_credit_name_p,
-                    recording_name_p,
-                    is_ac_detuned,
-                    is_r_detuned
-                )
-                if hit:
-                    self._log(Markup(f"""
-                        <table>
-                            <tr>
-                                <th>recording name</th>
-                                <th>release name</th>
-                                <th>artist credit name</th>
-                                <th>recording MBID</th>
-                                <th>release MBID</th>
-                                <th>artist_credit_id</th>
-                            </tr>
-                            <tr>
-                                <td>{hit['document']["recording_name"]}</td>
-                                <td>{hit['document']["release_name"]}</td>
-                                <td>{hit['document']["artist_credit_name"]}</td>
-                                <td>{hit['document']["recording_mbid"]}</td>
-                                <td>{hit['document']["release_mbid"]}</td>
-                                <td>{hit['document']["artist_credit_id"]}</td>
-                            </tr>
-                        </table>
-                    """))
+                return hit
 
-            if not hit:
-                hit = None
-                if ac_detuned:
-                    artist_credit_name_p = ac_detuned
-                    is_ac_detuned = True
-                    self._log("Detune artist_credit")
-                    ac_detuned = None
-                    continue
+        # lookup with both artist credit and recording detuned
+        if ac_detuned and r_detuned:
+            self._log("Detune artist_credit and recording")
+            hit = self.lookup_and_evaluate_hit(ac_detuned, r_detuned, True, True)
+            if hit:
+                return hit
 
-                if r_detuned:
-                    recording_name_p = r_detuned
-                    is_r_detuned = True
-                    r_detuned = None
-                    self._log("Detune recording")
-                    continue
-
-                self._log("FAIL (if this is the only line of output, it means we literally have no clue what this is)")
-
-                return None
-
-            break
-
+        self._log("FAIL (if this is the only line of output, it means we literally have no clue what this is)")
         self._log("OK")
 
-        return {'artist_credit_name': hit['document']['artist_credit_name'],
-                'artist_credit_id': hit['document']['artist_credit_id'],
-                'artist_mbids': hit['document']['artist_mbids'],
-                'release_name': hit['document']['release_name'],
-                'release_mbid': hit['document']['release_mbid'],
-                'recording_name': hit['document']['recording_name'],
-                'recording_mbid': hit['document']['recording_mbid'],
-                'year': hit['document']['year'],
-                'match_type': match_type}
+        return None
