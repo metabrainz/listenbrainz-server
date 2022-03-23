@@ -290,6 +290,14 @@ class MBIDMapper:
             if hit:
                 return hit
 
+        # this case is the last one because it didn't exist in earlier versions and
+        # preserving order of cases with older versions is probably sensible.
+        if r_detuned:
+            self._log("Detune only recording")
+            hit = self.lookup_and_evaluate_hit(artist_credit_name_p, r_detuned, False, True)
+            if hit:
+                return hit
+
         self._log("FAIL (if this is the only line of output, it means we literally have no clue what this is)")
         self._log("OK")
 
