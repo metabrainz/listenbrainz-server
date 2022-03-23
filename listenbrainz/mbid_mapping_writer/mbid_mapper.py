@@ -109,6 +109,42 @@ class MBIDMapper:
 
         return distance(artist_credit_name, artist_credit_name_hit), distance(recording_name, recording_name_hit)
 
+    def check_hit_in_threshold(self, artist_credit_name, recording_name, ac_hit, r_hit, is_ac_detuned, is_r_detuned):
+        ac_dist, r_dist = self.compare(
+            artist_credit_name,
+            recording_name,
+            prepare_query(ac_hit),
+            prepare_query(r_hit)
+        )
+        match_details = Markup(f"""<b>%s</b>: ac_detuned {is_ac_detuned}, r_detuned {is_r_detuned},
+        ac_dist {ac_dist:.3f} r_dist {r_dist:.3f}""")
+
+        # If we detuned one or more fields and it matches, the best it can get is a low quality match
+        if (is_ac_detuned or is_r_detuned) and \
+                ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
+                r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
+            self._log(match_details % "low quality")
+            return ac_dist, r_dist, MATCH_TYPE_LOW_QUALITY
+
+        # For exact matches, return exact match. duh.
+        if ac_dist == 0 and r_dist == 0:
+            self._log(match_details % "exact match")
+            return ac_dist, r_dist, MATCH_TYPE_EXACT_MATCH
+
+        # If both fields are above the high quality threshold, call it high quality
+        if ac_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE and \
+                r_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE:
+            self._log(match_details % "high quality")
+            return ac_dist, r_dist, MATCH_TYPE_HIGH_QUALITY
+
+        # If both fields are above the medium quality threshold, call it medium quality
+        if ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
+                r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
+            self._log(match_details % "med quality")
+            return ac_dist, r_dist, MATCH_TYPE_MED_QUALITY
+
+        return ac_dist, r_dist, MATCH_TYPE_NO_MATCH
+
     def evaluate_hit(self, hit, artist_credit_name, recording_name, is_ac_detuned, is_r_detuned):
         """
             Evaluate the given prepared search terms and hit. If the hit doesn't match,
@@ -121,57 +157,63 @@ class MBIDMapper:
         ac_hit_detuned = self.detune_query_string(ac_hit, True)
         r_hit_detuned = self.detune_query_string(r_hit, False)
 
-        is_ac_hit_detuned = False
-        is_r_hit_detuned = False
+        ac_dist, r_dist, match_type = self.check_hit_in_threshold(
+            artist_credit_name,
+            recording_name,
+            ac_hit,
+            r_hit,
+            is_ac_detuned,
+            is_r_detuned
+        )
+        if match_type != MATCH_TYPE_NO_MATCH:
+            return hit, match_type
 
-        while True:
-            ac_dist, r_dist = self.compare(
-                artist_credit_name, recording_name, prepare_query(ac_hit), prepare_query(r_hit))
+        # Poor results so far, lets try detuning MB ac field and try again
+        if ac_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and ac_hit_detuned:
+            self._log(Markup(f"""<b>no match</b>, ac_dist too high {ac_dist:.3f} continuing: detune ac"""))
+            ac_dist, r_dist, match_type = self.check_hit_in_threshold(
+                artist_credit_name,
+                recording_name,
+                ac_hit_detuned,
+                r_hit,
+                True,
+                is_r_detuned
+            )
+            if match_type != MATCH_TYPE_NO_MATCH:
+                return hit, match_type
 
-            match_details = Markup(f"""<b>%s</b>: ac_detuned {is_ac_detuned or is_ac_hit_detuned},
-            r_detuned {is_r_detuned or is_r_hit_detuned}, ac_dist {ac_dist:.3f} r_dist {r_dist:.3f}""")
+        # Poor results so far, lets try detuning both MB ac and recording field and try again
+        if ac_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and ac_hit_detuned and \
+                r_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_hit_detuned:
+            self._log(Markup(f"""<b>no match</b>, ac_dist {r_dist:.3f} and r_dist {r_dist:.3f} too high
+            continuing: detune ac and r"""))
+            ac_dist, r_dist, match_type = self.check_hit_in_threshold(
+                artist_credit_name,
+                recording_name,
+                ac_hit_detuned,
+                r_hit_detuned,
+                True,
+                True
+            )
+            if match_type != MATCH_TYPE_NO_MATCH:
+                return hit, match_type
 
-            # If we detuned one or more fields and it matches, the best it can get is a low quality match
-            if (is_ac_detuned or is_r_detuned or is_ac_hit_detuned or is_r_hit_detuned) and \
-                    ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
-                    r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
-                self._log(match_details % "low quality")
-                return hit, MATCH_TYPE_LOW_QUALITY
+        # Poor results so far, lets try detuning MB recording field and try again
+        if r_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_hit_detuned:
+            self._log(Markup(f"""<b>no match</b>, r_dist too high {r_dist:.3f} continuing: detune r"""))
+            ac_dist, r_dist, match_type = self.check_hit_in_threshold(
+                artist_credit_name,
+                recording_name,
+                ac_hit,
+                r_hit_detuned,
+                is_ac_detuned,
+                True
+            )
+            if match_type != MATCH_TYPE_NO_MATCH:
+                return hit, match_type
 
-            # For exact matches, return exact match. duh.
-            if ac_dist == 0 and r_dist == 0:
-                self._log(match_details % "exact match")
-                return hit, MATCH_TYPE_EXACT_MATCH
-
-            # If both fields are above the high quality threshold, call it high quality
-            if ac_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE and \
-               r_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE:
-                self._log(match_details % "high quality")
-                return hit, MATCH_TYPE_HIGH_QUALITY
-
-            # If both fields are above the medium quality threshold, call it medium quality
-            if ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
-                    r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
-                self._log(match_details % "med quality")
-                return hit, MATCH_TYPE_MED_QUALITY
-
-            # Poor results so far, lets try detuning fields and try again
-            if ac_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and ac_hit_detuned:
-                ac_hit = ac_hit_detuned
-                ac_hit_detuned = ""
-                is_ac_hit_detuned = True
-                self._log(Markup(f"""<b>no match</b>, ac_dist too high {ac_dist:.3f} continuing: detune ac"""))
-                continue
-
-            if r_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_hit_detuned:
-                r_hit = r_hit_detuned
-                r_hit_detuned = ""
-                is_r_hit_detuned = True
-                self._log(Markup(f"""<b>no match</b>, r_dist too high {r_dist:.3f} continuing: detune r"""))
-                continue
-
-            self._log(Markup(f"""<b>no good match</b>, ac_dist {ac_dist:.3f}, r_dist {r_dist:.3f}, moving on"""))
-            return None, MATCH_TYPE_NO_MATCH
+        self._log(Markup(f"""<b>no good match</b>, ac_dist {ac_dist:.3f}, r_dist {r_dist:.3f}, moving on"""))
+        return None, MATCH_TYPE_NO_MATCH
 
     def lookup(self, artist_credit_name_p, recording_name_p):
 
