@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       pr:
-        description: 'PR number (if deploying a PR)'
+        description: 'PR number (if set, ignores above ^)'
         required: false
         type: string
       tag:
