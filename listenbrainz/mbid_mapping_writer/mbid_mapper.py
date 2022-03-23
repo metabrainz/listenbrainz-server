@@ -68,8 +68,6 @@ class MBIDMapper:
             'connection_timeout_seconds': timeout
         })
         self.remove_stop_words = remove_stop_words
-        self.is_ac_detuned = False
-        self.is_r_detuned = False
 
     def _log(self, str):
         if self.debug:
@@ -109,9 +107,9 @@ class MBIDMapper:
         self._log(Markup(f"""QUERY: artist: <b>{artist_credit_name}</b> recording: <b>{recording_name}</b>"""))
         self._log(Markup(f"""HIT: artist: <b>{artist_credit_name_hit}</b> recording: <b>{recording_name_hit}</b>"""))
 
-        return (distance(artist_credit_name, artist_credit_name_hit), distance(recording_name, recording_name_hit))
+        return distance(artist_credit_name, artist_credit_name_hit), distance(recording_name, recording_name_hit)
 
-    def evaluate_hit(self, hit, artist_credit_name, recording_name):
+    def evaluate_hit(self, hit, artist_credit_name, recording_name, is_ac_detuned, is_r_detuned):
         """
             Evaluate the given prepared search terms and hit. If the hit doesn't match,
             attempt to detune it and try again for detuned artist and detuned recording.
@@ -120,57 +118,60 @@ class MBIDMapper:
         ac_hit = hit['document']['artist_credit_name']
         r_hit = hit['document']['recording_name']
 
-        ac_detuned = self.detune_query_string(ac_hit, True)
-        r_detuned = self.detune_query_string(r_hit, False)
+        ac_hit_detuned = self.detune_query_string(ac_hit, True)
+        r_hit_detuned = self.detune_query_string(r_hit, False)
+
+        is_ac_hit_detuned = False
+        is_r_hit_detuned = False
 
         while True:
             ac_dist, r_dist = self.compare(
                 artist_credit_name, recording_name, prepare_query(ac_hit), prepare_query(r_hit))
 
+            match_details = Markup(f"""<b>%s</b>: ac_detuned {is_ac_detuned or is_ac_hit_detuned},
+            r_detuned {is_r_detuned or is_r_hit_detuned}, ac_dist {ac_dist:.3f} r_dist {r_dist:.3f}""")
+
             # If we detuned one or more fields and it matches, the best it can get is a low quality match
-            if (self.is_ac_detuned or self.is_r_detuned) and \
+            if (is_ac_detuned or is_r_detuned or is_ac_hit_detuned or is_r_hit_detuned) and \
                     ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
                     r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
-                self._log(Markup(f"""<b>low quality</b>: ac_detuned {self.is_ac_detuned}, r_detuned {self.is_r_detuned},
-                                     ac_dist {ac_dist:.3f} r_dist {r_dist:.3f}"""))
-                return (hit, MATCH_TYPE_LOW_QUALITY)
+                self._log(match_details % "low quality")
+                return hit, MATCH_TYPE_LOW_QUALITY
 
             # For exact matches, return exact match. duh.
             if ac_dist == 0 and r_dist == 0:
-                self._log(Markup(f"""<b>exact_match</b>: ac_detuned {self.is_ac_detuned}, r_detuned {self.is_r_detuned}"""))
-                return (hit, MATCH_TYPE_EXACT_MATCH)
+                self._log(match_details % "exact match")
+                return hit, MATCH_TYPE_EXACT_MATCH
 
             # If both fields are above the high quality threshold, call it high quality
             if ac_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE and \
                r_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE:
-                self._log(Markup(f"""<b>high quality</b>: ac_detuned {self.is_ac_detuned}, r_detuned {self.is_r_detuned},
-                                     ac_dist {ac_dist:.3f} r_dist {r_dist:.3f}"""))
-                return (hit, MATCH_TYPE_HIGH_QUALITY)
+                self._log(match_details % "high quality")
+                return hit, MATCH_TYPE_HIGH_QUALITY
 
             # If both fields are above the medium quality threshold, call it medium quality
             if ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
                     r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
-                self._log(Markup(f"""<b>med quality</b>: ac_detuned {self.is_ac_detuned}, r_detuned {self.is_r_detuned},
-                                     ac_dist {ac_dist:.3f} r_dist {r_dist:.3f}"""))
-                return (hit, MATCH_TYPE_MED_QUALITY)
+                self._log(match_details % "med quality")
+                return hit, MATCH_TYPE_MED_QUALITY
 
             # Poor results so far, lets try detuning fields and try again
-            if ac_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and ac_detuned:
-                ac_hit = ac_detuned
-                ac_detuned = ""
-                self.is_ac_detuned = True
+            if ac_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and ac_hit_detuned:
+                ac_hit = ac_hit_detuned
+                ac_hit_detuned = ""
+                is_ac_hit_detuned = True
                 self._log(Markup(f"""<b>no match</b>, ac_dist too high {ac_dist:.3f} continuing: detune ac"""))
                 continue
 
-            if r_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_detuned:
-                r_hit = r_detuned
-                r_detuned = ""
-                self.is_r_detuned = True
+            if r_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_hit_detuned:
+                r_hit = r_hit_detuned
+                r_hit_detuned = ""
+                is_r_hit_detuned = True
                 self._log(Markup(f"""<b>no match</b>, r_dist too high {r_dist:.3f} continuing: detune r"""))
                 continue
 
             self._log(Markup(f"""<b>no good match</b>, ac_dist {ac_dist:.3f}, r_dist {r_dist:.3f}, moving on"""))
-            return (None, MATCH_TYPE_NO_MATCH)
+            return None, MATCH_TYPE_NO_MATCH
 
     def lookup(self, artist_credit_name_p, recording_name_p):
 
@@ -221,14 +222,19 @@ class MBIDMapper:
         r_detuned = prepare_query(self.detune_query_string(recording_name, False))
         self._log(f"ac_detuned: '{ac_detuned}' r_detuned: '{r_detuned}'")
 
-        self.is_ac_detuned = False
-        self.is_r_detuned = False
+        is_ac_detuned = False
+        is_r_detuned = False
 
         while True:
             hit = self.lookup(artist_credit_name_p, recording_name_p)
             if hit:
                 (hit, match_type) = self.evaluate_hit(
-                    hit, artist_credit_name_p, recording_name_p)
+                    hit,
+                    artist_credit_name_p,
+                    recording_name_p,
+                    is_ac_detuned,
+                    is_r_detuned
+                )
                 if hit:
                     self._log(Markup(f"""
                         <table>
@@ -255,14 +261,14 @@ class MBIDMapper:
                 hit = None
                 if ac_detuned:
                     artist_credit_name_p = ac_detuned
-                    self.is_ac_detuned = True
+                    is_ac_detuned = True
                     self._log("Detune artist_credit")
                     ac_detuned = None
                     continue
 
                 if r_detuned:
                     recording_name_p = r_detuned
-                    self.is_r_detuned = True
+                    is_r_detuned = True
                     r_detuned = None
                     self._log("Detune recording")
                     continue
