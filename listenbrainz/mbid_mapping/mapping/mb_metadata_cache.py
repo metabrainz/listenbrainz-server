@@ -10,6 +10,8 @@ from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 import config
 
+from icecream import ic
+
 BATCH_SIZE = 5000
 
 
