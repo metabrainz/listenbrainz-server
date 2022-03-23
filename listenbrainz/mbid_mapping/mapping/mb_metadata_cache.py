@@ -42,8 +42,7 @@ def create_tables(lb_conn):
         with lb_conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS tmp_mb_metadata_cache")
             curs.execute("""CREATE TABLE tmp_mb_metadata_cache (
-                                         id                        SERIAL
-                                       , dirty                     BOOLEAN DEFAULT FALSE
+                                         dirty                     BOOLEAN DEFAULT FALSE
                                        , recording_mbid            UUID NOT NULL
                                        , artist_mbids              UUID[] NOT NULL
                                        , release_mbid              UUID
@@ -186,7 +185,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     """
 
     query = """WITH artist_rels AS (
-                            SELECT r.gid
+                            SELECT a.gid
                                  , array_agg(ARRAY[lt.name, url]) AS artist_links
                               FROM recording r
                               JOIN artist_credit ac
@@ -218,7 +217,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                               ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
                                     OR lt.gid IS NULL)
 AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
-                          GROUP BY r.gid
+                          GROUP BY a.gid
                ), recording_rels AS (
                             SELECT r.gid
                                  , array_agg(ARRAY[lt.name, a1.name, a1.gid::TEXT, lat.name]) AS recording_links
@@ -276,7 +275,7 @@ AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-3
                      LEFT JOIN area ar
                             ON a.area = ar.id
                      LEFT JOIN artist_rels arl
-                            ON arl.gid = r.gid
+                            ON arl.gid = a.gid
 WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                       GROUP BY r.gid
                ), recording_tags AS (
@@ -380,7 +379,7 @@ WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b
     create_tables(lb_conn)
 
     rows = []
-    serial = 1
+    count = 1
     log("mb metadata cache: execute query (gonna be loooooong!)")
     mb_curs.execute(query)
     total_rows = mb_curs.rowcount
@@ -394,8 +393,8 @@ WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b
             break
 
         data = create_json_data(row)
-        rows.append((serial, "false", *data))
-        serial += 1
+        rows.append(("false", *data))
+        count += 1
 
         if len(rows) >= BATCH_SIZE:
             insert_rows(lb_curs, "tmp_mb_metadata_cache", rows)
@@ -404,13 +403,13 @@ WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b
             batch_count += 1
 
             if batch_count % 20 == 0:
-                log("mb metadata cache: inserted %d rows. %.1f%%" % (serial, 100 * serial / total_rows))
+                log("mb metadata cache: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
 
     if rows:
         insert_rows(lb_curs, "tmp_mb_metadata_cache", rows)
         lb_conn.commit()
 
-    log("mb metadata cache: inserted %d rows total." % (serial - 1))
+    log("mb metadata cache: inserted %d rows total." % count)
     log("mb metadata cache: create indexes")
     create_indexes_and_constraints(lb_conn)
 
