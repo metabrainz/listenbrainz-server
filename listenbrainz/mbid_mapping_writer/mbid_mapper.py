@@ -208,51 +208,52 @@ class MBIDMapper:
 
     def lookup_and_evaluate_hit(self, artist_credit_name_p, recording_name_p, is_ac_detuned, is_r_detuned):
         hit = self.lookup(artist_credit_name_p, recording_name_p)
+        if not hit:
+            return None
 
-        if hit:
-            hit, match_type = self.evaluate_hit(
-                hit,
-                artist_credit_name_p,
-                recording_name_p,
-                is_ac_detuned,
-                is_r_detuned
-            )
+        hit, match_type = self.evaluate_hit(
+            hit,
+            artist_credit_name_p,
+            recording_name_p,
+            is_ac_detuned,
+            is_r_detuned
+        )
+        if not hit:
+            return None
 
-            if hit:
-                self._log(Markup(f"""
-                    <table>
-                        <tr>
-                            <th>recording name</th>
-                            <th>release name</th>
-                            <th>artist credit name</th>
-                            <th>recording MBID</th>
-                            <th>release MBID</th>
-                            <th>artist_credit_id</th>
-                        </tr>
-                        <tr>
-                            <td>{hit['document']["recording_name"]}</td>
-                            <td>{hit['document']["release_name"]}</td>
-                            <td>{hit['document']["artist_credit_name"]}</td>
-                            <td>{hit['document']["recording_mbid"]}</td>
-                            <td>{hit['document']["release_mbid"]}</td>
-                            <td>{hit['document']["artist_credit_id"]}</td>
-                        </tr>
-                    </table>
-                """))
+        self._log(
+            Markup(f"""\
+                <table>
+                    <tr>
+                        <th>recording name</th>
+                        <th>release name</th>
+                        <th>artist credit name</th>
+                        <th>recording MBID</th>
+                        <th>release MBID</th>
+                        <th>artist_credit_id</th>
+                    </tr>
+                    <tr>
+                        <td>{hit['document']["recording_name"]}</td>
+                        <td>{hit['document']["release_name"]}</td>
+                        <td>{hit['document']["artist_credit_name"]}</td>
+                        <td>{hit['document']["recording_mbid"]}</td>
+                        <td>{hit['document']["release_mbid"]}</td>
+                        <td>{hit['document']["artist_credit_id"]}</td>
+                    </tr>
+                </table>
+            """))
 
-            return {
-                'artist_credit_name': hit['document']['artist_credit_name'],
-                'artist_credit_id': hit['document']['artist_credit_id'],
-                'artist_mbids': hit['document']['artist_mbids'],
-                'release_name': hit['document']['release_name'],
-                'release_mbid': hit['document']['release_mbid'],
-                'recording_name': hit['document']['recording_name'],
-                'recording_mbid': hit['document']['recording_mbid'],
-                'year': hit['document']['year'],
+        return {
+            'artist_credit_name': hit['document']['artist_credit_name'],
+            'artist_credit_id': hit['document']['artist_credit_id'],
+            'artist_mbids': hit['document']['artist_mbids'],
+            'release_name': hit['document']['release_name'],
+            'release_mbid': hit['document']['release_mbid'],
+            'recording_name': hit['document']['recording_name'],
+            'recording_mbid': hit['document']['recording_mbid'],
+            'year': hit['document']['year'],
                 'match_type': match_type
-            }
-
-        return None
+        }
 
     def search(self, artist_credit_name, recording_name):
         """
