@@ -10,6 +10,10 @@
 @progress-bar-height: 3px;
 @progress-bar-hover-height: 6px;
 @white-background: #fff;
+// Recommended minimum size required by Youtube
+@youtube-player-height:200px;
+@youtube-player-width:350px;
+@youtube-drag-handle-size:30px;
 
 #brainz-player {
 	position: fixed;
@@ -37,7 +41,7 @@
 			flex:0;
 			margin-right:1em;
 			// Show big preview of the cover art when hovering over it
-			&:hover > *:not(.hidden):not(.no-album-art) {
+			&:hover > *:not(.hidden):not(.no-album-art):not(.youtube-wrapper) {
 				// 80% of screen width max, capped at the width in pixel of big-cover-art-size
 				height: min(80vw, @big-cover-art-size);
 				width: min(80vw, @big-cover-art-size);
@@ -60,9 +64,38 @@
 				object-fit: cover;
 			}
 
-			// Youtube iframe
-			.youtube > * {
-				height: inherit;
+			// Youtube iframe and wrapper
+			.youtube-wrapper{
+				position: absolute;
+				bottom: @brainzplayer-height + 10px;
+				right: 10px;
+				height: @youtube-player-height + @youtube-drag-handle-size;
+				width: @youtube-player-width;
+				max-width: calc(100vw - 20px);
+				z-index: 10;
+				
+				.youtube-player{
+					height: @youtube-player-height;
+					border-radius: 8px;
+					border-top-right-radius: 0;// intersection with the square drag handle
+					overflow: hidden;
+					> * {
+						height: inherit;
+					}
+				}
+				.youtube-drag-handle{
+					width: @youtube-drag-handle-size;
+					height: @youtube-drag-handle-size;
+					margin-left:auto; // push all the way to the right
+					background:fadeout(black,50%);
+					color: @white;
+					text-align: center;
+					padding-top: 6px;
+					cursor: grab;
+					&:active{
+						cursor: grabbing;
+					}
+				}
 			}
 		}
 	}
@@ -268,4 +301,5 @@
 			}
 		}
 	}
+
 }

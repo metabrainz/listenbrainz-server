@@ -244,7 +244,7 @@ def parse_list(ctx, args):
 @click.option("--rank", callback=parse_list, default=[100, 120], type=int, multiple=True, help="Number of hidden features")
 @click.option("--itr", callback=parse_list, default=[5, 10], type=int, multiple=True, help="Number of iterations to run.")
 @click.option("--lmbda", callback=parse_list, default=[0.1, 10.0], type=float, multiple=True, help="Controls over fitting.")
-@click.option("--alpha", default=3.0, type=float, help="Baseline level of confidence weighting applied.")
+@click.option("--alpha", callback=parse_list, default=[3.0], type=float, help="Baseline level of confidence weighting applied.")
 def request_model(rank, itr, lmbda, alpha):
     """ Send the cluster a request to train the model.
 

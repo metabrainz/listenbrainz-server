@@ -199,7 +199,7 @@ def init_error_handlers(app):
         return handle_error(error, 504)
 
     @app.errorhandler(APIError)
-    @crossdomain()
+    @crossdomain
     def api_error(error):
         return jsonify(error.to_dict()), error.status_code
 

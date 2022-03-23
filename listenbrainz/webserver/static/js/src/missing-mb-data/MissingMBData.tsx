@@ -15,7 +15,7 @@ import APIServiceClass from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import { getPageProps } from "../utils/utils";
+import { getArtistName, getPageProps, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import Loader from "../components/Loader";
@@ -121,14 +121,14 @@ export default class MissingMBDataPage extends React.Component<
     const name = document.createElement("input");
     name.type = "hidden";
     name.name = "name";
-    name.value = listen.track_metadata.release_name || "";
+    name.value = listen.track_metadata?.release_name || "";
     form.appendChild(name);
     const recording = document.createElement("input");
     recording.type = "hidden";
     recording.name = "mediums.0.track.0.name";
-    recording.value = listen.track_metadata.track_name;
+    recording.value = getTrackName(listen);
     form.appendChild(recording);
-    const artists = listen.track_metadata.artist_name.split(",");
+    const artists = getArtistName(listen).split(",");
     artists.forEach((artist, index) => {
       const artistCredit = document.createElement("input");
       artistCredit.type = "hidden";

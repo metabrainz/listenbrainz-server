@@ -133,13 +133,13 @@ class TrainModelsTestCase(RecommendationsTestCase):
         ranks = [3]
         lambdas = [4.8]
         iterations = [2]
-        alpha = 3.0
+        alphas = [3.0]
         mock_rmse.return_value = 6.999
         best_model, model_metadata = train_models.get_best_model(mock_rdd_training, mock_rdd_validation, num_validation,
-                                                                 ranks, lambdas, iterations, alpha)
+                                                                 ranks, lambdas, iterations, alphas)
         mock_id.assert_called_once()
         mock_train.assert_called_once_with(mock_rdd_training, ranks[0], iterations[0], lambdas[0],
-                                           alpha, mock_id.return_value)
+                                           alphas[0], mock_id.return_value)
         mock_rmse.assert_called_once_with(mock_train.return_value, mock_rdd_validation, num_validation, mock_id.return_value)
 
     def test_delete_model(self):

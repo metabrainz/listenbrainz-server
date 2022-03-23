@@ -8,7 +8,12 @@ import {
   isString,
   difference,
 } from "lodash";
-import { searchForSpotifyTrack, loadScriptAsync } from "../utils/utils";
+import {
+  searchForSpotifyTrack,
+  loadScriptAsync,
+  getTrackName,
+  getArtistName,
+} from "../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
 // Fix for LB-447 (Player does not play any sound)
@@ -138,10 +143,8 @@ export default class SpotifyPlayer
   }
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
-    const trackName =
-      _get(listen, "track_metadata.track_name") || _get(listen, "title");
-    const artistName =
-      _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
+    const trackName = getTrackName(listen);
+    const artistName = getArtistName(listen);
     // Using the releaseName has paradoxically given worst search results,
     // so we're only using it when track name isn't provided (for example for an album search)
     const releaseName = trackName

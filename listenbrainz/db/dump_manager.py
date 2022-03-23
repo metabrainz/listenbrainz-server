@@ -71,9 +71,10 @@ def send_dump_creation_notification(dump_name, dump_type):
               help="the ID of the ListenBrainz data dump")
 @click.option('--listen/--no-listen', 'do_listen_dump', default=True)
 @click.option('--spark/--no-spark', 'do_spark_dump', type=bool, default=True)
-@click.option('--db/--no-db', 'do_db_dump', type=bool, default=True,
-              help="flag indicating whether to create a full dump from the last entry in the dump table")
-def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump: bool, do_db_dump: bool):
+@click.option('--db/--no-db', 'do_db_dump', type=bool, default=True)
+@click.option('--timescale/--no-timescale', 'do_timescale_dump', type=bool, default=True)
+def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump: bool,
+                do_db_dump: bool, do_timescale_dump: bool):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from the listenstore.
 
@@ -83,7 +84,8 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
             dump_id (int): the ID of the ListenBrainz data dump
             do_listen_dump: If True, make a listens dump
             do_spark_dump: If True, make a spark listens dump
-            do_db_dump: If True, make a public/private postgres/timescale dump
+            do_db_dump: If True, make a public/private postgres dump
+            do_timescale_dump: If True, make a public/private timescale dump
     """
     app = create_app()
     with app.app_context():
@@ -107,7 +109,10 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
         expected_num_dumps = 0
         if do_db_dump:
             db_dump.dump_postgres_db(dump_path, end_time, threads)
-            expected_num_dumps += 4
+            expected_num_dumps += 2
+        if do_timescale_dump:
+            db_dump.dump_timescale_db(dump_path, end_time, threads)
+            expected_num_dumps += 2
         if do_listen_dump:
             ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
             expected_num_dumps += 1
@@ -258,7 +263,7 @@ def create_feedback(location, threads):
               help="the path to the ListenBrainz public dump to be imported")
 @click.option('--public-timescale-archive', default=None, required=False,
               help="the path to the ListenBrainz public timescale dump to be imported")
-@click.option('--listen-archive', '-l', default=None, required=True,
+@click.option('--listen-archive', '-l', default=None, required=False,
               help="the path to the ListenBrainz listen dump archive to be imported")
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
               help="the number of threads to use during decompression, defaults to 1")
@@ -285,22 +290,9 @@ def import_dump(private_archive, private_timescale_archive,
         db_dump.import_postgres_dump(private_archive, private_timescale_archive,
                                      public_archive, public_timescale_archive,
                                      threads)
-
-        from listenbrainz.webserver.timescale_connection import _ts as ls
-        try:
+        if listen_archive:
+            from listenbrainz.webserver.timescale_connection import _ts as ls
             ls.import_listens_dump(listen_archive, threads)
-        except psycopg2.OperationalError as e:
-            current_app.logger.critical(
-                'OperationalError while trying to import data: %s', str(e), exc_info=True)
-            raise
-        except IOError as e:
-            current_app.logger.critical(
-                'IOError while trying to import data: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            current_app.logger.critical(
-                'Unexpected error while importing data: %s', str(e), exc_info=True)
-            raise
 
     sys.exit(0)
 

@@ -21,7 +21,7 @@ pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 
 
 @pinned_recording_api_bp.route("/pin", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def pin_recording_for_user():
     """
@@ -73,7 +73,7 @@ def pin_recording_for_user():
 
 
 @pinned_recording_api_bp.route("/pin/unpin", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def unpin_recording_for_user():
     """
@@ -101,7 +101,7 @@ def unpin_recording_for_user():
 
 
 @pinned_recording_api_bp.route("/pin/delete/<row_id>", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def delete_pin_for_user(row_id):
     """
@@ -131,7 +131,7 @@ def delete_pin_for_user(row_id):
 
 
 @pinned_recording_api_bp.route("/<user_name>/pins", methods=["GET", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_pins_for_user(user_name):
     """
@@ -207,7 +207,7 @@ def get_pins_for_user(user_name):
 
 
 @pinned_recording_api_bp.route("/<user_name>/pins/following", methods=["GET", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_pins_for_user_following(user_name):
     """

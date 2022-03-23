@@ -28,6 +28,7 @@ import {
   updateMediaSession,
   updateWindowTitle,
 } from "../notifications/Notifications";
+import { getArtistName, getTrackName } from "../utils/utils";
 
 export type DataSourceType = {
   name: string;
@@ -180,7 +181,7 @@ export default class BrainzPlayer extends React.Component<
   componentDidMount = () => {
     window.addEventListener("storage", this.onLocalStorageEvent);
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-
+    window.addEventListener("beforeunload", this.alertBeforeClosingPage);
     // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
     const { spotifyAuth } = this.context;
     if (
@@ -194,7 +195,21 @@ export default class BrainzPlayer extends React.Component<
   componentWillUnMount = () => {
     window.removeEventListener("storage", this.onLocalStorageEvent);
     window.removeEventListener("message", this.receiveBrainzPlayerMessage);
+    window.removeEventListener("beforeunload", this.alertBeforeClosingPage);
     this.stopPlayerStateTimer();
+  };
+
+  alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
+    const { playerPaused } = this.state;
+    if (!playerPaused) {
+      // Some old browsers may allow to set a custom message, but this is deprecated.
+      event.preventDefault();
+      // eslint-disable-next-line no-param-reassign
+      event.returnValue = `You are currently playing music from this page.
+      Are you sure you want to close it? Playback will be stopped.`;
+      return event.returnValue;
+    }
+    return null;
   };
 
   receiveBrainzPlayerMessage = (event: MessageEvent) => {
@@ -427,12 +442,12 @@ export default class BrainzPlayer extends React.Component<
 
   getCurrentTrackName = (): string => {
     const { currentListen } = this.state;
-    return _get(currentListen, "track_metadata.track_name", "");
+    return getTrackName(currentListen);
   };
 
   getCurrentTrackArtists = (): string | undefined => {
     const { currentListen } = this.state;
-    return _get(currentListen, "track_metadata.artist_name", "");
+    return getArtistName(currentListen);
   };
 
   seekToPositionMs = (msTimecode: number): void => {

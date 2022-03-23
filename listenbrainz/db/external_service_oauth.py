@@ -18,6 +18,13 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
         record_listens: True if user wishes to import listens, False otherwise
         scopes: the oauth scopes
     """
+    # regardless of whether a row is inserted or updated, the end result of the query
+    # should remain the same. if not so, weird things can happen as it is likely we
+    # assume the defaults exist for new users while writing code elsewhere.
+    # due to this reason, we update all columns in UPDATE section of following queries
+    # to use the new values. any column which does not have a new value to be set should
+    # be explicitly set to the default value (which would have been used if the row was
+    # inserted instead).
     token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -32,7 +39,8 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
                 access_token = EXCLUDED.access_token,
                 refresh_token = EXCLUDED.refresh_token,
                 token_expires = EXCLUDED.token_expires,
-                scopes = EXCLUDED.scopes
+                scopes = EXCLUDED.scopes,
+                last_updated = NOW()
             RETURNING id
             """), {
                 "user_id": user_id,
@@ -53,7 +61,10 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
                 ON CONFLICT (user_id, service) DO UPDATE SET
                     external_service_oauth_id = EXCLUDED.external_service_oauth_id,
                     user_id = EXCLUDED.user_id,
-                    service = EXCLUDED.service
+                    service = EXCLUDED.service,
+                    last_updated = NULL,
+                    latest_listened_at = NULL,
+                    error_message = NULL
                 """), {
                 "external_service_oauth_id": external_service_oauth_id,
                 "user_id": user_id,

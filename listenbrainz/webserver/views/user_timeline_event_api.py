@@ -50,7 +50,7 @@ user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recording', methods=['POST', 'OPTIONS'])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def create_user_recording_recommendation_event(user_name):
     """ Make the user recommend a recording to their followers.
@@ -104,7 +104,7 @@ def create_user_recording_recommendation_event(user_name):
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/notification', methods=['POST', 'OPTIONS'])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def create_user_notification_event(user_name):
     """ Post a message with a link on a user's timeline. Only approved users are allowed to perform this action.
@@ -156,7 +156,7 @@ def create_user_notification_event(user_name):
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
-@crossdomain()
+@crossdomain
 @ratelimit()
 @api_listenstore_needed
 def user_feed(user_name: str):
@@ -237,7 +237,7 @@ def user_feed(user_name: str):
 
 
 @user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
-@crossdomain()
+@crossdomain
 @ratelimit()
 def delete_feed_events(user_name):
     '''
@@ -461,7 +461,7 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
                 created=pin.created.timestamp(),
                 metadata=pinEvent,
             ))
-        except pydantic.ValidationError as e:
-            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+        except (pydantic.ValidationError, TypeError, KeyError):
+            current_app.logger.error("Could not convert pinned recording to feed event", exc_info=True)
             continue
     return events

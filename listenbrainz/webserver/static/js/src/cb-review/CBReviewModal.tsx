@@ -15,9 +15,11 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   countWords,
   getArtistMBIDs,
+  getArtistName,
   getRecordingMBID,
   getReleaseGroupMBID,
   getReleaseMBID,
+  getTrackName,
 } from "../utils/utils";
 import Loader from "../components/Loader";
 
@@ -221,13 +223,13 @@ export default class CBReviewModal extends React.Component<
     const { additional_info } = listen.track_metadata;
 
     let recording_mbid = getRecordingMBID(listen);
-
+    const trackName = getTrackName(listen);
     // If listen doesn't contain recording_mbid attribute,
     // search for it using the track mbid instead
     if (!recording_mbid && additional_info?.track_mbid) {
       recording_mbid = await this.getRecordingMBIDFromTrack(
         additional_info?.track_mbid,
-        listen.track_metadata.track_name
+        trackName
       );
     }
     // confirm that found mbid was valid
@@ -235,7 +237,7 @@ export default class CBReviewModal extends React.Component<
       const entity: ReviewableEntity = {
         type: "recording",
         mbid: recording_mbid,
-        name: listen.track_metadata.track_name,
+        name: trackName,
       };
       this.setState({ recordingEntity: entity });
     } else {
@@ -255,7 +257,7 @@ export default class CBReviewModal extends React.Component<
       const entity: ReviewableEntity = {
         type: "artist",
         mbid: artist_mbid,
-        name: listen.track_metadata.artist_name,
+        name: getArtistName(listen),
       };
       this.setState({ artistEntity: entity });
     } else {
@@ -283,7 +285,7 @@ export default class CBReviewModal extends React.Component<
       const entity: ReviewableEntity = {
         type: "release_group",
         mbid: release_group_mbid,
-        name: listen.track_metadata.release_name,
+        name: listen.track_metadata?.release_name,
       };
       this.setState({ releaseGroupEntity: entity });
     } else {
@@ -412,7 +414,7 @@ export default class CBReviewModal extends React.Component<
           newAlert(
             "success",
             `Your review was submitted to CritiqueBrainz!`,
-            `${listen.track_metadata.artist_name} - ${entityToReview?.name}`
+            `${getArtistName(listen)} - ${entityToReview?.name}`
           );
           // show url using review mbid on success
           this.setState({
@@ -493,9 +495,9 @@ export default class CBReviewModal extends React.Component<
     if (!entityToReview) {
       return (
         <div>
-          We could not link <b>{listen?.track_metadata?.track_name}</b> by{" "}
-          <b>{listen?.track_metadata?.artist_name}</b> to any recording, artist,
-          or release group on MusicBrainz.
+          We could not link <b>{getTrackName(listen)}</b> by{" "}
+          <b>{getArtistName(listen)}</b> to any recording, artist, or release
+          group on MusicBrainz.
           <br />
           <br />
           If you can&#39;t find them when searching{" "}
@@ -522,8 +524,7 @@ export default class CBReviewModal extends React.Component<
         {/* Show warning when recordingEntity is not availible */}
         {!recordingEntity && (
           <div className="alert alert-danger">
-            We could not find a recording for{" "}
-            <b>{listen?.track_metadata?.track_name}</b>.
+            We could not find a recording for <b>{getTrackName(listen)}</b>.
           </div>
         )}
 

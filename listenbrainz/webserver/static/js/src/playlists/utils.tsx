@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 
 import { padStart } from "lodash";
-import { getRecordingMBID } from "../utils/utils";
+import { getArtistName, getRecordingMBID, getTrackName } from "../utils/utils";
 
 export const MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION =
   "https://musicbrainz.org/doc/jspf#playlist";
@@ -84,7 +84,7 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
   if (customFields?.added_at) {
     listen.listened_at_iso = customFields.added_at;
   }
-  if (listen.track_metadata.additional_info) {
+  if (listen.track_metadata?.additional_info) {
     listen.track_metadata.additional_info.artist_mbids = customFields?.artist_identifiers?.map(
       getArtistMBIDFromURI
     );
@@ -94,11 +94,13 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
 
 export function listenToJSPFTrack(listen: Listen): JSPFTrack {
   const recordingMBID = getRecordingMBID(listen);
+  const trackName = getTrackName(listen);
+  const artistName = getArtistName(listen);
   return {
     identifier: PLAYLIST_TRACK_URI_PREFIX + recordingMBID,
     id: recordingMBID || undefined,
-    title: listen.track_metadata?.track_name,
-    creator: listen.track_metadata?.artist_name,
+    title: trackName,
+    creator: artistName,
     album: listen.track_metadata?.release_name || undefined,
     duration: listen.track_metadata?.additional_info?.duration_ms || undefined,
     location: listen.track_metadata?.additional_info?.origin_url

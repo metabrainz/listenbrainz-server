@@ -170,14 +170,16 @@ export default class UserArtistMap extends React.Component<
       >
         <div className="row">
           <div className="col-md-9 col-xs-6">
-            <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-              Artist Origins
+            <h3 style={{ marginLeft: 20 }}>
+              <span className="capitalize-bold">Artist Origins</span>
+              <small>&nbsp;Click on a country to see more details</small>
             </h3>
           </div>
           <div
             className="col-md-2 col-xs-4 text-right"
             style={{ marginTop: 20 }}
           >
+            <span>Rank by</span>
             <span className="dropdown">
               <button
                 className="dropdown-toggle btn-transparent capitalize-bold"
@@ -188,7 +190,9 @@ export default class UserArtistMap extends React.Component<
                 <span className="caret" />
               </button>
               <ul className="dropdown-menu" role="menu">
-                <li>
+                <li
+                  className={selectedMetric === "listen" ? "active" : undefined}
+                >
                   <a
                     href=""
                     role="button"
@@ -199,7 +203,9 @@ export default class UserArtistMap extends React.Component<
                     Listens
                   </a>
                 </li>
-                <li>
+                <li
+                  className={selectedMetric === "artist" ? "active" : undefined}
+                >
                   <a
                     href=""
                     role="button"
