@@ -220,14 +220,8 @@ AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-3
                           GROUP BY a.gid
                ), recording_rels AS (
                             SELECT r.gid
-                                 , array_agg(distinct(ARRAY[lt.name, a1.name, a1.gid::TEXT, lat.name])) AS recording_links
+                                 , array_agg(ARRAY[lt.name, a1.name, a1.gid::TEXT, lat.name]) AS recording_links
                               FROM recording r
-                              JOIN artist_credit ac
-                                ON r.artist_credit = ac.id
-                              JOIN artist_credit_name acn
-                                ON acn.artist_credit = ac.id
-                              JOIN artist a0
-                                ON a0.id = acn.artist
                          LEFT JOIN l_artist_recording lar
                                 ON lar.entity1 = r.id
                               JOIN artist a1
