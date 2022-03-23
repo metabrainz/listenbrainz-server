@@ -171,7 +171,7 @@ def create_json_data(row):
         artist_tags.append(tag)
 
     return (row["recording_mbid"],
-            artist_mbids,
+            list(set(artist_mbids)),
             row["release_mbid"],
             ujson.dumps({"rels": recording_rels}),
             ujson.dumps(artists),
@@ -217,7 +217,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                               ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
                                               ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
                                     OR lt.gid IS NULL)
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                           GROUP BY r.gid
                ), recording_rels AS (
                             SELECT r.gid
@@ -251,7 +251,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                                ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
                                                ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                    OR lt.gid IS NULL)
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                            GROUP BY r.gid
                ), artist_data AS (
                         SELECT r.gid
@@ -277,7 +277,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON a.area = ar.id
                      LEFT JOIN artist_rels arl
                             ON arl.gid = r.gid
---WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                       GROUP BY r.gid
                ), recording_tags AS (
                         SELECT r.gid AS recording_mbid
@@ -290,7 +290,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                      LEFT JOIN genre g
                             ON t.name = g.name
                          WHERE count > 0
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                          GROUP BY r.gid
                ), artist_tags AS (
                         SELECT r.gid AS recording_mbid
@@ -309,7 +309,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                      LEFT JOIN genre g
                             ON t.name = g.name
                          WHERE count > 0
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                          GROUP BY r.gid
                ), release_data AS (
                         SELECT * FROM (
@@ -327,7 +327,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                              LEFT JOIN cover_art_archive.cover_art_type cat
                                     ON cat.id = caa.id
                                  WHERE type_id = 1
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                         ) temp where rownum=1
                )
                         SELECT recording_links
@@ -359,7 +359,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON ats.recording_mbid = r.gid
                      LEFT JOIN release_data rd
                             ON rd.recording_mbid = r.gid
---WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                       GROUP BY r.gid
                              , r.length
                              , recording_links
@@ -415,7 +415,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     create_indexes_and_constraints(lb_conn)
 
     log("mb metadata cache: swap tables and indexes into production.")
-    swap_table_and_indexes(lb_conn)
+#    swap_table_and_indexes(lb_conn)
 
     log("mb metadata cache: done")
 
