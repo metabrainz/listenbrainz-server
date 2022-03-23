@@ -6,6 +6,8 @@ import listenbrainz.db.user as db_user
 from flask import current_app, url_for
 
 from redis import Redis
+
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.webserver.testing import ServerTestCase, APICompatServerTestCase
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
@@ -51,9 +53,9 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         Returns the result from a flask client GET
         """
         count = 0
-        while count < 5:
+        while count < 10:
             count += 1
-            time.sleep(2)
+            time.sleep(1)
 
             response = self.client.get(url, **kwargs)
             data = json.loads(response.data)['payload']
@@ -61,24 +63,31 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
                 break
         return response
 
-    def send_data(self, payload, user=None):
+    def send_data(self, payload, user=None, recalculate=False):
         """ Sends payload to api.submit_listen and return the response
         """
         if not user:
             user = self.user
-        return self.client.post(
+        response = self.client.post(
             url_for('api_v1.submit_listen'),
             data=json.dumps(payload),
             headers={'Authorization': 'Token {}'.format(user['auth_token'])},
             content_type='application/json'
         )
+        if recalculate:
+            # recalculate only if asked because there are many tests for invalid
+            # submissions or where we don't fetch listens. in those cases, this
+            # sleep will add unnecessary slowness.
+            time.sleep(1)  # wait for listens to be picked up by timescale writer
+            recalculate_all_user_data()
+        return response
 
-
-class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase):
+class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):
         APICompatServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
 
     def tearDown(self):
         APICompatServerTestCase.tearDown(self)

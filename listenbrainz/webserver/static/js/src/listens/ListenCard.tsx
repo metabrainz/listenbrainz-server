@@ -24,14 +24,16 @@ import {
   getRecordingMBID,
   getAlbumArtFromListenMetadata,
   getReleaseMBID,
-} from "../utils";
-import GlobalAppContext from "../GlobalAppContext";
+  getArtistName,
+  getTrackName,
+} from "../utils/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
-import YoutubePlayer from "../YoutubePlayer";
-import SpotifyPlayer from "../SpotifyPlayer";
-import SoundcloudPlayer from "../SoundcloudPlayer";
+import YoutubePlayer from "../brainzplayer/YoutubePlayer";
+import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
+import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -160,8 +162,8 @@ export default class ListenCard extends React.Component<
 
     if (currentUser?.auth_token) {
       const metadata: UserTrackRecommendationMetadata = {
-        artist_name: _get(listen, "track_metadata.artist_name"),
-        track_name: _get(listen, "track_metadata.track_name"),
+        artist_name: getArtistName(listen),
+        track_name: getTrackName(listen),
         release_name: _get(listen, "track_metadata.release_name"),
         recording_mbid: getRecordingMBID(listen),
         recording_msid: _get(
@@ -233,11 +235,11 @@ export default class ListenCard extends React.Component<
     const youtubeURL = YoutubePlayer.getYoutubeURLFromListen(listen);
     const soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(listen);
 
+    const trackName = getTrackName(listen);
+    const artistName = getArtistName(listen);
+
     const hasRecordingMSID = Boolean(recordingMSID);
-    const enableRecommendButton =
-      _has(listen, "track_metadata.artist_name") &&
-      _has(listen, "track_metadata.track_name") &&
-      hasRecordingMSID;
+    const enableRecommendButton = artistName && trackName && hasRecordingMSID;
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
@@ -280,11 +282,11 @@ export default class ListenCard extends React.Component<
       <Card
         {...otherProps}
         onDoubleClick={this.playListen}
-        className={`listen-card row ${
-          isCurrentlyPlaying ? "current-listen" : ""
-        }${compact ? " compact" : ""}${
-          additionalContent ? " has-additional-content" : " "
-        } ${className || ""}`}
+        className={`listen-card ${isCurrentlyPlaying ? "current-listen" : ""}${
+          compact ? " compact" : ""
+        }${additionalContent ? " has-additional-content" : " "} ${
+          className || ""
+        }`}
       >
         <div className="main-content">
           {thumbnail || (
@@ -324,16 +326,10 @@ export default class ListenCard extends React.Component<
             <div className="listen-details">{listenDetails}</div>
           ) : (
             <div className="listen-details">
-              <div
-                title={listen.track_metadata?.track_name}
-                className="ellipsis-2-lines"
-              >
+              <div title={trackName} className="ellipsis-2-lines">
                 {getTrackLink(listen)}
               </div>
-              <span
-                className="small text-muted ellipsis"
-                title={listen.track_metadata?.artist_name}
-              >
+              <span className="small text-muted ellipsis" title={artistName}>
                 {getArtistLink(listen)}
               </span>
             </div>
@@ -382,6 +378,7 @@ export default class ListenCard extends React.Component<
                       <ListenControl
                         icon={faExternalLinkAlt}
                         title="Open in MusicBrainz"
+                        text="Open in MusicBrainz"
                         link={`https://musicbrainz.org/recording/${recordingMBID}`}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -393,6 +390,7 @@ export default class ListenCard extends React.Component<
                       <ListenControl
                         icon={faSpotify}
                         title="Open in Spotify"
+                        text="Open in Spotify"
                         link={spotifyURL}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -404,6 +402,7 @@ export default class ListenCard extends React.Component<
                       <ListenControl
                         icon={faYoutube}
                         title="Open in YouTube"
+                        text="Open in YouTube"
                         link={youtubeURL}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -415,6 +414,7 @@ export default class ListenCard extends React.Component<
                       <ListenControl
                         icon={faSoundcloud}
                         title="Open in Soundcloud"
+                        text="Open in Soundcloud"
                         link={soundcloudURL}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -426,6 +426,7 @@ export default class ListenCard extends React.Component<
                       <ListenControl
                         icon={faCommentDots}
                         title="Recommend to my followers"
+                        text="Recommend to my followers"
                         action={this.recommendListenToFollowers}
                       />
                     )}
@@ -450,10 +451,7 @@ export default class ListenCard extends React.Component<
           </div>
         </div>
         {additionalContent && (
-          <div
-            className="additional-content"
-            title={listen.track_metadata?.track_name}
-          >
+          <div className="additional-content" title={trackName}>
             {additionalContent}
           </div>
         )}

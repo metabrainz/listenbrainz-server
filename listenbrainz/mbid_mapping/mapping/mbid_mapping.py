@@ -136,9 +136,9 @@ def create_temp_release_table(conn):
                                     ON rc.release = r.id
                                   JOIN musicbrainz.medium m
                                     ON m.release = r.id
-                                  JOIN musicbrainz.medium_format mf
+                             LEFT JOIN musicbrainz.medium_format mf
                                     ON m.format = mf.id
-                                  JOIN mapping.format_sort fs
+                             LEFT JOIN mapping.format_sort fs
                                     ON mf.id = fs.format
                                   JOIN musicbrainz.artist_credit ac
                                     ON rg.artist_credit = ac.id
@@ -150,7 +150,7 @@ def create_temp_release_table(conn):
                                     ON rgstj.secondary_type = rgst.id
                                  WHERE rg.artist_credit %s 1
                                        %s
-                                 ORDER BY rg.type, rgst.id desc, fs.sort,
+                                 ORDER BY rg.type, rgst.id desc, fs.sort NULLS LAST,
                                           to_date(date_year::TEXT || '-' ||
                                                   COALESCE(date_month,12)::TEXT || '-' ||
                                                   COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),

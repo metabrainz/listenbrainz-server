@@ -26,16 +26,16 @@ import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
-} from "../AlertNotificationsHOC";
-import APIServiceClass from "../APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import SpotifyAPIService from "../SpotifyAPIService";
-import BrainzPlayer from "../BrainzPlayer";
+} from "../notifications/AlertNotificationsHOC";
+import APIServiceClass from "../utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import SpotifyAPIService from "../utils/SpotifyAPIService";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../utils/ErrorBoundary";
 import PlaylistItemCard from "./PlaylistItemCard";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
@@ -46,7 +46,7 @@ import {
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "./utils";
-import { getPageProps } from "../utils";
+import { getPageProps } from "../utils/utils";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;
@@ -667,7 +667,7 @@ export default class PlaylistPage extends React.Component<
           className="full-page-loader"
         />
         <div className="row">
-          <div id="playlist" className="col-md-8">
+          <div id="playlist" className="col-md-8 col-md-offset-2">
             <div className="playlist-details row">
               <h1 className="title">
                 <div>
@@ -878,20 +878,13 @@ export default class PlaylistPage extends React.Component<
               </>
             )}
           </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <BrainzPlayer
-              listens={tracks.map(JSPFTrackToListen)}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
+          <BrainzPlayer
+            listens={tracks.map(JSPFTrackToListen)}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
         </div>
       </div>
     );

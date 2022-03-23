@@ -10,14 +10,16 @@ const ListenCountCard = (props: ListenCountCardProps) => {
 
   return (
     <Card id="listen-count-card">
-      <h4>
-        You have listened to
-        <hr />
-      </h4>
-      <div>
-        <h4>{listenCount}</h4>
-        <small className="text-muted">songs so far</small>
-      </div>
+      {listenCount && (
+        <div>
+          You have listened to
+          <hr />
+          {listenCount.toLocaleString()}
+          <br />
+          <small className="text-muted">songs so far</small>
+        </div>
+      )}
+      {!listenCount && <p>You have not listened to any songs so far</p>}
     </Card>
   );
 };

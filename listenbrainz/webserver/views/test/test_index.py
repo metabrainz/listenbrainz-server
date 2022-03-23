@@ -32,20 +32,12 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get(url_for('index.data'))
         self.assert200(resp)
 
-    def test_contribute(self):
-        resp = self.client.get(url_for('index.contribute'))
+    def test_about(self):
+        resp = self.client.get(url_for('index.about'))
         self.assert200(resp)
 
-    def test_goals(self):
-        resp = self.client.get(url_for('index.goals'))
-        self.assert200(resp)
-
-    def test_faq(self):
-        resp = self.client.get(url_for('index.faq'))
-        self.assert200(resp)
-
-    def test_roadmap(self):
-        resp = self.client.get(url_for('index.roadmap'))
+    def test_terms_of_service(self):
+        resp = self.client.get(url_for('index.terms_of_service'))
         self.assert200(resp)
 
     def test_add_data_info(self):
@@ -87,7 +79,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('Sign in', data)
         self.assertIn('Import', data)
         # item in user menu doesn't exist
-        self.assertNotIn('My Listens', data)
+        self.assertNotIn('Home', data)
         mock_user_get.assert_not_called()
 
     @mock.patch('listenbrainz.db.user.get_by_login_id')
@@ -107,7 +99,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('Import', data)
         # item in user menu
 
-        self.assertIn('My Listens', data)
+        self.assertIn('Home', data)
         mock_user_get.assert_called_with(user['login_id'])
 
     @mock.patch('listenbrainz.db.user.get_by_login_id')
@@ -135,7 +127,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('Import', data)
         # item in user menu
 
-        self.assertIn('My Listens', data)
+        self.assertIn('Home', data)
         mock_user_get.assert_called_with(user['login_id'])
 
         resp = self.client.get('/page_that_returns_404')
@@ -146,7 +138,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('Import', data)
         # item in user menu
 
-        self.assertIn('My Listens', data)
+        self.assertIn('Home', data)
         mock_user_get.assert_called_with(user['login_id'])
 
     @mock.patch('listenbrainz.db.user.get')
@@ -165,7 +157,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get('/page_that_returns_500')
         data = resp.data.decode('utf-8')
         # item not in user menu
-        self.assertNotIn('My Listens', data)
+        self.assertNotIn('Home', data)
         self.assertNotIn('Sign in', data)
         self.assertIn('Import', data)
 
@@ -193,7 +185,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         data = resp.data.decode('utf-8')
         self.assertIn('Import', data)
         # item not in user menu
-        self.assertNotIn('My Listens', data)
+        self.assertNotIn('Home', data)
         self.assertNotIn('Sign in', data)
         # Even after rendering the template, the database has only been queried once (before the exception)
         mock_user_get.assert_called_once()
@@ -202,11 +194,11 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
     def test_mb_user_deleter_valid_account(self, mock_delete_user, mock_authorize_mb_user_deleter):
-        user1 = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_authorize_mb_user_deleter.assert_called_once_with('132')
-        mock_delete_user.assert_called_once_with('iliekcomputers')
+        mock_delete_user.assert_called_once_with(user_id)
 
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
@@ -225,14 +217,14 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007538,
         }
-        user1 = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_requests_get.assert_called_with(
             'https://musicbrainz.org/oauth2/userinfo',
             headers={'Authorization': 'Bearer 132'},
         )
-        mock_delete_user.assert_called_with('iliekcomputers')
+        mock_delete_user.assert_called_with(user_id)
 
     @mock.patch('listenbrainz.webserver.views.index.requests.get')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
@@ -242,7 +234,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007531, # incorrect musicbrainz row id for UserDeleter
         }
-        user1 = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
@@ -291,8 +283,6 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         response = self.client.get(url_for('index.recent_listens'))
         self.assert200(response)
         self.assertTemplateUsed('index/recent.html')
-        props = ujson.loads(self.get_context_variable('props'))
-        self.assertEqual(props['mode'], 'recent')
 
     def test_feed_page(self):
         user = db_user.get_or_create(1, 'iliekcomputers')
@@ -303,4 +293,12 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def test_similar_users(self):
         resp = self.client.get(url_for('index.similar_users'))
+        self.assert200(resp)
+
+    def test_instant_playlist(self):
+        resp = self.client.get(url_for('player.load_instant', recording_mbids="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
+        self.assert200(resp)
+
+    def test_release_playlist(self):
+        resp = self.client.get(url_for('player.load_release', release_mbid="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
         self.assert200(resp)

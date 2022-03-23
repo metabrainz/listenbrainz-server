@@ -9,14 +9,14 @@ import { Integrations } from "@sentry/tracing";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import BrainzPlayer from "../BrainzPlayer";
-import ErrorBoundary from "../ErrorBoundary";
+import APIServiceClass from "../utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
-import { getPageProps, getRecordingMBID } from "../utils";
+import { getPageProps, getRecordingMBID, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
 
@@ -100,7 +100,7 @@ export default class Recommendations extends React.Component<
       } catch (error) {
         newAlert(
           "danger",
-          "Playback error",
+          "We could not load love/hate feedback",
           typeof error === "object" ? error.message : error
         );
       }
@@ -245,7 +245,7 @@ export default class Recommendations extends React.Component<
                   );
                   return (
                     <ListenCard
-                      key={`${recommendation.track_metadata?.track_name}-${
+                      key={`${getTrackName(recommendation)}-${
                         recommendation.track_metadata?.additional_info
                           ?.recording_msid ?? recordingMBID
                       }-${recommendation.listened_at}-${
@@ -299,20 +299,13 @@ export default class Recommendations extends React.Component<
 
             <br />
           </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <BrainzPlayer
-              listens={recommendations}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
+          <BrainzPlayer
+            listens={recommendations}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
         </div>
       </div>
     );

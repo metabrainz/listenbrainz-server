@@ -336,8 +336,14 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
         if not current_app.config['TESTING']:
             notify_error(user['musicbrainz_id'], error_message)
         # user has revoked authorization through spotify ui or deleted their spotify account etc.
-        # in any of these cases, we should delete the user's token from.
-        service.revoke_user(user['user_id'])
+        #
+        # we used to remove spotify access tokens from our database whenever we detected token revocation
+        # at one point. but one day spotify had a downtime while resulted in false revocation errors, and
+        # we ended up deleting most of our users' spotify access tokens. now we don't remove the token from
+        # database. this is actually more resilient and without downsides. if a user actually revoked their
+        # token, then its useless anyway so doesn't matter if we remove it. and if it is a false revocation
+        # error, we are saved! :) in any case, we do set an error message for the user in the database
+        # so that we can skip in future runs and notify them to reconnect if they want.
         raise ExternalServiceError("User has revoked spotify authorization")
 
     except ExternalServiceAPIError as e:

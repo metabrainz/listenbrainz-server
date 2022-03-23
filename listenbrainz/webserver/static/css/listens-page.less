@@ -177,7 +177,7 @@
 
 #listens {
 	@media (min-width: @screen-phone) {
-		padding: 10px;
+		padding: 0 10px;
 	}
 }
 
@@ -480,7 +480,11 @@
 		
 		.play-button {
 			color: #8d8d8d;
-			margin-left: .4em;
+			width: 2em;
+			min-width: 2em;
+			margin-left: 0;
+			margin-right: 0.5em;
+			padding: 0;
 		}
 		// If the user has an input method compatible with hovering (f.e. a mouse)
 		// hide the play button by default and show it on card hover
@@ -553,22 +557,12 @@
 	padding: 15px 50px;
 	margin-bottom: 20px;
 	text-align: center;
-	
-	> h4 {
-		font-weight: 400;
-		
-		hr {
-			margin: 8px 0px 40px 0px;
-			border-top: 1px solid #eeeeee;
-		}
-	}
-	
-	> div > h4 {
-		height: 26px;
-		font-weight: 500;
-		font-size: 20px;
-		margin-bottom: 0;
-		letter-spacing: 1px;
+
+	font-size: 24px;
+
+	hr {
+		margin: 8px 0 16px 0;
+		border-top: 1px solid #eeeeee;
 	}
 }
 

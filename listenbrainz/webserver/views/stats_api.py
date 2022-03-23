@@ -12,7 +12,7 @@ from data.model.common_stat import StatApi, StatisticsRange
 from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
 from flask import Blueprint, current_app, jsonify, request
 
-from data.model.user_entity import UserEntityRecord
+from data.model.user_entity import EntityRecord
 from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
@@ -29,7 +29,7 @@ stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 
 @stats_api_bp.route("/user/<user_name>/artists")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_user_artist(user_name):
     """
@@ -92,7 +92,7 @@ def get_user_artist(user_name):
 
 
 @stats_api_bp.route("/user/<user_name>/releases")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_release(user_name):
     """
@@ -161,7 +161,7 @@ def get_release(user_name):
 
 
 @stats_api_bp.route("/user/<user_name>/recordings")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_recording(user_name):
     """
@@ -253,7 +253,7 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
 
 
 @stats_api_bp.route("/user/<user_name>/listening-activity")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_listening_activity(user_name: str):
     """
@@ -328,7 +328,7 @@ def get_listening_activity(user_name: str):
 
 
 @stats_api_bp.route("/user/<user_name>/daily-activity")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_daily_activity(user_name: str):
     """
@@ -388,7 +388,8 @@ def get_daily_activity(user_name: str):
         raise APINoContent('')
 
     daily_activity_unprocessed = [x.dict() for x in stats.data.__root__]
-    daily_activity = {calendar.day_name[day]: [{"hour": hour, "listen_count": 0} for hour in range(0, 24)] for day in range(0, 7)}
+    daily_activity = {calendar.day_name[day]: [{"hour": hour, "listen_count": 0} for hour in range(0, 24)] for day in
+                      range(0, 7)}
 
     for day, day_data in daily_activity.items():
         for hour_data in day_data:
@@ -412,7 +413,7 @@ def get_daily_activity(user_name: str):
 
 
 @stats_api_bp.route("/user/<user_name>/artist-map")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_artist_map(user_name: str):
     """
@@ -465,62 +466,7 @@ def get_artist_map(user_name: str):
 
     """
     user, stats_range = _validate_stats_user_params(user_name)
-
-    recalculate_param = request.args.get('force_recalculate', default='false')
-    if recalculate_param.lower() not in ['true', 'false']:
-        raise APIBadRequest("Invalid value of force_recalculate: {}".format(recalculate_param))
-    force_recalculate = recalculate_param.lower() == 'true'
-
-    # Check if stats are present in DB, if not calculate them
-    calculated = not force_recalculate
-    stats = db_stats.get_user_artist_map(user['id'], stats_range)
-    if stats is None:
-        calculated = False
-
-    # Check if the stats present in DB have been calculated in the past week, if not recalculate them
-    stale = False
-    if calculated:
-        if (datetime.now(timezone.utc) - stats.last_updated).days >= STATS_CALCULATION_INTERVAL:
-            stale = True
-
-    if stale or not calculated:
-        artist_stats = db_stats.get_user_stats(user['id'], stats_range, 'artists')
-
-        # If top artists are missing, return the stale stats if present, otherwise return 204
-        if artist_stats is None:
-            if stale:
-                result = stats
-            else:
-                raise APINoContent('')
-        else:
-            # Calculate the data
-            artist_mbid_counts = defaultdict(int)
-            for artist in artist_stats.data.__root__:
-                for artist_mbid in artist.artist_mbids:
-                    artist_mbid_counts[artist_mbid] += artist.listen_count
-
-            country_code_data = _get_country_wise_counts(artist_mbid_counts)
-            result = StatApi[UserArtistMapRecord](**{
-                "data": country_code_data,
-                "from_ts": artist_stats.from_ts,
-                "to_ts": artist_stats.to_ts,
-                "stats_range": stats_range,
-                # this isn't stored in the database, but adding it here to avoid a subsequent db call to
-                # just fetch last updated. could just store this value instead in db but that complicates
-                # the implementation a bit
-                "last_updated": datetime.now(),
-                "user_id": user['id']
-            })
-
-            # Store in DB for future use
-            try:
-                db_stats.insert_user_jsonb_data(user['id'], 'artist_map', result)
-            except Exception as err:
-                current_app.logger.error("Error while inserting artist map stats for {user}. Error: {err}. Data: {data}".format(
-                    user=user_name, err=err, data=result), exc_info=True)
-    else:
-        result = stats
-
+    result = _get_artist_map_stats(user["id"], stats_range)
     return jsonify({
         "payload": {
             "user_id": user_name,
@@ -534,7 +480,7 @@ def get_artist_map(user_name: str):
 
 
 @stats_api_bp.route("/sitewide/artists")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_sitewide_artist():
     """
@@ -592,7 +538,7 @@ def get_sitewide_artist():
 
 
 @stats_api_bp.route("/sitewide/releases")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_sitewide_release():
     """
@@ -660,7 +606,7 @@ def get_sitewide_release():
 
 
 @stats_api_bp.route("/sitewide/recordings")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_sitewide_recording():
     """
@@ -752,7 +698,7 @@ def _get_sitewide_stats(entity: str):
 
 
 @stats_api_bp.route("/sitewide/listening-activity")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_sitewide_listening_activity():
     """
@@ -810,7 +756,7 @@ def get_sitewide_listening_activity():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    stats = db_stats.get_sitewide_stats(stats_range, "listening_activity")
+    stats = db_stats.get_sitewide_listening_activity(stats_range)
     if stats is None:
         raise APINoContent('')
 
@@ -822,6 +768,136 @@ def get_sitewide_listening_activity():
         "range": stats_range,
         "last_updated": int(stats.last_updated.timestamp())
     }})
+
+
+@stats_api_bp.route("/sitewide/artist-map")
+@crossdomain
+@ratelimit()
+def get_sitewide_artist_map():
+    """
+    Get the sitewide artist map. The artist map shows the number of artists listened to by users
+    from different countries of the world.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "from_ts": 1587945600,
+                "last_updated": 1592807084,
+                "artist_map": [
+                    {
+                        "country": "USA",
+                        "artist_count": 34
+                    },
+                    {
+                        "country": "GBR",
+                        "artist_count": 69
+                    },
+                    {
+                        "country": "IND",
+                        "artist_count": 32
+                    }
+                ],
+                "stats_range": "all_time"
+                "to_ts": 1589155200,
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - We cache the results for this query for a week to improve page load times, if you want to request fresh data
+         you can use the ``force_recalculate`` flag.
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :param force_recalculate: Optional, recalculate the data instead of returning the cached result.
+    :type force_recalculate: ``bool``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    result = _get_artist_map_stats(db_stats.SITEWIDE_STATS_USER_ID, stats_range)
+
+    return jsonify({
+        "payload": {
+            "range": stats_range,
+            "from_ts": result.from_ts,
+            "to_ts": result.to_ts,
+            "last_updated": int(result.last_updated.timestamp()),
+            "artist_map": [x.dict() for x in result.data.__root__]
+        }
+    })
+
+
+def _get_artist_map_stats(user_id, stats_range):
+    recalculate_param = request.args.get('force_recalculate', default='false')
+    if recalculate_param.lower() not in ['true', 'false']:
+        raise APIBadRequest("Invalid value of force_recalculate: {}".format(recalculate_param))
+    force_recalculate = recalculate_param.lower() == 'true'
+
+    # Check if stats are present in DB, if not calculate them
+    calculated = not force_recalculate
+    stats = db_stats.get_user_artist_map(user_id, stats_range)
+    if stats is None:
+        calculated = False
+
+    # Check if the stats present in DB have been calculated in the past week, if not recalculate them
+    stale = False
+    if calculated:
+        if (datetime.now(timezone.utc) - stats.last_updated).days >= STATS_CALCULATION_INTERVAL:
+            stale = True
+
+    if stale or not calculated:
+        artist_stats = db_stats.get_user_stats(user_id, stats_range, 'artists')
+
+        # If top artists are missing, return the stale stats if present, otherwise return 204
+        if artist_stats is None:
+            if stale:
+                result = stats
+            else:
+                raise APINoContent('')
+        else:
+            # Calculate the data
+            artist_mbid_counts = defaultdict(int)
+            for artist in artist_stats.data.__root__:
+                for artist_mbid in artist.artist_mbids:
+                    artist_mbid_counts[artist_mbid] += artist.listen_count
+
+            country_code_data = _get_country_wise_counts(artist_mbid_counts)
+            result = StatApi[UserArtistMapRecord](**{
+                "data": country_code_data,
+                "from_ts": artist_stats.from_ts,
+                "to_ts": artist_stats.to_ts,
+                "stats_range": stats_range,
+                # this isn't stored in the database, but adding it here to avoid a subsequent db call to
+                # just fetch last updated. could just store this value instead in db but that complicates
+                # the implementation a bit
+                "last_updated": datetime.now(),
+                "user_id": user_id
+            })
+
+            # Store in DB for future use
+            try:
+                db_stats.insert_user_jsonb_data(user_id, 'artist_map', result)
+            except Exception as err:
+                current_app.logger.error(
+                    "Error while inserting artist map stats for {user}. Error: {err}. Data: {data}".format(
+                        user=user_id, err=err, data=result), exc_info=True)
+    else:
+        result = stats
+
+    return result
+
 
 @stats_api_bp.route("/user/<user_name>/year-in-music/")
 def year_in_music(user_name: str):
@@ -837,8 +913,7 @@ def year_in_music(user_name: str):
     })
 
 
-
-def _process_user_entity(stats: StatApi[UserEntityRecord], offset, count) -> Tuple[list, int]:
+def _process_user_entity(stats: StatApi[EntityRecord], offset, count) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:

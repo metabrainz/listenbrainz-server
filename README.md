@@ -36,7 +36,7 @@ public.
 
 For more information about this project and its goals, look at our
 [website](https://listenbrainz.org/), specifically the
-[goals page](https://listenbrainz.org/goals).
+[about page](https://listenbrainz.org/about).
 
 Changes and other important announcements about the ListenBrainz services will be
 announced on [our blog](https://blog.metabrainz.org/). If you start using our

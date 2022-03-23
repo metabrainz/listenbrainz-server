@@ -3,14 +3,16 @@ from time import sleep
 
 import click
 import sqlalchemy
-from werkzeug.serving import run_simple
 
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.db import timescale as ts
 from listenbrainz.listenstore import timescale_fill_userid
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
-    refresh_listen_count_aggregate as ts_refresh_listen_count_aggregate
+    update_user_listen_data as ts_update_user_listen_data, \
+    add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
+    delete_listens as ts_delete_listens, \
+    delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data
 from listenbrainz.webserver import create_app
 
 
@@ -217,12 +219,8 @@ def init_ts_db(force, create_db):
         ts.run_sql_script(os.path.join(
             TIMESCALE_SQL_DIR, 'create_functions.sql'))
 
-        print('TS: Creating views...')
-        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
-
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
-        ts.create_view_indexes()
 
         print('TS: Creating Primary and Foreign Keys...')
         ts.run_sql_script(os.path.join(
@@ -259,14 +257,42 @@ def recalculate_all_user_data():
     .. note::
         **ONLY USE THIS WHEN YOU KNOW WHAT YOU ARE DOING!**
     """
-    ts_recalculate_all_user_data()
+    application = webserver.create_app()
+    with application.app_context():
+        ts_recalculate_all_user_data()
 
 
-@cli.command(name="refresh_continuous_aggregates")
-def refresh_continuous_aggregates():
-    """ Update the continuous aggregates in timescale.
-    """
-    ts_refresh_listen_count_aggregate()
+@cli.command(name="update_user_listen_data")
+def update_user_listen_data():
+    """ Scans listen table and update listen metadata for all users """
+    application = webserver.create_app()
+    with application.app_context():
+        ts_update_user_listen_data()
+
+
+@cli.command(name="delete_pending_listens")
+def delete_pending_listens():
+    """ Complete all pending listen deletes since last cron run """
+    application = webserver.create_app()
+    with application.app_context():
+        ts_delete_listens()
+
+
+@cli.command(name="delete_listens_and_update_metadata")
+def delete_listens_and_update_metadata():
+    """ Complete all pending listen deletes and also run update script for
+    updating listen metadata since last cron run """
+    application = webserver.create_app()
+    with application.app_context():
+        ts_delete_listens_and_update_user_listen_data()
+
+
+@cli.command(name="add_missing_to_listen_users_metadata")
+def add_missing_to_listen_users_metadata():
+    application = webserver.create_app()
+    with application.app_context():
+        ts_add_missing_to_listen_users_metadata()
+
 
 @cli.command()
 @click.option("-u", "--user", type=str)

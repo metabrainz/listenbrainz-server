@@ -12,14 +12,18 @@
 @import "huesound.less";
 @import "year-in-music.less";
 @import "brainzplayer.less";
+@import "messybrainz.less";
 
 
 @icon-font-path:"/static/fonts/";
 
 @pager-border-radius: @border-radius-base;
+// Height of the BrainzPlayer component (fixed at the bottom of the page)
+@brainzplayer-height: 60px;
 
 body {
-  padding-bottom: 25px;
+  // Leave some space for BrainzPlayer
+  padding-bottom: @brainzplayer-height;
 }
 
 .table {

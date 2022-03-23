@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 #   "release_name": null,
 #   "tags": [],
 #   "track_name": "Tougher Than It Is"
-#   "user_name": "vansika",
+#   "user_id": 5,
 # }
 # All the keys in the dict are column/field names in a Spark dataframe.
 

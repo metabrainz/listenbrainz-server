@@ -14,28 +14,27 @@ import {
   capitalize,
   toPairs,
 } from "lodash";
-import ErrorBoundary from "../ErrorBoundary";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import BrainzPlayer from "../BrainzPlayer";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
-import { getPageProps } from "../utils";
+import APIServiceClass from "../utils/APIService";
+import { getPageProps } from "../utils/utils";
 import { getEntityLink } from "../stats/utils";
 import ComponentToImage from "./ComponentToImage";
 
-import fakeData from "./year-in-music-data.json";
 import ListenCard from "../listens/ListenCard";
 import UserListModalEntry from "../follow/UserListModalEntry";
 import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../playlists/utils";
-import FollowButton from "../FollowButton";
+import FollowButton from "../follow/FollowButton";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -150,6 +149,16 @@ export default class YearInMusic extends React.Component<
           ) {
             newTrack.extension[MUSICBRAINZ_JSPF_TRACK_EXTENSION] =
               track.extension[badPlaylistTrackExtensionValue];
+          }
+          const trackExtension =
+            newTrack?.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION];
+          // See https://github.com/metabrainz/listenbrainz-server/pull/1839 for context
+          if (trackExtension && has(trackExtension, "artist_mbids")) {
+            //  Using some forbiddden (but oh so sweet) ts-ignore as we're fixing objects that don't fit the expected type
+            // @ts-ignore
+            trackExtension.artist_identifiers = trackExtension.artist_mbids;
+            // @ts-ignore
+            delete trackExtension.artist_mbids;
           }
           return newTrack;
         }

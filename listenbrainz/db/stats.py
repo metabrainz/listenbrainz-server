@@ -33,9 +33,9 @@ from psycopg2.extras import execute_values
 
 from data.model.common_stat import StatRange, StatApi
 from data.model.user_artist_map import UserArtistMapRecord
-from data.model.user_daily_activity import UserDailyActivityRecord
-from data.model.user_entity import UserEntityRecord
-from data.model.user_listening_activity import UserListeningActivityRecord
+from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_entity import EntityRecord
+from data.model.user_listening_activity import ListeningActivityRecord
 from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
@@ -88,8 +88,7 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
         })
 
 
-def insert_multiple_user_jsonb_data(data):
-    values = [(entry['musicbrainz_id'], entry['count'], json.dumps(entry['data'])) for entry in data['data']]
+def insert_multiple_user_jsonb_data(stats_type, stats_range, from_ts, to_ts, values):
     query = """
         INSERT INTO statistics.user (user_id, stats_type, stats_range, data, count, from_ts, to_ts, last_updated)
              SELECT "user".id
@@ -100,9 +99,10 @@ def insert_multiple_user_jsonb_data(data):
                   , {from_ts}
                   , {to_ts}
                   , NOW()
-               FROM (VALUES %s) AS t(user_name, count, stats)
-               JOIN "user"
-                 ON "user".musicbrainz_id = user_name
+               FROM (VALUES %s) AS t(user_id, count, stats)
+               -- this JOIN serves no other purpose than to filter out users for whom stats were calculated but
+               -- no longer exist in LB. if we don't filter, we'll get a FK conflict when such a case occurs
+               JOIN "user" ON "user".id = user_id 
         ON CONFLICT (user_id, stats_type, stats_range)
       DO UPDATE SET data = EXCLUDED.data
                   , count = EXCLUDED.count
@@ -111,10 +111,10 @@ def insert_multiple_user_jsonb_data(data):
                   , last_updated = EXCLUDED.last_updated
     """
     formatted_query = sql.SQL(query).format(
-        stats_type=sql.Literal(data['entity']),
-        stats_range=sql.Literal(data['stats_range']),
-        from_ts=sql.Literal(data['from_ts']),
-        to_ts=sql.Literal(data['to_ts'])
+        stats_type=sql.Literal(stats_type),
+        stats_range=sql.Literal(stats_range),
+        from_ts=sql.Literal(from_ts),
+        to_ts=sql.Literal(to_ts)
     )
     connection = db.engine.raw_connection()
     try:
@@ -136,7 +136,7 @@ def insert_sitewide_jsonb_data(stats_type: str, stats: StatRange):
     insert_user_jsonb_data(SITEWIDE_STATS_USER_ID, stats_type, stats)
 
 
-def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[StatApi[UserEntityRecord]]:
+def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[StatApi[EntityRecord]]:
     """ Get top stats of given type in a time range for user with given ID.
 
         Args:
@@ -159,7 +159,7 @@ def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[
         row = result.fetchone()
 
     try:
-        return StatApi[UserEntityRecord](**dict(row)) if row else None
+        return StatApi[EntityRecord](**dict(row)) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top artists for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,
@@ -201,24 +201,24 @@ def get_user_activity_stats(user_id: int, stats_range: str, stats_type: str, sta
         return None
 
 
-def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[StatApi[UserListeningActivityRecord]]:
+def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[StatApi[ListeningActivityRecord]]:
     """Get listening activity in the given time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'listening_activity', StatApi[UserListeningActivityRecord])
+    return get_user_activity_stats(user_id, stats_range, 'listening_activity', StatApi[ListeningActivityRecord])
 
 
-def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[StatApi[UserDailyActivityRecord]]:
+def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[StatApi[DailyActivityRecord]]:
     """Get daily activity in the given time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'daily_activity', StatApi[UserDailyActivityRecord])
+    return get_user_activity_stats(user_id, stats_range, 'daily_activity', StatApi[DailyActivityRecord])
 
 
 def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[UserArtistMapRecord]]:
@@ -231,7 +231,7 @@ def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[User
     return get_user_activity_stats(user_id, stats_range, 'artist_map', StatApi[UserArtistMapRecord])
 
 
-def get_sitewide_stats(stats_range: str, stats_type: str) -> Optional[StatApi[UserEntityRecord]]:
+def get_sitewide_stats(stats_range: str, stats_type: str) -> Optional[StatApi[EntityRecord]]:
     """ Get top stats of given type in a time range for user with given ID.
 
         Args:
@@ -239,6 +239,15 @@ def get_sitewide_stats(stats_range: str, stats_type: str) -> Optional[StatApi[Us
             stats_type: the entity type to fetch stats for
     """
     return get_user_stats(SITEWIDE_STATS_USER_ID, stats_range, stats_type)
+
+
+def get_sitewide_listening_activity(stats_range: str) -> Optional[StatApi[ListeningActivityRecord]]:
+    """Get sitewide listening activity in the given time range.
+
+        Args:
+            stats_range: the time range to fetch the stats for
+    """
+    return get_user_listening_activity(SITEWIDE_STATS_USER_ID, stats_range)
 
 
 def valid_stats_exist(user_id, days):

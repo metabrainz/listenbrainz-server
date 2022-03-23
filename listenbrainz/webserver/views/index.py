@@ -33,22 +33,24 @@ SEARCH_USER_LIMIT = 100  # max number of users to return in search username resu
 
 @index_bp.route("/")
 def index():
-
     if _ts:
-        # get total listen count
         try:
             listen_count = _ts.get_total_listen_count()
+            user_count = format(int(_get_user_count()), ',d')
         except Exception as e:
             current_app.logger.error('Error while trying to get total listen count: %s', str(e))
             listen_count = None
+            user_count = 'Unknown'
+
     else:
         listen_count = None
+        user_count = 'Unknown'
 
     return render_template(
         "index/index.html",
-        listen_count=listen_count,
+        listen_count=format(int(listen_count), ",d") if listen_count else "0",
+        user_count=user_count,
     )
-
 
 @index_bp.route("/import/")
 def import_data():
@@ -68,11 +70,6 @@ def data():
     return render_template("index/data.html")
 
 
-@index_bp.route("/contribute/")
-def contribute():
-    return render_template("index/contribute.html")
-
-
 @index_bp.route("/add-data/")
 def add_data_info():
     return render_template("index/add-data.html")
@@ -83,24 +80,19 @@ def import_data_info():
     return render_template("index/import-data.html")
 
 
-@index_bp.route("/goals/")
-def goals():
-    return render_template("index/goals.html")
-
-
-@index_bp.route("/faq/")
-def faq():
-    return render_template("index/faq.html")
-
-
 @index_bp.route("/lastfm-proxy/")
 def proxy():
     return render_template("index/lastfm-proxy.html")
 
 
-@index_bp.route("/roadmap/")
-def roadmap():
-    return render_template("index/roadmap.html")
+@index_bp.route("/about/")
+def about():
+    return render_template("index/about.html")
+
+
+@index_bp.route("/terms-of-service/")
+def terms_of_service():
+    return render_template("index/terms-of-service.html")
 
 
 @index_bp.route("/current-status/")
@@ -152,13 +144,9 @@ def recent_listens():
 
     props = {
         "listens": recent,
-        "mode": "recent",
     }
 
-    return render_template("index/recent.html",
-        props=ujson.dumps(props),
-        mode='recent',
-        active_section='listens')
+    return render_template("index/recent.html", props=ujson.dumps(props))
 
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
@@ -201,6 +189,10 @@ def search():
     return render_template("index/search-users.html", search_term=search_term, users=users)
 
 
+@index_bp.route('/messybrainz/', methods=['GET', 'OPTIONS'])
+def messybrainz():
+    return render_template("index/messybrainz.html")
+
 
 @index_bp.route('/delete-user/<int:musicbrainz_row_id>')
 def mb_user_deleter(musicbrainz_row_id):
@@ -221,7 +213,7 @@ def mb_user_deleter(musicbrainz_row_id):
     user = db_user.get_by_mb_row_id(musicbrainz_row_id)
     if user is None:
         raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
-    delete_user(user['musicbrainz_id'])
+    delete_user(user['id'])
     return jsonify({'status': 'ok'}), 200
 
 
@@ -273,7 +265,7 @@ def similar_users():
         and spammers as well.
     """
 
-    similar_users = get_top_similar_users(global_similarity=True)
+    similar_users = get_top_similar_users()
     return render_template(
         "index/similar-users.html",
         similar_users=similar_users
@@ -297,3 +289,15 @@ def huesound():
         "index/huesound.html",
         props=ujson.dumps({})
     )
+
+
+@index_bp.route("/statistics/charts/")
+def charts():
+    """ Show the top sitewide entities. """
+    return render_template("index/charts.html")
+
+
+@index_bp.route("/statistics/")
+def reports():
+    """ Show sitewide reports """
+    return render_template("index/reports.html")

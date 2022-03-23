@@ -8,7 +8,7 @@ JSON Documentation
 Submission JSON
 ---------------
 
-To submit a listen via our API (see: :doc:`api`), ``POST`` a JSON document to
+To submit a listen via our API (see: :doc:`api/core`), ``POST`` a JSON document to
 the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
 - ``single``: Submit single listen
@@ -26,6 +26,12 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
    - Submitting ``playing_now`` documents is optional
 
    - Timestamp must be omitted from a ``playing_now`` submission.
+
+.. note::
+
+    Playing Now listens are only stored temporarily. A playing now listen must be
+    submitted again as a ``single`` or ``import`` for permanent storage.
+
 
 - ``import``: Submit previously saved listens
 

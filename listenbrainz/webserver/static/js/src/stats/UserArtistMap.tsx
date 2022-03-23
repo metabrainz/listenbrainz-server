@@ -4,7 +4,7 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../APIService";
+import APIService from "../utils/APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 import Choropleth from "./Choropleth";
@@ -12,7 +12,7 @@ import { isInvalidStatRange } from "./utils";
 
 export type UserArtistMapProps = {
   range: UserStatsAPIRange;
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
   apiUrl: string;
 };
 
@@ -110,8 +110,7 @@ export default class UserArtistMap extends React.Component<
   getData = async (): Promise<UserArtistMapResponse> => {
     const { range, user } = this.props;
     try {
-      const data = await this.APIService.getUserArtistMap(user.name, range);
-      return data;
+      return await this.APIService.getUserArtistMap(user?.name, range);
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({
@@ -171,14 +170,16 @@ export default class UserArtistMap extends React.Component<
       >
         <div className="row">
           <div className="col-md-9 col-xs-6">
-            <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-              Artist Origins
+            <h3 style={{ marginLeft: 20 }}>
+              <span className="capitalize-bold">Artist Origins</span>
+              <small>&nbsp;Click on a country to see more details</small>
             </h3>
           </div>
           <div
             className="col-md-2 col-xs-4 text-right"
             style={{ marginTop: 20 }}
           >
+            <span>Rank by</span>
             <span className="dropdown">
               <button
                 className="dropdown-toggle btn-transparent capitalize-bold"
@@ -189,7 +190,9 @@ export default class UserArtistMap extends React.Component<
                 <span className="caret" />
               </button>
               <ul className="dropdown-menu" role="menu">
-                <li>
+                <li
+                  className={selectedMetric === "listen" ? "active" : undefined}
+                >
                   <a
                     href=""
                     role="button"
@@ -200,7 +203,9 @@ export default class UserArtistMap extends React.Component<
                     Listens
                   </a>
                 </li>
-                <li>
+                <li
+                  className={selectedMetric === "artist" ? "active" : undefined}
+                >
                   <a
                     href=""
                     role="button"

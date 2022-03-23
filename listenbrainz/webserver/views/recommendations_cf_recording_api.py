@@ -21,7 +21,7 @@ class RecommendationArtistType(Enum):
 
 
 @recommendations_cf_recording_api_bp.route("/user/<user_name>/recording")
-@crossdomain()
+@crossdomain
 @ratelimit()
 def get_recommendations(user_name):
     """ Get recommendations sorted on rating and ratings for user ``user_name``.

@@ -19,8 +19,8 @@
       <ul class="nav navbar-nav">
         {% if not hide_navbar_user_menu %}
           {% if current_user.is_authenticated %}
-            <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
-            <li><a href="{{ url_for('index.feed') }}">My Feed</a></li>
+            <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Home</a></li>
+            <li><a href="{{ url_for('index.feed') }}">Feed</a></li>
           {% endif %}
         {%- endif -%}
         <li><a href="{{ url_for('index.recent_listens') }}">Recent</a></li>
@@ -49,14 +49,11 @@
              About<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('index.faq') }}">FAQ</a></li>
-            <li><a href="{{ url_for('index.goals') }}">Goals</a></li>
-            <li><a href="{{ url_for('index.roadmap') }}">Roadmap</a></li>
+            <li><a href="{{ url_for('index.about') }}">About ListenBrainz</a></li>
+            <li><a href="{{ url_for('index.messybrainz') }}">MessyBrainz</a></li>
             <li><a href="https://listenbrainz.readthedocs.io">API Docs</a></li>
-            <li><a href="{{ url_for('index.contribute') }}">Contribute</a></li>
             <li><a href="{{ url_for('index.current_status') }}">Current site status</a></li>
-            <li><a href="https://metabrainz.org/gdpr">GDPR compliance</a></li>
-            <li><a href="https://metabrainz.org/privacy">Privacy policy</a></li>
+            <li><a href="{{ url_for('index.terms_of_service') }}">Terms of service</a></li>
             <li><a href="https://metabrainz.org">About MetaBrainz</a></li>
           </ul>
         </li>
@@ -74,15 +71,13 @@
               {{ current_user.musicbrainz_id }} <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
-              <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
-              <li><a href="{{ url_for('index.feed') }}">My Feed</a></li>
-              <li><a href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">My Playlists</a></li>
+              <li><a href="{{ url_for('profile.info') }}">Settings</a></li>
+              <li><a href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">Playlists</a></li>
               <li><a href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">Tracks you might like</a></li>
               <li><a href="{{ url_for('profile.music_services_details') }}">Connect Services</a></li>
               <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
               <li><a href="{{ url_for('profile.export_data') }}">Export</a></li>
-              <li><a href="{{ url_for('profile.info') }}">My profile</a></li>
-              <li><a href="{{ url_for('profile.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Add Missing MusicBrainz Data</a></li>
+              <li><a href="{{ url_for('user.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Add Missing MusicBrainz Data</a></li>
               <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
             </ul>
           </li>

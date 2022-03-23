@@ -5,6 +5,7 @@ from flask import url_for
 from unittest.mock import patch
 
 from data.model.external_service import ExternalServiceType
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.spotify_updater import spotify_read_listens
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.db import external_service_oauth
@@ -28,6 +29,9 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
 
         result = spotify_read_listens.process_all_spotify_users()
         self.assertEqual(result, (1, 0))
+
+        time.sleep(1)
+        recalculate_all_user_data()
 
         with open(self.path_to_data_file('spotify_recently_played_expected.json')) as f:
             expected_data = json.load(f)

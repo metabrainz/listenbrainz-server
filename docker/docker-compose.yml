@@ -49,7 +49,7 @@ services:
       - ..:/code/listenbrainz:z
       - ../listenbrainz/webserver/static:/static
     ports:
-      - "7000:80"
+      - "8100:80"
     depends_on:
       - redis
       - lb_db
@@ -60,9 +60,9 @@ services:
     environment:
       FLASK_APP: listenbrainz.webserver:create_api_compat_app()
       FLASK_ENV: development
-    command: flask run -h 0.0.0.0 -p 7080
+    command: flask run -h 0.0.0.0 -p 8101
     ports:
-      - "7080:7080"
+      - "8101:8101"
     volumes:
       - ..:/code/listenbrainz:z
     depends_on:
@@ -92,9 +92,9 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python manage.py run_websockets -h 0.0.0.0 -p 7082
+    command: python manage.py run_websockets -h 0.0.0.0 -p 8102
     ports:
-      - "7082:7082"
+      - "8102:8102"
     depends_on:
       - redis
       - rabbitmq
@@ -115,5 +115,5 @@ services:
 # TODO: re-comment these before merging this code
 #networks:
 #  default:
-#    name: musicbrainzdocker_default
+#    name: musicbrainz-docker_default
 #    external: true

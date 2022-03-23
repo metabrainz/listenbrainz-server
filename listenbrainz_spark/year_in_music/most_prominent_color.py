@@ -21,25 +21,25 @@ def _get_release_colors():
 def _get_most_prominent_color():
     return """
         WITH user_colors AS (
-            SELECT user_name
+            SELECT user_id
                  , color
                  , count(*) as listen_count
               FROM listens_of_year l
               JOIN release_color
                 ON release_color.release_mbid = l.release_mbid
              WHERE l.release_mbid IS NOT NULL
-          GROUP BY user_name
+          GROUP BY user_id
                  , color
         ), ranked_user_colors AS (
-            SELECT user_name
+            SELECT user_id
                  , color
-                 , row_number() OVER(PARTITION BY user_name ORDER BY listen_count DESC) AS row_number
+                 , row_number() OVER(PARTITION BY user_id ORDER BY listen_count DESC) AS row_number
               FROM user_colors
         )
         SELECT to_json(
                     map_from_entries(
                         collect_list(
-                            struct(user_name, color)
+                            struct(user_id, color)
                         )
                     )
                 ) AS all_users_colors

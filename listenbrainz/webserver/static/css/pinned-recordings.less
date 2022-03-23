@@ -1,69 +1,68 @@
 #pinned-recordings {
   padding: 10px;
-  
-  .pinned-recording-card {
-  
-    &.currently-pinned {
-      background-color: @blue;
-      color: white;
-      
-      a {
-        color: inherit;
-      }
+}
+.pinned-recording-card {
 
-      &.current-listen {
-        background-color: lighten(@blue,20%) !important;
-        .listen-controls .fa-ellipsis-v {
-          stroke:lighten(@blue,20%);
-        }
-      }
-
-      .text-muted {
-        color: rgb(204, 204, 204);
-      }
-      .listen-controls {
-        .dropdown-menu {
-          color: initial;
-        }
-        .fa-ellipsis-v {
-          stroke:@blue;
-          &:hover {
-            color: @white;
-          }
-        }
-        .fa-heart-broken {
-			
-          &:hover {
-            stroke: @white;
-          }
-          
-          &.hated {
-            color: @white;
-          }
-        }
-      }
-      .additional-content {
-        border-color:lighten(@blue,35%);
-      }
-      .listen-time{
-        color:darken(white,10%);
-      }
-      .play-button {
-        color: darken(white,10%);
-      }
-    }
+  &.currently-pinned {
+    background-color: @blue;
+    color: white;
     
-    .pinned-recording-icon {
-      flex: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-right: 1em;
-      justify-content:center;
-      .icon {
-        font-size: 1.6em;
+    a {
+      color: inherit;
+    }
+
+    &.current-listen {
+      background-color: lighten(@blue,20%) !important;
+      .listen-controls .fa-ellipsis-v {
+        stroke:lighten(@blue,20%);
       }
     }
 
+    .text-muted {
+      color: rgb(204, 204, 204);
+    }
+    .listen-controls {
+      .dropdown-menu {
+        color: initial;
+      }
+      .fa-ellipsis-v {
+        stroke:@blue;
+        &:hover {
+          color: @white;
+        }
+      }
+      .fa-heart-broken {
+    
+        &:hover {
+          stroke: @white;
+        }
+        
+        &.hated {
+          color: @white;
+        }
+      }
+    }
+    .additional-content {
+      border-color:lighten(@blue,35%);
+    }
+    .listen-time{
+      color:darken(white,10%);
+    }
+    .play-button {
+      color: darken(white,10%);
+    }
   }
+  
+  .pinned-recording-icon {
+    flex: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-right: 1em;
+    justify-content:center;
+    .icon {
+      font-size: 1.6em;
+    }
+  }
+
 }

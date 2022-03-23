@@ -1,14 +1,13 @@
 import json
 import time
 
-from flask import url_for, current_app, g
-from redis import Redis
 from brainzutils import cache
+from flask import url_for, g
 
 import listenbrainz.db.user as db_user
-from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
-from listenbrainz.utils import init_cache
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
+from listenbrainz.tests.integration import IntegrationTestCase
 
 
 class ProfileViewsTestCase(IntegrationTestCase):
@@ -16,11 +15,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         super().setUp()
         self.user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(self.user['musicbrainz_id'])
-
-        # Initialize brainzutils cache
-        init_cache(host=current_app.config['REDIS_HOST'],
-                   port=current_app.config['REDIS_PORT'],
-                   namespace=current_app.config['REDIS_NAMESPACE'])
         self.redis = cache._r
 
     def tearDown(self):
@@ -30,12 +24,15 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def send_listens(self):
         with open(self.path_to_data_file('user_export_test.json')) as f:
             payload = json.load(f)
-        return self.client.post(
+        response = self.client.post(
             url_for('api_v1.submit_listen'),
             data=json.dumps(payload),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
             content_type='application/json'
         )
+        time.sleep(1)
+        recalculate_all_user_data()
+        return response
 
     def test_export(self):
         """
@@ -50,8 +47,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         resp = self.send_listens()
         self.assert200(resp)
 
-        time.sleep(2)
-
         # now export data and check if contains all the listens we just sent
         resp = self.client.post(url_for('profile.export_data'))
         self.assert200(resp)
@@ -61,8 +56,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def test_user_page_latest_listen(self):
         resp = self.send_listens()
         self.assert200(resp)
-
-        time.sleep(1)
 
         r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
@@ -82,8 +75,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         resp = self.send_listens()
         self.assert200(resp)
 
-        time.sleep(2)
-
         # set the latest_import ts to a non-default value, so that we can check it was
         # reset later
         val = int(time.time())
@@ -98,7 +89,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(resp)
         self.assertEqual(resp.json['latest_import'], val)
 
-        self.assertNotEqual(self.redis.ttl(cache._prep_key(REDIS_USER_LISTEN_COUNT + self.user['musicbrainz_id'])), 0)
+        self.assertNotEqual(self.redis.ttl(cache._prep_key(REDIS_USER_LISTEN_COUNT + str(self.user['id']))), 0)
 
         # check that listens have been successfully submitted
         resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
@@ -112,7 +103,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
         resp = self.client.post(url_for('profile.delete_listens'), data={'csrf_token': g.csrf_token})
         self.assertRedirects(resp, url_for('user.profile', user_name=self.user['musicbrainz_id']))
 
-        time.sleep(2)
+        # listen counts are cached for 5 min, so delete key otherwise cached will be returned
+        cache.delete(REDIS_USER_LISTEN_COUNT + str(self.user['id']))
 
         # check that listens have been successfully deleted
         resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
