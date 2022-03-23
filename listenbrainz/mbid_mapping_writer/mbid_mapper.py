@@ -182,6 +182,20 @@ class MBIDMapper:
             if match_type != MATCH_TYPE_NO_MATCH:
                 return hit, match_type
 
+        # Poor results so far, lets try detuning MB recording field and try again
+        if r_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_hit_detuned:
+            self._log(Markup(f"""<b>no match</b>, r_dist too high {r_dist:.3f} continuing: detune r"""))
+            ac_dist, r_dist, match_type = self.check_hit_in_threshold(
+                artist_credit_name,
+                recording_name,
+                ac_hit,
+                r_hit_detuned,
+                is_ac_detuned,
+                True
+            )
+            if match_type != MATCH_TYPE_NO_MATCH:
+                return hit, match_type
+
         # Poor results so far, lets try detuning both MB ac and recording field and try again
         if ac_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and ac_hit_detuned and \
                 r_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_hit_detuned:
@@ -193,20 +207,6 @@ class MBIDMapper:
                 ac_hit_detuned,
                 r_hit_detuned,
                 True,
-                True
-            )
-            if match_type != MATCH_TYPE_NO_MATCH:
-                return hit, match_type
-
-        # Poor results so far, lets try detuning MB recording field and try again
-        if r_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_hit_detuned:
-            self._log(Markup(f"""<b>no match</b>, r_dist too high {r_dist:.3f} continuing: detune r"""))
-            ac_dist, r_dist, match_type = self.check_hit_in_threshold(
-                artist_credit_name,
-                recording_name,
-                ac_hit,
-                r_hit_detuned,
-                is_ac_detuned,
                 True
             )
             if match_type != MATCH_TYPE_NO_MATCH:
