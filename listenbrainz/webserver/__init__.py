@@ -316,3 +316,6 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.color_api import color_api_bp
     app.register_blueprint(color_api_bp, url_prefix=API_PREFIX+'/color')
+
+    from listenbrainz.webserver.views.metadata_api import metadata_bp
+    app.register_blueprint(metadata_bp, url_prefix=API_PREFIX+'/metadata')
