@@ -271,8 +271,8 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON acn.artist = a.id
                           JOIN artist_type  at
                             ON a.type = at.id
-                          JOIN gender ag
-                            ON a.type = ag.id
+                     LEFT JOIN gender ag
+                            ON a.gender = ag.id
                      LEFT JOIN area ar
                             ON a.area = ar.id
                      LEFT JOIN artist_rels arl
