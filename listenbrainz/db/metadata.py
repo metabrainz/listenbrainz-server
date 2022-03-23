@@ -24,7 +24,7 @@ def get_metadata_for_recording(recording_mbid_list: List[str]) -> List[Recording
 
     recording_mbid_list = tuple(recording_mbid_list)
     if len(recording_mbid_list) > MAX_NUMBER_OF_RECORDINGS_PER_CALL:
-        return ValueError("Too many recording mbids passed in.")
+        raise ValueError("Too many recording mbids passed in.")
 
     query = """SELECT *
                  FROM mb_metadata_cache
