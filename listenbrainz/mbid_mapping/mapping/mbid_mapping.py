@@ -142,7 +142,7 @@ def create_temp_release_table(conn):
                                     ON mf.id = fs.format
                                   JOIN musicbrainz.artist_credit ac
                                     ON rg.artist_credit = ac.id
-                                  JOIN musicbrainz.release_group_primary_type rgpt
+                             LEFT JOIN musicbrainz.release_group_primary_type rgpt
                                     ON rg.type = rgpt.id
                              LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj
                                     ON rg.id = rgstj.release_group
@@ -263,6 +263,9 @@ def create_canonical_release_table(mb_conn):
                                       , release_mbid 
                                    FROM mapping.mbid_mapping""")
 
+            # Commit the inserts before we proceed
+            mb_conn.commit()
+
             log("canonical releases: create index")
             curs.execute("""CREATE INDEX tmp_recording_mbid_ndx_recording_canonical_release
                                       ON mapping.tmp_recording_canonical_release(recording_mbid)""")
@@ -274,7 +277,8 @@ def create_canonical_release_table(mb_conn):
             curs.execute("""ALTER INDEX mapping.tmp_recording_mbid_ndx_recording_canonical_release
                             RENAME TO recording_mbid_ndx_recording_canonical_release""")
 
-        mb_conn.commit()
+            mb_conn.commit()
+
     except OperationalError as err:
         log("canonical releases: creating recording_canonical_release failed: ", str(err))
         conn.rollback()

@@ -218,7 +218,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                               ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
                                               ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
                                     OR lt.gid IS NULL)
-AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                           GROUP BY a.gid
                ), recording_rels AS (
                             SELECT r.gid
@@ -246,7 +246,7 @@ AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-3
                                                ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
                                                ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                    OR lt.gid IS NULL)
-AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                            GROUP BY r.gid
                ), artist_data AS (
                         SELECT r.gid
@@ -272,7 +272,7 @@ AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-3
                             ON a.area = ar.id
                      LEFT JOIN artist_rels arl
                             ON arl.gid = a.gid
-WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
+--WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                       GROUP BY r.gid
                ), recording_tags AS (
                         SELECT r.gid AS recording_mbid
@@ -285,7 +285,7 @@ WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b
                      LEFT JOIN genre g
                             ON t.name = g.name
                          WHERE count > 0
-AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                          GROUP BY r.gid
                ), artist_tags AS (
                         SELECT r.gid AS recording_mbid
@@ -304,14 +304,14 @@ AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-3
                      LEFT JOIN genre g
                             ON t.name = g.name
                          WHERE count > 0
-AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                          GROUP BY r.gid
                ), release_data AS (
                         SELECT * FROM (
                                 SELECT r.gid AS recording_mbid
                                      , rcr.release_mbid::TEXT
                                      , caa.id AS caa_id
-                                     , row_number() OVER (partition by release_mbid ORDER BY ordering) AS rownum
+                                     , row_number() OVER (partition by recording_mbid ORDER BY ordering) AS rownum
                                   FROM recording r
                              LEFT JOIN mapping.recording_canonical_release rcr
                                     ON r.gid = rcr.recording_mbid
@@ -322,7 +322,8 @@ AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-3
                              LEFT JOIN cover_art_archive.cover_art_type cat
                                     ON cat.id = caa.id
                                  WHERE type_id = 1
-AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
+                                    OR type_id IS NULL
+--AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                         ) temp where rownum=1
                )
                         SELECT recording_links
@@ -354,7 +355,7 @@ AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-3
                             ON ats.recording_mbid = r.gid
                      LEFT JOIN release_data rd
                             ON rd.recording_mbid = r.gid
-WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b-30e83e2c10e3', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
+--WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                       GROUP BY r.gid
                              , r.length
                              , recording_links
@@ -410,7 +411,7 @@ WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', '7ce4d633-0466-4b76-912b
     create_indexes_and_constraints(lb_conn)
 
     log("mb metadata cache: swap tables and indexes into production.")
-#    swap_table_and_indexes(lb_conn)
+    swap_table_and_indexes(lb_conn)
 
     log("mb metadata cache: done")
 
