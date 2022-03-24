@@ -49,10 +49,10 @@ body {
 }
 
 // Navbar
-@grid-float-breakpoint: @screen-md-min; // Point at which the navbar becomes uncollapsed
+@grid-float-breakpoint: @screen-md; // Point at which the navbar becomes uncollapsed
 .navbar {
   .beta {
-    .pull-right;
+    float: right;
     color: @red;
   }
   @logo-width: 166px + 15px;
@@ -129,12 +129,19 @@ body {
 }
 #homepage {
   #big-logo {
-    .pull-left;
-    .visible-lg;
+    float: left;
     height: 128px;
     margin-top: 27px;
     margin-bottom: 6px;
     margin-right: 26px;
+
+    @media (min-width: @screen-lg) {
+      display: block !important;
+      table&  { display: table !important; }
+      tr&     { display: table-row !important; }
+      th&,
+      td&     { display: table-cell !important; }
+    }
   }
   #twitter-block > iframe { width: 100%; }
 }
