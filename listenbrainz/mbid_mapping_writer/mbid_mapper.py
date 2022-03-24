@@ -30,7 +30,7 @@ def prepare_query(text):
     return unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text)).strip().lower())
 
 
-class MBIDMapper():
+class MBIDMapper:
     """
         This class performs a lookup of one or more artist credit name and recording name pairs
         to find the best possible match in MusicBrainz. This query will unaccent query
@@ -192,12 +192,13 @@ class MBIDMapper():
 
         while True:
             try:
-                hits = self.client.collections[COLLECTION_NAME].documents.search(
-                    search_parameters)
+                hits = self.client.collections[COLLECTION_NAME].documents.search(search_parameters)
                 break
             except requests.exceptions.ReadTimeout:
                 print("Got socket timeout, sleeping 5 seconds, trying again.")
                 sleep(5)
+            except typesense.exceptions.RequestMalformed:
+                return None
 
         if len(hits["hits"]) == 0:
             return None
