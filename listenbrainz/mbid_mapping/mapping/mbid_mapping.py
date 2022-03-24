@@ -181,9 +181,6 @@ def create_temp_release_table(conn):
                     if len(rows) == BATCH_SIZE:
                         insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
                         conn.commit()
-                        for i, id, mbid in rows:
-                            if mbid == 'be63340a-e579-42c6-8206-df918409e537':
-                                print("ID was inserted!!")
                         rows = []
 
                     if count % 500000 == 0:
