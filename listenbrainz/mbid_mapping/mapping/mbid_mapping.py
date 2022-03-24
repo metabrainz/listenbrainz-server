@@ -9,7 +9,7 @@ from mapping.formats import create_formats_table
 import config
 
 BATCH_SIZE = 5000
-TEST_ARTIST_IDS = [1160983, 49627, 65]  # Gun'n'roses, beyoncé, portishead
+TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
 
 
 def create_tables(mb_conn, lb_conn):
