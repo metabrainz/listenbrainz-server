@@ -379,29 +379,26 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
                         log(f"mbid mapping: inserted {count:,} rows.")
 
             try:
-                recording_name = row['recording_name']
-                if recording_name not in artist_recordings:
-                    artist_credit_name = row['artist_credit_name']
-                    release_name = row['release_name']
-                    combined_lookup = unidecode(
-                        re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
-                    artist_recordings[recording_name] = (serial,
-                                                         row['artist_credit_id'],
-                                                         row['artist_mbids'],
-                                                         artist_credit_name,
-                                                         row['release_mbid'],
-                                                         release_name,
-                                                         row['recording_mbid'],
-                                                         recording_name,
-                                                         combined_lookup,
-                                                         row['score'])
+                combined_lookup = unidecode(re.sub(r'[^\w]+', '', row['artist_credit_name'] + row['recording_name']).lower())
+                if combined_lookup not in artist_recordings:
+                    artist_recordings[combined_lookup] = (serial,
+                                                          row['artist_credit_id'],
+                                                          row['artist_mbids'],
+                                                          row['artist_credit_name'],
+                                                          row['release_mbid'],
+                                                          row['release_name'],
+                                                          row['recording_mbid'],
+                                                          row['recording_name'],
+                                                          combined_lookup,
+                                                          row['score'])
                     serial += 1
                 else:
-                    if row["recording_mbid"] != artist_recordings[recording_name][6]:
+                    other_row = artist_recordings[combined_lookup]
+                    if row["recording_mbid"] != other_row[6]:
                         canonical_recordings.append((serial_canon,
                                                      row["recording_mbid"],
-                                                     artist_recordings[recording_name][6],
-                                                     artist_recordings[recording_name][4]))
+                                                     other_row[6],
+                                                     other_row[4]))
                         if len(canonical_recordings) == BATCH_SIZE:
                             insert_rows(lb_curs, "mapping.tmp_canonical_recording", canonical_recordings)
                             mb_conn.commit()
