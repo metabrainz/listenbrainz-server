@@ -171,6 +171,7 @@ def create_temp_release_table(conn):
                 rows = []
                 release_index = {}
                 for row in curs:
+
                     if row[0] in release_index:
                         continue
 
@@ -178,22 +179,27 @@ def create_temp_release_table(conn):
                     count += 1
                     rows.append((count, row[0], row[1]))
                     if len(rows) == BATCH_SIZE:
-                        insert_rows(
-                            curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
+                        insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
+                        conn.commit()
+                        for i, id, mbid in rows:
+                            if mbid == 'be63340a-e579-42c6-8206-df918409e537':
+                                print("ID was inserted!!")
                         rows = []
 
-                    if count % 1000000 == 0:
+                    if count % 500000 == 0:
                         log("mbid mapping temp tables: inserted %s rows." % count)
 
                 if rows:
-                    insert_rows(
-                        curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
+                    insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
+                    conn.commit()
 
         log("mbid mapping temp tables: create indexes")
         curs.execute("""CREATE INDEX tmp_mbid_mapping_releases_idx_release
                                   ON mapping.tmp_mbid_mapping_releases(release)""")
         curs.execute("""CREATE INDEX tmp_mbid_mapping_releases_idx_id
                                   ON mapping.tmp_mbid_mapping_releases(id)""")
+        conn.commit()
+
         log("mbid mapping temp tables: done")
 
 
@@ -370,7 +376,7 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
                     batch_count += 1
 
                     if batch_count % 200 == 0:
-                        log("mbid mapping: inserted %d rows." % count)
+                        log(f"mbid mapping: inserted {count:,} rows.")
 
             try:
                 recording_name = row['recording_name']
@@ -420,7 +426,7 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
             mb_conn.commit()
             canonical_recordings = []
 
-    log("mbid mapping: inserted %d rows total." % count)
+    log(f"mbid mapping: inserted {count:,} rows total.")
     log("mbid mapping: create indexes")
     create_indexes(mb_conn, lb_conn)
 
