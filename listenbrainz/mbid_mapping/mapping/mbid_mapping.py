@@ -449,5 +449,5 @@ def create_mbid_mapping():
 
 
 def create_canonical_releases():
-    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn::
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         create_canonical_release_table(mb_conn)
