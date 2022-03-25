@@ -73,33 +73,42 @@ def create_indexes(mb_conn, lb_conn):
                                       ON mapping.tmp_mbid_mapping(artist_credit_name, recording_name)""")
 
             # # Remove any duplicate rows so we can create a unique index and not get dups in the results
-            # log("remove dups from mapping")
-            # curs.execute("""DELETE FROM mapping.tmp_mbid_mapping
-            #                       WHERE id IN (
-            #                                     SELECT id
-            #                                       FROM (
-            #                                               SELECT id, combined_lookup, score,
-            #                                                      row_number() OVER (PARTITION BY combined_lookup ORDER BY score)
-            #                                                 FROM mapping.tmp_mbid_mapping
-            #                                             GROUP BY combined_lookup, score, id
-            #                                            ) AS q
-            #                                      WHERE row_number > 1)""")
-            curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_combined_lookup
+            log("remove dups from mapping")
+            curs.execute("""
+                WITH all_recs AS (
+                    SELECT *
+                         , row_number() OVER (PARTITION BY combined_lookup ORDER BY score) AS rnum
+                      FROM mapping.tmp_mbid_mapping
+                ), deleted_recs AS (
+                    DELETE
+                      FROM mapping.tmp_mbid_mapping
+                     WHERE id IN (SELECT id FROM all_recs WHERE rnum > 1)
+                 RETURNING recording_mbid, combined_lookup
+                )
+               INSERT INTO mapping.tmp_canonical_recording (recording_mbid, canonical_recording_mbid, canonical_release_mbid)
+                    SELECT t1.recording_mbid
+                         , t2.recording_mbid AS canonical_recording
+                         , t2.release_mbid AS canonical_release
+                      FROM deleted_recs t1
+                      JOIN all_recs t2
+                        ON t1.combined_lookup = t2.combined_lookup
+                     WHERE t2.rnum = 1;
+            """)
+            curs.execute("""CREATE UNIQUE INDEX tmp_mbid_mapping_idx_combined_lookup
                                       ON mapping.tmp_mbid_mapping(combined_lookup)""")
 
             # Remove any duplicate rows
             with lb_conn.cursor() as lb_curs:
                 log("remove dups from canonical recordings")
-                lb_curs.execute("""DELETE FROM mapping.tmp_canonical_recording
-                                         WHERE id IN (
-                                                SELECT id
-                                                  FROM (
-                                                     SELECT id
-                                                          , row_number() OVER (PARTITION BY recording_mbid ORDER BY id)
-                                                       FROM mapping.tmp_canonical_recording
-                                                     ) AS q
-                                                 WHERE row_number > 1
-                                         )""")
+                lb_curs.execute("""
+                    WITH all_rows AS (
+                        SELECT id
+                             , row_number() OVER (PARTITION BY recording_mbid ORDER BY id) AS rnum
+                          FROM mapping.tmp_canonical_recording
+                    )
+                    DELETE FROM mapping.tmp_canonical_recording
+                          WHERE id IN (SELECT id FROM all_rows WHERE rnum > 1)
+                """)
                 lb_curs.execute("""CREATE INDEX tmp_canonical_recording_ndx_canonical_recording_mbid
                                              ON mapping.tmp_canonical_recording(canonical_recording_mbid)""")
                 lb_curs.execute("""CREATE UNIQUE INDEX tmp_canonical_recording_ndx_recording_mbid
