@@ -72,37 +72,37 @@ def create_indexes(mb_conn, lb_conn):
             curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_artist_credit_recording_name
                                       ON mapping.tmp_mbid_mapping(artist_credit_name, recording_name)""")
 
-            # Remove any duplicate rows so we can create a unique index and not get dups in the results
-            log("remove dups from mapping")
-            curs.execute("""DELETE FROM mapping.tmp_mbid_mapping
-                                  WHERE id IN (
-                                                SELECT id 
-                                                  FROM (
-                                                          SELECT id, combined_lookup, score,
-                                                                 row_number() OVER (PARTITION BY combined_lookup ORDER BY score)
-                                                            FROM mapping.tmp_mbid_mapping
-                                                        GROUP BY combined_lookup, score, id
-                                                       ) AS q
-                                                 WHERE row_number > 1)""")
-            curs.execute("""CREATE UNIQUE INDEX tmp_mbid_mapping_idx_combined_lookup
+            # # Remove any duplicate rows so we can create a unique index and not get dups in the results
+            # log("remove dups from mapping")
+            # curs.execute("""DELETE FROM mapping.tmp_mbid_mapping
+            #                       WHERE id IN (
+            #                                     SELECT id
+            #                                       FROM (
+            #                                               SELECT id, combined_lookup, score,
+            #                                                      row_number() OVER (PARTITION BY combined_lookup ORDER BY score)
+            #                                                 FROM mapping.tmp_mbid_mapping
+            #                                             GROUP BY combined_lookup, score, id
+            #                                            ) AS q
+            #                                      WHERE row_number > 1)""")
+            curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_combined_lookup
                                       ON mapping.tmp_mbid_mapping(combined_lookup)""")
 
             # Remove any duplicate rows
             with lb_conn.cursor() as lb_curs:
-                log("remove dups from canonical recordings")
-                lb_curs.execute("""DELETE FROM mapping.tmp_canonical_recording
-                                      WHERE id IN (
-                                                    SELECT id 
-                                                      FROM (
-                                                              SELECT id, canonical_recording_mbid, recording_mbid,
-                                                                     row_number() OVER (PARTITION BY canonical_recording_mbid ORDER BY recording_mbid)
-                                                                FROM mapping.tmp_canonical_recording
-                                                            GROUP BY canonical_recording_mbid, recording_mbid, id
-                                                           ) AS q
-                                                     WHERE row_number > 1)""")
+                # log("remove dups from canonical recordings")
+                # lb_curs.execute("""DELETE FROM mapping.tmp_canonical_recording
+                #                       WHERE id IN (
+                #                                     SELECT id
+                #                                       FROM (
+                #                                               SELECT id, canonical_recording_mbid, recording_mbid,
+                #                                                      row_number() OVER (PARTITION BY canonical_recording_mbid ORDER BY recording_mbid)
+                #                                                 FROM mapping.tmp_canonical_recording
+                #                                             GROUP BY canonical_recording_mbid, recording_mbid, id
+                #                                            ) AS q
+                #                                      WHERE row_number > 1)""")
                 lb_curs.execute("""CREATE INDEX tmp_canonical_recording_ndx_canonical_recording_mbid
                                              ON mapping.tmp_canonical_recording(canonical_recording_mbid)""")
-                lb_curs.execute("""CREATE UNIQUE INDEX tmp_canonical_recording_ndx_recording_mbid
+                lb_curs.execute("""CREATE INDEX tmp_canonical_recording_ndx_recording_mbid
                                              ON mapping.tmp_canonical_recording(recording_mbid)""")
 
         mb_conn.commit()
