@@ -12,7 +12,7 @@ BATCH_SIZE = 5000
 TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
 
 
-def create_tables(mb_conn, lb_conn):
+def create_tables(mb_conn):
     """
         Create tables needed to create the recording artist pairs. First
         is the temp table that the results will be stored in (in order
@@ -44,16 +44,12 @@ def create_tables(mb_conn, lb_conn):
                                             release      INTEGER NOT NULL,
                                             release_mbid UUID NOT NULL)""")
 
-            # TODO: the TS database does not have a mapping schema yet, but probably should
-            with lb_conn.cursor() as lb_curs:
-                lb_curs.execute("DROP TABLE IF EXISTS mapping.tmp_canonical_recording")
-                lb_curs.execute("""CREATE TABLE mapping.tmp_canonical_recording (
+            curs.execute("DROP TABLE IF EXISTS mapping.tmp_canonical_recording")
+            curs.execute("""CREATE TABLE mapping.tmp_canonical_recording (
                                                 id                        SERIAL,
                                                 recording_mbid            UUID NOT NULL,
                                                 canonical_recording_mbid  UUID NOT NULL,
                                                 canonical_release_mbid    UUID NOT NULL)""")
-                lb_conn.commit()
-
             create_formats_table(mb_conn)
             mb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
@@ -62,7 +58,7 @@ def create_tables(mb_conn, lb_conn):
         raise
 
 
-def create_indexes(mb_conn, lb_conn):
+def create_indexes(mb_conn):
     """
         Create indexes for the mapping
     """
@@ -106,20 +102,19 @@ def create_indexes(mb_conn, lb_conn):
                                       ON mapping.tmp_mbid_mapping(combined_lookup)""")
 
             # Remove any duplicate rows
-            with lb_conn.cursor() as lb_curs:
-                log("remove dups from canonical recordings")
-                lb_curs.execute("""
-                    WITH all_rows AS (
-                         SELECT id
-                              , row_number() OVER (PARTITION BY recording_mbid ORDER BY id) AS rnum
-                           FROM mapping.tmp_canonical_recording
-                    )
-                    DELETE FROM mapping.tmp_canonical_recording
-                          WHERE id IN (SELECT id FROM all_rows WHERE rnum > 1)
-                """)
-                lb_curs.execute("""CREATE INDEX tmp_canonical_recording_ndx_canonical_recording_mbid
-                                             ON mapping.tmp_canonical_recording(canonical_recording_mbid)""")
-                lb_curs.execute("""CREATE UNIQUE INDEX tmp_canonical_recording_ndx_recording_mbid
+            log("remove dups from canonical recordings")
+            curs.execute("""
+                WITH all_rows AS (
+                     SELECT id
+                          , row_number() OVER (PARTITION BY recording_mbid ORDER BY id) AS rnum
+                       FROM mapping.tmp_canonical_recording
+                )
+                DELETE FROM mapping.tmp_canonical_recording
+                      WHERE id IN (SELECT id FROM all_rows WHERE rnum > 1)
+            """)
+            curs.execute("""CREATE INDEX tmp_canonical_recording_ndx_canonical_recording_mbid
+                                      ON mapping.tmp_canonical_recording(canonical_recording_mbid)""")
+            curs.execute("""CREATE UNIQUE INDEX tmp_canonical_recording_ndx_recording_mbid
                                              ON mapping.tmp_canonical_recording(recording_mbid)""")
 
         mb_conn.commit()
@@ -217,7 +212,7 @@ def create_temp_release_table(conn):
         log("mbid mapping temp tables: done")
 
 
-def swap_table_and_indexes(mb_conn, lb_conn):
+def swap_table_and_indexes(mb_conn):
     """
         Swap temp tables and indexes for production tables and indexes.
     """
@@ -240,20 +235,17 @@ def swap_table_and_indexes(mb_conn, lb_conn):
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_id
                             RENAME TO mbid_mapping_releases_idx_id""")
 
-            with lb_conn.cursor() as lb_curs:
-                lb_curs.execute("DROP TABLE IF EXISTS mapping.canonical_recording")
-                lb_curs.execute("""ALTER TABLE mapping.tmp_canonical_recording
-                                   RENAME TO canonical_recording""")
-                lb_curs.execute("""ALTER INDEX mapping.tmp_canonical_recording_ndx_canonical_recording_mbid
-                                   RENAME TO canonical_recording_ndx_canonical_recording_mbid""")
-                lb_curs.execute("""ALTER INDEX mapping.tmp_canonical_recording_ndx_recording_mbid
-                                   RENAME TO canonical_recording_ndx_recording_mbid""")
-                lb_conn.commit()
-
+            curs.execute("DROP TABLE IF EXISTS mapping.canonical_recording")
+            curs.execute("""ALTER TABLE mapping.tmp_canonical_recording
+                               RENAME TO canonical_recording""")
+            curs.execute("""ALTER INDEX mapping.tmp_canonical_recording_ndx_canonical_recording_mbid
+                               RENAME TO canonical_recording_ndx_canonical_recording_mbid""")
+            curs.execute("""ALTER INDEX mapping.tmp_canonical_recording_ndx_recording_mbid
+                               RENAME TO canonical_recording_ndx_recording_mbid""")
         mb_conn.commit()
     except OperationalError as err:
         log("mbid mapping: failed to swap in new mbid mapping tables", str(err))
-        conn.rollback()
+        mb_conn.rollback()
         raise
 
 
@@ -301,11 +293,11 @@ def create_canonical_release_table(mb_conn):
 
     except OperationalError as err:
         log("canonical releases: creating recording_canonical_release failed: ", str(err))
-        conn.rollback()
+        mb_conn.rollback()
         raise
 
 
-def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
+def create_mapping(mb_conn, mb_curs):
     """
         This function is the heart of the mbid mapping. It
         calculates the intermediate table and then fetches all the recordings
@@ -320,7 +312,7 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
     log("mbid mapping: create schema")
     create_schema(mb_conn)
     log("mbid mapping: drop old tables, create new tables")
-    create_tables(mb_conn, lb_conn)
+    create_tables(mb_conn)
 
     create_temp_release_table(mb_conn)
     with mb_conn.cursor() as mb_curs2:
@@ -414,8 +406,8 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
                                                      other_row[6],
                                                      other_row[4]))
                         if len(canonical_recordings) == BATCH_SIZE:
-                            insert_rows(lb_curs, "mapping.tmp_canonical_recording", canonical_recordings)
-                            lb_conn.commit()
+                            insert_rows(mb_curs2, "mapping.tmp_canonical_recording", canonical_recordings)
+                            mb_conn.commit()
                             canonical_recordings = []
                         serial_canon += 1
 
@@ -433,16 +425,16 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
             count += len(rows)
 
         if len(canonical_recordings):
-            insert_rows(lb_curs, "mapping.tmp_canonical_recording", canonical_recordings)
-            lb_conn.commit()
+            insert_rows(mb_curs2, "mapping.tmp_canonical_recording", canonical_recordings)
+            mb_conn.commit()
             canonical_recordings = []
 
     log(f"mbid mapping: inserted {count:,} rows total.")
     log("mbid mapping: create indexes")
-    create_indexes(mb_conn, lb_conn)
+    create_indexes(mb_conn)
 
     log("mbid mapping: swap tables and indexes into production.")
-    swap_table_and_indexes(mb_conn, lb_conn)
+    swap_table_and_indexes(mb_conn)
 
     log("mbid mapping: create canonical release table")
     create_canonical_release_table(mb_conn)
@@ -450,15 +442,12 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
     log("mbid mapping: done")
 
 
-def create_mbid_mapping(canonical_data_db_connect_str):
-
+def create_mbid_mapping():
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            with psycopg2.connect(canonical_data_db_connect_str) as lb_conn:
-                with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
-                    create_mapping(mb_conn, mb_curs, lb_conn, lb_curs)
+            create_mapping(mb_conn, mb_curs)
+
 
 def create_canonical_releases():
-    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
-        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            create_canonical_release_table(mb_conn)
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn::
+        create_canonical_release_table(mb_conn)

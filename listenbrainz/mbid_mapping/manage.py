@@ -34,20 +34,12 @@ def create_all():
 
 
 @cli.command()
-@click.option('--timescale', is_flag=True)
-def mbid_mapping(timescale):
+def mbid_mapping():
     """
         Create the MBID mapping, which also creates the prerequisit artist-credit pairs table. This can be done during
-        production as new tables are moved in place atomically. Use the --timescale option to write the generated
-        canonical_recording table to timescale, rather than the MB database.
+        production as new tables are moved in place atomically.
     """
-
-    if timescale:
-        db_connect = config.TIMESCALE_DATABASE_URI
-    else:
-        db_connect = config.MBID_MAPPING_DATABASE_URI
-
-    create_mbid_mapping(db_connect)
+    create_mbid_mapping()
 
 
 @cli.command()
