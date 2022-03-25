@@ -89,26 +89,26 @@ def create_indexes(mb_conn, lb_conn):
 
             # Remove any duplicate rows
             with lb_conn.cursor() as lb_curs:
-                # log("remove dups from canonical recordings")
-                # lb_curs.execute("""DELETE FROM mapping.tmp_canonical_recording
-                #                       WHERE id IN (
-                #                                     SELECT id
-                #                                       FROM (
-                #                                               SELECT id, canonical_recording_mbid, recording_mbid,
-                #                                                      row_number() OVER (PARTITION BY canonical_recording_mbid ORDER BY recording_mbid)
-                #                                                 FROM mapping.tmp_canonical_recording
-                #                                             GROUP BY canonical_recording_mbid, recording_mbid, id
-                #                                            ) AS q
-                #                                      WHERE row_number > 1)""")
+                log("remove dups from canonical recordings")
+                lb_curs.execute("""DELETE FROM mapping.tmp_canonical_recording
+                                         WHERE id IN (
+                                                SELECT id
+                                                  FROM (
+                                                     SELECT id
+                                                          , row_number() OVER (PARTITION BY recording_mbid ORDER BY id)
+                                                       FROM mapping.tmp_canonical_recording
+                                                     ) AS q
+                                                 WHERE row_number > 1
+                                         )""")
                 lb_curs.execute("""CREATE INDEX tmp_canonical_recording_ndx_canonical_recording_mbid
                                              ON mapping.tmp_canonical_recording(canonical_recording_mbid)""")
-                lb_curs.execute("""CREATE INDEX tmp_canonical_recording_ndx_recording_mbid
+                lb_curs.execute("""CREATE UNIQUE INDEX tmp_canonical_recording_ndx_recording_mbid
                                              ON mapping.tmp_canonical_recording(recording_mbid)""")
 
         mb_conn.commit()
     except OperationalError as err:
         log("mbid mapping: failed to mbid mapping", err)
-        conn.rollback()
+        mb_conn.rollback()
         raise
 
 
