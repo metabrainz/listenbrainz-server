@@ -72,6 +72,14 @@ def create_indexes(mb_conn, lb_conn):
             curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_artist_credit_recording_name
                                       ON mapping.tmp_mbid_mapping(artist_credit_name, recording_name)""")
 
+            # we know the same so hardcoding it, can use pg_get_serial_sequence otherwise
+            # we need to reset the sequence because the inserts earlier insert id manually
+            # so without reset the sequence will start from 1, thus adding conflicting ids
+            curs.execute("""
+                SELECT setval('mapping.tmp_canonical_recording_id_seq', max(id) + 1, false)
+                  FROM mapping.tmp_canonical_recording
+            """)
+
             # # Remove any duplicate rows so we can create a unique index and not get dups in the results
             log("remove dups from mapping")
             curs.execute("""
@@ -102,9 +110,9 @@ def create_indexes(mb_conn, lb_conn):
                 log("remove dups from canonical recordings")
                 lb_curs.execute("""
                     WITH all_rows AS (
-                        SELECT id
-                             , row_number() OVER (PARTITION BY recording_mbid ORDER BY id) AS rnum
-                          FROM mapping.tmp_canonical_recording
+                         SELECT id
+                              , row_number() OVER (PARTITION BY recording_mbid ORDER BY id) AS rnum
+                           FROM mapping.tmp_canonical_recording
                     )
                     DELETE FROM mapping.tmp_canonical_recording
                           WHERE id IN (SELECT id FROM all_rows WHERE rnum > 1)
