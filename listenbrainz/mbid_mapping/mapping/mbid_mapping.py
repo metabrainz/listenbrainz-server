@@ -398,7 +398,7 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
                                                      other_row[4]))
                         if len(canonical_recordings) == BATCH_SIZE:
                             insert_rows(lb_curs, "mapping.tmp_canonical_recording", canonical_recordings)
-                            mb_conn.commit()
+                            lb_conn.commit()
                             canonical_recordings = []
                         serial_canon += 1
 
@@ -417,7 +417,7 @@ def create_mapping(mb_conn, mb_curs, lb_conn, lb_curs):
 
         if len(canonical_recordings):
             insert_rows(lb_curs, "mapping.tmp_canonical_recording", canonical_recordings)
-            mb_conn.commit()
+            lb_conn.commit()
             canonical_recordings = []
 
     log(f"mbid mapping: inserted {count:,} rows total.")
