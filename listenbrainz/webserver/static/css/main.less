@@ -17,7 +17,6 @@
 @import "metadata-viewer.less";
 @import "musicbrainz-entity-icons.less";
 
-
 @icon-font-path:"/static/fonts/";
 
 @pager-border-radius: @border-radius-base;
@@ -36,51 +35,13 @@ body {
    width: auto !important;
 }
 
-.navbar {
-  .nav {
-    > li {
-      > a { color: @blue; }
-    }
-  }
-}
-
-.btn {
-  .glyphicon {
-    margin-right: 4px;
-  }
-}
-
-// Navbar
-@grid-float-breakpoint: @screen-md; // Point at which the navbar becomes uncollapsed
-.navbar {
-  .beta {
-    float: right;
-    color: @red;
-  }
-  @logo-width: 165px + 15px;
-  .navbar-variant(#353070, @logo-width);
-  .import-link {
-    > a {
-      color: white !important;
-      font-size: 1.5em !important;
-      background-color: @orange !important;
-      &:hover, &:focus {
-        background-color: darken(@orange, 6.5%) !important;
-      }
-    }
-  }
-  .navbar-form {
-    padding-right: 0px;
-    .btn {
-      background-color: @orange;
-      margin-right: 0px;
-    }
-  }
-}
-
 // Content Wrapper
 .wrapper {
   min-height: 70vh;
+}
+
+.dropdown-menu{
+  width: max-content;
 }
 
 /* Footer */
@@ -257,12 +218,6 @@ body {
       background-color: @blue;
     }
   }
-}
-
-.sticky-top {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 20px;
 }
 
 #feedback-button {

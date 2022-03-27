@@ -227,11 +227,9 @@
 // Used for a bird's eye view of components dependent on the z-axis
 // Try to avoid customizing these :)
 
-@zindex-navbar: 1000;
 @zindex-dropdown: 1000;
 @zindex-popover: 1010;
 @zindex-tooltip: 1030;
-@zindex-navbar-fixed: 1030;
 @zindex-modal-background: 1040;
 @zindex-modal: 1050;
 
@@ -258,101 +256,6 @@
 @screen-xs-max: (@screen-sm - 1);
 @screen-sm-max: (@screen-md - 1);
 @screen-md-max: (@screen-lg - 1);
-
-// Navbar
-// -------------------------
-
-// Basics of a navbar
-@navbar-height: 42px;
-@navbar-height: 64px;
-@navbar-height-tall: 100px;
-@navbar-margin-bottom: @line-height-computed;
-@navbar-default-color: @white;
-@navbar-default-bg: fade(@brand-primary, 80%);
-@navbar-default-border: transparent;
-@navbar-border-radius: @border-radius-base;
-@navbar-padding-horizontal: floor(@grid-gutter-width / 2);
-@navbar-padding-vertical: ((@navbar-height - @line-height-computed) / 2);
-
-// Navbar links
-@navbar-default-link-color: lighten(@brand-primary, 30%);
-@navbar-default-link-hover-color: desaturate(darken(@white, 8%), 100%);
-@navbar-default-link-hover-bg: fadeout(@navbar-default-bg, 50%);
-@navbar-default-link-active-color: @white;
-@navbar-default-link-active-bg: fadeout(@navbar-default-bg, 30%);
-@navbar-default-link-disabled-color: @gray-light;
-@navbar-default-link-disabled-bg: transparent;
-
-// Navbar brand label
-@navbar-default-brand-color: @brand-primary;
-@navbar-default-brand-hover-color: @brand-primary;
-@navbar-default-brand-hover-bg: transparent;
-
-// Navbar toggle
-@navbar-default-toggle-hover-bg: #ddd;
-@navbar-default-toggle-icon-bar-bg: #ccc;
-@navbar-default-toggle-border-color: #ddd;
-
-// Inverted navbar
-//
-// Reset inverted navbar basics
-@navbar-inverse-color: @white;
-@navbar-inverse-bg: fade(@brand-secondary, 88%);
-@navbar-inverse-border: transparent;
-
-// Inverted navbar links
-@navbar-inverse-link-color: lighten(@brand-secondary, 30%);
-@navbar-inverse-link-hover-color: @navbar-default-link-hover-color;
-@navbar-inverse-link-hover-bg: fadeout(@navbar-inverse-bg, 30%);
-@navbar-inverse-link-active-color: @navbar-inverse-link-hover-color;
-@navbar-inverse-link-active-bg: fadeout(@navbar-inverse-bg, 10%);
-@navbar-inverse-link-disabled-color: @gray-light;
-@navbar-inverse-link-disabled-bg: transparent;
-
-// Inverted navbar brand label
-@navbar-inverse-brand-color: @navbar-inverse-link-color;
-@navbar-inverse-brand-hover-color: @white;
-@navbar-inverse-brand-hover-bg: transparent;
-
-// Inverted navbar search
-// Normal navbar needs no special styles or vars
-@navbar-inverse-search-bg: lighten(@navbar-inverse-bg, 25%);
-@navbar-inverse-search-bg-focus: @white;
-@navbar-inverse-search-border: @navbar-inverse-bg;
-@navbar-inverse-search-placeholder-color: #ccc;
-
-// Inverted navbar toggle
-@navbar-inverse-toggle-hover-bg: #333;
-@navbar-inverse-toggle-icon-bar-bg: @white;
-@navbar-inverse-toggle-border-color: #333;
-
-// Navs
-// -------------------------
-
-@nav-link-padding: 10px 15px;
-@nav-link-hover-bg: @gray-lighter;
-
-@nav-disabled-link-color: @gray-light;
-@nav-disabled-link-hover-color: @gray-light;
-
-@nav-open-link-hover-color: @white;
-@nav-open-caret-border-color: #fff;
-
-// Tabs
-@nav-tabs-border-color: #ddd;
-
-@nav-tabs-link-hover-border-color: @gray-lighter;
-
-@nav-tabs-active-link-hover-bg: @body-bg;
-@nav-tabs-active-link-hover-color: @gray;
-@nav-tabs-active-link-hover-border-color: #ddd;
-
-@nav-tabs-justified-link-border-color: #ddd;
-@nav-tabs-justified-active-link-border-color: @body-bg;
-
-// Pills
-@nav-pills-active-link-hover-bg: @component-active-bg;
-@nav-pills-active-link-hover-color: @white;
 
 // Pagination
 // -------------------------
