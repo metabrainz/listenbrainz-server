@@ -1,91 +1,180 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg navbar-light bg-light" role="navigation">
   <div class="container-fluid">
+    {#- Brand and toggle get grouped for better mobile display -#}
     <a class="navbar-brand" href="{{ url_for('index.index') }}">
-      <img src="{{ url_for('static', filename='img/navbar_logo.svg') }}" alt="ListenBrainz">
+      <img src="{{ url_for('static', filename='img/navbar_logo.svg') }}" alt="ListenBrainz" />
     </a>
-    <button class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    {#- Collect the nav links, forms, and other content for toggling -#}
+    <div class="collapse navbar-collapse" id="navbarToggleExternalContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         {% if not hide_navbar_user_menu %}
-          {% if current_user.is_authenticated %}
-          <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Home</a></li>
-          <li><a href="{{ url_for('index.feed') }}">Feed</a></li>
-          {% endif %}
+        {% if current_user.is_authenticated %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">
+            Home
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('index.feed') }}">
+            Feed
+          </a>
+        </li>
+        {% endif %}
         {%- endif -%}
-        <li><a href="{{ url_for('index.recent_listens') }}">Recent</a></li>
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('index.recent_listens') }}">
+            Recent
+          </a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
             Data<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('index.add_data_info') }}">Adding data</a></li>
-            <li><a href="{{ url_for('index.import_data_info') }}">Importing data</a></li>
-            <li><a href="{{ url_for('index.data') }}">Using our data</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index.add_data_info') }}">
+                Adding data
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index.import_data_info') }}">
+                Importing data
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index.data') }}">
+                Using our data
+              </a>
+            </li>
           </ul>
         </li>
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
             Explore<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('index.huesound') }}">Hue Sound</a></li>
-            <li><a href="{{ url_for('index.similar_users') }}">Top similar users</a></li>
-            <li><a href="{{ url_for('user.year_in_music', user_name=current_user.musicbrainz_id) }}">Your Year In Music</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index.huesound') }}">
+                Hue Sound
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index.similar_users') }}">
+              Top similar users
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('user.year_in_music', user_name=current_user.musicbrainz_id) }}">
+                Your Year In Music
+              </a>
+            </li>
           </ul>
         </li>
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-             About<span class="caret"></span>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
+            About<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('index.about') }}">About ListenBrainz</a></li>
-            <li><a href="{{ url_for('index.messybrainz') }}">MessyBrainz</a></li>
-            <li><a href="https://listenbrainz.readthedocs.io">API Docs</a></li>
-            <li><a href="{{ url_for('index.current_status') }}">Current site status</a></li>
-            <li><a href="{{ url_for('index.terms_of_service') }}">Terms of service</a></li>
-            <li><a href="https://metabrainz.org">About MetaBrainz</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index.about') }}">
+                About ListenBrainz
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index.messybrainz') }}">
+              MessyBrainz
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://listenbrainz.readthedocs.io">
+                API Docs
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index.current_status') }}">
+                Current site status
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index.terms_of_service') }}">
+                Terms of service
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://metabrainz.org">
+                About MetaBrainz
+              </a>
+            </li>
           </ul>
         </li>
       </ul>
 
+      <form class="d-flex" role="search" method="GET" action="/search">
+        <input type="text" name="search_term" class="form-control me-2" placeholder="Search Listener" required/>
+        <button type="submit" class="btn btn-primary input-sm">
+          <span class="glyphicon glyphicon-search"></span>
+        </button>
+      </form>
+
       {% if not hide_navbar_user_menu %}
       <ul class="nav navbar-nav navbar-right">
         {% if not current_user.is_authenticated or current_user.is_anonymous %}
-        <li>
-          <a href="{{ url_for('login.index') }}">Sign in</a>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('login.index') }}">Sign in</a>
         </li>
         {% else %}
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
             {{ current_user.musicbrainz_id }} <span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('profile.info') }}">Settings</a></li>
-            <li><a href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">Playlists</a></li>
-            <li><a href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">Tracks you might like</a></li>
-            <li><a href="{{ url_for('profile.music_services_details') }}">Connect Services</a></li>
-            <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
-            <li><a href="{{ url_for('profile.export_data') }}">Export</a></li>
-            <li><a href="{{ url_for('user.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Add Missing MusicBrainz Data</a></li>
-            <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('profile.info') }}">
+                Settings
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">
+                Playlists
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">
+                Tracks you might like
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('profile.music_services_details') }}">
+                Connect Services
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('profile.import_data') }}">
+                Import listens
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('profile.export_data') }}">
+                Export
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('user.missing_mb_data', user_name=current_user.musicbrainz_id) }}">
+                Add Missing MusicBrainz Data
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('login.logout') }}">
+                Sign out
+              </a>
+            </li>
           </ul>
         </li>
         {%- endif -%}
       </ul>
-      <form class="navbar-form navbar-right" role="search" method="GET" action="/search">
-        <div class="form-group">
-          <input type="text" name="search_term" class="form-control input-sm" placeholder="Search Listener" required>
-        </div>
-        <button type="submit" class="btn btn-primary input-sm"><span class="glyphicon glyphicon-search"></span></button>
-      </form>
       {% endif %}
     </div>
   </div>
