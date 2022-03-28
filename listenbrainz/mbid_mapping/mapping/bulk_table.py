@@ -23,6 +23,8 @@ class BulkInsertTable:
 
     # TODO: use lb_conn when needed
     # Add support for setting seq on serial column
+    # Add support for client side transactions on swap
+
     @abstractmethod
     def get_create_table_columns(self):
         """
@@ -159,13 +161,16 @@ class BulkInsertTable:
             with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs2:
                 queries = self.get_insert_queries()
                 total_row_count = 0
-                row_count = 0
                 rows = []
+                inserted = 0
+                inserted_total = 0
                 batch_count = 0
                 for i, query in enumerate(queries):
                     log(f"{self.table_name}: execute query {i+1} of {len(queries)}")
                     mb_curs.execute(query)
 
+                    row_count = 0
+                    inserted = 0
                     total_rows = mb_curs.rowcount
                     log(f"{self.table_name}: fetch {total_rows:,} rows")
                     while True:
@@ -173,26 +178,28 @@ class BulkInsertTable:
                         if not row:
                             break
 
-                        rows_to_insert = self.process_row(row)
-                        rows.extend(rows_to_insert)
-                        row_count += len(rows_to_insert)
+                        row_count += 1
+                        total_row_count += 1
+                        rows.extend(self.process_row(row))
                         if len(rows) >= self.batch_size:
                             insert_rows(mb_curs2, self.temp_table_name, rows)
                             self.mb_conn.commit()
                             rows = []
                             batch_count +=1
+                            inserted += self.batch_size
+                            inserted_total += self.batch_size
 
                             if batch_count % 20 == 0:
                                 percent = "%.1f" % (100.0 * row_count / total_rows)
-                                log(f"{self.table_name}: inserted {row_count:,} rows. {percent}% complete")
-                    total_row_count += row_count
+                                log(f"{self.table_name}: inserted {inserted:,} from {row_count:,} rows. {percent}% complete")
 
                 if rows:
                     insert_rows(mb_curs2, self.temp_table_name, rows)
                     self.mb_conn.commit()
+                    inserted_total += len(rows)
                     rows = []
 
-        log(f"{self.table_name}: inserted {total_row_count:,} rows total.")
+        log(f"{self.table_name}: complete! inserted {inserted_total:,} rows total.")
 
         log(f"{self.table_name}: post process inserted rows")
         self._post_process()
@@ -201,6 +208,6 @@ class BulkInsertTable:
         self._create_indexes()
 
         log(f"{self.table_name}: swap tables and indexes into production.")
-        self._swap_into_production()
+#        self._swap_into_production()
 
         log(f"{self.table_name}: done")
