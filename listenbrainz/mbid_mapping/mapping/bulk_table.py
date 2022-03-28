@@ -7,43 +7,54 @@ from mapping.utils import insert_rows, log
 BATCH_SIZE = 5000
 
 
-class BulkInsertTable
+class BulkInsertTable:
 
-    def __init__(self, table_name, mb_conn, lb_conn, batch_size=BATCH_SIZE):
+    def __init__(self, table_name, mb_conn, lb_conn=None, batch_size=None):
         self.table_name = table_name
-        self.tmp_table_name = table_name + "_TMP"
+        self.temp_table_name = table_name + "_TMP"
         self.mb_conn = mb_conn
         self.lb_conn = lb_conn
 
+        if batch_size is None:
+            batch_size = BATCH_SIZE
+        self.batch_size = batch_size
+
+
 
     # TODO: use lb_conn when needed
-    # Add support for an auto serial column
+    # Add support for setting seq on serial column
     @abstractmethod
-    def get_create_table_columns(self)
+    def get_create_table_columns(self):
         """
             Return the PG query to fetch the insert data. This function should return
             a liost of tuples of two strings: [(column name, column type/constraints/defaults)]
         """
+        return []
 
     @abstractmethod
-    def get_insert_data_query(self)
+    def get_insert_queries(self):
         """
+            Returns a list of data insert queries to run. The same process_row function will be 
+            called for each of the rows resulting from the passed queries.
         """
+        return []
 
     @abstractmethod
-    def get_create_index_queries(self)
+    def get_create_index_queries(self):
         """
             Returns a list of of tuples of index names and column defintion strings:
                 [("mbid_mapping_ndx_recording_mbid", "recoding_mbid")]
         """
+        return []
 
     @abstractmethod
-    def get_post_process_queries(self)
+    def get_post_process_queries(self):
         """
         """
+        return []
 
     @abstractmethod
-    def process_row(self)
+    def process_row(self):
         """
         """
 
@@ -60,12 +71,14 @@ class BulkInsertTable
         try:
             with self.mb_conn.cursor() as curs:
 
-                columns = ""
+                columns = []
                 for name, types in self.get_create_table_columns():
-                    columns += "%s,%s" % (name, types)
+                    columns.append("%s %s" % (name, types))
 
-                curs.execute(f"DROP TABLE IF EXISTS {self.tmp_table_name}")
-                curs.execute(f"CREATE TABLE {self.tmp_table_name} ({columns})")
+                columns = ", ".join(columns)
+
+                curs.execute(f"DROP TABLE IF EXISTS {self.temp_table_name}")
+                curs.execute(f"CREATE TABLE {self.temp_table_name} ({columns})")
                 self.mb_conn.commit()
 
         except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
@@ -80,7 +93,7 @@ class BulkInsertTable
         try:
             with self.mb_conn.cursor() as curs:
                 for name, column_def in self.get_create_index_queries():
-                    curs.execute(f"CREATE INDEX {self.name}_TMP ON {self.tmp_table_name} ({column_def})")
+                    curs.execute(f"CREATE INDEX {name}_tmp ON {self.temp_table_name} ({column_def})")
                 self.mb_conn.commit()
 
         except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
@@ -112,11 +125,20 @@ class BulkInsertTable
         """
 
         try:
+            schema, simple_table_name = self.table_name.split(".")
+        except ValueError:
+            schema = ""
+            simple_table_name = self.table_name
+
+        try:
             with self.mb_conn.cursor() as curs:
                 curs.execute(f"DROP TABLE IF EXISTS {self.table_name}")
-                curs.execute(f"ALTER TABLE {self.tmp_table_name} RENAME TO {self.table_name}") 
+                curs.execute(f"ALTER TABLE {self.temp_table_name} RENAME TO {simple_table_name}") 
                 for name, column_def in self.get_create_index_queries():
-                    curs.execute(f"ALTER INDEX {name}_TMP RENAME TO {name}")
+                    if schema:
+                        curs.execute(f"ALTER INDEX {schema}.{name}_tmp RENAME TO {name}")
+                    else:
+                        curs.execute(f"ALTER INDEX {name}_tmp RENAME TO {name}")
                 self.mb_conn.commit()
 
         except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
@@ -125,7 +147,7 @@ class BulkInsertTable
             raise
 
 
-    def run(mb_conn, mb_curs):
+    def run(self):
         """
         """
 
@@ -133,46 +155,52 @@ class BulkInsertTable
         log(f"{self.table_name}: drop old tables, create new tables")
         self._create_tables()
 
-        with mb_conn.cursor() as mb_curs2:
-            log(f"{self.table_name}: execute query")
-            mb_curs.execute(self.get_insert_query())
-
-            log(f"{self.table_name}: fetch rows")
-            total_rows = mb_curs.rowcount
-            row_count = 0
-            rows = []
-            batch_count = 0
-            while True:
-                row = mb_curs.fetchone()
-                if not row:
-                    break
-
-                rows_to_insert = self._process_row(row)
-                rows.extend(rows_to_insert)
-                row_count += len(rows_to_insert)
-                if len(rows) >= self.batch_size:
-                    insert_rows(mb_curs2, self.temp_table_name, rows)
-                    mb_conn.commit()
-                    rows = []
-                    batch_count +=1
-
-                    if batch_count % 20 == 0:
-                        percent = "%.1f" % (100.0 * row_count / total_rows)
-                        log(f"{self.table_name}: inserted {row_count:,} rows. {percent}% complete")
-
-            if rows:
-                insert_rows(mb_curs2, self.temp_table_name, rows)
-                mb_conn.commit()
+        with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+            with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs2:
+                queries = self.get_insert_queries()
+                total_row_count = 0
+                row_count = 0
                 rows = []
+                batch_count = 0
+                for i, query in enumerate(queries):
+                    log(f"{self.table_name}: execute query {i+1} of {len(queries)}")
+                    mb_curs.execute(query)
 
-        log(f"{self.table_name}: inserted {row_count:,} rows total.")
+                    total_rows = mb_curs.rowcount
+                    log(f"{self.table_name}: fetch {total_rows:,} rows")
+                    while True:
+                        row = mb_curs.fetchone()
+                        if not row:
+                            break
+
+                        rows_to_insert = self.process_row(row)
+                        rows.extend(rows_to_insert)
+                        row_count += len(rows_to_insert)
+                        if len(rows) >= self.batch_size:
+                            insert_rows(mb_curs2, self.temp_table_name, rows)
+                            self.mb_conn.commit()
+                            rows = []
+                            batch_count +=1
+
+                            if batch_count % 20 == 0:
+                                percent = "%.1f" % (100.0 * row_count / total_rows)
+                                log(f"{self.table_name}: inserted {row_count:,} rows. {percent}% complete")
+                    total_row_count += row_count
+
+                if rows:
+                    insert_rows(mb_curs2, self.temp_table_name, rows)
+                    self.mb_conn.commit()
+                    rows = []
+
+        log(f"{self.table_name}: inserted {total_row_count:,} rows total.")
+
+        log(f"{self.table_name}: post process inserted rows")
+        self._post_process()
+
         log(f"{self.table_name}: create indexes")
-        create_indexes(mb_conn)
+        self._create_indexes()
 
         log(f"{self.table_name}: swap tables and indexes into production.")
-        swap_table_and_indexes(mb_conn)
-
-        log(f"{self.table_name}: create canonical release table")
-        create_canonical_release_table(mb_conn)
+        self._swap_into_production()
 
         log(f"{self.table_name}: done")
