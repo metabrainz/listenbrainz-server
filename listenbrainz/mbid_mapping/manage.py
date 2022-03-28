@@ -15,7 +15,7 @@ from mapping.release_colors import sync_release_color_table, incremental_update_
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache
-import config
+from mapping.mbid_mapping_releases import create_mbid_mapping_releases
 
 
 @click.group()
@@ -32,14 +32,20 @@ def create_all():
     action_build_index()
     create_year_mapping()
 
-
 @cli.command()
 def mbid_mapping():
+    """
+        Create the MBID Mapping Releases table
+    """
+    create_mbid_mapping()
+
+@cli.command()
+def mbid_mapping_releases():
     """
         Create the MBID mapping, which also creates the prerequisit artist-credit pairs table. This can be done during
         production as new tables are moved in place atomically.
     """
-    create_mbid_mapping()
+    create_mbid_mapping_releases()
 
 
 @cli.command()
