@@ -87,7 +87,7 @@ class BulkInsertTable:
             self.mb_conn.rollback()
             raise
 
-    def _create_indexes(self):
+    def _create_indexes(self, no_analyze=False):
         """
         """
 
@@ -102,6 +102,10 @@ class BulkInsertTable:
                         curs.execute(f"""SELECT setval('{self.temp_table_name}_id_seq', max(id) + 1, false)
                                            FROM {self.temp_table_name}""")
                         break
+
+                if not no_analyze:
+                    log(f"{self.table_name}: analyze table")
+                    curs.execute(f"ANALYZE {self.temp_table_name}") 
 
                 self.mb_conn.commit()
 
@@ -128,7 +132,7 @@ class BulkInsertTable:
             raise
 
 
-    def _swap_into_production(self):
+    def _swap_into_production(self, no_swap_transaction=False):
         """
             Delete the old table and swap temp table into its place.
         """
@@ -149,15 +153,18 @@ class BulkInsertTable:
                     else:
                         curs.execute(f"ALTER INDEX {name}_tmp RENAME TO {name}")
                 curs.execute(f"ALTER SEQUENCE IF EXISTS {self.temp_table_name}_id_seq RENAME TO {simple_table_name}_id_seq") 
-                self.mb_conn.commit()
+
+                if not no_swap_transaction:
+                    self.mb_conn.commit()
 
         except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
             log(f"{self.table_name}: failed to swap into production", err)
-            self.mb_conn.rollback()
+            if not no_swap_transaction:
+                self.mb_conn.rollback()
             raise
 
 
-    def run(self):
+    def run(self, no_swap_transaction=False, no_analyze=False):
         """
         """
 
@@ -213,9 +220,9 @@ class BulkInsertTable:
         self._post_process()
 
         log(f"{self.table_name}: create indexes")
-        self._create_indexes()
+        self._create_indexes(no_analyze)
 
         log(f"{self.table_name}: swap tables and indexes into production.")
-        self._swap_into_production()
+        self._swap_into_production(no_swap_transaction)
 
         log(f"{self.table_name}: done")
