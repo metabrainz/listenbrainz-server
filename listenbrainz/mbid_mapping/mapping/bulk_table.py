@@ -31,18 +31,14 @@ class BulkInsertTable:
         self.mb_conn = mb_conn
         self.lb_conn = lb_conn
 
-<<<<<<< HEAD
         # For use with additional tables
         self.additional_tables = []
         self.insert_rows = []
 
-=======
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
         if batch_size is None:
             batch_size = BATCH_SIZE
         self.batch_size = batch_size
 
-<<<<<<< HEAD
     def add_additional_bulk_table(self, bulk_table):
         """
             Sometimes a bulk insert table query can generate output for more than one table.
@@ -54,9 +50,6 @@ class BulkInsertTable:
         """
         self.additional_tables.append(bulk_table)
 
-
-=======
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
     @abstractmethod
     def get_create_table_columns(self):
         """
@@ -90,11 +83,7 @@ class BulkInsertTable:
         return []
 
     @abstractmethod
-<<<<<<< HEAD
     def process_row(self, row):
-=======
-    def process_row(self):
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
         """
             This function will be called for each of the rows fetch from the source DB. This function
             should return an empty list if there are no rows to insert, or a list of rows (in correct
@@ -127,13 +116,10 @@ class BulkInsertTable:
             conn.rollback()
             raise
 
-<<<<<<< HEAD
         # Now chain this call to additional tables
         for table in self.additional_tables:
             table._create_tables()
 
-=======
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
     def _create_indexes(self, no_analyze=False):
         """
             Create indexes on the created temp tables. If no_analyze is passed, do not 
@@ -143,14 +129,9 @@ class BulkInsertTable:
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
-<<<<<<< HEAD
                 for name, column_def, unique in self.get_create_index_queries():
                     uniq = "UNIQUE" if unique else ""
                     curs.execute(f"CREATE {uniq} INDEX {name}_tmp ON {self.temp_table_name} ({column_def})")
-=======
-                for name, column_def in self.get_create_index_queries():
-                    curs.execute(f"CREATE INDEX {name}_tmp ON {self.temp_table_name} ({column_def})")
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
 
                 for name, types in self.get_create_table_columns():
                     if name == 'id' and types == "SERIAL":
@@ -170,13 +151,10 @@ class BulkInsertTable:
             conn.rollback()
             raise
 
-<<<<<<< HEAD
         # Now chain this call to additional tables
         for table in self.additional_tables:
             table._create_indexes(no_analyze)
 
-=======
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
     def _post_process(self):
         """
             Run queries that do post insert cleanup/processing. These queries are run
@@ -195,17 +173,12 @@ class BulkInsertTable:
             conn.rollback()
             raise
 
-<<<<<<< HEAD
         # Now chain this call to additional tables
         for table in self.additional_tables:
             table._post_process()
 
 
     def swap_into_production(self, no_swap_transaction=False, swap_conn=None):
-=======
-
-    def _swap_into_production(self, no_swap_transaction=False):
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
         """
             Delete the old table and swap temp table into its place, carefully renaming
             indexes and the if an id sequence exist, renaming it as well.
@@ -213,13 +186,9 @@ class BulkInsertTable:
             If no_swap_transaction is True, then no commits will be carried out in
             this function and the caller must carry out the transaction manaagement
             for this function. This is useful for if two or more tables need to be
-<<<<<<< HEAD
             swapped into production in a single transaction. If this is specified
             additional tables must have their swap_into_production function called
             manually.
-=======
-            swapped into production in a single transaction.
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
         """
 
         try:
@@ -229,19 +198,12 @@ class BulkInsertTable:
             simple_table_name = self.table_name
 
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
-<<<<<<< HEAD
         conn = swap_conn if swap_conn is not None else conn
-=======
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
         try:
             with conn.cursor() as curs:
                 curs.execute(f"DROP TABLE IF EXISTS {self.table_name}")
                 curs.execute(f"ALTER TABLE {self.temp_table_name} RENAME TO {simple_table_name}") 
-<<<<<<< HEAD
                 for name, column_def, _ in self.get_create_index_queries():
-=======
-                for name, column_def in self.get_create_index_queries():
->>>>>>> 30eafa8f44965d132d281515006995971b3b949d
                     if schema:
                         curs.execute(f"ALTER INDEX {schema}.{name}_tmp RENAME TO {name}")
                     else:
