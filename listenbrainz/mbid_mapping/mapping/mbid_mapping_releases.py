@@ -16,7 +16,6 @@ class MBIDMappingReleases(BulkInsertTable):
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.mbid_mapping_releases", mb_conn, lb_conn, batch_size)
         self.release_index = {}
-        self.count = 0
 
     def get_create_table_columns(self):
         """
@@ -89,5 +88,4 @@ class MBIDMappingReleases(BulkInsertTable):
             return ()
 
         self.release_index[row["release"]] = 1
-        self.count += 1
-        return [(self.count, row["release"], row["release_mbid"])]
+        return [(row["release"], row["release_mbid"])]

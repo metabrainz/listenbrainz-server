@@ -221,7 +221,9 @@ class BulkInsertTable:
 
         if not no_swap_transaction:
             for table in self.additional_tables:
+                print("SWAP INTO PRODCUTION FOR ADDITIONAL TABLE: %s" % table.table_name)
                 table.swap_into_production(no_swap_transaction)
+                print("Done!")
 
     def _add_insert_rows(self, rows):
         """ 
@@ -253,6 +255,11 @@ class BulkInsertTable:
         log(f"{self.table_name}: start")
         log(f"{self.table_name}: drop old tables, create new tables")
         self._create_tables()
+
+        columns = []
+        for name, types in self.get_create_table_columns():
+            if name != "id" and types != "SERIAL":
+                columns.append(name)
 
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
@@ -296,7 +303,7 @@ class BulkInsertTable:
                                         assert False
 
                         if len(rows) >= self.batch_size:
-                            insert_rows(ins_curs, self.temp_table_name, rows)
+                            insert_rows(ins_curs, self.temp_table_name, rows, cols=columns)
                             conn.commit()
                             rows = []
                             batch_count +=1
@@ -308,7 +315,7 @@ class BulkInsertTable:
                                 log(f"{self.table_name}: inserted {inserted:,} from {row_count:,} rows. {percent}% complete")
 
                 if rows:
-                    insert_rows(ins_curs, self.temp_table_name, rows)
+                    insert_rows(ins_curs, self.temp_table_name, rows, cols=columns)
                     conn.commit()
                     inserted_total += len(rows)
                     rows = []
@@ -324,5 +331,7 @@ class BulkInsertTable:
         if not no_swap:
             log(f"{self.table_name}: swap tables and indexes into production.")
             self._swap_into_production()
+        else:
+            log(f"{self.table_name}: defer swap tables.")
 
         log(f"{self.table_name}: done")

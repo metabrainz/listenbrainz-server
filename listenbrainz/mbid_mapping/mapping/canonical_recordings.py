@@ -19,14 +19,14 @@ class CanonicalRecordings(BulkInsertTable):
             WITH all_rows AS (
                  SELECT id
                       , row_number() OVER (PARTITION BY recording_mbid ORDER BY id) AS rnum
-                   FROM mapping.tmp_canonical_recording
+                   FROM mapping.canonical_recording_tmp
             )
-            DELETE FROM mapping.tmp_canonical_recording
+            DELETE FROM mapping.canonical_recording_tmp
                   WHERE id IN (SELECT id FROM all_rows WHERE rnum > 1)
         """]
 
     def get_create_index_queries(self):
-        return [("canonical_recording_ndx_canonical_recording_mbid", "combined_lookup", False),
+        return [("canonical_recording_ndx_canonical_recording_mbid", "canonical_recording_mbid", False),
                 ("canonical_recording_ndx_recording_mbid",           "recording_mbid", True)]
 
     def process_row(self, row):

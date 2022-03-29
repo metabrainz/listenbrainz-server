@@ -33,7 +33,7 @@ class MBIDMapping(BulkInsertTable):
                 ("recording_name",     "TEXT NOT NULL"),
                 ("combined_lookup",    "TEXT NOT NULL"),
                 ("score",              "INTEGER NOT NULL"),
-                ("year",               "INTEGER NOT NULL")]
+                ("year",               "INTEGER")]
 
     def get_insert_queries(self):
         return ["""
@@ -78,14 +78,14 @@ class MBIDMapping(BulkInsertTable):
             WITH all_recs AS (
                 SELECT *
                      , row_number() OVER (PARTITION BY combined_lookup ORDER BY score) AS rnum
-                  FROM mapping.tmp_mbid_mapping
+                  FROM mapping.mbid_mapping_tmp
             ), deleted_recs AS (
                 DELETE
-                  FROM mapping.tmp_mbid_mapping
+                  FROM mapping.mbid_mapping_tmp
                  WHERE id IN (SELECT id FROM all_recs WHERE rnum > 1)
              RETURNING recording_mbid, combined_lookup
             )
-           INSERT INTO mapping.tmp_canonical_recording (recording_mbid, canonical_recording_mbid, canonical_release_mbid)
+           INSERT INTO mapping.canonical_recording_tmp (recording_mbid, canonical_recording_mbid, canonical_release_mbid)
                 SELECT t1.recording_mbid
                      , t2.recording_mbid AS canonical_recording
                      , t2.release_mbid AS canonical_release
@@ -152,7 +152,9 @@ def create_mbid_mapping():
             mapping.run(no_swap=True)
 
             # Now swap everything into production in a single transaction
-            releases.swap_into_production(swap_conn=swap_conn)
-            mapping.swap_into_production(swap_conn=swap_conn)
-            con.swap_into_production(swap_conn=swap_conn)
+            log("mbid_mapping: Swap into production")
+            releases.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
+            mapping.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
+            can.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
             swap_conn.commit()
+            log("mbid_mapping: done done done!")
