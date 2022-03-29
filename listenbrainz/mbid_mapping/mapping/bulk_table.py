@@ -22,7 +22,6 @@ class BulkInsertTable:
 
 
     # TODO: use lb_conn when needed
-    # Add support for setting seq on serial column
     # Add support for client side transactions on swap
 
     @abstractmethod
@@ -96,6 +95,14 @@ class BulkInsertTable:
             with self.mb_conn.cursor() as curs:
                 for name, column_def in self.get_create_index_queries():
                     curs.execute(f"CREATE INDEX {name}_tmp ON {self.temp_table_name} ({column_def})")
+
+                for name, types in self.get_create_table_columns():
+                    if name == 'id' and types == "SERIAL":
+                        log(f"{self.table_name}: set sequence value")
+                        curs.execute(f"""SELECT setval('{self.temp_table_name}_id_seq', max(id) + 1, false)
+                                           FROM {self.temp_table_name}""")
+                        break
+
                 self.mb_conn.commit()
 
         except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
@@ -141,6 +148,7 @@ class BulkInsertTable:
                         curs.execute(f"ALTER INDEX {schema}.{name}_tmp RENAME TO {name}")
                     else:
                         curs.execute(f"ALTER INDEX {name}_tmp RENAME TO {name}")
+                curs.execute(f"ALTER SEQUENCE IF EXISTS {self.temp_table_name}_id_seq RENAME TO {simple_table_name}_id_seq") 
                 self.mb_conn.commit()
 
         except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
@@ -208,6 +216,6 @@ class BulkInsertTable:
         self._create_indexes()
 
         log(f"{self.table_name}: swap tables and indexes into production.")
-#        self._swap_into_production()
+        self._swap_into_production()
 
         log(f"{self.table_name}: done")
