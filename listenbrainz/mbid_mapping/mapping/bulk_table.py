@@ -31,9 +31,25 @@ class BulkInsertTable:
         self.mb_conn = mb_conn
         self.lb_conn = lb_conn
 
+        # For use with additional tables
+        self.additional_tables = []
+        self.insert_rows = []
+
         if batch_size is None:
             batch_size = BATCH_SIZE
         self.batch_size = batch_size
+
+    def add_additional_bulk_table(self, bulk_table):
+        """
+            Sometimes a bulk insert table query can generate output for more than one table.
+            By adding more bulk-tables to this table, this class will drive the creation of
+            all the tables related to this table. If you add another bulk table, you should
+            not call run() on the additional tables. This class will manage the creation process
+            but the process_row() function of additional tables will not be called since
+            additional tables are assumed to be inserting data createed by the primary table.
+        """
+        self.additional_tables.append(bulk_table)
+
 
     @abstractmethod
     def get_create_table_columns(self):
@@ -68,7 +84,7 @@ class BulkInsertTable:
         return []
 
     @abstractmethod
-    def process_row(self):
+    def process_row(self, row):
         """
             This function will be called for each of the rows fetch from the source DB. This function
             should return an empty list if there are no rows to insert, or a list of rows (in correct
@@ -101,6 +117,10 @@ class BulkInsertTable:
             conn.rollback()
             raise
 
+        # Now chain this call to additional tables
+        for table in self.additional_tables:
+            table._create_tables()
+
     def _create_indexes(self, no_analyze=False):
         """
             Create indexes on the created temp tables. If no_analyze is passed, do not 
@@ -110,8 +130,9 @@ class BulkInsertTable:
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
-                for name, column_def in self.get_create_index_queries():
-                    curs.execute(f"CREATE INDEX {name}_tmp ON {self.temp_table_name} ({column_def})")
+                for name, column_def, unique in self.get_create_index_queries():
+                    uniq = "UNIQUE" if unique else ""
+                    curs.execute(f"CREATE {uniq} INDEX {name}_tmp ON {self.temp_table_name} ({column_def})")
 
                 for name, types in self.get_create_table_columns():
                     if name == 'id' and types == "SERIAL":
@@ -131,6 +152,10 @@ class BulkInsertTable:
             conn.rollback()
             raise
 
+        # Now chain this call to additional tables
+        for table in self.additional_tables:
+            table._create_indexes(no_analyze)
+
     def _post_process(self):
         """
             Run queries that do post insert cleanup/processing. These queries are run
@@ -149,8 +174,12 @@ class BulkInsertTable:
             conn.rollback()
             raise
 
+        # Now chain this call to additional tables
+        for table in self.additional_tables:
+            table._post_process()
 
-    def _swap_into_production(self, no_swap_transaction=False):
+
+    def swap_into_production(self, no_swap_transaction=False, swap_conn=None):
         """
             Delete the old table and swap temp table into its place, carefully renaming
             indexes and the if an id sequence exist, renaming it as well.
@@ -158,7 +187,9 @@ class BulkInsertTable:
             If no_swap_transaction is True, then no commits will be carried out in
             this function and the caller must carry out the transaction manaagement
             for this function. This is useful for if two or more tables need to be
-            swapped into production in a single transaction.
+            swapped into production in a single transaction. If this is specified
+            additional tables must have their swap_into_production function called
+            manually.
         """
 
         try:
@@ -168,11 +199,12 @@ class BulkInsertTable:
             simple_table_name = self.table_name
 
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = swap_conn if swap_conn is not None else conn
         try:
             with conn.cursor() as curs:
                 curs.execute(f"DROP TABLE IF EXISTS {self.table_name}")
                 curs.execute(f"ALTER TABLE {self.temp_table_name} RENAME TO {simple_table_name}") 
-                for name, column_def in self.get_create_index_queries():
+                for name, column_def, _ in self.get_create_index_queries():
                     if schema:
                         curs.execute(f"ALTER INDEX {schema}.{name}_tmp RENAME TO {name}")
                     else:
@@ -188,11 +220,35 @@ class BulkInsertTable:
                 conn.rollback()
             raise
 
+        if not no_swap_transaction:
+            for table in self.additional_tables:
+                table.swap_into_production(no_swap_transaction)
 
-    def run(self, no_swap_transaction=False, no_analyze=False):
+    def _add_insert_rows(self, rows):
+        """ 
+            This function should only be called when this table is considered to be 
+            an additional bulk insert table and its rows have been generated by
+            the higher level bulk insert table. Since additional tables will not have
+            their process_row function called, this function takes its place for saving
+            resultant rows in the table.
+        """
+
+        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        self.insert_rows.extend(rows)
+        if len(self.insert_rows) >= self.batch_size:
+            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
+                insert_rows(ins_curs, self.temp_table_name, self.insert_rows)
+            conn.commit()
+            self.insert_rows = []
+
+    def run(self, no_swap=False, no_analyze=False):
         """
             The main loop of the class that carefully executes the provded statements
             and prints statistics about its progress.
+
+            Options:
+               no_swap     - If True, do not call swap_into_production, the caller will do it
+               no_analyze  - If True, do not run ANALYZE on the result table
         """
 
         log(f"{self.table_name}: start")
@@ -223,10 +279,26 @@ class BulkInsertTable:
 
                         row_count += 1
                         total_row_count += 1
-                        rows.extend(self.process_row(row))
+                        result = self.process_row(row)
+                        if type(result) in (list, tuple):
+                            rows.extend(result)
+                        else:
+                            # Assume result is a dict with table names as the keys
+                            for key in result:
+                                if key == self.table_name:
+                                    rows.extend(result[key])
+                                else:
+                                    for table in self.additional_tables:
+                                        if table.table_name == key:
+                                            table._add_insert_rows(result[key])
+                                            break
+                                    else:
+                                        # We should never get here. If we do, we have rows and no idea what to do with them
+                                        assert False
+
                         if len(rows) >= self.batch_size:
                             insert_rows(ins_curs, self.temp_table_name, rows)
-                            self.mb_conn.commit()
+                            conn.commit()
                             rows = []
                             batch_count +=1
                             inserted += self.batch_size
@@ -250,7 +322,8 @@ class BulkInsertTable:
         log(f"{self.table_name}: create indexes")
         self._create_indexes(no_analyze)
 
-        log(f"{self.table_name}: swap tables and indexes into production.")
-        self._swap_into_production(no_swap_transaction)
+        if not no_swap:
+            log(f"{self.table_name}: swap tables and indexes into production.")
+            self._swap_into_production()
 
         log(f"{self.table_name}: done")

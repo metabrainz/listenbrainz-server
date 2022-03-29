@@ -78,8 +78,8 @@ class MBIDMappingReleases(BulkInsertTable):
             Returns a list of of tuples of index names and column defintion strings:
                 [("mbid_mapping_ndx_recording_mbid", "recoding_mbid")]
         """
-        return [("mbid_mapping_releases_idx_release", "release"),
-                ("mbid_mapping_releases_idx_id",      "id")]
+        return [("mbid_mapping_releases_idx_release", "release", False),
+                ("mbid_mapping_releases_idx_id",      "id", False)]
 
     def process_row(self, row):
         """
@@ -91,9 +91,3 @@ class MBIDMappingReleases(BulkInsertTable):
         self.release_index[row["release"]] = 1
         self.count += 1
         return [(self.count, row["release"], row["release_mbid"])]
-
-
-def create_mbid_mapping_releases():
-    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
-        bt = MBIDMappingReleases(mb_conn)
-        bt.run()
