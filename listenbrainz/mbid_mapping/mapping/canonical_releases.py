@@ -3,7 +3,7 @@ from mapping.bulk_table import BulkInsertTable
 class CanonicalReleases(BulkInsertTable):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_releases", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.recording_canonical_release", mb_conn, lb_conn, batch_size)
 
     def get_create_table_columns(self):
         return [("id",                       "SERIAL"),
@@ -11,17 +11,18 @@ class CanonicalReleases(BulkInsertTable):
                 ("release_mbid",             "UUID NOT NULL")]
 
     def get_insert_queries(self):
+        return []
+
+    def get_post_process_queries(self):
         return ["""INSERT INTO mapping.recording_canonical_release_tmp (recording_mbid, release_mbid)
                         SELECT recording_mbid
                              , canonical_release_mbid AS release_mbid
                           FROM mapping.canonical_recording_tmp""",
-                """INSERT INTO mapping.tmp_recording_canonical_release_tmp (recording_mbid, release_mbid)
+                """INSERT INTO mapping.recording_canonical_release_tmp (recording_mbid, release_mbid)
                                  SELECT recording_mbid
                                       , release_mbid
-                                   FROM mapping.mbid_mapping_tmp"""]
-
-    def get_post_process_queries(self):
-        return ["""COMMIT"""]
+                                   FROM mapping.mbid_mapping_tmp""",
+                """COMMIT"""]
 
     def get_create_index_queries(self):
         return [("recording_mbid_ndx_recording_canonical_release", "recording_mbid", True)]

@@ -8,6 +8,7 @@ from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_recordings import CanonicalRecordings
+from mapping.canonical_releases import CanonicalReleases
 from mapping.mbid_mapping_releases import MBIDMappingReleases
 import config
 
@@ -149,6 +150,7 @@ def create_mbid_mapping():
 
             # Setup all the needed objects
             can = CanonicalRecordings(mb_conn)
+            can_rel = CanonicalReleases(mb_conn)
             releases = MBIDMappingReleases(mb_conn)
             mapping = MBIDMapping(mb_conn)
             mapping.add_additional_bulk_table(can)
@@ -157,13 +159,13 @@ def create_mbid_mapping():
             create_formats_table(mb_conn)
             releases.run(no_swap=True)
             mapping.run(no_swap=True)
-
-            return
+            can_rel.run(no_swap=True)
 
             # Now swap everything into production in a single transaction
             log("mbid_mapping: Swap into production")
             releases.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
             can.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
+            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
             swap_conn.commit()
             log("mbid_mapping: done done done!")
