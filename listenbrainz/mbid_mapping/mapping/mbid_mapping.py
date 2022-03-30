@@ -101,7 +101,7 @@ class MBIDMapping(BulkInsertTable):
                  WHERE t2.rnum = 1;
         """]
 
-    def get_create_index_queries(self):
+    def get_index_names(self):
         return [("mbid_mapping_idx_combined_lookup",              "combined_lookup", False),
                 ("mbid_mapping_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False)]
 

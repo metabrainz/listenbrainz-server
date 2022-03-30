@@ -32,7 +32,7 @@ class CanonicalRecordings(BulkInsertTable):
                   WHERE id IN (SELECT id FROM all_rows WHERE rnum > 1)
         """]
 
-    def get_create_index_queries(self):
+    def get_index_names(self):
         return [("canonical_recording_ndx_canonical_recording_mbid", "canonical_recording_mbid", False),
                 ("canonical_recording_ndx_recording_mbid",           "recording_mbid", True)]
 

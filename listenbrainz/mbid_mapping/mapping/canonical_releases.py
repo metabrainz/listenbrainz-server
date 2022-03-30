@@ -31,7 +31,7 @@ class CanonicalReleases(BulkInsertTable):
                                    FROM mapping.mbid_mapping_tmp""",
                 """COMMIT"""]
 
-    def get_create_index_queries(self):
+    def get_index_names(self):
         return [("recording_mbid_ndx_recording_canonical_release", "recording_mbid", True)]
 
     def process_row(self, row):

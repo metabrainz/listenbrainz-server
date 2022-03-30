@@ -80,7 +80,7 @@ class BulkInsertTable:
         return []
 
     @abstractmethod
-    def get_create_index_queries(self):
+    def get_index_names(self):
         """
             Returns a list of of tuples of (index names, column defintion, unique) strings:
                 [("mbid_mapping_ndx_recording_mbid", "recoding_mbid", True)]
@@ -151,7 +151,7 @@ class BulkInsertTable:
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
-                for name, column_def, unique in self.get_create_index_queries():
+                for name, column_def, unique in self.get_index_names():
                     uniq = "UNIQUE" if unique else ""
                     curs.execute(f"CREATE {uniq} INDEX {name}_tmp ON {self.temp_table_name} ({column_def})")
 
@@ -224,7 +224,7 @@ class BulkInsertTable:
             with conn.cursor() as curs:
                 curs.execute(f"DROP TABLE IF EXISTS {self.table_name}")
                 curs.execute(f"ALTER TABLE {self.temp_table_name} RENAME TO {simple_table_name}")
-                for name, column_def, _ in self.get_create_index_queries():
+                for name, column_def, _ in self.get_index_names():
                     if schema:
                         curs.execute(f"ALTER INDEX {schema}.{name}_tmp RENAME TO {name}")
                     else:
@@ -258,6 +258,12 @@ class BulkInsertTable:
             self._flush_insert_rows()
 
     def _flush_insert_rows(self):
+        """ 
+            This function should only be called when this table is considered to be 
+            an additional bulk insert table and the inserting of rows is complete.
+            This function will flush out any remaining rows in ram to the DB.
+        """
+
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
             insert_rows(ins_curs, self.temp_table_name, self.insert_rows, cols=self.insert_columns)
@@ -265,6 +271,9 @@ class BulkInsertTable:
         self.insert_rows = []
 
     def _handle_result(self, result):
+        """
+            Helper function for routing rows to be inserted.
+        """
         if result is None:
             return []
 

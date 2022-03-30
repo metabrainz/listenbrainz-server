@@ -78,7 +78,7 @@ class MBIDMappingReleases(BulkInsertTable):
 
         return queries
 
-    def get_create_index_queries(self):
+    def get_index_names(self):
         """
             Returns a list of of tuples of index names and column defintion strings:
                 [("mbid_mapping_ndx_recording_mbid", "recoding_mbid")]
