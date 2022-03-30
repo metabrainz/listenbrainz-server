@@ -30,6 +30,7 @@ class BulkInsertTable:
         self.temp_table_name = table_name + "_TMP"
         self.mb_conn = mb_conn
         self.lb_conn = lb_conn
+        self.insert_columns = []
 
         # For use with additional tables
         self.additional_tables = []
@@ -104,6 +105,8 @@ class BulkInsertTable:
                 columns = []
                 for name, types in self.get_create_table_columns():
                     columns.append("%s %s" % (name, types))
+                    if name != "id" and types != "SERIAL":
+                        self.insert_columns.append(name)
 
                 columns = ", ".join(columns)
 
@@ -221,9 +224,7 @@ class BulkInsertTable:
 
         if not no_swap_transaction:
             for table in self.additional_tables:
-                print("SWAP INTO PRODCUTION FOR ADDITIONAL TABLE: %s" % table.table_name)
                 table.swap_into_production(no_swap_transaction)
-                print("Done!")
 
     def _add_insert_rows(self, rows):
         """ 
@@ -234,13 +235,16 @@ class BulkInsertTable:
             resultant rows in the table.
         """
 
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         self.insert_rows.extend(rows)
         if len(self.insert_rows) >= self.batch_size:
-            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
-                insert_rows(ins_curs, self.temp_table_name, self.insert_rows)
-            conn.commit()
-            self.insert_rows = []
+            self._flush_insert_rows()
+
+    def _flush_insert_rows(self):
+        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
+            insert_rows(ins_curs, self.temp_table_name, self.insert_rows, cols=self.insert_columns)
+        conn.commit()
+        self.insert_rows = []
 
     def run(self, no_swap=False, no_analyze=False):
         """
@@ -255,11 +259,6 @@ class BulkInsertTable:
         log(f"{self.table_name}: start")
         log(f"{self.table_name}: drop old tables, create new tables")
         self._create_tables()
-
-        columns = []
-        for name, types in self.get_create_table_columns():
-            if name != "id" and types != "SERIAL":
-                columns.append(name)
 
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
@@ -303,7 +302,7 @@ class BulkInsertTable:
                                         assert False
 
                         if len(rows) >= self.batch_size:
-                            insert_rows(ins_curs, self.temp_table_name, rows, cols=columns)
+                            insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
                             conn.commit()
                             rows = []
                             batch_count +=1
@@ -315,10 +314,14 @@ class BulkInsertTable:
                                 log(f"{self.table_name}: inserted {inserted:,} from {row_count:,} rows. {percent}% complete")
 
                 if rows:
-                    insert_rows(ins_curs, self.temp_table_name, rows, cols=columns)
+                    insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
                     conn.commit()
                     inserted_total += len(rows)
                     rows = []
+
+                for table in self.additional_tables:
+                    table._flush_insert_rows()
+
 
         log(f"{self.table_name}: complete! inserted {inserted_total:,} rows total.")
 

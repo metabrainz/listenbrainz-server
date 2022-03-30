@@ -125,12 +125,12 @@ class MBIDMapping(BulkInsertTable):
                                                        row["year"])
         else:
             other_row = self.artist_recordings[combined_lookup]
-            if row["recording_mbid"] != other_row[6]:
+            if row["recording_mbid"] != other_row[5]:
                 canonical_recording_result.append((row["recording_mbid"],
-                                                   other_row[6],
-                                                   other_row[4]))
+                                                   other_row[5],
+                                                   other_row[3]))
 
-        last_artist_credit_id = row['artist_credit_id']
+        self.last_artist_credit_id = row['artist_credit_id']
 
         return { "mapping.mbid_mapping": result,
                  "mapping.canonical_recording": canonical_recording_result }
@@ -150,6 +150,8 @@ def create_mbid_mapping():
             create_formats_table(mb_conn)
             releases.run(no_swap=True)
             mapping.run(no_swap=True)
+
+            return
 
             # Now swap everything into production in a single transaction
             log("mbid_mapping: Swap into production")
