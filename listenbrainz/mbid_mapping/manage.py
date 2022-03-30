@@ -8,7 +8,6 @@ import click
 
 from mapping.mbid_mapping import create_mbid_mapping
 from mapping.typesense_index import build_index as action_build_index
-from mapping.year_mapping import create_year_mapping
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
 from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
@@ -25,11 +24,10 @@ def cli():
 @cli.command()
 def create_all():
     """
-        Create all mappings in one go. First mbid mapping, then its typesense index and finally the year lookup mapping.
+        Create all mappings in one go. First mbid mapping, then its typesense index.
     """
     create_mbid_mapping()
     action_build_index()
-    create_year_mapping()
 
 @cli.command()
 def mbid_mapping():
@@ -45,15 +43,6 @@ def test_mapping():
         Test the created mbid mapping. The MBID mapping must have been created before running this.
     """
     action_test_mapping()
-
-
-@cli.command()
-def year_mapping():
-    """
-        Create the recording year lookup mapping, which also creates the prerequisit artist-credit pairs table.
-        This can be done during production as new tables are moved in place atomically.
-    """
-    create_year_mapping()
 
 
 @cli.command()
