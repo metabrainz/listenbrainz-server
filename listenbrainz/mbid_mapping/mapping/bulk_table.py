@@ -91,6 +91,13 @@ class BulkInsertTable:
             column order suitable for inserting data into the DB with psycopg2's execute_values call).
         """
 
+    @abstractmethod
+    def process_row_complete(self):
+        """
+            This function will be called after the last row has been sent to process_row, so that
+            any flushing/cleanup needed can be completed.
+        """
+
     def _create_tables(self):
         """
             This function creates the temp table, given the provided specification.
@@ -246,6 +253,29 @@ class BulkInsertTable:
         conn.commit()
         self.insert_rows = []
 
+    def _handle_result(self, result):
+        if result is None:
+            return []
+
+        ret = []
+        if type(result) in (list, tuple):
+            ret.extend(result)
+        else:
+            # Assume result is a dict with table names as the keys
+            for key in result:
+                if key == self.table_name:
+                    ret.extend(result[key])
+                else:
+                    for table in self.additional_tables:
+                        if table.table_name == key:
+                            table._add_insert_rows(result[key])
+                            break
+                    else:
+                        # We should never get here. If we do, we have rows and no idea what to do with them
+                        assert False
+
+        return ret
+
     def run(self, no_swap=False, no_analyze=False):
         """
             The main loop of the class that carefully executes the provded statements
@@ -285,22 +315,7 @@ class BulkInsertTable:
                         row_count += 1
                         total_row_count += 1
                         result = self.process_row(row)
-                        if type(result) in (list, tuple):
-                            rows.extend(result)
-                        else:
-                            # Assume result is a dict with table names as the keys
-                            for key in result:
-                                if key == self.table_name:
-                                    rows.extend(result[key])
-                                else:
-                                    for table in self.additional_tables:
-                                        if table.table_name == key:
-                                            table._add_insert_rows(result[key])
-                                            break
-                                    else:
-                                        # We should never get here. If we do, we have rows and no idea what to do with them
-                                        assert False
-
+                        rows.extend(self._handle_result(result))
                         if len(rows) >= self.batch_size:
                             insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
                             conn.commit()
@@ -313,6 +328,7 @@ class BulkInsertTable:
                                 percent = "%.1f" % (100.0 * row_count / total_rows)
                                 log(f"{self.table_name}: inserted {inserted:,} from {row_count:,} rows. {percent}% complete")
 
+                rows.extend(self._handle_result(self.process_row_complete()))
                 if rows:
                     insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
                     conn.commit()

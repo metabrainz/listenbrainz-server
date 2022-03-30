@@ -135,6 +135,13 @@ class MBIDMapping(BulkInsertTable):
         return { "mapping.mbid_mapping": result,
                  "mapping.canonical_recording": canonical_recording_result }
 
+    def process_row_complete(self):
+        if self.artist_recordings:
+            return { "mapping.mbid_mapping": self.artist_recordings.values() }
+        else:
+            return None
+
+
 # Add LB write support -- test since there are many things not done!
 def create_mbid_mapping():
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
