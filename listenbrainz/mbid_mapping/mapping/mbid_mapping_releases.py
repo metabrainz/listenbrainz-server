@@ -65,10 +65,10 @@ class MBIDMappingReleases(BulkInsertTable):
         for op in ['!=', '=']:
             if config.USE_MINIMAL_DATASET:
                 log(f"{self.table_name}: Using a minimal dataset for artist credit pairs: artist_id %s 1" % op)
-                queries.append(query % (op, 'AND rg.artist_credit IN (%s)' % ",".join([str(i) for i in TEST_ARTIST_IDS])))
+                queries.append(("MB", query % (op, 'AND rg.artist_credit IN (%s)' % ",".join([str(i) for i in TEST_ARTIST_IDS]))))
             else:
                 log(f"{self.table_name}: Using a full dataset for artist credit pairs: artist_id %s 1" % op)
-                queries.append(query % (op, ""))
+                queries.append(("MB", query % (op, "")))
 
         return queries
 

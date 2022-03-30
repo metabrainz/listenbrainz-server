@@ -37,7 +37,7 @@ class MBIDMapping(BulkInsertTable):
                 ("year",               "INTEGER")]
 
     def get_insert_queries(self):
-        return ["""
+        return [("MB", """
                SELECT ac.id as artist_credit_id
                     , r.name AS recording_name
                     , r.gid AS recording_mbid
@@ -72,7 +72,7 @@ class MBIDMapping(BulkInsertTable):
                    ON rc.release = rl.id
              GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name, year
              ORDER BY ac.id, rpr.id
-        """]
+        """)]
 
     def get_post_process_queries(self):
         return ["""
@@ -143,29 +143,41 @@ class MBIDMapping(BulkInsertTable):
             return None
 
 
-# Add LB write support -- test since there are many things not done!
 def create_mbid_mapping():
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
-        with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as swap_conn:
 
-            # Setup all the needed objects
-            can = CanonicalRecordings(mb_conn)
-            can_rel = CanonicalReleases(mb_conn)
-            releases = MBIDMappingReleases(mb_conn)
-            mapping = MBIDMapping(mb_conn)
-            mapping.add_additional_bulk_table(can)
+        lb_conn = None
+        if config.TIMESCALE_DATABASE_URI:
+            lb_conn = psycopg2.connect(config.TIMESCALE_DATABASE_URI)
 
-            # Carry out the bulk of the work
-            create_formats_table(mb_conn)
-            releases.run(no_swap=True)
-            mapping.run(no_swap=True)
-            can_rel.run(no_swap=True)
+        # Setup all the needed objects
+        can = CanonicalRecordings(mb_conn, lb_conn)
+        can_rel = CanonicalReleases(mb_conn, lb_conn)
+        releases = MBIDMappingReleases(mb_conn)
+        mapping = MBIDMapping(mb_conn, lb_conn)
+        mapping.add_additional_bulk_table(can)
 
-            # Now swap everything into production in a single transaction
-            log("mbid_mapping: Swap into production")
-            releases.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
-            mapping.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
-            can.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
-            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=swap_conn)
-            swap_conn.commit()
-            log("mbid_mapping: done done done!")
+        # Carry out the bulk of the work
+        create_formats_table(mb_conn)
+        releases.run(no_swap=True)
+        mapping.run(no_swap=True)
+        can_rel.run(no_swap=True)
+
+        # Now swap everything into production in a single transaction
+        log("mbid_mapping: Swap into production")
+        if lb_conn:
+            releases.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+            mapping.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
+            can.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
+            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
+            mb_conn.commit()
+            lb_conn.commit()
+            lb_conn.close()
+        else:
+            releases.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+            mapping.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+            can.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+            mb_conn.commit()
+
+        log("mbid_mapping: done done done!")

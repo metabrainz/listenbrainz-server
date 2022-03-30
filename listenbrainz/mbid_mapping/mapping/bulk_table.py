@@ -62,8 +62,12 @@ class BulkInsertTable:
     @abstractmethod
     def get_insert_queries(self):
         """
-            Returns a list of data insert queries to run. The same process_row function will be 
-            called for each of the rows resulting from the passed queries.
+            Returns a list of tuples with DB handle to connecte to and data insert queries to run.
+            The same process_row function will be called for each of the rows resulting from the passed queries.
+
+            Example:
+                [("MB", "SELECT * from ..."),
+                 ("LB", "SELECT * from ... ")]
         """
         return []
 
@@ -290,25 +294,39 @@ class BulkInsertTable:
         log(f"{self.table_name}: drop old tables, create new tables")
         self._create_tables()
 
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
-        with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
-                queries = self.get_insert_queries()
-                total_row_count = 0
-                rows = []
-                inserted = 0
-                inserted_total = 0
-                batch_count = 0
-                for i, query in enumerate(queries):
+        total_row_count = 0
+        rows = []
+        inserted = 0
+        inserted_total = 0
+        batch_count = 0
+
+        ins_conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        with ins_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
+            queries = self.get_insert_queries()
+            for i, db_query in enumerate(queries):
+                select_conn = None
+                if db_query[0] == "MB":
+                    select_conn = self.mb_conn
+                elif db_query[0] == "LB":
+                    select_conn = self.lb_conn
+                else:
+                    print("Invalid DB provided in create table data: '%s'" % db_query[0])
+                    raise RuntimeError
+
+                if select_conn is None:
+                    print("You need to provide a LB DB connections string.")
+                    raise RuntimeError
+
+                with select_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                     log(f"{self.table_name}: execute query {i+1} of {len(queries)}")
-                    mb_curs.execute(query)
+                    curs.execute(db_query[1])
 
                     row_count = 0
                     inserted = 0
-                    total_rows = mb_curs.rowcount
+                    total_rows = curs.rowcount
                     log(f"{self.table_name}: fetch {total_rows:,} rows")
                     while True:
-                        row = mb_curs.fetchone()
+                        row = curs.fetchone()
                         if not row:
                             break
 
@@ -318,7 +336,7 @@ class BulkInsertTable:
                         rows.extend(self._handle_result(result))
                         if len(rows) >= self.batch_size:
                             insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
-                            conn.commit()
+                            ins_conn.commit()
                             rows = []
                             batch_count +=1
                             inserted += self.batch_size
@@ -331,7 +349,7 @@ class BulkInsertTable:
                 rows.extend(self._handle_result(self.process_row_complete()))
                 if rows:
                     insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
-                    conn.commit()
+                    ins_conn.commit()
                     inserted_total += len(rows)
                     rows = []
 
