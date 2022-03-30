@@ -36,9 +36,3 @@ class CanonicalReleases(BulkInsertTable):
 
     def process_row(self, row):
         return []
-
-
-def create_canonical_releases():
-    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
-        can = CanonicalRecordings(mb_conn)
-        can.run()
