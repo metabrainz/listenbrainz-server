@@ -29,6 +29,7 @@ def create_all():
     create_mbid_mapping()
     action_build_index()
 
+
 @cli.command()
 def mbid_mapping():
     """

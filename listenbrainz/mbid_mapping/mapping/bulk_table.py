@@ -107,7 +107,6 @@ class BulkInsertTable:
             This function creates the temp table, given the provided specification.
         """
 
-
         # drop/create finished table
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
@@ -156,7 +155,7 @@ class BulkInsertTable:
 
                 if not no_analyze:
                     log(f"{self.table_name}: analyze table")
-                    curs.execute(f"ANALYZE {self.temp_table_name}") 
+                    curs.execute(f"ANALYZE {self.temp_table_name}")
 
                 conn.commit()
 
@@ -191,7 +190,6 @@ class BulkInsertTable:
         for table in self.additional_tables:
             table._post_process()
 
-
     def swap_into_production(self, no_swap_transaction=False, swap_conn=None):
         """
             Delete the old table and swap temp table into its place, carefully renaming
@@ -216,13 +214,13 @@ class BulkInsertTable:
         try:
             with conn.cursor() as curs:
                 curs.execute(f"DROP TABLE IF EXISTS {self.table_name}")
-                curs.execute(f"ALTER TABLE {self.temp_table_name} RENAME TO {simple_table_name}") 
+                curs.execute(f"ALTER TABLE {self.temp_table_name} RENAME TO {simple_table_name}")
                 for name, column_def, _ in self.get_create_index_queries():
                     if schema:
                         curs.execute(f"ALTER INDEX {schema}.{name}_tmp RENAME TO {name}")
                     else:
                         curs.execute(f"ALTER INDEX {name}_tmp RENAME TO {name}")
-                curs.execute(f"ALTER SEQUENCE IF EXISTS {self.temp_table_name}_id_seq RENAME TO {simple_table_name}_id_seq") 
+                curs.execute(f"ALTER SEQUENCE IF EXISTS {self.temp_table_name}_id_seq RENAME TO {simple_table_name}_id_seq")
 
                 if not no_swap_transaction:
                     conn.commit()
@@ -338,7 +336,7 @@ class BulkInsertTable:
                             insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
                             ins_conn.commit()
                             rows = []
-                            batch_count +=1
+                            batch_count += 1
                             inserted += self.batch_size
                             inserted_total += self.batch_size
 
@@ -355,7 +353,6 @@ class BulkInsertTable:
 
                 for table in self.additional_tables:
                     table._flush_insert_rows()
-
 
         log(f"{self.table_name}: complete! inserted {inserted_total:,} rows total.")
 

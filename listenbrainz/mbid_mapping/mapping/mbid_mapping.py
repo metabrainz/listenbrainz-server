@@ -22,7 +22,6 @@ class MBIDMapping(BulkInsertTable):
         self.last_artist_credit_id = None
         self.artist_recordings = {}
 
-
     def get_create_table_columns(self):
         return [("id",                 "SERIAL"),
                 ("artist_credit_id",   "INT NOT NULL"),
@@ -133,12 +132,12 @@ class MBIDMapping(BulkInsertTable):
 
         self.last_artist_credit_id = row['artist_credit_id']
 
-        return { "mapping.mbid_mapping": result,
-                 "mapping.canonical_recording": canonical_recording_result }
+        return {"mapping.mbid_mapping": result,
+                "mapping.canonical_recording": canonical_recording_result}
 
     def process_row_complete(self):
         if self.artist_recordings:
-            return { "mapping.mbid_mapping": self.artist_recordings.values() }
+            return {"mapping.mbid_mapping": self.artist_recordings.values()}
         else:
             return None
 

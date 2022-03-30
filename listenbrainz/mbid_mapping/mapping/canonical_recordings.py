@@ -1,5 +1,6 @@
 from mapping.bulk_table import BulkInsertTable
 
+
 class CanonicalRecordings(BulkInsertTable):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):

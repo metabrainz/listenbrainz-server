@@ -1,5 +1,6 @@
 from mapping.bulk_table import BulkInsertTable
 
+
 class CanonicalReleases(BulkInsertTable):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
@@ -29,6 +30,7 @@ class CanonicalReleases(BulkInsertTable):
 
     def process_row(self, row):
         return []
+
 
 def create_canonical_releases():
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
