@@ -34,7 +34,7 @@ def create_all():
 @cli.command()
 def mbid_mapping():
     """
-        Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release) 
+        Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
     create_mbid_mapping()
 
