@@ -16,6 +16,12 @@ TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishe
 
 
 class MBIDMapping(BulkInsertTable):
+    """
+        This class creates the MBID mapping tables.
+
+        For documentation on what each of the functions in this class does, please refer
+        to the BulkInsertTable docs.
+    """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.mbid_mapping", mb_conn, lb_conn, batch_size)
@@ -143,6 +149,10 @@ class MBIDMapping(BulkInsertTable):
 
 
 def create_mbid_mapping():
+    """
+        Main function for creating the MBID mapping and its related tables.
+    """
+
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
 
         lb_conn = None

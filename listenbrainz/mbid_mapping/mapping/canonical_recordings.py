@@ -2,6 +2,12 @@ from mapping.bulk_table import BulkInsertTable
 
 
 class CanonicalRecordings(BulkInsertTable):
+    """
+        This class creates the canonical recording table.
+
+        For documentation on what each of the functions in this class does, please refer
+        to the BulkInsertTable docs.
+    """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.canonical_recording", mb_conn, lb_conn, batch_size)

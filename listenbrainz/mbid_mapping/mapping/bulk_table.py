@@ -54,20 +54,20 @@ class BulkInsertTable:
     @abstractmethod
     def get_create_table_columns(self):
         """
-            Return the PG query to fetch the insert data. This function should return
-            a list of tuples of two strings: [(column name, column type/constraints/defaults)]
+            Return the names and column types of the table to be created. This function should return a list
+            of tuples of two strings: [(column name, column type/constraints/defaults)]
         """
         return []
 
     @abstractmethod
     def get_insert_queries(self):
         """
-            Returns a list of tuples with DB handle to connecte to and data insert queries to run.
-            The same process_row function will be called for each of the rows resulting from the passed queries.
+            Returns a list of tuples with DB nick to connect to and data insert queries to run.
+            The process_row function will be called for each of the rows resulting from the queries.
 
             Example:
-                [("MB", "SELECT * from ..."),
-                 ("LB", "SELECT * from ... ")]
+                [("MB", "SELECT * from ..."),    # Select data from MB
+                 ("LB", "SELECT * from ... ")]   # Select data from LB
         """
         return []
 
@@ -82,8 +82,9 @@ class BulkInsertTable:
     @abstractmethod
     def get_create_index_queries(self):
         """
-            Returns a list of of tuples of index names and column defintion strings:
-                [("mbid_mapping_ndx_recording_mbid", "recoding_mbid")]
+            Returns a list of of tuples of (index names, column defintion, unique) strings:
+                [("mbid_mapping_ndx_recording_mbid", "recoding_mbid", True)]
+            Will create the unique index mbid_mapping_ndx_recording_mbid on recording_mbid.
         """
         return []
 
@@ -93,6 +94,14 @@ class BulkInsertTable:
             This function will be called for each of the rows fetch from the source DB. This function
             should return an empty list if there are no rows to insert, or a list of rows (in correct
             column order suitable for inserting data into the DB with psycopg2's execute_values call).
+
+            If an additional table has been added to this bulk table, process_row should return a
+            dict as follows instead:
+                { "mapping.mbid_mapping": [ ... row data ... ],
+                  "mapping.canonical_recording": [ ... row data ... ] }
+
+            The dict keys must be the name of the main or one of the additional tables. Rows will
+            be inserted into the correct table.
         """
 
     @abstractmethod
