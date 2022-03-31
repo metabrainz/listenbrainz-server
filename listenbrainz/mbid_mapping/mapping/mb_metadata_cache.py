@@ -148,9 +148,9 @@ def create_json_data(row):
 
     recording_rels = []
     for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
-        rel = { "type": rel_type,
-                "artist_name": artist_name,
-                "artist_mbid": artist_mbid }
+        rel = {"type": rel_type,
+               "artist_name": artist_name,
+               "artist_mbid": artist_mbid}
         if instrument is not None:
             rel["instrument"] = instrument
         recording_rels.append(rel)
