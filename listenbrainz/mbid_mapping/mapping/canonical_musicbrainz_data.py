@@ -7,15 +7,15 @@ from unidecode import unidecode
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 from mapping.bulk_table import BulkInsertTable
-from mapping.canonical_recordings import CanonicalRecordings
-from mapping.canonical_releases import CanonicalReleases
-from mapping.mbid_mapping_releases import MBIDMappingReleases
+from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
+from mapping.canonical_release_redirect import CanonicalReleaseRedirect
+from mapping.canonical_musicbrainz_data_release import CanonicalMusicBrainzDataRelease
 import config
 
 TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
 
 
-class MBIDMapping(BulkInsertTable):
+class CanonicalMusicBrainzData(BulkInsertTable):
     """
         This class creates the MBID mapping tables.
 
@@ -148,7 +148,7 @@ class MBIDMapping(BulkInsertTable):
             return None
 
 
-def create_mbid_mapping():
+def create_canonical_musicbrainz_data():
     """
         Main function for creating the MBID mapping and its related tables.
     """
@@ -160,10 +160,10 @@ def create_mbid_mapping():
             lb_conn = psycopg2.connect(config.TIMESCALE_DATABASE_URI)
 
         # Setup all the needed objects
-        can = CanonicalRecordings(mb_conn, lb_conn)
-        can_rel = CanonicalReleases(mb_conn, lb_conn)
-        releases = MBIDMappingReleases(mb_conn)
-        mapping = MBIDMapping(mb_conn, lb_conn)
+        can = CanonicalRecordingRedirect(mb_conn, lb_conn)
+        can_rel = CanonicalReleaseRedirect(mb_conn, lb_conn)
+        releases = CanonicalMusicBrainzDataRelease(mb_conn)
+        mapping = CanonicalMusicBrainzData(mb_conn, lb_conn)
         mapping.add_additional_bulk_table(can)
 
         # Carry out the bulk of the work

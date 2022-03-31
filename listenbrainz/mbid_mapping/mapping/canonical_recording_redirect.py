@@ -1,7 +1,7 @@
 from mapping.bulk_table import BulkInsertTable
 
 
-class CanonicalRecordings(BulkInsertTable):
+class CanonicalRecordingRedirect(BulkInsertTable):
     """
         This class creates the canonical recording table.
 

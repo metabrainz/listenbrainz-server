@@ -11,7 +11,7 @@ import config
 TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
 
 
-class MBIDMappingReleases(BulkInsertTable):
+class CanonicalMusicBrainzDataRelease(BulkInsertTable):
     """
         This class creates the MBID mapping release table.
 

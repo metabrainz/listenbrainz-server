@@ -6,7 +6,7 @@ import subprocess
 
 import click
 
-from mapping.mbid_mapping import create_mbid_mapping
+from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
 from mapping.typesense_index import build_index as action_build_index
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
@@ -25,18 +25,18 @@ def cli():
 @cli.command()
 def create_all():
     """
-        Create all mappings in one go. First mbid mapping, then its typesense index.
+        Create all canonical data in one go. First mb canonical data, then its typesense index.
     """
-    create_mbid_mapping()
+    create_canonical_musicbrainz_data()
     action_build_index()
 
 
 @cli.command()
-def mbid_mapping():
+def canonical_data():
     """
         Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
-    create_mbid_mapping()
+    create_canonical_musicbrainz_data()
 
 
 @cli.command()

@@ -1,7 +1,7 @@
 from mapping.bulk_table import BulkInsertTable
 
 
-class CanonicalReleases(BulkInsertTable):
+class CanonicalReleaseRedirect(BulkInsertTable):
     """
         This class creates the canonical releases table.
 
