@@ -7,16 +7,16 @@ from pydantic import BaseModel, NonNegativeInt
 class RecordingMetadata(BaseModel):
     """Metadata for a recording that is cached in LB to reduce the impact on MB."""
 
-    # Internal id metadata entry
-    id: NonNegativeInt
-
     # The recording that this metadata is about
     recording_mbid: uuid.UUID
+
+    # The mbids of artists of this recording
+    artist_mbids: List[uuid.UUID]
 
     # The release that this metadata is about -- could be None
     release_mbid: Optional[uuid.UUID]
 
-    # Has this entry been marked dirty for immenent re-fetching?
+    # Has this entry been marked dirty for imminent re-fetching?
     dirty: bool
 
     # JSON which contains metadata about the recording
