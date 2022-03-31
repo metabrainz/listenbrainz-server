@@ -10,7 +10,7 @@ class CanonicalReleases(BulkInsertTable):
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.recording_canonical_release", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_release_redirect", mb_conn, lb_conn, batch_size)
 
     def get_create_table_columns(self):
         return [("id",                       "SERIAL"),
@@ -21,18 +21,18 @@ class CanonicalReleases(BulkInsertTable):
         return []
 
     def get_post_process_queries(self):
-        return ["""INSERT INTO mapping.recording_canonical_release_tmp (recording_mbid, release_mbid)
+        return ["""INSERT INTO mapping.canonical_release_redirect_tmp (recording_mbid, release_mbid)
                         SELECT recording_mbid
                              , canonical_release_mbid AS release_mbid
-                          FROM mapping.canonical_recording_tmp""",
-                """INSERT INTO mapping.recording_canonical_release_tmp (recording_mbid, release_mbid)
+                          FROM mapping.canonical_recording_redirect_tmp""",
+                """INSERT INTO mapping.canonical_release_redirect_tmp (recording_mbid, release_mbid)
                                  SELECT recording_mbid
                                       , release_mbid
-                                   FROM mapping.mbid_mapping_tmp""",
+                                   FROM mapping.canonical_musicbrainz_data_tmp""",
                 """COMMIT"""]
 
     def get_index_names(self):
-        return [("recording_mbid_ndx_recording_canonical_release", "recording_mbid", True)]
+        return [("recording_mbid_ndx_canonical_release_redirect", "recording_mbid", True)]
 
     def process_row(self, row):
         return []

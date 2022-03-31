@@ -24,7 +24,7 @@ class MBIDMapping(BulkInsertTable):
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.mbid_mapping", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_musicbrainz_data", mb_conn, lb_conn, batch_size)
         self.last_artist_credit_id = None
         self.artist_recordings = {}
 
@@ -65,7 +65,7 @@ class MBIDMapping(BulkInsertTable):
                    ON m.id = t.medium
                  JOIN release rl
                    ON rl.id = m.release
-                 JOIN mapping.mbid_mapping_releases_tmp rpr
+                 JOIN mapping.canonical_musicbrainz_data_release_tmp rpr
                    ON rl.id = rpr.release
                  JOIN (SELECT artist_credit, array_agg(gid) AS artist_mbids
                          FROM artist_credit_name acn2
@@ -84,14 +84,14 @@ class MBIDMapping(BulkInsertTable):
             WITH all_recs AS (
                 SELECT *
                      , row_number() OVER (PARTITION BY combined_lookup ORDER BY score) AS rnum
-                  FROM mapping.mbid_mapping_tmp
+                  FROM mapping.canonical_musicbrainz_data_tmp
             ), deleted_recs AS (
                 DELETE
-                  FROM mapping.mbid_mapping_tmp
+                  FROM mapping.canonical_musicbrainz_data_tmp
                  WHERE id IN (SELECT id FROM all_recs WHERE rnum > 1)
              RETURNING recording_mbid, combined_lookup
             )
-           INSERT INTO mapping.canonical_recording_tmp (recording_mbid, canonical_recording_mbid, canonical_release_mbid)
+           INSERT INTO mapping.canonical_recording_redirect_tmp (recording_mbid, canonical_recording_mbid, canonical_release_mbid)
                 SELECT t1.recording_mbid
                      , t2.recording_mbid AS canonical_recording
                      , t2.release_mbid AS canonical_release
@@ -102,8 +102,8 @@ class MBIDMapping(BulkInsertTable):
         """]
 
     def get_index_names(self):
-        return [("mbid_mapping_idx_combined_lookup",              "combined_lookup", False),
-                ("mbid_mapping_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False)]
+        return [("canonical_musicbrainz_data_idx_combined_lookup",              "combined_lookup", False),
+                ("canonical_musicbrainz_data_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False)]
 
     def process_row(self, row):
 
@@ -138,12 +138,12 @@ class MBIDMapping(BulkInsertTable):
 
         self.last_artist_credit_id = row['artist_credit_id']
 
-        return {"mapping.mbid_mapping": result,
-                "mapping.canonical_recording": canonical_recording_result}
+        return {"mapping.canonical_musicbrainz_data": result,
+                "mapping.canonical_recording_redirect": canonical_recording_result}
 
     def process_row_complete(self):
         if self.artist_recordings:
-            return {"mapping.mbid_mapping": self.artist_recordings.values()}
+            return {"mapping.canonical_musicbrainz_data": self.artist_recordings.values()}
         else:
             return None
 
@@ -173,7 +173,7 @@ def create_mbid_mapping():
         can_rel.run(no_swap=True)
 
         # Now swap everything into production in a single transaction
-        log("mbid_mapping: Swap into production")
+        log("canonical_musicbrainz_data: Swap into production")
         if lb_conn:
             releases.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
@@ -189,4 +189,4 @@ def create_mbid_mapping():
             can_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             mb_conn.commit()
 
-        log("mbid_mapping: done done done!")
+        log("canonical_musicbrainz_data: done done done!")
