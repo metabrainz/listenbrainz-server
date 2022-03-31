@@ -12,7 +12,7 @@ from listenbrainz import config
 from listenbrainz.mbid_mapping_writer.stop_words import ENGLISH_STOP_WORDS
 
 DEFAULT_TIMEOUT = 2
-COLLECTION_NAME = "mbid_mapping_latest"
+COLLECTION_NAME = "canonical_musicbrainz_data_latest"
 MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
 MATCH_TYPE_NO_MATCH = 0
 MATCH_TYPE_LOW_QUALITY = 1
@@ -282,4 +282,5 @@ class MBIDMapper:
                 'release_mbid': hit['document']['release_mbid'],
                 'recording_name': hit['document']['recording_name'],
                 'recording_mbid': hit['document']['recording_mbid'],
+                'year': hit['document']['year'],
                 'match_type': match_type}
