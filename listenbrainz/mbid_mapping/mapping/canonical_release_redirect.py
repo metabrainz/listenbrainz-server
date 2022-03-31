@@ -28,8 +28,7 @@ class CanonicalReleaseRedirect(BulkInsertTable):
                 """INSERT INTO mapping.canonical_release_redirect_tmp (recording_mbid, release_mbid)
                                  SELECT recording_mbid
                                       , release_mbid
-                                   FROM mapping.canonical_musicbrainz_data_tmp""",
-                """COMMIT"""]
+                                   FROM mapping.canonical_musicbrainz_data_tmp"""]
 
     def get_index_names(self):
         return [("recording_mbid_ndx_canonical_release_redirect", "recording_mbid", True)]
