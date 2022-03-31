@@ -46,7 +46,7 @@ class ArtistCreditRecordingLookupQuery(Query):
 
         lookup_strings = tuple(lookup_strings)
 
-        with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
+        with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute("""SELECT artist_credit_name,
                                        artist_credit_id,
