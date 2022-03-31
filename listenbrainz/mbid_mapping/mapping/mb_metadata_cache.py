@@ -418,6 +418,6 @@ def create_mb_metadata_cache():
     psycopg2.extras.register_uuid()
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            with psycopg2.connect(config.TIMESCALE_DATABASE_URI) as lb_conn:
+            with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn:
                 with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
                     create_cache(mb_conn, mb_curs, lb_conn, lb_curs)

@@ -189,7 +189,7 @@ class MainTestCase(flask_testing.TestCase):
             q.inputs(), ['[artist_credit_name]', '[recording_name]'])
         self.assertEqual(q.outputs(), ['index', 'artist_credit_arg', 'recording_arg',
                                        'artist_credit_name', 'artist_mbids', 'release_name', 'recording_name',
-                                       'release_mbid', 'recording_mbid', 'artist_credit_id'])
+                                       'release_mbid', 'recording_mbid', 'artist_credit_id', 'year'])
 
     @patch('typesense.documents.Documents.search')
     def test_fetch(self, search):
