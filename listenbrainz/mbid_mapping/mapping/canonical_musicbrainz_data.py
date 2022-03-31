@@ -10,6 +10,7 @@ from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
 from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 from mapping.canonical_musicbrainz_data_release import CanonicalMusicBrainzDataRelease
+from mapping.recording_year import RecordingYear
 import config
 
 TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
@@ -109,6 +110,7 @@ class CanonicalMusicBrainzData(BulkInsertTable):
 
         result = []
         canonical_recording_result = []
+        recording_year = []
 
         if not self.last_artist_credit_id:
             self.last_artist_credit_id = row['artist_credit_id']
@@ -136,10 +138,14 @@ class CanonicalMusicBrainzData(BulkInsertTable):
                                                    other_row[5],
                                                    other_row[3]))
 
+        if row["year"] is not None:
+            recording_year.append((row["recording_mbid"], row["year"]))
+
         self.last_artist_credit_id = row['artist_credit_id']
 
         return {"mapping.canonical_musicbrainz_data": result,
-                "mapping.canonical_recording_redirect": canonical_recording_result}
+                "mapping.canonical_recording_redirect": canonical_recording_result,
+                "mapping.recording_year": recording_year}
 
     def process_row_complete(self):
         if self.artist_recordings:
@@ -164,7 +170,9 @@ def create_canonical_musicbrainz_data():
         can_rel = CanonicalReleaseRedirect(mb_conn, lb_conn)
         releases = CanonicalMusicBrainzDataRelease(mb_conn)
         mapping = CanonicalMusicBrainzData(mb_conn, lb_conn)
+        rec_year = RecordingYear(mb_conn, lb_conn)
         mapping.add_additional_bulk_table(can)
+        mapping.add_additional_bulk_table(rec_year)
 
         # Carry out the bulk of the work
         create_formats_table(mb_conn)
@@ -179,6 +187,7 @@ def create_canonical_musicbrainz_data():
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
+            rec_year.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             mb_conn.commit()
             lb_conn.commit()
             lb_conn.close()
@@ -187,6 +196,7 @@ def create_canonical_musicbrainz_data():
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             can.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             can_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+            rec_year.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             mb_conn.commit()
 
         log("canonical_musicbrainz_data: done done done!")
