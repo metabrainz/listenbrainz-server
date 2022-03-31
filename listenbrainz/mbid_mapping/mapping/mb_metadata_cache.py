@@ -381,11 +381,13 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     log("mb metadata cache: drop old tables, create new tables")
     create_tables(lb_conn)
 
-    # Uncomment these 4 lines to select a subset of the musicbrainz database for testing, and use execute_values instead of execute.
-    #recording_mbids = ['e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae']
-    #values = [(uuid.UUID(u),) for u in recording_mbids]
-    #query = get_metadata_cache_query(with_values=True)
-    config_postgres_join_limit(mb_curs)
+    # Uncomment these 4 lines to select a subset of the musicbrainz database for testing,
+    # and use execute_values instead of execute.
+    # recording_mbids = ['e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08',
+    #                    '97e69767-5d34-4c97-b36a-f3b2b1ef9dae']
+    # values = [(uuid.UUID(u),) for u in recording_mbids]
+    # query = get_metadata_cache_query(with_values=True)
+    # config_postgres_join_limit(mb_curs)
 
     rows = []
     count = 0
