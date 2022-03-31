@@ -13,7 +13,7 @@ from mapping.utils import log
 
 
 BATCH_SIZE = 5000
-COLLECTION_NAME_PREFIX = 'mbid_mapping_'
+COLLECTION_NAME_PREFIX = 'canonical_musicbrainz_data_'
 
 
 def prepare_string(text):

@@ -39,7 +39,8 @@ typesense_response_0 = [
                 "recording_mbid": "398a5f12-80ba-4d29-8b6b-bfe2176341a6",
                 "recording_name": "Gloria",
                 "release_mbid": "7abd5878-4ea3-4b33-a5d2-7721317013d7",
-                "release_name": "October"
+                "release_name": "October",
+                "year": 1981
             },
         }
         ]
@@ -56,7 +57,8 @@ typesense_response_0 = [
                     "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
                     "recording_name": "Strangers",
                     "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-                    "release_name": "Dummy"
+                    "release_name": "Dummy",
+                    "year": 1995
                 }
             }
         ]
@@ -75,7 +77,8 @@ typesense_response_0 = [
                 "recording_mbid": "145f5c43-0ac2-4886-8b09-63d0e92ded5d",
                 "recording_name": "Glory Box",
                 "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-                "release_name": "Dummy"
+                "release_name": "Dummy",
+                "year": 1996
             }
         }
         ]
@@ -95,7 +98,8 @@ typesense_response_1 = [
                     "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
                     "recording_name": "Strangers",
                     "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-                    "release_name": "Dummy"
+                    "release_name": "Dummy",
+                    "year": 1996
                 }
             }
         ]
@@ -114,7 +118,8 @@ json_response_0 = [
         "recording_mbid": "398a5f12-80ba-4d29-8b6b-bfe2176341a6",
         "recording_name": "Gloria",
         "release_mbid": "7abd5878-4ea3-4b33-a5d2-7721317013d7",
-        "release_name": "October"
+        "release_name": "October",
+        "year": 1981
     },
     {
         "artist_credit_arg": "portishead",
@@ -127,7 +132,8 @@ json_response_0 = [
         "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
         "recording_name": "Strangers",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-        "release_name": "Dummy"
+        "release_name": "Dummy",
+        "year": 1995
     },
     {
         "artist_credit_arg": "portishead",
@@ -140,7 +146,8 @@ json_response_0 = [
         "recording_mbid": "145f5c43-0ac2-4886-8b09-63d0e92ded5d",
         "recording_name": "Glory Box",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-        "release_name": "Dummy"
+        "release_name": "Dummy",
+        "year": 1996
     }
 ]
 
@@ -156,7 +163,8 @@ json_response_1 = [
         "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
         "recording_name": "Strangers",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-        "release_name": "Dummy"
+        "release_name": "Dummy",
+        "year": 1996
     }
 ]
 
