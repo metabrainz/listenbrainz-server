@@ -6,9 +6,8 @@ import subprocess
 
 import click
 
-from mapping.mbid_mapping import create_mbid_mapping, create_canonical_releases
+from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
 from mapping.typesense_index import build_index as action_build_index
-from mapping.year_mapping import create_year_mapping
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
 from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
@@ -26,20 +25,18 @@ def cli():
 @cli.command()
 def create_all():
     """
-        Create all mappings in one go. First mbid mapping, then its typesense index and finally the year lookup mapping.
+        Create all canonical data in one go. First mb canonical data, then its typesense index.
     """
-    create_mbid_mapping()
+    create_canonical_musicbrainz_data()
     action_build_index()
-    create_year_mapping()
 
 
 @cli.command()
-def mbid_mapping():
+def canonical_data():
     """
-        Create the MBID mapping, which also creates the prerequisit artist-credit pairs table. This can be done during
-        production as new tables are moved in place atomically.
+        Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
-    create_mbid_mapping()
+    create_canonical_musicbrainz_data()
 
 
 @cli.command()
@@ -51,28 +48,11 @@ def test_mapping():
 
 
 @cli.command()
-def year_mapping():
-    """
-        Create the recording year lookup mapping, which also creates the prerequisit artist-credit pairs table.
-        This can be done during production as new tables are moved in place atomically.
-    """
-    create_year_mapping()
-
-
-@cli.command()
 def build_index():
     """
         Build the typesense index of the mbid mapping. The mbid mapping must be run first in order to build this index.
     """
     action_build_index()
-
-
-@cli.command()
-def build_canonical_releases():
-    """
-        Build the canonical releases table from the mapping tables.
-    """
-    create_canonical_releases()
 
 
 @cli.command()

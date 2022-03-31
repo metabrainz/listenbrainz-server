@@ -13,7 +13,7 @@ from mapping.utils import log
 
 
 BATCH_SIZE = 5000
-COLLECTION_NAME_PREFIX = 'mbid_mapping_'
+COLLECTION_NAME_PREFIX = 'canonical_musicbrainz_data_'
 
 
 def prepare_string(text):
@@ -89,7 +89,7 @@ def build(client, collection_name):
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
-            curs.execute("SELECT max(score) FROM mapping.mbid_mapping")
+            curs.execute("SELECT max(score) FROM mapping.canonical_musicbrainz_data")
             max_score = curs.fetchone()[0]
 
             query = ("""SELECT recording_name,
@@ -99,8 +99,9 @@ def build(client, collection_name):
                                artist_credit_id,
                                artist_credit_name,
                                artist_mbids,
-                               score
-                          FROM mapping.mbid_mapping""")
+                               score,
+                               year
+                          FROM mapping.canonical_musicbrainz_data""")
 
             curs.execute(query)
             documents = []
