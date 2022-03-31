@@ -156,8 +156,8 @@ def create_canonical_musicbrainz_data():
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
 
         lb_conn = None
-        if config.TIMESCALE_DATABASE_URI:
-            lb_conn = psycopg2.connect(config.TIMESCALE_DATABASE_URI)
+        if config.SQLALCHEMY_TIMESCALE_URI:
+            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
         # Setup all the needed objects
         can = CanonicalRecordingRedirect(mb_conn, lb_conn)
