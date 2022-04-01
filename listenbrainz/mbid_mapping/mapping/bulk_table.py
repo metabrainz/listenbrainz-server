@@ -71,6 +71,27 @@ class BulkInsertTable:
         """
         return []
 
+    def get_insert_queries_test_values(self):
+        """
+            Return test query values. In order to facilitate debugging, it is sometimes useful to run a query
+            on a subset of data, usually specified with an IN clause in a postgres query. If this function
+            is overridden in your class and returns anything other than a non-empty list, a test version of the
+            query will be run using psycopg2's execute_values function, rather than the standard execute method
+            of the cursor.
+
+            Test data returned by this function should be a list of lists, where each outer list corresponds
+            to the query returned by get_insert_queries() so that the correct test values can be used with each of the 
+            queries to be executed. The inner list is a list of VALUES that are expected as part of the query.
+        """
+        return []
+
+    def pre_insert_queries_db_setup(self, curs):
+        """
+            If any particular database setup needs to be done before the insert queries are run, define this
+            method in your class. It will be called before the SQL statement is executed.
+        """
+        pass
+
     @abstractmethod
     def get_post_process_queries(self):
         """
@@ -153,7 +174,9 @@ class BulkInsertTable:
             with conn.cursor() as curs:
                 for name, column_def, unique in self.get_index_names():
                     uniq = "UNIQUE" if unique else ""
-                    curs.execute(f"CREATE {uniq} INDEX {name}_tmp ON {self.temp_table_name} ({column_def})")
+                    if column_def.find("(") == -1:
+                        column_def = "(" + column_def + ")"
+                    curs.execute(f"CREATE {uniq} INDEX {name}_tmp ON {self.temp_table_name} {column_def}")
 
                 for name, types in self.get_create_table_columns():
                     if name == 'id' and types == "SERIAL":
@@ -319,23 +342,31 @@ class BulkInsertTable:
         ins_conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         with ins_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
             queries = self.get_insert_queries()
-            for i, db_query in enumerate(queries):
+            values = self.get_insert_queries_test_values()
+            for i, db_query_vals in enumerate(zip(queries, values)):
+                db = db_query_vals[0][0]
+                query = db_query_vals[0][1]
+                vals = db_query_vals[1]
                 select_conn = None
-                if db_query[0] == "MB":
+                if db == "MB":
                     select_conn = self.mb_conn
-                elif db_query[0] == "LB":
+                elif db == "LB":
                     select_conn = self.lb_conn
                 else:
-                    print("Invalid DB provided in create table data: '%s'" % db_query[0])
+                    log("Invalid DB provided in create table data: '%s'" % query)
                     raise RuntimeError
 
                 if select_conn is None:
-                    print("You need to provide a LB DB connections string.")
+                    log("You need to provide a LB DB connections string.")
                     raise RuntimeError
 
                 with select_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                     log(f"{self.table_name}: execute query {i+1} of {len(queries)}")
-                    curs.execute(db_query[1])
+                    self.pre_insert_queries_db_setup(curs)
+                    if vals:
+                        psycopg2.extras.execute_values(curs, query, (vals,), page_size=len(vals))
+                    else:
+                        curs.execute(query)
 
                     row_count = 0
                     inserted = 0
