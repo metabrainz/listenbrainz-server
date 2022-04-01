@@ -120,6 +120,8 @@ def create_json_data(row):
     if row["release_mbid"] is not None:
         release["mbid"] = row["release_mbid"]
         release["caa_id"] = row["caa_id"]
+        if row["year"] is not None:
+            release["year"] = row["year"]
 
     for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
         data = {}
@@ -146,9 +148,9 @@ def create_json_data(row):
 
     recording_rels = []
     for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
-        rel = { "type": rel_type,
-                "artist_name": artist_name,
-                "artist_mbid": artist_mbid }
+        rel = {"type": rel_type,
+               "artist_name": artist_name,
+               "artist_mbid": artist_mbid}
         if instrument is not None:
             rel["instrument"] = instrument
         recording_rels.append(rel)
@@ -309,14 +311,14 @@ def get_metadata_cache_query(with_values=False):
                ), release_data AS (
                         SELECT * FROM (
                                 SELECT r.gid AS recording_mbid
-                                     , rcr.release_mbid::TEXT
+                                     , crr.release_mbid::TEXT
                                      , caa.id AS caa_id
                                      , row_number() OVER (partition by recording_mbid ORDER BY ordering) AS rownum
                                   FROM recording r
-                             LEFT JOIN mapping.recording_canonical_release rcr
-                                    ON r.gid = rcr.recording_mbid
+                             LEFT JOIN mapping.canonical_release_redirect crr
+                                    ON r.gid = crr.recording_mbid
                              LEFT JOIN release rel
-                                    ON rcr.release_mbid = rel.gid
+                                    ON crr.release_mbid = rel.gid
                              LEFT JOIN cover_art_archive.cover_art caa
                                     ON caa.release = rel.id
                              LEFT JOIN cover_art_archive.cover_art_type cat
@@ -334,6 +336,7 @@ def get_metadata_cache_query(with_values=False):
                              , r.gid::TEXT AS recording_mbid
                              , rd.release_mbid::TEXT
                              , rd.caa_id
+                             , year
                           FROM recording r
                           JOIN artist_credit ac
                             ON r.artist_credit = ac.id
@@ -355,6 +358,8 @@ def get_metadata_cache_query(with_values=False):
                             ON ats.recording_mbid = r.gid
                      LEFT JOIN release_data rd
                             ON rd.recording_mbid = r.gid
+                     LEFT JOIN mapping.canonical_musicbrainz_data cmb
+                            ON cmb.recording_mbid = r.gid
                             {values_join}
                       GROUP BY r.gid
                              , r.length
@@ -362,8 +367,9 @@ def get_metadata_cache_query(with_values=False):
                              , recording_tags
                              , artist_data
                              , artist_tags
-                             , release_mbid
-                             , caa_id"""
+                             , rd.release_mbid
+                             , caa_id
+                             , year"""
     return query
 
 
@@ -375,25 +381,23 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     query = get_metadata_cache_query(with_values=False)
 
     log("mb metadata cache: start")
-
-    # Create the dest table (perhaps dropping the old one first)
-
     log("mb metadata cache: drop old tables, create new tables")
     create_tables(lb_conn)
 
-    # Uncomment these 4 lines to select a subset of the musicbrainz database for testing,
-    # and use execute_values instead of execute.
-    # recording_mbids = ['e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08',
-    #                    '97e69767-5d34-4c97-b36a-f3b2b1ef9dae']
-    # values = [(uuid.UUID(u),) for u in recording_mbids]
-    # query = get_metadata_cache_query(with_values=True)
-    # config_postgres_join_limit(mb_curs)
+    if config.USE_MINIMAL_DATASET:
+        recording_mbids = ['e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08',
+                           '97e69767-5d34-4c97-b36a-f3b2b1ef9dae']
+        values = [(uuid.UUID(u),) for u in recording_mbids]
+        query = get_metadata_cache_query(with_values=True)
+        config_postgres_join_limit(mb_curs)
 
     rows = []
     count = 0
     log("mb metadata cache: execute query (gonna be loooooong!)")
-    mb_curs.execute(query)
-    #psycopg2.extras.execute_values(mb_curs, query, values, page_size=len(values))
+    if config.USE_MINIMAL_DATASET:
+        psycopg2.extras.execute_values(mb_curs, query, values, page_size=len(values))
+    else:
+        mb_curs.execute(query)
     total_rows = mb_curs.rowcount
     log(f"mb metadata cache: {total_rows} recordings in result")
 
