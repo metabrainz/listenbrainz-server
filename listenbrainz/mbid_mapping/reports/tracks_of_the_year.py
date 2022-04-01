@@ -116,7 +116,7 @@ def calculate_tracks_of_the_year(year):
 
     start_ts = int(datetime(year=year, month=1, day=1, tzinfo=timezone.utc).timestamp())
     end_ts = int(datetime(year=year + 1, month=1, day=1, tzinfo=timezone.utc).timestamp())
-    with psycopg2.connect(config.TIMESCALE_DATABASE_URI) as lb_conn:
+    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn:
         with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
             create_table(mb_conn)
             fetch_tracks_listened_to(lb_conn, mb_conn, start_ts, end_ts)
