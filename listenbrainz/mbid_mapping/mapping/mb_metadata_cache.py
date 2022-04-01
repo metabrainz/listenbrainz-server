@@ -13,7 +13,7 @@ import config
 BATCH_SIZE = 5000
 
 
-def mark_rows_as_dirty(lb_conn, recording_mbids: List[uuid.UUID], artist_mbids: List[uuid.UUID]):
+def mark_rows_as_dirty(lb_conn, recording_mbids: List[uuid.UUID], artist_mbids: List[uuid.UUID], release_mbids: List[uuid.UUID]):
     """Mark rows as dirty if the row is for a given recording mbid or if it's by a given artist mbid"""
     try:
         with lb_conn.cursor() as curs:
@@ -21,8 +21,9 @@ def mark_rows_as_dirty(lb_conn, recording_mbids: List[uuid.UUID], artist_mbids: 
                                SET dirty = 't'
                              WHERE recording_mbid = ANY(%s)
                                 OR %s && artist_mbids
+                                OR release_mbid = ANY(%s)
                     """
-            curs.execute(query, (recording_mbids, artist_mbids))
+            curs.execute(query, (recording_mbids, artist_mbids, release_mbids))
             lb_conn.commit()
 
     except psycopg2.errors.OperationalError as err:
@@ -178,13 +179,14 @@ def create_json_data(row):
             ujson.dumps(release))
 
 
-def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
-    """
-        This function is the heart of the mb metadata cache. It fetches all the data for
-        the cache in one go and then creates JSONB dicts for insertion into the cache.
-    """
+def get_metadata_cache_query(with_values=False):
+    values_cte = ""
+    values_join = ""
+    if with_values:
+        values_cte = "subset (subset_recording_mbid) AS (values %s), "
+        values_join = "JOIN subset ON r.gid = subset.subset_recording_mbid"
 
-    query = """WITH artist_rels AS (
+    query = f"""WITH {values_cte} artist_rels AS (
                             SELECT a.gid
                                  , array_agg(distinct(ARRAY[lt.name, url])) AS artist_links
                               FROM recording r
@@ -202,6 +204,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                 ON lau.link = l.id
                          LEFT JOIN link_type lt
                                 ON l.link_type = lt.id
+                                {values_join}
                              WHERE (lt.gid IN ('99429741-f3f6-484b-84f8-23af51991770'
                                               ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
                                               ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
@@ -216,7 +219,6 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                               ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
                                               ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
                                     OR lt.gid IS NULL)
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                           GROUP BY a.gid
                ), recording_rels AS (
                             SELECT r.gid
@@ -234,6 +236,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                 ON la.link = l.id
                          LEFT JOIN link_attribute_type lat
                                 ON la.attribute_type = lat.id
+                                {values_join}
                              WHERE (lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
                                                ,'59054b12-01ac-43ee-a618-285fd397e461'
                                                ,'0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa'
@@ -244,7 +247,6 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                                ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
                                                ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                    OR lt.gid IS NULL)
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                            GROUP BY r.gid
                ), artist_data AS (
                         SELECT r.gid
@@ -270,7 +272,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON a.area = ar.id
                      LEFT JOIN artist_rels arl
                             ON arl.gid = a.gid
---WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
+                            {values_join}
                       GROUP BY r.gid
                ), recording_tags AS (
                         SELECT r.gid AS recording_mbid
@@ -282,8 +284,8 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON rt.recording = r.id
                      LEFT JOIN genre g
                             ON t.name = g.name
+                            {values_join}
                          WHERE count > 0
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                          GROUP BY r.gid
                ), artist_tags AS (
                         SELECT r.gid AS recording_mbid
@@ -301,8 +303,8 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON at.tag = t.id
                      LEFT JOIN genre g
                             ON t.name = g.name
+                            {values_join}
                          WHERE count > 0
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                          GROUP BY r.gid
                ), release_data AS (
                         SELECT * FROM (
@@ -319,9 +321,9 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                                     ON caa.release = rel.id
                              LEFT JOIN cover_art_archive.cover_art_type cat
                                     ON cat.id = caa.id
+                                    {values_join}
                                  WHERE type_id = 1
                                     OR type_id IS NULL
---AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
                         ) temp where rownum=1
                )
                         SELECT recording_links
@@ -353,7 +355,7 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                             ON ats.recording_mbid = r.gid
                      LEFT JOIN release_data rd
                             ON rd.recording_mbid = r.gid
---WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08', '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')
+                            {values_join}
                       GROUP BY r.gid
                              , r.length
                              , recording_links
@@ -362,9 +364,15 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
                              , artist_tags
                              , release_mbid
                              , caa_id"""
+    return query
 
-# WHERE r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
-# AND r.gid in ('e97f805a-ab48-4c52-855e-07049142113d')
+
+def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
+    """
+        This function is the heart of the mb metadata cache. It fetches all the data for
+        the cache in one go and then creates JSONB dicts for insertion into the cache.
+    """
+    query = get_metadata_cache_query(with_values=False)
 
     log("mb metadata cache: start")
 
@@ -373,10 +381,19 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     log("mb metadata cache: drop old tables, create new tables")
     create_tables(lb_conn)
 
+    # Uncomment these 4 lines to select a subset of the musicbrainz database for testing,
+    # and use execute_values instead of execute.
+    # recording_mbids = ['e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08',
+    #                    '97e69767-5d34-4c97-b36a-f3b2b1ef9dae']
+    # values = [(uuid.UUID(u),) for u in recording_mbids]
+    # query = get_metadata_cache_query(with_values=True)
+    # config_postgres_join_limit(mb_curs)
+
     rows = []
     count = 0
     log("mb metadata cache: execute query (gonna be loooooong!)")
     mb_curs.execute(query)
+    #psycopg2.extras.execute_values(mb_curs, query, values, page_size=len(values))
     total_rows = mb_curs.rowcount
     log(f"mb metadata cache: {total_rows} recordings in result")
 
@@ -412,6 +429,67 @@ def create_cache(mb_conn, mb_curs, lb_conn, lb_curs):
     swap_table_and_indexes(lb_conn)
 
     log("mb metadata cache: done")
+
+
+def delete_rows(lb_curs, recording_mbids):
+    query = """
+        DELETE FROM mb_metadata_cache
+              WHERE recording_mbid IN %s
+    """
+    lb_curs.execute(query, (tuple(recording_mbids),))
+
+
+def config_postgres_join_limit(mb_curs):
+    # Because of the size of query we need to hint to postgres that it should continue to use joins
+    mb_curs.execute('SET geqo = off')
+    mb_curs.execute('SET geqo_threshold = 20')
+    mb_curs.execute('SET from_collapse_limit = 15')
+    mb_curs.execute('SET join_collapse_limit = 15')
+
+
+def update_dirty_cache_items(mb_curs, lb_conn, lb_curs):
+    dirty_query = """
+        SELECT recording_mbid
+          FROM mb_metadata_cache
+         WHERE dirty = 't'
+    """
+
+    log("mb metadata update: getting dirty items")
+    lb_curs.execute(dirty_query)
+    recording_mbids = lb_curs.fetchall()
+
+    config_postgres_join_limit(mb_curs)
+
+    log(f"mb metadata update: got {len(recording_mbids)} to update")
+
+    log("mb metadata update: Running looooong query on dirty items")
+    query = get_metadata_cache_query(with_values=True)
+    values = [(row[0],) for row in recording_mbids]
+    psycopg2.extras.execute_values(mb_curs, query, values, page_size=len(values))
+
+    rows = []
+    count = 0
+    total_rows = len(recording_mbids)
+    for row in mb_curs:
+        count += 1
+        data = create_json_data(row)
+        rows.append(("false", *data))
+        if len(rows) >= BATCH_SIZE:
+            batch_recording_mbids = [row[1] for row in rows]
+            delete_rows(lb_curs, batch_recording_mbids)
+            insert_rows(lb_curs, "mb_metadata_cache", rows)
+            lb_conn.commit()
+            log("mb metadata update: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
+            rows = []
+
+    if rows:
+        batch_recording_mbids = [row[1] for row in rows]
+        delete_rows(lb_curs, batch_recording_mbids)
+        insert_rows(lb_curs, "mb_metadata_cache", rows)
+        lb_conn.commit()
+
+    log("mb metadata update: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
+    log("mb metadata update: Done!")
 
 
 def create_mb_metadata_cache():
