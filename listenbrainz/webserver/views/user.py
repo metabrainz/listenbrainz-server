@@ -362,7 +362,7 @@ def collaborations(user_name: str):
     )
 
 
-@user_bp.route("/<user_name>/pins/")
+@user_bp.route("/user/<user_name>/pins/")
 def pins(user_name: str):
     """ Show user pin history """
 

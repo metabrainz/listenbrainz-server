@@ -130,7 +130,7 @@ def delete_pin_for_user(row_id):
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/<user_name>/pins", methods=["GET", "OPTIONS"])
+@pinned_recording_api_bp.route("/user/<user_name>/pins", methods=["GET", "OPTIONS"])
 @crossdomain
 @ratelimit()
 def get_pins_for_user(user_name):
@@ -206,7 +206,7 @@ def get_pins_for_user(user_name):
     )
 
 
-@pinned_recording_api_bp.route("/<user_name>/pins/following", methods=["GET", "OPTIONS"])
+@pinned_recording_api_bp.route("/user/<user_name>/pins/following", methods=["GET", "OPTIONS"])
 @crossdomain
 @ratelimit()
 def get_pins_for_user_following(user_name):
