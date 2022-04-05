@@ -18,6 +18,8 @@ ALTER TABLE recommendation.recommender_session ADD CONSTRAINT rec_recommender_se
 
 ALTER TABLE user_timeline_event ADD CONSTRAINT user_timeline_event_pkey PRIMARY KEY (id);
 
+ALTER TABLE hide_user_timeline_event ADD CONSTRAINT hide_user_timeline_event_pkey PRIMARY KEY (id);
+
 ALTER TABLE recording_feedback ADD CONSTRAINT recording_feedback_pkey PRIMARY KEY (id);
 
 ALTER TABLE missing_musicbrainz_data ADD CONSTRAINT missing_mb_data_pkey PRIMARY KEY (id);
