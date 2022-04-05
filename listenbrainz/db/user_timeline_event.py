@@ -27,6 +27,7 @@ from data.model.user_timeline_event import (
     UserTimelineEventType,
     UserTimelineEventMetadata,
     RecordingRecommendationMetadata, NotificationMetadata,
+    HideUserTimelineEvent,
 )
 from enum import Enum
 from listenbrainz import db
@@ -158,6 +159,27 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
         return [UserTimelineEvent(**row) for row in result.fetchall()]
 
 
+def get_user_timeline_events_by_id(id: int) -> UserTimelineEvent:
+    """ Gets event by it's id
+        Args:
+            id: row ID of the timeline event
+    """
+    try:
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text("""
+                SELECT id, user_id, event_type, metadata, created
+                  FROM user_timeline_event
+                 WHERE id = :id
+            """), {
+                "id": id,
+            })
+
+            r = dict(result.fetchone())
+            return UserTimelineEvent(**r)
+    except Exception as e:
+        raise DatabaseException(str(e))
+
+
 def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
     """ Gets notification posted on the user's timeline.
 
@@ -168,3 +190,28 @@ def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTime
         event_type=UserTimelineEventType.NOTIFICATION,
         count=count
     )
+
+def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, event_id: int) -> bool:
+    """ Adds events that are to be hidden """
+                   # VALUES (:user_id, :event_type, :event_id)
+    try:
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text('''
+                INSERT INTO hide_user_timeline_event (user_id, event_type, event_id)
+                    SELECT :user_id, :event_type, :event_id WHERE NOT EXISTS
+                    (
+                        SELECT * FROM hide_user_timeline_event WHERE
+                        user_id = :user_id AND
+                        event_type = :event_type AND
+                        event_id = :event_id
+
+                    )
+            '''), {
+                'user_id': user_id,
+                'event_type': event_type,
+                'event_id': event_id
+                }
+            )
+            return result.rowcount == 1
+    except Exception as e:
+        raise DatabaseException(str(e))

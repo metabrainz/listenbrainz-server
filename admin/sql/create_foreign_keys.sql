@@ -90,6 +90,12 @@ ALTER TABLE user_timeline_event
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE hide_user_timeline_event
+    ADD CONSTRAINT hide_user_timeline_event_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 ALTER TABLE recording_feedback
     ADD CONSTRAINT recording_feedback_user_id_foreign_key
     FOREIGN KEY (user_id)

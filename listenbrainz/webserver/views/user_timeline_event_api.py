@@ -33,7 +33,7 @@ from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.db.pinned_recording import get_pins_for_feed
+from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pins_by_id
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
@@ -289,6 +289,42 @@ def delete_feed_events(user_name):
 
         raise APIBadRequest("This event type is not supported for deletion via this method")
 
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+
+@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/hide", methods=['OPTIONS', 'POST'])
+@crossdomain
+@ratelimit()
+def hide_user_timeline_event(user_name):
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to hide events from this user's timeline.")
+
+    try:
+        data = ujson.loads(request.get_data())
+        if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
+            row_id = data["event_id"]
+            result = db_user_timeline_event.get_user_timeline_events_by_id(row_id);
+            if db_user_relationship.is_following_user(user['id'], result.user_id):
+                if db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"]):
+                    return jsonify({"status": "ok"});
+                else:
+                    raise APIBadRequest("Event already hidden");
+            else:
+                raise APIUnauthorized("You cannot hide events of this user");
+        elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
+            row_id = data["event_id"]
+            result = get_pins_by_id(row_id);
+            if db_user_relationship.is_following_user(user['id'], result.user_id):
+                if db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"]):
+                    return jsonify({"status": "ok"});
+                else:
+                    raise APIBadRequest("Event already hidden");
+            else:
+                raise APIUnauthorized("You cannot hide events of this user");
+        else:
+            raise APIBadRequest("This event type is not supported for hiding");
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 

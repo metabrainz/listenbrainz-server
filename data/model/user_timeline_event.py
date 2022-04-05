@@ -88,3 +88,10 @@ class APITimelineEvent(BaseModel):
     user_name: constr(min_length=1)
     created: NonNegativeInt
     metadata: APIEventMetadata
+
+class HideUserTimelineEvent(BaseModel):
+    id: NonNegativeInt
+    user_id: NonNegativeInt
+    event_type: UserTimelineEvent
+    event_id: NonNegativeInt
+    created: NonNegativeInt
