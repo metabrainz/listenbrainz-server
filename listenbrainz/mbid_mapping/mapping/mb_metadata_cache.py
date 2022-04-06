@@ -38,7 +38,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                                'e95e5009-99b3-42d2-abdd-477967233b08',
                                                '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')]]
         else:
-            return []
+            return [[]]
 
     def get_insert_queries(self):
         return [("MB", self.get_metadata_cache_query(with_values=config.USE_MINIMAL_DATASET))]
