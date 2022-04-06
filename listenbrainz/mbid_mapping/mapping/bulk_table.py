@@ -351,8 +351,6 @@ class BulkInsertTable:
                     if len(q) == len(v):
                         continue
                     ok = True
-                else:
-                    break
                 ok = True
 
             if not ok:
