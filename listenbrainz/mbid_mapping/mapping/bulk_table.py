@@ -364,7 +364,7 @@ class BulkInsertTable:
                     log(f"{self.table_name}: execute query {i+1} of {len(queries)}")
                     if vals:
                         self.pre_insert_queries_db_setup(curs)
-                        psycopg2.extras.execute_values(curs, query, (vals,), page_size=len(vals))
+                        psycopg2.extras.execute_values(curs, query, vals, page_size=len(vals))
                     else:
                         curs.execute(query)
 
