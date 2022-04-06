@@ -34,13 +34,15 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
     def get_insert_queries_test_values(self):
         if config.USE_MINIMAL_DATASET:
-            return [[uuid.UUID(u) for u in ('e97f805a-ab48-4c52-855e-07049142113d',
-                                            'e95e5009-99b3-42d2-abdd-477967233b08',
-                                            '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')]]
+            return [(uuid.UUID(u),) for u in ('e97f805a-ab48-4c52-855e-07049142113d',
+                                              'e95e5009-99b3-42d2-abdd-477967233b08',
+                                              '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')]
         else:
             return []
 
     def get_insert_queries(self):
+        with open("query.txt", "w") as f:
+            f.write(self.get_metadata_cache_query(with_values=config.USE_MINIMAL_DATASET))
         return [("MB", self.get_metadata_cache_query(with_values=config.USE_MINIMAL_DATASET))]
 
     def pre_insert_queries_db_setup(self, curs):
