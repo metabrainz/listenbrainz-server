@@ -11,6 +11,7 @@ from mapping.formats import create_formats_table
 from mapping.bulk_table import BulkInsertTable
 import config
 
+
 class MusicBrainzMetadataCache(BulkInsertTable):
     """
         This class creates the MB metadata cache
@@ -135,7 +136,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 ujson.dumps(artists),
                 ujson.dumps({"recording": recording_tags, "artist": artist_tags}),
                 ujson.dumps(release))
-
 
     def get_metadata_cache_query(self, with_values=False):
         values_cte = ""
@@ -407,7 +407,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
         log("mb metadata update: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
         log("mb metadata update: Done!")
-
 
 
 def create_mb_metadata_cache():
