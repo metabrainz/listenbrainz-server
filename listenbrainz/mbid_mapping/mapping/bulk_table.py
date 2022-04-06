@@ -343,7 +343,22 @@ class BulkInsertTable:
         with ins_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
             queries = self.get_insert_queries()
             values = self.get_insert_queries_test_values()
-            # TODO: Sanity check to make sure values is the right shape
+
+            # Check to make sure the dimensions of the query/values data is sane
+            ok = False
+            for q in queries:
+                for v in values:
+                    if len(q) == len(v):
+                        continue
+                    ok = True
+                else:
+                    break
+                ok = True
+
+            if not ok:
+                log("The number of rows of queries must match the number of rows of test values.")
+                raise RuntimeError
+
             for i, db_query_vals in enumerate(zip(queries, values)):
                 db = db_query_vals[0][0]
                 query = db_query_vals[0][1]
