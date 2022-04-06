@@ -351,7 +351,6 @@ class BulkInsertTable:
                     if len(q) == len(v):
                         continue
                     ok = True
-                ok = True
 
             if not ok:
                 log("The number of rows of queries must match the number of rows of test values.")
