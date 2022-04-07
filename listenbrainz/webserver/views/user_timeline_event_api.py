@@ -160,7 +160,7 @@ def create_user_notification_event(user_name):
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/review', methods=['POST', 'OPTIONS'])
-@crossdomain(headers="Authorization, Content-Type")
+@crossdomain
 @ratelimit()
 def create_user_cb_review_event(user_name):
     """ Creates a CritiqueBrainz review event for the user.

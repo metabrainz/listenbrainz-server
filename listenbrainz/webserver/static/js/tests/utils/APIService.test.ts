@@ -1069,7 +1069,7 @@ describe("submitReviewToCB", () => {
       {
         method: "POST",
         headers: {
-          Authorization: "Bearer baz",
+          Authorization: "Token baz",
           "Content-Type": "application/json;charset=UTF-8",
         },
         body: JSON.stringify({
