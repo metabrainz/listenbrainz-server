@@ -21,7 +21,7 @@ OAUTH_AUTHORIZE_URL = "https://critiquebrainz.org/oauth/authorize"
 OAUTH_TOKEN_URL = "https://critiquebrainz.org/ws/1/oauth/token"
 
 CRITIQUEBRAINZ_REVIEW_SUBMIT_URL = "https://critiquebrainz.org/ws/1/review/"
-CRITIQUEBRAINZ_REVIEW_FETCH_URL = "https://beta.critiquebrainz.org/ws/1/reviews/"
+CRITIQUEBRAINZ_REVIEW_FETCH_URL = "https://critiquebrainz.org/ws/1/reviews/"
 CRITIQUEBRAINZ_REVIEW_LICENSE = "CC BY-SA 3.0"
 
 

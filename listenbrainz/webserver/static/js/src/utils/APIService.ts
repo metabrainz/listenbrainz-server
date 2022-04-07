@@ -937,8 +937,8 @@ export default class APIService {
   };
 
   submitReviewToCB = async (
-    userToken: string,
     userName: string,
+    userToken: string,
     review: CritiqueBrainzReview
   ) => {
     const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/review`;

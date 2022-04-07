@@ -420,25 +420,20 @@ export default class UserFeedPage extends React.Component<
 
   renderEventContent(event: TimelineEvent) {
     if (UserFeedPage.isEventListenable(event)) {
-      const { metadata } = event;
-      const { currentUser } = this.context;
-      // TODO: make review listenable
-      const listen = metadata as Listen;
       const { metadata, event_type } = event;
+      const { currentUser } = this.context;
+      const { newAlert } = this.props;
       let listen: Listen;
-      let additionalContent: string | JSX.Element = getAdditionalContent(
-        metadata
-      );
+      let additionalContent: string | JSX.Element;
       if (event_type === EventType.REVIEW) {
         const typedMetadata = metadata as CritiqueBrainzReview;
         // Users can review various entity types, and we need to format the review as a Listen accordingly
         listen = feedReviewEventToListen(typedMetadata);
-        // We also want to show rating and link to CB review, so we reformat the additionalContent
         additionalContent = getReviewEventContent(typedMetadata);
       } else {
         listen = metadata as Listen;
+        additionalContent = getAdditionalContent(metadata);
       }
-      const { newAlert } = this.props;
       return (
         <div className="event-content">
           <ListenCard
