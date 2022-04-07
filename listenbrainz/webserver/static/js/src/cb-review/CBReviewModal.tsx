@@ -206,14 +206,14 @@ export default class CBReviewModal extends React.Component<
 
     // get all three entities and then set the default entityToReview
     this.getArtistEntity();
-    this.getRecordingEntity();
+    await this.getRecordingEntity();
     await this.getReleaseGroupEntity();
 
     this.setEntityToReview();
     this.setState({ loading: false });
   };
 
-  getRecordingEntity = () => {
+  getRecordingEntity = async () => {
     const { listen } = this.props;
     if (!listen) {
       return;
@@ -230,9 +230,8 @@ export default class CBReviewModal extends React.Component<
         trackName
       );
     }
-    const recording_mbid = getRecordingMBID(listen);
     // confirm that found mbid was valid
-    if (recording_mbid && recording_mbid?.length) {
+    if (recording_mbid?.length) {
       const entity: ReviewableEntity = {
         type: "recording",
         mbid: recording_mbid,
@@ -253,16 +252,17 @@ export default class CBReviewModal extends React.Component<
     const artist_mbid = getArtistMBIDs(listen)?.[0];
 
     if (artist_mbid) {
-    const artist_mbids = getArtistMBIDs(listen);
-    if (artist_mbids) {
-      const entity: ReviewableEntity = {
-        type: "artist",
-        mbid: artist_mbids[0],
-        name: getArtistName(listen),
-      };
-      this.setState({ artistEntity: entity });
-    } else {
-      this.setState({ artistEntity: null });
+      const artist_mbids = getArtistMBIDs(listen);
+      if (artist_mbids) {
+        const entity: ReviewableEntity = {
+          type: "artist",
+          mbid: artist_mbids[0],
+          name: getArtistName(listen),
+        };
+        this.setState({ artistEntity: entity });
+      } else {
+        this.setState({ artistEntity: null });
+      }
     }
   };
 
@@ -416,8 +416,8 @@ export default class CBReviewModal extends React.Component<
 
       try {
         const response = await APIService.submitReviewToCB(
-          auth_token,
           name,
+          auth_token,
           reviewToSubmit
         );
         if (response) {

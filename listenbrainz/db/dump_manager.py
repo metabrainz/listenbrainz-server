@@ -310,6 +310,7 @@ def check_dump_ages():
     check_ftp_dump_ages()
     sys.exit(0)
 
+
 @cli.command(name="create_parquet")
 def create_test_parquet_files():
     app = create_app()
@@ -337,6 +338,7 @@ def import_yim_playlists(patch_slug, dump_file):
     app = create_app()
     with app.app_context():
         insert_playlists(patch_slug, dump_file)
+
 
 def get_dump_id(dump_name):
     return int(dump_name.split('-')[2])

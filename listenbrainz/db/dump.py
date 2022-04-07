@@ -23,14 +23,9 @@ https://listenbrainz.readthedocs.io/en/production/dev/listenbrainz-dumps.html
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-import logging
 import os
 import shutil
-from ftplib import FTP
-
-import sqlalchemy
 import subprocess
-import sys
 import tarfile
 import tempfile
 import traceback
@@ -39,27 +34,15 @@ from ftplib import FTP
 from typing import Tuple, Optional
 
 import sqlalchemy
-import time
 import ujson
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
 
-from datetime import datetime, timedelta
-
-from brainzutils.mail import send_mail
-from flask import current_app, render_template
-from listenbrainz import DUMP_LICENSE_FILE_PATH
 import listenbrainz.db as db
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db import timescale
 from listenbrainz.utils import create_path
-from listenbrainz.webserver import create_app
-
-from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
-from listenbrainz.utils import create_path, log_ioerrors
-
-from listenbrainz import config
 from listenbrainz.webserver import create_app
 
 MAIN_FTP_SERVER_URL = "ftp.eu.metabrainz.org"
