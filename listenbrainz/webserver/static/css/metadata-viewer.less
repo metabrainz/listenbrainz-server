@@ -8,30 +8,29 @@
 	padding: 0.25em;
 	display: flex;
 	flex-wrap: wrap;
-	min-height: 55vw;
+	min-height: 100vh;
 	.left-side{
 		padding: @outer-padding;
 		background-color: fadein(@black,30%);
 		transition: background-color 0.3s;
 		border-radius: @border-radius;
-		color: white;
 		flex:1;
-		min-width: 300px;
+		// min-width: 300px;
+		// min-width: 60vh;
 		display: flex;
 		flex-direction: column;
+		justify-content: space-between;
 		.album-art{
-			flex:1;
-			background: @boxes-background-color;
-			// Maintain square aspect ratio
-			width: 100%;
-			// // 100% of width minus line heigth
-			// padding-bottom: calc(100% - 1.3em);
+			height: 100%;
+			display: flex;
+			justify-content: space-around;
+			max-height: calc(100vh - 130px);
 			img {
-				width: 100%;
+				flex:1;
+				max-width: 100%;
+				object-fit: cover;
+				object-position: center;
 			}
-		}
-		.track-info, .bottom{
-			flex:0;
 		}
 		.track-info {
 			display: flex;
@@ -48,9 +47,10 @@
 			}
 		}
 		.love-hate{
-			width: 6em;
 			display: flex;
-			justify-content: space-around;
+			justify-content: space-between;
+			font-size: 0.9em;
+			align-items: start;
 			.fa-heart {
 				stroke: @love;
 				color:transparent;
@@ -88,8 +88,8 @@
 	}
 	.right-side{
 		flex:1.1;
-		max-width: calc(100% - 0.5em);
-		min-width: 300px;
+		// max-width: calc(100% - 0.5em);
+		// min-width: 300px;
 		display: flex;
 		flex-direction: column;
 		margin: 0 0 0 0.5em;
