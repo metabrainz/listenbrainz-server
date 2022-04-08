@@ -1,0 +1,170 @@
+@outer-padding: 0.7em;
+@entity-icon-size: 1.2em;
+@border-radius: 6px;
+@black: #262626;
+
+#metadata-viewer {
+	padding: 0.25em;
+	display: flex;
+	flex-wrap: wrap;
+	min-height: 55vw;
+	.left-side{
+		padding: @outer-padding;
+		background-color: @black;
+		border-radius: @border-radius;
+		color: white;
+		flex:1.5;
+		min-width: 360px;
+		display: flex;
+		flex-direction: column;
+		.album-art{
+			flex:1;
+			background: lightslategrey;
+			// Maintain square aspect ratio
+			width: 100%;
+			// 100% of width minus line heigth
+			padding-bottom: calc(100% - 1.3em);
+		}
+		.track-info, .bottom{
+			flex:0;
+		}
+		.track-info {
+			display: flex;
+			padding: @outer-padding 0;
+			.track-name {
+				font-size: 1.4em;
+				font-weight: bold;
+				line-height: 1em;
+			}
+			> *:first-child{
+				flex:3
+			}
+		}
+		.love-hate{
+			width: 6em;
+			display: flex;
+			justify-content: space-around;
+			.fa-heart {
+				stroke: @love;
+				color:transparent;
+				stroke-width: 1.3em;
+				&:hover, &.loved {
+					stroke: transparent;
+					color: @love;
+				}
+			}
+			
+			.fa-heart-broken {
+				stroke: @hate;
+				color:transparent;
+			    stroke-width: 1.3em;
+				&:hover,&.hated {
+					stroke: transparent;
+					color: @hate;
+				}
+			}
+		}
+		.bottom{
+			display: flex;
+			align-items: center;
+			padding-top: @outer-padding;
+			.logo{
+				height: 1.5em;
+			}
+			.support-artist-btn {
+				margin-left: auto;
+				.caret{
+					margin-left: 1em;
+				}
+			}
+		}
+	}
+	.right-side{
+		flex:2;
+		display: flex;
+		flex-direction: column;
+		margin: 0 0 0 0.5em;
+		> * {
+			&.expanded{
+				flex:1;
+			}
+			.panel-body{
+				padding: @outer-padding;
+			}
+			.panel-heading{
+				background: inherit;
+				cursor: pointer;
+				.date{
+					font-size: 0.7em;
+					margin-left:auto;
+				}
+				.caret {
+					transform: rotate(-90deg);
+					transition: transform ease-out 0.35s;
+					margin-left: @outer-padding;
+				}
+				&:not(.collapsed) .caret {
+					transform: rotate(0deg);
+				}
+				.panel-title{
+					.name{
+						font-size: 1.3em;
+						font-weight: bold;
+					}
+					 > *{
+						display: flex;
+						align-items: center;
+					}
+				}
+			}
+			.badges, .ratings{
+				padding: 0.4em;
+				border-radius: @border-radius;
+				box-shadow: 2px 2px 2px rgba(0,0,0, 0.07) inset;
+				background-color: rgba(0,0,0, 0.03);
+			}
+			.badges{
+				overflow-x: auto;
+				white-space: nowrap;
+				overflow-y: hidden;
+				.badge{
+					color: currentcolor;
+					background-color: lightgrey;
+				}
+				.badge + .badge{
+					margin-left:0.3em;
+				}
+			}
+		}
+	}
+	
+}
+
+/* Entity icons, copied from MusicBrainz:
+	https://github.com/metabrainz/musicbrainz-server/blob/75162fb76e8a55d6c578a527fbcbfab5d7e4c5c8/root/static/styles/entity-icons.less
+*/
+.artistheader, .releaseheader,
+.recordingheader{
+	&::before{
+		display: inline-block;
+		content: ' ';
+		background-size: @entity-icon-size;
+		background-repeat: no-repeat;
+		height: @entity-icon-size;
+		width: @entity-icon-size + 0.3em;
+		vertical-align: text-bottom;
+	}
+}
+.recordingheader::before {
+	background-image: data-uri('../img/mb-entity-icons/recording.svg');
+}
+.releaseheader::before {
+	background-image: data-uri('../img/mb-entity-icons/release.svg');
+}
+.artistheader::before {
+	background-image: data-uri('../img/mb-entity-icons/artist.svg');
+	&.group-icon{
+	background-image: data-uri('../img/mb-entity-icons/group.svg');
+	}
+}
+
