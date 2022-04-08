@@ -1,7 +1,7 @@
-/* eslint-disable no-console */
 import * as React from "react";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import TagsComponent from "./TagsComponent";
 
 type MetadataViewerProps = {
   metadata?: PlayingNowMetadata;
@@ -83,7 +83,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               {metadata.artist[0]?.rels &&
                 Object.entries(metadata.artist[0].rels).map(([key, value]) => {
                   return (
-                    <li>
+                    <li key={key}>
                       <a href={value}>{key}</a>
                     </li>
                   );
@@ -132,18 +132,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingOne"
           >
             <div className="panel-body">
-              <div className="badges">
-                {metadata.tag.recording
-                  .filter((tag) => tag.genre_mbid)
-                  .sort((t1, t2) => t2.count - t1.count)
-                  .map((tag) => (
-                    <span className="badge">
-                      <a href={`https://musicbrainz.org/tag/${tag.tag}`}>
-                        {tag.tag}
-                      </a>
-                    </span>
-                  ))}
-              </div>
+              <TagsComponent tags={metadata.tag.recording} />
               {/* <div className="ratings" /> */}
               Track metadata content
             </div>
@@ -217,18 +206,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingThree"
           >
             <div className="panel-body">
-              <div className="badges">
-                {metadata.tag.artist
-                  .filter((tag) => tag.genre_mbid)
-                  .sort((t1, t2) => t2.count - t1.count)
-                  .map((tag) => (
-                    <span className="badge">
-                      <a href={`https://musicbrainz.org/tag/${tag.tag}`}>
-                        {tag.tag}
-                      </a>
-                    </span>
-                  ))}
-              </div>
+              <TagsComponent tags={metadata.tag.artist} />
               {/* <div className="ratings" /> */}
               Artist metadata content
             </div>
