@@ -13,7 +13,13 @@ export default function TagsComponent(props: {
             .sort((t1, t2) => t2.count - t1.count)
             .map((tag) => (
               <span key={tag.tag + tag.count} className="badge">
-                <a href={`https://musicbrainz.org/tag/${tag.tag}`}>{tag.tag}</a>
+                <a
+                  href={`https://musicbrainz.org/tag/${tag.tag}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {tag.tag}
+                </a>
               </span>
             ))
         ) : (
