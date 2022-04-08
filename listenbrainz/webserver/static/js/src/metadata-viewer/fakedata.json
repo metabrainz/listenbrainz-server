@@ -1,0 +1,146 @@
+{
+    "97e69767-5d34-4c97-b36a-f3b2b1ef9dae": {
+        "artist": [
+            {
+                "area": "United Kingdom",
+                "begin_year": 1995,
+                "rels": {
+                    "free streaming": "https://www.deezer.com/artist/901",
+                    "lyrics": "https://www.musixmatch.com/artist/Morcheeba",
+                    "official homepage": "https://www.morcheeba.uk/",
+                    "purchase for download": "https://www.qobuz.com/gb-en/interpreter/morcheeba/download-streaming-albums",
+                    "purchase for mail-order": "https://www.cdjapan.co.jp/person/169618",
+                    "social network": "https://www.instagram.com/morcheebamusic/",
+                    "streaming": "https://us.napster.com/artist/morcheeba",
+                    "wikidata": "https://www.wikidata.org/wiki/Q749019",
+                    "youtube": "https://www.youtube.com/user/realmorcheeba"
+                },
+                "type": "Group"
+            }
+        ],
+        "recording": {
+            "rels": [
+                {
+                    "artist_mbid": "e1cf599b-d9de-4e33-9cb8-e3a52e92d072",
+                    "artist_name": "Ross Godfrey",
+                    "instrument": "keyboard",
+                    "type": "instrument"
+                },
+                {
+                    "artist_mbid": "e1cf599b-d9de-4e33-9cb8-e3a52e92d072",
+                    "artist_name": "Ross Godfrey",
+                    "instrument": "bass guitar",
+                    "type": "instrument"
+                },
+                {
+                    "artist_mbid": "e1cf599b-d9de-4e33-9cb8-e3a52e92d072",
+                    "artist_name": "Ross Godfrey",
+                    "instrument": "synthesizer",
+                    "type": "instrument"
+                },
+                {
+                    "artist_mbid": "e1cf599b-d9de-4e33-9cb8-e3a52e92d072",
+                    "artist_name": "Ross Godfrey",
+                    "instrument": "guitar",
+                    "type": "instrument"
+                },
+                {
+                    "artist_mbid": "6c230e5a-dcf1-454b-8348-b71a0baf7f73",
+                    "artist_name": "Paul Godfrey",
+                    "instrument": "turntable",
+                    "type": "instrument"
+                },
+                {
+                    "artist_mbid": "6c230e5a-dcf1-454b-8348-b71a0baf7f73",
+                    "artist_name": "Paul Godfrey",
+                    "instrument": "drums (drum set)",
+                    "type": "instrument"
+                },
+                {
+                    "artist_mbid": "bd263d69-4eba-4c68-a071-38539891abae",
+                    "artist_name": "Skye",
+                    "type": "vocal"
+                },
+                {
+                    "artist_mbid": "9f048088-2725-40ba-b8fb-9365171c566a",
+                    "artist_name": "Pete Norris",
+                    "instrument": "synthesizer",
+                    "type": "instrument"
+                }
+            ]
+        },
+        "tag": {
+            "artist": [
+                {
+                    "artist_mbid": "067102ea-9519-4622-9077-57ca4164cfbb",
+                    "count": 5,
+                    "genre_mbid": "45eb1d9c-588c-4dc8-9394-a14b7c8f02bc",
+                    "tag": "trip hop"
+                },
+                {
+                    "artist_mbid": "067102ea-9519-4622-9077-57ca4164cfbb",
+                    "count": 1,
+                    "genre_mbid": "52faa157-6bad-4d86-a0ab-d4dec7d2513c",
+                    "tag": "hip hop"
+                },
+                {
+                    "artist_mbid": "067102ea-9519-4622-9077-57ca4164cfbb",
+                    "count": 4,
+                    "genre_mbid": "cc38aba3-48ed-439a-83b9-f81a34a66598",
+                    "tag": "downtempo"
+                },
+                {
+                    "artist_mbid": "067102ea-9519-4622-9077-57ca4164cfbb",
+                    "count": 1,
+                    "genre_mbid": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+                    "tag": "electronic"
+                }
+            ],
+            "recording": [
+                {
+                    "count": 1,
+                    "genre_mbid": "e5bba957-8c91-496a-a675-c6d0c6b51c33",
+                    "tag": "dance"
+                },
+                {
+                    "count": 1,
+                    "genre_mbid": "3976e9ba-16d0-461d-b732-99408a0374ba",
+                    "tag": "edm"
+                },
+                {
+                    "count": 3,
+                    "genre_mbid": "cc38aba3-48ed-439a-83b9-f81a34a66598",
+                    "tag": "downtempo"
+                },
+                {
+                    "count": 4,
+                    "genre_mbid": "45eb1d9c-588c-4dc8-9394-a14b7c8f02bc",
+                    "tag": "trip hop"
+                },
+                {
+                    "count": 3,
+                    "tag": "britannique"
+                },
+                {
+                    "count": 3,
+                    "genre_mbid": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+                    "tag": "electronic"
+                },
+                {
+                    "count": 1,
+                    "tag": "electronica trip-hop"
+                },
+                {
+                    "count": 1,
+                    "genre_mbid": "0e3fc579-2d24-4f20-9dae-736e1ec78798",
+                    "tag": "rock"
+                },
+                {
+                    "count": 1,
+                    "genre_mbid": "bab69b07-8bb9-4415-b666-c37609cef80b",
+                    "tag": "club"
+                }
+            ]
+        }
+    }
+}
