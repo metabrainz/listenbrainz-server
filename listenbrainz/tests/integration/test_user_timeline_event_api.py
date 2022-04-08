@@ -16,11 +16,14 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from flask import url_for, current_app
+from flask import url_for
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_REVIEW_SUBMIT_URL
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.db.model.user_timeline_event import UserTimelineEventType
 from unittest import mock
+
+import requests_mock
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
@@ -34,11 +37,19 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(UserTimelineAPITestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'friendly neighborhood spider-man')
+        CritiqueBrainzService().add_new_user(self.user['id'], {
+            "access_token": "foobar",
+            "refresh_token": "foobar",
+            "expires_in": 3600
+        })
         events = db_user_timeline_event.get_user_track_recommendation_events(
             user_id=self.user['id'],
             count=1,
         )
         self.assertListEqual([], events)
+        # by default this is True, we set to False so that the Flask handler to automatically
+        # catch uncaught exceptions works and wraps those in a 500.
+        self.app.config["TESTING"] = False
 
     def test_recommendation_writes_an_event_to_the_database(self):
 
@@ -328,27 +339,23 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert400(r)
 
-    def test_critiquebrainz_writes_an_event_to_the_database(self):
+    @requests_mock.Mocker()
+    def test_critiquebrainz_writes_an_event_to_the_database(self, mock_requests):
         metadata = {
-            "track_metadata": {
-                "additional_info": {
-                    "artist_msid": str(uuid.uuid4()),
-                    "recording_msid": str(uuid.uuid4()),
-                    "release_msid": str(uuid.uuid4()),
-                },
-                "artist_name": "TWICE",
-                "release_name": "Merry & Happy",
-                "track_name": "Heart Shaker"
-            },
+            "entity_name": "Heart Shaker",
+            "entity_id": str(uuid.uuid4()),
             "entity_type": "recording",
             "rating": 5,
+            "language": "en",
             "text": "Review text goes here ...",
-            "review_mbid": str(uuid.uuid4())
         }
+
+        review_id = str(uuid.uuid4())
+        mock_requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, status_code=200, json={'id': review_id})
 
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
-            data=json.dumps({'metadata': metadata}),
+            data=json.dumps(metadata),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert200(r)
@@ -360,38 +367,30 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             count=1,
         )
         self.assertEqual(1, len(events))
-        self.assertEqual('TWICE', events[0].metadata.artist_name)
-        self.assertEqual('Heart Shaker', events[0].metadata.track_name)
+        self.assertEqual('Heart Shaker', events[0].metadata.entity_name)
+        self.assertEqual(review_id, events[0].metadata.review_id)
 
     def test_critiquebrainz_checks_auth_token_for_authorization(self):
         metadata = {
-            "track_metadata": {
-                "additional_info": {
-                    "artist_msid": str(uuid.uuid4()),
-                    "recording_msid": str(uuid.uuid4()),
-                    "release_msid": str(uuid.uuid4()),
-                },
-                "artist_name": "TWICE",
-                "release_name": "Merry & Happy",
-                "track_name": "Heart Shaker"
-            },
+            "entity_name": "Heart Shaker",
+            "entity_id": str(uuid.uuid4()),
             "entity_type": "recording",
             "rating": 5,
+            "language": "en",
             "text": "Review text goes here ...",
-            "review_mbid": str(uuid.uuid4())
         }
 
         # send a request without a token
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
-            data=json.dumps({'metadata': metadata}),
+            data=json.dumps(metadata),
         )
         self.assert401(r)
 
         # send a request with an incorrect token
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
-            data=json.dumps({'metadata': metadata}),
+            data=json.dumps(metadata),
             headers={'Authorization': 'Token DSdsa asdasd sad asd'},
         )
         self.assert401(r)
@@ -411,34 +410,31 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         # empty metadata should 400
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
-            data=json.dumps({'metadata': metadata}),
+            data=json.dumps(metadata),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert400(r)
 
+    @requests_mock.Mocker()
     @mock.patch('listenbrainz.db.user_timeline_event.create_user_cb_review_event', side_effect=DatabaseException)
-    def test_recommendation_handles_database_exceptions(self, mock_create_event):
+    def test_critiquebrainz_handles_database_exceptions(self, mock_requests, mock_create_event):
         metadata = {
-            "track_metadata": {
-                "additional_info": {
-                    "artist_msid": str(uuid.uuid4()),
-                    "recording_msid": str(uuid.uuid4()),
-                    "release_msid": str(uuid.uuid4()),
-                },
-                "artist_name": "TWICE",
-                "release_name": "Merry & Happy",
-                "track_name": "Heart Shaker"
-            },
+            "entity_name": "Heart Shaker",
+            "entity_id": str(uuid.uuid4()),
             "entity_type": "recording",
             "rating": 5,
+            "language": "en",
             "text": "Review text goes here ...",
-            "review_mbid": str(uuid.uuid4())
         }
+
+        review_id = str(uuid.uuid4())
+        mock_requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, status_code=200, json={'id': review_id})
+
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
-            data=json.dumps({'metadata': metadata}),
+            data=json.dumps(metadata),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert500(r)
         data = json.loads(r.data)
-        self.assertEqual('Something went wrong, please try again.', data['error'])
+        self.assertEqual('An unknown error occured.', data['error'])
