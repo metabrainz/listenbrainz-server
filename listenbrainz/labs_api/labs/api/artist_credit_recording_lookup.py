@@ -28,7 +28,7 @@ class ArtistCreditRecordingLookupQuery(Query):
     def outputs(self):
         return ['index', 'artist_credit_arg', 'recording_arg',
                 'artist_credit_name', 'release_name', 'recording_name',
-                'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid']
+                'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid', 'year']
 
     def get_debug_log_lines(self):
         lines = self.log_lines
@@ -46,7 +46,7 @@ class ArtistCreditRecordingLookupQuery(Query):
 
         lookup_strings = tuple(lookup_strings)
 
-        with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
+        with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute("""SELECT artist_credit_name,
                                        artist_credit_id,
@@ -55,8 +55,9 @@ class ArtistCreditRecordingLookupQuery(Query):
                                        release_mbid,
                                        recording_name,
                                        recording_mbid,
+                                       year,
                                        combined_lookup
-                                  FROM mapping.mbid_mapping
+                                  FROM mapping.canonical_musicbrainz_data
                                  WHERE combined_lookup IN %s""", (lookup_strings,))
 
                 results = []
