@@ -1,28 +1,121 @@
+/* eslint-disable no-bitwise */
 import * as React from "react";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as tinycolor from "tinycolor2";
 import TagsComponent from "./TagsComponent";
 
 type MetadataViewerProps = {
   metadata?: PlayingNowMetadata;
 };
 
+/** Courtesy of Matt Zimmerman
+ * https://codepen.io/influxweb/pen/LpoXba
+ */
+function getAverageRGB(
+  imgEl?: HTMLImageElement
+): { r: number; g: number; b: number } {
+  const defaultRGB = { r: 0, g: 0, b: 0 }; // for non-supporting envs
+  if (!imgEl) {
+    return defaultRGB;
+  }
+  const blockSize = 5; // only visit every 5 pixels
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext && canvas.getContext("2d");
+  let data;
+  let i = -4;
+  const rgb = { r: 0, g: 0, b: 0 };
+  let count = 0;
+
+  if (!context) {
+    return defaultRGB;
+  }
+
+  const height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
+  const width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
+  canvas.height = height;
+  canvas.width = width;
+  context.drawImage(imgEl, 0, 0);
+
+  try {
+    data = context.getImageData(0, 0, width, height);
+  } catch (e) {
+    /* security error, img on diff domain */
+    console.error(e);
+    return defaultRGB;
+  }
+
+  const { length } = data.data;
+
+  // eslint-disable-next-line no-cond-assign
+  while ((i += blockSize * 4) < length) {
+    ++count;
+    rgb.r += data.data[i];
+    rgb.g += data.data[i + 1];
+    rgb.b += data.data[i + 2];
+  }
+
+  // ~~ used to floor values
+  rgb.r = ~~(rgb.r / count);
+  rgb.g = ~~(rgb.g / count);
+  rgb.b = ~~(rgb.b / count);
+
+  return rgb;
+}
+
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { metadata } = props;
   const [expandedAccordion, setExpandedAccordion] = React.useState(1);
-
+  const albumArtRef = React.useRef<HTMLImageElement>();
+  const [albumArtColor, setAlbumArtColor] = React.useState({
+    r: 0,
+    g: 0,
+    b: 0,
+  });
   if (!metadata) {
     return <div>Not playing anything</div>;
   }
+  React.useEffect(() => {
+    const setAverageColor = () => {
+      const averageColor = getAverageRGB(albumArtRef?.current);
+      setAlbumArtColor(averageColor);
+    };
+    if (albumArtRef?.current) {
+      albumArtRef.current.addEventListener("load", setAverageColor);
+    }
+    return () => {
+      if (albumArtRef?.current) {
+        albumArtRef.current.removeEventListener("load", setAverageColor);
+      }
+    };
+  }, [albumArtRef?.current, setAlbumArtColor]);
+
+  const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
+  adjustedAlbumColor.saturate(20);
+  adjustedAlbumColor.setAlpha(0.6);
+
+  const textColor = tinycolor.mostReadable(
+    adjustedAlbumColor,
+    adjustedAlbumColor.monochromatic().map((color) => color.toHexString()),
+    {
+      includeFallbackColors: true,
+    }
+  );
   return (
     <div id="metadata-viewer">
-      <div className="left-side">
+      <div
+        className="left-side"
+        style={{
+          backgroundColor: adjustedAlbumColor.toRgbString(),
+          color: textColor.toString(),
+        }}
+      >
         <div className="track-info">
           <div className="track-details">
-            <div title="Track Name" className="ellipsis-2-lines track-name">
+            <div title="Track Name" className="track-name ellipsis-2-lines">
               Track name
             </div>
-            <span className="small text-muted ellipsis" title="artist name">
+            <span className="artist-name small ellipsis" title="artist name">
               Artist name
             </span>
           </div>
@@ -58,7 +151,14 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           </div>
         </div>
 
-        <div className="album-art">Album art</div>
+        <div className="album-art">
+          <img
+            src="https://picsum.photos/400/400"
+            ref={albumArtRef}
+            crossOrigin="anonymous"
+            alt="Album art"
+          />
+        </div>
         <div className="bottom">
           <a href="https://listenbrainz.org/my/listens">
             <small>
