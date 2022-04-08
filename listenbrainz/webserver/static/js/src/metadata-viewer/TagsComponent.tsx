@@ -5,7 +5,7 @@ export default function TagsComponent(props: {
 }) {
   const { tags } = props;
   return (
-    <div className="tags-wrapper">
+    <div className="tags-wrapper content-box">
       <div className="tags">
         {tags?.length ? (
           tags
