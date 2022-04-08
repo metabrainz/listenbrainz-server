@@ -13,7 +13,7 @@ type MetadataViewerProps = {
  * https://codepen.io/influxweb/pen/LpoXba
  */
 function getAverageRGB(
-  imgEl?: HTMLImageElement
+  imgEl: HTMLImageElement | null
 ): { r: number; g: number; b: number } {
   const defaultRGB = { r: 0, g: 0, b: 0 }; // for non-supporting envs
   if (!imgEl) {
@@ -41,7 +41,6 @@ function getAverageRGB(
     data = context.getImageData(0, 0, width, height);
   } catch (e) {
     /* security error, img on diff domain */
-    console.error(e);
     return defaultRGB;
   }
 
@@ -49,7 +48,7 @@ function getAverageRGB(
 
   // eslint-disable-next-line no-cond-assign
   while ((i += blockSize * 4) < length) {
-    ++count;
+    count += 1;
     rgb.r += data.data[i];
     rgb.g += data.data[i + 1];
     rgb.b += data.data[i + 2];
@@ -66,7 +65,7 @@ function getAverageRGB(
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { metadata } = props;
   const [expandedAccordion, setExpandedAccordion] = React.useState(1);
-  const albumArtRef = React.useRef<HTMLImageElement>();
+  const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
     r: 0,
     g: 0,
@@ -101,6 +100,24 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       includeFallbackColors: true,
     }
   );
+
+  const flattenedRecRels: MusicBrainzRecordingRel[] =
+    metadata.recording.rels?.reduce((arr, cur) => {
+      const existingArtist = arr.find(
+        (el) => el.artist_mbid === cur.artist_mbid
+      );
+      const copy = { ...cur };
+      if (copy.type === "vocal") {
+        copy.instrument = "vocals";
+      }
+      if (existingArtist) {
+        existingArtist.instrument += `, ${copy.instrument}`;
+      } else {
+        arr.push(copy);
+      }
+      return arr;
+    }, [] as MusicBrainzRecordingRel[]) ?? [];
+
   return (
     <div id="metadata-viewer">
       <div
@@ -112,7 +129,10 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       >
         <div className="track-info">
           <div className="track-details">
-            <div title="Track Name" className="track-name ellipsis-2-lines">
+            <div
+              title="Track Name"
+              className="track-name strong ellipsis-2-lines"
+            >
               Track name
             </div>
             <span className="artist-name small ellipsis" title="artist name">
@@ -184,7 +204,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 Object.entries(metadata.artist[0].rels).map(([key, value]) => {
                   return (
                     <li key={key}>
-                      <a href={value}>{key}</a>
+                      <a href={value} target="_blank" rel="noopener noreferrer">
+                        {key}
+                      </a>
                     </li>
                   );
                 })}
@@ -217,8 +239,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <h4 className="panel-title">
               <div className="recordingheader">
-                <div className="name">Track name</div>
-                <div className="date">date</div>
+                <div className="name strong">Track name</div>
+                <div className="date">length</div>
                 <div className="caret" />
               </div>
             </h4>
@@ -233,8 +255,37 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <div className="panel-body">
               <TagsComponent tags={metadata.tag.recording} />
-              {/* <div className="ratings" /> */}
-              Track metadata content
+              {/* <div className="ratings content-box" /> */}
+              {flattenedRecRels && (
+                <div className="white content-box">
+                  <table className="table credits-table">
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span className="strong">Credits:</span>
+                        </td>
+                      </tr>
+                      {flattenedRecRels.map((rel) => {
+                        const { artist_name, artist_mbid, instrument } = rel;
+                        return (
+                          <tr key={artist_mbid}>
+                            <td>
+                              <a
+                                href={`https://musicbrainz.org/artist/${artist_mbid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {artist_name}
+                              </a>
+                            </td>
+                            <td>{instrument}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -256,8 +307,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <h4 className="panel-title">
               <div className="releaseheader">
-                <div className="name">Album name</div>
-                <div className="date">date</div>
+                <div className="name strong">Album name</div>
+                <div className="date">year</div>
                 <div className="caret" />
               </div>
             </h4>
@@ -291,8 +342,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <h4 className="panel-title">
               <div className="artistheader">
-                <div className="name">Artist name</div>
-                <div className="date">date</div>
+                <div className="name strong">Artist name</div>
+                <div className="date">year</div>
                 <div className="caret" />
               </div>
             </h4>
@@ -307,7 +358,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <div className="panel-body">
               <TagsComponent tags={metadata.tag.artist} />
-              {/* <div className="ratings" /> */}
+              {/* <div className="ratings content-box" /> */}
               Artist metadata content
             </div>
           </div>

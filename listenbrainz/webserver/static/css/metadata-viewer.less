@@ -21,7 +21,7 @@
 		flex-direction: column;
 		.album-art{
 			flex:1;
-			background: lightslategrey;
+			background: @boxes-background-color;
 			// Maintain square aspect ratio
 			width: 100%;
 			// // 100% of width minus line heigth
@@ -38,7 +38,6 @@
 			padding: @outer-padding 0;
 			.track-name {
 				font-size: 1.4em;
-				font-weight: bold;
 				line-height: 1em;
 			}
 			.artist-name{
@@ -94,6 +93,21 @@
 		display: flex;
 		flex-direction: column;
 		margin: 0 0 0 0.5em;
+		
+		.content-box{
+			padding: 0.4em;
+			border-radius: @border-radius;
+			box-shadow: 0px 0px 4px rgba(0,0,0, 0.1) inset;
+			background-color: @boxes-background-color;
+			
+			&.white{
+				background-color: white;
+			}
+			& + .content-box {
+				margin-top: @outer-padding;
+			}
+		}
+		
 		> * {
 			&.expanded{
 				flex:1;
@@ -119,7 +133,6 @@
 				.panel-title{
 					.name{
 						font-size: 1.3em;
-						font-weight: bold;
 					}
 					 > *{
 						display: flex;
@@ -127,12 +140,18 @@
 					}
 				}
 			}
-			.tags-wrapper, .ratings{
-				padding: 0.4em;
-				border-radius: @border-radius;
-				box-shadow: 2px 2px 2px rgba(0,0,0, 0.07) inset;
-				background-color: @boxes-background-color;
+
+			.credits-table {
+				line-height: 2em;
+				margin:0;
+				> tbody >tr:first-of-type > td{
+					border-top:none;
+				}
+				tr td+td{
+					text-align: right;
+				}
 			}
+
 			.tags-wrapper{
 				display: flex;
 				position: relative;
@@ -179,6 +198,9 @@
 	background:white;
 	border: 1px solid @blue;
 	border-radius: @border-radius;
+}
+.strong{
+	font-weight: 600;
 }
 
 /* Entity icons, copied from MusicBrainz:
