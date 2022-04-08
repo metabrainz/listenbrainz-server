@@ -16,6 +16,11 @@
   {# The css file has a .less extension in the manifest file entry (due to its original name in Webpack entry) #}
   <link href="{{ get_static_path('main.less') }}" rel="stylesheet" media="screen" />
   {%- endblock -%}
+  <style type="css">
+    body {
+      padding-bottom:0;
+    }
+  </style>
 </head>
 
 <body>
