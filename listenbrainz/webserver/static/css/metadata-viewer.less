@@ -2,6 +2,7 @@
 @entity-icon-size: 1.2em;
 @border-radius: 6px;
 @black: #262626;
+@boxes-background-color : #f7f7f7;
 
 #metadata-viewer {
 	padding: 0.25em;
@@ -10,11 +11,11 @@
 	min-height: 55vw;
 	.left-side{
 		padding: @outer-padding;
-		background-color: @black;
+		background-color: fadein(@black,30%);
 		border-radius: @border-radius;
 		color: white;
-		flex:1.5;
-		min-width: 360px;
+		flex:1;
+		min-width: 300px;
 		display: flex;
 		flex-direction: column;
 		.album-art{
@@ -22,8 +23,11 @@
 			background: lightslategrey;
 			// Maintain square aspect ratio
 			width: 100%;
-			// 100% of width minus line heigth
-			padding-bottom: calc(100% - 1.3em);
+			// // 100% of width minus line heigth
+			// padding-bottom: calc(100% - 1.3em);
+			img {
+				width: 100%;
+			}
 		}
 		.track-info, .bottom{
 			flex:0;
@@ -35,6 +39,9 @@
 				font-size: 1.4em;
 				font-weight: bold;
 				line-height: 1em;
+			}
+			.artist-name{
+				opacity:0.85;
 			}
 			> *:first-child{
 				flex:3
@@ -80,13 +87,18 @@
 		}
 	}
 	.right-side{
-		flex:2;
+		flex:1.1;
+		max-width: calc(100% - 0.5em);
+		min-width: 300px;
 		display: flex;
 		flex-direction: column;
 		margin: 0 0 0 0.5em;
 		> * {
 			&.expanded{
 				flex:1;
+				.panel-heading .caret{
+					transform: rotate(0deg);
+				}
 			}
 			.panel-body{
 				padding: @outer-padding;
@@ -103,9 +115,6 @@
 					transition: transform ease-out 0.35s;
 					margin-left: @outer-padding;
 				}
-				&:not(.collapsed) .caret {
-					transform: rotate(0deg);
-				}
 				.panel-title{
 					.name{
 						font-size: 1.3em;
@@ -117,27 +126,58 @@
 					}
 				}
 			}
-			.badges, .ratings{
+			.tags-wrapper, .ratings{
 				padding: 0.4em;
 				border-radius: @border-radius;
 				box-shadow: 2px 2px 2px rgba(0,0,0, 0.07) inset;
-				background-color: rgba(0,0,0, 0.03);
+				background-color: @boxes-background-color;
 			}
-			.badges{
-				overflow-x: auto;
-				white-space: nowrap;
-				overflow-y: hidden;
-				.badge{
-					color: currentcolor;
-					background-color: lightgrey;
+			.tags-wrapper{
+				display: flex;
+				position: relative;
+				.tags{
+					flex:1;
+					align-items: center;
+					// horizontal scroll overflow with
+					display: flex;
+					overflow-x: auto;
+					&::-webkit-scrollbar {
+						// hidden scrollbar
+						display: none;
+					}
+					.badge{
+						flex: none;
+						color: currentcolor;
+						background-color: lightgrey;
+					}
+					.badge + .badge{
+						margin-left:0.3em;
+					}
 				}
-				.badge + .badge{
-					margin-left:0.3em;
+				.add-tag{
+					flex:none;
+					// Faded overlay to hide extra tags in .tags
+					&:before{
+						content: '';
+						position: absolute;
+						width: 60px;
+						height: 80%;
+						right: 75px;
+						top:10%;
+    					background: linear-gradient(to right,transparent,@boxes-background-color);
+						pointer-events:none;
+					}
 				}
 			}
 		}
 	}
 	
+}
+
+.btn-outline{
+	background:white;
+	border: 1px solid @blue;
+	border-radius: @border-radius;
 }
 
 /* Entity icons, copied from MusicBrainz:
