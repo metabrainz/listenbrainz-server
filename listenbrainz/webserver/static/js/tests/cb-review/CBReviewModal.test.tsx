@@ -206,8 +206,8 @@ describe("submitReviewToCB", () => {
       acceptLicense: true,
     });
 
-    const spy = jest.fn().mockImplementation(() => {
-      return Promise.resolve({ id: "new review id that API returns" });
+    const spy = jest.fn().mockResolvedValue({
+      metadata: { review_id: "new review id that API returns" },
     });
     instance.context.APIService.submitReviewToCB = spy;
 
