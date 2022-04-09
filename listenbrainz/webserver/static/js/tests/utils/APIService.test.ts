@@ -1073,12 +1073,14 @@ describe("submitReviewToCB", () => {
           "Content-Type": "application/json;charset=UTF-8",
         },
         body: JSON.stringify({
-          entity_name: "Shakira",
-          entity_id: "bf24ca37-25f4-4e34-9aec-460b94364cfc",
-          entity_type: "artist",
-          text: "TEXT",
-          language: "en",
-          rating: 4,
+          metadata: {
+            entity_name: "Shakira",
+            entity_id: "bf24ca37-25f4-4e34-9aec-460b94364cfc",
+            entity_type: "artist",
+            text: "TEXT",
+            language: "en",
+            rating: 4,
+          },
         }),
       }
     );
