@@ -355,7 +355,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
-            data=json.dumps(metadata),
+            data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert200(r)
@@ -383,7 +383,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         # send a request without a token
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
-            data=json.dumps(metadata),
+            data=json.dumps({'metadata': metadata}),
         )
         self.assert401(r)
 
@@ -410,7 +410,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         # empty metadata should 400
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
-            data=json.dumps(metadata),
+            data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert400(r)
@@ -432,7 +432,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
-            data=json.dumps(metadata),
+            data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert500(r)

@@ -163,7 +163,27 @@ def create_user_notification_event(user_name):
 @crossdomain
 @ratelimit()
 def create_user_cb_review_event(user_name):
-    """ Creates a CritiqueBrainz review event for the user.
+    """ Creates a CritiqueBrainz review event for the user. This also creates a corresponding review in
+    CritiqueBrainz. Users need to have linked their ListenBrainz account with CritiqueBrainz first to use
+    this endpoint successfully.
+
+        The request should contain the following data:
+
+        .. code-block:: json
+
+        {
+            "metadata": {
+                "message": "<the message to post, required>",
+            }
+        }
+
+    :param user_name: The MusicBrainz ID of the user who is creating the review.
+    :type user_name: ``str``
+    :statuscode 200: Successful query, message has been posted!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 403: Forbidden, you have not linked with a CritiqueBrainz account.
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
     """
     user = validate_auth_header()
     if user_name != user["musicbrainz_id"]:
@@ -175,13 +195,14 @@ def create_user_cb_review_event(user_name):
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
     try:
+        metadata = data["metadata"]
         review = CBReviewMetadata(
-            name=data["entity_name"],
-            entity_id=data["entity_id"],
-            entity_type=data["entity_type"],
-            text=data["text"],
-            language=data["language"],
-            rating=data.get("rating", 0)
+            name=metadata["entity_name"],
+            entity_id=metadata["entity_id"],
+            entity_type=metadata["entity_type"],
+            text=metadata["text"],
+            language=metadata["language"],
+            rating=metadata.get("rating", 0)
         )
     except (pydantic.ValidationError, KeyError):
         raise APIBadRequest(f"Invalid metadata: {str(data)}")
