@@ -599,7 +599,7 @@ export default class CBReviewModal extends React.Component<
           <b>Rating (optional): </b>
           <Rating
             className="rating-stars"
-            onClick={(rate: number) => this.setState({ rating: rate })}
+            onClick={(rate: number) => this.setState({ rating: rate / 20 })} // rate in %age (0 - 100), convert to 0 - 5 scale
             ratingValue={rating}
             transition
             size={20}
