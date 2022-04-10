@@ -118,7 +118,7 @@ class CritiqueBrainzService(ExternalService):
         """
         # don't move this import outside otherwise will lead to a circular import error. you definitely
         # don't want to spend an evening debugging that :sob:
-        from listenbrainz.webserver.errors import APIUnauthorized, APIError, APIServiceUnavailable
+        from listenbrainz.webserver.errors import APIUnauthorized, APIError, APIInternalServerError
 
         token = self.get_user(user_id)
         if token is None:
@@ -136,7 +136,7 @@ class CritiqueBrainzService(ExternalService):
             raise APIError(data["description"], response.status_code)
         elif response.status_code >= 500:
             current_app.logger.error("CritiqueBrainz Server Error: %s", str(data))
-            raise APIServiceUnavailable("Something went wrong. Please try again later.")
+            raise APIInternalServerError("Something went wrong. Please try again later.")
         else:
             return data["id"]
 

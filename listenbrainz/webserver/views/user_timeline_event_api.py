@@ -524,7 +524,7 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
     api_events = []
     for review_id, event in review_id_event_map.items():
         if review_id not in reviews:
-            logging.warning(f"""Skipping review timeline event because
+            current_app.logger.warning(f"""Skipping review timeline event because
              either review for id {review_id} not found.""")
             continue
 
@@ -539,6 +539,7 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
                 review_mbid=review_id
             )
             api_events.append(APITimelineEvent(
+                id=event.id,
                 event_type=UserTimelineEventType.CRITIQUEBRAINZ_REVIEW,
                 user_name=review_event.user_name,
                 created=event.created.timestamp(),
