@@ -193,7 +193,6 @@ def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTime
 
 def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, event_id: int) -> bool:
     """ Adds events that are to be hidden """
-                   # VALUES (:user_id, :event_type, :event_id)
     try:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text('''
@@ -215,3 +214,42 @@ def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, ev
             return result.rowcount == 1
     except Exception as e:
         raise DatabaseException(str(e))
+
+def get_hidden_timeline_events(user: int, event_type: UserTimelineEventType, count: int) -> List[HideUserTimelineEvent]:
+    '''Retrieves all events that are hidden by the user, based on event_type'''
+    try:
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text('''
+                SELECT * FROM hide_user_timeline_event WHERE
+                user_id = :user_id AND
+                event_type = :event_type
+                ORDER BY created DESC
+                LIMIT :count
+            '''), {
+                'user_id': user,
+                'event_type': event_type.value,
+                'count': count
+                }
+            )
+            return [HideUserTimelineEvent(**row) for row in result.fetchall()]
+    except Exception as e:
+        raise DatabaseException(str(e))
+
+def delete_hidden_timeline_events(user: int, row_id: int) -> bool:
+    ''' Deletes hidden timeline events for a user with specific row id '''
+    try:
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text('''
+                DELETE FROM hide_user_timeline_event WHERE
+                user_id = :user_id AND
+                id = :row_id
+            '''), {
+                'user_id': user,
+                'row_id': row_id
+                }
+            )
+            return result.rowcount == 1
+    except Exception as e:
+        raise DatabaseException(str(e))
+
+
