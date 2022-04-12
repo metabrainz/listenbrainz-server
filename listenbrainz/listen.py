@@ -59,6 +59,8 @@ class Listen(object):
         'artist_msid',
         'release_msid',
         'recording_msid',
+        'duration_ms',
+        'duration',
     )
 
     TOP_LEVEL_KEYS = (

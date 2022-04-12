@@ -96,6 +96,7 @@ A complete submit listen JSON document may look like:
               ],
               "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
               "tags": [ "you", "just", "got", "rick rolled!"]
+              "duration_ms": 222000
             },
             "artist_name": "Rick Astley",
             "track_name": "Never Gonna Give You Up",
@@ -211,7 +212,10 @@ the data for any of the following fields, omit the key entirely:
      - If the song being listened to comes from an online service and you don't know the canonical domain, a name that represents the service.
    * - ``origin_url``
      - If the song of this listen comes from an online source, the URL to the place where it is available. This could be a spotify url (see ``spotify_id``), a YouTube video URL, a Soundcloud recording page URL, or the full URL to a public MP3 file. If there is a webpage for this song (e.g. Youtube page, Soundcloud page) **do not** try and resolve the URL to an actual audio resource.
-
+   * - ``duration_ms``
+     - The duration of the track in milliseconds(integer type).
+   * - ``duration``
+     - The duration of the track in seconds(integer type). Ignored if duration_ms has been given.
 .. note::
 
   **Music service names**
