@@ -6,17 +6,41 @@
 
 #metadata-viewer {
 	padding: 0.25em;
-	display: flex;
-	flex-wrap: wrap;
-	min-height: 100vh;
+	
+	// In smaller screen sizes, wrap content on two lines
+	display: block;
+	> * {
+		width: auto;
+		margin: 0;
+		max-width: 100% ;
+	}
+	
+	@media(min-width: @screen-xs) {
+		// In bigger screen sizes, use flexbox
+		display: flex;
+		flex-wrap: wrap;
+		
+		div.left-side{
+			margin-right: @outer-padding;
+			resize: horizontal;
+			overflow: auto;
+			min-width: 340px;
+			max-width: 50%;
+			margin-bottom: 0;
+		}
+		.right-side{
+			flex:1;
+		}
+	}
+	  
 	.left-side{
+		resize: none;
 		padding: @outer-padding;
 		background-color: fadein(@black,30%);
 		transition: background-color 0.3s;
 		border-radius: @border-radius;
-		flex:1;
-		// min-width: 300px;
-		// min-width: 60vh;
+		margin-bottom: @outer-padding;
+		
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
@@ -87,12 +111,10 @@
 		}
 	}
 	.right-side{
-		flex:1.1;
-		// max-width: calc(100% - 0.5em);
-		// min-width: 300px;
 		display: flex;
 		flex-direction: column;
-		margin: 0 0 0 0.5em;
+		overflow: auto;
+		margin-bottom: 0;
 		
 		.content-box{
 			padding: 0.4em;
@@ -158,9 +180,9 @@
 				.tags{
 					flex:1;
 					align-items: center;
-					// horizontal scroll overflow with
+					// horizontal scroll overflow with hidden scrollbar and faded overlay
 					display: flex;
-					overflow-x: auto;
+					overflow-x: scroll;
 					&::-webkit-scrollbar {
 						// hidden scrollbar
 						display: none;
@@ -202,32 +224,3 @@
 .strong{
 	font-weight: 600;
 }
-
-/* Entity icons, copied from MusicBrainz:
-	https://github.com/metabrainz/musicbrainz-server/blob/75162fb76e8a55d6c578a527fbcbfab5d7e4c5c8/root/static/styles/entity-icons.less
-*/
-.artistheader, .releaseheader,
-.recordingheader{
-	&::before{
-		display: inline-block;
-		content: ' ';
-		background-size: @entity-icon-size;
-		background-repeat: no-repeat;
-		height: @entity-icon-size;
-		width: @entity-icon-size + 0.3em;
-		vertical-align: text-bottom;
-	}
-}
-.recordingheader::before {
-	background-image: data-uri('../img/mb-entity-icons/recording.svg');
-}
-.releaseheader::before {
-	background-image: data-uri('../img/mb-entity-icons/release.svg');
-}
-.artistheader::before {
-	background-image: data-uri('../img/mb-entity-icons/artist.svg');
-	&.group-icon{
-	background-image: data-uri('../img/mb-entity-icons/group.svg');
-	}
-}
-

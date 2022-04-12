@@ -23,7 +23,7 @@ export default function TagsComponent(props: {
               </span>
             ))
         ) : (
-          <span>Be the first ot add a tag</span>
+          <span>Be the first to add a tag</span>
         )}
       </div>
       <div className="add-tag">
