@@ -27,13 +27,28 @@ declare type RecordingTag = {
   tag: string;
 };
 
-declare type PlayingNowMetadata = {
+declare type ListenMetadata = {
   artist: Array<MusicBrainzArtist>;
   recording: {
     rels: Array<MusicBrainzRecordingRel>;
+  };
+  release: {
+    caa_id: number;
+    mbid: string;
+    year: number;
   };
   tag: {
     artist: Array<ArtistTag>;
     recording: Array<RecordingTag>;
   };
+};
+
+declare type MetadataLookup = {
+  metadata: ListenMetadata;
+  artist_credit_name: string;
+  artist_mbids: string[];
+  recording_mbid: string;
+  recording_name: string;
+  release_mbid: string;
+  release_name: string;
 };
