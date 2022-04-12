@@ -215,6 +215,17 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
                 if len(tag) > MAX_TAG_SIZE:
                     raise ListenValidationError("JSON document may not contain track_metadata.additional_info.tags "
                                                 "longer than %d characters." % MAX_TAG_SIZE, listen)
+        
+        
+        # duration
+        duration_key = ["duration", "duration_ms"]
+        for key in duration_key:
+            validate_duration_field(listen, key)
+        # if both duration and duration_ms are given and valid, only duration_ms will be accepted without raising an error.
+        if 'duration' in listen['track_metadata']['additional_info'] and 'duration_ms' in listen['track_metadata']['additional_info']:
+            del listen['track_metadata']['additional_info']['duration']
+
+
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:
@@ -261,6 +272,16 @@ def log_raise_400(msg, data=""):
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
     raise APIBadRequest(msg)
+
+
+def validate_duration_field(listen, key):
+    if key in listen['track_metadata']['additional_info']:
+        duration = listen['track_metadata']['additional_info'][key]
+        if not duration:
+            del listen['track_metadata']['additional_info'][key]
+            return
+        if not isinstance(duration, int):
+            raise ListenValidationError("%s type invalid. Int is accepted" % (key,), listen)
 
 
 def validate_single_mbid_field(listen, key):
