@@ -16,10 +16,11 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import MetadataViewer from "./MetadataViewer";
 
 import fakeData from "./fakedata.json";
+import fakeData2 from "./fakedata-lookup.json";
 
 export type PlayingNowPageProps = {
   playingNow?: Listen;
-  metadata?: PlayingNowMetadata;
+  recordingData?: MetadataLookup;
 } & WithAlertNotificationsInjectedProps;
 
 export default class PlayingNowPage extends React.Component<
@@ -28,8 +29,8 @@ export default class PlayingNowPage extends React.Component<
   static contextType = GlobalAppContext;
 
   render() {
-    const { metadata } = this.props;
-    return <MetadataViewer metadata={metadata} />;
+    const { recordingData } = this.props;
+    return <MetadataViewer recordingData={recordingData} />;
   }
 }
 
@@ -79,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <PlayingNowPageWithAlertNotifications
           initialAlerts={optionalAlerts}
           //   playingNow={playing_now}
-          metadata={fakeData["97e69767-5d34-4c97-b36a-f3b2b1ef9dae"]}
+          recordingData={fakeData2}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
