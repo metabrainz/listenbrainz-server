@@ -476,7 +476,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['code'], 400)
     
     def test_multi_duration(self):
-        """ Test for duration and duration_both given """
+        """ Test for duration and duration_ms both given """
         with open(self.path_to_data_file('multi_duration.json'), 'r') as f:
             payload = json.load(f)
         response = self.send_data(payload)
