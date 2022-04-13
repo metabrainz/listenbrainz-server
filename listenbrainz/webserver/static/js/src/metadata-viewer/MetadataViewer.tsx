@@ -13,6 +13,7 @@ import ListenControl from "../listens/ListenControl";
 
 type MetadataViewerProps = {
   recordingData?: MetadataLookup;
+  playingNow?: Listen;
 };
 
 /** Courtesy of Matt Zimmerman
