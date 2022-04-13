@@ -7,11 +7,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as tinycolor from "tinycolor2";
-import { first } from "lodash";
+import { first, get } from "lodash";
 import TagsComponent from "./TagsComponent";
 import ListenControl from "../listens/ListenControl";
 import { getArtistName, getTrackName } from "../utils/utils";
 import PlayingNowPage from "./MetadataViewerPageWrapper";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 type MetadataViewerProps = {
   recordingData?: MetadataLookup;
@@ -104,6 +105,9 @@ function OpenInMusicBrainzButton(props: {
 
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { recordingData, playingNow } = props;
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+
+  const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const [expandedAccordion, setExpandedAccordion] = React.useState(1);
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
@@ -126,6 +130,62 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       }
     };
   }, [albumArtRef?.current, setAlbumArtColor]);
+
+  React.useEffect(() => {
+    const getFeedbackPromise = async () => {
+      const recordingMBID =
+        recordingData?.recording_mbid ||
+        get(playingNow, "track_metadata.additional_info.recording_mbid");
+      if (!recordingMBID) {
+        return;
+      }
+      try {
+        const feedbackArray = await APIService.getFeedbackForUserForRecordings(
+          currentUser.name,
+          recordingMBID
+        );
+        if (feedbackArray.length) {
+          const feedback: any = first(feedbackArray);
+          setCurrentListenFeedback(feedback.score);
+        } else {
+          setCurrentListenFeedback(0);
+        }
+      } catch (error) {
+        // Revert the feedback UI in case of failure
+        setCurrentListenFeedback(0);
+        console.error(error);
+      }
+    };
+    getFeedbackPromise();
+  }, [recordingData, playingNow]);
+
+  const submitFeedback = React.useCallback(
+    async (score: ListenFeedBack) => {
+      if (currentUser?.auth_token) {
+        const recordingMBID =
+          recordingData?.recording_mbid ||
+          get(playingNow, "track_metadata.additional_info.recording_mbid");
+
+        try {
+          const status = await APIService.submitFeedback(
+            currentUser.auth_token,
+            "",
+            score,
+            recordingMBID
+          );
+          if (status >= 400) {
+            // Revert the feedback UI in case of failure
+            setCurrentListenFeedback(0);
+          } else {
+            setCurrentListenFeedback(score);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    },
+    [recordingData, playingNow, setCurrentListenFeedback]
+  );
 
   /** Return early, but after defining all hooks (otherwise React no happy) */
   if (
@@ -222,30 +282,30 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           <div className="love-hate">
             <button
               className="btn-transparent"
-              onClick={() => {
-                console.log("clicked 'love'");
-              }}
+              onClick={() =>
+                submitFeedback(currentListenFeedback === 1 ? 0 : 1)
+              }
               type="button"
             >
               <FontAwesomeIcon
                 icon={faHeart}
                 title="Love"
                 size="2x"
-                // className={`${currentFeedback === 1 ? " loved" : ""}`}
+                className={`${currentListenFeedback === 1 ? " loved" : ""}`}
               />
             </button>
             <button
               className="btn-transparent"
-              onClick={() => {
-                console.log("clicked 'hate'");
-              }}
+              onClick={() =>
+                submitFeedback(currentListenFeedback === -1 ? 0 : -1)
+              }
               type="button"
             >
               <FontAwesomeIcon
                 icon={faHeartBroken}
                 title="Hate"
                 size="2x"
-                // className={`${currentFeedback === -1 ? " hated" : ""}`}
+                className={`${currentListenFeedback === 1 ? " hated" : ""}`}
               />
             </button>
           </div>
