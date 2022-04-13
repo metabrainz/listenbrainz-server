@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from itertools import zip_longest
 
 import psycopg2
 from psycopg2.errors import OperationalError
@@ -344,7 +345,7 @@ class BulkInsertTable:
             queries = self.get_insert_queries()
             values = self.get_insert_queries_test_values()
 
-            for i, db_query_vals in enumerate(zip(queries, values)):
+            for i, db_query_vals in enumerate(zip_longest(queries, values)):
                 db = db_query_vals[0][0]
                 query = db_query_vals[0][1]
                 vals = db_query_vals[1]
