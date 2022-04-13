@@ -1042,6 +1042,7 @@ export default class APIService {
     Object.keys(queryParams).map((key) =>
       url.searchParams.append(key, queryParams[key])
     );
+    url.searchParams.append("inc", "artist tag release");
 
     const response = await fetch(url.toString());
     await this.checkStatus(response);
