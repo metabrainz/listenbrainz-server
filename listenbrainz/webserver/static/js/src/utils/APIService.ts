@@ -507,16 +507,21 @@ export default class APIService {
   submitFeedback = async (
     userToken: string,
     recordingMSID: string,
-    score: ListenFeedBack
+    score: ListenFeedBack,
+    recordingMBID?: string
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/feedback/recording-feedback`;
+    const body: any = { recording_msid: recordingMSID, score };
+    if (recordingMBID) {
+      body.recording_mbid = recordingMBID;
+    }
     const response = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ recording_msid: recordingMSID, score }),
+      body: JSON.stringify(body),
     });
     await this.checkStatus(response);
     return response.status;
