@@ -411,7 +411,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                           <tr key={artist_mbid}>
                             <td>
                               <a
-                                href={`artist/${artist_mbid}`}
+                                href={`${musicBrainzURLRoot}artist/${artist_mbid}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
