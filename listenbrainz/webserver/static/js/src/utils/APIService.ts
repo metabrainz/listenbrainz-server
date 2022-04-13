@@ -227,6 +227,20 @@ export default class APIService {
     return response.json();
   };
 
+  getPlayingNowForUser = async (
+    username: string
+  ): Promise<Listen | undefined> => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${username}/playing-now`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.payload.listens?.[0];
+  };
+
   /*
      Send a POST request to the ListenBrainz server to submit a listen
    */
@@ -1007,5 +1021,30 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.status;
+  };
+
+  lookupRecordingMetadata = async (
+    trackName: string,
+    artistName: string
+  ): Promise<MetadataLookup | null> => {
+    if (!trackName) {
+      return null;
+    }
+    const queryParams: any = {
+      recording_name: trackName,
+      metadata: true,
+    };
+    if (artistName) {
+      queryParams.artist_name = artistName;
+    }
+    const url = new URL(`${this.APIBaseURI}/metadata/lookup/`);
+    // Iterate and add each queryParams
+    Object.keys(queryParams).map((key) =>
+      url.searchParams.append(key, queryParams[key])
+    );
+
+    const response = await fetch(url.toString());
+    await this.checkStatus(response);
+    return response.json();
   };
 }
