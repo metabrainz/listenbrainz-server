@@ -43,7 +43,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   /** Metadata lookup and storage */
   const onNewPlayingNow = React.useCallback(
     async (playingNowListen: Listen) => {
-      console.log("received new playingnow", playingNowListen);
+      console.debug("received new playingnow", playingNowListen);
       setCurrentListen(playingNowListen);
       try {
         const metadata = await APIService.lookupRecordingMetadata(
@@ -95,7 +95,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
             const newPlayingNow = await APIService.getPlayingNowForUser(
               currentUser.name
             );
-            console.log("playingNow", newPlayingNow);
+            console.debug("fetched playingNow", newPlayingNow);
             if (newPlayingNow) {
               await onNewPlayingNow(newPlayingNow);
             }
@@ -113,7 +113,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   }, []);
 
   return (
-    <MetadataViewer recordingData={recordingData} playingNow={playingNow} />
+    <MetadataViewer recordingData={recordingData} playingNow={currentListen} />
   );
 }
 
@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <PlayingNowPageWithAlertNotifications
           initialAlerts={optionalAlerts}
           //   playingNow={playing_now}
-          initialRecordingData={fakeData2}
+          // initialRecordingData={fakeData2}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

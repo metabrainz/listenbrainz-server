@@ -10,6 +10,8 @@ import * as tinycolor from "tinycolor2";
 import { first } from "lodash";
 import TagsComponent from "./TagsComponent";
 import ListenControl from "../listens/ListenControl";
+import { getArtistName, getTrackName } from "../utils/utils";
+import PlayingNowPage from "./MetadataViewerPageWrapper";
 
 type MetadataViewerProps = {
   recordingData?: MetadataLookup;
@@ -72,7 +74,7 @@ function getAverageRGB(
 const musicBrainzURLRoot = "https://musicbrainz.org/";
 
 export default function MetadataViewer(props: MetadataViewerProps) {
-  const { recordingData } = props;
+  const { recordingData, playingNow } = props;
   const [expandedAccordion, setExpandedAccordion] = React.useState(1);
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
@@ -80,9 +82,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     g: 0,
     b: 0,
   });
-  if (!recordingData) {
-    return <div>Not playing anything</div>;
-  }
+
   React.useEffect(() => {
     const setAverageColor = () => {
       const averageColor = getAverageRGB(albumArtRef?.current);
@@ -98,6 +98,14 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     };
   }, [albumArtRef?.current, setAlbumArtColor]);
 
+  /** Return early, but after defining all hooks (otherwise React no happy) */
+  if (
+    !recordingData?.recording_name &&
+    !playingNow?.track_metadata?.track_name
+  ) {
+    return <div>No data to show</div>;
+  }
+
   const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
   adjustedAlbumColor.saturate(20);
   adjustedAlbumColor.setAlpha(0.6);
@@ -109,10 +117,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       includeFallbackColors: true,
     }
   );
-  const { metadata } = recordingData;
 
-  const artistMBID = first(recordingData.artist_mbids);
-  let coverArtSrc = "";
+  // Default to empty object
+  const { metadata } = recordingData ?? {};
+
+  const artistMBID = first(recordingData?.artist_mbids);
+  let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
   if (metadata?.release?.mbid) {
     if (metadata.release.caa_id) {
       coverArtSrc = `https://coverartarchive.org/release/${metadata.release.mbid}/${metadata.release.caa_id}-500.jpg`;
@@ -139,6 +149,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       return arr;
     }, [] as MusicBrainzRecordingRel[]) ?? [];
 
+  const fallbackTrackName = getTrackName(playingNow);
+  const fallbackArtistName = getArtistName(playingNow);
+
+  const trackName = recordingData?.recording_name ?? fallbackTrackName;
+  const artistName = recordingData?.artist_credit_name ?? fallbackArtistName;
   return (
     <div id="metadata-viewer">
       <div
@@ -151,27 +166,24 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         <div className="track-info">
           <div className="track-details">
             <div
-              title={recordingData.recording_name}
+              title={trackName}
               className="track-name strong ellipsis-2-lines"
             >
               <a
-                href={`${musicBrainzURLRoot}artist/${recordingData.recording_mbid}`}
+                href={`${musicBrainzURLRoot}artist/${recordingData?.recording_mbid}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {recordingData.recording_name}
+                {trackName}
               </a>
             </div>
-            <span
-              className="artist-name small ellipsis"
-              title={recordingData.artist_credit_name}
-            >
+            <span className="artist-name small ellipsis" title={artistName}>
               <a
                 href={`${musicBrainzURLRoot}artist/${artistMBID}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {recordingData.artist_credit_name}
+                {artistName}
               </a>
             </span>
           </div>
@@ -236,7 +248,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <span className="caret" />
             </button>
             <ul className="dropdown-menu" role="menu">
-              {metadata?.artist[0]?.rels &&
+              {metadata?.artist?.[0]?.rels &&
                 Object.entries(metadata.artist[0].rels).map(([key, value]) => {
                   return (
                     <li key={key}>
@@ -275,9 +287,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <h4 className="panel-title">
               <div className="recordingheader">
-                <div className="name strong">
-                  {recordingData.recording_name}
-                </div>
+                <div className="name strong">{trackName}</div>
                 <div className="date">length</div>
                 <div className="caret" />
               </div>
@@ -293,17 +303,18 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <div className="panel-body">
               <ListenControl
+                buttonClassName="btn btn-link btn-outline"
                 icon={faExternalLinkAlt}
                 text="Open in MusicBrainz"
-                link={`${musicBrainzURLRoot}recording/${recordingData.recording_mbid}`}
+                link={`${musicBrainzURLRoot}recording/${recordingData?.recording_mbid}`}
                 anchorTagAttributes={{
                   target: "_blank",
                   rel: "noopener noreferrer",
                 }}
               />
-              <TagsComponent tags={metadata.tag.recording} />
+              <TagsComponent tags={metadata?.tag?.recording} />
               {/* <div className="ratings content-box" /> */}
-              {flattenedRecRels?.length && (
+              {Boolean(flattenedRecRels?.length) && (
                 <div className="white content-box">
                   <table className="table credits-table">
                     <tbody>
@@ -354,8 +365,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <h4 className="panel-title">
               <div className="releaseheader">
-                <div className="name strong">{recordingData.release_name}</div>
-                <div className="date">{metadata.release.year}</div>
+                <div className="name strong">{recordingData?.release_name}</div>
+                <div className="date">{metadata?.release?.year}</div>
                 <div className="caret" />
               </div>
             </h4>
@@ -370,15 +381,15 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <div className="panel-body">
               <ListenControl
+                buttonClassName="btn btn-link btn-outline"
                 icon={faExternalLinkAlt}
                 text="Open in MusicBrainz"
-                link={`${musicBrainzURLRoot}release/${recordingData.release_mbid}`}
+                link={`${musicBrainzURLRoot}release/${recordingData?.release_mbid}`}
                 anchorTagAttributes={{
                   target: "_blank",
                   rel: "noopener noreferrer",
                 }}
               />
-              Album metadata content ?
             </div>
           </div>
         </div>
@@ -400,10 +411,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <h4 className="panel-title">
               <div className="artistheader">
-                <div className="name strong">
-                  {recordingData.artist_credit_name}
-                </div>
-                <div className="date">{metadata.artist?.[0]?.begin_year}</div>
+                <div className="name strong">{artistName}</div>
+                <div className="date">{metadata?.artist?.[0]?.begin_year}</div>
                 <div className="caret" />
               </div>
             </h4>
@@ -418,6 +427,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           >
             <div className="panel-body">
               <ListenControl
+                buttonClassName="btn btn-link btn-outline"
                 icon={faExternalLinkAlt}
                 text="Open in MusicBrainz"
                 link={`${musicBrainzURLRoot}artist/${artistMBID}`}
@@ -426,9 +436,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   rel: "noopener noreferrer",
                 }}
               />
-              <TagsComponent tags={metadata.tag.artist} />
+              <TagsComponent tags={metadata?.tag?.artist} />
               {/* <div className="ratings content-box" /> */}
-              Artist metadata content
             </div>
           </div>
         </div>
