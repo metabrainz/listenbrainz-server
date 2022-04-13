@@ -28,18 +28,19 @@ declare type RecordingTag = {
 };
 
 declare type ListenMetadata = {
-  artist: Array<MusicBrainzArtist>;
-  recording: {
-    rels: Array<MusicBrainzRecordingRel>;
+  artist?: Array<MusicBrainzArtist>;
+  recording?: {
+    rels?: Array<MusicBrainzRecordingRel>;
+    duration?: number;
   };
-  release: {
-    caa_id: number;
-    mbid: string;
-    year: number;
+  release?: {
+    caa_id: ?number;
+    mbid?: string;
+    year?: number;
   };
-  tag: {
-    artist: Array<ArtistTag>;
-    recording: Array<RecordingTag>;
+  tag?: {
+    artist?: Array<ArtistTag>;
+    recording?: Array<RecordingTag>;
   };
 };
 

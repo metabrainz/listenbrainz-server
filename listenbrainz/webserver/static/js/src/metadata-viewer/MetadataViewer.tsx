@@ -73,6 +73,35 @@ function getAverageRGB(
 
 const musicBrainzURLRoot = "https://musicbrainz.org/";
 
+function OpenInMusicBrainzButton(props: {
+  entityType: Entity;
+  entityMBID?: string;
+}) {
+  const { entityType, entityMBID } = props;
+  if (!entityMBID) {
+    return null;
+  }
+  return (
+    <a
+      href={`${musicBrainzURLRoot}${entityType}/${entityMBID}`}
+      aria-label="Open in MusicBrainz"
+      title="Open in MusicBrainz"
+      className="btn btn-link btn-outline"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <img
+        src="/static/img/meb-icons/MusicBrainz.svg"
+        width="18"
+        height="18"
+        alt="MusicBrainz"
+        style={{ verticalAlign: "bottom" }}
+      />{" "}
+      Open in MusicBrainz
+    </a>
+  );
+}
+
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { recordingData, playingNow } = props;
   const [expandedAccordion, setExpandedAccordion] = React.useState(1);
@@ -133,7 +162,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   }
 
   const flattenedRecRels: MusicBrainzRecordingRel[] =
-    metadata?.recording.rels?.reduce((arr, cur) => {
+    metadata?.recording?.rels?.reduce((arr, cur) => {
       const existingArtist = arr.find(
         (el) => el.artist_mbid === cur.artist_mbid
       );
@@ -154,6 +183,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   const trackName = recordingData?.recording_name ?? fallbackTrackName;
   const artistName = recordingData?.artist_credit_name ?? fallbackArtistName;
+  const duration =
+    metadata?.recording?.duration ??
+    playingNow?.track_metadata?.additional_info?.duration_ms;
   return (
     <div id="metadata-viewer">
       <div
@@ -288,7 +320,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <h4 className="panel-title">
               <div className="recordingheader">
                 <div className="name strong">{trackName}</div>
-                <div className="date">length</div>
+                <div className="date">{duration}</div>
                 <div className="caret" />
               </div>
             </h4>
@@ -302,16 +334,6 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingOne"
           >
             <div className="panel-body">
-              <ListenControl
-                buttonClassName="btn btn-link btn-outline"
-                icon={faExternalLinkAlt}
-                text="Open in MusicBrainz"
-                link={`${musicBrainzURLRoot}recording/${recordingData?.recording_mbid}`}
-                anchorTagAttributes={{
-                  target: "_blank",
-                  rel: "noopener noreferrer",
-                }}
-              />
               <TagsComponent tags={metadata?.tag?.recording} />
               {/* <div className="ratings content-box" /> */}
               {Boolean(flattenedRecRels?.length) && (
@@ -344,55 +366,57 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   </table>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-        <div
-          className={`panel panel-default ${
-            expandedAccordion === 2 ? "expanded" : ""
-          }`}
-        >
-          <div
-            className="panel-heading"
-            role="tab"
-            tabIndex={0}
-            id="headingTwo"
-            onKeyDown={() => setExpandedAccordion(2)}
-            onClick={() => setExpandedAccordion(2)}
-            aria-expanded={expandedAccordion === 2}
-            aria-selected={expandedAccordion === 2}
-            aria-controls="collapseTwo"
-          >
-            <h4 className="panel-title">
-              <div className="releaseheader">
-                <div className="name strong">{recordingData?.release_name}</div>
-                <div className="date">{metadata?.release?.year}</div>
-                <div className="caret" />
-              </div>
-            </h4>
-          </div>
-          <div
-            id="collapseTwo"
-            className={`panel-collapse collapse ${
-              expandedAccordion === 2 ? "in" : ""
-            }`}
-            role="tabpanel"
-            aria-labelledby="headingTwo"
-          >
-            <div className="panel-body">
-              <ListenControl
-                buttonClassName="btn btn-link btn-outline"
-                icon={faExternalLinkAlt}
-                text="Open in MusicBrainz"
-                link={`${musicBrainzURLRoot}release/${recordingData?.release_mbid}`}
-                anchorTagAttributes={{
-                  target: "_blank",
-                  rel: "noopener noreferrer",
-                }}
+              <OpenInMusicBrainzButton
+                entityType="recording"
+                entityMBID={recordingData?.recording_mbid}
               />
             </div>
           </div>
         </div>
+        {Boolean(metadata?.release || recordingData?.release_name) && (
+          <div
+            className={`panel panel-default ${
+              expandedAccordion === 2 ? "expanded" : ""
+            }`}
+          >
+            <div
+              className="panel-heading"
+              role="tab"
+              tabIndex={0}
+              id="headingTwo"
+              onKeyDown={() => setExpandedAccordion(2)}
+              onClick={() => setExpandedAccordion(2)}
+              aria-expanded={expandedAccordion === 2}
+              aria-selected={expandedAccordion === 2}
+              aria-controls="collapseTwo"
+            >
+              <h4 className="panel-title">
+                <div className="releaseheader">
+                  <div className="name strong">
+                    {recordingData?.release_name}
+                  </div>
+                  <div className="date">{metadata?.release?.year}</div>
+                  <div className="caret" />
+                </div>
+              </h4>
+            </div>
+            <div
+              id="collapseTwo"
+              className={`panel-collapse collapse ${
+                expandedAccordion === 2 ? "in" : ""
+              }`}
+              role="tabpanel"
+              aria-labelledby="headingTwo"
+            >
+              <div className="panel-body">
+                <OpenInMusicBrainzButton
+                  entityType="release"
+                  entityMBID={recordingData?.release_mbid}
+                />
+              </div>
+            </div>
+          </div>
+        )}
         <div
           className={`panel panel-default ${
             expandedAccordion === 3 ? "expanded" : ""
@@ -426,18 +450,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingThree"
           >
             <div className="panel-body">
-              <ListenControl
-                buttonClassName="btn btn-link btn-outline"
-                icon={faExternalLinkAlt}
-                text="Open in MusicBrainz"
-                link={`${musicBrainzURLRoot}artist/${artistMBID}`}
-                anchorTagAttributes={{
-                  target: "_blank",
-                  rel: "noopener noreferrer",
-                }}
-              />
               <TagsComponent tags={metadata?.tag?.artist} />
               {/* <div className="ratings content-box" /> */}
+              <OpenInMusicBrainzButton
+                entityType="artist"
+                entityMBID={artistMBID}
+              />
             </div>
           </div>
         </div>
