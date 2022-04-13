@@ -8,6 +8,7 @@ from typing import Any
 
 
 import psycopg2
+import psycopg2.extras
 from psycopg2.errors import OperationalError
 from unidecode import unidecode
 from mapping.utils import log, insert_rows
@@ -15,10 +16,14 @@ from mapping.utils import log, insert_rows
 import config
 
 BATCH_SIZE = 5000
-MAX_SESSION_DURATION = 60 * 60 * 2  # 2 hours
-MIN_SIMILARITY_THRESHOLD = 100
+MAX_SESSION_BREAK = 60 * 30  # 30 minutes
+MAX_ITEMS_PER_SESSION = 50
+AVG_SONG_LENGTH = 180  # 3 minutes
+MIN_SIMILARITY_THRESHOLD = 10
+DATA_START_YEAR = 2005
+YEARS_PER_PASS = 3
 
-def create_tables(mb_conn):
+def create_table(mb_conn, table):
     """
         Create tables needed to create artist similarities. First
         is the temp table that the results will be stored in (in order
@@ -30,11 +35,11 @@ def create_tables(mb_conn):
     # drop/create finished table
     try:
         with mb_conn.cursor() as curs:
-            curs.execute("DROP TABLE IF EXISTS mapping.tmp_artist_similarity")
-            curs.execute("""CREATE TABLE mapping.tmp_artist_similarity (
+            curs.execute(f"DROP TABLE IF EXISTS {table}")
+            curs.execute(f"""CREATE TABLE {table} (
                                          mbid0                     UUID NOT NULL,
                                          mbid1                     UUID NOT NULL,
-                                         similarity                REAL NOT NULL)""")
+                                         similarity                INTEGER NOT NULL)""")
             mb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
         log("artist_similarity: failed to create artist_similarity tables", err)
@@ -82,51 +87,41 @@ def swap_table_and_indexes(conn):
         conn.rollback()
         raise
 
-def get_mbid_offset(mbid_index, inverse_mbid_index, mbid):
-    try:
-        return mbid_index[mbid.bytes]
-    except KeyError:
-        offset = len(mbid_index)
-        mbid_index[mbid.bytes] = offset
-        inverse_mbid_index[offset] = mbid.bytes
-        return offset
 
-def index_buffer(artist_index, mbid_index, inverse_mbid_index, buffer):
+def index_buffer(artist_index, buffer):
 
     pairs = 0
     for i0, i1 in combinations(range(len(buffer)), 2):
-        rec_mbid_0 = uuid.UUID(buffer[i0]["recording_mbid"])
-        rec_mbid_1 = uuid.UUID(buffer[i1]["recording_mbid"])
+        rec_mbid_0 = buffer[i0]["recording_mbid"]
+        rec_mbid_1 = buffer[i1]["recording_mbid"]
 
         if rec_mbid_0 != rec_mbid_1 and buffer[i0]["artist_credit_id"] != buffer[i1]["artist_credit_id"]:
             for mbid_0 in buffer[i0]["artist_mbids"]:
-                mbid_0 = uuid.UUID(mbid_0)
                 for mbid_1 in buffer[i1]["artist_mbids"]:
-                    mbid_1 = uuid.UUID(mbid_1)
-
                     # We've now decided to insert this row, lets tightly encode it
-                    mbid_0_offset = get_mbid_offset(mbid_index, inverse_mbid_index, mbid_0)
-                    mbid_1_offset = get_mbid_offset(mbid_index, inverse_mbid_index, mbid_1)
                     if mbid_0 < mbid_1:
-                        artist_index[mbid_0_offset][mbid_1_offset] += 1
+                        artist_index[mbid_0][mbid_1] += 1
                     else:
-                        artist_index[mbid_1_offset][mbid_0_offset] += 1
+                        artist_index[mbid_1][mbid_0] += 1
 
                     pairs += 1
 
     return pairs
 
 
-def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
+def build_partial_index(mb_conn, lb_conn, start_year, end_year):
 
     row_count = 0
+    inserted = 0
     buffer = []
-    mbid_index = {}
-    inverse_mbid_index = {}
-    artist_index = defaultdict(lambda: defaultdict(float))
+    artist_index = defaultdict(lambda: defaultdict(int))
 
-    min_ts = datetime(year=2010, month=1, day=1, hour=0, minute=0)
-    max_ts = datetime(year=2015, month=1, day=1, hour=0, minute=0)
+    min_ts = datetime(year=start_year, month=1, day=1, hour=0, minute=0)
+    max_ts = datetime(year=start_year, month=2, day=1, hour=0, minute=0)
+#    max_ts = datetime(year=end_year+1, month=1, day=1, hour=0, minute=0)
+
+    table_name = f"mapping.tmp_artist_similarity_{start_year}"
+    create_table(mb_conn, table_name)
     query = """    SELECT listened_at
                         , user_id
                         , mm.recording_mbid
@@ -143,82 +138,165 @@ def build_index(mb_conn, mb_curs, lb_conn, lb_curs):
                       AND created <= %s
                  ORDER BY user_id, listened_at, mm.recording_mbid"""
 
-    log("execute query")
-    lb_curs.execute(query, (min_ts, max_ts))
+    with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
+        log("  execute partial index query")
+        lb_curs.execute(query, (min_ts, max_ts))
 
-    total_rows = lb_curs.rowcount
+        total_rows = lb_curs.rowcount
 
-    log(f"build index: {total_rows:,} rows")
-    pairs = 0
-    session_start = 0
-    while True:
-        row = lb_curs.fetchone()
-        if not row:
-            break
+        log(f"  build partial index: {total_rows:,} rows")
+        pairs = 0
+        while True:
+            row = lb_curs.fetchone()
+            if not row:
+                break
 
-        if row["recording_mbid"] is None:
-            continue
+            if row["recording_mbid"] is None:
+                continue
 
-        row["artist_mbids"] = sorted(row["artist_mbids"][1:-1].split(","))
-        row_count += 1
+            row["artist_mbids"] = sorted(row["artist_mbids"]) #[1:-1].split(","))
+            row_count += 1
 
-        # If this is a different user or sufficient time has passed,
-        # index the buffer and start a new session
-        if (len(buffer) > 0 and row["user_id"] != buffer[0]["user_id"]) or \
-            (session_start is not None and row["listened_at"] - session_start >= MAX_SESSION_DURATION):
-            if len(buffer) > 1:
-                pairs += index_buffer(artist_index, mbid_index, inverse_mbid_index, buffer)
-
-            buffer = []
-            session_start = None
-
-        if session_start is None:
-            session_start = row["listened_at"]
-
-        # append the row to the buffer
-        buffer.append(row)
-        if row_count % 1000000 == 0:
-            log("indexed %d rows, %.1f%%" % (row_count, 100.0 * row_count / total_rows))
-
-    unique_pairs = 0
-    for mbid0 in artist_index:
-        unique_pairs += len(artist_index[mbid0])
-
-
-    log(f"Indexing complete. Generated {unique_pairs:,} unique pairs from {pairs:,} pairs. Inserting results")
-
-    create_tables(mb_conn)
-    values = []
-    inserted = 0
-    for mbid_0_offset in artist_index:
-        mbid_0 = uuid.UUID(bytes=inverse_mbid_index[mbid_0_offset])
-        for mbid_1_offset in artist_index[mbid_0_offset]:
-            mbid_1 = uuid.UUID(bytes=inverse_mbid_index[mbid_1_offset])
-
-            sim = artist_index[mbid_0_offset][mbid_1_offset]
-            if sim > MIN_SIMILARITY_THRESHOLD:
-                values.append((str(mbid_0), str(mbid_1), sim))
+            # If this is a different user or sufficient time has passed,
+            # index the buffer and start a new session
+            if len(buffer) and row["user_id"] != buffer[0]["user_id"]:
+                save = True
+            elif len(buffer) > MAX_ITEMS_PER_SESSION:
+                save = True
+            elif len(buffer) and row["listened_at"] - buffer[len(buffer) - 1]["listened_at"] + AVG_SONG_LENGTH > MAX_SESSION_BREAK:
+                save = True
             else:
-                unique_pairs -= 1
+                save = False
+            if save:
+                if len(buffer) > 1:
+                    pairs += index_buffer(artist_index, buffer)
+                buffer = []
 
-            if len(values) == BATCH_SIZE:
-                insert_rows(mb_curs, "mapping.tmp_artist_similarity", values, cols=None)
-                values = []
-                inserted += BATCH_SIZE
-                if inserted % 1000000 == 0:
-                    log("inserted %s rows, %.1f%%" % (inserted, 100.0 * inserted / unique_pairs))
+            # append the row to the buffer
+            buffer.append(row)
+            if row_count % 1000000 == 0:
+                log("  indexed %d rows, %.1f%%" % (row_count, 100.0 * row_count / total_rows))
 
-    if len(values) > 0:
-        insert_rows(mb_curs, "mapping.tmp_artist_similarity", values, cols=None)
-        inserted += len(values)
-        values = []
+        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+            unique_pairs = 0
+            rows = []
+            for mbid0 in artist_index:
+                unique_pairs += len(artist_index[mbid0])
+                for mbid1 in artist_index[mbid0]:
+                    rows.append((mbid0, mbid1, artist_index[mbid0][mbid1]))
+                    if len(rows) >= BATCH_SIZE:
+                        insert_rows(mb_curs, table_name, rows)
+                        inserted += len(rows)
+                        rows = []
 
-    # Free up space immediately
-    mbid_index = None
-    artist_index = None
-    inverse_mbid_index = None
+            if rows:
+                insert_rows(mb_curs, table_name, rows)
+                inserted += len(rows)
+
+    log(f"  inserted {inserted:,} unique pairs")
+
+    return table_name
+
+
+def build_final_index(mb_conn, lb_conn, tables):
+
+    log("Create final index")
+    total_rows = 0
+    rows_processed = 0
+    cursors = []
+    for table in tables: 
+        curs = mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        curs.execute(f"""SELECT mbid0::TEXT
+                              , mbid1::TEXT
+                              , similarity
+                           FROM {table}
+                       ORDER BY mbid0, mbid1""")
+        total_rows += curs.rowcount
+        cursors.append({"table":table, "curs": curs, "row": []})
+
+    log("select queries executed, now processing results")
+    create_table(mb_conn, "mapping.tmp_artist_similarity")
+    with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
+        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+
+            mbid0 = None
+            mbid1 = None
+            similarity = 0
+            inserted = 0
+            batch_count = 0
+            rows = []
+
+            while True:
+                # Load up rows for any cursor which is currently empty.
+                # None indicates end of query, [] means new row should be fetched
+                new_row_fetched = False
+                for cur in cursors:
+                    if cur["row"] is None or len(cur["row"]) > 0:
+                        continue
+
+                    cur["row"] = cur["curs"].fetchone()
+                    if cur["row"] is not None:
+                        new_row_fetched = True
+
+                if not new_row_fetched:
+                    break
+
+                if mbid0 is None:
+                    mbid = None
+                    index = None
+                    for i, cur in enumerate(cursors):
+                        if cur["row"] is None:
+                            continue
+
+                        if mbid is None:
+                            mbid = cur["row"]["mbid0"]
+                            index = i
+
+                        if cur["row"]["mbid0"] < mbid:
+                            mbid = cur["row"]["mbid0"]
+                            index = i
+
+                    if index is None:
+                        print("Could not find index, assuming all done.")
+                        break
+
+                    mbid0 = cursors[index]["row"]["mbid0"]
+                    mbid1 = cursors[index]["row"]["mbid1"]
+                    similarity = cursors[index]["row"]["similarity"]
+                    cursors[index]["row"] = []
+                    rows_processed += 1
+
+                for cur in cursors:
+                    if cur["row"] is None or len(cur["row"]) == 0:
+                        continue
+                    if cur["row"]["mbid0"] == mbid0 and cur["row"]["mbid1"] == mbid1:
+                        similarity += cur["row"]["similarity"]
+                        cur["row"] = []
+                        break
+                else:
+                    if similarity > MIN_SIMILARITY_THRESHOLD:
+                        rows.append((mbid0, mbid1, similarity))
+                    mbid0 = None
+
+                if len(rows) >= BATCH_SIZE:
+                    insert_rows(mb_curs, "mapping.tmp_artist_similarity", rows)
+                    lb_conn.commit()
+                    rows = []
+                    inserted += BATCH_SIZE
+                    batch_count += 1
+                    if batch_count % 10 == 0:
+                        log("inserted %s rows, %.1f%%" % (inserted, 100.0 * rows_processed / total_rows))
+
+            if len(rows) > 0:
+                insert_rows(mb_curs, "mapping.tmp_artist_similarity", rows)
+                lb_conn.commit()
+                inserted += len(rows)
 
     log(f"Inserted {inserted:,} rows.")
+    for cur in cursors:
+        log(f"drop table {cur['table']}")
+        cur["curs"].execute(f"DROP TABLE IF EXISTS {cur['table']}")
+        mb_conn.commit()
 
     log("Create indexes")
     create_indexes(mb_conn)
@@ -230,8 +308,13 @@ def create_artist_similarity_index():
     """
     """
 
+    psycopg2.extras.register_uuid()
+    current_year = datetime.now().year
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
-        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            with psycopg2.connect(config.TIMESCALE_DATABASE_URI) as lb_conn:
-                with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
-                    return build_index(mb_conn, mb_curs, lb_conn, lb_curs)
+        with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn:
+            tables = []
+            for year in range(DATA_START_YEAR, current_year + 2, YEARS_PER_PASS):
+                log("Process %d -> %d" % (year, year + YEARS_PER_PASS - 1))
+                tables.append(build_partial_index(mb_conn, lb_conn, year, year + YEARS_PER_PASS))
+
+            build_final_index(mb_conn, lb_conn, tables)
