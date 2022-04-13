@@ -221,7 +221,7 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         duration_key = ["duration", "duration_ms"]
         for key in duration_key:
             validate_duration_field(listen, key)
-        # if both duration and duration_ms are given and valid, only duration_ms will be accepted without raising an error.
+        # if both duration and duration_ms are given and valid, only duration_ms will be accepted but no error raised.
         if 'duration' in listen['track_metadata']['additional_info'] and 'duration_ms' in listen['track_metadata']['additional_info']:
             del listen['track_metadata']['additional_info']['duration']
 
