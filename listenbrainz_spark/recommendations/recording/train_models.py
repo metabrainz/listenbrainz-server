@@ -328,7 +328,7 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None):
         raise
 
     if alphas is None:
-        logger.critical('model param "alpha" missing')
+        logger.critical('model param "alphas" missing')
         raise
 
     ti = time.monotonic()
