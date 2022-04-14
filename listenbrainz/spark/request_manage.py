@@ -254,7 +254,7 @@ def request_model(rank, itr, lmbda, alpha):
         'ranks': rank,
         'lambdas': lmbda,
         'iterations': itr,
-        'alpha': alpha,
+        'alphas': alpha,
     }
 
     send_request_to_spark_cluster('cf.recommendations.recording.train_model', **params)

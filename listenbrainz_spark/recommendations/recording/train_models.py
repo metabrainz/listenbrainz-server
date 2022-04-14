@@ -202,6 +202,7 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
 
         t0 = time.monotonic()
         logger.info("Training model with model id: {}".format(model_id))
+        logger.info("Params: Rank - %d, Lambda - %d, Iterations - %d, Alpha - %f", rank, lmbda, iteration, alpha)
         model = train(training_data, rank, iteration, lmbda, alpha, model_id)
         logger.info("Model trained!")
         mt = '{:.2f}'.format((time.monotonic() - t0) / 60)
@@ -313,12 +314,10 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
     save_html(model_html, context, 'model.html')
 
 
-
-def main(ranks=None, lambdas=None, iterations=None, alpha=None):
+def main(ranks=None, lambdas=None, iterations=None, alphas=None):
 
     if ranks is None:
         logger.critical('model param "ranks" missing')
-
 
     if lambdas is None:
         logger.critical('model param "lambdas" missing')
@@ -328,8 +327,8 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         logger.critical('model param "iterations" missing')
         raise
 
-    if alpha is None:
-        logger.critical('model param "alpha" missing')
+    if alphas is None:
+        logger.critical('model param "alphas" missing')
         raise
 
     ti = time.monotonic()
@@ -366,7 +365,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
 
     t0 = time.monotonic()
     best_model, model_metadata = get_best_model(training_data, validation_data, num_validation, ranks,
-                                                lambdas, iterations, alpha)
+                                                lambdas, iterations, alphas)
     models_training_time = '{:.2f}'.format((time.monotonic() - t0) / 3600)
 
     best_model_metadata = get_best_model_metadata(best_model)
@@ -383,6 +382,8 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     t0 = time.monotonic()
     save_model(best_model.model_id, best_model.model)
     time_['save_model'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
+
+    logger.info("Best model params: %s", best_model_metadata)
 
     save_model_metadata_to_hdfs(best_model_metadata)
     # Delete checkpoint dir as saved lineages would eat up space, we won't be using them anyway.
