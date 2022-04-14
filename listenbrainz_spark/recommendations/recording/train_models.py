@@ -299,7 +299,7 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
             ti (str): Value of the monotonic clock when the script was run.
             models_training_data (str): Time taken to train all the models.
     """
-    date = datetime.utcnow().strftime('%Y-%m-%d')
+    date = datetime.utcnow().strftime('%Y-%m-%d-%H:%M')
     model_html = 'Model-{}-{}.html'.format(date, uuid.uuid4())
     context = {
         'time' : time_,
