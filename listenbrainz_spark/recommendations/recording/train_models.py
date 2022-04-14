@@ -313,12 +313,10 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
     save_html(model_html, context, 'model.html')
 
 
-
-def main(ranks=None, lambdas=None, iterations=None, alpha=None):
+def main(ranks=None, lambdas=None, iterations=None, alphas=None):
 
     if ranks is None:
         logger.critical('model param "ranks" missing')
-
 
     if lambdas is None:
         logger.critical('model param "lambdas" missing')
@@ -328,7 +326,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         logger.critical('model param "iterations" missing')
         raise
 
-    if alpha is None:
+    if alphas is None:
         logger.critical('model param "alpha" missing')
         raise
 
@@ -366,7 +364,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
 
     t0 = time.monotonic()
     best_model, model_metadata = get_best_model(training_data, validation_data, num_validation, ranks,
-                                                lambdas, iterations, alpha)
+                                                lambdas, iterations, alphas)
     models_training_time = '{:.2f}'.format((time.monotonic() - t0) / 3600)
 
     best_model_metadata = get_best_model_metadata(best_model)
