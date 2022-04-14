@@ -202,6 +202,7 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
 
         t0 = time.monotonic()
         logger.info("Training model with model id: {}".format(model_id))
+        logger.info("Params: Rank - %d, Lambda - %d, Iterations - %d, Alpha - %f", rank, lmbda, iteration, alpha)
         model = train(training_data, rank, iteration, lmbda, alpha, model_id)
         logger.info("Model trained!")
         mt = '{:.2f}'.format((time.monotonic() - t0) / 60)
@@ -382,7 +383,7 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None):
     save_model(best_model.model_id, best_model.model)
     time_['save_model'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
-    logging.info("Best model params: %s", best_model_metadata)
+    logger.info("Best model params: %s", best_model_metadata)
 
     save_model_metadata_to_hdfs(best_model_metadata)
     # Delete checkpoint dir as saved lineages would eat up space, we won't be using them anyway.
