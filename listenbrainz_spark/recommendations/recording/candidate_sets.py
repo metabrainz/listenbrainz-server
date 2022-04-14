@@ -478,7 +478,7 @@ def save_candidate_html(user_data, total_time, from_date, to_date):
             total_time (str): time taken to generate candidate_sets
     """
     date = datetime.utcnow().strftime('%Y-%m-%d')
-    candidate_html = 'Candidate-{}-{}.html'.format(uuid.uuid4(), date)
+    candidate_html = 'Candidate-{}-{}.html'.format(date, uuid.uuid4())
     context = {
         'user_data': user_data,
         'total_time': total_time,

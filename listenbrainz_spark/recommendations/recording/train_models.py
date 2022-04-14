@@ -299,7 +299,7 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
             models_training_data (str): Time taken to train all the models.
     """
     date = datetime.utcnow().strftime('%Y-%m-%d')
-    model_html = 'Model-{}-{}.html'.format(uuid.uuid4(), date)
+    model_html = 'Model-{}-{}.html'.format(date, uuid.uuid4())
     context = {
         'time' : time_,
         'num_training' : '{:,}'.format(num_training),
