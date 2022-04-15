@@ -1,17 +1,22 @@
-/* eslint-disable no-bitwise */
 import * as React from "react";
-import {
-  faExternalLinkAlt,
-  faHeart,
-  faHeartBroken,
-} from "@fortawesome/free-solid-svg-icons";
+import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as tinycolor from "tinycolor2";
-import { first, get, isNumber } from "lodash";
+import {
+  first,
+  get,
+  isNumber,
+  isPlainObject,
+  omit,
+  pick,
+  pickBy,
+} from "lodash";
 import TagsComponent from "./TagsComponent";
-import ListenControl from "../listens/ListenControl";
-import { getArtistName, getTrackName } from "../utils/utils";
-import PlayingNowPage from "./MetadataViewerPageWrapper";
+import {
+  getArtistName,
+  getAverageRGBOfImage,
+  getTrackName,
+} from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { millisecondsToStr } from "../playlists/utils";
 
@@ -20,60 +25,12 @@ type MetadataViewerProps = {
   playingNow?: Listen;
 };
 
-/** Courtesy of Matt Zimmerman
- * https://codepen.io/influxweb/pen/LpoXba
- */
-function getAverageRGB(
-  imgEl: HTMLImageElement | null
-): { r: number; g: number; b: number } {
-  const defaultRGB = { r: 0, g: 0, b: 0 }; // for non-supporting envs
-  if (!imgEl) {
-    return defaultRGB;
-  }
-  const blockSize = 5; // only visit every 5 pixels
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext && canvas.getContext("2d");
-  let data;
-  let i = -4;
-  const rgb = { r: 0, g: 0, b: 0 };
-  let count = 0;
-
-  if (!context) {
-    return defaultRGB;
-  }
-
-  const height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
-  const width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
-  canvas.height = height;
-  canvas.width = width;
-  context.drawImage(imgEl, 0, 0);
-
-  try {
-    data = context.getImageData(0, 0, width, height);
-  } catch (e) {
-    /* security error, img on diff domain */
-    return defaultRGB;
-  }
-
-  const { length } = data.data;
-
-  // eslint-disable-next-line no-cond-assign
-  while ((i += blockSize * 4) < length) {
-    count += 1;
-    rgb.r += data.data[i];
-    rgb.g += data.data[i + 1];
-    rgb.b += data.data[i + 2];
-  }
-
-  // ~~ used to floor values
-  rgb.r = ~~(rgb.r / count);
-  rgb.g = ~~(rgb.g / count);
-  rgb.b = ~~(rgb.b / count);
-
-  return rgb;
-}
-
 const musicBrainzURLRoot = "https://musicbrainz.org/";
+const supportLinkTypes = [
+  "official homepage",
+  "purchase for download",
+  "purchase for mail-order",
+];
 
 function OpenInMusicBrainzButton(props: {
   entityType: Entity;
@@ -88,7 +45,7 @@ function OpenInMusicBrainzButton(props: {
       href={`${musicBrainzURLRoot}${entityType}/${entityMBID}`}
       aria-label="Open in MusicBrainz"
       title="Open in MusicBrainz"
-      className="open-in-musicbrainz btn btn-link btn-outline"
+      className="btn btn-outline"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -119,7 +76,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   React.useEffect(() => {
     const setAverageColor = () => {
-      const averageColor = getAverageRGB(albumArtRef?.current);
+      const averageColor = getAverageRGBOfImage(albumArtRef?.current);
       setAlbumArtColor(averageColor);
     };
     if (albumArtRef?.current) {
@@ -170,19 +127,16 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           return;
         }
         try {
-          const status = await APIService.submitFeedback(
+          setCurrentListenFeedback(score);
+          await APIService.submitFeedback(
             currentUser.auth_token,
             score,
             undefined,
             recordingMBID
           );
-          if (status >= 400) {
-            // Revert the feedback UI in case of failure
-            setCurrentListenFeedback(0);
-          } else {
-            setCurrentListenFeedback(score);
-          }
         } catch (error) {
+          // Revert the feedback UI in case of failure
+          setCurrentListenFeedback(0);
           console.error(error);
         }
       }
@@ -249,6 +203,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const duration =
     metadata?.recording?.duration ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
+
+  const artist = metadata?.artist?.[0];
+
+  const supportLinks = pick(artist?.rels, ...supportLinkTypes);
+  const lyricsLink = pick(artist?.rels, "lyrics");
+
   return (
     <div id="metadata-viewer">
       <div
@@ -343,7 +303,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           </a>
           <div className="support-artist-btn dropup">
             <button
-              className="dropdown-toggle btn btn-primary"
+              className={`dropdown-toggle btn btn-primary${
+                isPlainObject(artist?.rels) &&
+                !Object.keys(artist?.rels as object).length
+                  ? " disabled"
+                  : ""
+              }`}
               data-toggle="dropdown"
               type="button"
             >
@@ -351,8 +316,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <span className="caret" />
             </button>
             <ul className="dropdown-menu dropdown-menu-right" role="menu">
-              {metadata?.artist?.[0]?.rels &&
-                Object.entries(metadata.artist[0].rels).map(([key, value]) => {
+              {supportLinks &&
+                Object.entries(supportLinks).map(([key, value]) => {
                   return (
                     <li key={key}>
                       <a href={value} target="_blank" rel="noopener noreferrer">
@@ -439,10 +404,22 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   </table>
                 </div>
               )}
-              <OpenInMusicBrainzButton
-                entityType="recording"
-                entityMBID={recordingData?.recording_mbid}
-              />
+              <div className="flex flex-wrap">
+                {lyricsLink?.lyrics && (
+                  <a
+                    href={lyricsLink.lyrics}
+                    className="btn btn-outline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Lyrics
+                  </a>
+                )}
+                <OpenInMusicBrainzButton
+                  entityType="recording"
+                  entityMBID={recordingData?.recording_mbid}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -509,7 +486,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <h4 className="panel-title">
               <div className="artistheader">
                 <div className="name strong">{artistName}</div>
-                <div className="date">{metadata?.artist?.[0]?.begin_year}</div>
+                <div className="date">{artist?.begin_year}</div>
                 <div className="caret" />
               </div>
             </h4>
@@ -525,6 +502,13 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <div className="panel-body">
               <TagsComponent tags={metadata?.tag?.artist} />
               {/* <div className="ratings content-box" /> */}
+              {(artist?.begin_year || artist?.area) && (
+                <div>
+                  {artist?.type === "Group" ? "Band founded" : "Artist born"}
+                  {artist?.begin_year && ` in ${artist.begin_year}`}
+                  {artist?.area && ` in ${artist.area}`}
+                </div>
+              )}
               <OpenInMusicBrainzButton
                 entityType="artist"
                 entityMBID={artistMBID}
