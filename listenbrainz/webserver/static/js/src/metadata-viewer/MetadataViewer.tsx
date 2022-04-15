@@ -7,12 +7,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as tinycolor from "tinycolor2";
-import { first, get } from "lodash";
+import { first, get, isNumber } from "lodash";
 import TagsComponent from "./TagsComponent";
 import ListenControl from "../listens/ListenControl";
 import { getArtistName, getTrackName } from "../utils/utils";
 import PlayingNowPage from "./MetadataViewerPageWrapper";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import { millisecondsToStr } from "../playlists/utils";
 
 type MetadataViewerProps = {
   recordingData?: MetadataLookup;
@@ -380,7 +381,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <h4 className="panel-title">
               <div className="recordingheader">
                 <div className="name strong">{trackName}</div>
-                <div className="date">{duration}</div>
+                <div className="date">
+                  {isNumber(duration) && millisecondsToStr(duration)}
+                </div>
                 <div className="caret" />
               </div>
             </h4>
