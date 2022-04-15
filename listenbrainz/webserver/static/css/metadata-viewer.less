@@ -139,22 +139,27 @@
 		> * {
 			&.expanded{
 				flex:1;
+				display: flex;
+				flex-direction: column;
 				.panel-heading .caret{
 					transform: rotate(0deg);
 				}
 			}
 			.panel-collapse{
-				height: calc(100% - 4em);
+				flex:1;
 			}
 			.panel-body{
 				padding: @outer-padding;
 				display: flex;
 				flex-direction: column;
 				height: 100%;
-				.open-in-musicbrainz {
+				> *:last-child {
 					align-self: center;
 					margin-top: auto;
 				}
+				> *:not(:last-child) {
+					margin-bottom: 0.7em;
+			}
 			}
 			.panel-heading{
 				background: inherit;
@@ -236,6 +241,9 @@
 	background:white;
 	border: 1px solid @blue;
 	border-radius: @border-radius;
+	&:hover,&:focus{
+		color:@blue;
+	}
 }
 .strong{
 	font-weight: 600;
