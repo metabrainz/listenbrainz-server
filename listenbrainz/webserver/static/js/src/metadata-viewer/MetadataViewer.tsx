@@ -263,7 +263,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               className="track-name strong ellipsis-2-lines"
             >
               <a
-                href={`${musicBrainzURLRoot}artist/${recordingData?.recording_mbid}`}
+                href={
+                  recordingData?.recording_mbid
+                    ? `${musicBrainzURLRoot}recording/${recordingData?.recording_mbid}`
+                    : undefined
+                }
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -272,7 +276,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             </div>
             <span className="artist-name small ellipsis" title={artistName}>
               <a
-                href={`${musicBrainzURLRoot}artist/${artistMBID}`}
+                href={
+                  artistMBID
+                    ? `${musicBrainzURLRoot}artist/${artistMBID}`
+                    : undefined
+                }
                 target="_blank"
                 rel="noopener noreferrer"
               >
