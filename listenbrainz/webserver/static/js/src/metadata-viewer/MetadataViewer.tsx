@@ -166,12 +166,14 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         const recordingMBID =
           recordingData?.recording_mbid ||
           get(playingNow, "track_metadata.additional_info.recording_mbid");
-
+        if (!recordingMBID) {
+          return;
+        }
         try {
           const status = await APIService.submitFeedback(
             currentUser.auth_token,
-            "",
             score,
+            undefined,
             recordingMBID
           );
           if (status >= 400) {

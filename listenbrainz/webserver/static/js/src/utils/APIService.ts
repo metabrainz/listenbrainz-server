@@ -506,12 +506,15 @@ export default class APIService {
 
   submitFeedback = async (
     userToken: string,
-    recordingMSID: string,
     score: ListenFeedBack,
+    recordingMSID?: string,
     recordingMBID?: string
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/feedback/recording-feedback`;
-    const body: any = { recording_msid: recordingMSID, score };
+    const body: any = { score };
+    if (recordingMSID) {
+      body.recording_msid = recordingMSID;
+    }
     if (recordingMBID) {
       body.recording_mbid = recordingMBID;
     }

@@ -644,7 +644,7 @@ describe("submitFeedback", () => {
   });
 
   it("calls fetch with correct parameters", async () => {
-    await apiService.submitFeedback("foobar", "foo", 1);
+    await apiService.submitFeedback("foobar", 1, "foo", "foombid");
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/feedback/recording-feedback",
       {
@@ -653,19 +653,38 @@ describe("submitFeedback", () => {
           Authorization: "Token foobar",
           "Content-Type": "application/json;charset=UTF-8",
         },
-        body: JSON.stringify({ recording_msid: "foo", score: 1 }),
+        body: JSON.stringify({
+          recording_msid: "foo",
+          score: 1,
+          recording_mbid: "foombid",
+        }),
+      }
+    );
+  });
+
+  it("fetches correclty if called with MBID only", async () => {
+    await apiService.submitFeedback("foobar", 1, undefined, "foombid");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/feedback/recording-feedback",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ score: 1, recording_mbid: "foombid" }),
       }
     );
   });
 
   it("calls checkStatus once", async () => {
-    await apiService.submitFeedback("foobar", "foo", 0);
+    await apiService.submitFeedback("foobar", 0, "foo");
     expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 
   it("returns the response code if successful", async () => {
     await expect(
-      apiService.submitFeedback("foobar", "foo", 0)
+      apiService.submitFeedback("foobar", 0, "foo")
     ).resolves.toEqual(200);
   });
 });
