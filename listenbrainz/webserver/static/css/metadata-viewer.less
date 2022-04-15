@@ -44,7 +44,7 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
-		a {
+		.track-info a, .bottom > a {
 			color: inherit;
 			&:visited {
 				color: inherit;
@@ -143,8 +143,18 @@
 					transform: rotate(0deg);
 				}
 			}
+			.panel-collapse{
+				height: calc(100% - 4em);
+			}
 			.panel-body{
 				padding: @outer-padding;
+				display: flex;
+				flex-direction: column;
+				height: 100%;
+				.open-in-musicbrainz {
+					align-self: center;
+					margin-top: auto;
+				}
 			}
 			.panel-heading{
 				background: inherit;

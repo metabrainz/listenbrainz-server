@@ -87,7 +87,7 @@ function OpenInMusicBrainzButton(props: {
       href={`${musicBrainzURLRoot}${entityType}/${entityMBID}`}
       aria-label="Open in MusicBrainz"
       title="Open in MusicBrainz"
-      className="btn btn-link btn-outline"
+      className="open-in-musicbrainz btn btn-link btn-outline"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -339,7 +339,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <b>Support the artist</b>
               <span className="caret" />
             </button>
-            <ul className="dropdown-menu" role="menu">
+            <ul className="dropdown-menu dropdown-menu-right" role="menu">
               {metadata?.artist?.[0]?.rels &&
                 Object.entries(metadata.artist[0].rels).map(([key, value]) => {
                   return (
