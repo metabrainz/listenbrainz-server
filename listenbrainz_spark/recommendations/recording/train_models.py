@@ -43,7 +43,7 @@ from pyspark.sql import Row
 from pyspark.mllib.recommendation import ALS, Rating
 
 logger = logging.getLogger(__name__)
-Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration model_id training_time rmse_time, alpha')
+Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration alpha model_id training_time rmse_time')
 
 # training HTML is generated if set to true
 SAVE_TRAINING_HTML = True
@@ -222,10 +222,10 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
                 rank=rank,
                 lmbda=lmbda,
                 iteration=iteration,
+                alpha=alpha,
                 model_id=model_id,
                 training_time=mt,
                 rmse_time=vt,
-                alpha=alpha,
             )
 
     return best_model, model_metadata
