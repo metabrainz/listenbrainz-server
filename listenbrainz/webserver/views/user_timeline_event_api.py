@@ -364,7 +364,7 @@ def hide_user_timeline_event(user_name):
 @user_timeline_event_api_bp.route("/user/<user_name>/feed/events/hide/delete", methods=['OPTIONS', 'POST'])
 @crossdomain
 @ratelimit()
-def delete_hidden_user_timeline_event(user_name):
+def unhide_user_timeline_event(user_name):
     '''
     Delete hidden events from the user feed, aka unhide events
     For example:
@@ -389,7 +389,7 @@ def delete_hidden_user_timeline_event(user_name):
         raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
     try:
         data = ujson.loads(request.get_data())
-        if db_user_timeline_event.delete_hidden_timeline_events(user['id'], data['id']):
+        if db_user_timeline_event.unhide_timeline_events(user['id'], data['id']):
             return jsonify({"status": "ok"})
         else:
             raise APIBadRequest("Such entry doesn't exist")
