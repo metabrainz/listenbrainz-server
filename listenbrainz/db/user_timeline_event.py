@@ -197,14 +197,9 @@ def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, ev
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text('''
                 INSERT INTO hide_user_timeline_event (user_id, event_type, event_id)
-                    SELECT :user_id, :event_type, :event_id WHERE NOT EXISTS
-                    (
-                        SELECT * FROM hide_user_timeline_event WHERE
-                        user_id = :user_id AND
-                        event_type = :event_type AND
-                        event_id = :event_id
-
-                    )
+                    VALUES (:user_id, :event_type, :event_id)
+                ON CONFLICT (user_id, event_type, event_id)
+                DO NOTHING
             '''), {
                 'user_id': user_id,
                 'event_type': event_type,
@@ -235,7 +230,7 @@ def get_hidden_timeline_events(user: int, event_type: UserTimelineEventType, cou
     except Exception as e:
         raise DatabaseException(str(e))
 
-def delete_hidden_timeline_events(user: int, row_id: int) -> bool:
+def unhide_timeline_events(user: int, row_id: int) -> bool:
     ''' Deletes hidden timeline events for a user with specific row id '''
     try:
         with db.engine.connect() as connection:

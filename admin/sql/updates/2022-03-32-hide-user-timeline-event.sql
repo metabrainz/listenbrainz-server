@@ -20,4 +20,6 @@ ALTER TABLE hide_user_timeline_event
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+CREATE UNIQUE INDEX user_id_event_type_event_id_ndx_hide_user_timeline_event ON hide_user_timeline_event (user_id, event_type, event_id);
+
 COMMIT;
