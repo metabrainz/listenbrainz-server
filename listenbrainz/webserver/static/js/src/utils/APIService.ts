@@ -572,6 +572,19 @@ export default class APIService {
     return response.json();
   };
 
+  getFeedbackForUserForMBIDs = async (
+    userName: string,
+    recording_mbids: string // Comma-separated list of MBIDs
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_mbids=${recording_mbids}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   deleteListen = async (
     userToken: string,
     recordingMSID: string,
