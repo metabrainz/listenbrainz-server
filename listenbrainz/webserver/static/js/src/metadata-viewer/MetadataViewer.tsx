@@ -98,7 +98,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         return;
       }
       try {
-        const feedbackArray = await APIService.getFeedbackForUserForRecordings(
+        const feedbackArray = await APIService.getFeedbackForUserForMBIDs(
           currentUser.name,
           recordingMBID
         );
@@ -276,7 +276,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 icon={faHeartBroken}
                 title="Hate"
                 size="2x"
-                className={`${currentListenFeedback === 1 ? " hated" : ""}`}
+                className={`${currentListenFeedback === -1 ? " hated" : ""}`}
               />
             </button>
           </div>
