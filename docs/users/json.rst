@@ -213,9 +213,9 @@ the data for any of the following fields, omit the key entirely:
    * - ``origin_url``
      - If the song of this listen comes from an online source, the URL to the place where it is available. This could be a spotify url (see ``spotify_id``), a YouTube video URL, a Soundcloud recording page URL, or the full URL to a public MP3 file. If there is a webpage for this song (e.g. Youtube page, Soundcloud page) **do not** try and resolve the URL to an actual audio resource.
    * - ``duration_ms``
-     - The duration of the track in milliseconds(integer type).
+     - The duration of the track in milliseconds. You can include either ``duration_ms`` or ``duration``, but please don't include both.
    * - ``duration``
-     - The duration of the track in seconds(integer type). Ignored if duration_ms has been given.
+     - The duration of the track in seconds. 
 .. note::
 
   **Music service names**

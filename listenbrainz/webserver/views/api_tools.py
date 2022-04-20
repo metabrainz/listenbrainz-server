@@ -221,9 +221,9 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         duration_key = ["duration", "duration_ms"]
         for key in duration_key:
             validate_duration_field(listen, key)
-        # if both duration and duration_ms are given and valid, only duration_ms will be accepted but no error raised.
+        # if both duration and duration_ms are given and valid, an error will be raised.
         if 'duration' in listen['track_metadata']['additional_info'] and 'duration_ms' in listen['track_metadata']['additional_info']:
-            del listen['track_metadata']['additional_info']['duration']
+            raise ListenValidationError("Both duration and duraion_ms are given, please choose one")
 
 
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
@@ -280,9 +280,13 @@ def validate_duration_field(listen, key):
         if not duration:
             del listen['track_metadata']['additional_info'][key]
             return
-        if not isinstance(duration, int):
-            raise ListenValidationError("%s type invalid. Int is accepted" % (key,), listen)
-
+        try:
+            value = int(duration)
+            if value <= 0:
+                raise ListenValidationError("%s type invalid. Positive int is accepted" % (key,), listen)
+        except ValueError:
+            raise ListenValidationError("%s type invalid. Positive int is accepted" % (key,), listen)
+        
 
 def validate_single_mbid_field(listen, key):
     """ Verify that mbid if present in the listen with given key is valid.
