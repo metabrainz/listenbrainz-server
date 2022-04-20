@@ -32,6 +32,7 @@ import time
 from datetime import datetime, timezone
 
 import pyspark.sql.functions as func
+from markupsafe import Markup
 from pyspark.sql.functions import rank, col
 from pyspark.sql.window import Window
 
@@ -78,6 +79,15 @@ logger = logging.getLogger(__name__)
 #       'count'
 #   ]
 
+# where the zero line of our confidence function is
+ZERO_POINT = 30
+
+# listen counts are capped to this value
+MAX_PLAYCOUNT = 20
+
+# the playcount value to use if playcount = 1
+ONE_PLAYCOUNT_CONFIDENCE = ZERO_POINT - MAX_PLAYCOUNT / 2
+
 
 def save_dataframe_metadata_to_hdfs(metadata: dict, df_metadata_path: str):
     """ Save dataframe metadata.
@@ -106,7 +116,30 @@ def save_dataframe_metadata_to_hdfs(metadata: dict, df_metadata_path: str):
 def describe_listencount_transformer(use_transformed_listencounts):
     """ Returns a human-readable description of the algorithm used to transform listen counts """
     if use_transformed_listencounts:
-        return "No transformation applied to listen counts"
+        return Markup("""
+        <table>
+            <tr>
+                <th>Playcount</th>
+                <th>Transformed Listencount</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>20</td>
+            </tr>
+            <tr>
+                <td>2 &lt;= x &lt;= 20</td>
+                <td>x + 20</td>
+            </tr>
+            <tr>
+                <td> &gt; 20</td>
+                <td>50</td>
+            </tr>
+        </table>
+    """)
     else:
         return "No transformation applied to listen counts"
 
@@ -134,8 +167,20 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
                               .join(recordings_df, 'recording_mbid', 'inner') \
                               .groupBy('spark_user_id', 'recording_id') \
                               .agg(func.count('recording_id').alias('playcount'))
+    playcounts_df.createOrReplaceTempView("playcounts")
 
-    transformed_listencounts = playcounts_df.withColumn("transformed_listencount", col("playcount"))
+    transformed_listencounts = listenbrainz_spark.sql_context.sql(f"""
+            SELECT spark_user_id
+                 , recording_id
+                 , playcount
+                 , float(
+                    CASE
+                        WHEN playcount = 0 THEN 0
+                        WHEN playcount = 1 THEN {ONE_PLAYCOUNT_CONFIDENCE}
+                        ELSE {ZERO_POINT} + LEAST(playcount, 20)
+                    END) AS transformed_listencount
+              FROM playcounts
+    """)
 
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(transformed_listencounts, save_path)
