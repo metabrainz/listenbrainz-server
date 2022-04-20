@@ -236,6 +236,13 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert401(response)
         self.assertEqual(response.json['code'], 401)
 
+    def test_valid_single(self):
+        """ Test for valid submissioon of listen_type listen """
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
     def test_single_more_than_one_listen(self):
         """ Test for an invalid submission which has listen_type 'single' but
@@ -480,19 +487,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('multi_duration.json'), 'r') as f:
             payload = json.load(f)
         response = self.send_data(payload)
-        self.assert200(response)
-        self.assertEqual(response.json['status'], 'ok')
-    
-
-    def test_invalid_duration(self):
-        """ Test for invalid submission in which a listen contains an invalid duration_ms field
-            in additional_info
-        """
-        with open(self.path_to_data_file('invalid_duration.json'), 'r') as f:
-            payload = json.load(f)
-        response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
+    
+
+    def test_valid_duration(self):
+        """ Test for valid submission in which a listen contains a valid duration_ms field
+            in additional_info
+        """
+        with open(self.path_to_data_file('valid_duration.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
 
     def test_unicode_null_error(self):
