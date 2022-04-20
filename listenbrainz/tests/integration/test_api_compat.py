@@ -46,7 +46,6 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         )
         self.log = logging.getLogger(__name__)
         self.ls = timescale_connection._ts
-        self.maxDiff = None
 
     def test_complete_workflow_json(self):
         """ Integration test for complete workflow to submit a listen using Last.fm compat api """
