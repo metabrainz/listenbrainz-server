@@ -30,8 +30,8 @@ model_param_schema = StructType(sorted(model_param_schema, key=lambda field: fie
 model_metadata_schema = [
     StructField('dataframe_id', StringType(), nullable=False),  # dataframe id or identification string of dataframe.
     StructField('model_created', TimestampType(), nullable=False),  # Timestamp when the model is saved in HDFS.
-    StructField('model_id', StringType(), nullable=False),  # Model id or identification string of best model.
     StructField('model_html_file', StringType(), nullable=False),  # Model html file name
+    StructField('model_id', StringType(), nullable=False),  # Model id or identification string of best model.
     StructField('model_param', model_param_schema, nullable=False),  # Parameters used to train the model.
     StructField('test_data_count', IntegerType(), nullable=False),  # Number of listens used to test the model.
     StructField('test_rmse', FloatType(), nullable=False),  # Root mean squared error for test data.
@@ -93,6 +93,7 @@ def convert_model_metadata_to_row(meta):
     return Row(
         dataframe_id=meta.get('dataframe_id'),
         model_created=datetime.utcnow(),
+        model_html_file=meta.get('model_html_file'),
         model_id=meta.get('model_id'),
         model_param=Row(
             alpha=meta.get('alpha'),
@@ -100,7 +101,6 @@ def convert_model_metadata_to_row(meta):
             lmbda=meta.get('lmbda'),
             rank=meta.get('rank'),
         ),
-        model_html_file=meta.get('model_html_file'),
         test_data_count=meta.get('test_data_count'),
         test_rmse=meta.get('test_rmse'),
         training_data_count=meta.get('training_data_count'),
