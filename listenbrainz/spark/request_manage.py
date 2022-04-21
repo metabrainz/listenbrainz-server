@@ -261,7 +261,7 @@ def request_model(rank, itr, lmbda, alpha):
 
 
 @cli.command(name='request_candidate_sets')
-@click.option("--days", type=int, default=7, help="Request recommendations to be generated on history of given number of days")
+@click.option("--days", type=int, required=False, help="Request recommendations to be generated on history of given number of days")
 @click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
 @click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
 @click.option("--html", is_flag=True, default=False, help='Enable/disable HTML file generation')
@@ -271,12 +271,13 @@ def request_candidate_sets(days, top, similar, users, html):
     """ Send the cluster a request to generate candidate sets.
     """
     params = {
-        'recommendation_generation_window': days,
         "top_artist_limit": top,
         "similar_artist_limit": similar,
         "users": users,
         "html_flag": html
     }
+    if days:
+        params['recommendation_generation_window'] = days
     send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', **params)
 
 
