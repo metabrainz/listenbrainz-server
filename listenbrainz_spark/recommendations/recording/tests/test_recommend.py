@@ -274,7 +274,7 @@ class RecommendTestClass(RecommendationsTestCase):
         model_metadata = df_1.union(df_2)
         utils.save_parquet(model_metadata, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
 
-        expected_model_id = recommend.get_most_recent_model_id()
+        expected_model_id = recommend.get_most_recent_model_meta()
         self.assertEqual(expected_model_id, model_id_2)
 
     @patch('listenbrainz_spark.recommendations.recording.recommend.get_candidate_set_rdd_for_user')

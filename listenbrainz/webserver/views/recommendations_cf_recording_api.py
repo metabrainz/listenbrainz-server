@@ -98,6 +98,8 @@ def get_recommendations(user_name):
 
     payload = {
         'payload': {
+            'model_id': recommendations['model_id'],
+            'model_url': recommendations['model_url'],
             'mbids': mbid_list,
             'entity': "recording",
             'type': artist_type,
