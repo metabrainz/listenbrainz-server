@@ -271,13 +271,12 @@ def request_candidate_sets(days, top, similar, users, html):
     """ Send the cluster a request to generate candidate sets.
     """
     params = {
+        "recommendation_generation_window": days,
         "top_artist_limit": top,
         "similar_artist_limit": similar,
         "users": users,
         "html_flag": html
     }
-    if days:
-        params['recommendation_generation_window'] = days
     send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', **params)
 
 
