@@ -3,7 +3,6 @@ import Card from "../components/Card";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 export type ListenCountCardProps = {
-  isCurrentUser: Boolean;
   listenCount?: number;
   user: ListenBrainzUser;
 };
