@@ -333,7 +333,7 @@ def create_messages(params, top_artist_rec_mbid_df, similar_artist_rec_mbid_df, 
                 'top_artist': data.get('top_artist', []),
                 'similar_artist': data.get('similar_artist', []),
                 'model_id': params.model_id,
-                'model_url': f"https://michael.metabrainz.org/{params.model_html_file}"
+                'model_url': f"http://michael.metabrainz.org/{params.model_html_file}"
             }
         }
         yield messages
