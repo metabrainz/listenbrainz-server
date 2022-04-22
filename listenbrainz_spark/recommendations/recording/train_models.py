@@ -151,6 +151,7 @@ def get_best_model_metadata(best_model):
         'rmse_time': best_model.rmse_time,
         'training_time': best_model.training_time,
         'validation_rmse': best_model.validation_rmse,
+        'model_html_file': f"Model-{datetime.utcnow().strftime('%Y-%m-%d-%H:%M')}-{uuid.uuid4()}.html"
     }
 
 
@@ -299,8 +300,6 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
             ti (str): Value of the monotonic clock when the script was run.
             models_training_data (str): Time taken to train all the models.
     """
-    date = datetime.utcnow().strftime('%Y-%m-%d-%H:%M')
-    model_html = 'Model-{}-{}.html'.format(date, uuid.uuid4())
     context = {
         'time' : time_,
         'num_training' : '{:,}'.format(num_training),
@@ -311,7 +310,7 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
         'models_training_time' : models_training_time,
         'total_time' : '{:.2f}'.format((time.monotonic() - ti) / 3600)
     }
-    save_html(model_html, context, 'model.html')
+    save_html(best_model_metadata['model_html_file'], context, 'model.html')
 
 
 def main(ranks=None, lambdas=None, iterations=None, alphas=None):

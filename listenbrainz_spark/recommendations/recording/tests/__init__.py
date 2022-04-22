@@ -58,6 +58,7 @@ class RecommendationsTestCase(SparkNewTestCase):
         return {
             'dataframe_id': 'xxxxx',
             'model_id': model_id,
+            'model_html_file': f"{model_id}.html",
             'alpha': 3.0,
             'lmbda': 2.0,
             'iteration': 2,
