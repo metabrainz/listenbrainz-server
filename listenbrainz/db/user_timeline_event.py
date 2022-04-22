@@ -210,19 +210,17 @@ def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, ev
     except Exception as e:
         raise DatabaseException(str(e))
 
-def get_hidden_timeline_events(user: int, event_type: UserTimelineEventType, count: int) -> List[HideUserTimelineEvent]:
+def get_hidden_timeline_events(user: int, count: int) -> List[HideUserTimelineEvent]:
     '''Retrieves all events that are hidden by the user, based on event_type'''
     try:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text('''
                 SELECT * FROM hide_user_timeline_event WHERE
-                user_id = :user_id AND
-                event_type = :event_type
+                user_id = :user_id
                 ORDER BY created DESC
                 LIMIT :count
             '''), {
                 'user_id': user,
-                'event_type': event_type.value,
                 'count': count
                 }
             )
