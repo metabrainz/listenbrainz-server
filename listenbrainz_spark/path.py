@@ -51,7 +51,7 @@ RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDAT
                                                                      'similar_artist.parquet')
 # Absolute path to model metadata.
 RECOMMENDATION_RECORDING_MODEL_METADATA = RECOMMENDATION_RECORDING_MODEL_DIR + \
-    '/' + 'model_metadata.parquet'
+    '/' + 'model_metadata_new.parquet'
 # Absolute path to mapped listens.
 RECOMMENDATION_RECORDING_MAPPED_LISTENS = RECOMMENDATION_RECORDING_DATAFRAME_DIR + \
     '/' + 'mapped_listens_df.parquet'

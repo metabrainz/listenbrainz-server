@@ -1,4 +1,5 @@
 import logging
+import uuid
 from unittest.mock import patch, call, MagicMock
 
 import listenbrainz_spark
@@ -22,17 +23,22 @@ class RecommendTestClass(RecommendationsTestCase):
     def test_recommendation_params_init(self):
         recordings_df = utils.create_dataframe(Row(col1=3, col2=9), schema=None)
         model = MagicMock()
+        model_id = "foobar"
+        model_html_file = "foobar.html"
         top_artist_candidate_set_df = utils.create_dataframe(Row(col1=4, col2=5, col3=5), schema=None)
         similar_artist_candidate_set_df = utils.create_dataframe(Row(col1=1), schema=None)
         recommendation_top_artist_limit = 20
         recommendation_similar_artist_limit = 40
 
-        params = recommend.RecommendationParams(recordings_df, model, top_artist_candidate_set_df,
+        params = recommend.RecommendationParams(recordings_df, model_id, model_html_file, model,
+                                                top_artist_candidate_set_df,
                                                 similar_artist_candidate_set_df,
                                                 recommendation_top_artist_limit,
                                                 recommendation_similar_artist_limit)
 
         self.assertEqual(sorted(params.recordings_df.columns), sorted(recordings_df.columns))
+        self.assertEqual(params.model_id, model_id)
+        self.assertEqual(params.model_html_file, model_html_file)
         self.assertEqual(params.model, model)
         self.assertEqual(sorted(params.top_artist_candidate_set_df.columns), sorted(top_artist_candidate_set_df.columns))
         self.assertEqual(sorted(params.similar_artist_candidate_set_df.columns), sorted(similar_artist_candidate_set_df.columns))
@@ -253,11 +259,10 @@ class RecommendTestClass(RecommendationsTestCase):
     @patch('listenbrainz_spark.recommendations.recording.recommend.MatrixFactorizationModel')
     @patch('listenbrainz_spark.recommendations.recording.recommend.listenbrainz_spark')
     @patch('listenbrainz_spark.recommendations.recording.recommend.get_model_path')
-    @patch('listenbrainz_spark.recommendations.recording.recommend.get_most_recent_model_id')
-    def test_load_model(self, mock_id, mock_model_path, mock_lb, mock_matrix_model):
-        model = recommend.load_model()
-        mock_id.assert_called_once()
-        mock_model_path.assert_called_once_with(mock_id.return_value)
+    def test_load_model(self, mock_model_path, mock_lb, mock_matrix_model):
+        model_id = uuid.uuid4()
+        recommend.load_model(model_id)
+        mock_model_path.assert_called_once_with(model_id)
         mock_matrix_model.load.assert_called_once_with(mock_lb.context, mock_model_path.return_value)
 
     def test_get_most_recent_model_id(self):
@@ -274,8 +279,9 @@ class RecommendTestClass(RecommendationsTestCase):
         model_metadata = df_1.union(df_2)
         utils.save_parquet(model_metadata, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
 
-        expected_model_id = recommend.get_most_recent_model_id()
-        self.assertEqual(expected_model_id, model_id_2)
+        expected_model_meta = recommend.get_most_recent_model_meta()
+        self.assertEqual(expected_model_meta[0], model_id_2)
+        self.assertEqual(expected_model_meta[1], f"{model_id_2}.html")
 
     @patch('listenbrainz_spark.recommendations.recording.recommend.get_candidate_set_rdd_for_user')
     @patch('listenbrainz_spark.recommendations.recording.recommend.generate_recommendations')
@@ -375,6 +381,7 @@ class RecommendTestClass(RecommendationsTestCase):
         self.assertEqual(max_test, True)
 
     def test_create_messages(self):
+        params = self.get_recommendation_params()
         top_artist_rec_df = self.get_top_artist_rec_df()
         similar_artist_rec_df = self.get_similar_artist_rec_df()
         active_user_count = 10
@@ -382,8 +389,8 @@ class RecommendTestClass(RecommendationsTestCase):
         similar_artist_rec_user_count = 4
         total_time = 3600
 
-        data = recommend.create_messages(top_artist_rec_df, similar_artist_rec_df, active_user_count, total_time,
-                               top_artist_rec_user_count, similar_artist_rec_user_count)
+        data = recommend.create_messages(params, top_artist_rec_df, similar_artist_rec_df, active_user_count,
+                                         total_time, top_artist_rec_user_count, similar_artist_rec_user_count)
 
         self.assertEqual(next(data), {
             'user_id': 3,
@@ -399,7 +406,9 @@ class RecommendTestClass(RecommendationsTestCase):
                         'score': -0.8
                     }
                 ],
-                'similar_artist': []
+                'similar_artist': [],
+                'model_id': 'foobar',
+                'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
         })
 
@@ -418,7 +427,9 @@ class RecommendTestClass(RecommendationsTestCase):
                         'recording_mbid': "7acb406f-c716-45f8-a8bd-96ca3939c2e5",
                         'score': 0.19
                     }
-                ]
+                ],
+                'model_id': 'foobar',
+                'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
         })
 
@@ -436,7 +447,9 @@ class RecommendTestClass(RecommendationsTestCase):
                         'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                         'score': -2.8
                     }
-                ]
+                ],
+                'model_id': 'foobar',
+                'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
         })
 
@@ -459,12 +472,15 @@ class RecommendTestClass(RecommendationsTestCase):
     def get_recommendation_params(self):
         recordings_df = self.get_recordings_df()
         model = MagicMock()
+        model_id = "foobar"
+        model_html_file = "foobar.html"
         top_artist_candidate_set_df = self.get_candidate_set()
         similar_artist_candidate_set_df = self.get_candidate_set()
         recommendation_top_artist_limit = 2
         recommendation_similar_artist_limit = 1
 
-        params = recommend.RecommendationParams(recordings_df, model, top_artist_candidate_set_df,
+        params = recommend.RecommendationParams(recordings_df, model_id, model_html_file, model,
+                                                top_artist_candidate_set_df,
                                                 similar_artist_candidate_set_df,
                                                 recommendation_top_artist_limit,
                                                 recommendation_similar_artist_limit)
