@@ -219,6 +219,25 @@ def user_feed(user_name: str):
         count=count,
     )
 
+    hidden_events = db_user_timeline_event.get_hidden_timeline_events(user['id'], count)
+    hidden_events_pin = {}
+    hidden_events_recommendation = {}
+
+    for hidden_event in hidden_events:
+        if hidden_event.event_type.value == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
+            # hidden_events_recommendation.append(hidden_event)
+            hidden_events_recommendation[hidden_event.event_id] = hidden_event
+        else:
+            hidden_events_pin[hidden_event.event_id] = hidden_event
+
+    for i in range(len(recording_recommendation_events)):
+        if recording_recommendation_events[i].id in hidden_events_recommendation:
+            recording_recommendation_events[i].hidden = True
+
+    for i in range(len(recording_pin_events)):
+        if recording_pin_events[i].id in hidden_events_pin:
+            recording_pin_events[i].hidden = True
+
     # TODO: add playlist event and like event
     all_events = sorted(
         listen_events + follow_events + recording_recommendation_events + recording_pin_events + notification_events,
@@ -505,12 +524,6 @@ def get_recording_recommendation_events(user: dict, users_for_events: List[dict]
         count=count,
     )
 
-    hidden_recommendation_events_db = db_user_timeline_event.get_hidden_timeline_events(
-        user['id'],
-        UserTimelineEventType.RECORDING_RECOMMENDATION,
-        count
-    )
-
     events = []
     for event in recording_recommendation_events_db:
         try:
@@ -527,20 +540,13 @@ def get_recording_recommendation_events(user: dict, users_for_events: List[dict]
                 ),
             )
 
-            hidden = False
-
-            for hidden_event in hidden_recommendation_events_db:
-                if hidden_event.event_id == event.id:
-                    hidden = True
-                    hidden_recommendation_events_db.remove(hidden_event)
-
             events.append(APITimelineEvent(
                 id=event.id,
                 event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
                 user_name=listen.user_name,
                 created=event.created.timestamp(),
                 metadata=listen,
-                hidden=hidden,
+                hidden=False,
             ))
         except pydantic.ValidationError as e:
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)
@@ -560,11 +566,6 @@ def get_recording_pin_events(user: dict, users_for_events: List[dict], min_ts: i
     )
     recording_pin_events_db = fetch_track_metadata_for_items(recording_pin_events_db)
 
-    hidden_pin_events_db = db_user_timeline_event.get_hidden_timeline_events(
-        user['id'],
-        UserTimelineEventType.RECORDING_PIN,
-        count
-    )
     events = []
     for pin in recording_pin_events_db:
         try:
@@ -582,20 +583,13 @@ def get_recording_pin_events(user: dict, users_for_events: List[dict], min_ts: i
                 )
             )
             
-            hidden = False
-
-            for hidden_event in hidden_pin_events_db:
-                if hidden_event.event_id == pin.row_id:
-                    hidden = True
-                    hidden_recommendation_events_db.remove(hidden_event)
-
             events.append(APITimelineEvent(
                 id=pin.row_id,
                 event_type=UserTimelineEventType.RECORDING_PIN,
                 user_name=pinEvent.user_name,
                 created=pin.created.timestamp(),
                 metadata=pinEvent,
-                hidden=hidden,
+                hidden=False,
             ))
         except pydantic.ValidationError as e:
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)
