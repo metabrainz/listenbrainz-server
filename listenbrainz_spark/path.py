@@ -40,8 +40,8 @@ RECOMMENDATION_RECORDING_USERS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DI
 RECOMMENDATION_RECORDINGS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + \
     '/' + 'recordings_df.parquet'
 # Absolute path to processed data/listens ready to be trained for `recording` recommendations.
-RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + \
-    '/' + 'playcounts_df.parquet'
+RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + \
+    '/' + 'transformed_listencounts_df.parquet'
 # Absolute path to candidate sets used in `recording` recommendations.
 RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR,
                                                                  'top_artist',

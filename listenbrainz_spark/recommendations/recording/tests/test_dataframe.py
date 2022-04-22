@@ -7,7 +7,7 @@ import os
 import listenbrainz_spark
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, RECOMMENDATION_RECORDING_MAPPED_LISTENS, \
     RECOMMENDATION_RECORDINGS_DATAFRAME, RECOMMENDATION_RECORDING_USERS_DATAFRAME, \
-    RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME, RECOMMENDATION_RECORDING_DATAFRAME_METADATA
+    RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME, RECOMMENDATION_RECORDING_DATAFRAME_METADATA
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
 from listenbrainz_spark.tests import TEST_DATA_PATH
 from listenbrainz_spark.recommendations.recording import create_dataframes
@@ -62,11 +62,11 @@ class CreateDataframeTestCase(RecommendationsTestCase):
         recordings_df = create_dataframes.get_recordings_df(mapped_listens, {}, RECOMMENDATION_RECORDINGS_DATAFRAME)
         listens_df = create_dataframes.get_listens_df(mapped_listens, {})
 
-        create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, metadata, RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
-        playcounts_df = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
+        create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, metadata, RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME)
+        playcounts_df = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME)
         self.assertEqual(playcounts_df.count(), 20)
 
-        self.assertListEqual(['spark_user_id', 'recording_id', 'count'], playcounts_df.columns)
+        self.assertListEqual(['spark_user_id', 'recording_id', 'playcount', 'transformed_listencount'], playcounts_df.columns)
         self.assertEqual(metadata['playcounts_count'], 20)
 
     def test_save_dataframe_metadata_to_HDFS(self):
