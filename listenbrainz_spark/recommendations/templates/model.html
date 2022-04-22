@@ -11,7 +11,7 @@
 	<center>
 		<h2>Data preprocessing and model training</h2>
 	</center>
-	<p>Sparks's inbuilt function to train a model takes an RDD of 'implicit preferences' given by users to some products, in the form of (userID (Int), productID (Int), preference (Double)) pairs. Here userID ~ user_id, productID ~ recording_id and preference ~ count as represented by rows in playcounts dataframe.</p>
+	<p>Sparks's inbuilt function to train a model takes an RDD of 'implicit preferences' given by users to some products, in the form of (userID (Int), productID (Int), preference (Double)) pairs. Here userID ~ user_id, productID ~ recording_id and preference ~ transformed count as represented by rows in playcounts dataframe.</p>
 	<p>Playcounts dataframe is loaded from HDFS in <b>{{ time.load_playcounts }}m</b> and is converetd to an RDD and each row is mapped to object of Rating class using <blockquote>Rating(user_id, recording_id, count)</blockquote></p>
 	<p>Playcounts dataframe is of the form:</p>
 	<table>
@@ -19,11 +19,14 @@
 	<col width="80">
 	<col width="80">
 		<tr>
-			<th>user_id</th>
-			<th>recording_id</th>
-			<th>count</th>
+            <th>user_id</th>
+            <th>recording_id</th>
+            <th>playcount</th>
+            <th>transformed_listencount</th>
 		</tr>
 	</table>
+    <p>Here, playcount is the actual listen count whereas the transformed_listencount was calculated by applying the following function on playcounts.</p>
+    <p><b>{{ listencount_transformer_description }}</b></p>
 	<p>Preprocessing of playcounts dataframe takes <b>{{ time.preprocessing }}m</b>. Of the preprocessed data, approx. 66% ({{ num_training }}) listens have been used as training data, 17% ({{ num_validation }}) listens have been used as validation data and 17% ({{ num_test }}) listens have been used as test data. After preprocessing, training phase starts. From the models trained, the best one is selected to generate recommendations.</p>
 	<p>Of all the trained models, the model with the least RMSE value is choosen to generate recommendations. The model will be referred to as <b>"best model"</b>.</p>
 

@@ -1,8 +1,8 @@
 """
 This script is responsible for training models and saving the best model to HDFS. The general flow is as follows:
 
-playcounts_df is loaded from HDFS and is split into training_data, validation_data and test_data. The dataframe is converted
-to an RDD and each row is converted to a Rating(row['spark_user_id'], row['recording_id'], row['count']) object.
+transformed_listencounts_df is loaded from HDFS and is split into training_data, validation_data and test_data. The dataframe is converted
+to an RDD and each row is converted to a Rating(row['spark_user_id'], row['recording_id'], row['transformed_listencount']) object.
 
 Eight models are trained using the training_data RDD. Each model uses a different value of `rank`, `lambda` and `iteration`.
 Refer to https://spark.apache.org/docs/2.2.0/ml-collaborative-filtering.html to know more about these params.
@@ -28,6 +28,7 @@ from py4j.protocol import Py4JJavaError
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark import config, utils, path, schema
+from listenbrainz_spark.recommendations.recording.create_dataframes import describe_listencount_transformer
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            PathNotFoundException,
@@ -55,7 +56,7 @@ def parse_dataset(row):
         Args:
             row: An RDD row or element.
     """
-    return Rating(row['spark_user_id'], row['recording_id'], row['count'])
+    return Rating(row['spark_user_id'], row['recording_id'], row['transformed_listencount'])
 
 
 def compute_rmse(model, data, n, model_id):
@@ -79,11 +80,11 @@ def compute_rmse(model, data, n, model_id):
         raise
 
 
-def preprocess_data(playcounts_df):
+def preprocess_data(transformed_listencounts_df):
     """ Convert and split the dataframe into three RDDs; training data, validation data, test data.
 
         Args:
-            playcounts_df: Dataframe containing play(listen) counts of users.
+            transformed_listencounts_df: Dataframe containing transformed listen counts of users.
 
         Returns:
             training_data (rdd): Used for training.
@@ -91,7 +92,7 @@ def preprocess_data(playcounts_df):
             test_data (rdd): Used for testing.
     """
     logger.info('Splitting dataframe...')
-    training_data, validation_data, test_data = playcounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
+    training_data, validation_data, test_data = transformed_listencounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
     return training_data, validation_data, test_data
 
 
@@ -308,7 +309,8 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
         'models' : model_metadata,
         'best_model' : best_model_metadata,
         'models_training_time' : models_training_time,
-        'total_time' : '{:.2f}'.format((time.monotonic() - ti) / 3600)
+        'total_time' : '{:.2f}'.format((time.monotonic() - ti) / 3600),
+        'listencount_transformer_description': describe_listencount_transformer()
     }
     save_html(best_model_metadata['model_html_file'], context, 'model.html')
 
@@ -342,7 +344,7 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None):
     listenbrainz_spark.context.setCheckpointDir(config.HDFS_CLUSTER_URI + path.CHECKPOINT_DIR)
 
     try:
-        playcounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
+        transformed_listencounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME)
         dataframe_metadata_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
     except PathNotFoundException as err:
         logger.error('{}\nConsider running create_dataframes.py'.format(str(err)), exc_info=True)
@@ -354,7 +356,7 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None):
     time_['load_playcounts'] = '{:.2f}'.format((time.monotonic() - ti) / 60)
 
     t0 = time.monotonic()
-    training_data, validation_data, test_data = preprocess_data(playcounts_df)
+    training_data, validation_data, test_data = preprocess_data(transformed_listencounts_df)
     time_['preprocessing'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
     # An action must be called for persist to evaluate.
