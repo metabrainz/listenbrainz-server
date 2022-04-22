@@ -62,7 +62,7 @@ def get_most_recent_model_meta():
         SELECT model_id, model_html_file
           FROM model_metadata
       ORDER BY model_created DESC
-         LIMIT 1 
+         LIMIT 1
     """).collect()[0]
     return meta.model_id, meta.model_html_file
 
@@ -269,10 +269,11 @@ def create_messages(params, top_artist_rec_mbid_df, similar_artist_rec_mbid_df, 
     """ Create messages to send the data to the webserver via RabbitMQ.
 
         Args:
+            params: recommendation params to get model id and model url from
             top_artist_rec_mbid_df (dataframe): Top artist recommendations.
             similar_artist_rec_mbid_df (dataframe): Similar artist recommendations.
             active_user_count (int): Number of users active in the last week.
-            total_time (str): Time taken in exceuting the whole script.
+            total_time (float): Time taken in exceuting the whole script.
             top_artist_rec_user_count (int): Number of users for whom top artist recommendations were generated.
             similar_artist_rec_user_count (int): Number of users for whom similar artist recommendations were generated.
 
