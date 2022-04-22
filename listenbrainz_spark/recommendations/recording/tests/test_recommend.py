@@ -279,8 +279,9 @@ class RecommendTestClass(RecommendationsTestCase):
         model_metadata = df_1.union(df_2)
         utils.save_parquet(model_metadata, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
 
-        expected_model_id = recommend.get_most_recent_model_meta()
-        self.assertEqual(expected_model_id, model_id_2)
+        expected_model_meta = recommend.get_most_recent_model_meta()
+        self.assertEqual(expected_model_meta[0], model_id_2)
+        self.assertEqual(expected_model_meta[1], f"{model_id_2}.html")
 
     @patch('listenbrainz_spark.recommendations.recording.recommend.get_candidate_set_rdd_for_user')
     @patch('listenbrainz_spark.recommendations.recording.recommend.generate_recommendations')
@@ -407,7 +408,7 @@ class RecommendTestClass(RecommendationsTestCase):
                 ],
                 'similar_artist': [],
                 'model_id': 'foobar',
-                'model_html_file': 'foobar.html'
+                'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
         })
 
@@ -428,7 +429,7 @@ class RecommendTestClass(RecommendationsTestCase):
                     }
                 ],
                 'model_id': 'foobar',
-                'model_html_file': 'foobar.html'
+                'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
         })
 
@@ -448,7 +449,7 @@ class RecommendTestClass(RecommendationsTestCase):
                     }
                 ],
                 'model_id': 'foobar',
-                'model_html_file': 'foobar.html'
+                'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
         })
 
