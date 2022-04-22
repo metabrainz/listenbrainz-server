@@ -283,7 +283,7 @@ def create_playlist():
 
     # filter description
     description = data["playlist"].get("annotation", None)
-    if description is not None:
+    if description is not None and user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
         description = _filter_description_html(description)
 
     # Check to see if the submitted playlist has algorithm_metadata defined and the current user an approved
