@@ -1,8 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
+exports[`ListenCountCard renders 'You' when on current user's page 1`] = `
 <ListenCountCard
   listenCount={100}
+  user={
+    Object {
+      "id": 2,
+      "name": "iliekcomputers",
+    }
+  }
 >
   <ForwardRef
     id="listen-count-card"
@@ -27,8 +33,48 @@ exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
 </ListenCountCard>
 `;
 
+exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
+<ListenCountCard
+  listenCount={100}
+  user={
+    Object {
+      "id": 1,
+      "name": "track_listener",
+    }
+  }
+>
+  <ForwardRef
+    id="listen-count-card"
+  >
+    <div
+      className="card "
+      id="listen-count-card"
+    >
+      <div>
+        track_listener has listened to
+        <hr />
+        100
+        <br />
+        <small
+          className="text-muted"
+        >
+          songs so far
+        </small>
+      </div>
+    </div>
+  </ForwardRef>
+</ListenCountCard>
+`;
+
 exports[`ListenCountCard renders correctly when listen count is zero or undefined 1`] = `
-<ListenCountCard>
+<ListenCountCard
+  user={
+    Object {
+      "id": 1,
+      "name": "track_listener",
+    }
+  }
+>
   <ForwardRef
     id="listen-count-card"
   >
@@ -37,8 +83,41 @@ exports[`ListenCountCard renders correctly when listen count is zero or undefine
       id="listen-count-card"
     >
       <p>
-        You have not listened to any songs so far
+        track_listener has not listened to any songs so far
       </p>
+    </div>
+  </ForwardRef>
+</ListenCountCard>
+`;
+
+exports[`ListenCountCard renders user's name instead of 'You' when visiting another user's page 1`] = `
+<ListenCountCard
+  listenCount={100}
+  user={
+    Object {
+      "id": 1,
+      "name": "track_listener",
+    }
+  }
+>
+  <ForwardRef
+    id="listen-count-card"
+  >
+    <div
+      className="card "
+      id="listen-count-card"
+    >
+      <div>
+        track_listener has listened to
+        <hr />
+        100
+        <br />
+        <small
+          className="text-muted"
+        >
+          songs so far
+        </small>
+      </div>
     </div>
   </ForwardRef>
 </ListenCountCard>
