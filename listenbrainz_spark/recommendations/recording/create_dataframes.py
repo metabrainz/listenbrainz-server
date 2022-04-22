@@ -31,6 +31,8 @@ import logging
 import time
 from datetime import datetime
 from collections import defaultdict
+
+import pyspark.sql
 from pydantic import ValidationError
 
 import listenbrainz_spark
@@ -150,8 +152,17 @@ def get_data_missing_from_musicbrainz(listens_df):
     return missing_musicbrainz_data_itr
 
 
+def describe_listencount_transformer():
+    """ Returns a human-readable description of the algorithm used to transform listen counts"""
+    return "No transformation applied to listen counts"
+
+
 def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path):
-    """ Prepare and save playcounts dataframe.
+    """ Save final dataframe of aggregated listen counts and transformed listen counts.
+
+    First calculate listen counts of a user per recording, then apply a transformation on the
+    listen count for tuning algorithms. For instance, The transformed listen counts will be passed
+    to spark ALS algorithm as ratings which will use it to calculate confidence values.
 
         Args:
             listens_df (dataframe): Dataframe containing recording_mbids corresponding to a user.
@@ -159,19 +170,21 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
                                        mbids and names.
             users_df (dataframe): Dataframe containing user names and user ids.
             metadata (dict): metadata dataframe to append.
-            save_path (str): path where playcounts_df should be saved.
+            save_path: path where playcounts_df should be saved.
     """
     # listens_df is joined with users_df on user_id.
     # The output is then joined with recording_df on recording_mbid.
-    # The final step uses groupBy which create groups on spark_user_id and recording_id and counts the number of recording_ids.
-    # The final dataframe tells us about the number of times a user has listend to a particular track for all users.
+    # The next step uses groupBy which create groups on spark_user_id and recording_id and counts the number of recording_ids.
+    # This dataframe tells us about the number of times a user has listend to a particular track for all users.
     playcounts_df = listens_df.join(users_df, 'user_id', 'inner') \
                               .join(recordings_df, 'recording_mbid', 'inner') \
                               .groupBy('spark_user_id', 'recording_id') \
-                              .agg(func.count('recording_id').alias('count'))
+                              .agg(func.count('recording_id').alias('playcount'))
+
+    transformed_listencounts = playcounts_df.withColumn("transformed_listencount", col("playcount"))
 
     metadata['playcounts_count'] = playcounts_df.count()
-    save_dataframe(playcounts_df, save_path)
+    save_dataframe(transformed_listencounts, save_path)
 
 
 def get_threshold_listens_df(mapped_listens_df, mapped_listens_path: str, threshold: int):
@@ -319,7 +332,7 @@ def calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold
     if job_type == "recommendation_recording":
         paths = {
             "mapped_listens": path.RECOMMENDATION_RECORDING_MAPPED_LISTENS,
-            "playcounts": path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME,
+            "playcounts": path.RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME,
             "recordings": path.RECOMMENDATION_RECORDINGS_DATAFRAME,
             "users": path.RECOMMENDATION_RECORDING_USERS_DATAFRAME,
             "metadata": path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA,

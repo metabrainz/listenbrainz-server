@@ -42,14 +42,15 @@ class RecommendationsTestCase(SparkNewTestCase):
             [
                 StructField("spark_user_id", IntegerType()),
                 StructField("recording_id", IntegerType()),
-                StructField("count", IntegerType())
+                StructField("playcount", IntegerType()),
+                StructField("transformed_listencount", IntegerType()),
             ]
         )
         test_playcounts = []
         for i in range(1, PLAYCOUNTS_COUNT // 2 + 1):
-            test_playcounts.append([1, 1, 1])
+            test_playcounts.append([1, 1, 1, 1])
         for i in range(PLAYCOUNTS_COUNT // 2 + 1, PLAYCOUNTS_COUNT + 1):
-            test_playcounts.append([2, 2, 1])
+            test_playcounts.append([2, 2, 1, 1])
         test_playcounts_df = listenbrainz_spark.session.createDataFrame(test_playcounts, schema=schema)
         utils.save_parquet(test_playcounts_df, TEST_PLAYCOUNTS_PATH)
 
