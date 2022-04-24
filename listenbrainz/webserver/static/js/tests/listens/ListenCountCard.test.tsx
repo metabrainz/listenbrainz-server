@@ -37,7 +37,11 @@ describe("ListenCountCard", () => {
         <ListenCountCard user={user} listenCount={100} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper).toMatchSnapshot();
+    const countCard = wrapper.find("#listen-count-card").first().children();
+    const cardDiv = countCard.children().first();
+    expect(cardDiv.html()).toEqual(
+      '<div>track_listener has listened to<hr>100<br><small class="text-muted">songs so far</small></div>'
+    );
   });
   it("renders 'You' when on current user's page", () => {
     const wrapper = mount(
@@ -45,6 +49,10 @@ describe("ListenCountCard", () => {
         <ListenCountCard user={loggedInUser} listenCount={100} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper).toMatchSnapshot();
+    const countCard = wrapper.find("#listen-count-card").first().children();
+    const cardDiv = countCard.children().first();
+    expect(cardDiv.html()).toEqual(
+      '<div>You have listened to<hr>100<br><small class="text-muted">songs so far</small></div>'
+    );
   });
 });

@@ -1,38 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ListenCountCard renders 'You' when on current user's page 1`] = `
-<ListenCountCard
-  listenCount={100}
-  user={
-    Object {
-      "id": 2,
-      "name": "iliekcomputers",
-    }
-  }
->
-  <ForwardRef
-    id="listen-count-card"
-  >
-    <div
-      className="card "
-      id="listen-count-card"
-    >
-      <div>
-        You have listened to
-        <hr />
-        100
-        <br />
-        <small
-          className="text-muted"
-        >
-          songs so far
-        </small>
-      </div>
-    </div>
-  </ForwardRef>
-</ListenCountCard>
-`;
-
 exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
 <ListenCountCard
   listenCount={100}
@@ -85,39 +52,6 @@ exports[`ListenCountCard renders correctly when listen count is zero or undefine
       <p>
         track_listener has not listened to any songs so far
       </p>
-    </div>
-  </ForwardRef>
-</ListenCountCard>
-`;
-
-exports[`ListenCountCard renders user's name instead of 'You' when visiting another user's page 1`] = `
-<ListenCountCard
-  listenCount={100}
-  user={
-    Object {
-      "id": 1,
-      "name": "track_listener",
-    }
-  }
->
-  <ForwardRef
-    id="listen-count-card"
-  >
-    <div
-      className="card "
-      id="listen-count-card"
-    >
-      <div>
-        track_listener has listened to
-        <hr />
-        100
-        <br />
-        <small
-          className="text-muted"
-        >
-          songs so far
-        </small>
-      </div>
     </div>
   </ForwardRef>
 </ListenCountCard>
