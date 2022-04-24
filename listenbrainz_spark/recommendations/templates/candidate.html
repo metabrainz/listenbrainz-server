@@ -3,25 +3,20 @@
 <head>
     <meta charset="utf-8"/>
     <title>Candidate Set</title>
-<style>
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-}
-
-td, th {
-  border: 1px solid #dddddd;
-  text-align: left;
-  padding: 8px;
-}
-</style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
 </head>
-<body>
+<body style="padding: 2em">
 	<center>
 		<h1>Data Preprocessing to generate recommendations</h1>
 	</center>
 	<p>To get personalized recommendations for users, candidate sets are generated for each user consisting of recording ids and the user id.</p>
-    <p>The candidate sets have been generated using listens from <b>{{ from_date }}</b> to <b>{{ to_date }}</b></p>
+    {% if from_date and to_date %}
+        <p>The candidate sets have been generated using listens from <b>{{ from_date }}</b> to <b>{{ to_date }}</b></p>
+    {% else %}
+        <p>The candidate sets have been generated using listens from entire listen data used for training.</p>
+    {% endif %}
     <p>Total time taken to generate candidates set for all users: <b>{{ total_time }}m</b></p>
 	{% for user_name, data in user_data.items() -%}
 	<p><center><h4>{{ user_name }}</h4></center></p>

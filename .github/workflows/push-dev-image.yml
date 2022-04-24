@@ -5,6 +5,10 @@ name: Push development image
 on:
   workflow_dispatch:
     inputs:
+      pr:
+        description: 'PR number (if set, ignores above ^)'
+        required: false
+        type: string
       tag:
         description: 'Docker Image Tag (Version)'
         required: true
@@ -17,7 +21,17 @@ jobs:
       runs-on: ubuntu-latest
 
       steps:
-      - uses: actions/checkout@v2
+      # Run only if we are deploying a branch or tag from this repo
+      - uses: actions/checkout@v3
+        # empty strings evaluate to 0
+        if: ${{ github.event.inputs.pr == 0}}
+        
+      # Run only if we are deploying a PR (may be in a forked repo)
+      - uses: actions/checkout@v3
+        if: ${{ github.event.inputs.pr != 0}}
+        with:
+          ref: ${{ format('refs/pull/{0}/head', github.event.inputs.pr) }}
+
 
       - name: Login to Docker Hub
         run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin

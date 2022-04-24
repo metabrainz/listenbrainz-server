@@ -226,10 +226,7 @@ def handle_recommendations(data):
     try:
         db_recommendations_cf_recording.insert_user_recommendation(
             user_id,
-            UserRecommendationsJson(**{
-                'top_artist': recommendations['top_artist'],
-                'similar_artist': recommendations['similar_artist']
-            })
+            UserRecommendationsJson(**recommendations)
         )
     except ValidationError:
         current_app.logger.error(f"""ValidationError while inserting recommendations for user with musicbrainz_id:

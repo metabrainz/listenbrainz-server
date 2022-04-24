@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timezone
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db.testing import DatabaseTestCase
@@ -43,6 +44,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
          overwrites existing one without crash. """
         # one time already saved in db by setup method
         # second time here
+        time_before_update = datetime.now(timezone.utc)
         db_oauth.save_token(
             user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
@@ -54,6 +56,11 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         )
         user = db_oauth.get_token(self.user['id'], ExternalServiceType.SPOTIFY)
         self.assertEqual(user['access_token'], 'new_token')
+        # also check that last_updated column is updated, if it is the last_updated in db
+        # will be >= than the one we saved just before the 2nd update. if its lesser, then
+        # the last updated in the db is still of 1st update and the 2nd update didn't update
+        # last_updated column
+        self.assertGreater(user['last_updated'], time_before_update)
 
     def test_update_token(self):
         db_oauth.update_token(

@@ -8,18 +8,15 @@ from listenbrainz.db import timescale as ts
 
 class MappingTestCase(TimescaleTestCase):
 
-    def insert_recording_in_mapping(self, recording):
+    def insert_recording_in_mapping(self, recording, match_type):
         with ts.engine.connect() as connection:
-            if recording["recording_mbid"]:
+            if match_type == "exact_match":
                 connection.execute(text("""
                     INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
                                                        artist_mbids, artist_credit_name, recording_name)
                      VALUES (:artist_credit_id, :recording_mbid ::UUID, :release_mbid ::UUID, :release,
                              :artist_mbids ::UUID[], :artist, :title)
                 """), **recording)
-                match_type = "exact_match"
-            else:
-                match_type = "no_match"
 
             connection.execute(
                 text("""
@@ -63,6 +60,10 @@ class MappingTestCase(TimescaleTestCase):
                 "artist_mbids": ["b7ffd2af-418f-4be2-bdd1-22f8b48613da"],
                 "artist": "Nine Inch Nails",
                 "title": "The Warning"
+            },
+            {
+                "artist": "Thanks for the Advice",
+                "title": "Repairs"
             }
         ]
         submitted = messybrainz.insert_all_in_transaction(recordings)
@@ -74,11 +75,22 @@ class MappingTestCase(TimescaleTestCase):
             "release": None,
             "artist_mbids": None,
         })
-        for recording, submission in zip(recordings, submitted):
-            recording["recording_msid"] = submission["ids"]["recording_msid"]
-            self.insert_recording_in_mapping(recording)
+        recordings[4].update(**{
+            "artist_credit_id": None,
+            "recording_mbid": None,
+            "release_mbid": None,
+            "release": None,
+            "artist_mbids": None,
+        })
+        for idx in range(5):
+            recordings[idx]["recording_msid"] = submitted[idx]["ids"]["recording_msid"]
+            if idx == 2 or idx == 4:
+                match_type = "no_match"
+            else:
+                match_type = "exact_match"
+            self.insert_recording_in_mapping(recordings[idx], match_type)
             # artist_credit_id is not retrieved, remove from dict after submitting
-            del recording["artist_credit_id"]
+            del recordings[idx]["artist_credit_id"]
         return recordings
 
     def test_load_recordings_from_mapping(self):
@@ -107,16 +119,20 @@ class MappingTestCase(TimescaleTestCase):
             MsidMbidModel(recording_msid=recordings[2]["recording_msid"], recording_mbid=None),
             # this recording tests loading mapping metadata from msid but no mbid
             # (we actually have a mapped mbid in the corresponding recording but omit it here for testing this case)
-            MsidMbidModel(recording_msid=recordings[3]["recording_msid"], recording_mbid=None)
+            MsidMbidModel(recording_msid=recordings[3]["recording_msid"], recording_mbid=None),
+            # test the case where user submitted a mbid for the item but its absent from mbid_mapping
+            MsidMbidModel(recording_msid=recordings[4]["recording_msid"], recording_mbid="0f53fa2f-f015-40c6-a5cd-f17af596764c")
+
         ]
         models = fetch_track_metadata_for_items(models)
 
-        for model, recording in zip(models, recordings):
-            metadata = model.track_metadata
+        for idx in range(5):
+            metadata = models[idx].track_metadata
+            recording = recordings[idx]
             self.assertEqual(metadata["track_name"], recording["title"])
             self.assertEqual(metadata["artist_name"], recording["artist"])
 
-            if recording["recording_mbid"] is None:  # 3rd recording which only present in MsB
+            if idx == 2 or idx == 4:  # these recordings are only present in MsB
                 continue
 
             self.assertEqual(metadata["release_name"], recording["release"])

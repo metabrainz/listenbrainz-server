@@ -144,7 +144,9 @@ def create_user_notification_event(user_name):
     if "message" not in data:
         raise APIBadRequest("Invalid metadata: message is missing")
 
-    message = _filter_description_html(data["message"])
+    # Not filtering html in the message because only approved users can use this endpoint.
+    # if this changes in the future, add back html cleanup here.
+    message = data["message"]
     metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
 
     try:
@@ -591,7 +593,7 @@ def get_recording_pin_events(user: dict, users_for_events: List[dict], min_ts: i
                 metadata=pinEvent,
                 hidden=False,
             ))
-        except pydantic.ValidationError as e:
-            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+        except (pydantic.ValidationError, TypeError, KeyError):
+            current_app.logger.error("Could not convert pinned recording to feed event", exc_info=True)
             continue
     return events

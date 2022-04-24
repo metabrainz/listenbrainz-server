@@ -9,6 +9,8 @@ import {
   preciseTimestamp,
   getListenablePin,
   pinnedRecordingToListen,
+  getArtistName,
+  getTrackName,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
@@ -97,7 +99,9 @@ export default class PinnedRecordingCard extends React.Component<
           newAlert(
             "success",
             `You unpinned a recording.`,
-            `${pinnedRecording.track_metadata.artist_name} - ${pinnedRecording.track_metadata.track_name}`
+            `${getArtistName(pinnedRecording)} - ${getTrackName(
+              pinnedRecording
+            )}`
           );
         }
       } catch (error) {

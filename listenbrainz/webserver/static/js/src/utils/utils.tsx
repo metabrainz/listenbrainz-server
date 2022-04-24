@@ -134,8 +134,15 @@ const getReleaseGroupMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.release_group_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.release_group_mbid");
 
+const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
+  _.get(listen, "track_metadata.track_name", "") || _.get(listen, "title", "");
+
+const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
+  _.get(listen, "track_metadata.artist_name", "") ||
+  _.get(listen, "creator", "");
+
 const getArtistLink = (listen: Listen) => {
-  const artistName = _.get(listen, "track_metadata.artist_name");
+  const artistName = getArtistName(listen);
   const artistMbids = getArtistMBIDs(listen);
   const firstArtist = _.first(artistMbids);
   if (firstArtist) {
@@ -153,7 +160,7 @@ const getArtistLink = (listen: Listen) => {
 };
 
 const getTrackLink = (listen: Listen): JSX.Element | string => {
-  const trackName = _.get(listen, "track_metadata.track_name");
+  const trackName = getTrackName(listen);
   const recordingMbid = getRecordingMBID(listen);
 
   if (recordingMbid) {
@@ -493,6 +500,8 @@ export {
   getReleaseMBID,
   getReleaseGroupMBID,
   getArtistMBIDs,
+  getArtistName,
+  getTrackName,
   pinnedRecordingToListen,
   getAlbumArtFromListenMetadata,
 };
