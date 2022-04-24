@@ -1,8 +1,8 @@
 """
 This script is responsible for training models and saving the best model to HDFS. The general flow is as follows:
 
-playcounts_df is loaded from HDFS and is split into training_data, validation_data and test_data. The dataframe is converted
-to an RDD and each row is converted to a Rating(row['spark_user_id'], row['recording_id'], row['count']) object.
+transformed_listencounts_df is loaded from HDFS and is split into training_data, validation_data and test_data. The dataframe is converted
+to an RDD and each row is converted to a Rating(row['spark_user_id'], row['recording_id'], row['transformed_listencount']) object.
 
 Eight models are trained using the training_data RDD. Each model uses a different value of `rank`, `lambda` and `iteration`.
 Refer to https://spark.apache.org/docs/2.2.0/ml-collaborative-filtering.html to know more about these params.
@@ -28,6 +28,7 @@ from py4j.protocol import Py4JJavaError
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark import config, utils, path, schema
+from listenbrainz_spark.recommendations.recording.create_dataframes import describe_listencount_transformer
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            PathNotFoundException,
@@ -43,7 +44,7 @@ from pyspark.sql import Row
 from pyspark.mllib.recommendation import ALS, Rating
 
 logger = logging.getLogger(__name__)
-Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration model_id training_time rmse_time, alpha')
+Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration alpha model_id training_time rmse_time')
 
 # training HTML is generated if set to true
 SAVE_TRAINING_HTML = True
@@ -55,7 +56,7 @@ def parse_dataset(row):
         Args:
             row: An RDD row or element.
     """
-    return Rating(row['spark_user_id'], row['recording_id'], row['count'])
+    return Rating(row['spark_user_id'], row['recording_id'], row['transformed_listencount'])
 
 
 def compute_rmse(model, data, n, model_id):
@@ -79,11 +80,11 @@ def compute_rmse(model, data, n, model_id):
         raise
 
 
-def preprocess_data(playcounts_df):
+def preprocess_data(transformed_listencounts_df):
     """ Convert and split the dataframe into three RDDs; training data, validation data, test data.
 
         Args:
-            playcounts_df: Dataframe containing play(listen) counts of users.
+            transformed_listencounts_df: Dataframe containing transformed listen counts of users.
 
         Returns:
             training_data (rdd): Used for training.
@@ -91,7 +92,7 @@ def preprocess_data(playcounts_df):
             test_data (rdd): Used for testing.
     """
     logger.info('Splitting dataframe...')
-    training_data, validation_data, test_data = playcounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
+    training_data, validation_data, test_data = transformed_listencounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
     return training_data, validation_data, test_data
 
 
@@ -151,6 +152,7 @@ def get_best_model_metadata(best_model):
         'rmse_time': best_model.rmse_time,
         'training_time': best_model.training_time,
         'validation_rmse': best_model.validation_rmse,
+        'model_html_file': f"Model-{datetime.utcnow().strftime('%Y-%m-%d-%H:%M')}-{uuid.uuid4()}.html"
     }
 
 
@@ -202,6 +204,7 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
 
         t0 = time.monotonic()
         logger.info("Training model with model id: {}".format(model_id))
+        logger.info("Params: Rank - %d, Lambda - %d, Iterations - %d, Alpha - %f", rank, lmbda, iteration, alpha)
         model = train(training_data, rank, iteration, lmbda, alpha, model_id)
         logger.info("Model trained!")
         mt = '{:.2f}'.format((time.monotonic() - t0) / 60)
@@ -212,7 +215,7 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
         logger.info("Validation RMSE calculated!")
         vt = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
-        model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, round(validation_rmse, 2), vt))
+        model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, alpha, round(validation_rmse, 2), vt))
 
         if best_model is None or validation_rmse < best_model.validation_rmse:
             best_model = Model(
@@ -221,10 +224,10 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
                 rank=rank,
                 lmbda=lmbda,
                 iteration=iteration,
+                alpha=alpha,
                 model_id=model_id,
                 training_time=mt,
                 rmse_time=vt,
-                alpha=alpha,
             )
 
     return best_model, model_metadata
@@ -298,8 +301,6 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
             ti (str): Value of the monotonic clock when the script was run.
             models_training_data (str): Time taken to train all the models.
     """
-    date = datetime.utcnow().strftime('%Y-%m-%d')
-    model_html = 'Model-{}-{}.html'.format(uuid.uuid4(), date)
     context = {
         'time' : time_,
         'num_training' : '{:,}'.format(num_training),
@@ -308,17 +309,16 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
         'models' : model_metadata,
         'best_model' : best_model_metadata,
         'models_training_time' : models_training_time,
-        'total_time' : '{:.2f}'.format((time.monotonic() - ti) / 3600)
+        'total_time' : '{:.2f}'.format((time.monotonic() - ti) / 3600),
+        'listencount_transformer_description': describe_listencount_transformer()
     }
-    save_html(model_html, context, 'model.html')
+    save_html(best_model_metadata['model_html_file'], context, 'model.html')
 
 
-
-def main(ranks=None, lambdas=None, iterations=None, alpha=None):
+def main(ranks=None, lambdas=None, iterations=None, alphas=None):
 
     if ranks is None:
         logger.critical('model param "ranks" missing')
-
 
     if lambdas is None:
         logger.critical('model param "lambdas" missing')
@@ -328,8 +328,8 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         logger.critical('model param "iterations" missing')
         raise
 
-    if alpha is None:
-        logger.critical('model param "alpha" missing')
+    if alphas is None:
+        logger.critical('model param "alphas" missing')
         raise
 
     ti = time.monotonic()
@@ -344,7 +344,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     listenbrainz_spark.context.setCheckpointDir(config.HDFS_CLUSTER_URI + path.CHECKPOINT_DIR)
 
     try:
-        playcounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
+        transformed_listencounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME)
         dataframe_metadata_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
     except PathNotFoundException as err:
         logger.error('{}\nConsider running create_dataframes.py'.format(str(err)), exc_info=True)
@@ -356,7 +356,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     time_['load_playcounts'] = '{:.2f}'.format((time.monotonic() - ti) / 60)
 
     t0 = time.monotonic()
-    training_data, validation_data, test_data = preprocess_data(playcounts_df)
+    training_data, validation_data, test_data = preprocess_data(transformed_listencounts_df)
     time_['preprocessing'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
     # An action must be called for persist to evaluate.
@@ -366,7 +366,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
 
     t0 = time.monotonic()
     best_model, model_metadata = get_best_model(training_data, validation_data, num_validation, ranks,
-                                                lambdas, iterations, alpha)
+                                                lambdas, iterations, alphas)
     models_training_time = '{:.2f}'.format((time.monotonic() - t0) / 3600)
 
     best_model_metadata = get_best_model_metadata(best_model)
@@ -383,6 +383,8 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     t0 = time.monotonic()
     save_model(best_model.model_id, best_model.model)
     time_['save_model'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
+
+    logger.info("Best model params: %s", best_model_metadata)
 
     save_model_metadata_to_hdfs(best_model_metadata)
     # Delete checkpoint dir as saved lineages would eat up space, we won't be using them anyway.

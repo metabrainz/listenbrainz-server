@@ -244,7 +244,7 @@ def parse_list(ctx, args):
 @click.option("--rank", callback=parse_list, default=[100, 120], type=int, multiple=True, help="Number of hidden features")
 @click.option("--itr", callback=parse_list, default=[5, 10], type=int, multiple=True, help="Number of iterations to run.")
 @click.option("--lmbda", callback=parse_list, default=[0.1, 10.0], type=float, multiple=True, help="Controls over fitting.")
-@click.option("--alpha", callback=parse_list, default=[3.0], type=float, help="Baseline level of confidence weighting applied.")
+@click.option("--alpha", callback=parse_list, default=[3.0], type=float, multiple=True, help="Baseline level of confidence weighting applied.")
 def request_model(rank, itr, lmbda, alpha):
     """ Send the cluster a request to train the model.
 
@@ -254,14 +254,14 @@ def request_model(rank, itr, lmbda, alpha):
         'ranks': rank,
         'lambdas': lmbda,
         'iterations': itr,
-        'alpha': alpha,
+        'alphas': alpha,
     }
 
     send_request_to_spark_cluster('cf.recommendations.recording.train_model', **params)
 
 
 @cli.command(name='request_candidate_sets')
-@click.option("--days", type=int, default=7, help="Request recommendations to be generated on history of given number of days")
+@click.option("--days", type=int, required=False, help="Request recommendations to be generated on history of given number of days")
 @click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
 @click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
 @click.option("--html", is_flag=True, default=False, help='Enable/disable HTML file generation')
@@ -271,7 +271,7 @@ def request_candidate_sets(days, top, similar, users, html):
     """ Send the cluster a request to generate candidate sets.
     """
     params = {
-        'recommendation_generation_window': days,
+        "recommendation_generation_window": days,
         "top_artist_limit": top,
         "similar_artist_limit": similar,
         "users": users,

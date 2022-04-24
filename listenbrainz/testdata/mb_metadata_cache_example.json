@@ -1,0 +1,154 @@
+{
+   "e97f805a-ab48-4c52-855e-07049142113d" : {
+      "tag" : {
+         "recording" : [
+            {
+               "genre_mbid" : "45eb1d9c-588c-4dc8-9394-a14b7c8f02bc",
+               "tag" : "trip hop",
+               "count" : 6
+            },
+            {
+               "count" : 1,
+               "tag" : "pop",
+               "genre_mbid" : "911c7bbb-172d-4df8-9478-dbff4296e791"
+            },
+            {
+               "count" : 1,
+               "genre_mbid" : "608b0471-7531-4854-a348-e698c69cb699",
+               "tag" : "ambient"
+            },
+            {
+               "count" : 3,
+               "tag" : "trip-hop"
+            },
+            {
+               "count" : 1,
+               "genre_mbid" : "cc38aba3-48ed-439a-83b9-f81a34a66598",
+               "tag" : "downtempo"
+            },
+            {
+               "count" : 3,
+               "genre_mbid" : "89255676-1f14-4dd8-bbad-fca839d6aff4",
+               "tag" : "electronic"
+            },
+            {
+               "genre_mbid" : "b7864789-29e6-4965-84e4-463baaa869df",
+               "tag" : "chanson française",
+               "count" : 1
+            },
+            {
+               "genre_mbid" : "7dc2b20f-3953-4874-b9bf-41b8ba06d20c",
+               "tag" : "acid jazz",
+               "count" : 1
+            }
+         ],
+         "artist" : [
+            {
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "tag" : "uk",
+               "count" : 1
+            },
+            {
+               "genre_mbid" : "ba318056-9ddf-46cd-8b95-61fc993b962d",
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "tag" : "krautrock",
+               "count" : 2
+            },
+            {
+               "count" : 4,
+               "tag" : "electronic",
+               "genre_mbid" : "89255676-1f14-4dd8-bbad-fca839d6aff4",
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+            },
+            {
+               "count" : 2,
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "genre_mbid" : "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7",
+               "tag" : "experimental rock"
+            },
+            {
+               "genre_mbid" : "ec5a14c7-7793-46dc-b858-470183eb63f7",
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "tag" : "folktronica",
+               "count" : 1
+            },
+            {
+               "count" : 8,
+               "tag" : "trip hop",
+               "genre_mbid" : "45eb1d9c-588c-4dc8-9394-a14b7c8f02bc",
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+            },
+            {
+               "count" : 3,
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "tag" : "british"
+            },
+            {
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "genre_mbid" : "cc38aba3-48ed-439a-83b9-f81a34a66598",
+               "tag" : "downtempo",
+               "count" : 5
+            },
+            {
+               "tag" : "trip-hop",
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "count" : 8
+            },
+            {
+               "count" : 1,
+               "tag" : "electro-industrial",
+               "artist_mbid" : "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "genre_mbid" : "6e2e809f-8c54-4e0f-aca0-0642771ab3cf"
+            }
+         ]
+      },
+      "recording" : {
+         "rels" : [
+            {
+               "artist_name" : "Beth Gibbons",
+               "instrument" : null,
+               "artist_mbid" : "5adcb9d9-5ea2-428d-af46-ef626966e106",
+               "type" : "vocal"
+            },
+            {
+               "artist_mbid" : "5082a11f-7203-4ff3-ae04-2a0150d3bbb6",
+               "type" : "instrument",
+               "instrument" : "Rhodes piano",
+               "artist_name" : "Geoff Barrow"
+            },
+            {
+               "type" : "instrument",
+               "artist_mbid" : "619b1116-740e-42e0-bdfe-96af274f79f7",
+               "instrument" : "guitar",
+               "artist_name" : "Adrian Utley"
+            },
+            {
+               "artist_name" : "Clive Deamer",
+               "instrument" : "drums (drum set)",
+               "type" : "instrument",
+               "artist_mbid" : "d576e6be-03d1-489c-8c3e-692c6fbfb7ca"
+            }
+         ]
+      },
+      "release" : {
+         "caa_id" : 829521842,
+         "mbid" : "76df3287-6cda-33eb-8e9a-044b5e15ffdd"
+      },
+      "artist" : [
+         {
+            "rels" : {
+               "official homepage" : "http://www.portishead.co.uk/",
+               "youtube" : "https://www.youtube.com/channel/UC243a5RnwmItLvwhl0YOxbg",
+               "purchase for download" : "https://itunes.apple.com/us/artist/id853090",
+               "wikidata" : "https://www.wikidata.org/wiki/Q191352",
+               "free streaming" : "https://open.spotify.com/artist/6liAMWkVf5LH7YR9yfFy1Y",
+               "social network" : "https://www.facebook.com/portishead",
+               "lyrics" : "https://muzikum.eu/en/122-6105/portishead/lyrics.html"
+            },
+            "begin_year" : 1991,
+            "area" : "United Kingdom",
+            "type" : "Group"
+         }
+      ]
+   }
+}

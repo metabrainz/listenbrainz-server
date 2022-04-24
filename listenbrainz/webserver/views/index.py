@@ -90,6 +90,11 @@ def about():
     return render_template("index/about.html")
 
 
+@index_bp.route("/terms-of-service/")
+def terms_of_service():
+    return render_template("index/terms-of-service.html")
+
+
 @index_bp.route("/current-status/")
 @web_listenstore_needed
 def current_status():

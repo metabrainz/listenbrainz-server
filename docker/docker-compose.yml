@@ -115,5 +115,5 @@ services:
 # TODO: re-comment these before merging this code
 #networks:
 #  default:
-#    name: musicbrainzdocker_default
+#    name: musicbrainz-docker_default
 #    external: true

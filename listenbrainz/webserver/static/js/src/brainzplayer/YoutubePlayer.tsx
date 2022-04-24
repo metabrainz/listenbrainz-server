@@ -1,14 +1,23 @@
 import * as React from "react";
+
 import YouTube, { Options } from "react-youtube";
 import {
-  isEqual as _isEqual,
   get as _get,
+  isEqual as _isEqual,
+  isFunction as _isFunction,
   isNil as _isNil,
   isString as _isString,
-  isFunction as _isFunction,
 } from "lodash";
-import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
-import { searchForYoutubeTrack } from "../utils/utils";
+
+import Draggable from "react-draggable";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowsAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  getArtistName,
+  getTrackName,
+  searchForYoutubeTrack,
+} from "../utils/utils";
+import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 type YoutubePlayerState = {
   currentListen?: Listen;
@@ -137,7 +146,7 @@ export default class YoutubePlayer
     } else {
       // Fallback to track name from the listen we are playing
       const { currentListen } = this.state;
-      title = currentListen?.track_metadata.track_name ?? "";
+      title = getTrackName(currentListen);
     }
     onTrackInfoChange(
       title,
@@ -223,10 +232,8 @@ export default class YoutubePlayer
   };
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack) => {
-    const trackName =
-      _get(listen, "track_metadata.track_name") || _get(listen, "title");
-    const artistName =
-      _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
+    const trackName = getTrackName(listen);
+    const artistName = getArtistName(listen);
     // Using the releaseName has paradoxically given worst search results,
     // so we're only using it when track name isn't provided (for example for an album search)
     const releaseName = trackName
@@ -389,15 +396,32 @@ export default class YoutubePlayer
       width: "100%",
       height: "100%",
     };
+    const draggableBoundPadding = 10;
+    // width of screen - padding on each side - youtube player width
+    const leftBound =
+      document.body.clientWidth - draggableBoundPadding * 2 - 350;
     return (
-      <div className={`youtube ${!show ? "hidden" : ""}`}>
-        <YouTube
-          opts={options}
-          onError={this.onError}
-          onStateChange={this.handlePlayerStateChanged}
-          onReady={this.onReady}
-        />
-      </div>
+      <Draggable
+        handle=".youtube-drag-handle"
+        bounds={{
+          left: -leftBound,
+          right: -draggableBoundPadding,
+          bottom: 60, // Brainzplaer height
+        }}
+      >
+        <div className={`youtube-wrapper${!show ? " hidden" : ""}`}>
+          <div className="youtube-drag-handle">
+            <FontAwesomeIcon icon={faArrowsAlt} />
+          </div>
+          <YouTube
+            className="youtube-player"
+            opts={options}
+            onError={this.onError}
+            onStateChange={this.handlePlayerStateChanged}
+            onReady={this.onReady}
+          />
+        </div>
+      </Draggable>
     );
   }
 }

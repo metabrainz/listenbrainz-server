@@ -39,9 +39,11 @@ logger = logging.getLogger(__name__)
 
 class RecommendationParams:
 
-    def __init__(self, recordings_df, model, top_artist_candidate_set_df, similar_artist_candidate_set_df,
-                 recommendation_top_artist_limit, recommendation_similar_artist_limit):
+    def __init__(self, recordings_df, model_id, model_html_file, model, top_artist_candidate_set_df,
+                 similar_artist_candidate_set_df, recommendation_top_artist_limit, recommendation_similar_artist_limit):
         self.recordings_df = recordings_df
+        self.model_id = model_id
+        self.model_html_file = model_html_file
         self.model = model
         self.top_artist_candidate_set_df = top_artist_candidate_set_df
         self.similar_artist_candidate_set_df = similar_artist_candidate_set_df
@@ -49,32 +51,25 @@ class RecommendationParams:
         self.recommendation_similar_artist_limit = recommendation_similar_artist_limit
 
 
-def get_most_recent_model_id():
+def get_most_recent_model_meta():
     """ Get model id of recently created model.
 
         Returns:
             model_id (str): Model identification string.
     """
-    try:
-        model_metadata = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
-    except PathNotFoundException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-    except FileNotFetchedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-
-    latest_ts = model_metadata.select(func.max('model_created').alias('model_created')).take(1)[0].model_created
-    model_id = model_metadata.select('model_id') \
-                             .where(col('model_created') == latest_ts).take(1)[0].model_id
-
-    return model_id
+    utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA).createOrReplaceTempView("model_metadata")
+    meta = listenbrainz_spark.sql_context.sql("""
+        SELECT model_id, model_html_file
+          FROM model_metadata
+      ORDER BY model_created DESC
+         LIMIT 1
+    """).collect()[0]
+    return meta.model_id, meta.model_html_file
 
 
-def load_model():
+def load_model(model_id):
     """ Load model from given path in HDFS.
     """
-    model_id = get_most_recent_model_id()
     dest_path = get_model_path(model_id)
     try:
         model = MatrixFactorizationModel.load(listenbrainz_spark.context, dest_path)
@@ -269,15 +264,16 @@ def check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df):
     return max_rating > 1.0, min_rating < -1.0
 
 
-def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count, total_time,
-                    top_artist_rec_user_count, similar_artist_rec_user_count):
+def create_messages(params, top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count,
+                    total_time, top_artist_rec_user_count, similar_artist_rec_user_count):
     """ Create messages to send the data to the webserver via RabbitMQ.
 
         Args:
+            params: recommendation params to get model id and model url from
             top_artist_rec_mbid_df (dataframe): Top artist recommendations.
             similar_artist_rec_mbid_df (dataframe): Similar artist recommendations.
             active_user_count (int): Number of users active in the last week.
-            total_time (str): Time taken in exceuting the whole script.
+            total_time (float): Time taken in exceuting the whole script.
             top_artist_rec_user_count (int): Number of users for whom top artist recommendations were generated.
             similar_artist_rec_user_count (int): Number of users for whom similar artist recommendations were generated.
 
@@ -336,7 +332,9 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': data.get('top_artist', []),
-                'similar_artist': data.get('similar_artist', [])
+                'similar_artist': data.get('similar_artist', []),
+                'model_id': params.model_id,
+                'model_url': f"http://michael.metabrainz.org/{params.model_html_file}"
             }
         }
         yield messages
@@ -417,16 +415,16 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         raise
 
     logger.info('Loading model...')
-    model = load_model()
+    model_id, model_html_file = get_most_recent_model_meta()
+    model = load_model(model_id)
 
     # an action must be called to persist data in memory
     recordings_df.count()
     recordings_df.persist()
 
-    params = RecommendationParams(recordings_df, model, top_artist_candidate_set_df,
-                                  similar_artist_candidate_set_df,
-                                  recommendation_top_artist_limit,
-                                  recommendation_similar_artist_limit)
+    params = RecommendationParams(recordings_df, model_id, model_html_file, model,
+                                  top_artist_candidate_set_df, similar_artist_candidate_set_df,
+                                  recommendation_top_artist_limit, recommendation_similar_artist_limit)
 
     try:
         # timestamp when the script was invoked
@@ -471,8 +469,8 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     total_time = time.monotonic() - ts_initial
     logger.info('Total time: {:.2f}sec'.format(total_time))
 
-    result = create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count, total_time,
-                             top_artist_rec_user_count, similar_artist_rec_user_count)
+    result = create_messages(params, top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count,
+                             total_time, top_artist_rec_user_count, similar_artist_rec_user_count)
 
     users_df.unpersist()
 

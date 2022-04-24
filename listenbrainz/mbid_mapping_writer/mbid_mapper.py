@@ -12,7 +12,7 @@ from listenbrainz import config
 from listenbrainz.mbid_mapping_writer.stop_words import ENGLISH_STOP_WORDS
 
 DEFAULT_TIMEOUT = 2
-COLLECTION_NAME = "mbid_mapping_latest"
+COLLECTION_NAME = "canonical_musicbrainz_data_latest"
 MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
 MATCH_TYPE_NO_MATCH = 0
 MATCH_TYPE_LOW_QUALITY = 1
@@ -30,7 +30,7 @@ def prepare_query(text):
     return unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text)).strip().lower())
 
 
-class MBIDMapper():
+class MBIDMapper:
     """
         This class performs a lookup of one or more artist credit name and recording name pairs
         to find the best possible match in MusicBrainz. This query will unaccent query
@@ -192,12 +192,13 @@ class MBIDMapper():
 
         while True:
             try:
-                hits = self.client.collections[COLLECTION_NAME].documents.search(
-                    search_parameters)
+                hits = self.client.collections[COLLECTION_NAME].documents.search(search_parameters)
                 break
             except requests.exceptions.ReadTimeout:
                 print("Got socket timeout, sleeping 5 seconds, trying again.")
                 sleep(5)
+            except typesense.exceptions.RequestMalformed:
+                return None
 
         if len(hits["hits"]) == 0:
             return None
@@ -281,4 +282,5 @@ class MBIDMapper():
                 'release_mbid': hit['document']['release_mbid'],
                 'recording_name': hit['document']['recording_name'],
                 'recording_mbid': hit['document']['recording_mbid'],
+                'year': hit['document']['year'],
                 'match_type': match_type}

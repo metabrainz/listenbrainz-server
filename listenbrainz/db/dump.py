@@ -31,6 +31,7 @@ import tempfile
 import traceback
 from datetime import datetime, timedelta
 from ftplib import FTP
+from typing import Tuple, Optional
 
 import sqlalchemy
 import ujson
@@ -155,6 +156,25 @@ PRIVATE_TABLES = {
         'gdpr_agreed',
         'email',
     ),
+    'external_service_oauth': (
+        'id',
+        'user_id',
+        'service',
+        'access_token',
+        'refresh_token',
+        'token_expires',
+        'last_updated',
+        'scopes'
+    ),
+    'listens_importer': (
+        'id',
+        'external_service_oauth_id',
+        'user_id',
+        'service',
+        'last_updated',
+        'latest_listened_at',
+        'error_message'
+    ),
     'api_compat.token': (
         'id',
         'user_id',
@@ -211,7 +231,6 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
         Returns:
             a tuple: (path to private dump, path to public dump)
     """
-
     current_app.logger.info('Beginning dump of PostgreSQL database...')
     current_app.logger.info('dump path: %s', location)
 
@@ -233,6 +252,41 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     current_app.logger.info(
         'Dump of private data created at %s!', private_dump)
 
+    current_app.logger.info('Creating dump of public data...')
+    try:
+        public_dump = create_public_dump(location, dump_time, threads)
+    except IOError as e:
+        current_app.logger.critical(
+            'IOError while creating public dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    except Exception as e:
+        current_app.logger.critical(
+            'Unable to create public dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+
+    current_app.logger.info(
+        'ListenBrainz PostgreSQL data dump created at %s!', location)
+    return private_dump, public_dump
+
+
+def dump_timescale_db(location: str, dump_time: datetime = datetime.today(),
+                      threads: int = DUMP_DEFAULT_THREAD_COUNT) -> Optional[Tuple[str, str]]:
+    """ Create timescale database (excluding listens) dump in the specified location
+
+        Arguments:
+            location: Directory where the final dump will be stored
+            dump_time: datetime object representing when the dump was started
+            threads: Maximal number of threads to run during compression
+
+        Returns:
+            a tuple: (path to private dump, path to public dump)
+    """
+    current_app.logger.info('Beginning dump of Timescale database...')
+
     current_app.logger.info('Creating dump of timescale private data...')
     try:
         private_timescale_dump = create_private_timescale_dump(location, dump_time, threads)
@@ -250,22 +304,6 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
         return
     current_app.logger.info(
         'Dump of private timescale data created at %s!', private_timescale_dump)
-
-    current_app.logger.info('Creating dump of public data...')
-    try:
-        public_dump = create_public_dump(location, dump_time, threads)
-    except IOError as e:
-        current_app.logger.critical(
-            'IOError while creating public dump: %s', str(e), exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
-        return
-    except Exception as e:
-        current_app.logger.critical(
-            'Unable to create public dump due to error %s', str(e), exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
-        return
 
     current_app.logger.info('Creating dump of timescale public data...')
     try:
@@ -285,9 +323,7 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
 
     current_app.logger.info('Dump of public timescale data created at %s!', public_timescale_dump)
 
-    current_app.logger.info(
-        'ListenBrainz PostgreSQL data dump created at %s!', location)
-    return private_dump, private_timescale_dump, public_dump, public_timescale_dump
+    return private_timescale_dump, public_timescale_dump
 
 
 def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
@@ -669,54 +705,18 @@ def import_postgres_dump(private_dump_archive_path=None,
     """
 
     if private_dump_archive_path:
-        current_app.logger.info(
-            'Importing private dump %s...', private_dump_archive_path)
-        try:
-            _import_dump(private_dump_archive_path,
-                         db.engine, PRIVATE_TABLES, db.SCHEMA_VERSION_CORE, threads)
-            current_app.logger.info(
-                'Import of private dump %s done!', private_dump_archive_path)
-        except IOError as e:
-            current_app.logger.critical(
-                'IOError while importing private dump: %s', str(e), exc_info=True)
-            raise
-        except SchemaMismatchException as e:
-            current_app.logger.critical(
-                'SchemaMismatchException: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            current_app.logger.critical(
-                'Error while importing private dump: %s', str(e), exc_info=True)
-            raise
-        current_app.logger.info(
-            'Private dump %s imported!', private_dump_archive_path)
+        current_app.logger.info('Importing private dump %s...', private_dump_archive_path)
+        _import_dump(private_dump_archive_path, db.engine, PRIVATE_TABLES, db.SCHEMA_VERSION_CORE, threads)
+        current_app.logger.info('Import of private dump %s done!', private_dump_archive_path)
 
     if private_timescale_dump_archive_path:
-        current_app.logger.info(
-            'Importing private timescale dump %s...', private_timescale_dump_archive_path)
-        try:
-            _import_dump(private_timescale_dump_archive_path,
-                         timescale.engine, PRIVATE_TABLES_TIMESCALE, timescale.SCHEMA_VERSION_TIMESCALE, threads)
-            current_app.logger.info(
-                'Import of private timescale dump %s done!', private_timescale_dump_archive_path)
-        except IOError as e:
-            current_app.logger.critical(
-                'IOError while importing private timescale dump: %s', str(e), exc_info=True)
-            raise
-        except SchemaMismatchException as e:
-            current_app.logger.critical(
-                'SchemaMismatchException: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            current_app.logger.critical(
-                'Error while importing private timescale dump: %s', str(e), exc_info=True)
-            raise
-        current_app.logger.info(
-            'Private timescale dump %s imported!', private_timescale_dump_archive_path)
+        current_app.logger.info('Importing private timescale dump %s...', private_timescale_dump_archive_path)
+        _import_dump(private_timescale_dump_archive_path, timescale.engine, PRIVATE_TABLES_TIMESCALE,
+                     timescale.SCHEMA_VERSION_TIMESCALE, threads)
+        current_app.logger.info('Import of private timescale dump %s done!', private_timescale_dump_archive_path)
 
     if public_dump_archive_path:
-        current_app.logger.info(
-            'Importing public dump %s...', public_dump_archive_path)
+        current_app.logger.info('Importing public dump %s...', public_dump_archive_path)
 
         tables_to_import = PUBLIC_TABLES_IMPORT.copy()
         if private_dump_archive_path:
@@ -725,49 +725,14 @@ def import_postgres_dump(private_dump_archive_path=None,
             # so remove it from tables_to_import
             del tables_to_import['"user"']
 
-        try:
-            _import_dump(public_dump_archive_path, db.engine,
-                         tables_to_import, db.SCHEMA_VERSION_CORE, threads)
-            current_app.logger.info(
-                'Import of Public dump %s done!', public_dump_archive_path)
-        except IOError as e:
-            current_app.logger.critical(
-                'IOError while importing public dump: %s', str(e), exc_info=True)
-            raise
-        except SchemaMismatchException as e:
-            current_app.logger.critical(
-                'SchemaMismatchException: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            current_app.logger.critical(
-                'Error while importing public dump: %s', str(e), exc_info=True)
-            raise
-        current_app.logger.info(
-            'Public dump %s imported!', public_dump_archive_path)
+        _import_dump(public_dump_archive_path, db.engine, tables_to_import, db.SCHEMA_VERSION_CORE, threads)
+        current_app.logger.info('Import of Public dump %s done!', public_dump_archive_path)
 
     if public_timescale_dump_archive_path:
-        current_app.logger.info(
-            'Importing public timescale dump %s...', public_timescale_dump_archive_path)
-
-        try:
-            _import_dump(public_timescale_dump_archive_path, timescale.engine,
-                         PUBLIC_TABLES_TIMESCALE_DUMP, timescale.SCHEMA_VERSION_TIMESCALE, threads)
-            current_app.logger.info(
-                'Import of Public timescale dump %s done!', public_timescale_dump_archive_path)
-        except IOError as e:
-            current_app.logger.critical(
-                'IOError while importing public timescale dump: %s', str(e), exc_info=True)
-            raise
-        except SchemaMismatchException as e:
-            current_app.logger.critical(
-                'SchemaMismatchException: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            current_app.logger.critical(
-                'Error while importing public timescale dump: %s', str(e), exc_info=True)
-            raise
-        current_app.logger.info(
-            'Public timescale dump %s imported!', public_timescale_dump_archive_path)
+        current_app.logger.info('Importing public timescale dump %s...', public_timescale_dump_archive_path)
+        _import_dump(public_timescale_dump_archive_path, timescale.engine, PUBLIC_TABLES_TIMESCALE_DUMP,
+                     timescale.SCHEMA_VERSION_TIMESCALE, threads)
+        current_app.logger.info('Import of Public timescale dump %s done!', public_timescale_dump_archive_path)
 
     try:
         current_app.logger.info("Creating sequences")
@@ -856,6 +821,14 @@ def _update_sequences():
     # user_id_seq
     current_app.logger.info('Updating user_id_seq...')
     _update_sequence(db.engine, 'user_id_seq', '"user"')
+
+    # external_service_oauth_id_seq
+    current_app.logger.info('Updating external_service_oauth_id_seq...')
+    _update_sequence(db.engine, 'external_service_oauth_id_seq', 'external_service_oauth')
+
+    # listens_importer_id_seq
+    current_app.logger.info('Updating listens_importer_id_seq...')
+    _update_sequence(db.engine, 'listens_importer_id_seq', 'listens_importer')
 
     # token_id_seq
     current_app.logger.info('Updating token_id_seq...')
@@ -1000,7 +973,7 @@ def check_ftp_dump_ages():
                 text=render_template('emails/data_dump_outdated.txt', msg=msg),
                 recipients=['listenbrainz-exceptions@metabrainz.org'],
                 from_name='ListenBrainz',
-                from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
+                from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN']
             )
         elif msg:
             print(msg)

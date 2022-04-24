@@ -24,6 +24,8 @@ import {
   getRecordingMBID,
   getAlbumArtFromListenMetadata,
   getReleaseMBID,
+  getArtistName,
+  getTrackName,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
@@ -160,8 +162,8 @@ export default class ListenCard extends React.Component<
 
     if (currentUser?.auth_token) {
       const metadata: UserTrackRecommendationMetadata = {
-        artist_name: _get(listen, "track_metadata.artist_name"),
-        track_name: _get(listen, "track_metadata.track_name"),
+        artist_name: getArtistName(listen),
+        track_name: getTrackName(listen),
         release_name: _get(listen, "track_metadata.release_name"),
         recording_mbid: getRecordingMBID(listen),
         recording_msid: _get(
@@ -233,11 +235,11 @@ export default class ListenCard extends React.Component<
     const youtubeURL = YoutubePlayer.getYoutubeURLFromListen(listen);
     const soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(listen);
 
+    const trackName = getTrackName(listen);
+    const artistName = getArtistName(listen);
+
     const hasRecordingMSID = Boolean(recordingMSID);
-    const enableRecommendButton =
-      _has(listen, "track_metadata.artist_name") &&
-      _has(listen, "track_metadata.track_name") &&
-      hasRecordingMSID;
+    const enableRecommendButton = artistName && trackName && hasRecordingMSID;
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
@@ -324,16 +326,10 @@ export default class ListenCard extends React.Component<
             <div className="listen-details">{listenDetails}</div>
           ) : (
             <div className="listen-details">
-              <div
-                title={listen.track_metadata?.track_name}
-                className="ellipsis-2-lines"
-              >
+              <div title={trackName} className="ellipsis-2-lines">
                 {getTrackLink(listen)}
               </div>
-              <span
-                className="small text-muted ellipsis"
-                title={listen.track_metadata?.artist_name}
-              >
+              <span className="small text-muted ellipsis" title={artistName}>
                 {getArtistLink(listen)}
               </span>
             </div>
@@ -455,10 +451,7 @@ export default class ListenCard extends React.Component<
           </div>
         </div>
         {additionalContent && (
-          <div
-            className="additional-content"
-            title={listen.track_metadata?.track_name}
-          >
+          <div className="additional-content" title={trackName}>
             {additionalContent}
           </div>
         )}

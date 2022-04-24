@@ -22,11 +22,11 @@ class TrainModelsTestCase(RecommendationsTestCase):
         super(TrainModelsTestCase, cls).delete_dir()
 
     def test_parse_dataset(self):
-        row = Row(spark_user_id=1, recording_id=2, count=3)
+        row = Row(spark_user_id=1, recording_id=2, playcount=3, transformed_listencount=5)
         rating_object = train_models.parse_dataset(row)
         self.assertEqual(rating_object.user, 1)
         self.assertEqual(rating_object.product, 2)
-        self.assertEqual(rating_object.rating, 3)
+        self.assertEqual(rating_object.rating, 5)
 
     @patch('listenbrainz_spark.recommendations.recording.train_models.sqrt')
     @patch('listenbrainz_spark.recommendations.recording.train_models.RDD')

@@ -16,6 +16,10 @@ on:
       - 'docker/docker-compose.test.yml'
       - 'test.sh'
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
 
   test:

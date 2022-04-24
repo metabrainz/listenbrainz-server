@@ -286,7 +286,7 @@ export default class UserPins extends React.Component<
                   {pins?.map((pin) => {
                     return (
                       <PinnedRecordingCard
-                        key={`${pin.created}-${pin.track_metadata.track_name}-${pin.recording_msid}-${user}`}
+                        key={pin.created}
                         userName={user.name}
                         pinnedRecording={pin}
                         isCurrentUser={currentUser?.name === user?.name}
