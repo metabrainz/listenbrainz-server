@@ -24,6 +24,12 @@ ALTER TABLE statistics.year_in_music
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE statistics.recording_discovery
+    ADD CONSTRAINT user_stats_recording_discovery_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 ALTER TABLE reported_users
     ADD CONSTRAINT  reporter_user_id_foreign_key
     FOREIGN KEY (reporter_user_id)

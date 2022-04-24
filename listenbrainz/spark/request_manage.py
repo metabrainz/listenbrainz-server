@@ -194,6 +194,12 @@ def request_yim_listen_count(year: int):
     send_request_to_spark_cluster("year_in_music.listen_count", year=year)
 
 
+@cli.command(name="request_recording_discovery")
+def request_recording_discovery():
+    """ Send request to calculate discovery dates for when all users and recordings """
+    send_request_to_spark_cluster("stats.user.recording_discovery")
+
+
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")

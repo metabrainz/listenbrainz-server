@@ -19,6 +19,7 @@ from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
+from listenbrainz.db.recording_discovery import insert_recording_discovery
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
 
@@ -50,6 +51,10 @@ def notify_user_stats_update(stat_type):
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
         )
+
+
+def handle_recording_discovery(data):
+    insert_recording_discovery(data)
 
 
 def handle_user_entity(data):

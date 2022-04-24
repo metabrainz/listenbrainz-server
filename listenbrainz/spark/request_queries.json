@@ -1,4 +1,9 @@
 {
+  "stats.user.recording_discovery": {
+    "name": "stats.user.recording_discovery",
+    "description": "Statistics for when the user played a recording first and the last time",
+    "params": []
+  },
   "stats.user.entity": {
     "name": "stats.user.entity",
     "description": "Entity statistics for all users for the requested stats_range",

@@ -24,6 +24,8 @@ CREATE UNIQUE INDEX msid_ndx_recording_stats ON statistics.recording (msid);
 CREATE UNIQUE INDEX user_type_range_ndx_stats ON statistics.user (user_id, stats_type, stats_range);
 CREATE INDEX user_id_ndx__user_stats ON statistics.user (user_id);
 
+CREATE UNIQUE INDEX user_id_recording_mbid_ndx_recording_discovery ON statistics.recording_discovery (user_id, recording_mbid) INCLUDE (latest_listened_at);
+
 CREATE INDEX latest_listened_at_spotify_auth ON spotify_auth (latest_listened_at DESC NULLS LAST);
 
 CREATE INDEX user_id_ndx_external_service_oauth ON external_service_oauth (user_id);

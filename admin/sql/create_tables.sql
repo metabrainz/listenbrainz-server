@@ -201,6 +201,14 @@ CREATE TABLE statistics.year_in_music (
     data        JSONB
 );
 
+CREATE TABLE statistics.recording_discovery (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    user_id                 INTEGER NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    first_listened_at       TIMESTAMP WITH TIME ZONE NOT NULL,
+    latest_listened_at      TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 
 CREATE TABLE recommendation_feedback (
     id                      SERIAL, -- PK
