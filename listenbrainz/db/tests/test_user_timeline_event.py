@@ -295,3 +295,32 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                     id=event_rec.id,
                     user_id=self.user["id"],
                 )
+
+    def test_hide_feed_events(self):
+        # creating a user
+        new_user = db_user.get_or_create(2, 'riksucks')
+        
+        # creating an event
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        #hiding event
+        hidden_event = db_user_timeline_event.hide_user_timeline_event(
+            user_id=self.user['id'],
+            event_type=event_rec.event_type.value,
+            event_id=event_rec.id
+        )
+
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(
+            user=self.user['id'],
+            count=1,
+        )
+
+        self.assertEqual(1, len(hidden_events))
+        self.assertEqual(event_rec.id, hidden_events[0].event_id)
