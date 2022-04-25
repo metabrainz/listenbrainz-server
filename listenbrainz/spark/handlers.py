@@ -20,6 +20,7 @@ from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from listenbrainz.db.similar_users import import_user_similarities
+from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
 
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
@@ -233,6 +234,9 @@ def handle_recommendations(data):
                                  {user["musicbrainz_id"]}. \nData: {json.dumps(data, indent=3)}""")
 
     current_app.logger.debug("recommendation for {} inserted".format(user["musicbrainz_id"]))
+
+    current_app.logger.debug("Running post recommendation steps for user {}".format(user["musicbrainz_id"]))
+    run_post_recommendation_troi_bot(user["musicbrainz_id"])
 
 
 def notify_mapping_import(data):
