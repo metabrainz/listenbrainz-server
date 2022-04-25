@@ -76,7 +76,7 @@ class RequestConsumer:
         avg_size_of_message = 0
         for message in messages:
             num_of_messages += 1
-            body = json.dumps(message)
+            body = message
             avg_size_of_message += len(body)
             while message is not None:
                 try:
