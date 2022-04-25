@@ -3,6 +3,12 @@
 exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
 <ListenCountCard
   listenCount={100}
+  user={
+    Object {
+      "id": 1,
+      "name": "track_listener",
+    }
+  }
 >
   <ForwardRef
     id="listen-count-card"
@@ -12,7 +18,7 @@ exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
       id="listen-count-card"
     >
       <div>
-        You have listened to
+        track_listener has listened to
         <hr />
         100
         <br />
@@ -28,7 +34,14 @@ exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
 `;
 
 exports[`ListenCountCard renders correctly when listen count is zero or undefined 1`] = `
-<ListenCountCard>
+<ListenCountCard
+  user={
+    Object {
+      "id": 1,
+      "name": "track_listener",
+    }
+  }
+>
   <ForwardRef
     id="listen-count-card"
   >
@@ -37,7 +50,7 @@ exports[`ListenCountCard renders correctly when listen count is zero or undefine
       id="listen-count-card"
     >
       <p>
-        You have not listened to any songs so far
+        track_listener has not listened to any songs so far
       </p>
     </div>
   </ForwardRef>
