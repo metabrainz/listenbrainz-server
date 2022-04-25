@@ -3,6 +3,7 @@ import requests
 
 from flask import Blueprint, render_template, current_app
 
+from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping
 from listenbrainz.webserver.views.user import _get_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 from werkzeug.exceptions import BadRequest, InternalServerError
@@ -131,37 +132,25 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                     }
                 }
     """
-    data = []
-    listened_at_times = {r['recording_mbid']: r['latest_listened_at'] for r in mbids_and_ratings_list}
-    for r in mbids_and_ratings_list:
-        data.append({'[recording_mbid]': r['recording_mbid']})
-
-    r = requests.post(SERVER_URL, json=data)
-    if r.status_code != 200:
-        if r.status_code == 400:
-            current_app.logger.error('Invalid data was sent to the labs API.\nData: {}'.format(data))
-            raise BadRequest
-        else:
-            current_app.logger.error("API didn't send a valid response due to Internal Server Error.\nData: {}".format(data))
-            raise InternalServerError
-
-    try:
-        rows = ujson.loads(r.text)
-    except Exception as err:
-        raise InternalServerError(str(err))
+    mbids = [r['recording_mbid'] for r in mbids_and_ratings_list]
+    data, _ = load_recordings_from_mapping(mbids=mbids, msids=[])
 
     recommendations = []
 
-    for row in rows:
+    for recommendation in mbids_and_ratings_list:
+        mbid = recommendation['recording_mbid']
+        if mbid not in data:
+            continue
+        row = data[mbid]
         recommendations.append({
-            'listened_at_iso': listened_at_times.get(row['recording_mbid']),
+            'listened_at_iso': recommendation['latest_listened_at'],
             'track_metadata': {
-                'artist_name': row['artist_credit_name'],
-                'track_name': row['recording_name'],
-                'release_name': row.get('release_name', ""),
+                'artist_name': row['artist'],
+                'track_name': row['title'],
+                'release_name': row['release'],
                 'additional_info': {
                     'recording_mbid': row['recording_mbid'],
-                    'artist_mbids': row['[artist_credit_mbids]']
+                    'artist_mbids': row['artist_mbids']
                 }
             }
         })
