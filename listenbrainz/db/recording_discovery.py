@@ -15,6 +15,9 @@ def insert_recording_discovery(data):
                   , latest_listened_at::timestamptz
                FROM (VALUES %s) AS t(user_id, recording_mbid, first_listened_at, latest_listened_at)
                JOIN "user" ON "user".id = user_id -- to remove rows for users that do not exist
+        ON CONFLICT DO UPDATE
+                SET first_listened_at  = EXCLUDED.first_listened_at
+                  , latest_listened_at = EXCLUDED.latest_listened_at
     """
     discoveries = [(x["user_id"], x["recording_mbid"], x["first_listened_at"], x["latest_listened_at"]) for x in data]
     try:
