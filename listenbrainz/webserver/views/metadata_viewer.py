@@ -15,13 +15,13 @@ def playing_now_metadata_viewer():
 
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
-    
+
     # Get the now_playing listen for this user
     playing_now = playing_now_conn.get_playing_now(current_user.id)
-        
+ 
     # TODO: Load initial recording metadata for playing_now listen
     # and add to props as 'metadata'
-    
+
     props = {
         "playing_now": playing_now,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
