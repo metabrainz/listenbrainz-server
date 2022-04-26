@@ -111,6 +111,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       } catch (error) {
         // Revert the feedback UI in case of failure
         setCurrentListenFeedback(0);
+        // eslint-disable-next-line no-console
         console.error(error);
       }
     };
@@ -137,6 +138,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         } catch (error) {
           // Revert the feedback UI in case of failure
           setCurrentListenFeedback(0);
+          // eslint-disable-next-line no-console
           console.error(error);
         }
       }
