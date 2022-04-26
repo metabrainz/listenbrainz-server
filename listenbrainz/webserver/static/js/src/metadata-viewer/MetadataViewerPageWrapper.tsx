@@ -21,16 +21,10 @@ import fakeData2 from "./fakedata-lookup.json";
 export type PlayingNowPageProps = {
   playingNow?: Listen;
   initialRecordingData?: MetadataLookup;
-  webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
 export default function PlayingNowPage(props: PlayingNowPageProps) {
-  const {
-    initialRecordingData,
-    playingNow,
-    newAlert,
-    webSocketsServerUrl,
-  } = props;
+  const { initialRecordingData, playingNow, newAlert } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [currentListen, setCurrentListen] = React.useState(playingNow);
   const [recordingData, setRecordingData] = React.useState(
@@ -136,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube,
     sentry_traces_sample_rate,
   } = globalReactProps;
-  const { playing_now, metadata, web_sockets_server_url } = reactProps;
+  const { playing_now, metadata } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -168,7 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
           initialAlerts={optionalAlerts}
           playingNow={playing_now}
           // initialRecordingData={fakeData2}
-          webSocketsServerUrl={web_sockets_server_url}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
