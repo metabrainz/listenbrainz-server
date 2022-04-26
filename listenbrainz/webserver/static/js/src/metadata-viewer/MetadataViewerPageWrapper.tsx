@@ -71,7 +71,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
 
   /** Websockets connection */
   React.useEffect(() => {
-    const socket = io(webSocketsServerUrl, { path: "/socket.io/" });
+    const socket = io(`${window.location.origin}`, { path: "/socket.io/" });
     socket.on("connect", () => {
       socket.emit("json", { user: currentUser.name });
     });
