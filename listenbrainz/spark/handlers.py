@@ -54,7 +54,7 @@ def notify_user_stats_update(stat_type):
 
 
 def handle_recording_discovery(data):
-    insert_recording_discovery(data)
+    insert_recording_discovery(data["data"])
 
 
 def handle_user_entity(data):
