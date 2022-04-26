@@ -22,7 +22,7 @@ def insert_recording_discovery(data):
     discoveries = [(x["user_id"], x["recording_mbid"], x["first_listened_at"], x["latest_listened_at"]) for x in data]
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, discoveries, page_size=5000)
+            execute_values(cursor, query, discoveries, page_size=500)
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
