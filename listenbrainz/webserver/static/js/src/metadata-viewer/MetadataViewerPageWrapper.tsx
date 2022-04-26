@@ -21,10 +21,16 @@ import fakeData2 from "./fakedata-lookup.json";
 export type PlayingNowPageProps = {
   playingNow?: Listen;
   initialRecordingData?: MetadataLookup;
+  webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
 export default function PlayingNowPage(props: PlayingNowPageProps) {
-  const { initialRecordingData, playingNow, newAlert } = props;
+  const {
+    initialRecordingData,
+    playingNow,
+    newAlert,
+    webSocketsServerUrl,
+  } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [currentListen, setCurrentListen] = React.useState(playingNow);
   const [recordingData, setRecordingData] = React.useState(
@@ -66,7 +72,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
 
   /** Websockets connection */
   React.useEffect(() => {
-    const socket = io("https://listenbrainz.org", { path: "/socket.io/" });
+    const socket = io(webSocketsServerUrl, { path: "/socket.io/" });
     socket.on("connect", () => {
       socket.emit("json", { user: currentUser.name });
     });
@@ -132,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube,
     sentry_traces_sample_rate,
   } = globalReactProps;
-  // const { playing_now, metadata } = reactProps;
+  const { playing_now, metadata, web_sockets_server_url } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -162,8 +168,9 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <PlayingNowPageWithAlertNotifications
           initialAlerts={optionalAlerts}
-          //   playingNow={playing_now}
+          playingNow={playing_now}
           // initialRecordingData={fakeData2}
+          webSocketsServerUrl={web_sockets_server_url}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
