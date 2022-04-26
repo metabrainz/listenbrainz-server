@@ -8,7 +8,7 @@ CREATE TABLE statistics.recording_discovery (
     latest_listened_at      TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
-ALTER TABLE statistics.recording_discovery ADD CONSTRAINT stats_recording_discovery_pkey PRIMARY KEY (user_id);
+ALTER TABLE statistics.recording_discovery ADD CONSTRAINT stats_recording_discovery_pkey PRIMARY KEY (id);
 
 ALTER TABLE statistics.recording_discovery
     ADD CONSTRAINT user_stats_recording_discovery_user_id_foreign_key
