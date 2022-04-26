@@ -13,7 +13,7 @@ def get_recording_discovery():
 
     iterator = run_query("""
         WITH discoveries AS (
-            SELECT int(monotonically_increasing_id() / 500) AS chunk_id
+            SELECT int(monotonically_increasing_id() / 25000) AS chunk_id
                    -- so that we can group rows into chunks later
                  , user_id
                  , recording_mbid
