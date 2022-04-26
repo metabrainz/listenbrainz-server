@@ -236,7 +236,8 @@ def handle_recommendations(data):
     current_app.logger.debug("recommendation for {} inserted".format(user["musicbrainz_id"]))
 
     current_app.logger.debug("Running post recommendation steps for user {}".format(user["musicbrainz_id"]))
-    run_post_recommendation_troi_bot(user["musicbrainz_id"])
+
+
 
 
 def notify_mapping_import(data):
@@ -280,10 +281,14 @@ def notify_artist_relation_import(data):
     )
 
 
-def notify_cf_recording_recommendations_generation(data):
+def cf_recording_recommendations_complete(data):
     """
-    Send an email to notify recommendations have been generated and are being written into db.
+    Run any troi scripts necessary now that recommendations have been generated and
+    send an email to notify recommendations have been generated and are being written into db.
     """
+
+    run_post_recommendation_troi_bot(user["musicbrainz_id"])
+
     if current_app.config['TESTING']:
         return
 
