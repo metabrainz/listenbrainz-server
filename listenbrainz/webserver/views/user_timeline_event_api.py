@@ -380,9 +380,11 @@ def hide_user_timeline_event(user_name):
             raise APIBadRequest("This event type is not supported for hiding");
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
+    except DatabaseException:
+        raise APIInternalServerError("Something went wrong. Please try again")
 
 
-@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/hide/delete", methods=['OPTIONS', 'POST'])
+@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/unhide", methods=['OPTIONS', 'POST'])
 @crossdomain
 @ratelimit()
 def unhide_user_timeline_event(user_name):
