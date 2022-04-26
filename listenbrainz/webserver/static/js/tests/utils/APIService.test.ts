@@ -654,8 +654,8 @@ describe("submitFeedback", () => {
           "Content-Type": "application/json;charset=UTF-8",
         },
         body: JSON.stringify({
-          recording_msid: "foo",
           score: 1,
+          recording_msid: "foo",
           recording_mbid: "foombid",
         }),
       }
