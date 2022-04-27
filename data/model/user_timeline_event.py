@@ -90,9 +90,9 @@ class APITimelineEvent(BaseModel):
     metadata: APIEventMetadata
     hidden: Optional[bool]
 
-class HideUserTimelineEvent(BaseModel):
+class HiddenUserTimelineEvent(BaseModel):
     id: NonNegativeInt
     user_id: NonNegativeInt
     event_type: UserTimelineEventType
     event_id: NonNegativeInt
-    created: Optional[datetime]
+    created: datetime

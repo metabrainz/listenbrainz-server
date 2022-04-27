@@ -342,7 +342,7 @@ def hide_user_timeline_event(user_name):
 
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
-    :statuscode 200: Successful deletion
+    :statuscode 200: Event hidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
     :statuscode 404: User not found
@@ -399,7 +399,7 @@ def unhide_user_timeline_event(user_name):
         }
 
     :type user_name: ``str``
-    :statuscode 200: Successful deletion
+    :statuscode 200: Event unhidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
     :statuscode 404: User not found
