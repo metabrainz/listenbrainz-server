@@ -15,69 +15,35 @@ Since the model is always trained on recently created dataframes, the model_meta
 saved corresponding to recently created dataframe_id. The model metadata also contains the unique identification string for the best model.
 """
 
-import uuid
-import logging
 import itertools
-from math import sqrt
+import logging
 import time
-from operator import add
-from datetime import datetime
+import uuid
 from collections import namedtuple, defaultdict
+from datetime import datetime
+
+import pyspark.sql.functions as func
 from py4j.protocol import Py4JJavaError
+from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.recommendation import ALS
 
 import listenbrainz_spark
-from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark import config, utils, path, schema
-from listenbrainz_spark.recommendations.recording.create_dataframes import describe_listencount_transformer
-from listenbrainz_spark.recommendations.utils import save_html
+from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
-                                           PathNotFoundException,
                                            FileNotFetchedException,
                                            HDFSDirectoryNotDeletedException,
                                            PathNotFoundException,
                                            DataFrameNotCreatedException,
                                            DataFrameNotAppendedException)
-
-import pyspark.sql.functions as func
-from pyspark import RDD
-from pyspark.sql import Row
-from pyspark.mllib.recommendation import ALS, Rating
+from listenbrainz_spark.recommendations.recording.create_dataframes import describe_listencount_transformer
+from listenbrainz_spark.recommendations.utils import save_html
 
 logger = logging.getLogger(__name__)
 Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration alpha model_id training_time rmse_time')
 
 # training HTML is generated if set to true
 SAVE_TRAINING_HTML = True
-
-
-def parse_dataset(row):
-    """ Convert each RDD element to object of class Rating.
-
-        Args:
-            row: An RDD row or element.
-    """
-    return Rating(row['spark_user_id'], row['recording_id'], row['transformed_listencount'])
-
-
-def compute_rmse(model, data, n, model_id):
-    """ Compute RMSE (Root Mean Squared Error).
-
-        Args:
-            model: Trained model.
-            data (rdd): Rdd used for validation i.e validation_data
-            n (int): Number of rows/elements in validation_data.
-            model_id (str): Model identification string.
-    """
-    try:
-        predictions = model.predictAll(data.map(lambda x: (x.user, x.product)))
-        predictionsAndRatings = predictions.map(lambda x: ((x[0], x[1]), x[2])) \
-                                           .join(data.map(lambda x: ((x[0], x[1]), x[2]))) \
-                                           .values()
-        return sqrt(predictionsAndRatings.map(lambda x: (x[0] - x[1]) ** 2).reduce(add) / float(n))
-    except Py4JJavaError as err:
-        logger.error('Root Mean Squared Error for model "{}" not computed\n{}'.format(
-                                 model_id, str(err.java_exception)), exc_info=True)
-        raise
 
 
 def preprocess_data(transformed_listencounts_df):
@@ -156,30 +122,7 @@ def get_best_model_metadata(best_model):
     }
 
 
-def train(training_data, rank, iteration, lmbda, alpha, model_id):
-    """ Train model.
-
-        Args:
-            training_data (rdd): Used for training.
-            rank (int): Number of factors in ALS model.
-            iteration (int): Number of iterations to run.
-            lmbda (float): Controls regularization.
-            alpha (float): Constant for computing confidence.
-            model_id (str): Model identification string.
-
-        Returns:
-            model: Trained model.
-
-    """
-    try:
-        model = ALS.trainImplicit(training_data, rank, iterations=iteration, lambda_=lmbda, alpha=alpha)
-        return model
-    except Py4JJavaError as err:
-        logger.error('Unable to train model "{}"\n{}'.format(model_id, str(err.java_exception)), exc_info=True)
-        raise
-
-
-def get_best_model(training_data, validation_data, num_validation, ranks, lambdas, iterations, alphas):
+def get_best_model(training_data, validation_data, evaluator, ranks, lambdas, iterations, alphas):
     """ Train models and get the best model.
 
         Args:
@@ -205,17 +148,20 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
         t0 = time.monotonic()
         logger.info("Training model with model id: {}".format(model_id))
         logger.info("Params: Rank - %d, Lambda - %d, Iterations - %d, Alpha - %f", rank, lmbda, iteration, alpha)
-        model = train(training_data, rank, iteration, lmbda, alpha, model_id)
+        als = ALS(userCol='spark_user_id', itemCol='recording_id', ratingCol='transformed_listencount',
+                  rank=rank, maxIter=iteration, regParam=lmbda, alpha=alpha, implicitPrefs=True)
+        model = als.fit(training_data)
         logger.info("Model trained!")
         mt = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
         t0 = time.monotonic()
         logger.info("Calculating validation RMSE for model with model id : {}".format(model_id))
-        validation_rmse = compute_rmse(model, validation_data, num_validation, model_id)
+        predictions = model.transform(validation_data)
+        validation_rmse = evaluator.evaluate(predictions)
         logger.info("Validation RMSE calculated!")
         vt = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
-        model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, alpha, round(validation_rmse, 2), vt))
+        model_metadata.append((model_id, mt, rank, f'{lmbda:.1f}', iteration, alpha, round(validation_rmse, 2), vt))
 
         if best_model is None or validation_rmse < best_model.validation_rmse:
             best_model = Model(
@@ -364,14 +310,17 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None):
     num_validation = validation_data.count()
     num_test = test_data.count()
 
+    evaluator = RegressionEvaluator(metricName="rmse", labelCol="transformed_listencount", predictionCol="prediction")
+
     t0 = time.monotonic()
-    best_model, model_metadata = get_best_model(training_data, validation_data, num_validation, ranks,
+    best_model, model_metadata = get_best_model(training_data, validation_data, evaluator, ranks,
                                                 lambdas, iterations, alphas)
     models_training_time = '{:.2f}'.format((time.monotonic() - t0) / 3600)
 
     best_model_metadata = get_best_model_metadata(best_model)
     logger.info("Calculating test RMSE for best model with model id: {}".format(best_model.model_id))
-    best_model_metadata['test_rmse'] = compute_rmse(best_model.model, test_data, num_test, best_model.model_id)
+    test_predictions = best_model.model.transform(test_data)
+    best_model_metadata['test_rmse'] = evaluator.evaluate(test_predictions)
     logger.info("Test RMSE calculated!")
 
     best_model_metadata['training_data_count'] = num_training
