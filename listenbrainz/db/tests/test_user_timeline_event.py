@@ -409,7 +409,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(1, len(hidden_events))
         self.assertEqual(event_rec.id, hidden_events[0].event_id)
 
-        db_user_timeline_event.unhide_timeline_events(
+        db_user_timeline_event.unhide_timeline_event(
             user=self.user['id'],
             row_id=1
         )
@@ -441,7 +441,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         with mock.patch("listenbrainz.db.engine.connect", side_effect=Exception):
             with self.assertRaises(DatabaseException):
                 # checking if DatabaseException is raised or not
-                db_user_timeline_event.unhide_timeline_events(
+                db_user_timeline_event.unhide_timeline_event(
                     user=self.user['id'],
                     row_id=1
                 )

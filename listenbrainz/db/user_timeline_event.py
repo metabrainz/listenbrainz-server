@@ -228,7 +228,7 @@ def get_hidden_timeline_events(user: int, count: int) -> List[HideUserTimelineEv
     except Exception as e:
         raise DatabaseException(str(e))
 
-def unhide_timeline_events(user: int, row_id: int) -> bool:
+def unhide_timeline_event(user: int, row_id: int) -> bool:
     ''' Deletes hidden timeline events for a user with specific row id '''
     try:
         with db.engine.connect() as connection:

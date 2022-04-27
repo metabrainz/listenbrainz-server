@@ -473,3 +473,76 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         self.assert400(r)
+
+    def test_unhide_events(self):
+        # add dummy event
+        db_user_timeline_event.hide_user_timeline_event(
+            self.user['id'],
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+            1
+        )
+
+        # send request to hide event
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.unhide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({"id": 1}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert200(r)
+
+    def test_unhide_events_for_authorization(self):
+        # add dummy event
+        db_user_timeline_event.hide_user_timeline_event(
+            self.user['id'],
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+            1
+        )
+
+        # send request to hide event
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.unhide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({"id": 1}),
+        )
+        self.assert401(r)
+
+    def test_unhide_events_for_bad_request(self):
+        # add dummy event
+        db_user_timeline_event.hide_user_timeline_event(
+            self.user['id'],
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+            1
+        )
+
+        # send request to hide event
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.unhide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert400(r)
+
+    @mock.patch("listenbrainz.db.user_timeline_event.unhide_timeline_event",
+        side_effect=DatabaseException)
+    def test_unhide_events_for_database_exception(self, mock_create_event):
+        # add dummy event
+        db_user_timeline_event.hide_user_timeline_event(
+            self.user['id'],
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+            1
+        )
+
+        # send request to hide event
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.unhide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({"id": 1}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert500(r)
