@@ -358,26 +358,26 @@ def hide_user_timeline_event(user_name):
         data = ujson.loads(request.get_data())
         if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
             row_id = data["event_id"]
-            result = db_user_timeline_event.get_user_timeline_events_by_id(row_id);
+            result = db_user_timeline_event.get_user_timeline_events_by_id(row_id)
             if db_user_relationship.is_following_user(user['id'], result.user_id):
                 if db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"]):
-                    return jsonify({"status": "ok"});
+                    return jsonify({"status": "ok"})
                 else:
-                    raise APIBadRequest("Event already hidden");
+                    raise APIBadRequest("Event already hidden")
             else:
-                raise APIUnauthorized("You cannot hide events of this user");
+                raise APIUnauthorized("You cannot hide events of this user")
         elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
             row_id = data["event_id"]
-            result = get_pins_by_id(row_id);
+            result = get_pins_by_id(row_id)
             if db_user_relationship.is_following_user(user['id'], result.user_id):
                 if db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"]):
-                    return jsonify({"status": "ok"});
+                    return jsonify({"status": "ok"})
                 else:
-                    raise APIBadRequest("Event already hidden");
+                    raise APIBadRequest("Event already hidden")
             else:
-                raise APIUnauthorized("You cannot hide events of this user");
+                raise APIUnauthorized("You cannot hide events of this user")
         else:
-            raise APIBadRequest("This event type is not supported for hiding");
+            raise APIBadRequest("This event type is not supported for hiding")
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
     except DatabaseException:
@@ -516,7 +516,13 @@ def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
     return events
 
 
-def get_recording_recommendation_events(user: dict, users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+def get_recording_recommendation_events(
+        user: dict,
+        users_for_events: List[dict],
+        min_ts: int,
+        max_ts: int,
+        count: int
+        ) -> List[APITimelineEvent]:
     """ Gets all recording recommendation events in the feed.
     """
 
@@ -558,7 +564,13 @@ def get_recording_recommendation_events(user: dict, users_for_events: List[dict]
     return events
 
 
-def get_recording_pin_events(user: dict, users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+def get_recording_pin_events(
+        user: dict,
+        users_for_events: List[dict],
+        min_ts: int,
+        max_ts: int,
+        count: int
+        ) -> List[APITimelineEvent]:
     """ Gets all recording pin events in the feed."""
 
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}

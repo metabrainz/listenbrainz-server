@@ -90,6 +90,7 @@ class APITimelineEvent(BaseModel):
     metadata: APIEventMetadata
     hidden: Optional[bool]
 
+
 class HiddenUserTimelineEvent(BaseModel):
     id: NonNegativeInt
     user_id: NonNegativeInt
