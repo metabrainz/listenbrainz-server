@@ -349,7 +349,7 @@ def hide_user_timeline_event(user_name):
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
     '''
- 
+
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
         raise APIUnauthorized("You don't have permissions to hide events from this user's timeline.")
@@ -598,7 +598,7 @@ def get_recording_pin_events(
                     )
                 )
             )
-            
+
             events.append(APITimelineEvent(
                 id=pin.row_id,
                 event_type=UserTimelineEventType.RECORDING_PIN,

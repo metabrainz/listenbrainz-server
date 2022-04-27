@@ -418,9 +418,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(r)
 
-
-    @mock.patch("listenbrainz.db.user_timeline_event.hide_user_timeline_event",
-        side_effect=DatabaseException)
+    @mock.patch(
+        "listenbrainz.db.user_timeline_event.hide_user_timeline_event",
+        side_effect=DatabaseException
+        )
     def test_hide_events_for_database_exception(self, mock_create_event):
         # creating a new user
         new_user = db_user.get_or_create(2, 'riksucks')
@@ -535,8 +536,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert400(r)
 
-    @mock.patch("listenbrainz.db.user_timeline_event.unhide_timeline_event",
-        side_effect=DatabaseException)
+    @mock.patch(
+        "listenbrainz.db.user_timeline_event.unhide_timeline_event",
+        side_effect=DatabaseException
+        )
     def test_unhide_events_for_database_exception(self, mock_create_event):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
