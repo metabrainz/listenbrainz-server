@@ -12,7 +12,8 @@ from flask import current_app
 from troi.core import generate_playlist
 
 TROI_BOT_USER_ID = 12939
-USERS_TO_PROCESS = ["mr_monkey", "rob", "akshaaatt", "Damselfish", "lucifer", "alastairp", "CatCat", "atj"]
+#USERS_TO_PROCESS = ["mr_monkey", "rob", "akshaaatt", "Damselfish", "lucifer", "alastairp", "CatCat", "atj"]
+USERS_TO_PROCESS = ["rob"]
 
 
 def run_post_recommendation_troi_bot():
@@ -46,7 +47,7 @@ def run_daily_jams(user):
     """
     token = current_app.config["WHITELISTED_AUTH_TOKENS"][0]
     try:
-        url = generate_playlist("daily-jams", args=[user["musicbrainz_id"]], upload=True, token=token, created_for=user)
+        url = generate_playlist("daily-jams", args=[user["musicbrainz_id"], "top"], upload=True, token=token, created_for=user)
     except RuntimeError as err:
         current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user["musicbrainz_id"], str(err)))
         return
