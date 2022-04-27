@@ -27,7 +27,7 @@ from data.model.user_timeline_event import (
     UserTimelineEventType,
     UserTimelineEventMetadata,
     RecordingRecommendationMetadata, NotificationMetadata,
-    HideUserTimelineEvent,
+    HiddenUserTimelineEvent,
 )
 from enum import Enum
 from listenbrainz import db
@@ -210,7 +210,7 @@ def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, ev
     except Exception as e:
         raise DatabaseException(str(e))
 
-def get_hidden_timeline_events(user: int, count: int) -> List[HideUserTimelineEvent]:
+def get_hidden_timeline_events(user: int, count: int) -> List[HiddenUserTimelineEvent]:
     '''Retrieves all events that are hidden by the user, based on event_type'''
     try:
         with db.engine.connect() as connection:
@@ -224,7 +224,7 @@ def get_hidden_timeline_events(user: int, count: int) -> List[HideUserTimelineEv
                 'count': count
                 }
             )
-            return [HideUserTimelineEvent(**row) for row in result.fetchall()]
+            return [HiddenUserTimelineEvent(**row) for row in result.fetchall()]
     except Exception as e:
         raise DatabaseException(str(e))
 
