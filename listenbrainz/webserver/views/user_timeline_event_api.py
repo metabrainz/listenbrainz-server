@@ -412,7 +412,7 @@ def unhide_user_timeline_event(user_name):
         raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
     try:
         data = ujson.loads(request.get_data())
-        if db_user_timeline_event.unhide_timeline_events(user['id'], data['id']):
+        if db_user_timeline_event.unhide_timeline_event(user['id'], data['id']):
             return jsonify({"status": "ok"})
         else:
             raise APIBadRequest("Such entry doesn't exist")
