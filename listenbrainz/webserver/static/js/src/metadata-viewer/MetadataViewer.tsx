@@ -2,15 +2,7 @@ import * as React from "react";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as tinycolor from "tinycolor2";
-import {
-  first,
-  get,
-  isNumber,
-  isPlainObject,
-  omit,
-  pick,
-  pickBy,
-} from "lodash";
+import { first, get, isEmpty, isNumber, isPlainObject, pick } from "lodash";
 import TagsComponent from "./TagsComponent";
 import {
   getArtistName,
@@ -318,7 +310,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <span className="caret" />
             </button>
             <ul className="dropdown-menu dropdown-menu-right" role="menu">
-              {supportLinks &&
+              {!isEmpty(supportLinks) ? (
                 Object.entries(supportLinks).map(([key, value]) => {
                   return (
                     <li key={key}>
@@ -327,7 +319,39 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                       </a>
                     </li>
                   );
-                })}
+                })
+              ) : (
+                <>
+                  <li
+                    className="dropdown-header"
+                    style={{ textAlign: "center" }}
+                  >
+                    We couldn&apos;t find any links
+                  </li>
+                  <li>
+                    <a
+                      href={
+                        artistMBID
+                          ? `${musicBrainzURLRoot}artist/${artistMBID}`
+                          : `${musicBrainzURLRoot}artist/create`
+                      }
+                      aria-label="Edit in MusicBrainz"
+                      title="Edit in MusicBrainz"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        src="/static/img/meb-icons/MusicBrainz.svg"
+                        width="18"
+                        height="18"
+                        alt="MusicBrainz"
+                        style={{ verticalAlign: "bottom" }}
+                      />{" "}
+                      {artistMBID ? "Add links" : "Create"} in MusicBrainz
+                    </a>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         </div>
