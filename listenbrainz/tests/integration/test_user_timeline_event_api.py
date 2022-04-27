@@ -347,7 +347,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.hide_user_timeline_event',
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({
@@ -377,7 +378,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.hide_user_timeline_event',
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({
@@ -403,7 +405,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.hide_user_timeline_event',
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({
@@ -436,7 +439,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.hide_user_timeline_event',
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({
@@ -466,7 +470,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.hide_user_timeline_event',
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({}),
@@ -484,7 +489,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.unhide_user_timeline_event',
+            url_for(
+                'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({"id": 1}),
@@ -502,7 +508,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.unhide_user_timeline_event',
+            url_for(
+                'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({"id": 1}),
@@ -519,7 +526,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.unhide_user_timeline_event',
+            url_for(
+                'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({}),
@@ -539,7 +547,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.unhide_user_timeline_event',
+            url_for(
+                'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({"id": 1}),

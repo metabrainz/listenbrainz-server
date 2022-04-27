@@ -299,7 +299,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
     def test_hide_feed_events(self):
         # creating a user
         new_user = db_user.get_or_create(2, 'riksucks')
-        
+
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
@@ -310,7 +310,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
 
-        #hiding event
+        # hiding event
         hidden_event = db_user_timeline_event.hide_user_timeline_event(
             user_id=self.user['id'],
             event_type=event_rec.event_type.value,
@@ -328,7 +328,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
     def test_hide_feed_events_honors_count_parameter(self):
         # creating a user
         new_user = db_user.get_or_create(2, 'riksucks')
-        
+
         # creating an event
         event1 = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
@@ -339,7 +339,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
 
-        #hiding event
+        # hiding event
         hidden_event = db_user_timeline_event.hide_user_timeline_event(
             user_id=self.user['id'],
             event_type=event1.event_type.value,
@@ -356,7 +356,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
 
-        #hiding event
+        # hiding event
         hidden_event = db_user_timeline_event.hide_user_timeline_event(
             user_id=self.user['id'],
             event_type=event2.event_type.value,
@@ -383,7 +383,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
     def test_unhide_events(self):
         # creating a user
         new_user = db_user.get_or_create(2, 'riksucks')
-        
+
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
@@ -394,7 +394,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
 
-        #hiding event
+        # hiding event
         hidden_event = db_user_timeline_event.hide_user_timeline_event(
             user_id=self.user['id'],
             event_type=event_rec.event_type.value,
@@ -432,7 +432,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
 
-        #hiding event
+        # hiding event
         hidden_event = db_user_timeline_event.hide_user_timeline_event(
             user_id=self.user['id'],
             event_type=event_rec.event_type.value,

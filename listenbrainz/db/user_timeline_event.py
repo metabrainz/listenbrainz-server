@@ -191,6 +191,7 @@ def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTime
         count=count
     )
 
+
 def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, event_id: int) -> bool:
     """ Adds events that are to be hidden """
     try:
@@ -210,6 +211,7 @@ def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, ev
     except Exception as e:
         raise DatabaseException(str(e))
 
+
 def get_hidden_timeline_events(user: int, count: int) -> List[HiddenUserTimelineEvent]:
     '''Retrieves all events that are hidden by the user, based on event_type'''
     try:
@@ -228,6 +230,7 @@ def get_hidden_timeline_events(user: int, count: int) -> List[HiddenUserTimeline
     except Exception as e:
         raise DatabaseException(str(e))
 
+
 def unhide_timeline_event(user: int, row_id: int) -> bool:
     ''' Deletes hidden timeline events for a user with specific row id '''
     try:
@@ -244,5 +247,3 @@ def unhide_timeline_event(user: int, row_id: int) -> bool:
             return result.rowcount == 1
     except Exception as e:
         raise DatabaseException(str(e))
-
-
