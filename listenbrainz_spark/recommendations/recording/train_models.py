@@ -149,7 +149,8 @@ def get_best_model(training_data, validation_data, evaluator, ranks, lambdas, it
         logger.info("Training model with model id: {}".format(model_id))
         logger.info("Params: Rank - %d, Lambda - %d, Iterations - %d, Alpha - %f", rank, lmbda, iteration, alpha)
         als = ALS(userCol='spark_user_id', itemCol='recording_id', ratingCol='transformed_listencount',
-                  rank=rank, maxIter=iteration, regParam=lmbda, alpha=alpha, implicitPrefs=True)
+                  rank=rank, maxIter=iteration, regParam=lmbda, alpha=alpha, implicitPrefs=True,
+                  coldStartStrategy="drop")
         model = als.fit(training_data)
         logger.info("Model trained!")
         mt = '{:.2f}'.format((time.monotonic() - t0) / 60)
