@@ -140,28 +140,10 @@ def generate_recommendations(candidate_set, params: RecommendationParams, limit)
             recommendation_df: Dataframe of spark_user_id, recording_id and rating.
     """
     recommendations = params.model.transform(candidate_set)
-
     if _is_empty_dataframe(recommendations):
         raise RecommendationsNotGeneratedException('Recommendations not generated!')
-
     recommendation_df = filter_recommendations_on_rating(recommendations, limit)
-
     return recommendation_df
-
-
-def get_scale_rating_udf(rating):
-    """ Get user defined function (udf) to scale ratings so that they fall in the
-        range: 0.0 -> 1.0.
-
-        Args:
-            rating (float): score given to recordings by CF.
-
-        Returns:
-            rating udf.
-    """
-    scaled_rating = (rating / 2.0) + 0.5
-
-    return round(min(max(scaled_rating, -1.0), 1.0), 3)
 
 
 def scale_rating(df: pyspark.sql.DataFrame):
@@ -174,14 +156,10 @@ def scale_rating(df: pyspark.sql.DataFrame):
         Returns:
             df: Dataframe with scaled rating.
     """
-    scaling_udf = func.udf(get_scale_rating_udf, DoubleType())
-
-    df = df.withColumn("scaled_rating", scaling_udf(df.rating)) \
-           .select(col('recording_id'),
-                   col('spark_user_id'),
-                   col('scaled_rating').alias('rating'))
-
-    return df
+    scaler = func.round(func.least(func.greatest((col('rating') / func.lit(2.0)) + func.lit(0.5), func.lit(-1.0)), func.lit(1.0)), 3)
+    return df \
+        .withColumn("scaled_rating", scaler) \
+        .select(col('recording_id'), col('spark_user_id'), col('scaled_rating').alias('rating'))
 
 
 def get_candidate_set_rdd_for_user(candidate_set_df, users):
