@@ -1,7 +1,7 @@
 """ This function contains code to run the various troi-bot functions after
     recommendations have been generated.
 """
-from listenbrainz.db.user_relationship import get_following_for_user
+from listenbrainz.db.user_relationship import get_followers_of_user
 from listenbrainz.db.user_timeline_event import create_user_timeline_event
 from data.model.user_timeline_event import (
     UserTimelineEvent,
@@ -22,12 +22,12 @@ def run_post_recommendation_troi_bot():
     """
 
     # Save playlists for just a handful of people
-    for user in USERS_TO_PROCESS:
-        make_playlist_from_recommendations(user)
+#    for user in USERS_TO_PROCESS:
+#        make_playlist_from_recommendations(user)
 
     # Now generate daily jams (and other in the future) for users who follow troi bot
-    users = get_following_for_user(TROI_BOT_USER_ID)
-    if user in users:
+    users = get_followers_of_user(TROI_BOT_USER_ID)
+    for user in users:
         run_daily_jams(user)
         # Add others here
 

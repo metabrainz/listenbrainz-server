@@ -382,5 +382,5 @@ def cron_request_recommendations(ctx):
 @click.pass_context
 def recommendations_finished(ctx):
     from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
-
-    ctx.invoke(run_post_recommendation_troi_bot)
+    with create_app().app_context():
+        run_post_recommendation_troi_bot()
