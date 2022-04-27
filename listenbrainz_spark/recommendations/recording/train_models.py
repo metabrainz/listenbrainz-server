@@ -201,7 +201,7 @@ def save_model(model_id, model):
     dest_path = get_model_path(model_id)
     try:
         logger.info('Saving model...')
-        model.save(listenbrainz_spark.context, dest_path)
+        model.save(dest_path)
         logger.info('Model saved!')
     except Py4JJavaError as err:
         logger.error('Unable to save model "{}"\n{}. Aborting...'.format(model_id,
