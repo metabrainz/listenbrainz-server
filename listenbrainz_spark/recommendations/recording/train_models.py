@@ -58,7 +58,7 @@ def preprocess_data(transformed_listencounts_df):
             test_data (rdd): Used for testing.
     """
     logger.info('Splitting dataframe...')
-    training_data, validation_data, test_data = transformed_listencounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
+    training_data, validation_data, test_data = transformed_listencounts_df.randomSplit([4.0, 1.0, 1.0], 45)
     return training_data, validation_data, test_data
 
 
