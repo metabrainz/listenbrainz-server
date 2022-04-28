@@ -4,6 +4,7 @@
 from listenbrainz.db.user import get_by_mb_id
 from listenbrainz.db.user_relationship import get_followers_of_user
 from listenbrainz.db.user_timeline_event import create_user_timeline_event
+from listenbrainz.db.playlist import TROI_BOT_USER_ID
 from data.model.user_timeline_event import (
     UserTimelineEvent,
     UserTimelineEventType,
@@ -12,7 +13,6 @@ from data.model.user_timeline_event import (
 from flask import current_app
 from troi.core import generate_playlist
 
-TROI_BOT_USER_ID = 12939
 USERS_TO_PROCESS = ["mr_monkey", "rob", "akshaaatt", "Damselfish", "lucifer", "alastairp", "CatCat", "atj"]
 
 

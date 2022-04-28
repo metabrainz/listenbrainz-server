@@ -3,11 +3,17 @@ import datetime
 from typing import List, Optional
 
 import sqlalchemy
+from sqlalchemy.orm import Session
 import ujson
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import timescale as ts
 from listenbrainz.db import user as db_user
+
+from flask import current_app
+
+
+TROI_BOT_USER_ID = 12939
 
 
 def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
@@ -388,6 +394,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
         created_for = db_user.get(playlist.created_for_id)
         if created_for is None:
             raise Exception("TODO: Custom exception")
+
     query = sqlalchemy.text("""
         INSERT INTO playlist.playlist (creator_id
                                      , name
@@ -410,21 +417,34 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
     fields["algorithm_metadata"] = ujson.dumps(playlist.algorithm_metadata or {})
 
     with ts.engine.connect() as connection:
-        result = connection.execute(query, fields)
-        row = dict(result.fetchone())
-        playlist.id = row['id']
-        playlist.mbid = row['mbid']
-        playlist.created = row['created']
-        playlist.creator = creator['musicbrainz_id']
-        playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 0)
+        with connection.begin():
+            if playlist.creator_id == TROI_BOT_USER_ID and playlist.created_for_id is not None and \
+                playlist.algorithm_metadata is not None and "source_patch" in playlist.algorithm_metadata:
+                del_query = sqlalchemy.text("""DELETE FROM playlist.playlist
+                                                     WHERE creator_id = :creator_id
+                                                       AND algorithm_metadata->>'source_patch' = :source_patch
+                                                       AND created_for_id = :created_for_id""")
+                connection.execute(del_query, { "creator_id": playlist.creator_id,
+                                                "created_for_id": playlist.created_for_id,
+                                                "source_patch": playlist.algorithm_metadata["source_patch"] })
 
-        if playlist.collaborator_ids:
-            add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
-            collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
-            collaborator_ids = collaborator_ids.get(playlist.id, [])
-            playlist.collaborators = get_collaborators_names_from_ids(collaborator_ids)
+            result = connection.execute(query, fields)
+            row = dict(result.fetchone())
+            playlist.id = row['id']
+            playlist.mbid = row['mbid']
+            playlist.created = row['created']
+            playlist.creator = creator['musicbrainz_id']
+            playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 0)
 
-        return model_playlist.Playlist.parse_obj(playlist.dict())
+            if playlist.collaborator_ids:
+                add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
+                collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
+                collaborator_ids = collaborator_ids.get(playlist.id, [])
+                playlist.collaborators = get_collaborators_names_from_ids(collaborator_ids)
+  
+                
+
+            return model_playlist.Playlist.parse_obj(playlist.dict())
 
 
 def add_playlist_collaborators(connection, playlist_id, collaborator_ids):
