@@ -236,6 +236,14 @@ def request_dataframes(days, job_type, listens_threshold):
     )
 
 
+@cli.command(name="request_missing_mb_data")
+@click.option("--days", type=int, default=180, help="Request missing musicbrainz data based on listen data of given number of days")
+def request_missing_mb_data(days):
+    """ Send the cluster a request to generate missing MB data.
+    """
+    send_request_to_spark_cluster('cf.missing_mb_data', days=days)
+
+
 def parse_list(ctx, args):
     return list(args)
 
