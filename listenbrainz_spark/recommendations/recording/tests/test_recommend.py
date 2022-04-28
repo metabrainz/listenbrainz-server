@@ -2,6 +2,8 @@ import logging
 import uuid
 from unittest.mock import patch, call, MagicMock
 
+from pyspark.sql.types import StructType
+
 import listenbrainz_spark
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
 from listenbrainz_spark.recommendations.recording import recommend
@@ -103,13 +105,9 @@ class RecommendTestClass(RecommendationsTestCase):
         ])
 
     def test_filter_recommendations_on_rating(self):
-        df = self.get_recommendation_df()
-        recommendation_df = df.select(col('spark_user_id').alias('user'),
-                                      col('recording_id').alias('product'),
-                                      col('rating'))
-        limit = 1
-
-        df = recommend.filter_recommendations_on_rating(recommendation_df, limit)
+        recommendation_df = self.get_recommendation_df() \
+            .select('spark_user_id', 'recording_id', col('rating').alias('prediction'))
+        df = recommend.filter_recommendations_on_rating(recommendation_df, 1)
         self.assertEqual(df.count(), 2)
         row = df.collect()
 
@@ -136,25 +134,20 @@ class RecommendTestClass(RecommendationsTestCase):
         mock_model = MagicMock()
         params.model = mock_model
 
-        mock_predict = mock_model.predictAll
+        mock_predict = mock_model.transform
         candidate_set = self.get_candidate_set()
         users = []
 
         rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, users)
         mock_predict.return_value = rdd
 
-        df = recommend.generate_recommendations(candidate_set, params, limit)
-
+        recommend.generate_recommendations(candidate_set, params, limit)
         mock_predict.assert_called_once_with(candidate_set)
-
-        mock_df = mock_lb.session.createDataFrame
-        mock_df.assert_called_once_with(mock_predict.return_value, schema=None)
-
-        mock_filter.assert_called_once_with(mock_df.return_value, limit)
+        mock_filter.assert_called_once_with(mock_predict.return_value, limit)
 
         with self.assertRaises(RecommendationsNotGeneratedException):
             # empty rdd
-            mock_predict.return_value = MagicMock()
+            mock_predict.return_value = listenbrainz_spark.session.createDataFrame([], schema=StructType([]))
             recommend.generate_recommendations(candidate_set, params, limit)
 
     def test_get_scale_rating_udf(self):
@@ -181,20 +174,19 @@ class RecommendTestClass(RecommendationsTestCase):
         self.assertEqual(sorted(df.columns), ['rating', 'recording_id', 'spark_user_id'])
         received_ratings = sorted([row.rating for row in df.collect()])
         expected_ratings = [-0.729, 0.657, 1.0, 1.0]
+        self.assertEqual(received_ratings, expected_ratings)
 
     def test_get_candidate_set_rdd_for_user(self):
         candidate_set = self.get_candidate_set()
         users = []
 
         candidate_set_rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, users)
-        self.assertTrue(isinstance(candidate_set_rdd, RDD))
         res = sorted([row for row in candidate_set_rdd.collect()])
         self.assertEqual(res, [(1, 1), (2, 2)])
 
         users = [3]
         candidate_set_rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, users)
 
-        self.assertTrue(isinstance(candidate_set_rdd, RDD))
         row = candidate_set_rdd.collect()
         self.assertEqual([(1, 1)], row)
 
@@ -256,14 +248,13 @@ class RecommendTestClass(RecommendationsTestCase):
             users = ['invalid']
             recommend.get_user_name_and_user_id(params, users)
 
-    @patch('listenbrainz_spark.recommendations.recording.recommend.MatrixFactorizationModel')
-    @patch('listenbrainz_spark.recommendations.recording.recommend.listenbrainz_spark')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.ALSModel')
     @patch('listenbrainz_spark.recommendations.recording.recommend.get_model_path')
-    def test_load_model(self, mock_model_path, mock_lb, mock_matrix_model):
+    def test_load_model(self, mock_model_path, mock_als_model):
         model_id = uuid.uuid4()
         recommend.load_model(model_id)
         mock_model_path.assert_called_once_with(model_id)
-        mock_matrix_model.load.assert_called_once_with(mock_lb.context, mock_model_path.return_value)
+        mock_als_model.load.assert_called_once_with(mock_model_path.return_value)
 
     def test_get_most_recent_model_id(self):
         model_id_1 = "a36d6fc9-49d0-4789-a7dd-a2b72369ca45"

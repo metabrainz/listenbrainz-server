@@ -19,6 +19,7 @@ import pyspark.sql.functions as func
 from py4j.protocol import Py4JJavaError
 from pyspark.ml.recommendation import ALSModel
 from pyspark.sql.functions import col, row_number
+from pyspark.sql.types import DoubleType
 from pyspark.sql.window import Window
 
 import listenbrainz_spark
@@ -173,7 +174,7 @@ def scale_rating(df: pyspark.sql.DataFrame):
         Returns:
             df: Dataframe with scaled rating.
     """
-    scaling_udf = udf(get_scale_rating_udf, DoubleType())
+    scaling_udf = func.udf(get_scale_rating_udf, DoubleType())
 
     df = df.withColumn("scaled_rating", scaling_udf(df.rating)) \
            .select(col('recording_id'),
