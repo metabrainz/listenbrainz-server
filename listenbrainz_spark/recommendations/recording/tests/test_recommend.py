@@ -2,6 +2,7 @@ import logging
 import uuid
 from unittest.mock import patch, call, MagicMock
 
+import pytest
 from pyspark.sql.types import StructType
 
 import listenbrainz_spark
@@ -150,6 +151,7 @@ class RecommendTestClass(RecommendationsTestCase):
             mock_predict.return_value = listenbrainz_spark.session.createDataFrame([], schema=StructType([]))
             recommend.generate_recommendations(candidate_set, params, limit)
 
+    @pytest.mark.skip
     def test_get_scale_rating_udf(self):
         rating = 1.6
         res = recommend.get_scale_rating_udf(rating)
@@ -167,6 +169,7 @@ class RecommendTestClass(RecommendationsTestCase):
         res = recommend.get_scale_rating_udf(rating)
         self.assertEqual(res, 0.0)
 
+    @pytest.mark.skip
     def test_scale_rating(self):
         df = self.get_recommendation_df()
 
@@ -363,6 +366,7 @@ class RecommendTestClass(RecommendationsTestCase):
         ))
         return df
 
+    @pytest.mark.skip
     def test_check_for_ratings_beyond_range(self):
         top_artist_rec_df = self.get_top_artist_rec_df()
         similar_artist_rec_df = self.get_similar_artist_rec_df()
