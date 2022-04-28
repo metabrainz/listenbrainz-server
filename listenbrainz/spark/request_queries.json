@@ -64,6 +64,13 @@
     "description": "Import incremental dump with the specified ID into the spark cluster",
     "params": ["dump_id"]
   },
+  "cf.missing_mb_data": {
+    "name": "cf.missing_mb_data",
+    "description": "Generate missing MB data",
+    "params": [
+      "days"
+    ]
+  },
   "cf.recommendations.recording.create_dataframes": {
     "name": "cf.recommendations.recording.create_dataframes",
     "description": "Create dataframes to prepare trainable data.",
