@@ -263,6 +263,9 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.player import player_bp
     _register_blueprint_with_context(app, player_bp, url_prefix='/player')
 
+    from listenbrainz.webserver.views.metadata_viewer import metadata_viewer_bp
+    _register_blueprint_with_context(app, metadata_viewer_bp, url_prefix='/playing-now')
+
     from listenbrainz.webserver.views.playlist import playlist_bp
     _register_blueprint_with_context(app, playlist_bp, url_prefix='/playlist')
 
