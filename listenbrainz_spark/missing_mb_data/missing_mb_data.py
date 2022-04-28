@@ -17,7 +17,7 @@ def get_missing_mb_data():
                  , recording_name
                  , artist_name
                  , release_name
-                 , listen_count
+                 , count(*) AS listen_count
               FROM missing_mb_listens
              WHERE recording_mbid IS NULL
                AND recording_name != ''
