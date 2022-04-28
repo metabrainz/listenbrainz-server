@@ -58,6 +58,8 @@ def preprocess_data(transformed_listencounts_df):
             test_data (rdd): Used for testing.
     """
     logger.info('Splitting dataframe...')
+    # divide in ratio of 4:1:1, so 4/6th = 67% of data is used for training, 16.5% for validation and 16.7% for testing
+    # 45 can be any seed for random sampling. # TODO: figure out why 45 was used in the first place.
     training_data, validation_data, test_data = transformed_listencounts_df.randomSplit([4.0, 1.0, 1.0], 45)
     return training_data, validation_data, test_data
 
@@ -128,7 +130,7 @@ def get_best_model(training_data, validation_data, evaluator, ranks, lambdas, it
         Args:
             training_data (rdd): Used for training.
             validation_data (rdd): Used for validation.
-            num_validation (int): Number of elements/rows in validation_data.
+            evaluator: the metric evaluator to calculate accuracy of the model.
             ranks (list): Number of factors in ALS model.
             lambdas (list): Controls regularization.
             iterations (list): Number of iterations to run.
@@ -139,7 +141,6 @@ def get_best_model(training_data, validation_data, evaluator, ranks, lambdas, it
             model_metadata (dict): Models information such as model id, error etc.
     """
     best_model = None
-    best_model_metadata = defaultdict(dict)
     model_metadata = list()
 
     for rank, lmbda, iteration, alpha in itertools.product(ranks, lambdas, iterations, alphas):
