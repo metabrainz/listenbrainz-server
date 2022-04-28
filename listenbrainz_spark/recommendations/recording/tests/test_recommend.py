@@ -190,17 +190,17 @@ class RecommendTestClass(RecommendationsTestCase):
             {
                 "spark_user_id": 3,
                 "recording_id": 1,
-                "rating": 0.729
-            },
-            {
-                "spark_user_id": 4,
-                "recording_id": 2,
                 "rating": 0.657
             },
             {
                 "spark_user_id": 4,
+                "recording_id": 2,
+                "rating": 1.0
+            },
+            {
+                "spark_user_id": 4,
                 "recording_id": 1,
-                "rating": -1.0
+                "rating": -0.729
             },
             {
                 "spark_user_id": 3,
