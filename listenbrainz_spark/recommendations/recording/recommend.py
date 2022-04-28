@@ -13,26 +13,24 @@ The same process is done for similar artist candidate set.
 
 import logging
 import time
+
+import pyspark.sql
+import pyspark.sql.functions as func
 from py4j.protocol import Py4JJavaError
+from pyspark.ml.recommendation import ALSModel
+from pyspark.sql.functions import col, row_number
+from pyspark.sql.types import DoubleType
+from pyspark.sql.window import Window
 
 import listenbrainz_spark
 from listenbrainz_spark import utils, path
-
 from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            FileNotFetchedException,
                                            SparkSessionNotInitializedException,
                                            RecommendationsNotGeneratedException,
                                            EmptyDataframeExcpetion)
-
-from listenbrainz_spark.recommendations.recording.train_models import get_model_path
 from listenbrainz_spark.recommendations.recording.candidate_sets import _is_empty_dataframe
-
-from pyspark.sql import Row
-import pyspark.sql.functions as func
-from pyspark.sql.window import Window
-from pyspark.sql.functions import col, udf, row_number
-from pyspark.sql.types import DoubleType
-from pyspark.mllib.recommendation import MatrixFactorizationModel
+from listenbrainz_spark.recommendations.recording.train_models import get_model_path
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +70,7 @@ def load_model(model_id):
     """
     dest_path = get_model_path(model_id)
     try:
-        model = MatrixFactorizationModel.load(listenbrainz_spark.context, dest_path)
-        return model
+        return ALSModel.load(dest_path)
     except Py4JJavaError as err:
         logger.error('Unable to load model "{}"\n{}\nAborting...'.format(model_id, str(err.java_exception)),
                                  exc_info=True)
@@ -120,13 +117,13 @@ def filter_recommendations_on_rating(df, limit):
         Returns:
             recommendation_df: Dataframe of spark_user_id, recording_id and rating.
     """
-    window = Window.partitionBy('user').orderBy(col('rating').desc())
+    window = Window.partitionBy('spark_user_id').orderBy(col('prediction').desc())
 
     recommendation_df = df.withColumn('rank', row_number().over(window)) \
                           .where(col('rank') <= limit) \
-                          .select(col('rating'),
-                                  col('product').alias('recording_id'),
-                                  col('user').alias('spark_user_id'))
+                          .select(col('prediction').alias('rating'),
+                                  col('recording_id'),
+                                  col('spark_user_id'))
 
     return recommendation_df
 
@@ -142,14 +139,12 @@ def generate_recommendations(candidate_set, params: RecommendationParams, limit)
         Returns:
             recommendation_df: Dataframe of spark_user_id, recording_id and rating.
     """
-    recommendations = params.model.predictAll(candidate_set)
+    recommendations = params.model.transform(candidate_set)
 
-    if recommendations.isEmpty():
+    if _is_empty_dataframe(recommendations):
         raise RecommendationsNotGeneratedException('Recommendations not generated!')
 
-    df = listenbrainz_spark.session.createDataFrame(recommendations, schema=None)
-
-    recommendation_df = filter_recommendations_on_rating(df, limit)
+    recommendation_df = filter_recommendations_on_rating(recommendations, limit)
 
     return recommendation_df
 
@@ -169,7 +164,7 @@ def get_scale_rating_udf(rating):
     return round(min(max(scaled_rating, -1.0), 1.0), 3)
 
 
-def scale_rating(df):
+def scale_rating(df: pyspark.sql.DataFrame):
     """ Scale the ratings column of dataframe so that they fall in the
         range: 0.0 -> 1.0.
 
@@ -179,7 +174,7 @@ def scale_rating(df):
         Returns:
             df: Dataframe with scaled rating.
     """
-    scaling_udf = udf(get_scale_rating_udf, DoubleType())
+    scaling_udf = func.udf(get_scale_rating_udf, DoubleType())
 
     df = df.withColumn("scaled_rating", scaling_udf(df.rating)) \
            .select(col('recording_id'),
@@ -208,9 +203,7 @@ def get_candidate_set_rdd_for_user(candidate_set_df, users):
     if _is_empty_dataframe(candidate_set_user_df):
         raise EmptyDataframeExcpetion('Empty Candidate sets!')
 
-    candidate_set_rdd = candidate_set_user_df.rdd.map(lambda r: (r['spark_user_id'], r['recording_id']))
-
-    return candidate_set_rdd
+    return candidate_set_user_df
 
 
 def get_user_name_and_user_id(params: RecommendationParams, users):
