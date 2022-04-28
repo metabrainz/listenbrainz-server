@@ -94,8 +94,8 @@ class TrainModelsTestCase(RecommendationsTestCase):
         iterations = [2]
         alphas = [3.0]
 
-        _, __ = train_models.get_best_model(mock_rdd_training, mock_rdd_validation, mock_evaluator,
-                                            ranks, lambdas, iterations, alphas)
+        _, __ = train_models.train_models(mock_rdd_training, mock_rdd_validation, mock_evaluator,
+                                          ranks, lambdas, iterations, alphas)
         mock_id.assert_called_once()
         mock_als_cls.assert_called_once_with(
             userCol='spark_user_id', itemCol='recording_id', ratingCol='transformed_listencount',
