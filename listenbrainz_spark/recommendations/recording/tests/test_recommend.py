@@ -151,30 +151,30 @@ class RecommendTestClass(RecommendationsTestCase):
             recommend.generate_recommendations(candidate_set, params, limit)
 
     def test_get_scale_rating_udf(self):
-        rating = 1.6
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 1.0)
+        df = listenbrainz_spark.session.createDataFrame([
+            Row(spark_user_id=1, recording_id=1, rating=1.6),
+            Row(spark_user_id=1, recording_id=2, rating=-1.6),
+            Row(spark_user_id=2, recording_id=2, rating=0.65579),
+            Row(spark_user_id=2, recording_id=1, rating=-0.9999),
+            Row(spark_user_id=3, recording_id=1, rating=0.313456),
+            Row(spark_user_id=4, recording_id=2, rating=6.994590001),
+            Row(spark_user_id=4, recording_id=2, rating=-2.4587),
+            Row(spark_user_id=3, recording_id=1, rating=7.999)
+        ])
 
-        rating = -1.6
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, -0.3)
+        scaled_df = recommend.scale_rating(df)
+        self.assertEqual(sorted(scaled_df.columns), ['rating', 'recording_id', 'spark_user_id'])
 
-        rating = 0.65579
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 0.828)
-
-        rating = -0.9999
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 0.0)
-
-    def test_scale_rating(self):
-        df = self.get_recommendation_df()
-
-        df = recommend.scale_rating(df)
-        self.assertEqual(sorted(df.columns), ['rating', 'recording_id', 'spark_user_id'])
-        received_ratings = sorted([row.rating for row in df.collect()])
-        expected_ratings = [-0.729, 0.657, 1.0, 1.0]
-        self.assertEqual(received_ratings, expected_ratings)
+        self.assertEqual(scaled_df.collect(), [
+            Row(spark_user_id=1, recording_id=1, rating=1.0),
+            Row(spark_user_id=1, recording_id=2, rating=-0.3),
+            Row(spark_user_id=2, recording_id=2, rating=0.828),
+            Row(spark_user_id=2, recording_id=1, rating=-0.0),
+            Row(spark_user_id=3, recording_id=1, rating=-0.729),
+            Row(spark_user_id=4, recording_id=2, rating=0.657),
+            Row(spark_user_id=4, recording_id=2, rating=-1.0),
+            Row(spark_user_id=3, recording_id=1, rating=1.0)
+        ])
 
     def test_get_candidate_set_rdd_for_user(self):
         candidate_set = self.get_candidate_set()
