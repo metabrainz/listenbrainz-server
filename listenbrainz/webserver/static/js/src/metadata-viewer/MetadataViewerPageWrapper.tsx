@@ -16,8 +16,6 @@ import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import MetadataViewer from "./MetadataViewer";
 
-import fakeData2 from "./fakedata-lookup.json";
-
 export type PlayingNowPageProps = {
   playingNow?: Listen;
   initialRecordingData?: MetadataLookup;
