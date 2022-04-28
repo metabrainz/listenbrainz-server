@@ -49,6 +49,7 @@ def get_missing_mb_data():
                    ) as data
               FROM filtered_listens
              WHERE rank <= {TOP_LISTENS_LIMIT}
+          GROUP BY user_id
     """).toLocalIterator()
 
 
