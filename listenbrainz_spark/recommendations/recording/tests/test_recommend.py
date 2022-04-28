@@ -158,22 +158,55 @@ class RecommendTestClass(RecommendationsTestCase):
             Row(spark_user_id=2, recording_id=1, rating=-0.9999),
             Row(spark_user_id=3, recording_id=1, rating=0.313456),
             Row(spark_user_id=4, recording_id=2, rating=6.994590001),
-            Row(spark_user_id=4, recording_id=2, rating=-2.4587),
-            Row(spark_user_id=3, recording_id=1, rating=7.999)
+            Row(spark_user_id=4, recording_id=1, rating=-2.4587),
+            Row(spark_user_id=3, recording_id=2, rating=7.999)
         ])
 
         scaled_df = recommend.scale_rating(df)
         self.assertEqual(sorted(scaled_df.columns), ['rating', 'recording_id', 'spark_user_id'])
 
-        self.assertEqual(scaled_df.collect(), [
-            Row(spark_user_id=1, recording_id=1, rating=1.0),
-            Row(spark_user_id=1, recording_id=2, rating=-0.3),
-            Row(spark_user_id=2, recording_id=2, rating=0.828),
-            Row(spark_user_id=2, recording_id=1, rating=-0.0),
-            Row(spark_user_id=3, recording_id=1, rating=-0.729),
-            Row(spark_user_id=4, recording_id=2, rating=0.657),
-            Row(spark_user_id=4, recording_id=2, rating=-1.0),
-            Row(spark_user_id=3, recording_id=1, rating=1.0)
+        received_ratings = [x.asDict() for x in scaled_df.collect()]
+        self.assertCountEqual(received_ratings, [
+            {
+                "spark_user_id": 1,
+                "recording_id": 1,
+                "rating": 1.0
+            },
+            {
+                "spark_user_id": 1,
+                "recording_id": 2,
+                "rating": -0.3
+            },
+            {
+                "spark_user_id": 2,
+                "recording_id": 2,
+                "rating": 0.828
+            },
+            {
+                "spark_user_id": 2,
+                "recording_id": 1,
+                "rating": 0.0
+            },
+            {
+                "spark_user_id": 3,
+                "recording_id": 1,
+                "rating": 0.729
+            },
+            {
+                "spark_user_id": 4,
+                "recording_id": 2,
+                "rating": 0.657
+            },
+            {
+                "spark_user_id": 4,
+                "recording_id": 1,
+                "rating": -1.0
+            },
+            {
+                "spark_user_id": 3,
+                "recording_id": 2,
+                "rating": 1.0
+            },
         ])
 
     def test_get_candidate_set_rdd_for_user(self):
