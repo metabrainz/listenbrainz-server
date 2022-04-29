@@ -24,8 +24,8 @@ class TrainModelsTestCase(RecommendationsTestCase):
 
     def test_preprocess_data(self):
         test_playcounts_df = utils.read_files_from_HDFS(TEST_PLAYCOUNTS_PATH)
-        training_data, validation_data, test_data = train_models.preprocess_data(test_playcounts_df, {})
-        total_playcounts = training_data.count() + validation_data.count() + test_data.count()
+        training_data, test_data = train_models.preprocess_data(test_playcounts_df, {})
+        total_playcounts = training_data.count() + test_data.count()
         self.assertEqual(total_playcounts, PLAYCOUNTS_COUNT)
 
     def test_get_model_path(self):
@@ -54,7 +54,6 @@ class TrainModelsTestCase(RecommendationsTestCase):
     def test_get_best_model(self, mock_als_cls):
         mock_evaluator = MagicMock()
         mock_rdd_training = Mock()
-        mock_rdd_validation = Mock()
 
         mock_als_model = MagicMock()
         mock_als = MagicMock()
@@ -66,7 +65,7 @@ class TrainModelsTestCase(RecommendationsTestCase):
         iterations = [2]
         alphas = [3.0]
 
-        _, __ = train_models.train_models(mock_rdd_training, mock_rdd_validation, mock_evaluator,
+        _, __ = train_models.train_models(mock_rdd_training, mock_evaluator,
                                           ranks, lambdas, iterations, alphas, {})
         mock_als_cls.assert_called_once_with(
             userCol='spark_user_id', itemCol='recording_id', ratingCol='transformed_listencount',
@@ -74,7 +73,6 @@ class TrainModelsTestCase(RecommendationsTestCase):
             implicitPrefs=True, coldStartStrategy="drop"
         )
         mock_als.fit.assert_called_once_with(mock_rdd_training)
-        mock_als_model.transform.assert_called_once_with(mock_rdd_validation)
         mock_evaluator.evaluate.assert_called_once_with(mock_als_model.transform.return_value)
 
     def test_delete_model(self):
@@ -94,8 +92,6 @@ class TrainModelsTestCase(RecommendationsTestCase):
             iteration=2,
             rank=4,
             validation_rmse=4.5,
-            training_time=3.0,
-            rmse_time=2.1,
             model=MagicMock()
         )
 
@@ -120,8 +116,6 @@ class TrainModelsTestCase(RecommendationsTestCase):
             iteration=2,
             rank=4,
             validation_rmse=4.5,
-            training_time=3.0,
-            rmse_time=2.1,
             model=MagicMock()
         )
         train_models.save_model(mock_model, {
