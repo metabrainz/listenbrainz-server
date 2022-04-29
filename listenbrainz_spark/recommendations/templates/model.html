@@ -34,9 +34,9 @@
 
     <p>
         Preprocessing of playcounts dataframe takes <b>{{ time_preprocessing }}</b>. The preprocessed data divided the
-        data into training and test data, in {{ train_test_ratio }}. Further, {{ train_validation_ratio * 100 | round(2)}}
-        % of the training dataset was used for training the model. The remaining listens in the training dataset were
-        used for validating phase of the model. From the models trained, the best one is selected to generate recommendations.
+        data into training and test data, in {{ train_test_ratio }}. The model was then trained on the training data
+        using K-Folds Cross Validation with {{ num_folds }} folds. From the models trained, the one with least RMSE
+        is selected to generate recommendations.
     </p>
     <p>
         Of all the trained models, the model with the least RMSE value is chosen to generate recommendations. The model

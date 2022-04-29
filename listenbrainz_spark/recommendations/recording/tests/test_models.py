@@ -1,6 +1,5 @@
-import re
 from unittest import mock
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, MagicMock
 
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
 from listenbrainz_spark.recommendations.recording.train_models import Model
@@ -51,7 +50,7 @@ class TrainModelsTestCase(RecommendationsTestCase):
         expected_dataframe_id = train_models.get_latest_dataframe_id()
         self.assertEqual(expected_dataframe_id, df_id_2)
 
-    @patch('listenbrainz_spark.recommendations.recording.train_models.TrainValidationSplit')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.CrossValidator')
     @patch('listenbrainz_spark.recommendations.recording.train_models.ParamGridBuilder')
     @patch('listenbrainz_spark.recommendations.recording.train_models.ALS')
     def test_get_best_model(self, mock_als_cls, mock_params, mock_tvs):
@@ -73,7 +72,7 @@ class TrainModelsTestCase(RecommendationsTestCase):
             estimator=mock_als_cls.return_value,
             estimatorParamMaps=mock.ANY,
             evaluator=mock_evaluator,
-            trainRatio=0.80,
+            numFolds=5,
             collectSubModels=True
         )
         mock_tvs.return_value.fit.assert_called_once_with(mock_training)

@@ -25,7 +25,7 @@ from typing import List, Tuple
 from pyspark import Row
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.recommendation import ALS
-from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit, TrainValidationSplitModel
+from pyspark.ml.tuning import ParamGridBuilder, CrossValidator, CrossValidatorModel
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils, path, schema
@@ -80,10 +80,17 @@ def preprocess_data(transformed_listencounts_df, context):
     return training_data, test_data
 
 
-def get_models(als: ALS, params: List[dict], tvs_model: TrainValidationSplitModel) -> Tuple[Model, List[Model]]:
+def get_models(als: ALS, params: List[dict], cv_model: CrossValidatorModel) -> Tuple[Model, List[Model]]:
+    """ Return the best model and list of all models along with the parameters on which the model was trained.
+
+    Args:
+        als: the ALS model to be trained
+        params: list of dict of parameters on which als model is trained and tuned
+        cv_model: tuned cross validator model
+    """
     # Spark doesn't expose the underlying params which were used for a model directly, so we
     # need to resort to workarounds. See also: https://stackoverflow.com/a/43794841
-    parent = tvs_model.bestModel._java_obj.parent()
+    parent = cv_model.bestModel._java_obj.parent()
     best_model_params = {
         "rank": parent.getRank(),
         "alpha": parent.getAlpha(),
@@ -93,7 +100,7 @@ def get_models(als: ALS, params: List[dict], tvs_model: TrainValidationSplitMode
     best_model_metadata = None
 
     metadatas = []
-    for param, model, metric in zip(params, tvs_model.subModels, tvs_model.validationMetrics):
+    for param, model, metric in zip(params, cv_model.subModels, cv_model.avgMetrics):
         model_metadata = Model(
             model=model,
             rank=param[als.rank],
@@ -148,20 +155,20 @@ def train_models(training_data, evaluator, ranks, lambdas, iterations, alphas, c
         .addGrid(als.maxIter, iterations) \
         .build()
 
-    tvs = TrainValidationSplit(
+    cv = CrossValidator(
         estimator=als,
         estimatorParamMaps=params,
         evaluator=evaluator,
-        trainRatio=0.80,
+        numFolds=5,
         collectSubModels=True
     )
-    context["train_validation_ratio"] = 0.80
-    tvs_model: TrainValidationSplitModel = tvs.fit(training_data)
+    context["num_folds"] = 5
+    cv_model: CrossValidatorModel = cv.fit(training_data)
     logger.info("Model trained!")
 
     context["time_model_training"] = f"{(time.monotonic() - t0) / 3600:.2f} hours"
 
-    best_model, all_models = get_models(als, params, tvs_model)
+    best_model, all_models = get_models(als, params, cv_model)
     context["best_model"] = best_model
     context["all_models"] = all_models
 
