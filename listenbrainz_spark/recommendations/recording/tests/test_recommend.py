@@ -12,7 +12,6 @@ from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
                                            EmptyDataframeExcpetion)
 
 from pyspark.sql import Row
-from pyspark.rdd import RDD
 from pyspark.sql.functions import col
 
 # for test data/dataframes refer to listenbrainzspark/tests/__init__.py
@@ -150,31 +149,6 @@ class RecommendTestClass(RecommendationsTestCase):
             mock_predict.return_value = listenbrainz_spark.session.createDataFrame([], schema=StructType([]))
             recommend.generate_recommendations(candidate_set, params, limit)
 
-    def test_get_scale_rating_udf(self):
-        rating = 1.6
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 1.0)
-
-        rating = -1.6
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, -0.3)
-
-        rating = 0.65579
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 0.828)
-
-        rating = -0.9999
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 0.0)
-
-    def test_scale_rating(self):
-        df = self.get_recommendation_df()
-
-        df = recommend.scale_rating(df)
-        self.assertEqual(sorted(df.columns), ['rating', 'recording_id', 'spark_user_id'])
-        received_ratings = sorted([row.rating for row in df.collect()])
-        expected_ratings = [-0.729, 0.657, 1.0, 1.0]
-        self.assertEqual(received_ratings, expected_ratings)
 
     def test_get_candidate_set_rdd_for_user(self):
         candidate_set = self.get_candidate_set()
@@ -362,14 +336,6 @@ class RecommendTestClass(RecommendationsTestCase):
             schema=None
         ))
         return df
-
-    def test_check_for_ratings_beyond_range(self):
-        top_artist_rec_df = self.get_top_artist_rec_df()
-        similar_artist_rec_df = self.get_similar_artist_rec_df()
-
-        min_test, max_test = recommend.check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
-        self.assertEqual(min_test, True)
-        self.assertEqual(max_test, True)
 
     def test_create_messages(self):
         params = self.get_recommendation_params()
