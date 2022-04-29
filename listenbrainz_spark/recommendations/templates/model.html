@@ -16,13 +16,7 @@
         products. userID ~ user_id, productID ~ recording_id and preference ~ transformed count as represented by rows
         in playcounts dataframe.
     </p>
-    <p>
-        Playcounts dataframe is loaded from HDFS in <b>{{ time_load_playcounts }}</b> and is converetd to an RDD and
-        each row is mapped to object of Rating class using
-    </p>
-    <blockquote>Rating(user_id, recording_id, count)</blockquote>
-
-    <p>Playcounts dataframe is of the form:</p>
+    <p>Playcounts dataframe is loaded from HDFS in <b>{{ time_load_playcounts }}</b> and is of the form:</p>
     <table>
         <tr>
             <th>user_id</th>
