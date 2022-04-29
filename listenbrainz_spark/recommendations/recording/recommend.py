@@ -5,7 +5,7 @@ The best_model saved in HDFS is loaded with the help of model_id which is fetche
 `spark_user_id` and `recording_id` are fetched from top_artist_candidate_set_df and are given as input to the
 recommender. An RDD of `user`, `product` and `rating` is returned from the recommender which is later converted to
 a dataframe by filtering top X (an int supplied as an argument to the script) recommendations for all users sorted on rating
-and fields renamed as `spark_user_id`, `recording_id` and `rating`. The ratings are scaled so that they lie between 0 and 1.
+and fields renamed as `spark_user_id`, `recording_id` and `rating`.
 This dataframe is joined with recordings_df on recording_id to get the recording mbids which are then sent over the queue.
 
 The same process is done for similar artist candidate set.
@@ -193,33 +193,6 @@ def get_user_name_and_user_id(params: RecommendationParams, users):
         raise EmptyDataframeExcpetion('No active users found!')
 
     return users_df
-
-
-def check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df):
-    """ Check if rating in top_artist_rec_df and similar_artist_rec_df does not belong to [-1, 1].
-
-        Args:
-            top_artist_rec_df (dataframe): Top artist recommendations for all users.
-            similar_artist_rec_df (dataframe): Similar artist recommendations for all users.
-
-        Returns:
-            a tuple of booleans (max out of range, min out of range)
-    """
-    max_rating = top_artist_rec_df.select(func.max('rating').alias('rating')).take(1)[0].rating
-
-    max_rating = max(similar_artist_rec_df.select(func.max('rating').alias('rating')).take(1)[0].rating, max_rating)
-
-    min_rating = top_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating
-
-    min_rating = min(similar_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating, min_rating)
-
-    if max_rating > 1.0:
-        logger.info('Some ratings are greater than 1 \nMax rating: {}'.format(max_rating))
-
-    if min_rating < -1.0:
-        logger.info('Some ratings are less than -1 \nMin rating: {}'.format(min_rating))
-
-    return max_rating > 1.0, min_rating < -1.0
 
 
 def create_messages(params, top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count,

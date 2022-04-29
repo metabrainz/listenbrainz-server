@@ -2,7 +2,6 @@ import logging
 import uuid
 from unittest.mock import patch, call, MagicMock
 
-import pytest
 from pyspark.sql.types import StructType
 
 import listenbrainz_spark
@@ -13,7 +12,6 @@ from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
                                            EmptyDataframeExcpetion)
 
 from pyspark.sql import Row
-from pyspark.rdd import RDD
 from pyspark.sql.functions import col
 
 # for test data/dataframes refer to listenbrainzspark/tests/__init__.py
@@ -338,15 +336,6 @@ class RecommendTestClass(RecommendationsTestCase):
             schema=None
         ))
         return df
-
-    @pytest.mark.skip
-    def test_check_for_ratings_beyond_range(self):
-        top_artist_rec_df = self.get_top_artist_rec_df()
-        similar_artist_rec_df = self.get_similar_artist_rec_df()
-
-        min_test, max_test = recommend.check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
-        self.assertEqual(min_test, True)
-        self.assertEqual(max_test, True)
 
     def test_create_messages(self):
         params = self.get_recommendation_params()
