@@ -151,33 +151,6 @@ class RecommendTestClass(RecommendationsTestCase):
             mock_predict.return_value = listenbrainz_spark.session.createDataFrame([], schema=StructType([]))
             recommend.generate_recommendations(candidate_set, params, limit)
 
-    @pytest.mark.skip
-    def test_get_scale_rating_udf(self):
-        rating = 1.6
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 1.0)
-
-        rating = -1.6
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, -0.3)
-
-        rating = 0.65579
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 0.828)
-
-        rating = -0.9999
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 0.0)
-
-    @pytest.mark.skip
-    def test_scale_rating(self):
-        df = self.get_recommendation_df()
-
-        df = recommend.scale_rating(df)
-        self.assertEqual(sorted(df.columns), ['rating', 'recording_id', 'spark_user_id'])
-        received_ratings = sorted([row.rating for row in df.collect()])
-        expected_ratings = [-0.729, 0.657, 1.0, 1.0]
-        self.assertEqual(received_ratings, expected_ratings)
 
     def test_get_candidate_set_rdd_for_user(self):
         candidate_set = self.get_candidate_set()

@@ -149,41 +149,6 @@ def generate_recommendations(candidate_set, params: RecommendationParams, limit)
     return recommendation_df
 
 
-# def get_scale_rating_udf(rating):
-#     """ Get user defined function (udf) to scale ratings so that they fall in the
-#         range: 0.0 -> 1.0.
-#
-#         Args:
-#             rating (float): score given to recordings by CF.
-#
-#         Returns:
-#             rating udf.
-#     """
-#     scaled_rating = (rating / 2.0) + 0.5
-#
-#     return round(min(max(scaled_rating, -1.0), 1.0), 3)
-
-
-# def scale_rating(df: pyspark.sql.DataFrame):
-#     """ Scale the ratings column of dataframe so that they fall in the
-#         range: 0.0 -> 1.0.
-#
-#         Args:
-#             df: Dataframe to scale.
-#
-#         Returns:
-#             df: Dataframe with scaled rating.
-#     """
-#     scaling_udf = func.udf(get_scale_rating_udf, DoubleType())
-#
-#     df = df.withColumn("scaled_rating", scaling_udf(df.rating)) \
-#            .select(col('recording_id'),
-#                    col('spark_user_id'),
-#                    col('scaled_rating').alias('rating'))
-#
-#     return df
-
-
 def get_candidate_set_rdd_for_user(candidate_set_df, users):
     """ Get candidate set RDD for a given user.
 
@@ -443,13 +408,6 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     top_artist_rec_user_count = get_user_count(top_artist_rec_df)
     similar_artist_rec_user_count = get_user_count(similar_artist_rec_df)
     logger.info('Took {:.2f}sec to get top artist and similar artist user count'.format(time.monotonic() - ts))
-
-    # ts = time.monotonic()
-    # check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
-
-    # top_artist_rec_scaled_df = scale_rating(top_artist_rec_df)
-    # similar_artist_rec_scaled_df = scale_rating(similar_artist_rec_df)
-    # logger.info('Took {:.2f}sec to scale the ratings'.format(time.monotonic() - ts))
 
     ts = time.monotonic()
     top_artist_rec_mbid_df = get_recording_mbids(params, top_artist_rec_df, users_df)
