@@ -73,7 +73,8 @@ class TrainModelsTestCase(RecommendationsTestCase):
             estimatorParamMaps=mock.ANY,
             evaluator=mock_evaluator,
             numFolds=5,
-            collectSubModels=True
+            collectSubModels=True,
+            parallelism=3
         )
         mock_tvs.return_value.fit.assert_called_once_with(mock_training)
 

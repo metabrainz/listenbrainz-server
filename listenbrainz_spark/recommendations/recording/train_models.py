@@ -160,7 +160,8 @@ def train_models(training_data, evaluator, ranks, lambdas, iterations, alphas, c
         estimatorParamMaps=params,
         evaluator=evaluator,
         numFolds=5,
-        collectSubModels=True
+        collectSubModels=True,
+        parallelism=3
     )
     context["num_folds"] = 5
     cv_model: CrossValidatorModel = cv.fit(training_data)
