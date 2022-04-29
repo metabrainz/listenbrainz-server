@@ -100,7 +100,7 @@ def get_models(als: ALS, params: List[dict], cv_model: CrossValidatorModel) -> T
     best_model_metadata = None
 
     metadatas = []
-    for param, model, metric in zip(params, cv_model.subModels, cv_model.avgMetrics):
+    for param, model, metric in zip(params, cv_model.subModels[0], cv_model.avgMetrics):
         model_metadata = Model(
             model=model,
             rank=param[als.rank],
