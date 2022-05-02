@@ -137,6 +137,9 @@ const getReleaseGroupMBID = (listen: Listen): string | undefined =>
 const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
   _.get(listen, "track_metadata.track_name", "") || _.get(listen, "title", "");
 
+const getTrackDuration = (listen?: Listen): number =>
+  _.get(listen, "track_metadata.additional_info.duration_ms", "");
+
 const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
   _.get(listen, "track_metadata.artist_name", "") ||
   _.get(listen, "creator", "");
@@ -557,6 +560,7 @@ export {
   getArtistMBIDs,
   getArtistName,
   getTrackName,
+  getTrackDuration,
   pinnedRecordingToListen,
   getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,
