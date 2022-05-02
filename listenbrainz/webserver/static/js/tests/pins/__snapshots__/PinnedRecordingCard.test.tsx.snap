@@ -188,12 +188,12 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
             >
               Never Gonna Give You Up
             </div>
-            <span
+            <div
               className="small text-muted ellipsis"
               title="Rick Astley"
             >
               Rick Astley
-            </span>
+            </div>
           </div>
           <div
             className="right-section"
