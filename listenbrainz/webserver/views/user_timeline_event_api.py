@@ -360,20 +360,16 @@ def hide_user_timeline_event(user_name):
             row_id = data["event_id"]
             result = db_user_timeline_event.get_user_timeline_events_by_id(row_id)
             if db_user_relationship.is_following_user(user['id'], result.user_id):
-                if db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"]):
-                    return jsonify({"status": "ok"})
-                else:
-                    raise APIBadRequest("Event already hidden")
+                db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"])
+                return jsonify({"status": "ok"})
             else:
                 raise APIUnauthorized("You cannot hide events of this user")
         elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
             row_id = data["event_id"]
             result = get_pins_by_id(row_id)
             if db_user_relationship.is_following_user(user['id'], result.user_id):
-                if db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"]):
-                    return jsonify({"status": "ok"})
-                else:
-                    raise APIBadRequest("Event already hidden")
+                db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"])
+                return jsonify({"status": "ok"})
             else:
                 raise APIUnauthorized("You cannot hide events of this user")
         else:
