@@ -156,6 +156,9 @@ class BulkInsertTable:
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
+                if "." in self.table_name:
+                    schema = self.table_name.split(".")[0]
+                    curs.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
 
                 columns = []
                 for name, types in self.get_create_table_columns():
