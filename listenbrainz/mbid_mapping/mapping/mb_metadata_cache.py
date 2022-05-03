@@ -9,6 +9,7 @@ import ujson
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 from mapping.bulk_table import BulkInsertTable
+from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 import config
 
 
@@ -419,6 +420,11 @@ def create_mb_metadata_cache():
         lb_conn = None
         if config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+
+        can_rel = CanonicalReleaseRedirect(mb_conn)
+        if not can_rel.table_exists():
+            log("mb metadata cache: canonical_release_redirect table doesn't exist, run `canonical-data` manage command first")
+            return
 
         cache = MusicBrainzMetadataCache(mb_conn, lb_conn)
         cache.run()
