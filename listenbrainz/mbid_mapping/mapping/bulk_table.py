@@ -134,6 +134,12 @@ class BulkInsertTable:
         """
 
     def table_exists(self):
+        """Check if the table for this bulk inserter exists.
+
+        Returns:
+            True if it exists and has data in it
+            False if it doesn't exist or is empty
+        """
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
