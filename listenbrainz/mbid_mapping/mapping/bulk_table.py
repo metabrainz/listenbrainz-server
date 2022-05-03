@@ -133,6 +133,20 @@ class BulkInsertTable:
             any flushing/cleanup needed can be completed.
         """
 
+    def table_exists(self):
+        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        try:
+            with conn.cursor() as curs:
+                query = f"""SELECT count(*)
+                            FROM {self.table_name}"""
+                curs.execute(query)
+                if curs.fetchone()[0] > 0:
+                    return True
+                else:
+                    return False
+        except psycopg2.errors.UndefinedTable as err:
+            return False
+
     def _create_tables(self):
         """
             This function creates the temp table, given the provided specification.
