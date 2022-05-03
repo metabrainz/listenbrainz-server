@@ -6,7 +6,9 @@ import UserFeedback, {
   UserFeedbackProps,
   UserFeedbackState,
 } from "../../src/user/UserFeedback";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import * as userFeedbackProps from "../__mocks__/userFeedbackProps.json";
 import * as userFeedbackAPIResponse from "../__mocks__/userFeedbackAPIResponse.json";
@@ -173,6 +175,44 @@ describe("UserFeedback", () => {
     );
     const listens = wrapper.find(ListenCard);
     expect(listens).toHaveLength(15);
+  });
+
+  it("does not render ListenCard items for feedback item without track name", async () => {
+    const withoutTrackNameProps = {
+      ...props,
+      feedback: [
+        {
+          created: 1631778335,
+          recording_msid: "8aa379ad-852e-4794-9c01-64959f5d0b17",
+          score: 1,
+          track_metadata: {
+            additional_info: {
+              artist_msid: "49cd7874-b996-4caf-bece-cad2997b0fe3",
+              recording_mbid: "9812475d-c800-4f29-8a9a-4ac4af4b4dfd",
+              release_mbid: "17276c50-dd38-4c62-990e-186ef0ff36f4",
+            },
+            artist_name: "Hobocombo",
+            release_name: "",
+            track_name: "Bird's lament",
+          },
+          user_id: "mr_monkey",
+        },
+        {
+          created: 1631553259,
+          recording_msid: "edfa0bb9-a58c-406c-9f7c-f16741443f9c",
+          score: 1,
+          track_metadata: null,
+          user_id: "mr_monkey",
+        },
+      ],
+    };
+    const wrapper = mount<UserFeedback>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <UserFeedback {...(withoutTrackNameProps as UserFeedbackProps)} />
+      </GlobalAppContext.Provider>
+    );
+    const listens = wrapper.find(ListenCard);
+    expect(listens).toHaveLength(1);
   });
 
   it("shows feedback on the ListenCards according to recordingFeedbackMap", async () => {

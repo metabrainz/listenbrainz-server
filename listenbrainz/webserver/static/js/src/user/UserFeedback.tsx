@@ -66,9 +66,6 @@ export default class UserFeedback extends React.Component<
       ...listenFormat.track_metadata.additional_info,
       recording_msid: feedbackItem.recording_msid,
     };
-    if (!getTrackName(listenFormat)) {
-      listenFormat.track_metadata.track_name = `No metadata for MSID ${feedbackItem.recording_msid}`;
-    }
     return listenFormat;
   };
 
@@ -380,10 +377,13 @@ export default class UserFeedback extends React.Component<
     } = this.state;
     const { user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
-    const listensFromFeedback: BaseListenFormat[] = feedback.map(
-      (feedbackItem) =>
+    const listensFromFeedback: BaseListenFormat[] = feedback
+      // remove feedback items for which track metadata wasn't found. this usually means bad
+      // msid or mbid data was submitted by the user.
+      .filter((item) => item?.track_metadata)
+      .map((feedbackItem) =>
         UserFeedback.RecordingMetadataToListenFormat(feedbackItem)
-    );
+      );
 
     const canNavigateNewer = page !== 1;
     const canNavigateOlder = page < maxPage;
@@ -440,8 +440,7 @@ export default class UserFeedback extends React.Component<
                   ref={this.listensTable}
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
-                  {feedback.map((feedbackItem, index) => {
-                    const listen = listensFromFeedback[index];
+                  {listensFromFeedback.map((listen) => {
                     const additionalMenuItems = (
                       <>
                         <ListenControl
@@ -459,10 +458,10 @@ export default class UserFeedback extends React.Component<
                       <ListenCard
                         showUsername={false}
                         showTimestamp
-                        key={`${feedbackItem.created}`}
+                        key={`${listen.listened_at}`}
                         listen={listen}
                         currentFeedback={this.getFeedbackForRecordingMsid(
-                          feedbackItem.recording_msid
+                          listen.track_metadata?.additional_info?.recording_msid
                         )}
                         updateFeedbackCallback={this.updateFeedback}
                         additionalMenuItems={additionalMenuItems}
