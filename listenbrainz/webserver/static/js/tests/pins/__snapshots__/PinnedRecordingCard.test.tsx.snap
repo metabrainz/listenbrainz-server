@@ -183,10 +183,14 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
             className="listen-details"
           >
             <div
-              className="ellipsis-2-lines"
-              title="Never Gonna Give You Up"
+              className="title-duration"
             >
-              Never Gonna Give You Up
+              <div
+                className="ellipsis-2-lines"
+                title="Never Gonna Give You Up"
+              >
+                Never Gonna Give You Up
+              </div>
             </div>
             <div
               className="small text-muted ellipsis"

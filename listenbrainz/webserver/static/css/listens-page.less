@@ -314,7 +314,10 @@
 		.title-duration {
 			display: flex;
 			flex-direction: row;
-			column-gap: 0.5rem;
+			align-items: center;
+			> *:not(:first-child) {
+				margin-left: 0.5rem;
+			  }
 		}
 
 		.right-section{

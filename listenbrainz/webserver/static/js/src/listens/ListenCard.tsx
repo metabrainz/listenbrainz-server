@@ -329,21 +329,17 @@ export default class ListenCard extends React.Component<
             <div className="listen-details">{listenDetails}</div>
           ) : (
             <div className="listen-details">
-              {trackDuration ? (
-                <div className="title-duration">
-                  <div title={trackName} className="ellipsis-2-lines">
-                    {getTrackLink(listen)}
-                  </div>
+              <div className="title-duration">
+                <div title={trackName} className="ellipsis-2-lines">
+                  {getTrackLink(listen)}
+                </div>
+                {trackDuration && (
                   <div className="small text-muted" title="Duration">
                     {isNumber(trackDuration) &&
                       millisecondsToStr(trackDuration)}
                   </div>
-                </div>
-              ) : (
-                <div title={trackName} className="ellipsis-2-lines">
-                  {getTrackLink(listen)}
-                </div>
-              )}
+                )}
+              </div>
               <div className="small text-muted ellipsis" title={artistName}>
                 {getArtistLink(listen)}
               </div>
