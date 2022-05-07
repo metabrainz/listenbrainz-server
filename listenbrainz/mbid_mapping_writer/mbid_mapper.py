@@ -110,6 +110,12 @@ class MBIDMapper:
         return distance(artist_credit_name, artist_credit_name_hit), distance(recording_name, recording_name_hit)
 
     def check_hit_in_threshold(self, artist_credit_name, recording_name, ac_hit, r_hit, is_ac_detuned, is_r_detuned):
+        """
+            Check whether the artist and recording name found by typesense search match to the input
+            artist and recording name. An exact match is performed first then falling back to a fuzzy
+            match within desired threshold. The is_ac_detuned and is_r_detuned args denote whether the
+            input artist and recording name are unmodified or detuned.
+        """
         ac_dist, r_dist = self.compare(
             artist_credit_name,
             recording_name,
@@ -294,7 +300,7 @@ class MBIDMapper:
             'recording_name': hit['document']['recording_name'],
             'recording_mbid': hit['document']['recording_mbid'],
             'year': hit['document']['year'],
-                'match_type': match_type
+            'match_type': match_type
         }
 
     def search(self, artist_credit_name, recording_name):
