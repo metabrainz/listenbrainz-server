@@ -201,7 +201,7 @@ def get_latest_listened_times(recommendation_df):
     recommendation_df.createOrReplaceTempView("recommendation")
     return run_query("""
         SELECT user_id
-             , recording_id
+             , recording_mbid
              , rating
              , date_format(latest_listened_at, "yyyy-MM-dd'T'HH:mm:ss.SSS") AS latest_listened_at
           FROM recommendation
