@@ -391,4 +391,5 @@ def cron_request_recommendations(ctx):
     ctx.invoke(request_dataframes)
     ctx.invoke(request_model)
     ctx.invoke(request_candidate_sets)
+    ctx.invoke(request_recording_discovery)
     ctx.invoke(request_recommendations, top=1000, similar=1000)
