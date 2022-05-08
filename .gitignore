@@ -148,3 +148,5 @@ listenbrainz_spark/recommendations/html_files*
 
 # IDE configs
 .idea
+/.vs
+/listenbrainz/delete_listens.py
