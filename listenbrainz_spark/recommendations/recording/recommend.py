@@ -200,13 +200,14 @@ def get_user_name_and_user_id(params: RecommendationParams, users):
 def get_latest_listened_times(recommendation_df):
     recommendation_df.createOrReplaceTempView("recommendation")
     return run_query("""
-        SELECT user_id
-             , recording_mbid
+        SELECT rm.user_id
+             , rm.recording_mbid
              , rating
              , date_format(latest_listened_at, "yyyy-MM-dd'T'HH:mm:ss.SSS") AS latest_listened_at
-          FROM recommendation
-          JOIN recording_discovery
-         USING (user_id, recording_mbid)
+          FROM recommendation rm
+     LEFT JOIN recording_discovery rd
+            ON rm.user_id = rd.user_id
+           AND rm.recording_mbid = rd.recording_mbid
       ORDER BY rating DESC
     """)
 
