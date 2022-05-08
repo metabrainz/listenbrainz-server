@@ -21,118 +21,88 @@ logger = logging.getLogger(__name__)
 
 class RecommendTestClass(RecommendationsTestCase):
 
-    def test_recommendation_params_init(self):
-        recordings_df = utils.create_dataframe(Row(col1=3, col2=9), schema=None)
-        model = MagicMock()
-        model_id = "foobar"
-        model_html_file = "foobar.html"
-        top_artist_candidate_set_df = utils.create_dataframe(Row(col1=4, col2=5, col3=5), schema=None)
-        similar_artist_candidate_set_df = utils.create_dataframe(Row(col1=1), schema=None)
-        recommendation_top_artist_limit = 20
-        recommendation_similar_artist_limit = 40
-
-        params = recommend.RecommendationParams(recordings_df, model_id, model_html_file, model,
-                                                top_artist_candidate_set_df,
-                                                similar_artist_candidate_set_df,
-                                                recommendation_top_artist_limit,
-                                                recommendation_similar_artist_limit)
-
-        self.assertEqual(sorted(params.recordings_df.columns), sorted(recordings_df.columns))
-        self.assertEqual(params.model_id, model_id)
-        self.assertEqual(params.model_html_file, model_html_file)
-        self.assertEqual(params.model, model)
-        self.assertEqual(sorted(params.top_artist_candidate_set_df.columns), sorted(top_artist_candidate_set_df.columns))
-        self.assertEqual(sorted(params.similar_artist_candidate_set_df.columns), sorted(similar_artist_candidate_set_df.columns))
-        self.assertEqual(params.recommendation_top_artist_limit, recommendation_top_artist_limit)
-        self.assertEqual(params.recommendation_similar_artist_limit, recommendation_similar_artist_limit)
-
-    def get_recordings_df(self):
-        return listenbrainz_spark.session.createDataFrame([
-            Row(artist_credit_id=1, recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5", recording_id=1),
-            Row(artist_credit_id=2, recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5", recording_id=2)
+    def test_process_recommendations(self):
+        recommendation_df = listenbrainz_spark.session.createDataFrame([
+            Row(spark_user_id=1, recording_id=1, prediction=0.5),
+            Row(spark_user_id=1, recording_id=2, prediction=-0.5),
+            Row(spark_user_id=2, recording_id=2, prediction=1.0),
+            Row(spark_user_id=2, recording_id=1, prediction=0.25),
+            Row(spark_user_id=2, recording_id=3, prediction=0.75),
         ])
 
-    def get_recommendation_df(self):
-        return listenbrainz_spark.session.createDataFrame([
-            Row(spark_user_id=1, recording_id=1, rating=0.313456),
-            Row(spark_user_id=1, recording_id=2, rating=6.994590001),
-            Row(spark_user_id=2, recording_id=2, rating=-2.4587),
-            Row(spark_user_id=2, recording_id=1, rating=7.999)
+        recording_df = listenbrainz_spark.session.createDataFrame([
+            Row(recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5", recording_id=1),
+            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5", recording_id=2),
+            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5", recording_id=3)
         ])
-
-    def test_get_recording_mbids(self):
-        params = self.get_recommendation_params()
-        recommendation_df = self.get_recommendation_df()
-        users = []
-        users_df = recommend.get_user_name_and_user_id(params, users)
-
-        df = recommend.get_recording_mbids(params, recommendation_df, users_df)
-        self.assertEqual(df.count(), 4)
-        # Each user's rows are ordered by ratings but the order of users is not
-        # fixed so need to test each user's recommendations separately.
-        rows_rob = df.where(df.user_id == 1).collect()
-        self.assertEqual(rows_rob, [
+        discovery_df = listenbrainz_spark.session.createDataFrame([
             Row(
-                recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rank=1,
-                rating=7.999,
-                spark_user_id=2,
-                user_id=1
+                user_id=1,
+                recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                latest_listened_at="2020-11-14T06:21:02.000Z"
             ),
             Row(
+                user_id=1,
                 recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rank=2,
-                rating=-2.4587,
-                spark_user_id=2,
-                user_id=1
+                latest_listened_at="2021-12-17T05:32:11.000Z"
+            ),
+            Row(
+                user_id=3,
+                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                latest_listened_at="2019-10-12T09:43:57.000Z"
             )
         ])
-        rows_vansika = df.where(df.user_id == 3).collect()
-        self.assertEqual(rows_vansika, [
-            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rank=1,
-                rating=6.994590001,
-                spark_user_id=1,
-                user_id=3),
-            Row(
-                recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rank=2,
-                rating=0.313456,
-                spark_user_id=1,
-                user_id=3
-                ),
+        user_df = listenbrainz_spark.session.createDataFrame([
+            Row(spark_user_id=1, user_id=3),
+            Row(spark_user_id=2, user_id=1)
         ])
 
-    def test_filter_recommendations_on_rating(self):
-        recommendation_df = self.get_recommendation_df() \
-            .select('spark_user_id', 'recording_id', col('rating').alias('prediction'))
-        df = recommend.filter_recommendations_on_rating(recommendation_df, 1)
-        self.assertEqual(df.count(), 2)
-        row = df.collect()
+        recording_df.createOrReplaceTempView("recording")
+        discovery_df.createOrReplaceTempView("recording_discovery")
+        user_df.createOrReplaceTempView("user")
 
-        received_data = [row[0], row[1]]
-        expected_data = [
+        recommendations = recommend.process_recommendations(recommendation_df, 2)
+        self.assertEqual(recommendations.count(), 4)
+
+        # Each user's rows are ordered by scores but the order of users is not
+        # fixed so need to test each user's recommendations separately.
+
+        rows_user_1 = recommendations.where(recommendations.user_id == 1).collect()
+        self.assertEqual(rows_user_1, [
             Row(
-                rating=6.994590001,
-                recording_id=2,
-                spark_user_id=1),
+                user_id=1,
+                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                score=1.0,
+                latest_listened_at="2021-12-17T05:32:11.000Z"
+            ),
             Row(
-                rating=7.999,
-                recording_id=1,
-                spark_user_id=2)
-        ]
+                user_id=1,
+                recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                score=0.75,
+                latest_listened_at="2020-11-14T06:21:02.000Z"
+            )
+        ])
+        rows_user_3 = recommendations.where(recommendations.user_id == 3).collect()
+        self.assertEqual(rows_user_3, [
+            Row(
+                user_id=3,
+                recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                score=0.5,
+                latest_listened_at=None
+            ),
+            Row(
+                user_id=3,
+                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                score=-0.5,
+                latest_listened_at="2019-10-12T09:43:57.000Z"
+            )
+        ])
 
-        self.assertEqual(received_data, expected_data)
-
-    @patch('listenbrainz_spark.recommendations.recording.recommend.filter_recommendations_on_rating')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.process_recommendations')
     @patch('listenbrainz_spark.recommendations.recording.recommend.listenbrainz_spark')
-    def test_generate_recommendations(self, mock_lb, mock_filter):
-        params = self.get_recommendation_params()
+    def test_generate_recommendations(self, mock_lb, mock_process):
         limit = 1
-
         mock_model = MagicMock()
-        params.model = mock_model
-
         mock_predict = mock_model.transform
         candidate_set = self.get_candidate_set()
         users = []
@@ -140,15 +110,14 @@ class RecommendTestClass(RecommendationsTestCase):
         rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, users)
         mock_predict.return_value = rdd
 
-        recommend.generate_recommendations(candidate_set, params, limit)
+        recommend.generate_recommendations(candidate_set, mock_model, limit)
         mock_predict.assert_called_once_with(candidate_set)
-        mock_filter.assert_called_once_with(mock_predict.return_value, limit)
+        mock_process.assert_called_once_with(mock_predict.return_value, limit)
 
         with self.assertRaises(RecommendationsNotGeneratedException):
             # empty rdd
             mock_predict.return_value = listenbrainz_spark.session.createDataFrame([], schema=StructType([]))
-            recommend.generate_recommendations(candidate_set, params, limit)
-
+            recommend.generate_recommendations(candidate_set, mock_model, limit)
 
     def test_get_candidate_set_rdd_for_user(self):
         candidate_set = self.get_candidate_set()
@@ -169,39 +138,13 @@ class RecommendTestClass(RecommendationsTestCase):
             recommend.get_candidate_set_rdd_for_user(candidate_set, users)
 
     def test_get_user_name_and_user_id(self):
-        params = self.get_recommendation_params()
-        df = utils.create_dataframe(
-            Row(
-                spark_user_id=1,
-                user_id=3,
-                recording_id=1
-            ),
-            schema=None
-        )
+        df = listenbrainz_spark.session.createDataFrame([
+            Row(spark_user_id=1, user_id=3, recording_id=1),
+            Row(spark_user_id=1, user_id=3, recording_id=2),
+            Row(spark_user_id=2, user_id=1, recording_id=1),
+        ], schema=None)
 
-        df = df.union(utils.create_dataframe(
-            Row(
-                spark_user_id=1,
-                user_id=3,
-                recording_id=2
-            ),
-            schema=None
-        ))
-
-        df = df.union(utils.create_dataframe(
-            Row(
-                spark_user_id=2,
-                user_id=1,
-                recording_id=1
-            ),
-            schema=None
-        ))
-
-        params.top_artist_candidate_set_df = df
-
-        users = []
-        users_df = recommend.get_user_name_and_user_id(params, [])
-
+        users_df = recommend.get_user_name_and_user_id(df, [])
         self.assertEqual(users_df.count(), 2)
         user_id = sorted([row.user_id for row in users_df.collect()])
         spark_user_id = sorted([row.spark_user_id for row in users_df.collect()])
@@ -210,7 +153,7 @@ class RecommendTestClass(RecommendationsTestCase):
         self.assertEqual([1, 2], spark_user_id)
 
         users = [3, 100]
-        users_df = recommend.get_user_name_and_user_id(params, users)
+        users_df = recommend.get_user_name_and_user_id(df, users)
         self.assertEqual(users_df.count(), 1)
         self.assertEqual(sorted(users_df.columns), sorted(['spark_user_id', 'user_id']))
         user_id = [row.user_id for row in users_df.collect()]
@@ -220,7 +163,7 @@ class RecommendTestClass(RecommendationsTestCase):
 
         with self.assertRaises(EmptyDataframeExcpetion):
             users = ['invalid']
-            recommend.get_user_name_and_user_id(params, users)
+            recommend.get_user_name_and_user_id(df, users)
 
     @patch('listenbrainz_spark.recommendations.recording.recommend.ALSModel')
     @patch('listenbrainz_spark.recommendations.recording.recommend.get_model_path')
@@ -251,32 +194,36 @@ class RecommendTestClass(RecommendationsTestCase):
     @patch('listenbrainz_spark.recommendations.recording.recommend.get_candidate_set_rdd_for_user')
     @patch('listenbrainz_spark.recommendations.recording.recommend.generate_recommendations')
     def test_get_recommendations_for_all(self, mock_recs, mock_candidate_set):
-        params = self.get_recommendation_params()
+        model = MagicMock()
         users = [3]
 
-        params.top_artist_candidate_set_df = self.get_top_artist_rec_df()
-        params.similar_artist_candidate_set_df = self.get_similar_artist_rec_df()
+        top_artist_candidate_set_df = self.get_top_artist_rec_df()
+        similar_artist_candidate_set_df = self.get_similar_artist_rec_df()
+
+        recommendation_top_artist_limit = 2
+        recommendation_similar_artist_limit = 1
 
         def side_effect(df, users):
-
-            if len(df.subtract(params.top_artist_candidate_set_df).collect()) == 0:
+            if len(df.subtract(top_artist_candidate_set_df).collect()) == 0:
                 return 'top_artist_rdd'
 
-            if len(df.subtract(params.similar_artist_candidate_set_df).collect()) == 0:
+            if len(df.subtract(similar_artist_candidate_set_df).collect()) == 0:
                 return 'similar_artist_rdd'
 
         mock_candidate_set.side_effect = side_effect
 
-        recommend.get_recommendations_for_all(params, users)
+        recommend.get_recommendations_for_all(model, top_artist_candidate_set_df, similar_artist_candidate_set_df,
+                                              recommendation_top_artist_limit, recommendation_similar_artist_limit,
+                                              users)
 
         mock_candidate_set.assert_has_calls([
-            call(params.top_artist_candidate_set_df, users),
-            call(params.similar_artist_candidate_set_df, users)
+            call(top_artist_candidate_set_df, users),
+            call(similar_artist_candidate_set_df, users)
         ])
 
         mock_recs.assert_has_calls([
-            call(mock_candidate_set(params.top_artist_candidate_set_df, users), params, params.recommendation_top_artist_limit),
-            call(mock_candidate_set(params.similar_artist_candidate_set_df, users), params, params.recommendation_similar_artist_limit)
+            call(mock_candidate_set(top_artist_candidate_set_df, users), model, recommendation_top_artist_limit),
+            call(mock_candidate_set(similar_artist_candidate_set_df, users), model, recommendation_similar_artist_limit)
         ])
 
     def get_top_artist_rec_df(self):
@@ -284,19 +231,19 @@ class RecommendTestClass(RecommendationsTestCase):
                 Row(
                     latest_listened_at="2021-12-17T05:32:11.000Z",
                     recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                    rating=1.8,
+                    score=1.8,
                     user_id=3
                 ),
                 Row(
                     latest_listened_at=None,
                     recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                    rating=-0.8,
+                    score=-0.8,
                     user_id=3
                 ),
                 Row(
                     latest_listened_at="2020-11-14T06:21:02.000Z",
                     recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                    rating=0.99,
+                    score=0.99,
                     user_id=1
                 )
             ], schema=None)
@@ -306,24 +253,25 @@ class RecommendTestClass(RecommendationsTestCase):
             Row(
                 latest_listened_at=None,
                 recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rating=0.8,
+                score=0.8,
                 user_id=4
             ),
             Row(
                 latest_listened_at="2019-10-12T09:43:57.000Z",
                 recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rating=-2.8,
+                score=-2.8,
                 user_id=4
             ),
             Row(
                 latest_listened_at=None,
                 recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rating=0.19,
+                score=0.19,
                 user_id=1
             )], schema=None)
 
     def test_create_messages(self):
-        params = self.get_recommendation_params()
+        model_id = "foobar"
+        model_html_file = "foobar.html"
         top_artist_rec_df = self.get_top_artist_rec_df()
         similar_artist_rec_df = self.get_similar_artist_rec_df()
         active_user_count = 10
@@ -331,8 +279,8 @@ class RecommendTestClass(RecommendationsTestCase):
         similar_artist_rec_user_count = 4
         total_time = 3600
 
-        data = recommend.create_messages(params, top_artist_rec_df, similar_artist_rec_df, active_user_count,
-                                         total_time, top_artist_rec_user_count, similar_artist_rec_user_count)
+        data = recommend.create_messages(model_id, model_html_file, top_artist_rec_df, similar_artist_rec_df,
+                                         active_user_count, total_time, top_artist_rec_user_count, similar_artist_rec_user_count)
 
         self.assertEqual(next(data), {
             'user_id': 3,
@@ -416,20 +364,3 @@ class RecommendTestClass(RecommendationsTestCase):
 
         user_count = recommend.get_user_count(df)
         self.assertEqual(user_count, 2)
-
-    def get_recommendation_params(self):
-        recordings_df = self.get_recordings_df()
-        model = MagicMock()
-        model_id = "foobar"
-        model_html_file = "foobar.html"
-        top_artist_candidate_set_df = self.get_candidate_set()
-        similar_artist_candidate_set_df = self.get_candidate_set()
-        recommendation_top_artist_limit = 2
-        recommendation_similar_artist_limit = 1
-
-        params = recommend.RecommendationParams(recordings_df, model_id, model_html_file, model,
-                                                top_artist_candidate_set_df,
-                                                similar_artist_candidate_set_df,
-                                                recommendation_top_artist_limit,
-                                                recommendation_similar_artist_limit)
-        return params
