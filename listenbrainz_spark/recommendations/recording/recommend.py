@@ -207,6 +207,7 @@ def get_latest_listened_times(recommendation_df):
           FROM recommendation
           JOIN recording_discovery
          USING (user_id, recording_mbid)
+      ORDER BY rating DESC
     """)
 
 
