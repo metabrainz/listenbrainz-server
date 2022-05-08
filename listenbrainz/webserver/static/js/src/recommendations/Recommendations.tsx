@@ -232,12 +232,16 @@ export default class Recommendations extends React.Component<
                 style={{ opacity: loading ? "0.4" : "1" }}
               >
                 {recommendations.map((recommendation) => {
-                  const recordingMBID = getRecordingMBID(recommendation);
+                  const listen = recommendation;
+                  if (recommendation.latest_listened_at) {
+                    listen.listened_at_iso = recommendation.latest_listened_at;
+                  }
+                  const recordingMBID = getRecordingMBID(listen);
                   const recommendationFeedbackComponent = (
                     <RecommendationFeedbackComponent
                       newAlert={newAlert}
                       updateFeedbackCallback={this.updateFeedback}
-                      listen={recommendation}
+                      listen={listen}
                       currentFeedback={this.getFeedbackForRecordingMbid(
                         recordingMBID
                       )}
@@ -245,16 +249,14 @@ export default class Recommendations extends React.Component<
                   );
                   return (
                     <ListenCard
-                      key={`${getTrackName(recommendation)}-${
-                        recommendation.track_metadata?.additional_info
+                      key={`${getTrackName(listen)}-${
+                        listen.track_metadata?.additional_info
                           ?.recording_msid ?? recordingMBID
-                      }-${recommendation.listened_at}-${
-                        recommendation.user_name
-                      }`}
-                      showTimestamp={false}
+                      }-${listen.listened_at_iso}-${listen.user_name}`}
+                      showTimestamp
                       showUsername={false}
                       feedbackComponent={recommendationFeedbackComponent}
-                      listen={recommendation}
+                      listen={listen}
                       newAlert={newAlert}
                     />
                   );
