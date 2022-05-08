@@ -13,6 +13,7 @@ The same process is done for similar artist candidate set.
 
 import logging
 import time
+from collections import defaultdict
 
 import pyspark.sql
 import pyspark.sql.functions as func
@@ -31,6 +32,7 @@ from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            EmptyDataframeExcpetion)
 from listenbrainz_spark.recommendations.recording.candidate_sets import _is_empty_dataframe
 from listenbrainz_spark.recommendations.recording.train_models import get_model_path
+from listenbrainz_spark.stats import run_query
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +197,20 @@ def get_user_name_and_user_id(params: RecommendationParams, users):
     return users_df
 
 
+def get_latest_listened_times(recommendation_df):
+    recommendation_df.createOrReplaceTempView("recommendation")
+    return run_query("""
+        SELECT rm.user_id
+             , rm.recording_id
+             , rm.rating
+             , date_format(rd.latest_listened_at, "yyyy-MM-dd'T'HH:mm:ss.SSS") AS latest_listened_at
+          FROM recommendation rm
+          JOIN recording_discovery rd
+            ON rm.user_id = rd.user_id
+           AND rm.recording_id = rd.recording_mbid
+    """)
+
+
 def create_messages(params, top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count,
                     total_time, top_artist_rec_user_count, similar_artist_rec_user_count):
     """ Create messages to send the data to the webserver via RabbitMQ.
@@ -211,59 +227,38 @@ def create_messages(params, top_artist_rec_mbid_df, similar_artist_rec_mbid_df, 
         Returns:
             messages: A list of messages to be sent via RabbitMQ
     """
+    user_rec = defaultdict(lambda: {
+        "top_artist": [],
+        "similar_artist": []
+    })
+
     top_artist_rec_itr = top_artist_rec_mbid_df.toLocalIterator()
-
-    user_rec = {}
-
     for row in top_artist_rec_itr:
-
-        if user_rec.get(row.user_id) is None:
-            user_rec[row.user_id] = {}
-
-            user_rec[row.user_id]['top_artist'] = [
-                {
-                    "recording_mbid": row.recording_mbid,
-                    "score": row.rating
-                }
-            ]
-            user_rec[row.user_id]['similar_artist'] = []
-
-        else:
-            user_rec[row.user_id]['top_artist'].append(
-                    {
-                        "recording_mbid": row.recording_mbid,
-                        "score": row.rating
-                    }
-            )
+        user_rec[row.user_id]['top_artist'].append(
+            {
+                "recording_mbid": row.recording_mbid,
+                "score": row.rating,
+                "latest_listened_at": row.latest_listened_at
+            }
+        )
 
     similar_artist_rec_itr = similar_artist_rec_mbid_df.toLocalIterator()
-
     for row in similar_artist_rec_itr:
-
-        if user_rec.get(row.user_id) is None:
-            user_rec[row.user_id] = {}
-            user_rec[row.user_id]['similar_artist'] = [
-                {
-                    "recording_mbid": row.recording_mbid,
-                    "score": row.rating
-                }
-            ]
-
-        else:
-            user_rec[row.user_id]['similar_artist'].append(
-                    {
-                        "recording_mbid": row.recording_mbid,
-                        "score": row.rating
-                    }
-            )
+        user_rec[row.user_id]['similar_artist'].append(
+            {
+                "recording_mbid": row.recording_mbid,
+                "score": row.rating,
+                "latest_listened_at": row.latest_listened_at
+            }
+        )
 
     for user_id, data in user_rec.items():
         messages = {
             'user_id': user_id,
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
-                'top_artist': data.get('top_artist', []),
-                'similar_artist': data.get('similar_artist', []),
+                'top_artist': data['top_artist'],
+                'similar_artist': data['similar_artist'],
                 'model_id': params.model_id,
                 'model_url': f"http://michael.metabrainz.org/{params.model_html_file}"
             }
@@ -385,6 +380,12 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     ts = time.monotonic()
     top_artist_rec_mbid_df = get_recording_mbids(params, top_artist_rec_df, users_df)
     similar_artist_rec_mbid_df = get_recording_mbids(params, similar_artist_rec_df, users_df)
+    logger.info('Took {:.2f}sec to get mbids corresponding to recording ids'.format(time.monotonic() - ts))
+
+    ts = time.monotonic()
+    utils.read_files_from_HDFS(path.RECORDING_DISCOVERY).createOrReplaceTempView("recording_discovery")
+    top_artist_rec_mbid_df = get_latest_listened_times(top_artist_rec_mbid_df)
+    similar_artist_rec_mbid_df = get_latest_listened_times(similar_artist_rec_mbid_df)
     logger.info('Took {:.2f}sec to get mbids corresponding to recording ids'.format(time.monotonic() - ts))
 
     # persisted data must be cleared from memory after usage to avoid OOM

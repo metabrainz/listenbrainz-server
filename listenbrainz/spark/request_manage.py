@@ -306,6 +306,12 @@ def request_recommendations(top, similar, users):
     send_request_to_spark_cluster('cf.recommendations.recording.recommendations', **params)
 
 
+@cli.command(name='request_recording_discovery')
+def request_recording_discovery():
+    """ Send the cluster a request to generate recording discovery data. """
+    send_request_to_spark_cluster('cf.recommendations.recording.discovery')
+
+
 @cli.command(name='request_import_artist_relation')
 def request_import_artist_relation():
     """ Send the spark cluster a request to import artist relation.
