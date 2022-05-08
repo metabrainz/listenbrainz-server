@@ -106,14 +106,14 @@ def get_missing_musicbrainz_data(user_name):
         err_msg = 'Missing MusicBrainz data for {} not calculated'.format(user_name)
         raise APINoContent(err_msg)
 
-    missing_musicbrainz_data_list = getattr(data, 'data').dict()['missing_musicbrainz_data']
+    missing_musicbrainz_data_list = data.data.dict()['missing_musicbrainz_data']
 
     missing_musicbrainz_data_list_filtered = missing_musicbrainz_data_list[offset:count]
 
     payload = {
         'payload': {
             'user_name': user_name,
-            'last_updated': int(getattr(data, 'created').timestamp()),
+            'last_updated': int(data.created.timestamp()),
             'count': len(missing_musicbrainz_data_list_filtered),
             'total_data_count': len(missing_musicbrainz_data_list),
             'offset': offset,
