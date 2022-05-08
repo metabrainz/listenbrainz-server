@@ -68,7 +68,7 @@ def _get_template(active_section, user):
             error_msg="Looks like the user wasn't active in the last week. Submit your listens and check back after a week!"
         )
 
-    result = getattr(data, 'recording_mbid').dict()[active_section]
+    result = data.recording_mbid.dict()[active_section]
 
     if not result:
         current_app.logger.error('Top/Similar artists not found in Mapping/artist relation for "{}"'.format(user.musicbrainz_id))
@@ -105,7 +105,7 @@ def _get_template(active_section, user):
         active_section=active_section,
         props=ujson.dumps(props),
         user=user,
-        last_updated=getattr(data, 'created').strftime('%d %b %Y')
+        last_updated=data.created.strftime('%d %b %Y')
     )
 
 

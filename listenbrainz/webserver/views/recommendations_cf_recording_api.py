@@ -104,7 +104,7 @@ def get_recommendations(user_name):
             'entity': "recording",
             'type': artist_type,
             'user_name': user_name,
-            'last_updated': int(getattr(recommendations, 'created').timestamp()),
+            'last_updated': int(recommendations.created.timestamp()),
             'count': len(mbid_list),
             'total_mbid_count': total_mbid_count,
             'offset': offset
@@ -132,18 +132,18 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
             APINoContent: if recommendations not found.
     """
     if artist_type == 'similar':
-        data = getattr(recommendations, 'recording_mbid').dict()
+        data = recommendations.recording_mbid.dict()
         mbid_list = data['similar_artist']
 
     elif artist_type == 'top':
-        data = getattr(recommendations, 'recording_mbid').dict()
+        data = recommendations.recording_mbid.dict()
         mbid_list = data['top_artist']
 
     total_mbid_count = len(mbid_list)
 
     if total_mbid_count == 0:
-        err_msg = 'No recommendations for user {}, please try again later.'.format(user_name)
-        raise APINoContent(err_msg, payload={'last_updated': int(getattr(recommendations, 'created').timestamp())})
+        err_msg = f'No recommendations for user {user_name}, please try again later.'
+        raise APINoContent(err_msg, payload={'last_updated': int(recommendations.created.timestamp())})
 
     # For the purpose of experimenting with recommendations, we're allowing to fetch at most
     # 1K recommendations.

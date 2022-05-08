@@ -103,20 +103,21 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(recieved_entity, 'recording')
 
         received_total_count = data['total_mbid_count']
-        expected_total_count = len(getattr(self.user_recommendations, 'recording_mbid').dict()['top_artist'])
+        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['top_artist'])
+        self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
-        expected_ts = int(getattr(self.user_recommendations, 'created').timestamp())
+        expected_ts = int(self.user_recommendations.created.timestamp())
         self.assertEqual(received_ts, expected_ts)
 
         received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = getattr(self.user_recommendations, 'recording_mbid').dict()['top_artist'][:25]
+        expected_top_artist_recommendations = self.user_recommendations.recording_mbid.dict()['top_artist'][:25]
         self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
 
     def test_recommendations_with_count(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
                                            user_name=self.user2['musicbrainz_id']),
-                                           query_string={'artist_type': 'similar', 'count': 10})
+                                   query_string={'artist_type': 'similar', 'count': 10})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -136,20 +137,21 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(recieved_entity, 'recording')
 
         received_total_count = data['total_mbid_count']
-        expected_total_count = len(getattr(self.user2_recommendations, 'recording_mbid').dict()['similar_artist'])
+        expected_total_count = len(self.user2_recommendations.recording_mbid.dict()['similar_artist'])
+        self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
-        expected_ts = int(getattr(self.user2_recommendations, 'created').timestamp())
+        expected_ts = int(self.user2_recommendations.created.timestamp())
         self.assertEqual(received_ts, expected_ts)
 
         received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = getattr(self.user2_recommendations, 'recording_mbid').dict()['similar_artist'][:10]
+        expected_top_artist_recommendations = self.user2_recommendations.recording_mbid.dict()['similar_artist'][:10]
         self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
 
     def test_recommendations_too_many(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
                                            user_name=self.user2['musicbrainz_id']),
-                                           query_string={'artist_type': 'similar', 'count': 1500, 'offset': 100})
+                                   query_string={'artist_type': 'similar', 'count': 1500, 'offset': 100})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -169,20 +171,21 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(recieved_entity, 'recording')
 
         received_total_count = data['total_mbid_count']
-        expected_total_count = len(getattr(self.user2_recommendations, 'recording_mbid').dict()['similar_artist'])
+        expected_total_count = len(self.user2_recommendations.recording_mbid.dict()['similar_artist'])
+        self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
-        expected_ts = int(getattr(self.user2_recommendations, 'created').timestamp())
+        expected_ts = int(self.user2_recommendations.created.timestamp())
         self.assertEqual(received_ts, expected_ts)
 
         received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = getattr(self.user2_recommendations, 'recording_mbid').dict()['similar_artist'][100:1100]
+        expected_top_artist_recommendations = self.user2_recommendations.recording_mbid.dict()['similar_artist'][100:1100]
         self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
 
     def test_recommendations_with_offset(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
                                            user_name=self.user['musicbrainz_id']),
-                                           query_string={'artist_type': 'top', 'offset': 10})
+                                   query_string={'artist_type': 'top', 'offset': 10})
 
         self.assert200(response)
         data = json.loads(response.data)['payload']
@@ -203,12 +206,13 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(recieved_entity, 'recording')
 
         received_total_count = data['total_mbid_count']
-        expected_total_count = len(getattr(self.user_recommendations, 'recording_mbid').dict()['top_artist'])
+        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['top_artist'])
+        self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
-        expected_ts = int(getattr(self.user_recommendations, 'created').timestamp())
+        expected_ts = int(self.user_recommendations.created.timestamp())
         self.assertEqual(received_ts, expected_ts)
 
         received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = getattr(self.user_recommendations, 'recording_mbid').dict()['top_artist'][10:35]
+        expected_top_artist_recommendations = self.user_recommendations.recording_mbid.dict()['top_artist'][10:35]
         self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
