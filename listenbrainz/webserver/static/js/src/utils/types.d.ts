@@ -554,6 +554,7 @@ type TimelineEvent = {
   user_name: string;
   created: number;
   metadata: EventMetadata;
+  hidden: boolean;
 };
 
 type SimilarUser = {

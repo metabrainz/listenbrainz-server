@@ -16,6 +16,8 @@ import {
   faUserSlash,
   faThumbtack,
   faTrash,
+  faEye,
+  faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -405,8 +407,56 @@ export default class UserFeedPage extends React.Component<
     }
   };
 
+  eventSideButton(event: TimelineEvent) {
+    const { currentUser } = this.context;
+    if (
+      ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
+        event.event_type === EventType.RECORDING_PIN) &&
+        event.user_name === currentUser.name) ||
+      event.event_type === EventType.NOTIFICATION
+    ) {
+      return (
+        <ListenControl
+          title="Delete Event"
+          text=""
+          icon={faTrash}
+          buttonClassName="btn btn-link btn-xs"
+          // eslint-disable-next-line react/jsx-no-bind
+          action={this.deleteFeedEvent.bind(this, event)}
+        />
+      );
+    }
+    if (
+      (event.event_type === EventType.RECORDING_PIN ||
+        event.event_type === EventType.RECORDING_RECOMMENDATION) &&
+      event.user_name !== currentUser.name
+    ) {
+      if (event.hidden) {
+        return (
+          <ListenControl
+            title="Delete Event"
+            text=""
+            icon={faEye}
+            buttonClassName="btn btn-link btn-xs"
+            // eslint-disable-next-line react/jsx-no-bind
+          />
+        );
+      }
+      return (
+        <ListenControl
+          title="Delete Event"
+          text=""
+          icon={faEyeSlash}
+          buttonClassName="btn btn-link btn-xs"
+          // eslint-disable-next-line react/jsx-no-bind
+        />
+      );
+    }
+    return null;
+  }
+
   renderEventContent(event: TimelineEvent) {
-    if (UserFeedPage.isEventListenable(event)) {
+    if (UserFeedPage.isEventListenable(event) && !event.hidden) {
       const { metadata } = event;
       const { currentUser } = this.context;
       const { newAlert } = this.props;
@@ -453,6 +503,13 @@ export default class UserFeedPage extends React.Component<
   renderEventText(event: TimelineEvent) {
     const { currentUser } = this.context;
     const { event_type, user_name, metadata } = event;
+    if (event.hidden) {
+      return (
+        <i>
+          <span className="event-description-text">This event is hidden</span>
+        </i>
+      );
+    }
     if (event_type === EventType.FOLLOW) {
       const {
         user_name_0,
@@ -608,20 +665,7 @@ export default class UserFeedPage extends React.Component<
 
                           <span className="event-time">
                             {preciseTimestamp(created * 1000)}
-                            {((event.event_type ===
-                              EventType.RECORDING_RECOMMENDATION ||
-                              event.event_type === EventType.RECORDING_PIN) &&
-                              event.user_name === currentUser.name) ||
-                            event.event_type === EventType.NOTIFICATION ? (
-                              <ListenControl
-                                title="Delete Event"
-                                text=""
-                                icon={faTrash}
-                                buttonClassName="btn btn-link btn-xs"
-                                // eslint-disable-next-line react/jsx-no-bind
-                                action={this.deleteFeedEvent.bind(this, event)}
-                              />
-                            ) : null}
+                            {this.eventSideButton(event)}
                           </span>
                         </div>
 
