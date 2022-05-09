@@ -50,11 +50,12 @@ class TrainModelsTestCase(RecommendationsTestCase):
         expected_dataframe_id = train_models.get_latest_dataframe_id()
         self.assertEqual(expected_dataframe_id, df_id_2)
 
+    @patch('listenbrainz_spark.recommendations.recording.train_models.get_models')
     @patch('listenbrainz_spark.recommendations.recording.train_models.RegressionEvaluator')
     @patch('listenbrainz_spark.recommendations.recording.train_models.CrossValidator')
     @patch('listenbrainz_spark.recommendations.recording.train_models.ParamGridBuilder')
     @patch('listenbrainz_spark.recommendations.recording.train_models.ALS')
-    def test_get_best_model(self, mock_als_cls, mock_params, mock_tvs, mock_evaluator):
+    def test_get_best_model(self, mock_als_cls, mock_params, mock_tvs, mock_evaluator, mock_get_models):
         mock_test = MagicMock()
         mock_training = MagicMock()
 
