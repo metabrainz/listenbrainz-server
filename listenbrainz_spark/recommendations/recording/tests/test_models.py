@@ -58,6 +58,7 @@ class TrainModelsTestCase(RecommendationsTestCase):
     def test_get_best_model(self, mock_als_cls, mock_params, mock_tvs, mock_evaluator, mock_get_models):
         mock_test = MagicMock()
         mock_training = MagicMock()
+        mock_get_models.return_value = MagicMock(), MagicMock()
 
         ranks = [3]
         lambdas = [4.8]
