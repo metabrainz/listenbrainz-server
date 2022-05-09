@@ -39,6 +39,9 @@ logger = logging.getLogger(__name__)
 Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration alpha model_id')
 
 
+NUM_FOLDS = 5  # number of folds to use for k-folds cross validation
+
+
 def get_model_path(model_id: str):
     """ Get path to save or load model
 
@@ -159,11 +162,11 @@ def train_models(training_data, evaluator, ranks, lambdas, iterations, alphas, c
         estimator=als,
         estimatorParamMaps=params,
         evaluator=evaluator,
-        numFolds=5,
+        numFolds=NUM_FOLDS,
         collectSubModels=True,
         parallelism=3
     )
-    context["num_folds"] = 5
+    context["num_folds"] = NUM_FOLDS
     cv_model: CrossValidatorModel = cv.fit(training_data)
     logger.info("Model trained!")
 

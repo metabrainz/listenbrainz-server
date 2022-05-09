@@ -2,7 +2,7 @@ from unittest import mock
 from unittest.mock import patch, MagicMock
 
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
-from listenbrainz_spark.recommendations.recording.train_models import Model
+from listenbrainz_spark.recommendations.recording.train_models import Model, NUM_FOLDS
 from listenbrainz_spark.tests import TEST_PLAYCOUNTS_PATH, PLAYCOUNTS_COUNT
 from listenbrainz_spark import utils, config, path, schema
 from listenbrainz_spark.recommendations.recording import train_models
@@ -72,7 +72,7 @@ class TrainModelsTestCase(RecommendationsTestCase):
             estimator=mock_als_cls.return_value,
             estimatorParamMaps=mock.ANY,
             evaluator=mock_evaluator,
-            numFolds=5,
+            numFolds=NUM_FOLDS,
             collectSubModels=True,
             parallelism=3
         )
