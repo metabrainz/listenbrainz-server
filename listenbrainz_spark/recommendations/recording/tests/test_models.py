@@ -1,4 +1,5 @@
 import re
+from unittest import mock
 from unittest.mock import patch, Mock, MagicMock
 
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
@@ -24,8 +25,8 @@ class TrainModelsTestCase(RecommendationsTestCase):
 
     def test_preprocess_data(self):
         test_playcounts_df = utils.read_files_from_HDFS(TEST_PLAYCOUNTS_PATH)
-        training_data, validation_data, test_data = train_models.preprocess_data(test_playcounts_df, {})
-        total_playcounts = training_data.count() + validation_data.count() + test_data.count()
+        training_data, test_data = train_models.preprocess_data(test_playcounts_df, {})
+        total_playcounts = training_data.count() + test_data.count()
         self.assertEqual(total_playcounts, PLAYCOUNTS_COUNT)
 
     def test_get_model_path(self):
@@ -50,32 +51,32 @@ class TrainModelsTestCase(RecommendationsTestCase):
         expected_dataframe_id = train_models.get_latest_dataframe_id()
         self.assertEqual(expected_dataframe_id, df_id_2)
 
+    @patch('listenbrainz_spark.recommendations.recording.train_models.TrainValidationSplit')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.ParamGridBuilder')
     @patch('listenbrainz_spark.recommendations.recording.train_models.ALS')
-    def test_get_best_model(self, mock_als_cls):
+    def test_get_best_model(self, mock_als_cls, mock_params, mock_tvs):
         mock_evaluator = MagicMock()
-        mock_rdd_training = Mock()
-        mock_rdd_validation = Mock()
-
-        mock_als_model = MagicMock()
-        mock_als = MagicMock()
-        mock_als.fit.return_value = mock_als_model
-        mock_als_cls.return_value = mock_als
+        mock_training = MagicMock()
 
         ranks = [3]
         lambdas = [4.8]
         iterations = [2]
         alphas = [3.0]
 
-        _, __ = train_models.train_models(mock_rdd_training, mock_rdd_validation, mock_evaluator,
-                                          ranks, lambdas, iterations, alphas, {})
+        _, __ = train_models.train_models(mock_training, mock_evaluator, ranks, lambdas, iterations, alphas, {})
         mock_als_cls.assert_called_once_with(
             userCol='spark_user_id', itemCol='recording_id', ratingCol='transformed_listencount',
-            rank=ranks[0], maxIter=iterations[0], regParam=lambdas[0], alpha=alphas[0],
             implicitPrefs=True, coldStartStrategy="drop"
         )
-        mock_als.fit.assert_called_once_with(mock_rdd_training)
-        mock_als_model.transform.assert_called_once_with(mock_rdd_validation)
-        mock_evaluator.evaluate.assert_called_once_with(mock_als_model.transform.return_value)
+        mock_params.assert_called_once()
+        mock_tvs.assert_called_once_with(
+            estimator=mock_als_cls.return_value,
+            estimatorParamMaps=mock.ANY,
+            evaluator=mock_evaluator,
+            trainRatio=0.80,
+            collectSubModels=True
+        )
+        mock_tvs.return_value.fit.assert_called_once_with(mock_training)
 
     def test_delete_model(self):
         df = utils.create_dataframe(Row(col1=1, col2=1), None)
@@ -94,8 +95,6 @@ class TrainModelsTestCase(RecommendationsTestCase):
             iteration=2,
             rank=4,
             validation_rmse=4.5,
-            training_time=3.0,
-            rmse_time=2.1,
             model=MagicMock()
         )
 
@@ -120,8 +119,6 @@ class TrainModelsTestCase(RecommendationsTestCase):
             iteration=2,
             rank=4,
             validation_rmse=4.5,
-            training_time=3.0,
-            rmse_time=2.1,
             model=MagicMock()
         )
         train_models.save_model(mock_model, {
