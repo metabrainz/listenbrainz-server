@@ -124,7 +124,8 @@ def get_models(als: ALS, params: List[dict], cv_model: CrossValidatorModel) -> T
     return best_model_metadata, metadatas
 
 
-def train_models(training_data, evaluator, ranks, lambdas, iterations, alphas, context) -> Tuple[Model, List[Model]]:
+def train_models(training_data, test_data, use_transformed_listecounts, ranks, lambdas, iterations, alphas, context) \
+        -> Tuple[Model, List[Model]]:
     """ Train models and get the best model.
 
         Args:
@@ -143,10 +144,14 @@ def train_models(training_data, evaluator, ranks, lambdas, iterations, alphas, c
     t0 = time.monotonic()
     logger.info("Training model.")
 
+    ratingCol = "transformed_listencount" if use_transformed_listecounts else "playcount"
+
+    evaluator = RegressionEvaluator(metricName="rmse", labelCol=ratingCol, predictionCol="prediction")
+
     als = ALS(
         userCol="spark_user_id",
         itemCol="recording_id",
-        ratingCol="transformed_listencount",
+        ratingCol=ratingCol,
         implicitPrefs=True,
         coldStartStrategy="drop"
     )
@@ -175,6 +180,12 @@ def train_models(training_data, evaluator, ranks, lambdas, iterations, alphas, c
     best_model, all_models = get_models(als, params, cv_model)
     context["best_model"] = best_model
     context["all_models"] = all_models
+    logger.info("Best model params: %s", best_model)
+
+    logger.info("Calculating test RMSE for best model:")
+    test_predictions = best_model.model.transform(test_data)
+    context["test_rmse"] = evaluator.evaluate(test_predictions)
+    logger.info("Test RMSE calculated!")
 
     return best_model, all_models
 
@@ -240,13 +251,13 @@ def save_model(model: Model, context: dict):
 
 def save_training_html(context):
     """ Prepare and save HTML report of the model training process. """
-    context["listencount_transformer_description"] = describe_listencount_transformer()
+    context["listencount_transformer_description"] = describe_listencount_transformer(context["use_transformed_listencounts"])
     context["time_total"] = f"{(time.monotonic() - context['time_start']) / 3600:.2f} hours"
     save_html(context["model_html_file"], context, 'model.html')
     logger.info('Done!')
 
 
-def main(ranks=None, lambdas=None, iterations=None, alphas=None):
+def main(ranks=None, lambdas=None, iterations=None, alphas=None, use_transformed_listencounts=False):
     if ranks is None:
         logger.critical('model param "ranks" missing')
 
@@ -262,7 +273,10 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None):
         logger.critical('model param "alphas" missing')
         raise
 
-    context = {"time_start": time.monotonic()}
+    context = {
+        "time_start": time.monotonic(),
+        "use_transformed_listencounts": use_transformed_listencounts
+    }
 
     listenbrainz_spark.init_spark_session("Train Models")
 
@@ -278,16 +292,10 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None):
 
     context["time_load_playcounts"] = f"{(time.monotonic() - context['time_start']) / 60:.2f} mins"
 
-    evaluator = RegressionEvaluator(metricName="rmse", labelCol="transformed_listencount", predictionCol="prediction")
     training_data, test_data = preprocess_data(transformed_listencounts_df, context)
 
-    best_model, all_models = train_models(training_data, evaluator, ranks, lambdas, iterations, alphas, context)
-    logger.info("Best model params: %s", best_model)
-
-    logger.info("Calculating test RMSE for best model:")
-    test_predictions = best_model.model.transform(test_data)
-    context["test_rmse"] = evaluator.evaluate(test_predictions)
-    logger.info("Test RMSE calculated!")
+    best_model, all_models = train_models(training_data, test_data, use_transformed_listencounts,
+                                          ranks, lambdas, iterations, alphas, context)
 
     context["model_html_file"] = f"Model-{datetime.utcnow().strftime('%Y-%m-%d-%H:%M')}-{uuid.uuid4()}.html"
 
