@@ -130,7 +130,8 @@ def train_models(training_data, test_data, use_transformed_listecounts, ranks, l
 
         Args:
             training_data: Used for training.
-            evaluator: the metric evaluator to calculate accuracy of the model.
+            test_data: used for evaluating best model.
+            use_transformed_listecounts: whether to use playcount or transformed listen count for training.
             ranks: Number of factors in ALS model.
             lambdas: Controls regularization.
             iterations: Number of iterations to run.
