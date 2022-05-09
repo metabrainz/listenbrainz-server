@@ -50,28 +50,36 @@ class TrainModelsTestCase(RecommendationsTestCase):
         expected_dataframe_id = train_models.get_latest_dataframe_id()
         self.assertEqual(expected_dataframe_id, df_id_2)
 
+    @patch('listenbrainz_spark.recommendations.recording.train_models.get_models')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.RegressionEvaluator')
     @patch('listenbrainz_spark.recommendations.recording.train_models.CrossValidator')
     @patch('listenbrainz_spark.recommendations.recording.train_models.ParamGridBuilder')
     @patch('listenbrainz_spark.recommendations.recording.train_models.ALS')
-    def test_get_best_model(self, mock_als_cls, mock_params, mock_tvs):
-        mock_evaluator = MagicMock()
+    def test_get_best_model(self, mock_als_cls, mock_params, mock_tvs, mock_evaluator, mock_get_models):
+        mock_test = MagicMock()
         mock_training = MagicMock()
+        mock_get_models.return_value = MagicMock(), MagicMock()
 
         ranks = [3]
         lambdas = [4.8]
         iterations = [2]
         alphas = [3.0]
 
-        _, __ = train_models.train_models(mock_training, mock_evaluator, ranks, lambdas, iterations, alphas, {})
+        _, __ = train_models.train_models(mock_training, mock_test, True, ranks, lambdas, iterations, alphas, {})
         mock_als_cls.assert_called_once_with(
-            userCol='spark_user_id', itemCol='recording_id', ratingCol='transformed_listencount',
+            userCol="spark_user_id", itemCol="recording_id", ratingCol="transformed_listencount",
             implicitPrefs=True, coldStartStrategy="drop"
         )
         mock_params.assert_called_once()
+        mock_evaluator.assert_called_once_with(
+            metricName="rmse",
+            labelCol="transformed_listencount",
+            predictionCol="prediction"
+        )
         mock_tvs.assert_called_once_with(
             estimator=mock_als_cls.return_value,
             estimatorParamMaps=mock.ANY,
-            evaluator=mock_evaluator,
+            evaluator=mock_evaluator.return_value,
             numFolds=NUM_FOLDS,
             collectSubModels=True,
             parallelism=3
