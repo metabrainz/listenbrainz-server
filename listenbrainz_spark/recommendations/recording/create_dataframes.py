@@ -103,9 +103,12 @@ def save_dataframe_metadata_to_hdfs(metadata: dict, df_metadata_path: str):
         raise
 
 
-def describe_listencount_transformer():
-    """ Returns a human-readable description of the algorithm used to transform listen counts"""
-    return "No transformation applied to listen counts"
+def describe_listencount_transformer(use_transformed_listencounts):
+    """ Returns a human-readable description of the algorithm used to transform listen counts """
+    if use_transformed_listencounts:
+        return "No transformation applied to listen counts"
+    else:
+        return "No transformation applied to listen counts"
 
 
 def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path):
