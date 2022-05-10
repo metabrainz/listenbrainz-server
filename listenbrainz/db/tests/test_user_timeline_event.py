@@ -411,7 +411,8 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
 
         db_user_timeline_event.unhide_timeline_event(
             user=self.user['id'],
-            row_id=1
+            event_type=event_rec.event_type.value,
+            event_id=event_rec.id
         )
 
         hidden_events = db_user_timeline_event.get_hidden_timeline_events(
@@ -443,5 +444,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 # checking if DatabaseException is raised or not
                 db_user_timeline_event.unhide_timeline_event(
                     user=self.user['id'],
-                    row_id=1
+                    event_type=event_rec.event_type.value,
+                    event_id=event_rec.id
                 )

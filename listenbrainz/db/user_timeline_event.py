@@ -231,17 +231,19 @@ def get_hidden_timeline_events(user: int, count: int) -> List[HiddenUserTimeline
         raise DatabaseException(str(e))
 
 
-def unhide_timeline_event(user: int, row_id: int) -> bool:
+def unhide_timeline_event(user: int, event_type: UserTimelineEventType, event_id: int) -> bool:
     ''' Deletes hidden timeline events for a user with specific row id '''
     try:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text('''
                 DELETE FROM hide_user_timeline_event WHERE
                 user_id = :user_id AND
-                id = :row_id
+                event_type = :event_type AND
+                event_id = :event_id
             '''), {
                 'user_id': user,
-                'row_id': row_id
+                'event_type': event_type,
+                'event_id': event_id
                 }
             )
             return result.rowcount == 1
