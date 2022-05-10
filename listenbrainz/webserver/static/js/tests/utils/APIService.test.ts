@@ -1165,3 +1165,141 @@ describe("deleteFeedEvent", () => {
     ).resolves.toEqual(200);
   });
 });
+
+describe("hideFeedEvent", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.hideFeedEvent(
+      "recording_recommendation",
+      "riksucks",
+      "testToken",
+      1337
+    );
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/user/riksucks/feed/events/hide",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token testToken",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          event_type: "recording_recommendation",
+          event_id: 1337,
+        }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.hideFeedEvent(
+      "recording_recommendation",
+      "riksucks",
+      "testToken",
+      1337
+    );
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws appropriate error if id is missing", async () => {
+    await expect(
+      apiService.hideFeedEvent(
+        "recording_recommendation",
+        "riksucks",
+        "testToken",
+        (undefined as unknown) as number
+      )
+    ).rejects.toThrow(SyntaxError("Event ID not present"));
+  });
+
+  it("returns the response code if successful", async () => {
+    await expect(
+      apiService.hideFeedEvent(
+        "recording_recommendation",
+        "riksucks",
+        "testToken",
+        1337
+      )
+    ).resolves.toEqual(200);
+  });
+});
+
+describe("unhideFeedEvent", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.unhideFeedEvent(
+      "recording_recommendation",
+      "riksucks",
+      "testToken",
+      1337
+    );
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/user/riksucks/feed/events/unhide",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token testToken",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          event_type: "recording_recommendation",
+          event_id: 1337,
+        }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.unhideFeedEvent(
+      "recording_recommendation",
+      "riksucks",
+      "testToken",
+      1337
+    );
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws appropriate error if id is missing", async () => {
+    await expect(
+      apiService.unhideFeedEvent(
+        "recording_recommendation",
+        "riksucks",
+        "testToken",
+        (undefined as unknown) as number
+      )
+    ).rejects.toThrow(SyntaxError("Event ID not present"));
+  });
+
+  it("returns the response code if successful", async () => {
+    await expect(
+      apiService.unhideFeedEvent(
+        "recording_recommendation",
+        "riksucks",
+        "testToken",
+        1337
+      )
+    ).resolves.toEqual(200);
+  });
+});
