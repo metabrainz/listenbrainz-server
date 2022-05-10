@@ -489,6 +489,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Both duration and duraion_ms are given, please choose one',
+                         response.json['error'])
     
 
     def test_valid_duration(self):
