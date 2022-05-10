@@ -407,7 +407,71 @@ export default class UserFeedPage extends React.Component<
     }
   };
 
-  eventSideButton(event: TimelineEvent) {
+  hideFeedEvent = async (event: TimelineEvent) => {
+    const { currentUser, APIService } = this.context;
+    const { newAlert } = this.props;
+    const { events } = this.state;
+
+    try {
+      const status = await APIService.hideFeedEvent(
+        event.event_type,
+        currentUser.name,
+        currentUser.auth_token as string,
+        event.id!
+      );
+
+      if (status === 200) {
+        newAlert("success", "", <>Successfully hidden</>);
+        const new_events = events.map((traversedEvent) => {
+          if (
+            traversedEvent.event_type === event.event_type &&
+            traversedEvent.id === event.id
+          ) {
+            // eslint-disable-next-line no-param-reassign
+            traversedEvent.hidden = true;
+          }
+          return traversedEvent;
+        });
+        this.setState({ events: new_events });
+      }
+    } catch (error) {
+      newAlert("danger", "", <>Could not hide event</>);
+    }
+  };
+
+  unhideFeedEvent = async (event: TimelineEvent) => {
+    const { currentUser, APIService } = this.context;
+    const { newAlert } = this.props;
+    const { events } = this.state;
+
+    try {
+      const status = await APIService.unhideFeedEvent(
+        event.event_type,
+        currentUser.name,
+        currentUser.auth_token as string,
+        event.id!
+      );
+
+      if (status === 200) {
+        newAlert("success", "", <>Successfully hidden</>);
+        const new_events = events.map((traversedEvent) => {
+          if (
+            traversedEvent.event_type === event.event_type &&
+            traversedEvent.id === event.id
+          ) {
+            // eslint-disable-next-line no-param-reassign
+            traversedEvent.hidden = true;
+          }
+          return traversedEvent;
+        });
+        this.setState({ events: new_events });
+      }
+    } catch (error) {
+      newAlert("danger", "", <>Could not hide event</>);
+    }
+  };
+
+  renderEventActionButton(event: TimelineEvent) {
     const { currentUser } = this.context;
     if (
       ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
@@ -434,7 +498,7 @@ export default class UserFeedPage extends React.Component<
       if (event.hidden) {
         return (
           <ListenControl
-            title="Delete Event"
+            title="Unhide Event"
             text=""
             icon={faEye}
             buttonClassName="btn btn-link btn-xs"
@@ -444,11 +508,12 @@ export default class UserFeedPage extends React.Component<
       }
       return (
         <ListenControl
-          title="Delete Event"
+          title="Hide Event"
           text=""
           icon={faEyeSlash}
           buttonClassName="btn btn-link btn-xs"
           // eslint-disable-next-line react/jsx-no-bind
+          action={this.hideFeedEvent.bind(this, event)}
         />
       );
     }
@@ -665,7 +730,7 @@ export default class UserFeedPage extends React.Component<
 
                           <span className="event-time">
                             {preciseTimestamp(created * 1000)}
-                            {this.eventSideButton(event)}
+                            {this.renderEventActionButton(event)}
                           </span>
                         </div>
 
