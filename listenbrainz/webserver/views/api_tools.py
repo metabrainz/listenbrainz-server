@@ -217,13 +217,13 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
                                                 "longer than %d characters." % MAX_TAG_SIZE, listen)
         
         
-        # duration
-        duration_key = ["duration", "duration_ms"]
-        for key in duration_key:
-            validate_duration_field(listen, key)
         # if both duration and duration_ms are given and valid, an error will be raised.
         if 'duration' in listen['track_metadata']['additional_info'] and 'duration_ms' in listen['track_metadata']['additional_info']:
             raise ListenValidationError("Both duration and duraion_ms are given, please choose one")
+        # check duration validity
+        duration_key = ["duration", "duration_ms"]
+        for key in duration_key:
+            validate_duration_field(listen, key)
 
 
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
