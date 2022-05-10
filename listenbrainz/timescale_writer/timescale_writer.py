@@ -128,8 +128,6 @@ class TimescaleWriterSubscriber:
         except (messybrainz.exceptions.BadDataException, messybrainz.exceptions.ErrorAddingException):
             current_app.logger.error("MessyBrainz lookup for listens failed: ", exc_info=True)
             return []
-        except messybrainz.exceptions.NoDataFoundException:
-            return []
 
         augmented_listens = []
         for listen, messybrainz_resp in zip(listens, msb_responses['payload']):

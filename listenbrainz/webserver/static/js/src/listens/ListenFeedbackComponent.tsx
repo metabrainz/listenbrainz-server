@@ -36,8 +36,8 @@ export default class ListenFeedbackComponent extends React.Component<
       try {
         const status = await APIService.submitFeedback(
           currentUser.auth_token,
-          recordingMSID,
-          score
+          score,
+          recordingMSID
         );
         if (status === 200) {
           //   this.setState({ feedback: score });
