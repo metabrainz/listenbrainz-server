@@ -1035,10 +1035,10 @@ export default class APIService {
     eventType: string,
     username: string,
     userToken: string,
-    id: number
+    event_id: number
   ): Promise<any> => {
-    if (!id) {
-      throw new SyntaxError("Row ID not present");
+    if (!event_id) {
+      throw new SyntaxError("Event ID not present");
     }
     const query = `${this.APIBaseURI}/user/${username}/feed/events/unhide`;
     const response = await fetch(query, {
@@ -1047,7 +1047,7 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ event_type: eventType, id }),
+      body: JSON.stringify({ event_type: eventType, event_id }),
     });
     await this.checkStatus(response);
     return response.status;

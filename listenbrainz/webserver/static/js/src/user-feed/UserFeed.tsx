@@ -453,21 +453,21 @@ export default class UserFeedPage extends React.Component<
       );
 
       if (status === 200) {
-        newAlert("success", "", <>Successfully hidden</>);
+        newAlert("success", "", <>Successfully unhidden</>);
         const new_events = events.map((traversedEvent) => {
           if (
             traversedEvent.event_type === event.event_type &&
             traversedEvent.id === event.id
           ) {
             // eslint-disable-next-line no-param-reassign
-            traversedEvent.hidden = true;
+            traversedEvent.hidden = false;
           }
           return traversedEvent;
         });
         this.setState({ events: new_events });
       }
     } catch (error) {
-      newAlert("danger", "", <>Could not hide event</>);
+      newAlert("danger", "", <>Could not unhide event</>);
     }
   };
 
@@ -503,6 +503,7 @@ export default class UserFeedPage extends React.Component<
             icon={faEye}
             buttonClassName="btn btn-link btn-xs"
             // eslint-disable-next-line react/jsx-no-bind
+            action={this.unhideFeedEvent.bind(this, event)}
           />
         );
       }
