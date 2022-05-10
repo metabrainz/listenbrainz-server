@@ -494,7 +494,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
                 'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
-            data=json.dumps({"id": 1}),
+            data=json.dumps({
+                "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                "event_id": 1
+            }),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         self.assert200(r)
@@ -513,7 +516,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
                 'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
-            data=json.dumps({"id": 1}),
+            data=json.dumps({
+                "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                "event_id": 1
+            }),
         )
         self.assert401(r)
 
@@ -554,7 +560,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
                 'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
-            data=json.dumps({"id": 1}),
+            data=json.dumps({
+                "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                "event_id": 1
+            }),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         self.assert500(r)

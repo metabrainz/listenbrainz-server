@@ -391,7 +391,8 @@ def unhide_user_timeline_event(user_name):
     .. code-block:: json
 
         {
-            "id": "<integer row id of the hidden event>"
+            "event_type": "recording_pin",
+            "event_id": "<integer id of the event>"
         }
 
     :type user_name: ``str``
@@ -408,7 +409,7 @@ def unhide_user_timeline_event(user_name):
         raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
     try:
         data = ujson.loads(request.get_data())
-        db_user_timeline_event.unhide_timeline_event(user['id'], data['id'])
+        db_user_timeline_event.unhide_timeline_event(user['id'], data['event_type'], data['event_id'])
         return jsonify({"status": "ok"})
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
