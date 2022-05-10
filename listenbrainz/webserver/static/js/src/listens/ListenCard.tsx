@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, has as _has, isEqual, isNil } from "lodash";
+import { get as _get, has as _has, isEqual, isNil, isNumber } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -26,6 +26,7 @@ import {
   getReleaseMBID,
   getArtistName,
   getTrackName,
+  getTrackDuration,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
@@ -34,6 +35,7 @@ import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
+import { millisecondsToStr } from "../playlists/utils";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -237,6 +239,7 @@ export default class ListenCard extends React.Component<
 
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
+    const trackDuration = getTrackDuration(listen);
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const enableRecommendButton = artistName && trackName && hasRecordingMSID;
@@ -326,12 +329,20 @@ export default class ListenCard extends React.Component<
             <div className="listen-details">{listenDetails}</div>
           ) : (
             <div className="listen-details">
-              <div title={trackName} className="ellipsis-2-lines">
-                {getTrackLink(listen)}
+              <div className="title-duration">
+                <div title={trackName} className="ellipsis-2-lines">
+                  {getTrackLink(listen)}
+                </div>
+                {trackDuration && (
+                  <div className="small text-muted" title="Duration">
+                    {isNumber(trackDuration) &&
+                      millisecondsToStr(trackDuration)}
+                  </div>
+                )}
               </div>
-              <span className="small text-muted ellipsis" title={artistName}>
+              <div className="small text-muted ellipsis" title={artistName}>
                 {getArtistLink(listen)}
-              </span>
+              </div>
             </div>
           )}
           <div className="right-section">

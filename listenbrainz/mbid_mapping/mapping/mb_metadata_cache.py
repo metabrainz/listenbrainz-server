@@ -9,6 +9,7 @@ import ujson
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 from mapping.bulk_table import BulkInsertTable
+from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 import config
 
 
@@ -328,34 +329,46 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , year"""
         return query
 
-    def delete_rows(self, recording_mbids):
-        query = """
-            DELETE FROM mb_metadata_cache
+    def delete_rows(self, recording_mbids: List[uuid.UUID]):
+        """Delete recording MBIDs from the mb_metadata_cache table
+
+        Args:
+            recording_mbids: a list of Recording MBIDs to delete
+        """
+        query = f"""
+            DELETE FROM {self.table_name}
                   WHERE recording_mbid IN %s
         """
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
-        conn.execute(query, (tuple(recording_mbids),))
+        with conn.cursor() as curs:
+            curs.execute(query, (tuple(recording_mbids),))
 
     def config_postgres_join_limit(self, curs):
-        # Because of the size of query we need to hint to postgres that it should continue to use joins
+        """
+        Because of the size of query we need to hint to postgres that it should continue to
+        reorder JOINs in an optimal order. Without these settings, PG will take minutes to
+        execute the metadata cache query for even for 3-4 mbids. With these settings,
+        the query planning time increases by few milliseconds but the query running time
+        becomes instantaneous.
+        """
         curs.execute('SET geqo = off')
         curs.execute('SET geqo_threshold = 20')
         curs.execute('SET from_collapse_limit = 15')
         curs.execute('SET join_collapse_limit = 15')
 
     def mark_rows_as_dirty(self, recording_mbids: List[uuid.UUID], artist_mbids: List[uuid.UUID], release_mbids: List[uuid.UUID]):
-        """Mark rows as dirty if the row is for a given recording mbid or if it's by a given artist mbid"""
+        """Mark rows as dirty if the row is for a given recording mbid or if it's by a given artist mbid, or is from a given release mbid"""
 
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
-                query = """UPDATE mb_metadata_cache
-                                   SET dirty = 't'
-                                 WHERE recording_mbid = ANY(%s)
-                                    OR %s && artist_mbids
-                                    OR release_mbid = ANY(%s)
+                query = f"""UPDATE {self.table_name}
+                               SET dirty = 't'
+                             WHERE recording_mbid IN %s
+                                OR %s && artist_mbids
+                                OR release_mbid IN %s
                         """
-                curs.execute(query, (recording_mbids, artist_mbids, release_mbids))
+                curs.execute(query, (tuple(recording_mbids), artist_mbids, tuple(release_mbids)))
                 conn.commit()
 
         except psycopg2.errors.OperationalError as err:
@@ -363,24 +376,29 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             conn.rollback()
             raise
 
-    def update_dirty_cache_items():
-        dirty_query = """
+    def update_dirty_cache_items(self):
+        """Refresh any dirty items in the mb_metadata_cache table.
+
+        This process first looks for all recording MIBDs which are dirty, gets updated metadata for them, and then
+        in batches deletes the dirty rows and inserts the updated ones.
+        """
+        dirty_query = f"""
             SELECT recording_mbid
-              FROM mb_metadata_cache
+              FROM {self.table_name}
              WHERE dirty = 't'
         """
 
         log("mb metadata update: getting dirty items")
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
-            with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+            with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
                 lb_curs.execute(dirty_query)
                 recording_mbids = lb_curs.fetchall()
 
                 self.config_postgres_join_limit(mb_curs)
 
                 log("mb metadata update: Running looooong query on dirty items")
-                query = get_metadata_cache_query(with_values=True)
+                query = self.get_metadata_cache_query(with_values=True)
                 values = [(row[0],) for row in recording_mbids]
                 psycopg2.extras.execute_values(mb_curs, query, values, page_size=len(values))
 
@@ -391,10 +409,10 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     count += 1
                     data = self.create_json_data(row)
                     rows.append(("false", *data))
-                    if len(rows) >= BATCH_SIZE:
+                    if len(rows) >= self.batch_size:
                         batch_recording_mbids = [row[1] for row in rows]
                         self.delete_rows(batch_recording_mbids)
-                        insert_rows(lb_curs, "mb_metadata_cache", rows)
+                        insert_rows(lb_curs, self.table_name, rows)
                         conn.commit()
                         log("mb metadata update: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
                         rows = []
@@ -402,7 +420,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 if rows:
                     batch_recording_mbids = [row[1] for row in rows]
                     self.delete_rows(batch_recording_mbids)
-                    insert_rows(lb_curs, "mb_metadata_cache", rows)
+                    insert_rows(lb_curs, self.table_name, rows)
                     conn.commit()
 
         log("mb metadata update: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
@@ -419,6 +437,11 @@ def create_mb_metadata_cache():
         lb_conn = None
         if config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+
+        can_rel = CanonicalReleaseRedirect(mb_conn)
+        if not can_rel.table_exists():
+            log("mb metadata cache: canonical_release_redirect table doesn't exist, run `canonical-data` manage command first")
+            return
 
         cache = MusicBrainzMetadataCache(mb_conn, lb_conn)
         cache.run()

@@ -184,10 +184,12 @@ def submit_recording(connection, data):
 
 def load_recordings_from_msids(connection, messybrainz_ids):
     """ Returns data for a recordings corresponding to a given list of MessyBrainz IDs.
+    msids not found in the database are omitted from the returned dict (usually indicates the msid
+    is wrong because data is not deleted from MsB).
 
     Args:
         connection: sqlalchemy connection to execute db queries with
-        messybrainz_id (list [uuid]): the MessyBrainz IDs of the recordings to fetch data for
+        messybrainz_ids (list [uuid]): the MessyBrainz IDs of the recordings to fetch data for
 
     Returns:
         list [dict]: a list of the recording data for the recordings in the order of the given MSIDs.
@@ -210,7 +212,7 @@ def load_recordings_from_msids(connection, messybrainz_ids):
 
     rows = result.fetchall()
     if not rows:
-        raise exceptions.NoDataFoundException
+        return []
 
     msid_recording_map = {str(x["gid"]): x for x in rows}
 
@@ -218,7 +220,7 @@ def load_recordings_from_msids(connection, messybrainz_ids):
     results = []
     for msid in messybrainz_ids:
         if msid not in msid_recording_map:
-            raise exceptions.NoDataFoundException
+            continue
         row = msid_recording_map[msid]
         results.append({
             "payload": row["data"],

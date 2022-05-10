@@ -15,222 +15,180 @@ Since the model is always trained on recently created dataframes, the model_meta
 saved corresponding to recently created dataframe_id. The model metadata also contains the unique identification string for the best model.
 """
 
-import uuid
 import logging
-import itertools
-from math import sqrt
 import time
-from operator import add
-from datetime import datetime
-from collections import namedtuple, defaultdict
-from py4j.protocol import Py4JJavaError
+import uuid
+from collections import namedtuple
+from datetime import datetime, timezone
+from typing import List, Tuple
+
+from pyspark import Row
+from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.recommendation import ALS
+from pyspark.ml.tuning import ParamGridBuilder, CrossValidator, CrossValidatorModel
 
 import listenbrainz_spark
-from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark import config, utils, path, schema
+from listenbrainz_spark.exceptions import PathNotFoundException
 from listenbrainz_spark.recommendations.recording.create_dataframes import describe_listencount_transformer
 from listenbrainz_spark.recommendations.utils import save_html
-from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
-                                           PathNotFoundException,
-                                           FileNotFetchedException,
-                                           HDFSDirectoryNotDeletedException,
-                                           PathNotFoundException,
-                                           DataFrameNotCreatedException,
-                                           DataFrameNotAppendedException)
-
-import pyspark.sql.functions as func
-from pyspark import RDD
-from pyspark.sql import Row
-from pyspark.mllib.recommendation import ALS, Rating
+from listenbrainz_spark.stats import run_query
 
 logger = logging.getLogger(__name__)
-Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration alpha model_id training_time rmse_time')
 
-# training HTML is generated if set to true
-SAVE_TRAINING_HTML = True
+Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration alpha model_id')
 
 
-def parse_dataset(row):
-    """ Convert each RDD element to object of class Rating.
-
-        Args:
-            row: An RDD row or element.
-    """
-    return Rating(row['spark_user_id'], row['recording_id'], row['transformed_listencount'])
+NUM_FOLDS = 5  # number of folds to use for k-folds cross validation
 
 
-def compute_rmse(model, data, n, model_id):
-    """ Compute RMSE (Root Mean Squared Error).
-
-        Args:
-            model: Trained model.
-            data (rdd): Rdd used for validation i.e validation_data
-            n (int): Number of rows/elements in validation_data.
-            model_id (str): Model identification string.
-    """
-    try:
-        predictions = model.predictAll(data.map(lambda x: (x.user, x.product)))
-        predictionsAndRatings = predictions.map(lambda x: ((x[0], x[1]), x[2])) \
-                                           .join(data.map(lambda x: ((x[0], x[1]), x[2]))) \
-                                           .values()
-        return sqrt(predictionsAndRatings.map(lambda x: (x[0] - x[1]) ** 2).reduce(add) / float(n))
-    except Py4JJavaError as err:
-        logger.error('Root Mean Squared Error for model "{}" not computed\n{}'.format(
-                                 model_id, str(err.java_exception)), exc_info=True)
-        raise
-
-
-def preprocess_data(transformed_listencounts_df):
-    """ Convert and split the dataframe into three RDDs; training data, validation data, test data.
-
-        Args:
-            transformed_listencounts_df: Dataframe containing transformed listen counts of users.
-
-        Returns:
-            training_data (rdd): Used for training.
-            validation_data (rdd): Used for validation.
-            test_data (rdd): Used for testing.
-    """
-    logger.info('Splitting dataframe...')
-    training_data, validation_data, test_data = transformed_listencounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
-    return training_data, validation_data, test_data
-
-
-def generate_model_id():
-    """ Generate model id.
-    """
-    return '{}-{}'.format(config.MODEL_ID_PREFIX, uuid.uuid4())
-
-
-def get_model_path(model_id):
+def get_model_path(model_id: str):
     """ Get path to save or load model
 
         Args:
-            model_id (str): Model identification string.
+            model_id: Model identification string.
 
         Returns:
             path to save or load model.
     """
-
     return config.HDFS_CLUSTER_URI + path.RECOMMENDATION_RECORDING_DATA_DIR + '/' + model_id
 
 
-def get_latest_dataframe_id(dataframe_metadata_df):
-    """ Get dataframe id of dataframe on which model has been trained.
+def get_latest_dataframe_id():
+    """ Get dataframe id of dataframe on which model has been trained. """
+    dataframe_metadata_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
+    dataframe_metadata_df.createOrReplaceTempView("dataframe_metadata")
+    return run_query("""
+        SELECT dataframe_id
+          FROM dataframe_metadata
+      ORDER BY dataframe_created DESC
+         LIMIT 1
+    """).collect()[0].dataframe_id
 
-        Args:
-            dataframe_metadata_df (dataframe): Refer to listenbrainz_spark.schema.dataframe_metadata_schema
 
-        Returns:
-            dataframe id
+def preprocess_data(transformed_listencounts_df, context):
+    """ Split the listen data into training set for training the model and test set for evaluating the model """
+    t0 = time.monotonic()
+    logger.info('Splitting dataframe...')
+
+    # divide the data randomly into training and test in 5 : 1.
+    # TODO: figure out why 45 was used as the seed in the first place.
+    training_data, test_data = transformed_listencounts_df.randomSplit([5.0, 1.0], 45)
+
+    context["train_test_ratio"] = "5 : 1"
+    context["time_preprocessing"] = f"{(time.monotonic() - t0) / 60:.2f} mins"
+    context["count_training_data"] = training_data.count()
+    context["count_test_data"] = test_data.count()
+
+    return training_data, test_data
+
+
+def get_models(als: ALS, params: List[dict], cv_model: CrossValidatorModel) -> Tuple[Model, List[Model]]:
+    """ Return the best model and list of all models along with the parameters on which the model was trained.
+
+    Args:
+        als: the ALS model to be trained
+        params: list of dict of parameters on which als model is trained and tuned
+        cv_model: tuned cross validator model
     """
-    # get timestamp of recently saved dataframe.
-    timestamp = dataframe_metadata_df.select(func.max('dataframe_created').alias('recent_dataframe_timestamp')).take(1)[0]
-    # get dataframe id corresponding to most recent timestamp.
-    df = dataframe_metadata_df.select('dataframe_id') \
-                              .where(func.col('dataframe_created') == timestamp.recent_dataframe_timestamp).take(1)[0]
-
-    return df.dataframe_id
-
-
-def get_best_model_metadata(best_model):
-    """ Get best model metadata.
-
-        Args:
-            best_model (namedtuple): contains best model and related data.
-
-        Returns:
-            dict containing best model metadata.
-    """
-
-    return {
-        'alpha': best_model.alpha,
-        'iteration': best_model.iteration,
-        'lmbda': best_model.lmbda,
-        'model_id': best_model.model_id,
-        'rank': best_model.rank,
-        'rmse_time': best_model.rmse_time,
-        'training_time': best_model.training_time,
-        'validation_rmse': best_model.validation_rmse,
-        'model_html_file': f"Model-{datetime.utcnow().strftime('%Y-%m-%d-%H:%M')}-{uuid.uuid4()}.html"
+    # Spark doesn't expose the underlying params which were used for a model directly, so we
+    # need to resort to workarounds. See also: https://stackoverflow.com/a/43794841
+    parent = cv_model.bestModel._java_obj.parent()
+    best_model_params = {
+        "rank": parent.getRank(),
+        "alpha": parent.getAlpha(),
+        "lmbda": parent.getRegParam(),
+        "iteration": parent.getMaxIter()
     }
+    best_model_metadata = None
+
+    metadatas = []
+    for param, model, metric in zip(params, cv_model.subModels[0], cv_model.avgMetrics):
+        model_metadata = Model(
+            model=model,
+            rank=param[als.rank],
+            lmbda=param[als.regParam],
+            iteration=param[als.maxIter],
+            alpha=param[als.alpha],
+            validation_rmse=metric,
+            model_id=f"{config.MODEL_ID_PREFIX}-{uuid.uuid4()}"
+        )
+        metadatas.append(model_metadata)
+
+        if model_metadata.rank == best_model_params["rank"] \
+                and model_metadata.lmbda == best_model_params["lmbda"] \
+                and model_metadata.alpha == best_model_params["alpha"] \
+                and model_metadata.iteration == best_model_params["iteration"]:
+            best_model_metadata = model_metadata
+
+    return best_model_metadata, metadatas
 
 
-def train(training_data, rank, iteration, lmbda, alpha, model_id):
-    """ Train model.
-
-        Args:
-            training_data (rdd): Used for training.
-            rank (int): Number of factors in ALS model.
-            iteration (int): Number of iterations to run.
-            lmbda (float): Controls regularization.
-            alpha (float): Constant for computing confidence.
-            model_id (str): Model identification string.
-
-        Returns:
-            model: Trained model.
-
-    """
-    try:
-        model = ALS.trainImplicit(training_data, rank, iterations=iteration, lambda_=lmbda, alpha=alpha)
-        return model
-    except Py4JJavaError as err:
-        logger.error('Unable to train model "{}"\n{}'.format(model_id, str(err.java_exception)), exc_info=True)
-        raise
-
-
-def get_best_model(training_data, validation_data, num_validation, ranks, lambdas, iterations, alphas):
+def train_models(training_data, test_data, use_transformed_listecounts, ranks, lambdas, iterations, alphas, context) \
+        -> Tuple[Model, List[Model]]:
     """ Train models and get the best model.
 
         Args:
-            training_data (rdd): Used for training.
-            validation_data (rdd): Used for validation.
-            num_validation (int): Number of elements/rows in validation_data.
-            ranks (list): Number of factors in ALS model.
-            lambdas (list): Controls regularization.
-            iterations (list): Number of iterations to run.
-            alphas (list): Baseline level of confidence weighting applied.
+            training_data: Used for training.
+            test_data: used for evaluating best model.
+            use_transformed_listecounts: whether to use playcount or transformed listen count for training.
+            ranks: Number of factors in ALS model.
+            lambdas: Controls regularization.
+            iterations: Number of iterations to run.
+            alphas: Baseline level of confidence weighting applied.
+            context: to store metadata for display in html reports.
 
         Returns:
             best_model: Model with least RMSE value.
-            model_metadata (dict): Models information such as model id, error etc.
+            model_metadata: List of all trained models.
     """
-    best_model = None
-    best_model_metadata = defaultdict(dict)
-    model_metadata = list()
+    t0 = time.monotonic()
+    logger.info("Training model.")
 
-    for rank, lmbda, iteration, alpha in itertools.product(ranks, lambdas, iterations, alphas):
-        model_id = generate_model_id()
+    ratingCol = "transformed_listencount" if use_transformed_listecounts else "playcount"
 
-        t0 = time.monotonic()
-        logger.info("Training model with model id: {}".format(model_id))
-        logger.info("Params: Rank - %d, Lambda - %d, Iterations - %d, Alpha - %f", rank, lmbda, iteration, alpha)
-        model = train(training_data, rank, iteration, lmbda, alpha, model_id)
-        logger.info("Model trained!")
-        mt = '{:.2f}'.format((time.monotonic() - t0) / 60)
+    evaluator = RegressionEvaluator(metricName="rmse", labelCol=ratingCol, predictionCol="prediction")
 
-        t0 = time.monotonic()
-        logger.info("Calculating validation RMSE for model with model id : {}".format(model_id))
-        validation_rmse = compute_rmse(model, validation_data, num_validation, model_id)
-        logger.info("Validation RMSE calculated!")
-        vt = '{:.2f}'.format((time.monotonic() - t0) / 60)
+    als = ALS(
+        userCol="spark_user_id",
+        itemCol="recording_id",
+        ratingCol=ratingCol,
+        implicitPrefs=True,
+        coldStartStrategy="drop"
+    )
 
-        model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, alpha, round(validation_rmse, 2), vt))
+    params = ParamGridBuilder() \
+        .addGrid(als.rank, ranks) \
+        .addGrid(als.regParam, lambdas) \
+        .addGrid(als.alpha, alphas) \
+        .addGrid(als.maxIter, iterations) \
+        .build()
 
-        if best_model is None or validation_rmse < best_model.validation_rmse:
-            best_model = Model(
-                model=model,
-                validation_rmse=round(validation_rmse, 2),
-                rank=rank,
-                lmbda=lmbda,
-                iteration=iteration,
-                alpha=alpha,
-                model_id=model_id,
-                training_time=mt,
-                rmse_time=vt,
-            )
+    cv = CrossValidator(
+        estimator=als,
+        estimatorParamMaps=params,
+        evaluator=evaluator,
+        numFolds=NUM_FOLDS,
+        collectSubModels=True,
+        parallelism=3
+    )
+    context["num_folds"] = NUM_FOLDS
+    cv_model: CrossValidatorModel = cv.fit(training_data)
+    logger.info("Model trained!")
 
-    return best_model, model_metadata
+    context["time_model_training"] = f"{(time.monotonic() - t0) / 3600:.2f} hours"
+
+    best_model, all_models = get_models(als, params, cv_model)
+    context["best_model"] = best_model
+    context["all_models"] = all_models
+    logger.info("Best model params: %s", best_model)
+
+    logger.info("Calculating test RMSE for best model:")
+    test_predictions = best_model.model.transform(test_data)
+    context["test_rmse"] = evaluator.evaluate(test_predictions)
+    logger.info("Test RMSE calculated!")
+
+    return best_model, all_models
 
 
 def delete_model():
@@ -242,81 +200,65 @@ def delete_model():
         utils.delete_dir(path.RECOMMENDATION_RECORDING_DATA_DIR, recursive=True)
 
 
-def save_model(model_id, model):
-    """ Save model to HDFS.
+def save_model_metadata_to_hdfs(model: Model, context: dict):
+    """ Add model metadata to the model metadata dataframe.
 
         Args:
-            model_id (str): Model identification string.
-            model: Trained model
+            model: the model to save for future use.
+            context: to store metadata for display in html reports.
     """
+    logger.info("Saving model metadata...")
+    dataframe_id = get_latest_dataframe_id()
+
+    metadata_row = Row(
+        dataframe_id=dataframe_id,
+        model_created=datetime.now(timezone.utc),
+        model_html_file=context["model_html_file"],
+        model_id=model.model_id,
+        model_param=Row(
+            alpha=model.alpha,
+            iteration=model.iteration,
+            lmbda=model.lmbda,
+            rank=model.rank,
+        ),
+        test_rmse=context["test_rmse"],
+        validation_rmse=model.validation_rmse
+    )
+    model_metadata_df = utils.create_dataframe(metadata_row, schema.model_metadata_schema)
+
+    utils.append(model_metadata_df, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
+    logger.info('Model metadata saved...')
+
+
+def save_model(model: Model, context: dict):
+    """ Save model to HDFS and add its metadata to the model metadata dataframe.
+
+        Args:
+            model: the model to save for future use.
+            context: to store metadata for display in html reports.
+    """
+    t0 = time.monotonic()
     # delete previously saved model before saving a new model
     delete_model()
 
-    dest_path = get_model_path(model_id)
-    try:
-        logger.info('Saving model...')
-        model.save(listenbrainz_spark.context, dest_path)
-        logger.info('Model saved!')
-    except Py4JJavaError as err:
-        logger.error('Unable to save model "{}"\n{}. Aborting...'.format(model_id,
-                                 str(err.java_exception)), exc_info=True)
-        raise
+    logger.info('Saving model...')
+    dest_path = get_model_path(model.model_id)
+    model.model.save(dest_path)
+    logger.info('Model saved!')
+
+    save_model_metadata_to_hdfs(model, context)
+    context["time_model_save"] = f"{(time.monotonic() - t0) / 60:.2f} mins"
 
 
-def save_model_metadata_to_hdfs(metadata):
-    """ Save model metadata.
-
-        Args:
-            metadata: dict containing model metadata.
-    """
-    metadata_row = schema.convert_model_metadata_to_row(metadata)
-    try:
-        # Create dataframe from the row object.
-        model_metadata_df = utils.create_dataframe(metadata_row, schema.model_metadata_schema)
-    except DataFrameNotCreatedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-
-    try:
-        logger.info('Saving model metadata...')
-        # Append the dataframe to existing dataframe if already exist or create a new one.
-        utils.append(model_metadata_df, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
-        logger.info('Model metadata saved...')
-    except DataFrameNotAppendedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
+def save_training_html(context):
+    """ Prepare and save HTML report of the model training process. """
+    context["listencount_transformer_description"] = describe_listencount_transformer(context["use_transformed_listencounts"])
+    context["time_total"] = f"{(time.monotonic() - context['time_start']) / 3600:.2f} hours"
+    save_html(context["model_html_file"], context, 'model.html')
+    logger.info('Done!')
 
 
-def save_training_html(time_, num_training, num_validation, num_test, model_metadata, best_model_metadata, ti,
-                       models_training_time):
-    """ Prepare and save taraining HTML.
-
-        Args:
-            time_ (dict): Dictionary containing execution time information.
-            num_training (int): Number of elements/rows in training_data.
-            num_validation (int): Number of elements/rows in validation_data.
-            num_test (int): Number of elements/rows in test_data.
-            model_metadata (dict): Models information such as model id, error etc.
-            best_model_metadata (dict): Best Model information such as model id, error etc.
-            ti (str): Value of the monotonic clock when the script was run.
-            models_training_data (str): Time taken to train all the models.
-    """
-    context = {
-        'time' : time_,
-        'num_training' : '{:,}'.format(num_training),
-        'num_validation' : '{:,}'.format(num_validation),
-        'num_test' : '{:,}'.format(num_test),
-        'models' : model_metadata,
-        'best_model' : best_model_metadata,
-        'models_training_time' : models_training_time,
-        'total_time' : '{:.2f}'.format((time.monotonic() - ti) / 3600),
-        'listencount_transformer_description': describe_listencount_transformer()
-    }
-    save_html(best_model_metadata['model_html_file'], context, 'model.html')
-
-
-def main(ranks=None, lambdas=None, iterations=None, alphas=None):
-
+def main(ranks=None, lambdas=None, iterations=None, alphas=None, use_transformed_listencounts=False):
     if ranks is None:
         logger.critical('model param "ranks" missing')
 
@@ -332,78 +274,40 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None):
         logger.critical('model param "alphas" missing')
         raise
 
-    ti = time.monotonic()
-    time_ = defaultdict(dict)
-    try:
-        listenbrainz_spark.init_spark_session('Train Models')
-    except SparkSessionNotInitializedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
+    context = {
+        "time_start": time.monotonic(),
+        "use_transformed_listencounts": use_transformed_listencounts
+    }
+
+    listenbrainz_spark.init_spark_session("Train Models")
 
     # Add checkpoint dir to break and save RDD lineage.
     listenbrainz_spark.context.setCheckpointDir(config.HDFS_CLUSTER_URI + path.CHECKPOINT_DIR)
 
     try:
-        transformed_listencounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME)
-        dataframe_metadata_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
+        transformed_listencounts_df = utils.read_files_from_HDFS(
+            path.RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME)
     except PathNotFoundException as err:
         logger.error('{}\nConsider running create_dataframes.py'.format(str(err)), exc_info=True)
         raise
-    except FileNotFetchedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
 
-    time_['load_playcounts'] = '{:.2f}'.format((time.monotonic() - ti) / 60)
+    context["time_load_playcounts"] = f"{(time.monotonic() - context['time_start']) / 60:.2f} mins"
 
-    t0 = time.monotonic()
-    training_data, validation_data, test_data = preprocess_data(transformed_listencounts_df)
-    time_['preprocessing'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
+    training_data, test_data = preprocess_data(transformed_listencounts_df, context)
 
-    # An action must be called for persist to evaluate.
-    num_training = training_data.count()
-    num_validation = validation_data.count()
-    num_test = test_data.count()
+    best_model, all_models = train_models(training_data, test_data, use_transformed_listencounts,
+                                          ranks, lambdas, iterations, alphas, context)
 
-    t0 = time.monotonic()
-    best_model, model_metadata = get_best_model(training_data, validation_data, num_validation, ranks,
-                                                lambdas, iterations, alphas)
-    models_training_time = '{:.2f}'.format((time.monotonic() - t0) / 3600)
+    context["model_html_file"] = f"Model-{datetime.utcnow().strftime('%Y-%m-%d-%H:%M')}-{uuid.uuid4()}.html"
 
-    best_model_metadata = get_best_model_metadata(best_model)
-    logger.info("Calculating test RMSE for best model with model id: {}".format(best_model.model_id))
-    best_model_metadata['test_rmse'] = compute_rmse(best_model.model, test_data, num_test, best_model.model_id)
-    logger.info("Test RMSE calculated!")
+    save_model(best_model, context)
+    save_training_html(context)
 
-    best_model_metadata['training_data_count'] = num_training
-    best_model_metadata['validation_data_count'] = num_validation
-    best_model_metadata['test_data_count'] = num_test
-    best_model_metadata['dataframe_id'] = get_latest_dataframe_id(dataframe_metadata_df)
-
-    hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
-    t0 = time.monotonic()
-    save_model(best_model.model_id, best_model.model)
-    time_['save_model'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
-
-    logger.info("Best model params: %s", best_model_metadata)
-
-    save_model_metadata_to_hdfs(best_model_metadata)
     # Delete checkpoint dir as saved lineages would eat up space, we won't be using them anyway.
-    try:
-        utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
-    except HDFSDirectoryNotDeletedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
+    utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
 
-    if SAVE_TRAINING_HTML:
-        logger.info('Saving HTML...')
-        save_training_html(time_, num_training, num_validation, num_test, model_metadata, best_model_metadata, ti,
-                           models_training_time)
-        logger.info('Done!')
-
-    message = [{
+    return [{
         'type': 'cf_recommendations_recording_model',
-        'model_upload_time': str(datetime.utcnow()),
-        'total_time': '{:.2f}'.format(time.monotonic() - ti),
+        'model_upload_time': str(datetime.now(timezone.utc)),
+        'total_time': f"{time.monotonic() - context['time_start']:.2f} seconds",
     }]
-
-    return message

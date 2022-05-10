@@ -236,6 +236,14 @@ def request_dataframes(days, job_type, listens_threshold):
     )
 
 
+@cli.command(name="request_missing_mb_data")
+@click.option("--days", type=int, default=180, help="Request missing musicbrainz data based on listen data of given number of days")
+def request_missing_mb_data(days):
+    """ Send the cluster a request to generate missing MB data.
+    """
+    send_request_to_spark_cluster('cf.missing_mb_data', days=days)
+
+
 def parse_list(ctx, args):
     return list(args)
 
@@ -245,7 +253,8 @@ def parse_list(ctx, args):
 @click.option("--itr", callback=parse_list, default=[5, 10], type=int, multiple=True, help="Number of iterations to run.")
 @click.option("--lmbda", callback=parse_list, default=[0.1, 10.0], type=float, multiple=True, help="Controls over fitting.")
 @click.option("--alpha", callback=parse_list, default=[3.0], type=float, multiple=True, help="Baseline level of confidence weighting applied.")
-def request_model(rank, itr, lmbda, alpha):
+@click.option("--use-transformed-listencounts", is_flag=True, default=False, help='Whether to apply a transformation function on the listencounts or use original listen playcounts')
+def request_model(rank, itr, lmbda, alpha, use_transformed_listencounts):
     """ Send the cluster a request to train the model.
 
     For more details refer to https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html
@@ -255,6 +264,7 @@ def request_model(rank, itr, lmbda, alpha):
         'lambdas': lmbda,
         'iterations': itr,
         'alphas': alpha,
+        'use_transformed_listencounts': use_transformed_listencounts
     }
 
     send_request_to_spark_cluster('cf.recommendations.recording.train_model', **params)
