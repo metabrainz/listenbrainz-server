@@ -138,14 +138,6 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     [recordingData, playingNow, setCurrentListenFeedback]
   );
 
-  /** Return early, but after defining all hooks (otherwise React no happy) */
-  if (
-    !recordingData?.recording_name &&
-    !playingNow?.track_metadata?.track_name
-  ) {
-    return <div>No data to show</div>;
-  }
-
   const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
   adjustedAlbumColor.saturate(20);
   adjustedAlbumColor.setAlpha(0.6);
@@ -192,8 +184,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const fallbackTrackName = getTrackName(playingNow);
   const fallbackArtistName = getArtistName(playingNow);
 
-  const trackName = recordingData?.recording_name ?? fallbackTrackName;
-  const artistName = recordingData?.artist_credit_name ?? fallbackArtistName;
+  const trackName =
+    (recordingData?.recording_name ?? fallbackTrackName) || "No track to show";
+  const artistName =
+    (recordingData?.artist_credit_name ?? fallbackArtistName) ||
+    "No artist to show";
   const duration =
     metadata?.recording?.duration ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
@@ -205,6 +200,22 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   return (
     <div id="metadata-viewer">
+      {!playingNow && (
+        <div className="no-listen-container">
+          <div className="no-listen">
+            <p>
+              We don&apos;t have a <i>Playing Now</i> listen for you at the
+              moment.
+              <br />
+              Are you&nbsp;<a href="/add-data/">sending listens</a> to
+              ListenBrainz?
+              <br />
+              Sometimes it takes a while for us to receive listens from
+              third-party services, please be patient
+            </p>
+          </div>
+        </div>
+      )}
       <div
         className="left-side"
         style={{
