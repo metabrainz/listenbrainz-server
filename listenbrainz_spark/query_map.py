@@ -1,3 +1,4 @@
+import listenbrainz_spark.missing_mb_data.missing_mb_data
 import listenbrainz_spark.recommendations.recording.candidate_sets
 import listenbrainz_spark.recommendations.recording.create_dataframes
 import listenbrainz_spark.recommendations.recording.recommend
@@ -28,6 +29,7 @@ functions = {
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
     'import.dump.incremental_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,
     'import.dump.incremental_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_incremental_dump_by_id_handler,
+    'cf.missing_mb_data': listenbrainz_spark.missing_mb_data.missing_mb_data.main,
     'cf.recommendations.recording.create_dataframes': listenbrainz_spark.recommendations.recording.create_dataframes.main,
     'cf.recommendations.recording.train_model': listenbrainz_spark.recommendations.recording.train_models.main,
     'cf.recommendations.recording.candidate_sets': listenbrainz_spark.recommendations.recording.candidate_sets.main,

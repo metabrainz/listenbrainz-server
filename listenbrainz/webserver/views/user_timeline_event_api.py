@@ -148,7 +148,9 @@ def create_user_notification_event(user_name):
     if "message" not in data:
         raise APIBadRequest("Invalid metadata: message is missing")
 
-    message = _filter_description_html(data["message"])
+    # Not filtering html in the message because only approved users can use this endpoint.
+    # if this changes in the future, add back html cleanup here.
+    message = data["message"]
     metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
 
     try:

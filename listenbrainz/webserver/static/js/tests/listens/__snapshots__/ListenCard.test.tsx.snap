@@ -13,6 +13,7 @@ exports[`ListenCard renders correctly 1`] = `
             "xxxx",
           ],
           "artist_msid": "artist_msid",
+          "duration_ms": 123000,
           "recording_mbid": "yyyy",
           "recording_msid": "bar",
           "release_mbid": "foo",
@@ -58,18 +59,28 @@ exports[`ListenCard renders correctly 1`] = `
           className="listen-details"
         >
           <div
-            className="ellipsis-2-lines"
-            title="Bird's Lament"
+            className="title-duration"
           >
-            <a
-              href="https://musicbrainz.org/recording/yyyy"
-              rel="noopener noreferrer"
-              target="_blank"
+            <div
+              className="ellipsis-2-lines"
+              title="Bird's Lament"
             >
-              Bird's Lament
-            </a>
+              <a
+                href="https://musicbrainz.org/recording/yyyy"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                Bird's Lament
+              </a>
+            </div>
+            <div
+              className="small text-muted"
+              title="Duration"
+            >
+              2:03
+            </div>
           </div>
-          <span
+          <div
             className="small text-muted ellipsis"
             title="Moondog"
           >
@@ -80,7 +91,7 @@ exports[`ListenCard renders correctly 1`] = `
             >
               Moondog
             </a>
-          </span>
+          </div>
         </div>
         <div
           className="right-section"
@@ -118,6 +129,7 @@ exports[`ListenCard renders correctly 1`] = `
                         "xxxx",
                       ],
                       "artist_msid": "artist_msid",
+                      "duration_ms": 123000,
                       "recording_mbid": "yyyy",
                       "recording_msid": "bar",
                       "release_mbid": "foo",
@@ -550,6 +562,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
             "xxxx",
           ],
           "artist_msid": "artist_msid",
+          "duration_ms": 123000,
           "recording_mbid": "yyyy",
           "recording_msid": "bar",
           "release_mbid": "foo",
@@ -595,18 +608,28 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
           className="listen-details"
         >
           <div
-            className="ellipsis-2-lines"
-            title="Bird's Lament"
+            className="title-duration"
           >
-            <a
-              href="https://musicbrainz.org/recording/yyyy"
-              rel="noopener noreferrer"
-              target="_blank"
+            <div
+              className="ellipsis-2-lines"
+              title="Bird's Lament"
             >
-              Bird's Lament
-            </a>
+              <a
+                href="https://musicbrainz.org/recording/yyyy"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                Bird's Lament
+              </a>
+            </div>
+            <div
+              className="small text-muted"
+              title="Duration"
+            >
+              2:03
+            </div>
           </div>
-          <span
+          <div
             className="small text-muted ellipsis"
             title="Moondog"
           >
@@ -617,7 +640,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
             >
               Moondog
             </a>
-          </span>
+          </div>
         </div>
         <div
           className="right-section"
@@ -655,6 +678,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                         "xxxx",
                       ],
                       "artist_msid": "artist_msid",
+                      "duration_ms": 123000,
                       "recording_mbid": "yyyy",
                       "recording_msid": "bar",
                       "release_mbid": "foo",
@@ -1087,6 +1111,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
             "xxxx",
           ],
           "artist_msid": "artist_msid",
+          "duration_ms": 123000,
           "recording_mbid": "yyyy",
           "recording_msid": "bar",
           "release_mbid": "foo",
@@ -1132,18 +1157,28 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
           className="listen-details"
         >
           <div
-            className="ellipsis-2-lines"
-            title="Bird's Lament"
+            className="title-duration"
           >
-            <a
-              href="https://musicbrainz.org/recording/yyyy"
-              rel="noopener noreferrer"
-              target="_blank"
+            <div
+              className="ellipsis-2-lines"
+              title="Bird's Lament"
             >
-              Bird's Lament
-            </a>
+              <a
+                href="https://musicbrainz.org/recording/yyyy"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                Bird's Lament
+              </a>
+            </div>
+            <div
+              className="small text-muted"
+              title="Duration"
+            >
+              2:03
+            </div>
           </div>
-          <span
+          <div
             className="small text-muted ellipsis"
             title="Moondog"
           >
@@ -1154,7 +1189,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
             >
               Moondog
             </a>
-          </span>
+          </div>
         </div>
         <div
           className="right-section"
@@ -1192,6 +1227,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                         "xxxx",
                       ],
                       "artist_msid": "artist_msid",
+                      "duration_ms": 123000,
                       "recording_mbid": "yyyy",
                       "recording_msid": "bar",
                       "release_mbid": "foo",
