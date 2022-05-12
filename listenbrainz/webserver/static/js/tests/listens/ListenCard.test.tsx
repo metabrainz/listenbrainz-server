@@ -18,6 +18,7 @@ const listen: Listen = {
     artist_name: "Moondog",
     track_name: "Bird's Lament",
     additional_info: {
+      duration_ms: 123000,
       release_mbid: "foo",
       recording_msid: "bar",
       artist_msid: "artist_msid",

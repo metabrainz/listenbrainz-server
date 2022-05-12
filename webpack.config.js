@@ -75,6 +75,10 @@ module.exports = function (env, argv) {
         "src/missing-mb-data/MissingMBData.tsx"
       ),
       playerPage: path.resolve(jsDir, "src/player-pages/PlayerPage.tsx"),
+      metadataViewer: path.resolve(
+        jsDir,
+        "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
+      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

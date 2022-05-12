@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify, current_app
 from listenbrainz.db.metadata import get_metadata_for_recording
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
+from listenbrainz.mbid_mapping_writer.mbid_mapper_metadata_api import MBIDMapperMetadataAPI
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -150,8 +151,8 @@ def get_mbid_mapping():
     if result:
         return process_results(result[0], metadata, incs)
 
-    q = MBIDMappingQuery(timeout=10, remove_stop_words=True, debug=False)
-    result = q.fetch(params)
+    q = MBIDMapperMetadataAPI(timeout=10, remove_stop_words=True, debug=False)
+    result = q.search(artist_name, recording_name)
     if result:
         return process_results(result[0], metadata, incs)
 
