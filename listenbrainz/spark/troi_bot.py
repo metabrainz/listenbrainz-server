@@ -13,7 +13,6 @@ from data.model.user_timeline_event import (
 from flask import current_app
 from troi.core import generate_playlist
 
-USERS_TO_PROCESS = ["mr_monkey", "rob", "akshaaatt", "Damselfish", "lucifer", "alastairp", "CatCat", "atj"]
 
 
 def run_post_recommendation_troi_bot():
@@ -21,16 +20,19 @@ def run_post_recommendation_troi_bot():
         Top level function called after spark CF recommendations have been completed.
     """
        
+    users_to_process = ["mr_monkey", "rob", "akshaaatt", "Damselfish", "lucifer", "alastairp", "CatCat", "atj"]
     if current_app.config['TESTING']:
         current_app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token"]
-        USER_TO_PROCESS = ["rob"]
+        users_to_process = ["lucifer"]
 
     # Save playlists for just a handful of people
-    for user in USERS_TO_PROCESS:
+    for user in users_to_process:
         make_playlist_from_recommendations(user)
 
     # Now generate daily jams (and other in the future) for users who follow troi bot
     users = get_followers_of_user(TROI_BOT_USER_ID)
+    if current_app.config['TESTING']:
+        users = users_to_process
     for user in users:
         run_daily_jams(user)
         # Add others here
