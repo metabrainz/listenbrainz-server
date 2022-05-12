@@ -1,5 +1,6 @@
 import * as React from "react";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
+import { faPauseCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as tinycolor from "tinycolor2";
 import { first, get, isEmpty, isNumber, isPlainObject, pick } from "lodash";
@@ -204,14 +205,30 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         <div className="no-listen-container">
           <div className="no-listen">
             <p>
-              We don&apos;t have a <i>Playing Now</i> listen for you at the
-              moment.
+              <hr />
+              <div style={{ marginTop: "-2.1em" }}>
+                <FontAwesomeIcon icon={faPauseCircle} size="2x" />
+              </div>
+              Sorry, we do not know what music you are currently listening to,
+              since we have not received any recent <i>Playing Now</i> events
+              for your account.
               <br />
-              Are you&nbsp;<a href="/add-data/">sending listens</a> to
-              ListenBrainz?
+              As soon as a <i>Playing Now</i> listen comes through, this page
+              will be updated automatically.
               <br />
-              Sometimes it takes a while for us to receive listens from
-              third-party services, please be patient
+              <br />
+              <small>
+                In order to receive these events, you will need to{" "}
+                <a href="/add-data/">send listens</a> to ListenBrainz.
+                <br />
+                We work hard to make this data available to you as soon as we
+                receive it, but until your music service sends us a{" "}
+                <a href="https://listenbrainz.readthedocs.io/en/production/dev/json/?highlight=playing%20now#submission-json">
+                  <i>Playing Now</i> event
+                </a>
+                , we cannot display anything here.
+              </small>
+              <hr />
             </p>
           </div>
         </div>
