@@ -20,6 +20,10 @@ def run_post_recommendation_troi_bot():
     """
         Top level function called after spark CF recommendations have been completed.
     """
+       
+    if current_app.config['TESTING']:
+        current_app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token"]
+        USER_TO_PROCESS = ["rob"]
 
     # Save playlists for just a handful of people
     for user in USERS_TO_PROCESS:

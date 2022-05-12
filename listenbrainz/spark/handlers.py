@@ -287,7 +287,7 @@ def cf_recording_recommendations_complete(data):
     send an email to notify recommendations have been generated and are being written into db.
     """
 
-    run_post_recommendation_troi_bot(user["musicbrainz_id"])
+    run_post_recommendation_troi_bot()
 
     if current_app.config['TESTING']:
         return
