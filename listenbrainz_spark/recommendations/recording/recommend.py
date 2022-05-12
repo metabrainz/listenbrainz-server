@@ -5,7 +5,7 @@ The best_model saved in HDFS is loaded with the help of model_id which is fetche
 `spark_user_id` and `recording_id` are fetched from top_artist_candidate_set_df and are given as input to the
 recommender. An RDD of `user`, `product` and `rating` is returned from the recommender which is later converted to
 a dataframe by filtering top X (an int supplied as an argument to the script) recommendations for all users sorted on rating
-and fields renamed as `spark_user_id`, `recording_id` and `rating`. The ratings are scaled so that they lie between 0 and 1.
+and fields renamed as `spark_user_id`, `recording_id` and `rating`.
 This dataframe is joined with recordings_df on recording_id to get the recording mbids which are then sent over the queue.
 
 The same process is done for similar artist candidate set.
@@ -13,35 +13,35 @@ The same process is done for similar artist candidate set.
 
 import logging
 import time
+
+import pyspark.sql
+import pyspark.sql.functions as func
 from py4j.protocol import Py4JJavaError
+from pyspark.ml.recommendation import ALSModel
+from pyspark.sql.functions import col, row_number
+from pyspark.sql.types import DoubleType
+from pyspark.sql.window import Window
 
 import listenbrainz_spark
 from listenbrainz_spark import utils, path
-
 from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            FileNotFetchedException,
                                            SparkSessionNotInitializedException,
                                            RecommendationsNotGeneratedException,
                                            EmptyDataframeExcpetion)
-
-from listenbrainz_spark.recommendations.recording.train_models import get_model_path
 from listenbrainz_spark.recommendations.recording.candidate_sets import _is_empty_dataframe
-
-from pyspark.sql import Row
-import pyspark.sql.functions as func
-from pyspark.sql.window import Window
-from pyspark.sql.functions import col, udf, row_number
-from pyspark.sql.types import DoubleType
-from pyspark.mllib.recommendation import MatrixFactorizationModel
+from listenbrainz_spark.recommendations.recording.train_models import get_model_path
 
 logger = logging.getLogger(__name__)
 
 
 class RecommendationParams:
 
-    def __init__(self, recordings_df, model, top_artist_candidate_set_df, similar_artist_candidate_set_df,
-                 recommendation_top_artist_limit, recommendation_similar_artist_limit):
+    def __init__(self, recordings_df, model_id, model_html_file, model, top_artist_candidate_set_df,
+                 similar_artist_candidate_set_df, recommendation_top_artist_limit, recommendation_similar_artist_limit):
         self.recordings_df = recordings_df
+        self.model_id = model_id
+        self.model_html_file = model_html_file
         self.model = model
         self.top_artist_candidate_set_df = top_artist_candidate_set_df
         self.similar_artist_candidate_set_df = similar_artist_candidate_set_df
@@ -49,36 +49,28 @@ class RecommendationParams:
         self.recommendation_similar_artist_limit = recommendation_similar_artist_limit
 
 
-def get_most_recent_model_id():
+def get_most_recent_model_meta():
     """ Get model id of recently created model.
 
         Returns:
             model_id (str): Model identification string.
     """
-    try:
-        model_metadata = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
-    except PathNotFoundException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-    except FileNotFetchedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-
-    latest_ts = model_metadata.select(func.max('model_created').alias('model_created')).take(1)[0].model_created
-    model_id = model_metadata.select('model_id') \
-                             .where(col('model_created') == latest_ts).take(1)[0].model_id
-
-    return model_id
+    utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA).createOrReplaceTempView("model_metadata")
+    meta = listenbrainz_spark.sql_context.sql("""
+        SELECT model_id, model_html_file
+          FROM model_metadata
+      ORDER BY model_created DESC
+         LIMIT 1
+    """).collect()[0]
+    return meta.model_id, meta.model_html_file
 
 
-def load_model():
+def load_model(model_id):
     """ Load model from given path in HDFS.
     """
-    model_id = get_most_recent_model_id()
     dest_path = get_model_path(model_id)
     try:
-        model = MatrixFactorizationModel.load(listenbrainz_spark.context, dest_path)
-        return model
+        return ALSModel.load(dest_path)
     except Py4JJavaError as err:
         logger.error('Unable to load model "{}"\n{}\nAborting...'.format(model_id, str(err.java_exception)),
                                  exc_info=True)
@@ -125,13 +117,13 @@ def filter_recommendations_on_rating(df, limit):
         Returns:
             recommendation_df: Dataframe of spark_user_id, recording_id and rating.
     """
-    window = Window.partitionBy('user').orderBy(col('rating').desc())
+    window = Window.partitionBy('spark_user_id').orderBy(col('prediction').desc())
 
     recommendation_df = df.withColumn('rank', row_number().over(window)) \
                           .where(col('rank') <= limit) \
-                          .select(col('rating'),
-                                  col('product').alias('recording_id'),
-                                  col('user').alias('spark_user_id'))
+                          .select(col('prediction').alias('rating'),
+                                  col('recording_id'),
+                                  col('spark_user_id'))
 
     return recommendation_df
 
@@ -147,51 +139,14 @@ def generate_recommendations(candidate_set, params: RecommendationParams, limit)
         Returns:
             recommendation_df: Dataframe of spark_user_id, recording_id and rating.
     """
-    recommendations = params.model.predictAll(candidate_set)
+    recommendations = params.model.transform(candidate_set)
 
-    if recommendations.isEmpty():
+    if _is_empty_dataframe(recommendations):
         raise RecommendationsNotGeneratedException('Recommendations not generated!')
 
-    df = listenbrainz_spark.session.createDataFrame(recommendations, schema=None)
-
-    recommendation_df = filter_recommendations_on_rating(df, limit)
+    recommendation_df = filter_recommendations_on_rating(recommendations, limit)
 
     return recommendation_df
-
-
-def get_scale_rating_udf(rating):
-    """ Get user defined function (udf) to scale ratings so that they fall in the
-        range: 0.0 -> 1.0.
-
-        Args:
-            rating (float): score given to recordings by CF.
-
-        Returns:
-            rating udf.
-    """
-    scaled_rating = (rating / 2.0) + 0.5
-
-    return round(min(max(scaled_rating, -1.0), 1.0), 3)
-
-
-def scale_rating(df):
-    """ Scale the ratings column of dataframe so that they fall in the
-        range: 0.0 -> 1.0.
-
-        Args:
-            df: Dataframe to scale.
-
-        Returns:
-            df: Dataframe with scaled rating.
-    """
-    scaling_udf = udf(get_scale_rating_udf, DoubleType())
-
-    df = df.withColumn("scaled_rating", scaling_udf(df.rating)) \
-           .select(col('recording_id'),
-                   col('spark_user_id'),
-                   col('scaled_rating').alias('rating'))
-
-    return df
 
 
 def get_candidate_set_rdd_for_user(candidate_set_df, users):
@@ -213,9 +168,7 @@ def get_candidate_set_rdd_for_user(candidate_set_df, users):
     if _is_empty_dataframe(candidate_set_user_df):
         raise EmptyDataframeExcpetion('Empty Candidate sets!')
 
-    candidate_set_rdd = candidate_set_user_df.rdd.map(lambda r: (r['spark_user_id'], r['recording_id']))
-
-    return candidate_set_rdd
+    return candidate_set_user_df
 
 
 def get_user_name_and_user_id(params: RecommendationParams, users):
@@ -242,42 +195,16 @@ def get_user_name_and_user_id(params: RecommendationParams, users):
     return users_df
 
 
-def check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df):
-    """ Check if rating in top_artist_rec_df and similar_artist_rec_df does not belong to [-1, 1].
-
-        Args:
-            top_artist_rec_df (dataframe): Top artist recommendations for all users.
-            similar_artist_rec_df (dataframe): Similar artist recommendations for all users.
-
-        Returns:
-            a tuple of booleans (max out of range, min out of range)
-    """
-    max_rating = top_artist_rec_df.select(func.max('rating').alias('rating')).take(1)[0].rating
-
-    max_rating = max(similar_artist_rec_df.select(func.max('rating').alias('rating')).take(1)[0].rating, max_rating)
-
-    min_rating = top_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating
-
-    min_rating = min(similar_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating, min_rating)
-
-    if max_rating > 1.0:
-        logger.info('Some ratings are greater than 1 \nMax rating: {}'.format(max_rating))
-
-    if min_rating < -1.0:
-        logger.info('Some ratings are less than -1 \nMin rating: {}'.format(min_rating))
-
-    return max_rating > 1.0, min_rating < -1.0
-
-
-def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count, total_time,
-                    top_artist_rec_user_count, similar_artist_rec_user_count):
+def create_messages(params, top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count,
+                    total_time, top_artist_rec_user_count, similar_artist_rec_user_count):
     """ Create messages to send the data to the webserver via RabbitMQ.
 
         Args:
+            params: recommendation params to get model id and model url from
             top_artist_rec_mbid_df (dataframe): Top artist recommendations.
             similar_artist_rec_mbid_df (dataframe): Similar artist recommendations.
             active_user_count (int): Number of users active in the last week.
-            total_time (str): Time taken in exceuting the whole script.
+            total_time (float): Time taken in exceuting the whole script.
             top_artist_rec_user_count (int): Number of users for whom top artist recommendations were generated.
             similar_artist_rec_user_count (int): Number of users for whom similar artist recommendations were generated.
 
@@ -336,7 +263,9 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': data.get('top_artist', []),
-                'similar_artist': data.get('similar_artist', [])
+                'similar_artist': data.get('similar_artist', []),
+                'model_id': params.model_id,
+                'model_url': f"http://michael.metabrainz.org/{params.model_html_file}"
             }
         }
         yield messages
@@ -417,16 +346,16 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         raise
 
     logger.info('Loading model...')
-    model = load_model()
+    model_id, model_html_file = get_most_recent_model_meta()
+    model = load_model(model_id)
 
     # an action must be called to persist data in memory
     recordings_df.count()
     recordings_df.persist()
 
-    params = RecommendationParams(recordings_df, model, top_artist_candidate_set_df,
-                                  similar_artist_candidate_set_df,
-                                  recommendation_top_artist_limit,
-                                  recommendation_similar_artist_limit)
+    params = RecommendationParams(recordings_df, model_id, model_html_file, model,
+                                  top_artist_candidate_set_df, similar_artist_candidate_set_df,
+                                  recommendation_top_artist_limit, recommendation_similar_artist_limit)
 
     try:
         # timestamp when the script was invoked
@@ -454,15 +383,8 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     logger.info('Took {:.2f}sec to get top artist and similar artist user count'.format(time.monotonic() - ts))
 
     ts = time.monotonic()
-    check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
-
-    top_artist_rec_scaled_df = scale_rating(top_artist_rec_df)
-    similar_artist_rec_scaled_df = scale_rating(similar_artist_rec_df)
-    logger.info('Took {:.2f}sec to scale the ratings'.format(time.monotonic() - ts))
-
-    ts = time.monotonic()
-    top_artist_rec_mbid_df = get_recording_mbids(params, top_artist_rec_scaled_df, users_df)
-    similar_artist_rec_mbid_df = get_recording_mbids(params, similar_artist_rec_scaled_df, users_df)
+    top_artist_rec_mbid_df = get_recording_mbids(params, top_artist_rec_df, users_df)
+    similar_artist_rec_mbid_df = get_recording_mbids(params, similar_artist_rec_df, users_df)
     logger.info('Took {:.2f}sec to get mbids corresponding to recording ids'.format(time.monotonic() - ts))
 
     # persisted data must be cleared from memory after usage to avoid OOM
@@ -471,8 +393,8 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     total_time = time.monotonic() - ts_initial
     logger.info('Total time: {:.2f}sec'.format(total_time))
 
-    result = create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count, total_time,
-                             top_artist_rec_user_count, similar_artist_rec_user_count)
+    result = create_messages(params, top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count,
+                             total_time, top_artist_rec_user_count, similar_artist_rec_user_count)
 
     users_df.unpersist()
 

@@ -63,7 +63,7 @@ describe("ListenFeedbackComponent", () => {
       await instance.submitFeedback(-1);
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("baz", "bar", -1);
+      expect(spy).toHaveBeenCalledWith("baz", -1, "bar");
 
       expect(instance.props.updateFeedbackCallback).toHaveBeenCalledTimes(1);
       expect(instance.props.updateFeedbackCallback).toHaveBeenCalledWith(
@@ -111,7 +111,7 @@ describe("ListenFeedbackComponent", () => {
       instance.submitFeedback(-1);
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("baz", "bar", -1);
+      expect(spy).toHaveBeenCalledWith("baz", -1, "bar");
 
       expect(props.updateFeedbackCallback).toHaveBeenCalledTimes(0);
     });

@@ -650,7 +650,7 @@ export default class Listens extends React.Component<
                 newAlert={newAlert}
               />
             )}
-            <ListenCountCard listenCount={listenCount} />
+            <ListenCountCard user={user} listenCount={listenCount} />
             {user && (
               <div
                 className="card hidden-xs hidden-sm"

@@ -110,9 +110,6 @@ def get_missing_musicbrainz_data(user_name):
 
     missing_musicbrainz_data_list_filtered = missing_musicbrainz_data_list[offset:count]
 
-    for index in range(len(missing_musicbrainz_data_list_filtered)):
-            missing_musicbrainz_data_list_filtered[index]["listened_at"] += "Z"
-
     payload = {
         'payload': {
             'user_name': user_name,
