@@ -452,7 +452,6 @@ export default class UserFeedPage extends React.Component<
       );
 
       if (status === 200) {
-        newAlert("success", "", <>Successfully unhidden</>);
         const new_events = events.map((traversedEvent) => {
           if (
             traversedEvent.event_type === event.event_type &&
