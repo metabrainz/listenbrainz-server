@@ -231,13 +231,13 @@ def user_feed(user_name: str):
         else:
             hidden_events_pin[hidden_event.event_id] = hidden_event
 
-    for i in range(len(recording_recommendation_events)):
-        if recording_recommendation_events[i].id in hidden_events_recommendation:
-            recording_recommendation_events[i].hidden = True
+    for event in recording_recommendation_events:
+        if event.id in hidden_events_recommendation:
+            event.hidden = True
 
-    for i in range(len(recording_pin_events)):
-        if recording_pin_events[i].id in hidden_events_pin:
-            recording_pin_events[i].hidden = True
+    for event in recording_pin_events:
+        if event.id in hidden_events_pin:
+            event.hidden = True
 
     # TODO: add playlist event and like event
     all_events = sorted(
