@@ -421,7 +421,6 @@ export default class UserFeedPage extends React.Component<
       );
 
       if (status === 200) {
-        newAlert("success", "", <>Successfully hidden</>);
         const new_events = events.map((traversedEvent) => {
           if (
             traversedEvent.event_type === event.event_type &&
@@ -435,7 +434,7 @@ export default class UserFeedPage extends React.Component<
         this.setState({ events: new_events });
       }
     } catch (error) {
-      newAlert("danger", "", <>Could not hide event</>);
+      newAlert("danger", error.toString(), <>Could not hide event</>);
     }
   };
 
