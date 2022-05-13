@@ -132,6 +132,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                 }
     """
     data = []
+    listened_at_times = {r['recording_mbid']: r['latest_listened_at'] for r in mbids_and_ratings_list}
     for r in mbids_and_ratings_list:
         data.append({'[recording_mbid]': r['recording_mbid']})
 
@@ -153,7 +154,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
 
     for row in rows:
         recommendations.append({
-            'listened_at': 0,
+            'listened_at_iso': listened_at_times[row['recording_mbid']],
             'track_metadata': {
                 'artist_name': row['artist_credit_name'],
                 'track_name': row['recording_name'],
