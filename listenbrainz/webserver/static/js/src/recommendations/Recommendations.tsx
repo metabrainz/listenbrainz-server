@@ -4,7 +4,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 
-import { get, isEqual } from "lodash";
+import { get, isEqual, isInteger } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
   WithAlertNotificationsInjectedProps,
@@ -250,10 +250,19 @@ export default class Recommendations extends React.Component<
                       )}
                     />
                   );
-                  const discoveryTimestamp =
-                    recommendation.latest_listened_at ??
-                    recommendation.listened_at_iso ??
-                    recommendation.listened_at;
+                  // Backwards compatible support for various timestamp property names
+                  let discoveryTimestamp: string | number | undefined | null =
+                    recommendation.latest_listened_at;
+                  if (discoveryTimestamp) {
+                    discoveryTimestamp = recommendation.listened_at_iso;
+                  }
+                  if (
+                    !discoveryTimestamp &&
+                    isInteger(recommendation.listened_at)
+                  ) {
+                    // Transfrom unix timestamp in JS milliseconds timestamp
+                    discoveryTimestamp = recommendation.listened_at * 1000;
+                  }
                   const customTimestamp = discoveryTimestamp ? (
                     <span
                       className="listen-time"
