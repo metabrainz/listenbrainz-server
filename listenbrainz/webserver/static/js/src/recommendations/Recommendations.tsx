@@ -250,16 +250,20 @@ export default class Recommendations extends React.Component<
                       )}
                     />
                   );
-                  const customTimestamp = recommendation.latest_listened_at ? (
+                  const discoveryTimestamp =
+                    recommendation.latest_listened_at ??
+                    recommendation.listened_at_iso ??
+                    recommendation.listened_at;
+                  const customTimestamp = discoveryTimestamp ? (
                     <span
                       className="listen-time"
                       title={fullLocalizedDateFromTimestampOrISODate(
-                        recommendation.latest_listened_at
+                        discoveryTimestamp
                       )}
                     >
                       Discovered on
                       <br />
-                      {preciseTimestamp(recommendation.latest_listened_at)}
+                      {preciseTimestamp(discoveryTimestamp)}
                     </span>
                   ) : (
                     <span className="listen-time">Not listened to yet</span>
