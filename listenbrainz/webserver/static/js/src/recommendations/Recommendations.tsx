@@ -4,7 +4,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 
-import { get, isEqual } from "lodash";
+import { get, isEqual, isInteger } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
   WithAlertNotificationsInjectedProps,
@@ -16,7 +16,14 @@ import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
-import { getPageProps, getRecordingMBID, getTrackName } from "../utils/utils";
+import {
+  fullLocalizedDateFromTimestampOrISODate,
+  getArtistName,
+  getPageProps,
+  getRecordingMBID,
+  getTrackName,
+  preciseTimestamp,
+} from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
 
@@ -232,31 +239,54 @@ export default class Recommendations extends React.Component<
                 style={{ opacity: loading ? "0.4" : "1" }}
               >
                 {recommendations.map((recommendation) => {
-                  const listen = recommendation;
-                  if (recommendation.latest_listened_at) {
-                    listen.listened_at_iso = recommendation.latest_listened_at;
-                  }
-                  const recordingMBID = getRecordingMBID(listen);
+                  const recordingMBID = getRecordingMBID(recommendation);
                   const recommendationFeedbackComponent = (
                     <RecommendationFeedbackComponent
                       newAlert={newAlert}
                       updateFeedbackCallback={this.updateFeedback}
-                      listen={listen}
+                      listen={recommendation}
                       currentFeedback={this.getFeedbackForRecordingMbid(
                         recordingMBID
                       )}
                     />
                   );
+                  // Backwards compatible support for various timestamp property names
+                  let discoveryTimestamp: string | number | undefined | null =
+                    recommendation.latest_listened_at;
+                  if (discoveryTimestamp) {
+                    discoveryTimestamp = recommendation.listened_at_iso;
+                  }
+                  if (
+                    !discoveryTimestamp &&
+                    isInteger(recommendation.listened_at)
+                  ) {
+                    // Transfrom unix timestamp in JS milliseconds timestamp
+                    discoveryTimestamp = recommendation.listened_at * 1000;
+                  }
+                  const customTimestamp = discoveryTimestamp ? (
+                    <span
+                      className="listen-time"
+                      title={fullLocalizedDateFromTimestampOrISODate(
+                        discoveryTimestamp
+                      )}
+                    >
+                      Discovered on
+                      <br />
+                      {preciseTimestamp(discoveryTimestamp)}
+                    </span>
+                  ) : (
+                    <span className="listen-time">Not listened to yet</span>
+                  );
                   return (
                     <ListenCard
-                      key={`${getTrackName(listen)}-${
-                        listen.track_metadata?.additional_info
-                          ?.recording_msid ?? recordingMBID
-                      }-${listen.listened_at_iso}-${listen.user_name}`}
+                      key={`${getTrackName(recommendation)}-${getArtistName(
+                        recommendation
+                      )}`}
+                      customTimestamp={customTimestamp}
                       showTimestamp
                       showUsername={false}
                       feedbackComponent={recommendationFeedbackComponent}
-                      listen={listen}
+                      listen={recommendation}
                       newAlert={newAlert}
                     />
                   );
