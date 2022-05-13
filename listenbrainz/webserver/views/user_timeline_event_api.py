@@ -221,13 +221,12 @@ def user_feed(user_name: str):
         count=count,
     )
 
-    hidden_events = db_user_timeline_event.get_hidden_timeline_events(user['id'], count)
+    hidden_events = db_user_timeline_event.get_hidden_timeline_event(user['id'], count)
     hidden_events_pin = {}
     hidden_events_recommendation = {}
 
     for hidden_event in hidden_events:
         if hidden_event.event_type.value == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
-            # hidden_events_recommendation.append(hidden_event)
             hidden_events_recommendation[hidden_event.event_id] = hidden_event
         else:
             hidden_events_pin[hidden_event.event_id] = hidden_event
