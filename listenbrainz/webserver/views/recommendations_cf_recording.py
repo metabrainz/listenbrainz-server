@@ -154,7 +154,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
 
     for row in rows:
         recommendations.append({
-            'listened_at_iso': listened_at_times[row['recording_mbid']],
+            'listened_at_iso': listened_at_times.get(row['recording_mbid']),
             'track_metadata': {
                 'artist_name': row['artist_credit_name'],
                 'track_name': row['recording_name'],
