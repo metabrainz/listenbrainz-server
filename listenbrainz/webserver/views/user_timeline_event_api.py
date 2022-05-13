@@ -221,7 +221,7 @@ def user_feed(user_name: str):
         count=count,
     )
 
-    hidden_events = db_user_timeline_event.get_hidden_timeline_events(user['id'], count)
+    hidden_events = db_user_timeline_event.get_hidden_timeline_event(user['id'], count)
     hidden_events_pin = {}
     hidden_events_recommendation = {}
 
