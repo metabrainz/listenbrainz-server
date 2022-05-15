@@ -29,30 +29,23 @@ Note: All the dataframes except the dataframe_metadata overwrite the existing da
 
 import logging
 import time
-from datetime import datetime
-from collections import defaultdict
+from datetime import datetime, timezone
 
-import pyspark.sql
-from pydantic import ValidationError
+import pyspark.sql.functions as func
+from markupsafe import Markup
+from pyspark.sql.functions import rank, col
+from pyspark.sql.window import Window
 
 import listenbrainz_spark
+from data.model.user_cf_recommendations_recording_message import UserCreateDataframesMessage
 from listenbrainz_spark import path, utils, schema
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            DataFrameNotAppendedException,
                                            DataFrameNotCreatedException,
                                            SparkException)
-
-from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataRecord
-from data.model.user_cf_recommendations_recording_message import (UserCreateDataframesMessage,
-                                                                  UserMissingMusicBrainzDataMessage)
-
 from listenbrainz_spark.recommendations.dataframe_utils import (get_dataframe_id,
                                                                 save_dataframe,
                                                                 get_dates_to_train_data)
-import pyspark.sql.functions as func
-from pyspark.sql.window import Window
-from pyspark.sql.functions import rank, col, row_number
-
 from listenbrainz_spark.utils import get_listens_from_new_dump
 
 logger = logging.getLogger(__name__)
@@ -86,6 +79,15 @@ logger = logging.getLogger(__name__)
 #       'count'
 #   ]
 
+# where the zero line of our confidence function is
+ZERO_POINT = 30
+
+# listen counts are capped to this value
+MAX_PLAYCOUNT = 20
+
+# the playcount value to use if playcount = 1
+ONE_PLAYCOUNT_CONFIDENCE = ZERO_POINT - MAX_PLAYCOUNT / 2
+
 
 def save_dataframe_metadata_to_hdfs(metadata: dict, df_metadata_path: str):
     """ Save dataframe metadata.
@@ -111,50 +113,35 @@ def save_dataframe_metadata_to_hdfs(metadata: dict, df_metadata_path: str):
         raise
 
 
-def get_data_missing_from_musicbrainz(listens_df):
-    """ Get data that has been submitted to ListenBrainz but is missing from MusicBrainz.
-
-        Args:
-            listens_df (dataframe): dataframe of listens.
-        Returns:
-            missing_musicbrainz_data_itr (iterator): Data missing from the MusicBrainz.
-    """
-    df = listens_df \
-        .select(
-            'artist_name',
-            'listened_at',
-            'release_name',
-            'recording_name',
-            'user_id'
-        ) \
-        .where(col('recording_mbid').isNull())
-
-    logger.info('Number of (artist, recording) pairs missing from mapping: {}'.format(df.count()))
-    window = Window.partitionBy('user_id').orderBy(col('listened_at').desc())
-
-    # limiting listens to 200 for each user so that messages don't drop
-    # Also, we don't want to overwhelm users with the data that they
-    # have submitted to LB and should consider submitting to MB.
-    # The data will be sorted on "listened_at"
-
-    missing_musicbrainz_data_itr = df \
-        .groupBy(
-            'artist_name',
-            'release_name',
-            'recording_name',
-            'user_id'
-        ) \
-        .agg(func.max('listened_at').alias('listened_at')) \
-        .withColumn('rank', row_number().over(window)) \
-        .where(col('rank') <= 200) \
-        .toLocalIterator()
-
-    return missing_musicbrainz_data_itr
-
-
-def describe_listencount_transformer():
-    """ Returns a human-readable description of the algorithm used to transform listen counts"""
-    return "No transformation applied to listen counts"
+def describe_listencount_transformer(use_transformed_listencounts):
+    """ Returns a human-readable description of the algorithm used to transform listen counts """
+    if use_transformed_listencounts:
+        return Markup("""
+        <table>
+            <tr>
+                <th>Playcount</th>
+                <th>Transformed Listencount</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>20</td>
+            </tr>
+            <tr>
+                <td>2 &lt;= x &lt;= 20</td>
+                <td>x + 20</td>
+            </tr>
+            <tr>
+                <td> &gt; 20</td>
+                <td>50</td>
+            </tr>
+        </table>
+    """)
+    else:
+        return "No transformation applied to listen counts"
 
 
 def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path):
@@ -180,8 +167,20 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
                               .join(recordings_df, 'recording_mbid', 'inner') \
                               .groupBy('spark_user_id', 'recording_id') \
                               .agg(func.count('recording_id').alias('playcount'))
+    playcounts_df.createOrReplaceTempView("playcounts")
 
-    transformed_listencounts = playcounts_df.withColumn("transformed_listencount", col("playcount"))
+    transformed_listencounts = listenbrainz_spark.sql_context.sql(f"""
+            SELECT spark_user_id
+                 , recording_id
+                 , playcount
+                 , float(
+                    CASE
+                        WHEN playcount = 0 THEN 0
+                        WHEN playcount = 1 THEN {ONE_PLAYCOUNT_CONFIDENCE}
+                        ELSE {ZERO_POINT} + LEAST(playcount, 20)
+                    END) AS transformed_listencount
+              FROM playcounts
+    """)
 
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(transformed_listencounts, save_path)
@@ -269,65 +268,6 @@ def get_users_dataframe(mapped_listens_df, metadata, save_path):
     return users_df
 
 
-def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
-    """ Create messages to send the data to the webserver via RabbitMQ
-
-        Args:
-            missing_musicbrainz_data_itr (iterator): Data missing from the MusicBrainz.
-            from_date (datetime): Date from which start fetching listens.
-            to_date (datetime): Date upto which fetch listens.
-            ti: Timestamp when the first func (main) of the script was called.
-
-        Returns:
-            messages: A list of messages to be sent via RabbitMQ
-    """
-    messages = []
-    missing_musicbrainz_data = defaultdict(list)
-
-    current_ts = str(datetime.utcnow())
-
-    for row in missing_musicbrainz_data_itr:
-        try:
-            missing_musicbrainz_data[row.user_id].append(UserMissingMusicBrainzDataRecord(**
-                {
-                    'artist_name': row.artist_name,
-                    'listened_at': str(row.listened_at),
-                    'release_name': row.release_name,
-                    'recording_name': row.recording_name,
-                }
-            ).dict())
-        except ValidationError:
-            logger.warning(f"""Invalid entry present in missing musicbrainz data for user: {row.user_id}
-            , skipping""", exc_info=True)
-
-    total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
-    try:
-        messages.append(
-            UserCreateDataframesMessage(**{
-                'type': 'cf_recommendations_recording_dataframes',
-                'dataframe_upload_time': current_ts,
-                'total_time': total_time,
-                'from_date': str(from_date.strftime('%b %Y')),
-                'to_date': str(to_date.strftime('%b %Y')),
-            }).dict())
-    except ValidationError:
-        logger.warning("Invalid entry present in dataframe creation message", exc_info=True)
-
-    for user_id, data in missing_musicbrainz_data.items():
-        try:
-            messages.append(UserMissingMusicBrainzDataMessage(**{
-                'type': 'missing_musicbrainz_data',
-                'user_id': user_id,
-                'missing_musicbrainz_data': data,
-                'source': 'cf'
-            }).dict())
-        except ValidationError:
-            logger.warning(f"ValidationError while calculating missing_musicbrainz_data for {user_id}"
-                           f". \nData: {data}", exc_info=True)
-
-    return messages
-
-
 def calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold):
     if job_type == "recommendation_recording":
         paths = {
@@ -396,15 +336,17 @@ def calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold
 
 def main(train_model_window, job_type, minimum_listens_threshold=0):
     ti = time.monotonic()
-
     logger.info('Fetching listens to create dataframes...')
     to_date, from_date = get_dates_to_train_data(train_model_window)
+    calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold)
+    total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
 
-    complete_listens_df = calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold)
-
-    logger.info('Preparing missing MusicBrainz data...')
-    missing_musicbrainz_data_itr = get_data_missing_from_musicbrainz(complete_listens_df)
-
-    messages = prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti)
-
-    return messages
+    return [
+        UserCreateDataframesMessage(
+            type='cf_recommendations_recording_dataframes',
+            dataframe_upload_time=str(datetime.now(timezone.utc)),
+            total_time=total_time,
+            from_date=str(from_date.strftime('%b %Y')),
+            to_date=str(to_date.strftime('%b %Y')),
+        ).dict()
+    ]

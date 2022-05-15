@@ -33,10 +33,7 @@ model_metadata_schema = [
     StructField('model_html_file', StringType(), nullable=False),  # Model html file name
     StructField('model_id', StringType(), nullable=False),  # Model id or identification string of best model.
     StructField('model_param', model_param_schema, nullable=False),  # Parameters used to train the model.
-    StructField('test_data_count', IntegerType(), nullable=False),  # Number of listens used to test the model.
     StructField('test_rmse', FloatType(), nullable=False),  # Root mean squared error for test data.
-    StructField('training_data_count', IntegerType(), nullable=False),  # Number of listens used to train the model.
-    StructField('validation_data_count', IntegerType(), nullable=False),  # Number of listens used to validate the model.
     StructField('validation_rmse', FloatType(), nullable=False),  # Root mean squared error for validation data.
 ]
 
@@ -101,10 +98,7 @@ def convert_model_metadata_to_row(meta):
             lmbda=meta.get('lmbda'),
             rank=meta.get('rank'),
         ),
-        test_data_count=meta.get('test_data_count'),
         test_rmse=meta.get('test_rmse'),
-        training_data_count=meta.get('training_data_count'),
-        validation_data_count=meta.get('validation_data_count'),
         validation_rmse=meta.get('validation_rmse'),
     )
 
