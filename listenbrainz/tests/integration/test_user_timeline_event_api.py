@@ -107,6 +107,9 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     @mock.patch('listenbrainz.db.user_timeline_event.create_user_track_recommendation_event', side_effect=DatabaseException)
     def test_it_handles_database_exceptions(self, mock_create_event):
+        # see test_unhide_events_for_database_exception for details on this
+        self.app.config["TESTING"] = False
+
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
@@ -290,6 +293,9 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     @mock.patch("listenbrainz.db.user_timeline_event.delete_user_timeline_event",
         side_effect=DatabaseException)
     def test_delete_feed_events_for_db_exceptions(self, mock_create_event):
+        # see test_unhide_events_for_database_exception for details on this
+        self.app.config["TESTING"] = False
+
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
         approved_user = db_user.get_or_create(11, "troi-bot")
@@ -423,6 +429,9 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         side_effect=DatabaseException
         )
     def test_hide_events_for_database_exception(self, mock_create_event):
+        # see test_unhide_events_for_database_exception for details on this
+        self.app.config["TESTING"] = False
+
         # creating a new user
         new_user = db_user.get_or_create(2, 'riksucks')
         # creating an event
@@ -547,6 +556,14 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         side_effect=DatabaseException
         )
     def test_unhide_events_for_database_exception(self, mock_create_event):
+        # in prod, we have registered error handlers to return 500 response
+        # on all uncaught exceptions. if TESTING is set to True, flask will
+        # behave differently and instead make the exception visible here rather
+        # than a 500 response. also, app is created for each test so don't worry
+        # to reset it after the test. similarly, set TESTING to true to help in
+        # debugging tests if needed.
+        self.app.config["TESTING"] = False
+
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
             self.user['id'],

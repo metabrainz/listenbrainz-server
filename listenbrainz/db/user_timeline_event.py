@@ -159,25 +159,21 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
         return [UserTimelineEvent(**row) for row in result.fetchall()]
 
 
-def get_user_timeline_events_by_id(id: int) -> UserTimelineEvent:
-    """ Gets event by it's id
+def get_user_timeline_event_by_id(id: int) -> UserTimelineEvent:
+    """ Gets timeline event by its id
         Args:
             id: row ID of the timeline event
     """
-    try:
-        with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text("""
-                SELECT id, user_id, event_type, metadata, created
-                  FROM user_timeline_event
-                 WHERE id = :id
-            """), {
-                "id": id,
-            })
-
-            r = dict(result.fetchone())
-            return UserTimelineEvent(**r)
-    except Exception as e:
-        raise DatabaseException(str(e))
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, user_id, event_type, metadata, created
+              FROM user_timeline_event
+             WHERE id = :id
+        """), {
+            "id": id,
+        })
+        row = result.fetchone()
+        return UserTimelineEvent(**dict(row)) if row else None
 
 
 def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
@@ -212,17 +208,18 @@ def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, ev
         raise DatabaseException(str(e))
 
 
-def get_hidden_timeline_event(user: int, count: int) -> List[HiddenUserTimelineEvent]:
+def get_hidden_timeline_event(user_id: int, count: int) -> List[HiddenUserTimelineEvent]:
     '''Retrieves all events that are hidden by the user, based on event_type'''
     try:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text('''
-                SELECT * FROM hide_user_timeline_event WHERE
-                user_id = :user_id
-                ORDER BY created DESC
-                LIMIT :count
+                SELECT *
+                  FROM hide_user_timeline_event
+                 WHERE user_id = :user_id
+              ORDER BY created DESC
+                 LIMIT :count
             '''), {
-                'user_id': user,
+                'user_id': user_id,
                 'count': count
                 }
             )
