@@ -220,7 +220,7 @@ PRIVATE_TABLES_TIMESCALE = {
 }
 
 
-def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
+def dump_postgres_db(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump in the specified location
 
         Arguments:
@@ -326,7 +326,7 @@ def dump_timescale_db(location: str, dump_time: datetime = datetime.today(),
     return private_timescale_dump, public_timescale_dump
 
 
-def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
+def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Dump user/recommendation feedback from postgres into spark format.
 
         Arguments:
@@ -389,12 +389,12 @@ def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: 
 
     with open(archive_path, 'w') as archive:
 
-        pxz_command = ['pxz', '--compress',
+        xz_command = ['xz', '--compress',
                        '-T{threads}'.format(threads=threads)]
-        pxz = subprocess.Popen(
-            pxz_command, stdin=subprocess.PIPE, stdout=archive)
+        xz = subprocess.Popen(
+            xz_command, stdin=subprocess.PIPE, stdout=archive)
 
-        with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+        with tarfile.open(fileobj=xz.stdin, mode='w|') as tar:
 
             temp_dir = tempfile.mkdtemp()
 
@@ -456,9 +456,9 @@ def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: 
 
             shutil.rmtree(temp_dir)
 
-        pxz.stdin.close()
+        xz.stdin.close()
 
-    pxz.wait()
+    xz.wait()
     return archive_path
 
 
@@ -757,14 +757,14 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                             db.DUMP_DEFAULT_THREAD_COUNT
     """
 
-    pxz_command = ['pxz', '--decompress', '--stdout',
+    xz_command = ['xz', '--decompress', '--stdout',
                    archive_path, '-T{threads}'.format(threads=threads)]
-    pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
+    xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
 
     connection = db_engine.raw_connection()
     try:
         cursor = connection.cursor()
-        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
             for member in tar:
                 file_name = member.name.split('/')[-1]
 
@@ -798,7 +798,7 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info('Imported table %s', file_name)
     finally:
         connection.close()
-        pxz.stdout.close()
+        xz.stdout.close()
 
 
 def _update_sequence(db_engine: sqlalchemy.engine.Engine, seq_name, table_name):

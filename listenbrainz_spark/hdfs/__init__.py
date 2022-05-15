@@ -38,19 +38,19 @@ class ListenbrainzHDFSUploader:
         """
         return filename.endswith('.json')
 
-    def get_pxz_output(self, archive, threads=8):
-        """ Spawn a new pxz process to decompress tar.
+    def get_xz_output(self, archive, threads=8):
+        """ Spawn a new xz process to decompress tar.
 
             Args:
                 archive: Tar to decompress.
                 threads: Maximal number of threads to run simultaneously.
 
             Returns:
-                pxz: Return pipe to pxz command.
+                xz: Return pipe to xz command.
         """
-        pxz_command = ['xz', '--decompress', '--stdout', archive, '-T{}'.format(threads)]
-        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
-        return pxz
+        xz_command = ['xz', '--decompress', '--stdout', archive, '-T{}'.format(threads)]
+        xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
+        return xz
 
     def upload_archive(self, tmp_dump_dir, tar, dest_path, schema, callback=None, overwrite=False):
         """ Upload data dump to HDFS.
