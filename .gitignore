@@ -11,7 +11,7 @@ env
 tmp/
 
 # Listenbrainz dumps
-listenbrainz-*dump*.tar.*
+listenbrainz-*dump*.tar*
 
 # ListenBrainz application data
 docker/data
