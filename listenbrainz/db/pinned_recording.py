@@ -219,7 +219,7 @@ def get_pins_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int)
         return [PinnedRecording(**dict(row)) for row in result.fetchall()]
 
 
-def get_pins_by_id(row_id: int) -> PinnedRecording:
+def get_pin_by_id(row_id: int) -> PinnedRecording:
     """ Get a pinned_recording by id
         Args:
             row_id: the row ID of the pinned_recording

@@ -159,8 +159,8 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
         return [UserTimelineEvent(**row) for row in result.fetchall()]
 
 
-def get_user_timeline_events_by_id(id: int) -> UserTimelineEvent:
-    """ Gets event by it's id
+def get_user_timeline_event_by_id(id: int) -> UserTimelineEvent:
+    """ Gets timeline event by its id
         Args:
             id: row ID of the timeline event
     """
