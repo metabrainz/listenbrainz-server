@@ -164,20 +164,16 @@ def get_user_timeline_event_by_id(id: int) -> UserTimelineEvent:
         Args:
             id: row ID of the timeline event
     """
-    try:
-        with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text("""
-                SELECT id, user_id, event_type, metadata, created
-                  FROM user_timeline_event
-                 WHERE id = :id
-            """), {
-                "id": id,
-            })
-
-            r = dict(result.fetchone())
-            return UserTimelineEvent(**r)
-    except Exception as e:
-        raise DatabaseException(str(e))
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, user_id, event_type, metadata, created
+              FROM user_timeline_event
+             WHERE id = :id
+        """), {
+            "id": id,
+        })
+        row = result.fetchone()
+        return UserTimelineEvent(**dict(row)) if row else None
 
 
 def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:

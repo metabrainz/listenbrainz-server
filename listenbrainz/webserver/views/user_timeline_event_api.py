@@ -358,6 +358,9 @@ def hide_user_timeline_event(user_name):
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
+    if 'event_type' not in data or 'event_id' not in data:
+        raise APIBadRequest("JSON document must contain both event_type and event_id", data)
+
     row_id = data["event_id"]
     if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
         result = db_user_timeline_event.get_user_timeline_event_by_id(row_id)
@@ -365,6 +368,9 @@ def hide_user_timeline_event(user_name):
         result = get_pin_by_id(row_id)
     else:
         raise APIBadRequest("This event type is not supported for hiding")
+
+    if not result:
+        raise APIBadRequest(f"{data['event_type']} event with id {row_id} not found")
 
     if db_user_relationship.is_following_user(user['id'], result.user_id):
         db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"])
@@ -405,6 +411,9 @@ def unhide_user_timeline_event(user_name):
         data = ujson.loads(request.get_data())
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+    if 'event_type' not in data or 'event_id' not in data:
+        raise APIBadRequest("JSON document must contain both event_type and event_id", data)
 
     db_user_timeline_event.unhide_timeline_event(user['id'], data['event_type'], data['event_id'])
     return jsonify({"status": "ok"})

@@ -226,19 +226,16 @@ def get_pin_by_id(row_id: int) -> PinnedRecording:
         Returns:
             PinnedRecording that satisfies the condition
     """
-    try:
-        with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text("""
-                SELECT {columns}
-                  FROM pinned_recording as pin
-                 WHERE pin.id = :row_id
-            """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {
-                "row_id": row_id,
-            })
-            r = dict(result.fetchone())
-            return PinnedRecording(**r)
-    except Exception as e:
-        raise DatabaseException(str(e))
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT {columns}
+              FROM pinned_recording as pin
+             WHERE pin.id = :row_id
+        """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {
+            "row_id": row_id,
+        })
+        row = result.fetchone()
+        return PinnedRecording(**dict(row)) if row else None
 
 
 def get_pin_count_for_user(user_id: int) -> int:
