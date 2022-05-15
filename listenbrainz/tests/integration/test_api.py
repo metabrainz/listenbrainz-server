@@ -2,7 +2,7 @@ import json
 import time
 
 import pytest
-from flask import url_for, current_app
+from flask import url_for
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
@@ -489,9 +489,18 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
-        self.assertEqual('Both duration and duraion_ms are given, please choose one',
+        self.assertEqual('JSON document should not contain both duration and duration_ms.',
                          response.json['error'])
-    
+
+    def test_invalid_duration(self):
+        """ Test for error on invalid duration """
+        with open(self.path_to_data_file('invalid_duration.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for duration is invalid, should be a positive integer.',
+                         response.json['error'])
 
     def test_valid_duration(self):
         """ Test for valid submission in which a listen contains a valid duration_ms field
@@ -502,7 +511,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
-
 
     def test_unicode_null_error(self):
         with open(self.path_to_data_file('listen_having_unicode_null.json'), 'r') as f:
