@@ -542,8 +542,6 @@ def missing_mb_data(user_name: str):
         missing_data_list = []
     else:
         missing_data_list = missing_data.data.dict()["missing_musicbrainz_data"]
-        for item in missing_data_list:
-            item["listened_at"] += "Z"
 
     props = {
         "missingData": missing_data_list,
