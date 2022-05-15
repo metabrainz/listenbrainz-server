@@ -5,6 +5,7 @@ from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from typing import List
+from listenbrainz.db.exceptions import DatabaseException
 
 
 PINNED_REC_GET_COLUMNS = [
@@ -216,6 +217,25 @@ def get_pins_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int)
             "count": count,
         })
         return [PinnedRecording(**dict(row)) for row in result.fetchall()]
+
+
+def get_pin_by_id(row_id: int) -> PinnedRecording:
+    """ Get a pinned_recording by id
+        Args:
+            row_id: the row ID of the pinned_recording
+        Returns:
+            PinnedRecording that satisfies the condition
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT {columns}
+              FROM pinned_recording as pin
+             WHERE pin.id = :row_id
+        """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {
+            "row_id": row_id,
+        })
+        row = result.fetchone()
+        return PinnedRecording(**dict(row)) if row else None
 
 
 def get_pin_count_for_user(user_id: int) -> int:
