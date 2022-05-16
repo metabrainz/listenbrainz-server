@@ -28,6 +28,7 @@ MESSYBRAINZ_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 MESSYBRAINZ_ADMIN_MSB_URI = "postgresql://postgres:postgres@lb_db/messybrainz"
 
 # MusicBrainz & others
+IS_MUSICBRAINZ_UP = True  # if set to False, login page will be blocked
 MBID_MAPPING_DATABASE_URI = ""
 MB_DATABASE_URI = ""
 
