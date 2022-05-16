@@ -41,6 +41,7 @@ POSTGRES_ADMIN_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
 {{end}}
 
 
+IS_MUSICBRAINZ_UP = {{template "KEY_JSON" "musicbrainz_up"}}
 # Use a key '$musicbrainz_up' in consul (json boolean true or false) to decide if we connect to musicbrainz.
 # If we set MB_DATABASE_URI to an empty string, then the @mb_database_needed decorator will prevent the
 # webserver from accessing the musicbrainz database.

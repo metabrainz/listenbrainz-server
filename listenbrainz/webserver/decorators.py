@@ -61,14 +61,15 @@ def web_listenstore_needed(func):
 
 def web_musicbrainz_needed(func):
     """
-        This web decorator checks to see if musicbrainz db is online (by having
-        a DB URI) and if not, it redirects to an error page telling the user
-        that the musicbrainz db is offline.
+        This web decorator checks to see if musicbrainz db is online by checking
+        a config variable and if not, it redirects to an error page telling the
+        user that the musicbrainz db is offline.
     """
     @wraps(func)
     def decorator(*args, **kwargs):
-        if musicbrainz_db.engine is None:
+        # if config item is missing, consider the database to be up (useful for local development)
+        is_musicbrainz_up = current_app.config.get("IS_MUSICBRAINZ_UP", True)
+        if not is_musicbrainz_up:
             return redirect(url_for("index.musicbrainz_offline"))
         return func(*args, **kwargs)
-
     return decorator
