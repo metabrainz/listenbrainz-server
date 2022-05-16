@@ -59,6 +59,7 @@ MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrain
     {{else}}
 MB_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
     {{end}}
+{{else}}
 MB_DATABASE_URI = ""
 {{end}}
 
