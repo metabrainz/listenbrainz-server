@@ -31,7 +31,7 @@ class RecordingFromRecordingMBIDQuery(Query):
             return []
 
         mbids = [p['[recording_mbid]'] for p in params]
-        with psycopg2.connect(config.MB_DATABASE_URI) as conn:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
                 # First lookup and MBIDs that may have been redirected

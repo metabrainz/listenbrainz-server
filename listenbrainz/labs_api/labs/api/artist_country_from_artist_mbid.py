@@ -28,7 +28,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 
-        with psycopg2.connect(config.MB_DATABASE_URI) as conn:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
                 acs = tuple([r['artist_mbid'] for r in params])
