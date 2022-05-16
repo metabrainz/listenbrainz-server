@@ -27,7 +27,6 @@ class ArtistCreditIdFromArtistMBIDQuery(Query):
             return []
 
         with psycopg2.connect(config.MB_DATABASE_URI) as conn:
-
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
                 acs = tuple([p['artist_mbid'] for p in params])
