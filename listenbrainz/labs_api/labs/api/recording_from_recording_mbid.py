@@ -25,6 +25,8 @@ class RecordingFromRecordingMBIDQuery(Query):
                 'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid']
 
     def fetch(self, params, offset=-1, count=-1):
+        if not config.MB_DATABASE_URI:
+            return []
 
         mbids = [p['[recording_mbid]'] for p in params]
         with psycopg2.connect(config.MB_DATABASE_URI) as conn:
