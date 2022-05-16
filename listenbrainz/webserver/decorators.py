@@ -1,5 +1,6 @@
-from functools import update_wrapper, wraps
+from functools import wraps
 
+from brainzutils import musicbrainz_db
 from flask import request, current_app, make_response, redirect, url_for
 
 from listenbrainz.webserver import timescale_connection
@@ -53,6 +54,21 @@ def web_listenstore_needed(func):
     def decorator(*args, **kwargs):
         if timescale_connection._ts is None:
             return redirect(url_for("index.listens_offline"))
+        return func(*args, **kwargs)
+
+    return decorator
+
+
+def web_musicbrainz_needed(func):
+    """
+        This web decorator checks to see if musicbrainz db is online (by having
+        a DB URI) and if not, it redirects to an error page telling the user
+        that the musicbrainz db is offline.
+    """
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        if musicbrainz_db.engine is None:
+            return redirect(url_for("index.musicbrainz_offline"))
         return func(*args, **kwargs)
 
     return decorator

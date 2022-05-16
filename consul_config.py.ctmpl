@@ -41,16 +41,25 @@ POSTGRES_ADMIN_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
 {{end}}
 
 
-{{if service "pgbouncer-slave"}}
-{{with index (service "pgbouncer-slave") 0}}
+# Use a key '$musicbrainz_up' in consul (json boolean true or false) to decide if we connect to musicbrainz.
+# If we set MB_DATABASE_URI to an empty string, then the @mb_database_needed decorator will prevent the
+# webserver from accessing the musicbrainz database.
+{{- /* This needs to use key/printf again here instead of our pre-defined template at the top of the file as you cannot
+     call a template in an if statement or variable declaration */}}
+{{- $musicbrainz_up := (key (printf "docker-server-configs/LB/config.%s.json/$musicbrainz_up" (env "DEPLOY_ENV"))) }}
+{{- if $musicbrainz_up | parseBool}}
+    {{if service "pgbouncer-slave"}}
+    {{with index (service "pgbouncer-slave") 0}}
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
-{{end}}
-{{else if service "pgbouncer-master"}}
-{{with index (service "pgbouncer-master") 0}}
+    {{end}}
+    {{else if service "pgbouncer-master"}}
+    {{with index (service "pgbouncer-master") 0}}
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
-{{end}}
-{{else}}
+    {{end}}
+    {{else}}
 MB_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
+    {{end}}
+MB_DATABASE_URI = ""
 {{end}}
 
 
