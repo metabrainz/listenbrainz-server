@@ -21,10 +21,10 @@ class ArtistCreditIdFromArtistMBIDQuery(Query):
         return ['artist_mbid', 'artist_credit_id']
 
     def fetch(self, params, count=-1, offset=-1):
+        if not config.MB_DATABASE_URI:
+            return []
 
         with psycopg2.connect(config.MB_DATABASE_URI) as conn:
-            if not config.MB_DATABASE_URI:
-                return []
 
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
