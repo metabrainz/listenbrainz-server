@@ -46,7 +46,7 @@ POSTGRES_ADMIN_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
 # webserver from accessing the musicbrainz database.
 {{- /* This needs to use key/printf again here instead of our pre-defined template at the top of the file as you cannot
      call a template in an if statement or variable declaration */}}
-{{- $musicbrainz_up := (key (printf "docker-server-configs/LB/config.%s.json/$musicbrainz_up" (env "DEPLOY_ENV"))) }}
+{{- $musicbrainz_up := (key (printf "docker-server-configs/LB/config.%s.json/musicbrainz_up" (env "DEPLOY_ENV"))) }}
 {{- if $musicbrainz_up | parseBool}}
     {{if service "pgbouncer-slave"}}
     {{with index (service "pgbouncer-slave") 0}}
