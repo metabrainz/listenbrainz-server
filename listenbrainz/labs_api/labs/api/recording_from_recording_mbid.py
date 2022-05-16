@@ -1,6 +1,8 @@
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
+from flask import current_app
+
 from listenbrainz import config
 
 psycopg2.extras.register_uuid()
@@ -25,7 +27,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                 'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid']
 
     def fetch(self, params, offset=-1, count=-1):
-        if not config.MB_DATABASE_URI:
+        if not current_app.config["MB_DATABASE_URI"]:
             return []
 
         mbids = [p['[recording_mbid]'] for p in params]

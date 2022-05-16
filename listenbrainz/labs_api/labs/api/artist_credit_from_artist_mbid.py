@@ -3,6 +3,8 @@ from operator import itemgetter
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
+from flask import current_app
+
 from listenbrainz import config
 
 
@@ -21,7 +23,7 @@ class ArtistCreditIdFromArtistMBIDQuery(Query):
         return ['artist_mbid', 'artist_credit_id']
 
     def fetch(self, params, count=-1, offset=-1):
-        if not config.MB_DATABASE_URI:
+        if not current_app.config["MB_DATABASE_URI"]:
             return []
 
         with psycopg2.connect(config.MB_DATABASE_URI) as conn:

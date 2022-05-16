@@ -3,6 +3,7 @@ from operator import itemgetter
 from datasethoster import Query
 import psycopg2
 import psycopg2.extras
+from flask import current_app
 from werkzeug.exceptions import NotFound
 from listenbrainz import config
 
@@ -24,7 +25,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
         return ['artist_mbid', 'artist_name', 'country_code']
 
     def fetch(self, params, count=-1, offset=-1):
-        if not config.MB_DATABASE_URI:
+        if not current_app.config["MB_DATABASE_URI"]:
             return []
 
         with psycopg2.connect(config.MB_DATABASE_URI) as conn:
