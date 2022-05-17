@@ -1,5 +1,6 @@
 import uuid
 from operator import itemgetter
+import traceback
 
 import sqlalchemy
 import psycopg2
@@ -16,6 +17,14 @@ SEARCH_TIMEOUT = 3600  # basically, don't have searches timeout.
 
 
 def process_listens(app, listens, priority):
+    """ Wrapper function for catching errors and logging them """
+    try:
+        return process_listens_core(app, listens, priority)
+    except Exception as err:
+        self.app.logger.error(traceback.format_exc())
+        raise
+        
+def process_listens_core(app, listens, priority):
     """Given a set of listens, look up each one and then save the results to
        the DB. Note: Legacy listens to not need to be checked to see if
        a result alrady exists in the DB -- the selection of legacy listens

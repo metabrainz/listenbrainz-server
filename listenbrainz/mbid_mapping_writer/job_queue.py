@@ -346,8 +346,12 @@ class MappingJobQueue(threading.Thread):
                                 sleep(.1)
                                 continue
 
-                            futures[executor.submit(
-                                process_listens, self.app, job.item, job.priority)] = job.priority
+                            try:
+                                futures[executor.submit(
+                                    process_listens, self.app, job.item, job.priority)] = job.priority
+                            except RuntimeError as err:
+                                self.app.logger.critical(str(err))
+
                             if job.priority == LEGACY_LISTEN:
                                 stats["legacy"] += 1
 
