@@ -208,7 +208,7 @@ def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, ev
         raise DatabaseException(str(e))
 
 
-def get_hidden_timeline_event(user_id: int, count: int) -> List[HiddenUserTimelineEvent]:
+def get_hidden_timeline_events(user_id: int, count: int) -> List[HiddenUserTimelineEvent]:
     '''Retrieves all events that are hidden by the user, based on event_type'''
     try:
         with db.engine.connect() as connection:
