@@ -3,7 +3,7 @@ set -e
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
-rm -r pyspark_venv pyspark_venv.tar.gz listenbrainz_spark_request_consumer.zip
+rm -rf pyspark_venv pyspark_venv.tar.gz listenbrainz_spark_request_consumer.zip models.zip
 
 python3 -m venv pyspark_venv
 source pyspark_venv/bin/activate
@@ -18,6 +18,7 @@ GIT_COMMIT_SHA="$(git describe --tags --dirty --always)"
 echo "$GIT_COMMIT_SHA" > .git-version
 
 zip -rq listenbrainz_spark_request_consumer.zip listenbrainz_spark/
+zip -rq models.zip data/
 
 source spark_config.sh
 spark-submit \
@@ -30,5 +31,5 @@ spark-submit \
         --conf "spark.executor.memory"=$EXECUTOR_MEMORY \
         --conf "spark.driver.memory"=$DRIVER_MEMORY \
         --conf "spark.yarn.appMasterEnv.GIT_SHA"=$GIT_COMMIT_SHA \
-       --py-files listenbrainz_spark_request_consumer.zip \
+        --py-files listenbrainz_spark_request_consumer.zip,models.zip \
     spark_manage.py request_consumer

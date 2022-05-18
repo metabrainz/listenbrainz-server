@@ -23,10 +23,10 @@ class HDFSTestCase(SparkNewTestCase):
         self.assertFalse(ListenbrainzHDFSUploader()._is_json_file('file.txt'))
 
     @patch('listenbrainz_spark.hdfs.subprocess.Popen')
-    def test_get_pxz_output(self, mock_popen):
-        pxz = ListenbrainzHDFSUploader().get_pxz_output('faketar', threads=8)
+    def test_get_xz_output(self, mock_popen):
+        xz = ListenbrainzHDFSUploader().get_xz_output('faketar', threads=8)
         mock_popen.assert_called_once()
-        self.assertEqual(pxz, mock_popen.return_value)
+        self.assertEqual(xz, mock_popen.return_value)
 
     def create_test_tar(self):
         """ Creates a tar file to test listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.upload_archive
@@ -40,8 +40,8 @@ class HDFSTestCase(SparkNewTestCase):
         temp_archive = os.path.join(tempfile.mkdtemp(), 'temp_tar.tar.xz')
         temp_dir = tempfile.mkdtemp()
         with open(temp_archive, 'w') as archive:
-            pxz_command = ['xz', '--compress']
-            pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
+            xz_command = ['xz', '--compress']
+            xz = subprocess.Popen(xz_command, stdin=subprocess.PIPE, stdout=archive)
             test_entry = {
                 "id_1": 11285,
                 "name_1": "Wolfgang Amadeus Mozart",
@@ -50,7 +50,7 @@ class HDFSTestCase(SparkNewTestCase):
                 "score": 1.0
             }
 
-            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+            with tarfile.open(fileobj=xz.stdin, mode='w|') as tar:
                 json_file_path = os.path.join(temp_dir, 'artist_credit-artist_credit-relations.json')
                 with open(json_file_path, 'w') as f:
                     json.dump(test_entry, f)
@@ -60,17 +60,17 @@ class HDFSTestCase(SparkNewTestCase):
                 with open(invalid_json_file_path, 'w') as f:
                     f.write('test file')
                 tar.add(invalid_json_file_path, arcname=os.path.join('temp_tar', 'invalid.txt'))
-            pxz.stdin.close()
+            xz.stdin.close()
 
-        pxz.wait()
+        xz.wait()
         return temp_archive
 
     def test_upload_archive(self):
         archive_path = self.create_test_tar()
-        pxz = self.uploader.get_pxz_output(archive_path)
+        xz = self.uploader.get_xz_output(archive_path)
         tmp_dump_dir = tempfile.mkdtemp()
 
-        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
             self.uploader.upload_archive(tmp_dump_dir, tar, '/artist_relations.parquet',
                                          schema.artist_relation_schema, self.uploader.process_json)
 

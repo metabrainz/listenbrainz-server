@@ -131,7 +131,7 @@ def calculate_top_discoveries(year):
         Main entry point for creating top discoveries table.
     """
 
-    with psycopg2.connect(config.TIMESCALE_DATABASE_URI) as lb_conn:
+    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn:
         with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
             create_table(mb_conn)
             fetch_top_discoveries_for_users(lb_conn, mb_conn, year)

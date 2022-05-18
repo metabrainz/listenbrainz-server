@@ -1,5 +1,8 @@
 import logging
+import uuid
 from unittest.mock import patch, call, MagicMock
+
+from pyspark.sql.types import StructType
 
 import listenbrainz_spark
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
@@ -9,7 +12,6 @@ from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
                                            EmptyDataframeExcpetion)
 
 from pyspark.sql import Row
-from pyspark.rdd import RDD
 from pyspark.sql.functions import col
 
 # for test data/dataframes refer to listenbrainzspark/tests/__init__.py
@@ -22,17 +24,22 @@ class RecommendTestClass(RecommendationsTestCase):
     def test_recommendation_params_init(self):
         recordings_df = utils.create_dataframe(Row(col1=3, col2=9), schema=None)
         model = MagicMock()
+        model_id = "foobar"
+        model_html_file = "foobar.html"
         top_artist_candidate_set_df = utils.create_dataframe(Row(col1=4, col2=5, col3=5), schema=None)
         similar_artist_candidate_set_df = utils.create_dataframe(Row(col1=1), schema=None)
         recommendation_top_artist_limit = 20
         recommendation_similar_artist_limit = 40
 
-        params = recommend.RecommendationParams(recordings_df, model, top_artist_candidate_set_df,
+        params = recommend.RecommendationParams(recordings_df, model_id, model_html_file, model,
+                                                top_artist_candidate_set_df,
                                                 similar_artist_candidate_set_df,
                                                 recommendation_top_artist_limit,
                                                 recommendation_similar_artist_limit)
 
         self.assertEqual(sorted(params.recordings_df.columns), sorted(recordings_df.columns))
+        self.assertEqual(params.model_id, model_id)
+        self.assertEqual(params.model_html_file, model_html_file)
         self.assertEqual(params.model, model)
         self.assertEqual(sorted(params.top_artist_candidate_set_df.columns), sorted(top_artist_candidate_set_df.columns))
         self.assertEqual(sorted(params.similar_artist_candidate_set_df.columns), sorted(similar_artist_candidate_set_df.columns))
@@ -97,13 +104,9 @@ class RecommendTestClass(RecommendationsTestCase):
         ])
 
     def test_filter_recommendations_on_rating(self):
-        df = self.get_recommendation_df()
-        recommendation_df = df.select(col('spark_user_id').alias('user'),
-                                      col('recording_id').alias('product'),
-                                      col('rating'))
-        limit = 1
-
-        df = recommend.filter_recommendations_on_rating(recommendation_df, limit)
+        recommendation_df = self.get_recommendation_df() \
+            .select('spark_user_id', 'recording_id', col('rating').alias('prediction'))
+        df = recommend.filter_recommendations_on_rating(recommendation_df, 1)
         self.assertEqual(df.count(), 2)
         row = df.collect()
 
@@ -130,65 +133,34 @@ class RecommendTestClass(RecommendationsTestCase):
         mock_model = MagicMock()
         params.model = mock_model
 
-        mock_predict = mock_model.predictAll
+        mock_predict = mock_model.transform
         candidate_set = self.get_candidate_set()
         users = []
 
         rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, users)
         mock_predict.return_value = rdd
 
-        df = recommend.generate_recommendations(candidate_set, params, limit)
-
+        recommend.generate_recommendations(candidate_set, params, limit)
         mock_predict.assert_called_once_with(candidate_set)
-
-        mock_df = mock_lb.session.createDataFrame
-        mock_df.assert_called_once_with(mock_predict.return_value, schema=None)
-
-        mock_filter.assert_called_once_with(mock_df.return_value, limit)
+        mock_filter.assert_called_once_with(mock_predict.return_value, limit)
 
         with self.assertRaises(RecommendationsNotGeneratedException):
             # empty rdd
-            mock_predict.return_value = MagicMock()
+            mock_predict.return_value = listenbrainz_spark.session.createDataFrame([], schema=StructType([]))
             recommend.generate_recommendations(candidate_set, params, limit)
 
-    def test_get_scale_rating_udf(self):
-        rating = 1.6
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 1.0)
-
-        rating = -1.6
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, -0.3)
-
-        rating = 0.65579
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 0.828)
-
-        rating = -0.9999
-        res = recommend.get_scale_rating_udf(rating)
-        self.assertEqual(res, 0.0)
-
-    def test_scale_rating(self):
-        df = self.get_recommendation_df()
-
-        df = recommend.scale_rating(df)
-        self.assertEqual(sorted(df.columns), ['rating', 'recording_id', 'spark_user_id'])
-        received_ratings = sorted([row.rating for row in df.collect()])
-        expected_ratings = [-0.729, 0.657, 1.0, 1.0]
 
     def test_get_candidate_set_rdd_for_user(self):
         candidate_set = self.get_candidate_set()
         users = []
 
         candidate_set_rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, users)
-        self.assertTrue(isinstance(candidate_set_rdd, RDD))
         res = sorted([row for row in candidate_set_rdd.collect()])
         self.assertEqual(res, [(1, 1), (2, 2)])
 
         users = [3]
         candidate_set_rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, users)
 
-        self.assertTrue(isinstance(candidate_set_rdd, RDD))
         row = candidate_set_rdd.collect()
         self.assertEqual([(1, 1)], row)
 
@@ -250,15 +222,13 @@ class RecommendTestClass(RecommendationsTestCase):
             users = ['invalid']
             recommend.get_user_name_and_user_id(params, users)
 
-    @patch('listenbrainz_spark.recommendations.recording.recommend.MatrixFactorizationModel')
-    @patch('listenbrainz_spark.recommendations.recording.recommend.listenbrainz_spark')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.ALSModel')
     @patch('listenbrainz_spark.recommendations.recording.recommend.get_model_path')
-    @patch('listenbrainz_spark.recommendations.recording.recommend.get_most_recent_model_id')
-    def test_load_model(self, mock_id, mock_model_path, mock_lb, mock_matrix_model):
-        model = recommend.load_model()
-        mock_id.assert_called_once()
-        mock_model_path.assert_called_once_with(mock_id.return_value)
-        mock_matrix_model.load.assert_called_once_with(mock_lb.context, mock_model_path.return_value)
+    def test_load_model(self, mock_model_path, mock_als_model):
+        model_id = uuid.uuid4()
+        recommend.load_model(model_id)
+        mock_model_path.assert_called_once_with(model_id)
+        mock_als_model.load.assert_called_once_with(mock_model_path.return_value)
 
     def test_get_most_recent_model_id(self):
         model_id_1 = "a36d6fc9-49d0-4789-a7dd-a2b72369ca45"
@@ -274,8 +244,9 @@ class RecommendTestClass(RecommendationsTestCase):
         model_metadata = df_1.union(df_2)
         utils.save_parquet(model_metadata, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
 
-        expected_model_id = recommend.get_most_recent_model_id()
-        self.assertEqual(expected_model_id, model_id_2)
+        expected_model_meta = recommend.get_most_recent_model_meta()
+        self.assertEqual(expected_model_meta[0], model_id_2)
+        self.assertEqual(expected_model_meta[1], f"{model_id_2}.html")
 
     @patch('listenbrainz_spark.recommendations.recording.recommend.get_candidate_set_rdd_for_user')
     @patch('listenbrainz_spark.recommendations.recording.recommend.generate_recommendations')
@@ -366,15 +337,8 @@ class RecommendTestClass(RecommendationsTestCase):
         ))
         return df
 
-    def test_check_for_ratings_beyond_range(self):
-        top_artist_rec_df = self.get_top_artist_rec_df()
-        similar_artist_rec_df = self.get_similar_artist_rec_df()
-
-        min_test, max_test = recommend.check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
-        self.assertEqual(min_test, True)
-        self.assertEqual(max_test, True)
-
     def test_create_messages(self):
+        params = self.get_recommendation_params()
         top_artist_rec_df = self.get_top_artist_rec_df()
         similar_artist_rec_df = self.get_similar_artist_rec_df()
         active_user_count = 10
@@ -382,8 +346,8 @@ class RecommendTestClass(RecommendationsTestCase):
         similar_artist_rec_user_count = 4
         total_time = 3600
 
-        data = recommend.create_messages(top_artist_rec_df, similar_artist_rec_df, active_user_count, total_time,
-                               top_artist_rec_user_count, similar_artist_rec_user_count)
+        data = recommend.create_messages(params, top_artist_rec_df, similar_artist_rec_df, active_user_count,
+                                         total_time, top_artist_rec_user_count, similar_artist_rec_user_count)
 
         self.assertEqual(next(data), {
             'user_id': 3,
@@ -399,7 +363,9 @@ class RecommendTestClass(RecommendationsTestCase):
                         'score': -0.8
                     }
                 ],
-                'similar_artist': []
+                'similar_artist': [],
+                'model_id': 'foobar',
+                'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
         })
 
@@ -418,7 +384,9 @@ class RecommendTestClass(RecommendationsTestCase):
                         'recording_mbid': "7acb406f-c716-45f8-a8bd-96ca3939c2e5",
                         'score': 0.19
                     }
-                ]
+                ],
+                'model_id': 'foobar',
+                'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
         })
 
@@ -436,7 +404,9 @@ class RecommendTestClass(RecommendationsTestCase):
                         'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                         'score': -2.8
                     }
-                ]
+                ],
+                'model_id': 'foobar',
+                'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
         })
 
@@ -459,12 +429,15 @@ class RecommendTestClass(RecommendationsTestCase):
     def get_recommendation_params(self):
         recordings_df = self.get_recordings_df()
         model = MagicMock()
+        model_id = "foobar"
+        model_html_file = "foobar.html"
         top_artist_candidate_set_df = self.get_candidate_set()
         similar_artist_candidate_set_df = self.get_candidate_set()
         recommendation_top_artist_limit = 2
         recommendation_similar_artist_limit = 1
 
-        params = recommend.RecommendationParams(recordings_df, model, top_artist_candidate_set_df,
+        params = recommend.RecommendationParams(recordings_df, model_id, model_html_file, model,
+                                                top_artist_candidate_set_df,
                                                 similar_artist_candidate_set_df,
                                                 recommendation_top_artist_limit,
                                                 recommendation_similar_artist_limit)

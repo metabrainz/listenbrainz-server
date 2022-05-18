@@ -1,20 +1,12 @@
-import json
-import unittest
-from datetime import datetime
-
-import os
+from pyspark.sql import Row
 
 import listenbrainz_spark
-from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, RECOMMENDATION_RECORDING_MAPPED_LISTENS, \
-    RECOMMENDATION_RECORDINGS_DATAFRAME, RECOMMENDATION_RECORDING_USERS_DATAFRAME, \
-    RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME, RECOMMENDATION_RECORDING_DATAFRAME_METADATA
-from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
-from listenbrainz_spark.tests import TEST_DATA_PATH
-from listenbrainz_spark.recommendations.recording import create_dataframes
 from listenbrainz_spark import schema, utils
-
-from pyspark.sql import Row
-import time
+from listenbrainz_spark.path import RECOMMENDATION_RECORDING_MAPPED_LISTENS, \
+    RECOMMENDATION_RECORDINGS_DATAFRAME, RECOMMENDATION_RECORDING_USERS_DATAFRAME, \
+    RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME, RECOMMENDATION_RECORDING_DATAFRAME_METADATA
+from listenbrainz_spark.recommendations.recording import create_dataframes
+from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
 
 
 class CreateDataframeTestCase(RecommendationsTestCase):
@@ -62,11 +54,11 @@ class CreateDataframeTestCase(RecommendationsTestCase):
         recordings_df = create_dataframes.get_recordings_df(mapped_listens, {}, RECOMMENDATION_RECORDINGS_DATAFRAME)
         listens_df = create_dataframes.get_listens_df(mapped_listens, {})
 
-        create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, metadata, RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
-        playcounts_df = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
+        create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, metadata, RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME)
+        playcounts_df = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME)
         self.assertEqual(playcounts_df.count(), 20)
 
-        self.assertListEqual(['spark_user_id', 'recording_id', 'count'], playcounts_df.columns)
+        self.assertListEqual(['spark_user_id', 'recording_id', 'playcount', 'transformed_listencount'], playcounts_df.columns)
         self.assertEqual(metadata['playcounts_count'], 20)
 
     def test_save_dataframe_metadata_to_HDFS(self):
@@ -79,20 +71,3 @@ class CreateDataframeTestCase(RecommendationsTestCase):
 
         df = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
         self.assertCountEqual(df.columns, schema.dataframe_metadata_schema.fieldNames())
-
-    def test_get_data_missing_from_musicbrainz(self):
-        partial_listen_df = utils.read_files_from_HDFS(LISTENBRAINZ_NEW_DATA_DIRECTORY)
-        itr = create_dataframes.get_data_missing_from_musicbrainz(partial_listen_df)
-        messages = create_dataframes.prepare_messages(itr, self.begin_date, self.end_date, time.monotonic())
-
-        received_first_mssg = messages.pop(0)
-
-        self.assertEqual(received_first_mssg['type'], 'cf_recommendations_recording_dataframes')
-        self.assertEqual(received_first_mssg['from_date'], str(self.begin_date.strftime('%b %Y')))
-        self.assertEqual(received_first_mssg['to_date'], str(self.end_date.strftime('%b %Y')))
-        self.assertIsInstance(received_first_mssg['dataframe_upload_time'], str)
-        self.assertIsInstance(received_first_mssg['total_time'], str)
-
-        with open(os.path.join(TEST_DATA_PATH, 'missing_musicbrainz_data.json')) as f:
-            expected_missing_mb_data = json.load(f)
-        self.assertCountEqual(expected_missing_mb_data, messages)

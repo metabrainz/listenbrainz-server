@@ -681,12 +681,19 @@ export default class BrainzPlayer extends React.Component<
     if (!currentUser || !currentUser.auth_token) {
       return;
     }
-    if (dataSource?.current && !dataSource.current.datasourceRecordsListens()) {
+    const isPlayingNowType = listenType === "playing_now";
+    // Always submit playing_now listens for a better experience on LB pages
+    // (ingestion of playing-now info from spotify can take minutes,
+    // sometimes not getting updated before the end of the track)
+    if (
+      isPlayingNowType ||
+      (dataSource?.current && !dataSource.current.datasourceRecordsListens())
+    ) {
       try {
         const { auth_token } = currentUser;
         let processedPayload = listen;
         // When submitting playing_now listens, listened_at must NOT be present
-        if (listenType === "playing_now") {
+        if (isPlayingNowType) {
           processedPayload = omit(listen, "listened_at") as Listen;
         }
 
@@ -718,8 +725,8 @@ export default class BrainzPlayer extends React.Component<
             listen,
             retries - 1
           );
-        } else {
-          this.handleWarning(error, "Could not save this listen");
+        } else if (!isPlayingNowType) {
+          this.handleWarning(error.toString(), "Could not save this listen");
         }
       }
     }

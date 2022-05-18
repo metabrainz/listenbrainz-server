@@ -477,8 +477,8 @@ def save_candidate_html(user_data, total_time, from_date, to_date):
             user_data (dict): Top and similar artists associated to users.
             total_time (str): time taken to generate candidate_sets
     """
-    date = datetime.utcnow().strftime('%Y-%m-%d')
-    candidate_html = 'Candidate-{}-{}.html'.format(uuid.uuid4(), date)
+    date = datetime.utcnow().strftime('%Y-%m-%d-%H:%M')
+    candidate_html = 'Candidate-{}-{}.html'.format(date, uuid.uuid4())
     context = {
         'user_data': user_data,
         'total_time': total_time,
@@ -510,17 +510,20 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         logger.error(str(err), exc_info=True)
         raise
 
-    from_date, to_date = get_dates_to_generate_candidate_sets(mapped_listens_df, recommendation_generation_window)
-
     logger.info('Fetching listens to get top artists...')
-    mapped_listens_subset = get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date)
+    if recommendation_generation_window is not None:
+        logger.info('Recommendation generation window is specified, calculating subset of listens')
+        from_date, to_date = get_dates_to_generate_candidate_sets(mapped_listens_df, recommendation_generation_window)
+        mapped_listens_df = get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date)
+    else:
+        from_date, to_date = None, None
 
     logger.info('Fetching top artists...')
-    top_artist_df = get_top_artists(mapped_listens_subset, top_artist_limit, users)
+    top_artist_df = get_top_artists(mapped_listens_df, top_artist_limit, users)
 
     logger.info('Preparing top artists candidate set...')
     top_artist_candidate_set_df, top_artist_candidate_set_df_html = get_top_artist_candidate_set(top_artist_df, recordings_df,
-                                                                                                 users_df, mapped_listens_subset)
+                                                                                                 users_df, mapped_listens_df)
 
     logger.info('Fetching similar artists...')
     similar_artist_df, similar_artist_df_html = get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
@@ -530,7 +533,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
                                                                                 similar_artist_df,
                                                                                 recordings_df,
                                                                                 users_df,
-                                                                                mapped_listens_subset)
+                                                                                mapped_listens_df)
 
     logger.info('Saving candidate sets...')
     save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df)
