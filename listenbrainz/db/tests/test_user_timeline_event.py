@@ -317,7 +317,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             event_id=event_rec.id
         )
 
-        hidden_events = db_user_timeline_event.get_hidden_timeline_event(
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(
             user_id=self.user['id'],
             count=1,
         )
@@ -362,7 +362,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             event_type=event2.event_type.value,
             event_id=event2.id
         )
-        hidden_events = db_user_timeline_event.get_hidden_timeline_event(
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(
             user_id=self.user['id'],
             count=1,
         )
@@ -401,7 +401,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             event_id=event_rec.id
         )
 
-        hidden_events = db_user_timeline_event.get_hidden_timeline_event(
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(
             user_id=self.user['id'],
             count=1,
         )
@@ -415,7 +415,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             event_id=event_rec.id
         )
 
-        hidden_events = db_user_timeline_event.get_hidden_timeline_event(
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(
             user_id=self.user['id'],
             count=1,
         )

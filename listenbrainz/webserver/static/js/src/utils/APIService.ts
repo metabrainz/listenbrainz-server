@@ -1044,6 +1044,50 @@ export default class APIService {
     return response.status;
   };
 
+  hideFeedEvent = async (
+    eventType: string,
+    username: string,
+    userToken: string,
+    event_id: number
+  ): Promise<any> => {
+    if (!event_id) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/feed/events/hide`;
+    const response = await fetch(query, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ event_type: eventType, event_id }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  unhideFeedEvent = async (
+    eventType: string,
+    username: string,
+    userToken: string,
+    event_id: number
+  ): Promise<any> => {
+    if (!event_id) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/feed/events/unhide`;
+    const response = await fetch(query, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ event_type: eventType, event_id }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   lookupRecordingMetadata = async (
     trackName: string,
     artistName: string
