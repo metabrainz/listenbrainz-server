@@ -399,7 +399,7 @@ export default class Listens extends React.Component<
       });
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
-          user.name,
+          currentUser.name,
           recordings
         );
         return data.feedback;
