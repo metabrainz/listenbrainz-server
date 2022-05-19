@@ -12,10 +12,11 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { get, isNaN as _isNaN } from "lodash";
+import { get, isNaN as _isNaN, isNumber } from "lodash";
 import ProgressBar from "./ProgressBar";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import MenuOptions from "./MenuOptions";
+import { msToTime } from "../playlists/utils";
 
 type BrainzPlayerUIProps = {
   playPreviousTrack: () => void;
@@ -189,6 +190,13 @@ const BrainzPlayerUI = (
             </span>
           )}
         </div>
+        {isPlayingATrack && (
+          <div className="elapsed small text-muted">
+            {`${isNumber(progressMs) && msToTime(progressMs)}\u202f/\u202f${
+              isNumber(durationMs) && msToTime(durationMs)
+            }`}
+          </div>
+        )}
       </div>
       <div className="controls">
         <PlaybackControlButton
