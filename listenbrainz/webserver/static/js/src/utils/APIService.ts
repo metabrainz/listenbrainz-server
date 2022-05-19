@@ -997,8 +997,8 @@ export default class APIService {
     return response.json();
   };
 
-  lookupMBRelease = async (releaseMBID: string): Promise<any> => {
-    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
+  lookupMBRelease = async (releaseMBID: string): Promise<MBRelease> => {
+    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups recordings labels`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();

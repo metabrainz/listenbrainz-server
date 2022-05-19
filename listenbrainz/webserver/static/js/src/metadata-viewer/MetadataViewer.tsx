@@ -8,6 +8,7 @@ import TagsComponent from "./TagsComponent";
 import {
   getArtistName,
   getAverageRGBOfImage,
+  getReleaseMBID,
   getTrackName,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -60,6 +61,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const [expandedAccordion, setExpandedAccordion] = React.useState(1);
+  const [releaseData, setReleaseData] = React.useState<MBRelease>();
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
     r: 0,
@@ -110,6 +112,33 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     };
     getFeedbackPromise();
   }, [recordingData, playingNow]);
+
+  // Fetch release information from the MusicBrainz API if the release tab is expanded
+  React.useEffect(() => {
+    const getReleaseDataPromise = async () => {
+      const releaseMBID =
+        recordingData?.release_mbid || getReleaseMBID(playingNow as Listen);
+      if (!releaseMBID || expandedAccordion !== 2) {
+        setReleaseData(undefined);
+        return;
+      }
+      try {
+        const releaseDataResponse = await APIService.lookupMBRelease(
+          releaseMBID
+        );
+        if (releaseDataResponse) {
+          setReleaseData(releaseDataResponse);
+        } else {
+          setReleaseData(undefined);
+        }
+      } catch (error) {
+        setReleaseData(undefined);
+        // eslint-disable-next-line no-console
+        console.error(error);
+      }
+    };
+    getReleaseDataPromise();
+  }, [recordingData, playingNow, expandedAccordion]);
 
   const submitFeedback = React.useCallback(
     async (score: ListenFeedBack) => {
@@ -513,6 +542,63 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               aria-labelledby="headingTwo"
             >
               <div className="panel-body">
+                {releaseData?.date && (
+                  <div>
+                    Released:{" "}
+                    {new Date(releaseData.date).toLocaleDateString(undefined, {
+                      dateStyle: "long",
+                    })}
+                  </div>
+                )}
+                {releaseData?.["release-group"]?.["first-release-date"] &&
+                  releaseData?.["release-group"]?.["first-release-date"] !==
+                    releaseData?.date && (
+                    <div>
+                      First released:{" "}
+                      {new Date(
+                        releaseData["release-group"]["first-release-date"]
+                      ).toLocaleDateString(undefined, { dateStyle: "long" })}
+                    </div>
+                  )}
+                {Boolean(releaseData?.["label-info"]?.length) && (
+                  <div>
+                    Labels:
+                    {releaseData?.["label-info"]?.map((label, index) => (
+                      <>
+                        <a
+                          href={`${musicBrainzURLRoot}label/${label.label.id}`}
+                          aria-label="Open in MusicBrainz"
+                          title="Open in MusicBrainz"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {label.label.name}
+                        </a>
+                        {index !== releaseData?.["label-info"]?.length! - 1
+                          ? ", "
+                          : null}
+                      </>
+                    ))}
+                  </div>
+                )}
+                {Boolean(releaseData?.media?.[0]?.tracks?.length) && (
+                  <ol>
+                    {releaseData?.media?.[0]?.tracks
+                      ?.sort((a, b) => a.position - b.position)
+                      .map((track: MBTrack) => {
+                        return (
+                          <li
+                            className={
+                              track.title === trackName ? "strong" : ""
+                            }
+                          >
+                            {track.title}
+                          </li>
+                        );
+                      })}
+                  </ol>
+                )}
+
                 <OpenInMusicBrainzButton
                   entityType="release"
                   entityMBID={recordingData?.release_mbid}

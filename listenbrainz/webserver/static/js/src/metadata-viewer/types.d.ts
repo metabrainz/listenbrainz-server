@@ -21,7 +21,6 @@ declare type ArtistTag = {
   genre_mbid?: string;
   tag: string;
 };
-declare type RecordingTag = {
   count: number;
   genre_mbid?: string;
   tag: string;
@@ -40,7 +39,6 @@ declare type ListenMetadata = {
   };
   tag?: {
     artist?: Array<ArtistTag>;
-    recording?: Array<RecordingTag>;
   };
 };
 
@@ -52,4 +50,92 @@ declare type MetadataLookup = {
   recording_name: string;
   release_mbid: string;
   release_name: string;
+};
+
+declare type MBRelease = {
+  "status-id": string;
+  title: string;
+  asin: string;
+  packaging: string;
+  barcode: string;
+  "label-info"?: MBLabel[] | null;
+  date: string;
+  country: string;
+  quality: string;
+  "release-events"?: MBReleaseEvent[] | null;
+  "release-group": MBReleaseGroup;
+  "cover-art-archive": CoverArtArchive;
+  status: string;
+  disambiguation: string;
+  "packaging-id": string;
+  id: string;
+  media?: MBMedia[] | null;
+};
+declare type MBReleaseEvent = {
+  area: MBArea;
+  date: string;
+};
+declare type MBArea = {
+  disambiguation: string;
+  "type-id"?: null;
+  id: string;
+  name: string;
+  type?: null;
+  "iso-3166-1-codes"?: string[] | null;
+  "sort-name": string;
+};
+declare type MBReleaseGroup = {
+  id: string;
+  disambiguation: string;
+  "first-release-date": string;
+  "primary-type": string;
+  "secondary-type-ids"?: string[] | null;
+  "secondary-types"?: string[] | null;
+  title: string;
+  "primary-type-id": string;
+};
+
+declare type MBLabel = {
+  "catalog-number": string;
+  label: {
+    "sort-name": string;
+    "type-id": string | null; // UUID
+    disambiguation: string;
+    "label-code": string | null;
+    name: string;
+    type: string | null;
+    id: string; // UUID
+  };
+};
+declare type CoverArtArchive = {
+  darkened: boolean;
+  back: boolean;
+  front: boolean;
+  artwork: boolean;
+  count: number;
+};
+declare type MBMedia = {
+  format: string;
+  "track-offset": number;
+  tracks?: MBTrack[] | null;
+  "track-count": number;
+  position: number;
+  title: string;
+  "format-id": string;
+};
+declare type MBTrack = {
+  recording: MBRecording;
+  id: string;
+  title: string;
+  position: number;
+  number: string;
+  length: number;
+};
+declare type MBRecording = {
+  id: string;
+  "first-release-date": string;
+  length: number;
+  video: boolean;
+  title: string;
+  disambiguation: string;
 };
