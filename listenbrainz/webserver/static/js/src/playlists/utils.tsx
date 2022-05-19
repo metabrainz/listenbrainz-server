@@ -65,6 +65,27 @@ export function millisecondsToStr(milliseconds: number) {
   return "< 1s";
 }
 
+// Originally by Sinjai https://stackoverflow.com/a/67462589
+export function msToTime(milliseconds: number) {
+  function pad(num: number) {
+    return `${num}`.padStart(2, "0");
+  }
+  const asSeconds = milliseconds / 1000;
+
+  let hours;
+  let minutes = Math.floor(asSeconds / 60);
+  const seconds = Math.floor(asSeconds % 60);
+
+  if (minutes > 59) {
+    hours = Math.floor(minutes / 60);
+    minutes %= 60;
+  }
+
+  return hours
+    ? `${hours}:${pad(minutes)}:${pad(seconds)}`
+    : `${minutes}:${pad(seconds)}`;
+}
+
 export function JSPFTrackToListen(track: JSPFTrack): Listen {
   const customFields = getTrackExtension(track);
   const listen: Listen = {
