@@ -24,13 +24,15 @@ exports[`BrainzPlayerUI renders 1`] = `
       seekToPositionMs={[Function]}
     >
       <div
-        aria-label="Audio Progress Control"
+        aria-label="Audio progress control"
         aria-valuemax={100}
         aria-valuemin={0}
         aria-valuenow={0}
         className="progress hidden"
+        data-tip="0:00"
         onClick={[Function]}
         onKeyDown={[Function]}
+        onMouseMove={[Function]}
         role="progressbar"
         tabIndex={0}
       >
@@ -42,6 +44,14 @@ exports[`BrainzPlayerUI renders 1`] = `
             }
           }
         />
+        <mockConstructor
+          className="progress-tooltip"
+          getContent={[Function]}
+          globalEventOff="click"
+          overridePosition={[Function]}
+        >
+          This is a mocked react-tooltip component.
+        </mockConstructor>
       </div>
     </ProgressBar>
     <div
