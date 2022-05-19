@@ -60,6 +60,8 @@ export type ListenCardProps = {
   thumbnail?: JSX.Element;
   // The default details (recording name, artist name) can be replaced
   listenDetails?: JSX.Element;
+  // The default timestamp can be replaced
+  customTimestamp?: JSX.Element;
   compact?: boolean;
   // The default Listen fedback (love/hate) can be replaced
   feedbackComponent?: JSX.Element;
@@ -216,6 +218,7 @@ export default class ListenCard extends React.Component<
       showTimestamp,
       thumbnail,
       listenDetails,
+      customTimestamp,
       compact,
       feedbackComponent,
       additionalMenuItems,
@@ -254,7 +257,7 @@ export default class ListenCard extends React.Component<
       soundcloudURL;
     const hideActionsMenu = compact || !hasActionOptions;
 
-    const timeStampForDisplay = (
+    const timeStampForDisplay = customTimestamp ?? (
       <>
         {listen.playing_now ? (
           <span className="listen-time">
