@@ -60,7 +60,9 @@ declare type Listen = BaseListenFormat & {
   playing_now?: boolean | null;
 };
 
-declare type Recommendation = BaseListenFormat;
+declare type Recommendation = Listen & {
+  latest_listened_at?: string;
+};
 
 declare type ListenBrainzUser = {
   id?: number;

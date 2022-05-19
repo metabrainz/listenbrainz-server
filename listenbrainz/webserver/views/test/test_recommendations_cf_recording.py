@@ -255,11 +255,13 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mbids_and_ratings = [
             {
                 'recording_mbid': "03f1b16a-af43-4cd7-b22c-d2991bf011a3",
-                'score': 6.88
+                'score': 6.88,
+                'latest_listened_at': "2021-12-17T05:32:11.000Z"
             },
             {
                 'recording_mbid': "2c8412f0-9353-48a2-aedb-1ad8dac9498f",
-                'score': 9.0
+                'score': 9.0,
+                'latest_listened_at': "2022-10-13T15:12:23.000Z"
             }
         ]
 
@@ -296,7 +298,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_requests.post.assert_called_with(self.server_url, json=data)
         expected_recommendations = [
             {
-                'listened_at': 0,
+                'listened_at_iso': "2021-12-17T05:32:11.000Z",
                 'track_metadata': {
                     'artist_name': 'Tame Impala',
                     'track_name': 'One More Hour',
@@ -308,7 +310,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 }
             },
             {
-                'listened_at': 0,
+                'listened_at_iso': "2022-10-13T15:12:23.000Z",
                 'track_metadata': {
                     'artist_name': 'Tame Impala',
                     'track_name': 'Sun’s Coming Up',
