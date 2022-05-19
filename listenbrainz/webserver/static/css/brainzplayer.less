@@ -7,8 +7,8 @@
 @brainzplayer-padding: 0px;
 @cover-art-size: @brainzplayer-height - @brainzplayer-padding*2;
 @big-cover-art-size: 500px;
-@progress-bar-height: 3px;
-@progress-bar-hover-height: 6px;
+@progress-bar-height: 4px;
+@progress-bar-hover-height: 8px;
 @white-background: #fff;
 // Recommended minimum size required by Youtube
 @youtube-player-height:200px;
@@ -23,6 +23,7 @@
 	height: @brainzplayer-height;
 	background: @white-background;
 	display: flex;
+	box-shadow: 0px -1px 12px fade(@primary-color, 50%);
 	
 	padding: @brainzplayer-padding;
 	border-top: 1px solid #dbccc6;
@@ -237,7 +238,7 @@
 		margin-bottom: 0;
     	left: 0;
 		width: 100%;
-		cursor: crosshair;
+		cursor: pointer;
 		z-index: 2;
 		
 		.progress-bar {
@@ -246,8 +247,20 @@
 			border-right: 2px solid @dark-color;
 		}
 		&:hover{
+			transition: height, 0.3s;
 			height: @progress-bar-hover-height;
 			top: -@progress-bar-height - (@progress-bar-hover-height - @progress-bar-height)/2
+		}
+
+		.progress-tooltip {
+			background: @primary-color;
+			margin-top: -4px;
+			border-radius: 24px;
+			font-size: 1em;
+			padding: 6px 12px;
+		}
+		& > ::after {
+			border-color: transparent;
 		}
 	}
 
