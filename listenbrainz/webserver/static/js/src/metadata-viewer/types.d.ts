@@ -21,6 +21,7 @@ declare type ArtistTag = {
   genre_mbid?: string;
   tag: string;
 };
+declare type GenericTag = {
   count: number;
   genre_mbid?: string;
   tag: string;
@@ -39,6 +40,8 @@ declare type ListenMetadata = {
   };
   tag?: {
     artist?: Array<ArtistTag>;
+    recording?: Array<GenericTag>;
+    release?: Array<GenericTag>;
   };
 };
 

@@ -1,7 +1,7 @@
 import * as React from "react";
 
 export default function TagsComponent(props: {
-  tags?: Array<ArtistTag | RecordingTag>;
+  tags?: Array<ArtistTag | GenericTag>;
 }) {
   const { tags } = props;
   return (
