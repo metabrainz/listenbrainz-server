@@ -198,6 +198,8 @@ def get_user_name_and_user_id(params: RecommendationParams, users):
 
 
 def get_latest_listened_times(recommendation_df):
+    """ Lookup recording discovery data and add the last time a recommendation
+     was listened to if listened earlier by the user. """
     recommendation_df.createOrReplaceTempView("recommendation")
     return run_query("""
         SELECT rm.user_id

@@ -7,6 +7,8 @@ from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_new_
 
 
 def get_recording_discovery():
+    """ Calculate the last time a track was listened by a user and store it in HDFS
+     for later use in recommendations. """
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
     get_listens_from_new_dump(from_date, to_date) \
