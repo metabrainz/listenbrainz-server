@@ -15,7 +15,6 @@ RUN apt-get update \
     dnsutils \
     bsdmainutils \
     xz-utils \
-    pxz \
     zip \
     && rm -rf /var/lib/apt/lists/*
 

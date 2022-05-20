@@ -1,24 +1,15 @@
 import os
-import uuid
-import json
+import tarfile
 import unittest
+import uuid
 from datetime import datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-import tarfile
-
 import listenbrainz_spark
+from listenbrainz_spark import hdfs_connection, utils, config
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
-from listenbrainz_spark.recommendations import dataframe_utils
-from listenbrainz_spark import hdfs_connection, utils, config, schema
-from listenbrainz_spark.recommendations.dataframe_utils import save_dataframe
-from listenbrainz_spark.recommendations.recording import train_models
-
-from pyspark.sql import Row
-from pyspark.sql.types import StructType, StructField, IntegerType
-
 from listenbrainz_spark.utils import get_listens_from_new_dump
 
 TEST_PLAYCOUNTS_PATH = '/tests/playcounts.parquet'

@@ -10,8 +10,8 @@ env
 # tmp folder
 tmp/
 
-# Listenbrainz listens dump
-listenbrainz-listens*
+# Listenbrainz dumps
+listenbrainz-*dump*.tar*
 
 # ListenBrainz application data
 docker/data

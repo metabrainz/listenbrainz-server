@@ -1,5 +1,6 @@
 import * as React from "react";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
+import { faPauseCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as tinycolor from "tinycolor2";
 import { first, get, isEmpty, isNumber, isPlainObject, pick } from "lodash";
@@ -138,14 +139,6 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     [recordingData, playingNow, setCurrentListenFeedback]
   );
 
-  /** Return early, but after defining all hooks (otherwise React no happy) */
-  if (
-    !recordingData?.recording_name &&
-    !playingNow?.track_metadata?.track_name
-  ) {
-    return <div>No data to show</div>;
-  }
-
   const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
   adjustedAlbumColor.saturate(20);
   adjustedAlbumColor.setAlpha(0.6);
@@ -192,8 +185,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const fallbackTrackName = getTrackName(playingNow);
   const fallbackArtistName = getArtistName(playingNow);
 
-  const trackName = recordingData?.recording_name ?? fallbackTrackName;
-  const artistName = recordingData?.artist_credit_name ?? fallbackArtistName;
+  const trackName =
+    (recordingData?.recording_name ?? fallbackTrackName) || "No track to show";
+  const artistName =
+    (recordingData?.artist_credit_name ?? fallbackArtistName) ||
+    "No artist to show";
   const duration =
     metadata?.recording?.duration ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
@@ -205,6 +201,38 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   return (
     <div id="metadata-viewer">
+      {!playingNow && (
+        <div className="no-listen-container">
+          <div className="no-listen">
+            <p>
+              <hr />
+              <div style={{ marginTop: "-2.1em" }}>
+                <FontAwesomeIcon icon={faPauseCircle} size="2x" />
+              </div>
+              Sorry, we do not know what music you are currently listening to,
+              since we have not received any recent <i>Playing Now</i> events
+              for your account.
+              <br />
+              As soon as a <i>Playing Now</i> listen comes through, this page
+              will be updated automatically.
+              <br />
+              <br />
+              <small>
+                In order to receive these events, you will need to{" "}
+                <a href="/add-data/">send listens</a> to ListenBrainz.
+                <br />
+                We work hard to make this data available to you as soon as we
+                receive it, but until your music service sends us a{" "}
+                <a href="https://listenbrainz.readthedocs.io/en/production/dev/json/?highlight=playing%20now#submission-json">
+                  <i>Playing Now</i> event
+                </a>
+                , we cannot display anything here.
+              </small>
+              <hr />
+            </p>
+          </div>
+        </div>
+      )}
       <div
         className="left-side"
         style={{

@@ -308,3 +308,155 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                     id=event_rec.id,
                     user_id=self.user["id"],
                 )
+
+    def test_hide_feed_events(self):
+        # creating a user
+        new_user = db_user.get_or_create(2, 'riksucks')
+
+        # creating an event
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # hiding event
+        hidden_event = db_user_timeline_event.hide_user_timeline_event(
+            user_id=self.user['id'],
+            event_type=event_rec.event_type.value,
+            event_id=event_rec.id
+        )
+
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(
+            user_id=self.user['id'],
+            count=1,
+        )
+
+        self.assertEqual(1, len(hidden_events))
+        self.assertEqual(event_rec.id, hidden_events[0].event_id)
+
+    def test_hide_feed_events_honors_count_parameter(self):
+        # creating a user
+        new_user = db_user.get_or_create(2, 'riksucks')
+
+        # creating an event
+        event1 = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # hiding event
+        hidden_event = db_user_timeline_event.hide_user_timeline_event(
+            user_id=self.user['id'],
+            event_type=event1.event_type.value,
+            event_id=event1.id
+        )
+
+        # creating another event
+        event2 = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="Aruarian Dance",
+                artist_name="Nujabes",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # hiding event
+        hidden_event = db_user_timeline_event.hide_user_timeline_event(
+            user_id=self.user['id'],
+            event_type=event2.event_type.value,
+            event_id=event2.id
+        )
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(
+            user_id=self.user['id'],
+            count=1,
+        )
+
+        self.assertEqual(1, len(hidden_events))
+        self.assertEqual(event2.id, hidden_events[0].event_id)
+
+    @mock.patch('listenbrainz.db.engine.connect', side_effect=Exception)
+    def test_hide_feed_events_raises_database_exception(self, mock_db_connect):
+        with self.assertRaises(DatabaseException):
+            # Dummy timeline event
+            db_user_timeline_event.hide_user_timeline_event(
+                user_id=self.user['id'],
+                event_type=UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                event_id=1
+            )
+
+    def test_unhide_events(self):
+        # creating a user
+        new_user = db_user.get_or_create(2, 'riksucks')
+
+        # creating an event
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # hiding event
+        hidden_event = db_user_timeline_event.hide_user_timeline_event(
+            user_id=self.user['id'],
+            event_type=event_rec.event_type.value,
+            event_id=event_rec.id
+        )
+
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(
+            user_id=self.user['id'],
+            count=1,
+        )
+
+        self.assertEqual(1, len(hidden_events))
+        self.assertEqual(event_rec.id, hidden_events[0].event_id)
+
+        db_user_timeline_event.unhide_timeline_event(
+            user=self.user['id'],
+            event_type=event_rec.event_type.value,
+            event_id=event_rec.id
+        )
+
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(
+            user_id=self.user['id'],
+            count=1,
+        )
+
+        self.assertEqual(0, len(hidden_events))
+
+    def test_unhide_events_for_something_goes_wrong(self):
+        # creating recording recommendation
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # hiding event
+        hidden_event = db_user_timeline_event.hide_user_timeline_event(
+            user_id=self.user['id'],
+            event_type=event_rec.event_type.value,
+            event_id=event_rec.id
+        )
+        with mock.patch("listenbrainz.db.engine.connect", side_effect=Exception):
+            with self.assertRaises(DatabaseException):
+                # checking if DatabaseException is raised or not
+                db_user_timeline_event.unhide_timeline_event(
+                    user=self.user['id'],
+                    event_type=event_rec.event_type.value,
+                    event_id=event_rec.id
+                )
