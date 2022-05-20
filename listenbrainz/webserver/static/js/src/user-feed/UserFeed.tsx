@@ -142,7 +142,9 @@ export default class UserFeedPage extends React.Component<
         return "pinned a recording";
       case EventType.REVIEW: {
         review = event.metadata as CritiqueBrainzReview;
-        return `reviewed ${review.entity_type}`;
+        return `reviewed ${UserFeedPage.getReviewEntityName(
+          review.entity_type
+        )}`;
       }
       default:
         return "";
