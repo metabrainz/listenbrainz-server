@@ -1,12 +1,11 @@
 import * as React from "react";
-import { get as _get } from "lodash";
+import * as _ from "lodash";
 
 import { Rating } from "react-simple-star-rating";
 import ReactTooltip from "react-tooltip";
 
 import * as iso from "@cospired/i18n-iso-languages";
 import * as eng from "@cospired/i18n-iso-languages/langs/en.json";
-import * as _ from "lodash";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -79,7 +78,6 @@ export default class CBReviewModal extends React.Component<
         on your CritiqueBrainz profile. To view or delete your reviews, visit your
         <a href='${this.CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
         data-event="click focus"
-        data-html
       >
         <FontAwesomeIcon
           icon={faInfoCircle as IconProp}
@@ -254,14 +252,17 @@ export default class CBReviewModal extends React.Component<
     const artist_mbid = getArtistMBIDs(listen)?.[0];
 
     if (artist_mbid) {
-      const entity: ReviewableEntity = {
-        type: "artist",
-        mbid: artist_mbid,
-        name: getArtistName(listen),
-      };
-      this.setState({ artistEntity: entity });
-    } else {
-      this.setState({ artistEntity: null });
+      const artist_mbids = getArtistMBIDs(listen);
+      if (artist_mbids) {
+        const entity: ReviewableEntity = {
+          type: "artist",
+          mbid: artist_mbids[0],
+          name: getArtistName(listen),
+        };
+        this.setState({ artistEntity: entity });
+      } else {
+        this.setState({ artistEntity: null });
+      }
     }
   };
 
@@ -366,8 +367,9 @@ export default class CBReviewModal extends React.Component<
     if (!listen) {
       return null;
     }
-    const { APIService, critiquebrainzAuth } = this.context;
+    const { APIService, critiquebrainzAuth, currentUser } = this.context;
     const accessToken = access_token ?? critiquebrainzAuth?.access_token;
+    const { name, auth_token } = currentUser;
     const {
       entityToReview,
       textContent,
@@ -388,7 +390,13 @@ export default class CBReviewModal extends React.Component<
       return null;
     }
 
-    if (isCurrentUser && accessToken && entityToReview && acceptLicense) {
+    if (
+      isCurrentUser &&
+      accessToken &&
+      entityToReview &&
+      acceptLicense &&
+      auth_token
+    ) {
       this.setState({ loading: true });
 
       /* do not include rating if it wasn't set */
@@ -398,6 +406,7 @@ export default class CBReviewModal extends React.Component<
       }
 
       const reviewToSubmit: CritiqueBrainzReview = {
+        entity_name: entityToReview.name ?? "",
         entity_id: entityToReview.mbid,
         entity_type: entityToReview.type,
         text: textContent,
@@ -407,7 +416,8 @@ export default class CBReviewModal extends React.Component<
 
       try {
         const response = await APIService.submitReviewToCB(
-          accessToken,
+          name,
+          auth_token,
           reviewToSubmit
         );
         if (response) {
@@ -418,7 +428,7 @@ export default class CBReviewModal extends React.Component<
           );
           // show url using review mbid on success
           this.setState({
-            reviewMBID: response.id,
+            reviewMBID: response.metadata.review_id,
           });
           this.resetCBReviewForm();
         }
@@ -589,11 +599,11 @@ export default class CBReviewModal extends React.Component<
           <b>Rating (optional): </b>
           <Rating
             className="rating-stars"
-            onClick={(rate: number) => this.setState({ rating: rate })}
+            onClick={(rate: number) => this.setState({ rating: rate / 20 })} // rate in %age (0 - 100), convert to 0 - 5 scale
             ratingValue={rating}
             transition
             size={20}
-            stars={5}
+            iconsCount={5}
           />
         </div>
 

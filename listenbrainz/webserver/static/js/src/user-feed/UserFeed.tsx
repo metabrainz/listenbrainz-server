@@ -18,10 +18,11 @@ import {
   faTrash,
   faEye,
   faEyeSlash,
+  faComments,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual, get as _get, reject as _reject } from "lodash";
+import { get as _get, reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import {
@@ -35,7 +36,13 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
 import ListenCard from "../listens/ListenCard";
-import { getPageProps, preciseTimestamp } from "../utils/utils";
+import {
+  getPageProps,
+  preciseTimestamp,
+  getAdditionalContent,
+  feedReviewEventToListen,
+  getReviewEventContent,
+} from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
 
@@ -48,6 +55,7 @@ export enum EventType {
   STOP_FOLLOW = "stop_follow",
   BLOCK_FOLLOW = "block_follow",
   NOTIFICATION = "notification",
+  REVIEW = "critiquebrainz_review",
 }
 
 type UserFeedPageProps = {
@@ -75,7 +83,8 @@ export default class UserFeedPage extends React.Component<
       event_type === EventType.RECORDING_RECOMMENDATION ||
       event_type === EventType.RECORDING_PIN ||
       event_type === EventType.LIKE ||
-      event_type === EventType.LISTEN
+      event_type === EventType.LISTEN ||
+      event_type === EventType.REVIEW
     );
   }
 
@@ -99,13 +108,30 @@ export default class UserFeedPage extends React.Component<
         return faBell;
       case EventType.RECORDING_PIN:
         return faThumbtack;
+      case EventType.REVIEW:
+        return faComments;
       default:
         return faQuestion;
     }
   }
 
-  static getEventTypePhrase(eventType: EventTypeT): string {
-    switch (eventType) {
+  static getReviewEntityName(entity_type: ReviewableEntityType): string {
+    switch (entity_type) {
+      case "artist":
+        return "an artist";
+      case "recording":
+        return "a track";
+      case "release_group":
+        return "an album";
+      default:
+        return entity_type;
+    }
+  }
+
+  static getEventTypePhrase(event: TimelineEvent): string {
+    const { event_type } = event;
+    let review: CritiqueBrainzReview;
+    switch (event_type) {
       case EventType.RECORDING_RECOMMENDATION:
         return "recommended a track";
       case EventType.LISTEN:
@@ -114,6 +140,12 @@ export default class UserFeedPage extends React.Component<
         return "added a track to their favorites";
       case EventType.RECORDING_PIN:
         return "pinned a recording";
+      case EventType.REVIEW: {
+        review = event.metadata as CritiqueBrainzReview;
+        return `reviewed ${UserFeedPage.getReviewEntityName(
+          review.entity_type
+        )}`;
+      }
       default:
         return "";
     }
@@ -521,28 +553,35 @@ export default class UserFeedPage extends React.Component<
 
   renderEventContent(event: TimelineEvent) {
     if (UserFeedPage.isEventListenable(event) && !event.hidden) {
-      const { metadata } = event;
+      const { metadata, event_type } = event;
       const { currentUser } = this.context;
       const { newAlert } = this.props;
+      let listen: Listen;
+      let additionalContent: string | JSX.Element;
+      if (event_type === EventType.REVIEW) {
+        const typedMetadata = metadata as CritiqueBrainzReview;
+        // Users can review various entity types, and we need to format the review as a Listen accordingly
+        listen = feedReviewEventToListen(typedMetadata);
+        additionalContent = getReviewEventContent(typedMetadata);
+      } else {
+        listen = metadata as Listen;
+        additionalContent = getAdditionalContent(metadata);
+      }
       return (
         <div className="event-content">
           <ListenCard
             updateFeedbackCallback={this.updateFeedback}
             currentFeedback={this.getFeedbackForRecordingMsid(
               _get(
-                metadata,
+                listen,
                 "track_metadata.additional_info.recording_msid",
                 null
               )
             )}
             showUsername={false}
             showTimestamp={false}
-            listen={metadata as Listen}
-            additionalContent={
-              (metadata as PinEventMetadata).blurb_content
-                ? `"${(metadata as PinEventMetadata).blurb_content}"`
-                : ""
-            }
+            listen={listen}
+            additionalContent={additionalContent}
             newAlert={newAlert}
             additionalMenuItems={
               (event.event_type === EventType.RECORDING_RECOMMENDATION ||
@@ -632,7 +671,7 @@ export default class UserFeedPage extends React.Component<
       );
     return (
       <span className="event-description-text">
-        {userLinkOrYou} {UserFeedPage.getEventTypePhrase(event_type)}
+        {userLinkOrYou} {UserFeedPage.getEventTypePhrase(event)}
       </span>
     );
   }

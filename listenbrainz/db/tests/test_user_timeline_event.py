@@ -23,10 +23,12 @@ from unittest import mock
 import time
 import uuid
 
+from listenbrainz.db.model.review import CBReviewMetadata, CBReviewTimelineMetadata
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.exceptions import DatabaseException
 
-from data.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, NotificationMetadata
+from listenbrainz.db.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, \
+    NotificationMetadata
 
 
 class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
@@ -82,6 +84,17 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
         self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, event.event_type)
+
+    def test_create_user_cb_review_event_sets_event_type_correctly(self):
+        event = db_user_timeline_event.create_user_cb_review_event(
+            user_id=self.user['id'],
+            metadata=CBReviewTimelineMetadata(
+                review_id="f305b3fd-a040-4cde-b5ce-a926614f5d5d",
+                entity_name="Sunflower",
+                entity_id="f305b3fd-a040-4cde-b5ce-a926614f5d5d"
+            )
+        )
+        self.assertEqual(UserTimelineEventType.CRITIQUEBRAINZ_REVIEW, event.event_type)
 
     def test_create_user_notification_event(self):
         message = 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'
