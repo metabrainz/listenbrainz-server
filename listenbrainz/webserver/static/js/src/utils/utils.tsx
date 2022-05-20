@@ -1,6 +1,8 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
+import { isFinite, isUndefined } from "lodash";
+import { Rating } from "react-simple-star-rating";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
@@ -117,6 +119,9 @@ const searchForYoutubeTrack = async (
   if (videoIds.length) return videoIds;
   return null;
 };
+
+const getAdditionalContent = (metadata: EventMetadata): string =>
+  _.get(metadata, "blurb_content") ?? _.get(metadata, "text") ?? "";
 
 const getArtistMBIDs = (listen: Listen): string[] | undefined =>
   _.get(listen, "track_metadata.additional_info.artist_mbids") ??
@@ -542,6 +547,81 @@ function getAverageRGBOfImage(
 }
 /* eslint-enable no-bitwise */
 
+export function feedReviewEventToListen(
+  eventMetadata: CritiqueBrainzReview
+): BaseListenFormat {
+  const { entity_id, entity_name, entity_type } = eventMetadata;
+
+  let trackName;
+  let artistName;
+  let releaseGroupName;
+  let artist_mbids: string[] = [];
+  let recording_mbid;
+  let release_group_mbid;
+  if (entity_type === "artist" && entity_id) {
+    artistName = entity_name;
+    artist_mbids = [entity_id] as string[];
+  }
+  if (entity_type === "release_group" && entity_id) {
+    // currently releaseGroupName isn't displayed by the ListenCard
+    // so also assign trackName and recording_mbid
+    trackName = entity_name;
+    recording_mbid = entity_id;
+    releaseGroupName = entity_name;
+    release_group_mbid = entity_id;
+  }
+  if (entity_type === "recording" && entity_id) {
+    trackName = entity_name;
+    recording_mbid = entity_id;
+  }
+  return {
+    listened_at: -1,
+    track_metadata: {
+      track_name: trackName ?? "",
+      artist_name: artistName ?? "",
+      release_name: releaseGroupName ?? "",
+      additional_info: {
+        artist_mbids,
+        recording_mbid,
+        release_group_mbid,
+      },
+    },
+  };
+}
+
+export function getReviewEventContent(
+  eventMetadata: CritiqueBrainzReview
+): JSX.Element {
+  const additionalContent = getAdditionalContent(eventMetadata);
+  return (
+    <>
+      <a
+        href={`https://critiquebrainz.org/review/${eventMetadata.review_mbid}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="pull-right"
+      >
+        See this review on CritiqueBrainz
+      </a>
+      {!isUndefined(eventMetadata.rating) && isFinite(eventMetadata.rating) && (
+        <div className="rating-container">
+          <b>Rating: </b>
+          <Rating
+            readonly
+            onClick={() => {}}
+            className="rating-stars"
+            ratingValue={eventMetadata.rating * 20} // CB stores ratings in 0 - 5 scale but the component requires 0 - 100
+            transition
+            size={20}
+            iconsCount={5}
+          />
+        </div>
+      )}
+      {additionalContent}
+    </>
+  );
+}
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -565,4 +645,5 @@ export {
   pinnedRecordingToListen,
   getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,
+  getAdditionalContent,
 };

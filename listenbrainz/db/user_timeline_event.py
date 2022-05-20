@@ -17,22 +17,23 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import sqlalchemy
-import pydantic
 import ujson
 
 from datetime import datetime
 
-from data.model.user_timeline_event import (
+from listenbrainz.db.model.user_timeline_event import (
     UserTimelineEvent,
     UserTimelineEventType,
     UserTimelineEventMetadata,
-    RecordingRecommendationMetadata, NotificationMetadata,
-    HiddenUserTimelineEvent,
+    RecordingRecommendationMetadata,
+    NotificationMetadata,
+    HiddenUserTimelineEvent
 )
-from enum import Enum
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 from typing import List
+
+from listenbrainz.db.model.review import CBReviewTimelineMetadata
 
 
 def create_user_timeline_event(
@@ -99,6 +100,16 @@ def delete_user_timeline_event(
     except Exception as e:
         raise DatabaseException(str(e))
 
+
+def create_user_cb_review_event(user_id: int, metadata: CBReviewTimelineMetadata) -> UserTimelineEvent:
+    """ Creates a CritiqueBrainz review event in the database and returns it.
+    """
+    return create_user_timeline_event(
+        user_id=user_id,
+        event_type=UserTimelineEventType.CRITIQUEBRAINZ_REVIEW,
+        metadata=metadata
+    )
+
 def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, count: int = 50) -> List[UserTimelineEvent]:
     """ Gets user timeline events of the specified type associated with the specified user.
 
@@ -154,6 +165,32 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
             "max_ts": datetime.utcfromtimestamp(max_ts),
             "count": count,
             "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+        })
+
+        return [UserTimelineEvent(**row) for row in result.fetchall()]
+
+
+def get_cb_review_events(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
+    """ Gets a list of CritiqueBrainz review events for specified users.
+
+    user_ids is a tuple of user row IDs.
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, user_id, event_type, metadata, created
+              FROM user_timeline_event
+             WHERE user_id IN :user_ids
+               AND created > :min_ts
+               AND created < :max_ts
+               AND event_type = :event_type
+          ORDER BY created DESC
+             LIMIT :count
+        """), {
+            "user_ids": tuple(user_ids),
+            "min_ts": datetime.utcfromtimestamp(min_ts),
+            "max_ts": datetime.utcfromtimestamp(max_ts),
+            "count": count,
+            "event_type": UserTimelineEventType.CRITIQUEBRAINZ_REVIEW.value,
         })
 
         return [UserTimelineEvent(**row) for row in result.fetchall()]

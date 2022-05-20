@@ -190,7 +190,7 @@ describe("<UserFeed />", () => {
 
     // Ensure additional details are rendered if provided
     const additionalContent = content.find(".additional-content");
-    expect(additionalContent.text()).toEqual('"Very good..."');
+    expect(additionalContent.text()).toEqual("Very good...");
     dateNowMock.mockRestore();
   });
 

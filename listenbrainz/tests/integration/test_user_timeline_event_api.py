@@ -16,11 +16,15 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from flask import url_for, current_app
+from flask import url_for
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, \
+    CRITIQUEBRAINZ_REVIEW_FETCH_URL
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from data.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata
+from listenbrainz.db.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata
 from unittest import mock
+
+import requests_mock
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
@@ -34,15 +38,31 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(UserTimelineAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'friendly neighborhood spider-man')
+        self.user = db_user.get_or_create(199, 'friendly neighborhood spider-man')
+        CritiqueBrainzService().add_new_user(self.user['id'], {
+            "access_token": "foobar",
+            "refresh_token": "foobar",
+            "expires_in": 3600
+        })
+        self.review_metadata = {
+            "entity_name": "Heart Shaker",
+            "entity_id": str(uuid.uuid4()),
+            "entity_type": "recording",
+            "rating": 5,
+            "language": "en",
+            "text": "Review text goes here ...",
+        }
+
         events = db_user_timeline_event.get_user_track_recommendation_events(
             user_id=self.user['id'],
             count=1,
         )
         self.assertListEqual([], events)
+        # by default this is True, we set to False so that the Flask handler to automatically
+        # catch uncaught exceptions works and wraps those in a 500.
+        self.app.config["TESTING"] = False
 
-    def test_it_writes_an_event_to_the_database(self):
-
+    def test_recommendation_writes_an_event_to_the_database(self):
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
@@ -64,7 +84,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('Kanye West', events[0].metadata.artist_name)
         self.assertEqual('Fade', events[0].metadata.track_name)
 
-    def test_it_checks_auth_token_for_authorization(self):
+    def test_recommendation_checks_auth_token_for_authorization(self):
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
@@ -94,7 +114,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assertListEqual([], events)
 
-    def test_it_validates_metadata_json(self):
+    def test_recommendation_validates_metadata_json(self):
         metadata = {}
 
         # empty metadata should 400
@@ -106,10 +126,9 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert400(r)
 
     @mock.patch('listenbrainz.db.user_timeline_event.create_user_track_recommendation_event', side_effect=DatabaseException)
-    def test_it_handles_database_exceptions(self, mock_create_event):
+    def test_recommendation_handles_database_exceptions(self, mock_create_event):
         # see test_unhide_events_for_database_exception for details on this
         self.app.config["TESTING"] = False
-
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
@@ -290,8 +309,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(r_rec)
 
-    @mock.patch("listenbrainz.db.user_timeline_event.delete_user_timeline_event",
-        side_effect=DatabaseException)
+    @mock.patch("listenbrainz.db.user_timeline_event.delete_user_timeline_event", side_effect=DatabaseException)
     def test_delete_feed_events_for_db_exceptions(self, mock_create_event):
         # see test_unhide_events_for_database_exception for details on this
         self.app.config["TESTING"] = False
@@ -584,3 +602,216 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         self.assert500(r)
+
+    @requests_mock.Mocker()
+    def test_critiquebrainz_writes_an_event_to_the_database_and_returns_event_data(self, mock_requests):
+        review_id = str(uuid.uuid4())
+        mock_requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, status_code=200, json={'id': review_id})
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': self.review_metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert200(r)
+        data = r.json
+        self.assertEqual('critiquebrainz_review', data["event_type"])
+        self.assertEqual(self.review_metadata["entity_id"], data["metadata"]["entity_id"])
+        self.assertEqual(self.review_metadata["entity_name"], data["metadata"]["entity_name"])
+        self.assertEqual(review_id, data["metadata"]["review_id"])
+
+        events = db_user_timeline_event.get_cb_review_events(
+            user_ids=[self.user['id']],
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=1,
+        )
+        self.assertEqual(1, len(events))
+        self.assertEqual('Heart Shaker', events[0].metadata.entity_name)
+        self.assertEqual(review_id, events[0].metadata.review_id)
+
+    def test_critiquebrainz_checks_auth_token_for_authorization(self):
+        # send a request without a token
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': self.review_metadata}),
+        )
+        self.assert401(r)
+
+        # send a request with an incorrect token
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': self.review_metadata}),
+            headers={'Authorization': 'Token DSdsa asdasd sad asd'},
+        )
+        self.assert401(r)
+
+        # check that no events were created in the database
+        events = db_user_timeline_event.get_cb_review_events(
+            user_ids=[self.user['id']],
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=1,
+        )
+        self.assertListEqual([], events)
+
+    def test_critiquebrainz_validates_metadata_json(self):
+        metadata = {}
+
+        # empty metadata should 400
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+
+    @requests_mock.Mocker()
+    @mock.patch('listenbrainz.db.user_timeline_event.create_user_cb_review_event', side_effect=DatabaseException)
+    def test_critiquebrainz_handles_database_exceptions(self, mock_requests, mock_create_event):
+        review_id = str(uuid.uuid4())
+        mock_requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, status_code=200, json={'id': review_id})
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': self.review_metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert500(r)
+        data = json.loads(r.data)
+        self.assertEqual('An unknown error occured.', data['error'])
+
+    @requests_mock.Mocker()
+    def test_critiquebrainz_handles_cb_api_exceptions(self, mock_requests):
+        mock_requests.post(
+            CRITIQUEBRAINZ_REVIEW_SUBMIT_URL,
+            status_code=500,
+            json={'code': 500, 'description': 'Internal Server Error'}
+        )
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                    user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': self.review_metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert500(r)
+        data = json.loads(r.data)
+        self.assertEqual("Something went wrong. Please try again later.", data['error'])
+
+    @requests_mock.Mocker()
+    def test_get_cb_review_events(self, mock_requests):
+        self.maxDiff = None
+
+        user_2 = db_user.get_or_create(201, 'not your friendly neighborhood spider-man')
+        CritiqueBrainzService().add_new_user(user_2['id'], {
+            "access_token": "bazbar",
+            "refresh_token": "bazfoo",
+            "expires_in": 3600
+        })
+        metadata_1 = {
+            "entity_name": "Heart Shaker",
+            "entity_id": "cea67a92-db08-4950-bdc6-6d52fc622243",
+            "entity_type": "recording",
+            "rating": 5,
+            "language": "en",
+            "text": "Review text goes here ...",
+        }
+        metadata_2 = {
+            "entity_name": "Britney Spears",
+            "entity_id": "45a663b5-b1cb-4a91-bff6-2bef7bbfdd76",
+            "entity_type": "artist",
+            "rating": 4,
+            "language": "en",
+            "text": "Review2 text goes here ...",
+        }
+        metadata_3 = {
+            "entity_name": "Oops! …I Did It Again",
+            "entity_id": "44abd7d3-c593-4587-a109-6d9582f13f36",
+            "entity_type": "recording",
+            "rating": 5,
+            "language": "en",
+            "text": "Review3 text goes here ...",
+        }
+        review_mbid_1 = str(uuid.uuid4())
+        review_mbid_2 = str(uuid.uuid4())
+        review_mbid_3 = str(uuid.uuid4())
+
+        mock_requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, [
+            {"status_code": 200, "json": {"id": review_mbid_1}},
+            {"status_code": 200, "json": {"id": review_mbid_2}},
+            {"status_code": 200, "json": {"id": review_mbid_3}},
+        ])
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': metadata_1}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert200(r)
+        print(r.json)
+        review_event_id_1 = r.json["id"]
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': metadata_2}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert200(r)
+        review_event_id_2 = r.json["id"]
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=user_2['musicbrainz_id']),
+            data=json.dumps({'metadata': metadata_3}),
+            headers={'Authorization': 'Token {}'.format(user_2['auth_token'])},
+        )
+        self.assert200(r)
+        review_event_id_3 = r.json["id"]
+
+        # we created 3 reviews originally so LB db has record of 3 review events but we intentionally return
+        # 2 reviews from CB so that we can test the case of if a review is deleted from CB, LB side just skips
+        # it without erring
+        mock_requests.get(CRITIQUEBRAINZ_REVIEW_FETCH_URL, status_code=200, json={
+            "reviews": {
+                review_mbid_1: {
+                    "entity_type": metadata_1["entity_type"],
+                    "text": metadata_1["text"],
+                    "rating": metadata_1["rating"],
+                },
+                review_mbid_3: {
+                    "entity_type": metadata_3["entity_type"],
+                    "text": metadata_3["text"],
+                    "rating": metadata_3["rating"],
+                }
+            }
+        })
+
+        db_user_relationship.insert(self.user['id'], user_2['id'], 'follow')
+
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            query_string={'min_ts': 0, 'max_ts': int(time.time()) + 1000}
+        )
+        self.assert200(r)
+
+        data = r.json["payload"]
+        events_map = {event["id"]: event for event in data["events"]}
+
+        self.assertIn(review_event_id_1, events_map)
+        review_event_1 = events_map[review_event_id_1]
+        self.assertEqual(metadata_1["entity_type"], review_event_1["metadata"]["entity_type"])
+        self.assertEqual(metadata_1["entity_id"], review_event_1["metadata"]["entity_id"])
+        self.assertEqual(metadata_1["entity_name"], review_event_1["metadata"]["entity_name"])
+        self.assertEqual(metadata_1["rating"], review_event_1["metadata"]["rating"])
+        self.assertEqual(metadata_1["text"], review_event_1["metadata"]["text"])
+        self.assertEqual(review_mbid_1, review_event_1["metadata"]["review_mbid"])
+
+        self.assertNotIn(review_event_id_2, events_map)
+
+        self.assertIn(review_event_id_3, events_map)
+        review_event_3 = events_map[review_event_id_3]
+        self.assertEqual(metadata_3["entity_type"], review_event_3["metadata"]["entity_type"])
+        self.assertEqual(metadata_3["entity_id"], review_event_3["metadata"]["entity_id"])
+        self.assertEqual(metadata_3["entity_name"], review_event_3["metadata"]["entity_name"])
+        self.assertEqual(metadata_3["rating"], review_event_3["metadata"]["rating"])
+        self.assertEqual(metadata_3["text"], review_event_3["metadata"]["text"])
+        self.assertEqual(review_mbid_3, review_event_3["metadata"]["review_mbid"])

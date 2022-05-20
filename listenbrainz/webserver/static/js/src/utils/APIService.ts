@@ -972,24 +972,26 @@ export default class APIService {
   };
 
   submitReviewToCB = async (
-    accessToken: string,
+    userName: string,
+    userToken: string,
     review: CritiqueBrainzReview
   ) => {
-    const url = `${this.CBBaseURI}/review/`;
+    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/review`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
       body: JSON.stringify({
-        is_draft: false,
-        entity_id: review.entity_id,
-        entity_type: review.entity_type,
-        text: review.text,
-        license_choice: "CC BY-SA 3.0",
-        language: review.languageCode,
-        rating: review.rating,
+        metadata: {
+          entity_name: review.entity_name,
+          entity_id: review.entity_id,
+          entity_type: review.entity_type,
+          text: review.text,
+          language: review.languageCode,
+          rating: review.rating,
+        },
       }),
     });
 
