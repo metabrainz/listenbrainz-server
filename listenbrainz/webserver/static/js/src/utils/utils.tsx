@@ -599,6 +599,7 @@ export function getReviewEventContent(
         href={`https://critiquebrainz.org/review/${eventMetadata.review_mbid}`}
         target="_blank"
         rel="noopener noreferrer"
+        className="pull-right"
       >
         See this review on CritiqueBrainz
       </a>
