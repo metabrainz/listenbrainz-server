@@ -680,6 +680,7 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
                 user_name=review_event.user_name,
                 created=event.created.timestamp(),
                 metadata=review_event,
+                hidden=False
             ))
         except pydantic.ValidationError as e:
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)
