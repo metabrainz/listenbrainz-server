@@ -115,8 +115,10 @@ export default class UserFeedPage extends React.Component<
     }
   }
 
-  static getEventTypePhrase(eventType: EventTypeT): string {
-    switch (eventType) {
+  static getEventTypePhrase(event: TimelineEvent): string {
+    const { event_type } = event;
+    let review: CritiqueBrainzReview;
+    switch (event_type) {
       case EventType.RECORDING_RECOMMENDATION:
         return "recommended a track";
       case EventType.LISTEN:
@@ -125,8 +127,10 @@ export default class UserFeedPage extends React.Component<
         return "added a track to their favorites";
       case EventType.RECORDING_PIN:
         return "pinned a recording";
-      case EventType.REVIEW:
-        return "reviewed a track";
+      case EventType.REVIEW: {
+        review = (event as unknown) as CritiqueBrainzReview;
+        return `reviewed a ${review.entity_type}`;
+      }
       default:
         return "";
     }
@@ -652,7 +656,7 @@ export default class UserFeedPage extends React.Component<
       );
     return (
       <span className="event-description-text">
-        {userLinkOrYou} {UserFeedPage.getEventTypePhrase(event_type)}
+        {userLinkOrYou} {UserFeedPage.getEventTypePhrase(event)}
       </span>
     );
   }

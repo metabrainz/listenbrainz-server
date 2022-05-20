@@ -660,8 +660,6 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
     api_events = []
     for review_id, event in review_id_event_map.items():
         if review_id not in reviews:
-            current_app.logger.warning(f"""Skipping review timeline event because
-             either review for id {review_id} not found.""")
             continue
 
         try:

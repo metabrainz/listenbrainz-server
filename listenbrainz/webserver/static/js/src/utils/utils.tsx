@@ -563,6 +563,10 @@ export function feedReviewEventToListen(
     artist_mbids = [entity_id] as string[];
   }
   if (entity_type === "release_group" && entity_id) {
+    // currently releaseGroupName isn't displayed by the ListenCard
+    // so also assign trackName and recording_mbid
+    trackName = entity_name;
+    recording_mbid = entity_id;
     releaseGroupName = entity_name;
     release_group_mbid = entity_id;
   }
