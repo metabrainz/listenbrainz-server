@@ -784,7 +784,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             }
         })
 
-        user_relationship.insert(self.user['id'], user_2['id'], 'follow')
+        db_user_relationship.insert(self.user['id'], user_2['id'], 'follow')
 
         r = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
