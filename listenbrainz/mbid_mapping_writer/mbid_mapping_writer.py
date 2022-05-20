@@ -1,21 +1,18 @@
 import json
 import pika
 import time
-import threading
 
 from flask import current_app
 from listenbrainz.webserver import create_app
-from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.mbid_mapping_writer.job_queue import MappingJobQueue
 
 
-class MBIDMappingWriter(threading.Thread):
+class MBIDMappingWriter:
     """ Main entry point for the mapping writer. Sets up connections and 
         handles messages from RabbitMQ and stuff them into the queue for the
         job matcher to handle."""
 
     def __init__(self, app):
-        threading.Thread.__init__(self)
         self.app = app
         self.queue = None
 
@@ -72,7 +69,6 @@ class MBIDMappingWriter(threading.Thread):
                 try:
                     self.connection.ioloop.start()
                 except KeyboardInterrupt:
-                    self.submit_delivery_tags()
                     self.queue.terminate()
                     current_app.logger.error("Keyboard interrupt!")
                     break
@@ -80,9 +76,13 @@ class MBIDMappingWriter(threading.Thread):
                     current_app.logger.error(
                         "Error in MBID Mapping Writer: %s", str(e), exc_info=True)
                     time.sleep(3)
+            # the while True loop above makes this line unreachable but adding it anyway
+            # so that we remember that every started thread should also be joined.
+            # (you may also want to read the commit message for the commit that added this)
+            self.queue.terminate()
 
 
 if __name__ == "__main__":
     app = create_app()
     mw = MBIDMappingWriter(app)
-    mw.start()
+    mw.run()

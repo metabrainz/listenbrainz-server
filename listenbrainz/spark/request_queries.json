@@ -105,6 +105,11 @@
       "users"
     ]
   },
+  "cf.recommendations.recording.discovery": {
+    "name": "cf.recommendations.recording.discovery",
+    "description": "Calculate the time for when the user played a recording the last time",
+    "params": []
+  },
   "import.artist_relation": {
     "name": "import.artist_relation",
     "description": "Import artist relation into the spark cluster.",

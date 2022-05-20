@@ -260,12 +260,12 @@ class DumpListenStore:
             location, '{filename}.tar.xz'.format(filename=archive_name))
         with open(archive_path, 'w') as archive:
 
-            pxz_command = ['pxz', '--compress',
+            xz_command = ['xz', '--compress',
                            '-T{threads}'.format(threads=threads)]
-            pxz = subprocess.Popen(
-                pxz_command, stdin=subprocess.PIPE, stdout=archive)
+            xz = subprocess.Popen(
+                xz_command, stdin=subprocess.PIPE, stdout=archive)
 
-            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+            with tarfile.open(fileobj=xz.stdin, mode='w|') as tar:
                 temp_dir = os.path.join(
                     self.dump_temp_dir_root, str(uuid.uuid4()))
                 create_path(temp_dir)
@@ -279,9 +279,9 @@ class DumpListenStore:
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
 
-            pxz.stdin.close()
+            xz.stdin.close()
 
-        pxz.wait()
+        xz.wait()
         self.log.info('ListenBrainz listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path

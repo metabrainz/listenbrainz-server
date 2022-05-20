@@ -392,14 +392,14 @@ class TimescaleListenStore:
         self.log.info(
             'Beginning import of listens from dump %s...', archive_path)
 
-        # construct the pxz command to decompress the archive
-        pxz_command = ['pxz', '--decompress', '--stdout',
+        # construct the xz command to decompress the archive
+        xz_command = ['xz', '--decompress', '--stdout',
                        archive_path, '-T{threads}'.format(threads=threads)]
-        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
+        xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
 
         schema_checked = False
         total_imported = 0
-        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
             listens = []
             for member in tar:
                 if member.name.endswith('SCHEMA_SEQUENCE'):
@@ -443,7 +443,7 @@ class TimescaleListenStore:
                 "SCHEMA_SEQUENCE file missing from listen dump.")
 
         self.log.info('Import of listens from dump %s done!', archive_path)
-        pxz.stdout.close()
+        xz.stdout.close()
 
         return total_imported
 

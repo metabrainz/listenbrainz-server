@@ -16,6 +16,8 @@ import {
   faUserSlash,
   faThumbtack,
   faTrash,
+  faEye,
+  faEyeSlash,
   faComments,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -418,8 +420,120 @@ export default class UserFeedPage extends React.Component<
     }
   };
 
+  hideFeedEvent = async (event: TimelineEvent) => {
+    const { currentUser, APIService } = this.context;
+    const { newAlert } = this.props;
+    const { events } = this.state;
+
+    try {
+      const status = await APIService.hideFeedEvent(
+        event.event_type,
+        currentUser.name,
+        currentUser.auth_token as string,
+        event.id!
+      );
+
+      if (status === 200) {
+        const new_events = events.map((traversedEvent) => {
+          if (
+            traversedEvent.event_type === event.event_type &&
+            traversedEvent.id === event.id
+          ) {
+            // eslint-disable-next-line no-param-reassign
+            traversedEvent.hidden = true;
+          }
+          return traversedEvent;
+        });
+        this.setState({ events: new_events });
+      }
+    } catch (error) {
+      newAlert("danger", error.toString(), <>Could not hide event</>);
+    }
+  };
+
+  unhideFeedEvent = async (event: TimelineEvent) => {
+    const { currentUser, APIService } = this.context;
+    const { newAlert } = this.props;
+    const { events } = this.state;
+
+    try {
+      const status = await APIService.unhideFeedEvent(
+        event.event_type,
+        currentUser.name,
+        currentUser.auth_token as string,
+        event.id!
+      );
+
+      if (status === 200) {
+        const new_events = events.map((traversedEvent) => {
+          if (
+            traversedEvent.event_type === event.event_type &&
+            traversedEvent.id === event.id
+          ) {
+            // eslint-disable-next-line no-param-reassign
+            traversedEvent.hidden = false;
+          }
+          return traversedEvent;
+        });
+        this.setState({ events: new_events });
+      }
+    } catch (error) {
+      newAlert("danger", "", <>Could not unhide event</>);
+    }
+  };
+
+  renderEventActionButton(event: TimelineEvent) {
+    const { currentUser } = this.context;
+    if (
+      ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
+        event.event_type === EventType.RECORDING_PIN) &&
+        event.user_name === currentUser.name) ||
+      event.event_type === EventType.NOTIFICATION
+    ) {
+      return (
+        <ListenControl
+          title="Delete Event"
+          text=""
+          icon={faTrash}
+          buttonClassName="btn btn-link btn-xs"
+          // eslint-disable-next-line react/jsx-no-bind
+          action={this.deleteFeedEvent.bind(this, event)}
+        />
+      );
+    }
+    if (
+      (event.event_type === EventType.RECORDING_PIN ||
+        event.event_type === EventType.RECORDING_RECOMMENDATION) &&
+      event.user_name !== currentUser.name
+    ) {
+      if (event.hidden) {
+        return (
+          <ListenControl
+            title="Unhide Event"
+            text=""
+            icon={faEye}
+            buttonClassName="btn btn-link btn-xs"
+            // eslint-disable-next-line react/jsx-no-bind
+            action={this.unhideFeedEvent.bind(this, event)}
+          />
+        );
+      }
+      return (
+        <ListenControl
+          title="Hide Event"
+          text=""
+          icon={faEyeSlash}
+          buttonClassName="btn btn-link btn-xs"
+          // eslint-disable-next-line react/jsx-no-bind
+          action={this.hideFeedEvent.bind(this, event)}
+        />
+      );
+    }
+    return null;
+  }
+
   renderEventContent(event: TimelineEvent) {
-    if (UserFeedPage.isEventListenable(event)) {
+    if (UserFeedPage.isEventListenable(event) && !event.hidden) {
       const { metadata, event_type } = event;
       const { currentUser } = this.context;
       const { newAlert } = this.props;
@@ -473,6 +587,13 @@ export default class UserFeedPage extends React.Component<
   renderEventText(event: TimelineEvent) {
     const { currentUser } = this.context;
     const { event_type, user_name, metadata } = event;
+    if (event.hidden) {
+      return (
+        <i>
+          <span className="event-description-text">This event is hidden</span>
+        </i>
+      );
+    }
     if (event_type === EventType.FOLLOW) {
       const {
         user_name_0,
@@ -628,20 +749,7 @@ export default class UserFeedPage extends React.Component<
 
                           <span className="event-time">
                             {preciseTimestamp(created * 1000)}
-                            {((event.event_type ===
-                              EventType.RECORDING_RECOMMENDATION ||
-                              event.event_type === EventType.RECORDING_PIN) &&
-                              event.user_name === currentUser.name) ||
-                            event.event_type === EventType.NOTIFICATION ? (
-                              <ListenControl
-                                title="Delete Event"
-                                text=""
-                                icon={faTrash}
-                                buttonClassName="btn btn-link btn-xs"
-                                // eslint-disable-next-line react/jsx-no-bind
-                                action={this.deleteFeedEvent.bind(this, event)}
-                              />
-                            ) : null}
+                            {this.renderEventActionButton(event)}
                           </span>
                         </div>
 

@@ -101,6 +101,14 @@ CREATE TABLE user_timeline_event (
   created               TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
+CREATE TABLE hide_user_timeline_event (
+    id           SERIAL NOT NULL,  --PK
+    user_id      INTEGER NOT NULL, --FK to "user"
+    event_type   hide_user_timeline_event_type_enum NOT NULL,
+    event_id     INTEGER NOT NULL, --Row ID of recommendation or pin
+    created      TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
 CREATE TABLE spotify_auth (
   user_id                   INTEGER NOT NULL, -- PK and FK to user.id
   user_token                VARCHAR NOT NULL,

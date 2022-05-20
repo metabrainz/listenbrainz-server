@@ -21,14 +21,14 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, \
     CRITIQUEBRAINZ_REVIEW_FETCH_URL
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.db.model.user_timeline_event import UserTimelineEventType
+from listenbrainz.db.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata
 from unittest import mock
 
 import requests_mock
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
-from listenbrainz.db import user_relationship
+import listenbrainz.db.user_relationship as db_user_relationship
 import time
 import json
 import uuid
@@ -127,6 +127,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     @mock.patch('listenbrainz.db.user_timeline_event.create_user_track_recommendation_event', side_effect=DatabaseException)
     def test_recommendation_handles_database_exceptions(self, mock_create_event):
+        # see test_unhide_events_for_database_exception for details on this
+        self.app.config["TESTING"] = False
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
@@ -309,6 +311,9 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     @mock.patch("listenbrainz.db.user_timeline_event.delete_user_timeline_event", side_effect=DatabaseException)
     def test_delete_feed_events_for_db_exceptions(self, mock_create_event):
+        # see test_unhide_events_for_database_exception for details on this
+        self.app.config["TESTING"] = False
+
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
         approved_user = db_user.get_or_create(11, "troi-bot")
@@ -347,6 +352,256 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         self.assert400(r)
+
+    def test_hide_events(self):
+        # creating a new user
+        new_user = db_user.get_or_create(2, 'riksucks')
+        # creating an event
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # user starts following riksucks
+        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+
+        # send request to hide event
+        r = self.client.post(
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({
+                "event_type": event_rec.event_type.value,
+                "event_id": event_rec.id
+                }
+            ),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert200(r)
+
+    def test_hide_events_tokens_for_authorization(self):
+        # creating a new user
+        new_user = db_user.get_or_create(2, 'riksucks')
+        # creating an event
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # user starts following riksucks
+        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+
+        # send request to hide event
+        r = self.client.post(
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({
+                "event_type": event_rec.event_type.value,
+                "event_id": event_rec.id
+                }
+            ),
+        )
+        self.assert401(r)
+
+    def test_hide_events_for_non_followed_users(self):
+        # creating a new user
+        new_user = db_user.get_or_create(2, 'riksucks')
+        # creating an event
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # send request to hide event
+        r = self.client.post(
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({
+                "event_type": event_rec.event_type.value,
+                "event_id": event_rec.id
+                }
+            ),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert401(r)
+
+    @mock.patch(
+        "listenbrainz.db.user_timeline_event.hide_user_timeline_event",
+        side_effect=DatabaseException
+        )
+    def test_hide_events_for_database_exception(self, mock_create_event):
+        # see test_unhide_events_for_database_exception for details on this
+        self.app.config["TESTING"] = False
+
+        # creating a new user
+        new_user = db_user.get_or_create(2, 'riksucks')
+        # creating an event
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # user starts following riksucks
+        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+
+        # send request to hide event
+        r = self.client.post(
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({
+                "event_type": event_rec.event_type.value,
+                "event_id": event_rec.id
+                }
+            ),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert500(r)
+
+    def test_hide_events_for_bad_request(self):
+        # creating a new user
+        new_user = db_user.get_or_create(2, 'riksucks')
+        # creating an event
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # user starts following riksucks
+        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+
+        # send request to hide event
+        r = self.client.post(
+            url_for(
+                'user_timeline_event_api_bp.hide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert400(r)
+
+    def test_unhide_events(self):
+        # add dummy event
+        db_user_timeline_event.hide_user_timeline_event(
+            self.user['id'],
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+            1
+        )
+
+        # send request to hide event
+        r = self.client.post(
+            url_for(
+                'user_timeline_event_api_bp.unhide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({
+                "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                "event_id": 1
+            }),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert200(r)
+
+    def test_unhide_events_for_authorization(self):
+        # add dummy event
+        db_user_timeline_event.hide_user_timeline_event(
+            self.user['id'],
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+            1
+        )
+
+        # send request to hide event
+        r = self.client.post(
+            url_for(
+                'user_timeline_event_api_bp.unhide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({
+                "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                "event_id": 1
+            }),
+        )
+        self.assert401(r)
+
+    def test_unhide_events_for_bad_request(self):
+        # add dummy event
+        db_user_timeline_event.hide_user_timeline_event(
+            self.user['id'],
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+            1
+        )
+
+        # send request to hide event
+        r = self.client.post(
+            url_for(
+                'user_timeline_event_api_bp.unhide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert400(r)
+
+    @mock.patch(
+        "listenbrainz.db.user_timeline_event.unhide_timeline_event",
+        side_effect=DatabaseException
+        )
+    def test_unhide_events_for_database_exception(self, mock_create_event):
+        # in prod, we have registered error handlers to return 500 response
+        # on all uncaught exceptions. if TESTING is set to True, flask will
+        # behave differently and instead make the exception visible here rather
+        # than a 500 response. also, app is created for each test so don't worry
+        # to reset it after the test. similarly, set TESTING to true to help in
+        # debugging tests if needed.
+        self.app.config["TESTING"] = False
+
+        # add dummy event
+        db_user_timeline_event.hide_user_timeline_event(
+            self.user['id'],
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+            1
+        )
+
+        # send request to hide event
+        r = self.client.post(
+            url_for(
+                'user_timeline_event_api_bp.unhide_user_timeline_event',
+                user_name=self.user['musicbrainz_id']
+            ),
+            data=json.dumps({
+                "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                "event_id": 1
+            }),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert500(r)
 
     @requests_mock.Mocker()
     def test_critiquebrainz_writes_an_event_to_the_database_and_returns_event_data(self, mock_requests):

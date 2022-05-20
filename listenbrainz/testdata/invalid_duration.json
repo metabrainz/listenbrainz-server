@@ -1,0 +1,16 @@
+{
+    "payload": [
+        {
+            "listened_at": 1486709515,
+            "track_metadata": {
+                "track_name": "Every Step Every Way",
+                "artist_name": "Majid Jordan",
+                "additional_info": {
+                    "duration": null
+                },
+                "release_name": "Majid Jordan"
+            }
+        }
+    ],
+    "listen_type": "import"
+}
