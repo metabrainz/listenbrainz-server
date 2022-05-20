@@ -115,6 +115,19 @@ export default class UserFeedPage extends React.Component<
     }
   }
 
+  static getReviewEntityName(entity_type: ReviewableEntityType): string {
+    switch (entity_type) {
+      case "artist":
+        return "an artist";
+      case "recording":
+        return "a track";
+      case "release_group":
+        return "an album";
+      default:
+        return entity_type;
+    }
+  }
+
   static getEventTypePhrase(event: TimelineEvent): string {
     const { event_type } = event;
     let review: CritiqueBrainzReview;
@@ -128,8 +141,8 @@ export default class UserFeedPage extends React.Component<
       case EventType.RECORDING_PIN:
         return "pinned a recording";
       case EventType.REVIEW: {
-        review = (event as unknown) as CritiqueBrainzReview;
-        return `reviewed a ${review.entity_type}`;
+        review = event.metadata as CritiqueBrainzReview;
+        return `reviewed ${review.entity_type}`;
       }
       default:
         return "";
