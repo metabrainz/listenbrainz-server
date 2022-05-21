@@ -39,6 +39,7 @@ class UserRecommendationsJson(BaseModel):
     """
     top_artist: Optional[List[UserRecommendationsRecord]]
     similar_artist: Optional[List[UserRecommendationsRecord]]
+    raw: Optional[List[UserRecommendationsRecord]]
     model_id: Optional[str]
     model_url: Optional[str]
 
