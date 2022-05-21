@@ -212,9 +212,12 @@ class RecommendTestClass(RecommendationsTestCase):
 
         mock_candidate_set.side_effect = side_effect
 
-        recommend.get_recommendations_for_all(model, top_artist_candidate_set_df, similar_artist_candidate_set_df,
-                                              recommendation_top_artist_limit, recommendation_similar_artist_limit,
-                                              users)
+        recommend.get_recommendations_for_candidate_set(
+            model, top_artist_candidate_set_df, recommendation_top_artist_limit, users
+        )
+        recommend.get_recommendations_for_candidate_set(
+            model, similar_artist_candidate_set_df, recommendation_similar_artist_limit, users
+        )
 
         mock_candidate_set.assert_has_calls([
             call(top_artist_candidate_set_df, users),
