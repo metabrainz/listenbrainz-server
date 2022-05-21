@@ -102,6 +102,7 @@
     "params": [
       "recommendation_top_artist_limit",
       "recommendation_similar_artist_limit",
+      "recommendation_raw_limit",
       "users"
     ]
   },
