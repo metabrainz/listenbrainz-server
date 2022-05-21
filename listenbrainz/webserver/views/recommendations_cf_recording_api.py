@@ -131,12 +131,10 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
         Raises:
             APINoContent: if recommendations not found.
     """
+    data = recommendations.recording_mbid.dict()
     if artist_type == 'similar':
-        data = recommendations.recording_mbid.dict()
         mbid_list = data['similar_artist']
-
-    elif artist_type == 'top':
-        data = recommendations.recording_mbid.dict()
+    else:
         mbid_list = data['top_artist']
 
     total_mbid_count = len(mbid_list)

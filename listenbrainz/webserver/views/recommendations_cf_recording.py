@@ -1,13 +1,9 @@
 import ujson
-import requests
-
 from flask import Blueprint, render_template, current_app
 
+import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping
 from listenbrainz.webserver.views.user import _get_user
-import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
-from werkzeug.exceptions import BadRequest, InternalServerError
-
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
 
@@ -60,11 +56,16 @@ def _get_template(active_section, user):
     """
 
     data = db_recommendations_cf_recording.get_user_recommendation(user.id)
+    if active_section == 'top_artist':
+        tracks_type = "Top Artist"
+    else:
+        tracks_type = "Similar Artist"
 
     if data is None:
         return render_template(
-            "recommendations_cf_recording/{}.html".format(active_section),
+            "recommendations_cf_recording/base.html",
             active_section=active_section,
+            tracks_type=tracks_type,
             user=user,
             error_msg="Looks like the user wasn't active in the last week. Submit your listens and check back after a week!"
         )
@@ -74,8 +75,9 @@ def _get_template(active_section, user):
     if not result:
         current_app.logger.error('Top/Similar artists not found in Mapping/artist relation for "{}"'.format(user.musicbrainz_id))
         return render_template(
-            "recommendations_cf_recording/{}.html".format(active_section),
+            "recommendations_cf_recording/base.html",
             active_section=active_section,
+            tracks_type=tracks_type,
             user=user,
             error_msg="Looks like the recommendations weren't generated because of anomalies in our data." \
                       "We are working on it. Check back later."
@@ -86,8 +88,9 @@ def _get_template(active_section, user):
         current_app.logger.error('The API returned an empty response for {} recommendations.\nData: {}'
                                  .format(active_section, result))
         return render_template(
-            "recommendations_cf_recording/{}.html".format(active_section),
+            "recommendations_cf_recording/base.html",
             active_section=active_section,
+            tracks_type=tracks_type,
             user=user,
             error_msg="An error occurred while processing your request. Check back later!"
         )
@@ -102,8 +105,9 @@ def _get_template(active_section, user):
     }
 
     return render_template(
-        "recommendations_cf_recording/{}.html".format(active_section),
+        "recommendations_cf_recording/base.html",
         active_section=active_section,
+        tracks_type=tracks_type,
         props=ujson.dumps(props),
         user=user,
         last_updated=data.created.strftime('%d %b %Y')
