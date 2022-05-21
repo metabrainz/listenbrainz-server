@@ -10,6 +10,7 @@
         <li {{ 'class=active' if active_section=='info' }}><a href="{{ url_for('recommendations_cf_recording.info', user_name=user.musicbrainz_id) }}">Tracks you might like</a></li>
         <li {{ 'class=active' if active_section=='top_artist' }}><a href="{{ url_for('recommendations_cf_recording.top_artist', user_name=user.musicbrainz_id) }}">Top Artist</a></li>
         <li {{ 'class=active' if active_section=='similar_artist' }}><a href="{{ url_for('recommendations_cf_recording.similar_artist', user_name=user.musicbrainz_id) }}">Similar Artist</a></li>
+        <li {{ 'class=active' if active_section=='raw' }}><a href="{{ url_for('recommendations_cf_recording.raw', user_name=user.musicbrainz_id) }}">Raw Recommendations</a></li>
     </ul>
 
     {% block profile_content %}
