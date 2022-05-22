@@ -110,7 +110,7 @@ def process_recommendations(recommendation_df, limit):
      LEFT JOIN recording_discovery rd
          USING (user_id, recording_mbid)
          WHERE rank <= {limit}
-      GROUP BY user_id  
+       GROUP BY user_id
     """
     return run_query(query)
 
@@ -299,10 +299,8 @@ def get_raw_recommendations(model: ALSModel, limit, users_df):
 
 
 def get_user_count(df):
-    """ Get distinct user count from the given dataframe.
-    """
-    users_df = df.select('spark_user_id').distinct()
-    return users_df.count()
+    """ Get distinct user count from the given dataframe. """
+    return df.select('user_id').distinct().count()
 
 
 def main(recommendation_top_artist_limit=None, recommendation_similar_artist_limit=None,
