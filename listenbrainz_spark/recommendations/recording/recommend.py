@@ -183,8 +183,7 @@ def get_user_name_and_user_id(top_artist_candidate_set_df, users):
 
 
 def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artist_recs_df,
-                    raw_recs_df, active_user_count, total_time, top_artist_rec_user_count,
-                    similar_artist_rec_user_count, raw_recs_user_count):
+                    raw_recs_df, active_user_count, total_time):
     """ Create messages to send the data to the webserver via RabbitMQ.
 
         Args:
@@ -195,9 +194,6 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
             raw_recs_df (dataframe): Raw recommendations.
             active_user_count (int): Number of users active in the last week.
             total_time (float): Time taken in exceuting the whole script.
-            top_artist_rec_user_count (int): Number of users for whom top artist recommendations were generated.
-            similar_artist_rec_user_count (int): Number of users for whom similar artist recommendations were generated.
-            raw_recs_user_count (int): Number of users for whom raw recommendations were generated.
 
         Returns:
             messages: A list of messages to be sent via RabbitMQ
@@ -209,19 +205,25 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
     })
 
     top_artist_rec_itr = top_artist_recs_df.toLocalIterator()
+    top_artist_rec_user_count = 0
     for row in top_artist_rec_itr:
         row_dict = row.asDict(recursive=True)
         user_rec[row_dict["user_id"]]["top_artist"] = row_dict["recs"]
+        top_artist_rec_user_count = top_artist_rec_user_count + 1
 
     similar_artist_rec_itr = similar_artist_recs_df.toLocalIterator()
+    similar_artist_rec_user_count = 0
     for row in similar_artist_rec_itr:
         row_dict = row.asDict(recursive=True)
         user_rec[row_dict["user_id"]]["similar_artist"] = row_dict["recs"]
+        similar_artist_rec_user_count = similar_artist_rec_user_count + 1
 
     raw_rec_itr = raw_recs_df.toLocalIterator()
+    raw_rec_user_count = 0
     for row in raw_rec_itr:
         row_dict = row.asDict(recursive=True)
         user_rec[row_dict["user_id"]]["raw"] = row_dict["recs"]
+        raw_rec_user_count = raw_rec_user_count + 1
 
     for user_id, data in user_rec.items():
         messages = {
@@ -241,7 +243,7 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
             'active_user_count': active_user_count,
             'top_artist_user_count': top_artist_rec_user_count,
             'similar_artist_user_count': similar_artist_rec_user_count,
-            'raw_user_count': raw_recs_user_count,
+            'raw_user_count': raw_rec_user_count,
             'total_time': '{:.2f}'.format(total_time / 3600)
     }
 
@@ -368,12 +370,6 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     logger.info('Recommendations generated!')
     logger.info('Took {:.2f}sec to generate recommendations for all active users'.format(time.monotonic() - ts))
 
-    ts = time.monotonic()
-    top_artist_rec_user_count = get_user_count(top_artist_recs_df)
-    similar_artist_rec_user_count = get_user_count(similar_artist_recs_df)
-    raw_rec_user_count = get_user_count(raw_recs_df)
-    logger.info('Took {:.2f}sec to get raw, top artist and similar artist user count'.format(time.monotonic() - ts))
-
     # persisted data must be cleared from memory after usage to avoid OOM
     recordings_df.unpersist()
 
@@ -381,8 +377,7 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     logger.info('Total time: {:.2f}sec'.format(total_time))
 
     result = create_messages(model_id, model_html_file, top_artist_recs_df, similar_artist_recs_df,
-                             raw_recs_df, active_user_count, total_time, top_artist_rec_user_count,
-                             similar_artist_rec_user_count, raw_rec_user_count)
+                             raw_recs_df, active_user_count, total_time)
 
     users_df.unpersist()
 
