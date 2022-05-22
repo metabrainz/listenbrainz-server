@@ -232,6 +232,7 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
             'recommendations': {
                 'top_artist': data['top_artist'],
                 'similar_artist': data['similar_artist'],
+                'raw': data['raw'],
                 'model_id': model_id,
                 'model_url': f"http://michael.metabrainz.org/{model_html_file}"
             }
