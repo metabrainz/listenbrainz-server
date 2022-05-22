@@ -253,7 +253,7 @@ export default class Recommendations extends React.Component<
                   // Backwards compatible support for various timestamp property names
                   let discoveryTimestamp: string | number | undefined | null =
                     recommendation.latest_listened_at;
-                  if (discoveryTimestamp) {
+                  if (!discoveryTimestamp) {
                     discoveryTimestamp = recommendation.listened_at_iso;
                   }
                   if (
