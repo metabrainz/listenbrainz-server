@@ -1,8 +1,7 @@
 from datetime import datetime
 from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
-    IntegerType, LongType
-
+    IntegerType, LongType, DoubleType, DecimalType
 
 listens_new_schema = StructType([
     StructField('listened_at', TimestampType(), nullable=False),
@@ -14,6 +13,16 @@ listens_new_schema = StructType([
     StructField('recording_name', StringType(), nullable=False),
     StructField('recording_mbid', StringType(), nullable=True),
     StructField('artist_credit_mbids', ArrayType(StringType()), nullable=True),
+])
+
+
+recommendation_schema = StructType([
+    StructField('user_id', IntegerType(), nullable=False),
+    StructField('recs', ArrayType(StructType([
+        StructField('latest_listened_at', StringType(), nullable=True),
+        StructField('recording_mbid', StringType(), nullable=True),
+        StructField('score', FloatType(), nullable=True)
+    ])), nullable=False)
 ])
 
 

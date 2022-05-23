@@ -240,12 +240,12 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
         yield messages
 
     yield {
-            'type': 'cf_recommendations_recording_mail',
-            'active_user_count': active_user_count,
-            'top_artist_user_count': top_artist_rec_user_count,
-            'similar_artist_user_count': similar_artist_rec_user_count,
-            'raw_user_count': raw_rec_user_count,
-            'total_time': '{:.2f}'.format(total_time / 3600)
+        'type': 'cf_recommendations_recording_mail',
+        'active_user_count': active_user_count,
+        'top_artist_user_count': top_artist_rec_user_count,
+        'similar_artist_user_count': similar_artist_rec_user_count,
+        'raw_rec_user_count': raw_rec_user_count,
+        'total_time': '{:.2f}'.format(total_time / 3600)
     }
 
 
