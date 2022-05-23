@@ -24,6 +24,7 @@ from enum import Enum
 from typing import Union, Optional
 
 from data.model.listen import APIListen
+from listenbrainz.db.model.review import CBReviewTimelineMetadata
 
 
 class UserTimelineEventType(Enum):
@@ -32,6 +33,7 @@ class UserTimelineEventType(Enum):
     LISTEN = 'listen'
     NOTIFICATION = 'notification'
     RECORDING_PIN = 'recording_pin'
+    CRITIQUEBRAINZ_REVIEW = 'critiquebrainz_review'
 
 
 class RecordingRecommendationMetadata(BaseModel):
@@ -53,7 +55,7 @@ class NotificationMetadata(BaseModel):
     message: constr(min_length=1)
 
 
-UserTimelineEventMetadata = Union[RecordingRecommendationMetadata, NotificationMetadata]
+UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, RecordingRecommendationMetadata, NotificationMetadata]
 
 
 class UserTimelineEvent(BaseModel):
@@ -79,7 +81,17 @@ class APIPinEvent(APIListen):
     blurb_content: Optional[str]
 
 
-APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent]
+class APICBReviewEvent(BaseModel):
+    user_name: str
+    entity_name: str
+    entity_id: str
+    entity_type: str
+    rating: int
+    text: str
+    review_mbid: str
+
+
+APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent]
 
 
 class APITimelineEvent(BaseModel):

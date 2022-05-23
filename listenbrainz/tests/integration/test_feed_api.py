@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from data.model.user_timeline_event import UserTimelineEventMetadata, RecordingRecommendationMetadata
+from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from flask import url_for, current_app
 

@@ -280,62 +280,47 @@ class RecommendTestClass(RecommendationsTestCase):
         ])
 
     def get_top_artist_rec_df(self):
-        df = utils.create_dataframe(
-            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rating=1.8,
-                recording_id=5,
-                spark_user_id=6,
-                user_id=3),
-            schema=None
-        )
-
-        df = df.union(utils.create_dataframe(
-            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rating=-0.8,
-                recording_id=6,
-                spark_user_id=6,
-                user_id=3),
-            schema=None
-        ))
-
-        df = df.union(utils.create_dataframe(
-            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rating=0.99,
-                recording_id=6,
-                spark_user_id=7,
-                user_id=1),
-            schema=None
-        ))
-        return df
+        return listenbrainz_spark.session.createDataFrame([
+                Row(
+                    latest_listened_at="2021-12-17T05:32:11.000Z",
+                    recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    rating=1.8,
+                    user_id=3
+                ),
+                Row(
+                    latest_listened_at=None,
+                    recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    rating=-0.8,
+                    user_id=3
+                ),
+                Row(
+                    latest_listened_at="2020-11-14T06:21:02.000Z",
+                    recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    rating=0.99,
+                    user_id=1
+                )
+            ], schema=None)
 
     def get_similar_artist_rec_df(self):
-        df = utils.create_dataframe(
-            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+        return listenbrainz_spark.session.createDataFrame([
+            Row(
+                latest_listened_at=None,
+                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.8,
-                recording_id=5,
-                spark_user_id=8,
-                user_id=4),
-            schema=None
-        )
-
-        df = df.union(utils.create_dataframe(
-            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                user_id=4
+            ),
+            Row(
+                latest_listened_at="2019-10-12T09:43:57.000Z",
+                recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=-2.8,
-                recording_id=6,
-                spark_user_id=8,
-                user_id=4),
-            schema=None
-        ))
-
-        df = df.union(utils.create_dataframe(
-            Row(recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                user_id=4
+            ),
+            Row(
+                latest_listened_at=None,
+                recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.19,
-                recording_id=11,
-                spark_user_id=7,
-                user_id=1),
-            schema=None
-        ))
-        return df
+                user_id=1
+            )], schema=None)
 
     def test_create_messages(self):
         params = self.get_recommendation_params()
@@ -356,11 +341,13 @@ class RecommendTestClass(RecommendationsTestCase):
                 'top_artist': [
                     {
                         'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 1.8
+                        'score': 1.8,
+                        'latest_listened_at': "2021-12-17T05:32:11.000Z"
                     },
                     {
                         'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': -0.8
+                        'score': -0.8,
+                        'latest_listened_at': None
                     }
                 ],
                 'similar_artist': [],
@@ -376,13 +363,15 @@ class RecommendTestClass(RecommendationsTestCase):
                 'top_artist': [
                     {
                         'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 0.99
+                        'score': 0.99,
+                        'latest_listened_at': "2020-11-14T06:21:02.000Z"
                     }
                 ],
                 'similar_artist': [
                     {
                         'recording_mbid': "7acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 0.19
+                        'score': 0.19,
+                        'latest_listened_at': None
                     }
                 ],
                 'model_id': 'foobar',
@@ -398,11 +387,13 @@ class RecommendTestClass(RecommendationsTestCase):
                 'similar_artist': [
                     {
                         'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 0.8
+                        'score': 0.8,
+                        'latest_listened_at': None
                     },
                     {
                         'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': -2.8
+                        'score': -2.8,
+                        'latest_listened_at': "2019-10-12T09:43:57.000Z"
                     }
                 ],
                 'model_id': 'foobar',

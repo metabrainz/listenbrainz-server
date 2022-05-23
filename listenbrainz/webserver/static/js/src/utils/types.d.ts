@@ -60,7 +60,9 @@ declare type Listen = BaseListenFormat & {
   playing_now?: boolean | null;
 };
 
-declare type Recommendation = BaseListenFormat;
+declare type Recommendation = Listen & {
+  latest_listened_at?: string;
+};
 
 declare type ListenBrainzUser = {
   id?: number;
@@ -529,7 +531,8 @@ type EventTypeT =
   | "follow"
   | "stop_follow"
   | "block_follow"
-  | "notification";
+  | "notification"
+  | "critiquebrainz_review";
 
 type UserRelationshipEventMetadata = {
   user_name_0: string;
@@ -546,7 +549,8 @@ type EventMetadata =
   | Listen
   | UserRelationshipEventMetadata
   | PinEventMetadata
-  | NotificationEventMetadata;
+  | NotificationEventMetadata
+  | CritiqueBrainzReview;
 
 type TimelineEvent = {
   event_type: EventTypeT;
@@ -554,6 +558,7 @@ type TimelineEvent = {
   user_name: string;
   created: number;
   metadata: EventMetadata;
+  hidden: boolean;
 };
 
 type SimilarUser = {
@@ -571,10 +576,13 @@ type ReviewableEntity = {
 
 type CritiqueBrainzReview = {
   entity_id: string;
+  entity_name: string;
   entity_type: ReviewableEntityType;
+  review_mbid?: string;
   text: string;
-  languageCode: string;
+  languageCode?: string;
   rating?: number;
+  user_name?: string;
 };
 
 type CoverArtArchiveEntry = {
