@@ -45,6 +45,7 @@ import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCountCard from "../listens/ListenCountCard";
+import ListenFeedbackComponent from "../listens/ListenFeedbackComponent";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -62,7 +63,8 @@ export interface ListensState {
   loading: boolean;
   nextListenTs?: number;
   previousListenTs?: number;
-  recordingFeedbackMap: RecordingFeedbackMap;
+  recordingMsidFeedbackMap: RecordingFeedbackMap;
+  recordingMbidFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   recordingToReview?: Listen;
   dateTimePickerValue: Date | Date[];
@@ -102,7 +104,8 @@ export default class Listens extends React.Component<
       previousListenTs: props.listens?.[0]?.listened_at,
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
-      recordingFeedbackMap: {},
+      recordingMsidFeedbackMap: {},
+      recordingMbidFeedbackMap: {},
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
         : new Date(Date.now()),
@@ -385,7 +388,8 @@ export default class Listens extends React.Component<
     const { user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
-    let recordings = "";
+    let recording_msids = "";
+    let recording_mbids = "";
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
@@ -394,13 +398,18 @@ export default class Listens extends React.Component<
           "track_metadata.additional_info.recording_msid"
         );
         if (recordingMsid) {
-          recordings += `${recordingMsid},`;
+          recording_msids += `${recordingMsid},`;
+        }
+        const recordingMBID = getRecordingMBID(listen);
+        if (recordingMBID) {
+          recording_mbids += `${recordingMBID},`;
         }
       });
       try {
-        const data = await APIService.getFeedbackForUserForRecordings(
+        const data = await APIService.getFeedbackForUserForRecordingsNew(
           currentUser.name,
-          recordings
+          recording_msids,
+          recording_mbids
         );
         return data.feedback;
       } catch (error) {
@@ -421,23 +430,56 @@ export default class Listens extends React.Component<
     if (!feedback) {
       return;
     }
-    const recordingFeedbackMap: RecordingFeedbackMap = {};
+    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
+    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
     feedback.forEach((fb: FeedbackResponse) => {
-      recordingFeedbackMap[fb.recording_msid] = fb.score;
+      if (fb.recording_msid) {
+        recordingMsidFeedbackMap[fb.recording_msid] = fb.score;
+      }
+      if (fb.recording_mbid) {
+        recordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
+      }
     });
-    this.setState({ recordingFeedbackMap });
+    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
   };
 
   updateFeedback = (
     recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack
+    score: ListenFeedBack | RecommendationFeedBack,
+    recordingMbid?: string
   ) => {
-    const { recordingFeedbackMap } = this.state;
-    const newFeedbackMap = {
-      ...recordingFeedbackMap,
-      [recordingMsid]: score as ListenFeedBack,
-    };
-    this.setState({ recordingFeedbackMap: newFeedbackMap });
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    if (recordingMsid && recordingMbid) {
+      const newMsidFeedbackMap = {
+        ...recordingMsidFeedbackMap,
+        [recordingMsid]: score as ListenFeedBack,
+      };
+      const newMbidFeedbackMap = {
+        ...recordingMbidFeedbackMap,
+        [recordingMbid]: score as ListenFeedBack,
+      };
+      this.setState({
+        recordingMsidFeedbackMap: newMsidFeedbackMap,
+        recordingMbidFeedbackMap: newMbidFeedbackMap,
+      });
+    }
+
+    if (recordingMsid) {
+      const newMsidFeedbackMap = {
+        ...recordingMsidFeedbackMap,
+        [recordingMsid]: score as ListenFeedBack,
+      };
+      this.setState({ recordingMsidFeedbackMap: newMsidFeedbackMap });
+    }
+
+    if (recordingMbid) {
+      const newMbidFeedbackMap = {
+        ...recordingMbidFeedbackMap,
+        [recordingMbid]: score as ListenFeedBack,
+      };
+      this.setState({ recordingMbidFeedbackMap: newMbidFeedbackMap });
+    }
   };
 
   updateRecordingToPin = (recordingToPin: Listen) => {
@@ -448,11 +490,22 @@ export default class Listens extends React.Component<
     this.setState({ recordingToReview });
   };
 
-  getFeedbackForRecordingMsid = (
-    recordingMsid?: string | null
-  ): ListenFeedBack => {
-    const { recordingFeedbackMap } = this.state;
-    return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
+  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    const recordingMbid = getRecordingMBID(listen);
+    if (recordingMbid && _.has(recordingMbidFeedbackMap, recordingMbid)) {
+      return _.get(recordingMbidFeedbackMap, recordingMbid, 0);
+    }
+
+    const recordingMsid = _.get(
+      listen,
+      "track_metadata.additional_info.recording_msid"
+    );
+
+    return recordingMsid
+      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
+      : 0;
   };
 
   deleteListen = async (listen: Listen) => {
@@ -609,8 +662,11 @@ export default class Listens extends React.Component<
     const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
+    let userPinnedRecordingFeedback: ListenFeedBack = 0;
     if (userPinnedRecording) {
-      allListenables = [getListenablePin(userPinnedRecording), ...listens];
+      const listenablePin = getListenablePin(userPinnedRecording);
+      allListenables = [listenablePin, ...listens];
+      userPinnedRecordingFeedback = this.getFeedbackForListen(listenablePin);
     }
 
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
@@ -642,9 +698,7 @@ export default class Listens extends React.Component<
                 userName={user.name}
                 pinnedRecording={userPinnedRecording}
                 isCurrentUser={currentUser?.name === user?.name}
-                currentFeedback={this.getFeedbackForRecordingMsid(
-                  userPinnedRecording?.recording_msid
-                )}
+                currentFeedback={userPinnedRecordingFeedback}
                 updateFeedbackCallback={this.updateFeedback}
                 removePinFromPinsList={() => {}}
                 newAlert={newAlert}
@@ -752,9 +806,7 @@ export default class Listens extends React.Component<
                         showTimestamp
                         showUsername={false}
                         listen={listen}
-                        currentFeedback={this.getFeedbackForRecordingMsid(
-                          listen.track_metadata?.additional_info?.recording_msid
-                        )}
+                        currentFeedback={this.getFeedbackForListen(listen)}
                         updateFeedbackCallback={this.updateFeedback}
                         newAlert={newAlert}
                         className={`${
