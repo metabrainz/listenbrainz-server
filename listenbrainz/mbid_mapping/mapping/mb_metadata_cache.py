@@ -132,10 +132,10 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             artist_tags.append(tag)
 
         release_group_tags = []
-        for tag, count, release_mbid, genre_mbid in row["release_group_tags"] or []:
+        for tag, count, release_group_mbid, genre_mbid in row["release_group_tags"] or []:
             tag = {"tag": tag,
                    "count": count,
-                   "release_mbid": release_mbid}
+                   "release_group_mbid": release_group_mbid}
             if genre_mbid is not None:
                 tag["genre_mbid"] = genre_mbid
             release_group_tags.append(tag)
@@ -278,7 +278,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                    ), release_group_tags AS (
                             SELECT r.gid AS recording_mbid
                                  , rg.gid AS release_group_mbid
-                                 , array_agg(jsonb_build_array(t.name, count, rel.gid, g.gid)) AS release_group_tags
+                                 , array_agg(jsonb_build_array(t.name, count, rg.gid, g.gid)) AS release_group_tags
                               FROM recording r
                          LEFT JOIN mapping.canonical_release_redirect crr
                                 ON r.gid = crr.recording_mbid
