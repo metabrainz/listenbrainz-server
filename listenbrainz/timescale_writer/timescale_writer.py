@@ -88,7 +88,7 @@ class TimescaleWriterSubscriber:
                 pass
 
         current_app.logger.info("Listens: %s", submit)
-        current_app.logger.info("Submitting to listenstore: %s", submit)
+        current_app.logger.info("Submitting to listenstore")
         ret = self.insert_to_listenstore(submit)
 
         # If there is an error, we do not ack the message so that rabbitmq redelivers it later.
