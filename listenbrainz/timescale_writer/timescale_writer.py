@@ -75,11 +75,10 @@ class TimescaleWriterSubscriber:
 
         current_app.logger.info("Loaded as JSON")
 
-        msb_listens = []
         chunkN = 0
         for chunk in chunked(listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
             current_app.logger.info("Chunk %s", chunkN)
-            msb_listens.extend(self.messybrainz_lookup(chunk))
+            msb_listens = self.messybrainz_lookup(chunk)
             current_app.logger.info("Looked up MsB data")
 
             submit = []
