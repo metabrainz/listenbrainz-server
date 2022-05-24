@@ -7,8 +7,6 @@ from listenbrainz.messybrainz import exceptions
 from sqlalchemy import text
 
 
-logger = logging.getLogger(__name__)
-
 def get_id_from_meta_hash(connection, data):
     """ Gets Recording MessyBrainz ID from metadata.
 
@@ -122,19 +120,15 @@ def get_id_from_recording(connection, data):
     Returns:
         the MessyBrainz ID of the recording with passed data if it exists, None otherwise
     """
-    logger.info("generating hash for recording")
     _, data_json = convert_to_messybrainz_json(data)
     data_sha256 = sha256(data_json.encode("utf-8")).hexdigest()
-    logger.info("hash generated")
 
     query = text("""SELECT s.gid
                       FROM recording s
                  LEFT JOIN recording_json sj
                         ON sj.id = s.data
                      WHERE sj.data_sha256 = :data_sha256""")
-    logger.info("fetch hash")
     result = connection.execute(query, data_sha256=data_sha256)
-    logger.info("hash fetched")
     if result.rowcount:
         return result.fetchone()["gid"]
     else:
@@ -151,31 +145,24 @@ def submit_recording(connection, data):
     Returns:
         the Recording MessyBrainz ID of the data
     """
-    logger.info("generating hash for listen")
     data_json, sha256_json = convert_to_messybrainz_json(data)
     data_sha256 = sha256(sha256_json.encode("utf-8")).hexdigest()
 
     meta = {"artist": data["artist"], "title": data["title"]}
     meta_json, meta_sha256_json = convert_to_messybrainz_json(meta)
     meta_sha256 = sha256(meta_sha256_json.encode("utf-8")).hexdigest()
-    logger.info("generated hash for listen")
 
-    logger.info("inserting artist")
     artist = get_artist_credit(connection, data["artist"])
     if not artist:
         artist = add_artist_credit(connection, data["artist"])
-    logger.info("inserted artist")
 
-    logger.info("inserting release")
     if "release" in data:
         release = get_release(connection, data["release"])
         if not release:
             release = add_release(connection, data["release"])
     else:
         release = None
-    logger.info("inserted release")
 
-    logger.info("inserting recording_json")
     query = text("""INSERT INTO recording_json (data, data_sha256, meta_sha256)
                          VALUES (:data, :data_sha256, :meta_sha256)
                       RETURNING id""")
@@ -184,7 +171,6 @@ def submit_recording(connection, data):
         "data_sha256": data_sha256,
         "meta_sha256": meta_sha256,
     })
-    logger.info("inserting recording data")
     id = result.fetchone()["id"]
     gid = str(uuid.uuid4())
     query = text("""INSERT INTO recording (gid, data, artist, release, submitted)
@@ -195,7 +181,6 @@ def submit_recording(connection, data):
         "artist": artist,
         "release": release,
     })
-    logger.info("inserted recording_json")
 
     return gid
 

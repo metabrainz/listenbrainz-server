@@ -184,10 +184,8 @@ class TimescaleListenStore:
         with conn.cursor() as curs:
             try:
                 execute_values(curs, query, submit, template=None)
-                self.log.info("inserted")
                 while True:
                     result = curs.fetchone()
-                    self.log.info("fetching returned data")
                     if not result:
                         break
                     inserted_rows.append((result[0], result[1], result[2], result[3]))

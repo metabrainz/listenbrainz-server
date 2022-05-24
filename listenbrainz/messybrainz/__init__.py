@@ -15,8 +15,6 @@ SCHEMA_VERSION = 1
 
 engine = None
 
-logger = logging.getLogger(__name__)
-
 
 def init_db_connection(connect_str):
     global engine
@@ -111,16 +109,10 @@ def insert_single(connection, recording):
     Returns:
         A dict containing the recording data for inserted recording
     """
-    logger.info("fetching msid")
     gid = data.get_id_from_recording(connection, recording)
-    logger.info("msid fetched")
     if not gid:
-        logger.info("submitting msid")
         gid = data.submit_recording(connection, recording)
-        logger.info("submitted msid")
-    logger.info("fetching new/existing msid")
     loaded = data.load_recordings_from_msids(connection, [gid])[0]
-    logger.info("fetched new/existing msid")
     return loaded
 
 
