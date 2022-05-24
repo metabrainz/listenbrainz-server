@@ -3,7 +3,7 @@ import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { get } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import {getRecordingMBID} from "../utils/utils";
+import { getRecordingMBID } from "../utils/utils";
 
 export type ListenFeedbackComponentProps = {
   newAlert: (
