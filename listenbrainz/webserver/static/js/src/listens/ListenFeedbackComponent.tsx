@@ -3,6 +3,7 @@ import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { get } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import {getRecordingMBID} from "../utils/utils";
 
 export type ListenFeedbackComponentProps = {
   newAlert: (
@@ -33,11 +34,14 @@ export default class ListenFeedbackComponent extends React.Component<
         "track_metadata.additional_info.recording_msid"
       );
 
+      const recordingMBID = getRecordingMBID(listen);
+
       try {
         const status = await APIService.submitFeedback(
           currentUser.auth_token,
           score,
-          recordingMSID
+          recordingMSID,
+          recordingMBID
         );
         if (status === 200) {
           //   this.setState({ feedback: score });
