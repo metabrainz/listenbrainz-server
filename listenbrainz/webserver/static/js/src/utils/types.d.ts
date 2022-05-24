@@ -394,7 +394,7 @@ declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike";
 declare type FeedbackResponse = {
   created: number;
   recording_msid: string;
-  recording_mbid: string | null;
+  recording_mbid?: string | null;
   score: ListenFeedBack;
   user_id: string;
 };

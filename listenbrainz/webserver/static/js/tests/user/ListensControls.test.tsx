@@ -140,14 +140,12 @@ describe("getFeedbackForRecordingMsid", () => {
 
     const instance = wrapper.instance();
 
-    const recordingFeedbackMap: RecordingFeedbackMap = {
+    const recordingMsidFeedbackMap: RecordingFeedbackMap = {
       "973e5620-829d-46dd-89a8-760d87076287": 1,
     };
-    wrapper.setState({ recordingFeedbackMap });
+    wrapper.setState({ recordingMsidFeedbackMap });
 
-    const res = await instance.getFeedbackForRecordingMsid(
-      "973e5620-829d-46dd-89a8-760d87076287"
-    );
+    const res = await instance.getFeedbackForListen(listens[0]);
 
     expect(res).toEqual(1);
   });
@@ -161,9 +159,7 @@ describe("getFeedbackForRecordingMsid", () => {
 
     const instance = wrapper.instance();
 
-    const res = await instance.getFeedbackForRecordingMsid(
-      "973e5620-829d-46dd-89a8-760d87076287"
-    );
+    const res = await instance.getFeedbackForListen(listens[0]);
 
     expect(res).toEqual(0);
   });
@@ -179,10 +175,10 @@ describe("updateFeedback", () => {
 
     const instance = wrapper.instance();
 
-    const recordingFeedbackMap: RecordingFeedbackMap = {
+    const recordingMsidFeedbackMap: RecordingFeedbackMap = {
       "973e5620-829d-46dd-89a8-760d87076287": 0,
     };
-    wrapper.setState({ recordingFeedbackMap });
+    wrapper.setState({ recordingMsidFeedbackMap });
 
     await instance.updateFeedback("973e5620-829d-46dd-89a8-760d87076287", 1);
 
