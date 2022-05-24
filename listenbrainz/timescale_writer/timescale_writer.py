@@ -71,6 +71,7 @@ class TimescaleWriterSubscriber:
     def callback(self, ch, method, properties, body):
         current_app.logger.info("Entered callback")
         listens = ujson.loads(body)
+        current_app.logger.info("Number of Listens: %s", len(listens))
 
         current_app.logger.info("Loaded as JSON")
 
@@ -87,7 +88,6 @@ class TimescaleWriterSubscriber:
             except ValueError:
                 pass
 
-        current_app.logger.info("Listens: %s", submit)
         current_app.logger.info("Submitting to listenstore")
         ret = self.insert_to_listenstore(submit)
 
