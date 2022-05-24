@@ -69,12 +69,16 @@ class TimescaleWriterSubscriber:
             sys.exit(-1)
 
     def callback(self, ch, method, properties, body):
-
+        current_app.logger.info("Entered callback")
         listens = ujson.loads(body)
+
+        current_app.logger.info("Loaded as JSON")
 
         msb_listens = []
         for chunk in chunked(listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
             msb_listens.extend(self.messybrainz_lookup(chunk))
+
+        current_app.logger.info("Looked up MsB data")
 
         submit = []
         for listen in msb_listens:
@@ -83,6 +87,8 @@ class TimescaleWriterSubscriber:
             except ValueError:
                 pass
 
+        current_app.logger.info("Listens: %s", submit)
+        current_app.logger.info("Submitting to listenstore: %s", submit)
         ret = self.insert_to_listenstore(submit)
 
         # If there is an error, we do not ack the message so that rabbitmq redelivers it later.
@@ -91,6 +97,7 @@ class TimescaleWriterSubscriber:
 
         while True:
             try:
+                current_app.logger.info("Acking")
                 self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
                 break
             except pika.exceptions.ConnectionClosed:

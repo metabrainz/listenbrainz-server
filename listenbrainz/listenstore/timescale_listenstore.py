@@ -177,14 +177,17 @@ class TimescaleListenStore:
                    ON CONFLICT (listened_at, track_name, user_id)
                     DO NOTHING
                      RETURNING listened_at, track_name, user_name, user_id"""
+        self.log.info("trying to insert")
 
         inserted_rows = []
         conn = timescale.engine.raw_connection()
         with conn.cursor() as curs:
             try:
                 execute_values(curs, query, submit, template=None)
+                self.log.info("inserted")
                 while True:
                     result = curs.fetchone()
+                    self.log.info("fetching returned data")
                     if not result:
                         break
                     inserted_rows.append((result[0], result[1], result[2], result[3]))
