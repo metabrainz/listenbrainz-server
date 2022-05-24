@@ -254,30 +254,13 @@ class TimescaleWriterSubscriber:
                                                  str(err), exc_info=True)
                         time.sleep(self.ERROR_RETRY_DELAY)
 
-                while True:
-                    self.connect_to_rabbitmq()
-                    self.incoming_ch = self.connection.channel()
-                    self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
-                    self.incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
-                    self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'],
-                                                queue=current_app.config['INCOMING_QUEUE'])
-                    self.incoming_ch.basic_consume(
-                        queue=current_app.config['INCOMING_QUEUE'],
-                        on_message_callback=lambda ch, method, properties, body: self.callback(ch, method, properties, body)
-                    )
-
-                    self.unique_ch = self.connection.channel()
-                    self.unique_ch.exchange_declare(exchange=current_app.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
-
-                    try:
-                        self.incoming_ch.start_consuming()
-                    except pika.exceptions.ConnectionClosed:
-                        current_app.logger.warn("Connection to rabbitmq closed. Re-opening.", exc_info=True)
-                        self.connection = None
-                        continue
-
-                    self.connection.close()
-
+                self.connect_to_rabbitmq()
+                self.incoming_ch = self.connection.channel()
+                method, properties, body = self.incoming_ch.basic_get(current_app.config['INCOMING_QUEUE'])
+                self.callback(self.incoming_ch, method, properties, body)
+                self.connection.close()
+                current_app.logger.info("Message done! Sleeping")
+                time.sleep(3600)
             except Exception:
                 current_app.logger.error("failed to start timescale loop:", exc_info=True)
 
