@@ -493,9 +493,18 @@ export default class Listens extends React.Component<
   getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
     const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
 
+    // first check whether the mbid has any feedback available
+    // if yes and the feedback is not zero, return it. if the
+    // feedback is zero or not the mbid is absent from the map,
+    // look for the feedback using the msid.
+
     const recordingMbid = getRecordingMBID(listen);
-    if (recordingMbid && _.has(recordingMbidFeedbackMap, recordingMbid)) {
-      return _.get(recordingMbidFeedbackMap, recordingMbid, 0);
+    const mbidFeedback = recordingMbid
+      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
+      : 0;
+
+    if (mbidFeedback) {
+      return mbidFeedback;
     }
 
     const recordingMsid = _.get(
