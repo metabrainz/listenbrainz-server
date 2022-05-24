@@ -76,29 +76,32 @@ class TimescaleWriterSubscriber:
         current_app.logger.info("Loaded as JSON")
 
         msb_listens = []
+        chunkN = 0
         for chunk in chunked(listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
+            current_app.logger.info("Chunk %s", chunkN)
             msb_listens.extend(self.messybrainz_lookup(chunk))
+            current_app.logger.info("Looked up MsB data")
 
-        current_app.logger.info("Looked up MsB data")
+            submit = []
+            for listen in msb_listens:
+                try:
+                    submit.append(Listen.from_json(listen))
+                except ValueError:
+                    pass
 
-        submit = []
-        for listen in msb_listens:
-            try:
-                submit.append(Listen.from_json(listen))
-            except ValueError:
-                pass
+            ret = self.insert_to_listenstore(submit)
+            current_app.logger.info("Inserted")
 
-        current_app.logger.info("Submitting to listenstore")
-        ret = self.insert_to_listenstore(submit)
+            # If there is an error, we do not ack the message so that rabbitmq redelivers it later.
+            if ret == LISTEN_INSERT_ERROR_SENTINEL:
+                return ret
 
-        # If there is an error, we do not ack the message so that rabbitmq redelivers it later.
-        if ret == LISTEN_INSERT_ERROR_SENTINEL:
-            return ret
+            chunkN = chunkN + 1
 
         while True:
             try:
-                current_app.logger.info("Acking")
                 self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
+                current_app.logger.info("Acked")
                 break
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
