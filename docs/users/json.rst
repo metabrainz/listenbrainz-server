@@ -37,7 +37,8 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
    - ``payload`` should contain information about *at least one* track
 
-   - submitting multiple listens in one go is allowed, but the complete JSON
+   - submitting multiple listens in one go is allowed up to a maximum of
+     :data:`~webserver.views.api.MAX_LISTENS_PER_REQUEST` listens. The complete JSON
      document may not exceed :data:`~webserver.views.api.MAX_LISTEN_SIZE` bytes
      in size
 

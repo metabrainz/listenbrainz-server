@@ -351,14 +351,29 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
-    def test_empty_track_name(self):
-        """ Test for invalid submission in which a listen contains an empty track name
+    def test_too_many_listens(self):
+        """ Test for invalid submission in which more than 1000 listens are in a single request
         """
-        with open(self.path_to_data_file('empty_track_name.json'), 'r') as f:
+        with open(self.path_to_data_file('too_large_listen.json'), 'r') as f:
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
+
+    def test_empty_track_name(self):
+        """ Test for invalid submission in which a listen contains an empty track name
+        """
+        with open(self.path_to_data_file('valid_import.json'), 'r') as f:
+            payload = json.load(f)
+
+        # 2 messages in this file, * 500 to make more up to 1000
+        payload['payload'] = payload['payload'] * 500 + payload['payload']
+        self.assertEqual(len(payload['payload']), 1002)
+
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertTrue("Too many listens" in response.json['error'])
 
         del payload["payload"][0]["track_metadata"]["track_name"]
         response = self.send_data(payload)
