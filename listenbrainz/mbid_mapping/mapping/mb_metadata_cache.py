@@ -77,6 +77,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
         if row["release_mbid"] is not None:
             release["mbid"] = row["release_mbid"]
+            release["release_group_mbid"] = row["release_group_mbid"]
             release["caa_id"] = row["caa_id"]
             if row["year"] is not None:
                 release["year"] = row["year"]
@@ -130,21 +131,21 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 tag["genre_mbid"] = genre_mbid
             artist_tags.append(tag)
 
-        release_tags = []
-        for tag, count, release_mbid, genre_mbid in row["release_tags"] or []:
+        release_group_tags = []
+        for tag, count, release_mbid, genre_mbid in row["release_group_tags"] or []:
             tag = {"tag": tag,
                    "count": count,
                    "release_mbid": release_mbid}
             if genre_mbid is not None:
                 tag["genre_mbid"] = genre_mbid
-            release_tags.append(tag)
+            release_group_tags.append(tag)
 
         return (row["recording_mbid"],
                 list(set(artist_mbids)),
                 row["release_mbid"],
                 ujson.dumps({"rels": recording_rels}),
                 ujson.dumps(artists),
-                ujson.dumps({"recording": recording_tags, "artist": artist_tags, "release": release_tags}),
+                ujson.dumps({"recording": recording_tags, "artist": artist_tags, "release_group": release_group_tags}),
                 ujson.dumps(release))
 
     def get_metadata_cache_query(self, with_values=False):
@@ -274,26 +275,30 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                               {values_join}
                              WHERE count > 0
                           GROUP BY r.gid
-                   ), release_tags AS (
+                   ), release_group_tags AS (
                             SELECT r.gid AS recording_mbid
-                                 , array_agg(jsonb_build_array(t.name, count, rel.gid, g.gid)) AS release_tags
+                                 , rg.gid AS release_group_mbid
+                                 , array_agg(jsonb_build_array(t.name, count, rel.gid, g.gid)) AS release_group_tags
                               FROM recording r
                          LEFT JOIN mapping.canonical_release_redirect crr
                                 ON r.gid = crr.recording_mbid
                          LEFT JOIN release rel
                                 ON crr.release_mbid = rel.gid
-                              JOIN release_tag rt
-                                ON rt.release = rel.id
+                              JOIN release_group rg
+                                ON rel.release_group = rg.id
+                              JOIN release_group_tag rgt
+                                ON rgt.release_group = rel.release_group
                               JOIN tag t
-                                ON rt.tag = t.id
+                                ON rgt.tag = t.id
                          LEFT JOIN genre g
                                 ON t.name = g.name
                               {values_join}
                              WHERE count > 0
-                          GROUP BY r.gid
+                          GROUP BY r.gid, rg.gid
                    ), release_data AS (
                             SELECT * FROM (
                                     SELECT r.gid AS recording_mbid
+                                         , rel.release_group
                                          , crr.release_mbid::TEXT
                                          , caa.id AS caa_id
                                          , row_number() OVER (partition by recording_mbid ORDER BY ordering) AS rownum
@@ -315,7 +320,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , artist_data
                                  , artist_tags
                                  , recording_tags
-                                 , release_tags
+                                 , release_group_tags
+                                 , release_group_mbid::TEXT
                                  , r.length
                                  , r.gid::TEXT AS recording_mbid
                                  , rd.release_mbid::TEXT
@@ -340,7 +346,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 ON rt.recording_mbid = r.gid
                          LEFT JOIN artist_tags ats
                                 ON ats.recording_mbid = r.gid
-                         LEFT JOIN release_tags rts
+                         LEFT JOIN release_group_tags rts
                                 ON rts.recording_mbid = r.gid
                          LEFT JOIN release_data rd
                                 ON rd.recording_mbid = r.gid
@@ -351,7 +357,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , r.length
                                  , recording_links
                                  , recording_tags
-                                 , release_tags
+                                 , release_group_tags
+                                 , release_group_mbid
                                  , artist_data
                                  , artist_tags
                                  , rd.release_mbid
