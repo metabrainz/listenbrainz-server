@@ -58,6 +58,12 @@ def submit_listen():
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     raw_data = request.get_data()
+
+    if len(raw_data) > MAX_LISTENS_PER_REQUEST * MAX_LISTEN_SIZE:
+        log_raise_400(
+            "Payload too large. Payload cannot exceed %s bytes" % MAX_LISTENS_PER_REQUEST * MAX_LISTEN_SIZE
+        )
+
     try:
         data = ujson.loads(raw_data.decode("utf-8"))
     except ValueError as e:
@@ -83,8 +89,8 @@ def submit_listen():
             )
 
         if len(raw_data) > len(payload) * MAX_LISTEN_SIZE:
-            log_raise_400("JSON document is too large. In aggregate, listens may not "
-                          "be larger than %d characters." % MAX_LISTEN_SIZE, payload)
+            log_raise_400("JSON document is too large. Each listens may not "
+                          "be larger than %d bytes." % MAX_LISTEN_SIZE, payload)
 
         if data['listen_type'] not in ('playing_now', 'single', 'import'):
             log_raise_400(
