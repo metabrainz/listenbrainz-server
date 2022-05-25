@@ -58,7 +58,9 @@ Constants
 
 Constants that are relevant to using the API:
 
+.. autodata:: listenbrainz.webserver.views.api_tools.MAX_LISTEN_PAYLOAD_SIZE
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_LISTEN_SIZE
+.. autodata:: listenbrainz.webserver.views.api_tools.MAX_LISTENS_PER_REQUEST
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_ITEMS_PER_GET
 .. autodata:: listenbrainz.webserver.views.api_tools.DEFAULT_ITEMS_PER_GET
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN
