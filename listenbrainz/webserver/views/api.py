@@ -21,9 +21,10 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
     APIUnauthorized, ListenValidationError
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
-from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list, \
-    is_valid_uuid, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, \
-    _parse_int_arg, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param, MAX_LISTENS_PER_REQUEST
+from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
+    is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
+    LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
+    get_non_negative_param
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 
 api_bp = Blueprint('api_v1', __name__)
@@ -59,9 +60,9 @@ def submit_listen():
 
     raw_data = request.get_data()
 
-    if len(raw_data) > MAX_LISTENS_PER_REQUEST * MAX_LISTEN_SIZE:
+    if len(raw_data) > MAX_LISTEN_PAYLOAD_SIZE:
         log_raise_400(
-            "Payload too large. Payload cannot exceed %s bytes" % MAX_LISTENS_PER_REQUEST * MAX_LISTEN_SIZE
+            "Payload too large. Payload cannot exceed %s bytes" % MAX_LISTEN_PAYLOAD_SIZE
         )
 
     try:
