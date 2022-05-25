@@ -8,8 +8,7 @@ from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound
 from listenbrainz.webserver.utils import parse_boolean_arg
-from listenbrainz.webserver.views.api import _parse_int_arg
-from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, \
+from listenbrainz.webserver.views.api_tools import _parse_int_arg, log_raise_400, is_valid_uuid, \
     DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list, \
     validate_auth_header
 
