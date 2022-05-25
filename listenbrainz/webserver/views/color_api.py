@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest
 from brainzutils.ratelimit import ratelimit
-from listenbrainz.webserver.views.api import _parse_int_arg
+from listenbrainz.webserver.views.api_tools import _parse_int_arg
 from listenbrainz.db.color import get_releases_for_color
 from brainzutils import cache
 
