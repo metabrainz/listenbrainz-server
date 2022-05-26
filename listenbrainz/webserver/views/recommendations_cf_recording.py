@@ -44,6 +44,16 @@ def similar_artist(user_name: str):
     return template
 
 
+@recommendations_cf_recording_bp.route("/<user_name>/raw/")
+def raw(user_name: str):
+    """ Show raw track recommendations """
+    user = _get_user(user_name)
+
+    template = _get_template(active_section='raw', user=user)
+
+    return template
+
+
 def _get_template(active_section, user):
     """ Get template to render based on active section.
 
@@ -58,8 +68,10 @@ def _get_template(active_section, user):
     data = db_recommendations_cf_recording.get_user_recommendation(user.id)
     if active_section == 'top_artist':
         tracks_type = "Top Artist"
-    else:
+    elif active_section == 'similar_artist':
         tracks_type = "Similar Artist"
+    else:
+        tracks_type = "Raw Tracks"
 
     if data is None:
         return render_template(
@@ -73,7 +85,7 @@ def _get_template(active_section, user):
     result = data.recording_mbid.dict()[active_section]
 
     if not result:
-        current_app.logger.error('Top/Similar artists not found in Mapping/artist relation for "{}"'.format(user.musicbrainz_id))
+        current_app.logger.error('Top/Similar artists/raw not found in Mapping/artist relation for "{}"'.format(user.musicbrainz_id))
         return render_template(
             "recommendations_cf_recording/base.html",
             active_section=active_section,

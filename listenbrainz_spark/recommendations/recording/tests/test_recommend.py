@@ -15,6 +15,7 @@ from pyspark.sql import Row
 from pyspark.sql.functions import col
 
 # for test data/dataframes refer to listenbrainzspark/tests/__init__.py
+from listenbrainz_spark.schema import recommendation_schema
 
 logger = logging.getLogger(__name__)
 
@@ -62,41 +63,44 @@ class RecommendTestClass(RecommendationsTestCase):
         user_df.createOrReplaceTempView("user")
 
         recommendations = recommend.process_recommendations(recommendation_df, 2)
-        self.assertEqual(recommendations.count(), 4)
+        self.assertEqual(recommendations.count(), 2)
 
         # Each user's rows are ordered by scores but the order of users is not
         # fixed so need to test each user's recommendations separately.
 
-        rows_user_1 = recommendations.where(recommendations.user_id == 1).collect()
-        self.assertEqual(rows_user_1, [
-            Row(
-                user_id=1,
-                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                score=1.0,
-                latest_listened_at="2021-12-17T05:32:11.000Z"
-            ),
-            Row(
-                user_id=1,
-                recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                score=0.75,
-                latest_listened_at="2020-11-14T06:21:02.000Z"
-            )
-        ])
-        rows_user_3 = recommendations.where(recommendations.user_id == 3).collect()
-        self.assertEqual(rows_user_3, [
-            Row(
-                user_id=3,
-                recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                score=0.5,
-                latest_listened_at=None
-            ),
-            Row(
-                user_id=3,
-                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                score=-0.5,
-                latest_listened_at="2019-10-12T09:43:57.000Z"
-            )
-        ])
+        rows_user_1 = recommendations.where(recommendations.user_id == 1).collect()[0]
+        self.assertEqual(
+            rows_user_1,
+            Row(user_id=1, recs=[
+                Row(
+                    recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    score=1.0,
+                    latest_listened_at="2021-12-17T05:32:11.000Z"
+                ),
+                Row(
+                    recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    score=0.75,
+                    latest_listened_at="2020-11-14T06:21:02.000Z"
+                )
+            ])
+        )
+
+        rows_user_3 = recommendations.where(recommendations.user_id == 3).collect()[0]
+        self.assertEqual(
+            rows_user_3,
+            Row(user_id=3, recs=[
+                Row(
+                    recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    score=0.5,
+                    latest_listened_at=None
+                ),
+                Row(
+                    recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    score=-0.5,
+                    latest_listened_at="2019-10-12T09:43:57.000Z"
+                )
+            ])
+        )
 
     @patch('listenbrainz_spark.recommendations.recording.recommend.process_recommendations')
     @patch('listenbrainz_spark.recommendations.recording.recommend.listenbrainz_spark')
@@ -212,9 +216,12 @@ class RecommendTestClass(RecommendationsTestCase):
 
         mock_candidate_set.side_effect = side_effect
 
-        recommend.get_recommendations_for_all(model, top_artist_candidate_set_df, similar_artist_candidate_set_df,
-                                              recommendation_top_artist_limit, recommendation_similar_artist_limit,
-                                              users)
+        recommend.get_recommendations_for_candidate_set(
+            model, top_artist_candidate_set_df, recommendation_top_artist_limit, users
+        )
+        recommend.get_recommendations_for_candidate_set(
+            model, similar_artist_candidate_set_df, recommendation_similar_artist_limit, users
+        )
 
         mock_candidate_set.assert_has_calls([
             call(top_artist_candidate_set_df, users),
@@ -228,59 +235,82 @@ class RecommendTestClass(RecommendationsTestCase):
 
     def get_top_artist_rec_df(self):
         return listenbrainz_spark.session.createDataFrame([
+            Row(user_id=3, recs=[
                 Row(
                     latest_listened_at="2021-12-17T05:32:11.000Z",
                     recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                    score=1.8,
-                    user_id=3
+                    score=2.0,
                 ),
                 Row(
                     latest_listened_at=None,
                     recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                    score=-0.8,
-                    user_id=3
+                    score=-1.0,
                 ),
+            ]),
+            Row(user_id=1, recs=[
                 Row(
                     latest_listened_at="2020-11-14T06:21:02.000Z",
                     recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                    score=0.99,
-                    user_id=1
+                    score=2.0,
                 )
-            ], schema=None)
+            ]),
+        ], schema=recommendation_schema)
 
     def get_similar_artist_rec_df(self):
         return listenbrainz_spark.session.createDataFrame([
-            Row(
-                latest_listened_at=None,
-                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                score=0.8,
-                user_id=4
-            ),
-            Row(
-                latest_listened_at="2019-10-12T09:43:57.000Z",
-                recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                score=-2.8,
-                user_id=4
-            ),
-            Row(
-                latest_listened_at=None,
-                recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                score=0.19,
-                user_id=1
-            )], schema=None)
+            Row(user_id=4, recs=[
+                Row(
+                    latest_listened_at=None,
+                    recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    score=1.0,
+                ),
+                Row(
+                    latest_listened_at="2019-10-12T09:43:57.000Z",
+                    recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    score=-3.0,
+                )
+            ]),
+            Row(user_id=1, recs=[
+                Row(
+                    latest_listened_at=None,
+                    recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    score=0.0,
+                )
+            ])
+        ], schema=recommendation_schema)
+
+    def get_raw_rec_df(self):
+        return listenbrainz_spark.session.createDataFrame([
+            Row(user_id=4, recs=[
+                Row(
+                    latest_listened_at=None,
+                    recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    score=4.0
+                )
+            ]),
+            Row(user_id=3, recs=[
+                Row(
+                    latest_listened_at="2019-10-12T09:43:57.000Z",
+                    recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                    score=-1.0,
+                )
+            ])
+        ], schema=recommendation_schema)
 
     def test_create_messages(self):
         model_id = "foobar"
         model_html_file = "foobar.html"
         top_artist_rec_df = self.get_top_artist_rec_df()
         similar_artist_rec_df = self.get_similar_artist_rec_df()
+        raw_rec_df = self.get_raw_rec_df()
         active_user_count = 10
-        top_artist_rec_user_count = 5
-        similar_artist_rec_user_count = 4
+        top_artist_rec_user_count = 2
+        similar_artist_rec_user_count = 2
+        raw_rec_user_count = 2
         total_time = 3600
 
         data = recommend.create_messages(model_id, model_html_file, top_artist_rec_df, similar_artist_rec_df,
-                                         active_user_count, total_time, top_artist_rec_user_count, similar_artist_rec_user_count)
+                                         raw_rec_df, active_user_count, total_time)
 
         self.assertEqual(next(data), {
             'user_id': 3,
@@ -289,16 +319,23 @@ class RecommendTestClass(RecommendationsTestCase):
                 'top_artist': [
                     {
                         'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 1.8,
+                        'score': 2.0,
                         'latest_listened_at': "2021-12-17T05:32:11.000Z"
                     },
                     {
                         'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': -0.8,
+                        'score': -1.0,
                         'latest_listened_at': None
                     }
                 ],
                 'similar_artist': [],
+                'raw': [
+                    {
+                        'latest_listened_at': '2019-10-12T09:43:57.000Z',
+                        'recording_mbid': '8acb406f-c716-45f8-a8bd-96ca3939c2e5',
+                        'score': -1.0
+                    }
+                ],
                 'model_id': 'foobar',
                 'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
@@ -311,17 +348,18 @@ class RecommendTestClass(RecommendationsTestCase):
                 'top_artist': [
                     {
                         'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 0.99,
+                        'score': 2.0,
                         'latest_listened_at': "2020-11-14T06:21:02.000Z"
                     }
                 ],
                 'similar_artist': [
                     {
                         'recording_mbid': "7acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 0.19,
+                        'score': 0.0,
                         'latest_listened_at': None
                     }
                 ],
+                'raw': [],
                 'model_id': 'foobar',
                 'model_url': 'http://michael.metabrainz.org/foobar.html'
             }
@@ -335,13 +373,20 @@ class RecommendTestClass(RecommendationsTestCase):
                 'similar_artist': [
                     {
                         'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 0.8,
+                        'score': 1.0,
                         'latest_listened_at': None
                     },
                     {
                         'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': -2.8,
+                        'score': -3.0,
                         'latest_listened_at': "2019-10-12T09:43:57.000Z"
+                    }
+                ],
+                'raw': [
+                    {
+                        'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        'score': 4.0,
+                        'latest_listened_at': None
                     }
                 ],
                 'model_id': 'foobar',
@@ -354,13 +399,13 @@ class RecommendTestClass(RecommendationsTestCase):
             'active_user_count': active_user_count,
             'top_artist_user_count': top_artist_rec_user_count,
             'similar_artist_user_count': similar_artist_rec_user_count,
+            'raw_rec_user_count': raw_rec_user_count,
             'total_time': '1.00'
         })
 
     def test_get_user_count(self):
-        df = utils.create_dataframe(Row(spark_user_id=3), schema=None)
-        df = df.union(utils.create_dataframe(Row(spark_user_id=3), schema=None))
-        df = df.union(utils.create_dataframe(Row(spark_user_id=2), schema=None))
-
+        df = listenbrainz_spark.session.createDataFrame(
+            [Row(user_id=3), Row(user_id=3), Row(user_id=2)], schema=None
+        )
         user_count = recommend.get_user_count(df)
         self.assertEqual(user_count, 2)
