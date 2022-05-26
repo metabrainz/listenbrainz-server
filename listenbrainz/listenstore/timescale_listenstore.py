@@ -122,6 +122,7 @@ class TimescaleListenStore:
                   FROM listen l
                 -- we want max(listened_at) so why bother adding a >= listened_at clause?
                 -- because we want to limit the scan to a few chunks making the query run much faster
+                -- (except for the cases listens in last_update CTE where existing_max_ts will 0)
                   
                 -- do not directly join to CTE, otherwise TS generates a suboptimal query plan
                 -- scanning all chunks. whereas doing it this way, we get runtime chunk exclusion
