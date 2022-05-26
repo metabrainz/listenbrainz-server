@@ -87,9 +87,21 @@ def process_recommendations(recommendation_df, limit):
               FROM recommendation
         )
         SELECT user_id
-             , recording_mbid
-             , score
-             , date_format(latest_listened_at, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") AS latest_listened_at
+             , array_sort(
+                    collect_list(
+                        struct(
+                            recording_mbid
+                          , score
+                          , date_format(latest_listened_at, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") AS latest_listened_at
+                        )
+                    )
+                  , (left, right) -> CASE
+                                     WHEN left.score > right.score THEN -1
+                                     WHEN left.score < right.score THEN  1
+                                     ELSE 0
+                                     END
+                    -- sort in descending order of score
+               ) AS recs
           FROM ranked_recommendation rm
           JOIN recording r
          USING (recording_id)
@@ -98,7 +110,7 @@ def process_recommendations(recommendation_df, limit):
      LEFT JOIN recording_discovery rd
          USING (user_id, recording_mbid)
          WHERE rank <= {limit}
-      ORDER BY rank -- lower the rank, better the recommendation so doing ASC ordering
+       GROUP BY user_id
     """
     return run_query(query)
 
@@ -170,47 +182,48 @@ def get_user_name_and_user_id(top_artist_candidate_set_df, users):
     return users_df
 
 
-def create_messages(model_id, model_html_file, top_artist_rec_mbid_df, similar_artist_rec_mbid_df,
-                    active_user_count, total_time, top_artist_rec_user_count, similar_artist_rec_user_count):
+def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artist_recs_df,
+                    raw_recs_df, active_user_count, total_time):
     """ Create messages to send the data to the webserver via RabbitMQ.
 
         Args:
             model_id: the id of the model
             model_html_file: the html report file name for the model
-            top_artist_rec_mbid_df (dataframe): Top artist recommendations.
-            similar_artist_rec_mbid_df (dataframe): Similar artist recommendations.
+            top_artist_recs_df (dataframe): Top artist recommendations.
+            similar_artist_recs_df (dataframe): Similar artist recommendations.
+            raw_recs_df (dataframe): Raw recommendations.
             active_user_count (int): Number of users active in the last week.
             total_time (float): Time taken in exceuting the whole script.
-            top_artist_rec_user_count (int): Number of users for whom top artist recommendations were generated.
-            similar_artist_rec_user_count (int): Number of users for whom similar artist recommendations were generated.
 
         Returns:
             messages: A list of messages to be sent via RabbitMQ
     """
     user_rec = defaultdict(lambda: {
         "top_artist": [],
-        "similar_artist": []
+        "similar_artist": [],
+        "raw": []
     })
 
-    top_artist_rec_itr = top_artist_rec_mbid_df.toLocalIterator()
+    top_artist_rec_itr = top_artist_recs_df.toLocalIterator()
+    top_artist_rec_user_count = 0
     for row in top_artist_rec_itr:
-        user_rec[row.user_id]['top_artist'].append(
-            {
-                "recording_mbid": row.recording_mbid,
-                "score": row.score,
-                "latest_listened_at": row.latest_listened_at
-            }
-        )
+        row_dict = row.asDict(recursive=True)
+        user_rec[row_dict["user_id"]]["top_artist"] = row_dict["recs"]
+        top_artist_rec_user_count += 1
 
-    similar_artist_rec_itr = similar_artist_rec_mbid_df.toLocalIterator()
+    similar_artist_rec_itr = similar_artist_recs_df.toLocalIterator()
+    similar_artist_rec_user_count = 0
     for row in similar_artist_rec_itr:
-        user_rec[row.user_id]['similar_artist'].append(
-            {
-                "recording_mbid": row.recording_mbid,
-                "score": row.score,
-                "latest_listened_at": row.latest_listened_at
-            }
-        )
+        row_dict = row.asDict(recursive=True)
+        user_rec[row_dict["user_id"]]["similar_artist"] = row_dict["recs"]
+        similar_artist_rec_user_count += 1
+
+    raw_rec_itr = raw_recs_df.toLocalIterator()
+    raw_rec_user_count = 0
+    for row in raw_rec_itr:
+        row_dict = row.asDict(recursive=True)
+        user_rec[row_dict["user_id"]]["raw"] = row_dict["recs"]
+        raw_rec_user_count += 1
 
     for user_id, data in user_rec.items():
         messages = {
@@ -219,6 +232,7 @@ def create_messages(model_id, model_html_file, top_artist_rec_mbid_df, similar_a
             'recommendations': {
                 'top_artist': data['top_artist'],
                 'similar_artist': data['similar_artist'],
+                'raw': data['raw'],
                 'model_id': model_id,
                 'model_url': f"http://michael.metabrainz.org/{model_html_file}"
             }
@@ -226,63 +240,74 @@ def create_messages(model_id, model_html_file, top_artist_rec_mbid_df, similar_a
         yield messages
 
     yield {
-            'type': 'cf_recommendations_recording_mail',
-            'active_user_count': active_user_count,
-            'top_artist_user_count': top_artist_rec_user_count,
-            'similar_artist_user_count': similar_artist_rec_user_count,
-            'total_time': '{:.2f}'.format(total_time / 3600)
+        'type': 'cf_recommendations_recording_mail',
+        'active_user_count': active_user_count,
+        'top_artist_user_count': top_artist_rec_user_count,
+        'similar_artist_user_count': similar_artist_rec_user_count,
+        'raw_rec_user_count': raw_rec_user_count,
+        'total_time': '{:.2f}'.format(total_time / 3600)
     }
 
 
-def get_recommendations_for_all(model, top_artist_candidate_set_df, similar_artist_candidate_set_df,
-                                recommendation_top_artist_limit, recommendation_similar_artist_limit, users):
-    """ Get recommendations for all active users.
+def get_recommendations_for_candidate_set(model, candidate_set_df, limit, users):
+    """ Get recommendations for all active users using given candidate set.
 
         Args:
-            params: RecommendationParams class object.
+            model: the ALSModel to use to predict tracks
+            candidate_set_df: the candidate set to feed as input to model
+            limit: maximum number of recs to generate per user
             users: list of users names to generate recommendations.
 
         Returns:
-            top_artist_rec_df: Top artist recommendations.
-            similar_artist_rec_df: Similar artist recommendations.
+            recs_df: generated recommendations.
     """
     try:
-        top_artist_candidate_subset = get_candidate_set_rdd_for_user(top_artist_candidate_set_df, users)
+        candidate_subset = get_candidate_set_rdd_for_user(candidate_set_df, users)
+        recs_df = generate_recommendations(candidate_subset, model, limit)
+        return recs_df
     except EmptyDataframeExcpetion:
-        logger.error('Top artist candidate set not found for any user.', exc_info=True)
+        logger.error('Candidate set not found for any user.', exc_info=True)
         raise
-
-    try:
-        similar_artist_candidate_subset = get_candidate_set_rdd_for_user(similar_artist_candidate_set_df, users)
-    except EmptyDataframeExcpetion:
-        logger.error('Similar artist candidate set not found for any user.', exc_info=True)
-        raise
-
-    try:
-        top_artist_rec_df = generate_recommendations(top_artist_candidate_subset, model,
-                                                     recommendation_top_artist_limit)
     except RecommendationsNotGeneratedException:
-        logger.error('Top artist recommendations not generated for any user', exc_info=True)
+        logger.error('Recommendations not generated for any user', exc_info=True)
         raise
 
-    try:
-        similar_artist_rec_df = generate_recommendations(similar_artist_candidate_subset, model,
-                                                         recommendation_similar_artist_limit)
-    except RecommendationsNotGeneratedException:
-        logger.error('Similar artist recommendations not generated for any user', exc_info=True)
-        raise
 
-    return top_artist_rec_df, similar_artist_rec_df
+def get_raw_recommendations(model: ALSModel, limit, users_df):
+    """Get recommendations from the model directly based on the data on which it was initially trained.
+
+        Args:
+            model: the ALSModel to use to predict tracks
+            limit: maximum number of recs to generate per user
+            users_df: list of users names to generate recommendations.
+
+        Returns:
+            recs_df: generated recommendations.
+    """
+    raw_recommendations = model.recommendForUserSubset(users_df.select('spark_user_id'), limit)
+    raw_recommendations.createOrReplaceTempView("raw_recommendations")
+    recommendations = run_query("""
+        WITH expanded_recs AS (
+            SELECT spark_user_id
+                 , explode(recommendations) AS rec
+              FROM raw_recommendations
+        )
+        SELECT spark_user_id
+             , rec.recording_id
+             , rec.rating AS prediction
+          FROM expanded_recs
+    """)
+    recs_df = process_recommendations(recommendations, limit)
+    return recs_df
 
 
 def get_user_count(df):
-    """ Get distinct user count from the given dataframe.
-    """
-    users_df = df.select('spark_user_id').distinct()
-    return users_df.count()
+    """ Get distinct user count from the given dataframe. """
+    return df.select('user_id').distinct().count()
 
 
-def main(recommendation_top_artist_limit=None, recommendation_similar_artist_limit=None, users=None):
+def main(recommendation_top_artist_limit=None, recommendation_similar_artist_limit=None,
+         recommendation_raw_limit=None, users=None):
 
     try:
         listenbrainz_spark.init_spark_session('Recommendations')
@@ -330,21 +355,21 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
 
     logger.info('Generating recommendations...')
     ts = time.monotonic()
-    top_artist_rec_df, similar_artist_rec_df = get_recommendations_for_all(
+    top_artist_recs_df = get_recommendations_for_candidate_set(
         model,
         top_artist_candidate_set_df,
-        similar_artist_candidate_set_df,
         recommendation_top_artist_limit,
+        users
+    )
+    similar_artist_recs_df = get_recommendations_for_candidate_set(
+        model,
+        similar_artist_candidate_set_df,
         recommendation_similar_artist_limit,
         users
     )
+    raw_recs_df = get_raw_recommendations(model, recommendation_raw_limit, users_df)
     logger.info('Recommendations generated!')
     logger.info('Took {:.2f}sec to generate recommendations for all active users'.format(time.monotonic() - ts))
-
-    ts = time.monotonic()
-    top_artist_rec_user_count = get_user_count(top_artist_rec_df)
-    similar_artist_rec_user_count = get_user_count(similar_artist_rec_df)
-    logger.info('Took {:.2f}sec to get top artist and similar artist user count'.format(time.monotonic() - ts))
 
     # persisted data must be cleared from memory after usage to avoid OOM
     recordings_df.unpersist()
@@ -352,8 +377,8 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     total_time = time.monotonic() - ts_initial
     logger.info('Total time: {:.2f}sec'.format(total_time))
 
-    result = create_messages(model_id, model_html_file, top_artist_rec_df, similar_artist_rec_df,
-                             active_user_count, total_time, top_artist_rec_user_count, similar_artist_rec_user_count)
+    result = create_messages(model_id, model_html_file, top_artist_recs_df, similar_artist_recs_df,
+                             raw_recs_df, active_user_count, total_time)
 
     users_df.unpersist()
 
