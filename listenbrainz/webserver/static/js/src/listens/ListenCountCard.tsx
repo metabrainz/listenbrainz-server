@@ -12,28 +12,31 @@ const ListenCountCard = (props: ListenCountCardProps) => {
   const { listenCount, user } = props;
   const isCurrentUser = currentUser?.name === user?.name;
 
-  return (
-    <Card id="listen-count-card">
-      {listenCount && (
-        <div>
-          {isCurrentUser
-            ? "You have listened to"
-            : `${user.name} has listened to`}
-          <hr />
-          {listenCount.toLocaleString()}
-          <br />
-          <small className="text-muted">songs so far</small>
-        </div>
-      )}
-      {!listenCount && (
-        <p>
-          {isCurrentUser
-            ? "You have not listened to any songs so far"
-            : `${user.name} has not listened to any songs so far`}
-        </p>
-      )}
-    </Card>
-  );
+  let content;
+
+  if (listenCount) {
+    content = (
+      <div>
+        {isCurrentUser
+          ? "You have listened to"
+          : `${user.name} has listened to`}
+        <hr />
+        {listenCount.toLocaleString()}
+        <br />
+        <small className="text-muted">songs so far</small>
+      </div>
+    );
+  } else {
+    content = (
+      <p>
+        {isCurrentUser
+          ? "You have not listened to any songs so far"
+          : `${user.name} has not listened to any songs so far`}
+      </p>
+    );
+  }
+
+  return <Card id="listen-count-card">{content}</Card>;
 };
 
 export default ListenCountCard;
