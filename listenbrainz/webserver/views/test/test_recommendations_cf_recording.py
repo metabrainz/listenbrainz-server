@@ -74,7 +74,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         # Flask essentially needs render_template to generate a response
         # this is a fake repsonse to check _get_template wa called with desired params.
         mock_template.return_value = render_template(
-            "recommendations_cf_recording/top_artist.html",
+            "recommendations_cf_recording/base.html",
             active_section='top_artist',
             user=self.user,
             error_msg="test"
@@ -94,7 +94,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         # Flask essentially needs render_template to generate a response
         # this is a fake repsonse to check _get_template wa called with desired params.
         mock_template.return_value = render_template(
-            "recommendations_cf_recording/similar_artist.html",
+            "recommendations_cf_recording/base.html",
             active_section='similar_artist',
             user=self.user,
             error_msg="test"
@@ -107,27 +107,27 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     def test_get_template_missing_user_from_rec_db(self):
         user = _get_user('vansika')
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
 
         user = _get_user('vansika')
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
 
     def test_get_template_missing_rec_top_artist(self):
         user = _get_user('vansika_2')
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
 
     def test_get_template_missing_rec_similar_artist(self):
         user = _get_user('vansika_1')
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
 
@@ -149,7 +149,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_get_recommendations.return_value = []
 
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
         error_msg = "An error occurred while processing your request. Check back later!"
@@ -173,7 +173,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_get_recommendations.return_value = []
 
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
         error_msg = "An error occurred while processing your request. Check back later!"
@@ -214,7 +214,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
         mock_get_rec.assert_called_with(user.id)
         mock_get_recommendations.assert_called_once()
-        self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
         self.assert_context('last_updated', created.strftime('%d %b %Y'))
@@ -244,63 +244,61 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         })
 
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
         received_props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(expected_props, received_props)
 
 
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording.requests')
-    def test_get_playable_recommendations_list(self, mock_requests):
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording.load_recordings_from_mapping')
+    def test_get_playable_recommendations_list(self, mock_load):
         mbids_and_ratings = [
             {
                 'recording_mbid': "03f1b16a-af43-4cd7-b22c-d2991bf011a3",
-                'score': 6.88
+                'score': 6.88,
+                'latest_listened_at': "2021-12-17T05:32:11.000Z"
             },
             {
                 'recording_mbid': "2c8412f0-9353-48a2-aedb-1ad8dac9498f",
-                'score': 9.0
+                'score': 9.0,
+                'latest_listened_at': "2022-10-13T15:12:23.000Z"
             }
         ]
 
-        data = [
-            {'[recording_mbid]': "03f1b16a-af43-4cd7-b22c-d2991bf011a3"},
-            {'[recording_mbid]': "2c8412f0-9353-48a2-aedb-1ad8dac9498f"}
-        ]
-
-        text = [
-            {
-                '[artist_credit_mbids]': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d'],
-                'artist_credit_id': 571280,
-                'artist_credit_name': 'Tame Impala',
-                'comment': '',
-                'length': 433000,
-                'recording_mbid': '03f1b16a-af43-4cd7-b22c-d2991bf011a3',
-                'recording_name': 'One More Hour'
+        mock_load.return_value = {
+            "03f1b16a-af43-4cd7-b22c-d2991bf011a3": {
+                "artist_mbids": ["63aa26c3-d59b-4da4-84ac-716b54f1ef4d"],
+                "artist_credit_id": 571280,
+                "release_mbid": "5da4af04-d796-4d07-801d-a878e83dea48",
+                "release": "Random Is Resistance",
+                "recording_mbid": "03f1b16a-af43-4cd7-b22c-d2991bf011a3",
+                "artist": "Rotersand",
+                "title": "One More Hour"
             },
-            {
-                '[artist_credit_mbids]': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d'],
-                'artist_credit_id': 571280,
-                'artist_credit_name': 'Tame Impala',
-                'comment': '', 'length': 320000,
-                'recording_mbid': '2c8412f0-9353-48a2-aedb-1ad8dac9498f',
-                'recording_name': 'Sun’s Coming Up'
+            "2c8412f0-9353-48a2-aedb-1ad8dac9498f": {
+                "artist_mbids": ["63aa26c3-d59b-4da4-84ac-716b54f1ef4d"],
+                "artist_credit_id": 571280,
+                "artist": "Tame Impala",
+                "release_mbid": "27280632-fa33-3801-a5b1-081ed0b65bb3",
+                "release": "Year Zero",
+                "recording_mbid": "2c8412f0-9353-48a2-aedb-1ad8dac9498f",
+                "title": "Sun’s Coming Up"
             }
-        ]
-
-        mock_requests.post().text = ujson.dumps(text)
-        mock_requests.post().status_code = 200
+        }, {}
 
         received_recommendations = recommendations_cf_recording._get_playable_recommendations_list(mbids_and_ratings)
+        mock_load.assert_called_with(mbids=[
+            "03f1b16a-af43-4cd7-b22c-d2991bf011a3",
+            "2c8412f0-9353-48a2-aedb-1ad8dac9498f"
+        ], msids=[])
 
-        mock_requests.post.assert_called_with(self.server_url, json=data)
         expected_recommendations = [
             {
-                'listened_at': 0,
+                'listened_at_iso': "2021-12-17T05:32:11.000Z",
                 'track_metadata': {
-                    'artist_name': 'Tame Impala',
+                    'artist_name': 'Rotersand',
                     'track_name': 'One More Hour',
-                    'release_name': '',
+                    'release_name': 'Random Is Resistance',
                     'additional_info': {
                         'recording_mbid': '03f1b16a-af43-4cd7-b22c-d2991bf011a3',
                         'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d']
@@ -308,11 +306,11 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 }
             },
             {
-                'listened_at': 0,
+                'listened_at_iso': "2022-10-13T15:12:23.000Z",
                 'track_metadata': {
                     'artist_name': 'Tame Impala',
                     'track_name': 'Sun’s Coming Up',
-                    'release_name': '',
+                    'release_name': 'Year Zero',
                     'additional_info': {
                             'recording_mbid': '2c8412f0-9353-48a2-aedb-1ad8dac9498f',
                             'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d']
@@ -321,11 +319,3 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             }
         ]
         self.assertEqual(expected_recommendations, received_recommendations)
-
-        mock_requests.post().status_code = 400
-        with self.assertRaises(BadRequest):
-            recommendations_cf_recording._get_playable_recommendations_list(mbids_and_ratings)
-
-        mock_requests.post().status_code = 304
-        with self.assertRaises(InternalServerError):
-            recommendations_cf_recording._get_playable_recommendations_list(mbids_and_ratings)

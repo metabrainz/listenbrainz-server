@@ -1,12 +1,9 @@
 import ujson
-import requests
-
 from flask import Blueprint, render_template, current_app
 
-from listenbrainz.webserver.views.user import _get_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
-from werkzeug.exceptions import BadRequest, InternalServerError
-
+from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping
+from listenbrainz.webserver.views.user import _get_user
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
 
@@ -47,6 +44,16 @@ def similar_artist(user_name: str):
     return template
 
 
+@recommendations_cf_recording_bp.route("/<user_name>/raw/")
+def raw(user_name: str):
+    """ Show raw track recommendations """
+    user = _get_user(user_name)
+
+    template = _get_template(active_section='raw', user=user)
+
+    return template
+
+
 def _get_template(active_section, user):
     """ Get template to render based on active section.
 
@@ -59,22 +66,30 @@ def _get_template(active_section, user):
     """
 
     data = db_recommendations_cf_recording.get_user_recommendation(user.id)
+    if active_section == 'top_artist':
+        tracks_type = "Top Artist"
+    elif active_section == 'similar_artist':
+        tracks_type = "Similar Artist"
+    else:
+        tracks_type = "Raw Tracks"
 
     if data is None:
         return render_template(
-            "recommendations_cf_recording/{}.html".format(active_section),
+            "recommendations_cf_recording/base.html",
             active_section=active_section,
+            tracks_type=tracks_type,
             user=user,
             error_msg="Looks like the user wasn't active in the last week. Submit your listens and check back after a week!"
         )
 
-    result = getattr(data, 'recording_mbid').dict()[active_section]
+    result = data.recording_mbid.dict()[active_section]
 
     if not result:
-        current_app.logger.error('Top/Similar artists not found in Mapping/artist relation for "{}"'.format(user.musicbrainz_id))
+        current_app.logger.error('Top/Similar artists/raw not found in Mapping/artist relation for "{}"'.format(user.musicbrainz_id))
         return render_template(
-            "recommendations_cf_recording/{}.html".format(active_section),
+            "recommendations_cf_recording/base.html",
             active_section=active_section,
+            tracks_type=tracks_type,
             user=user,
             error_msg="Looks like the recommendations weren't generated because of anomalies in our data." \
                       "We are working on it. Check back later."
@@ -85,8 +100,9 @@ def _get_template(active_section, user):
         current_app.logger.error('The API returned an empty response for {} recommendations.\nData: {}'
                                  .format(active_section, result))
         return render_template(
-            "recommendations_cf_recording/{}.html".format(active_section),
+            "recommendations_cf_recording/base.html",
             active_section=active_section,
+            tracks_type=tracks_type,
             user=user,
             error_msg="An error occurred while processing your request. Check back later!"
         )
@@ -101,11 +117,12 @@ def _get_template(active_section, user):
     }
 
     return render_template(
-        "recommendations_cf_recording/{}.html".format(active_section),
+        "recommendations_cf_recording/base.html",
         active_section=active_section,
+        tracks_type=tracks_type,
         props=ujson.dumps(props),
         user=user,
-        last_updated=getattr(data, 'created').strftime('%d %b %Y')
+        last_updated=data.created.strftime('%d %b %Y')
     )
 
 
@@ -131,36 +148,25 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                     }
                 }
     """
-    data = []
-    for r in mbids_and_ratings_list:
-        data.append({'[recording_mbid]': r['recording_mbid']})
-
-    r = requests.post(SERVER_URL, json=data)
-    if r.status_code != 200:
-        if r.status_code == 400:
-            current_app.logger.error('Invalid data was sent to the labs API.\nData: {}'.format(data))
-            raise BadRequest
-        else:
-            current_app.logger.error("API didn't send a valid response due to Internal Server Error.\nData: {}".format(data))
-            raise InternalServerError
-
-    try:
-        rows = ujson.loads(r.text)
-    except Exception as err:
-        raise InternalServerError(str(err))
+    mbids = [r['recording_mbid'] for r in mbids_and_ratings_list]
+    data, _ = load_recordings_from_mapping(mbids=mbids, msids=[])
 
     recommendations = []
 
-    for row in rows:
+    for recommendation in mbids_and_ratings_list:
+        mbid = recommendation['recording_mbid']
+        if mbid not in data:
+            continue
+        row = data[mbid]
         recommendations.append({
-            'listened_at': 0,
+            'listened_at_iso': recommendation['latest_listened_at'],
             'track_metadata': {
-                'artist_name': row['artist_credit_name'],
-                'track_name': row['recording_name'],
-                'release_name': row.get('release_name', ""),
+                'artist_name': row['artist'],
+                'track_name': row['title'],
+                'release_name': row['release'],
                 'additional_info': {
                     'recording_mbid': row['recording_mbid'],
-                    'artist_mbids': row['[artist_credit_mbids]']
+                    'artist_mbids': row['artist_mbids']
                 }
             }
         })

@@ -1,7 +1,6 @@
 from flask import Blueprint, request, redirect, render_template, url_for, session, current_app, Markup
 from flask_login import login_user, logout_user, login_required
-from brainzutils.musicbrainz_db import engine as mb_engine
-from listenbrainz.webserver.decorators import web_listenstore_needed
+from listenbrainz.webserver.decorators import web_listenstore_needed, web_musicbrainz_needed
 from listenbrainz.webserver.login import login_forbidden, provider, User
 from listenbrainz.webserver import flash
 import listenbrainz.db.user as db_user
@@ -13,6 +12,7 @@ login_bp = Blueprint('login', __name__)
 
 
 @login_bp.route('/')
+@web_musicbrainz_needed
 @web_listenstore_needed
 @login_forbidden
 def index():
@@ -20,6 +20,7 @@ def index():
 
 
 @login_bp.route('/musicbrainz/')
+@web_musicbrainz_needed
 @web_listenstore_needed
 @login_forbidden
 def musicbrainz():
@@ -28,6 +29,7 @@ def musicbrainz():
 
 
 @login_bp.route('/musicbrainz/post/')
+@web_musicbrainz_needed
 @web_listenstore_needed
 @login_forbidden
 def musicbrainz_post():

@@ -291,17 +291,25 @@ def request_candidate_sets(days, top, similar, users, html):
 @cli.command(name='request_recommendations')
 @click.option("--top", type=int, default=1000, help="Generate given number of top artist recommendations")
 @click.option("--similar", type=int, default=1000, help="Generate given number of similar artist recommendations")
+@click.option("--raw", type=int, default=1000, help="Generate given number of raw recommendations")
 @click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
               help="Generate recommendations for given users. Generate recommendations for all users by default.")
-def request_recommendations(top, similar, users):
+def request_recommendations(top, similar, raw, users):
     """ Send the cluster a request to generate recommendations.
     """
     params = {
         'recommendation_top_artist_limit': top,
         'recommendation_similar_artist_limit': similar,
+        'recommendation_raw_limit': raw,
         'users': users
     }
     send_request_to_spark_cluster('cf.recommendations.recording.recommendations', **params)
+
+
+@cli.command(name='request_recording_discovery')
+def request_recording_discovery():
+    """ Send the cluster a request to generate recording discovery data. """
+    send_request_to_spark_cluster('cf.recommendations.recording.discovery')
 
 
 @cli.command(name='request_import_artist_relation')
@@ -383,4 +391,5 @@ def cron_request_recommendations(ctx):
     ctx.invoke(request_dataframes)
     ctx.invoke(request_model)
     ctx.invoke(request_candidate_sets)
-    ctx.invoke(request_recommendations, top=1000, similar=1000)
+    ctx.invoke(request_recording_discovery)
+    ctx.invoke(request_recommendations)

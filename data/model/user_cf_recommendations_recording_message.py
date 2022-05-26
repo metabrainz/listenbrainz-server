@@ -29,6 +29,7 @@ class UserRecommendationsRecord(BaseModel):
     """
     recording_mbid: constr(min_length=1)
     score: float
+    latest_listened_at: Optional[str]
 
     _validate_recording_mbid: classmethod = validator("recording_mbid", allow_reuse=True)(check_valid_uuid)
 
@@ -38,6 +39,7 @@ class UserRecommendationsJson(BaseModel):
     """
     top_artist: Optional[List[UserRecommendationsRecord]]
     similar_artist: Optional[List[UserRecommendationsRecord]]
+    raw: Optional[List[UserRecommendationsRecord]]
     model_id: Optional[str]
     model_url: Optional[str]
 

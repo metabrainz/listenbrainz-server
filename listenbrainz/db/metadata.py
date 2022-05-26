@@ -27,7 +27,7 @@ def get_metadata_for_recording(recording_mbid_list: List[str]) -> List[Recording
         raise ValueError("Too many recording mbids passed in.")
 
     query = """SELECT *
-                 FROM mb_metadata_cache
+                 FROM mapping.mb_metadata_cache
                 WHERE recording_mbid in %s
              ORDER BY recording_mbid"""
 

@@ -29,6 +29,12 @@ MAX_LISTEN_SIZE = 10240
 #: The maximum number of tags per listen.
 MAX_TAGS_PER_LISTEN = 50
 
+#: The maximum number of listens in a request.
+MAX_LISTENS_PER_REQUEST = 1000
+
+#: The maximum size of a payload in bytes. The same as MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST.
+MAX_LISTEN_PAYLOAD_SIZE = MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST
+
 #: The maximum length of a tag
 MAX_TAG_SIZE = 64
 
@@ -215,6 +221,15 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
                 if len(tag) > MAX_TAG_SIZE:
                     raise ListenValidationError("JSON document may not contain track_metadata.additional_info.tags "
                                                 "longer than %d characters." % MAX_TAG_SIZE, listen)
+
+        # if both duration and duration_ms are given and valid, an error will be raised.
+        if 'duration' in listen['track_metadata']['additional_info'] and 'duration_ms' in listen['track_metadata']['additional_info']:
+            raise ListenValidationError("JSON document should not contain both duration and duration_ms.", listen)
+        # check duration validity
+        duration_key = ["duration", "duration_ms"]
+        for key in duration_key:
+            validate_duration_field(listen, key)
+
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:
@@ -261,6 +276,17 @@ def log_raise_400(msg, data=""):
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
     raise APIBadRequest(msg)
+
+
+def validate_duration_field(listen, key):
+    if key in listen['track_metadata']['additional_info']:
+        duration = listen['track_metadata']['additional_info'][key]
+        try:
+            value = int(duration)
+            if value <= 0:
+                raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)
+        except (ValueError, TypeError):
+            raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)
 
 
 def validate_single_mbid_field(listen, key):

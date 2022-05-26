@@ -281,6 +281,12 @@ def listens_offline():
     return render_template("index/listens_offline.html")
 
 
+@index_bp.route("/musicbrainz-offline/")
+def musicbrainz_offline():
+    """ Show the "musicbrainz offline" message. """
+    return render_template("index/musicbrainz-offline.html")
+
+
 @index_bp.route("/huesound/")
 def huesound():
     """ Hue Sound browse music by color of cover art """

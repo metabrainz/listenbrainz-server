@@ -206,23 +206,21 @@ describe("submitReviewToCB", () => {
       acceptLicense: true,
     });
 
-    const spy = jest.fn().mockImplementation(() => {
-      return Promise.resolve({ id: "new review id that API returns" });
+    const spy = jest.fn().mockResolvedValue({
+      metadata: { review_id: "new review id that API returns" },
     });
     instance.context.APIService.submitReviewToCB = spy;
 
     await instance.submitReviewToCB();
 
-    expect(spy).toHaveBeenCalledWith(
-      "BL9f6rv8OXyR0qLucXoftqAhMarEcfhUXpZ8lXII",
-      {
-        entity_id: "2bf47421-2344-4255-a525-e7d7f54de742",
-        entity_type: "recording",
-        languageCode: "en",
-        rating: undefined,
-        text: "String is over 25 characters",
-      }
-    );
+    expect(spy).toHaveBeenCalledWith("jdaok", "auth_token", {
+      entity_name: "Criminal",
+      entity_id: "2bf47421-2344-4255-a525-e7d7f54de742",
+      entity_type: "recording",
+      languageCode: "en",
+      rating: undefined,
+      text: "String is over 25 characters",
+    });
 
     expect(instance.props.newAlert).toHaveBeenCalled();
 

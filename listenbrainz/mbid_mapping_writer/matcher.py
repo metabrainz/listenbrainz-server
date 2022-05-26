@@ -40,13 +40,16 @@ def process_listens(app, listens, priority):
 
     if len(msids):
 
-        # Remove msids for which we already have a match, unless
-        # its timestamp is 0, which means we should re-check the item
+        # Remove msids for which we already have a match, unless its timestamp is 0
+        # or if the msid was last checked more than 2 weeks ago and no match was
+        # found at that time, which means we should re-check the item
         with timescale.engine.connect() as connection:
             query = """SELECT recording_msid, match_type
                          FROM mbid_mapping
                         WHERE recording_msid IN :msids
-                          AND last_updated != '1970-01-01'"""
+                          AND (last_updated != '1970-01-01'
+                              -- using not because the rows returned by this query are removed from the lookups
+                              OR NOT (NOW() - last_updated > INTERVAL '2 weeks' AND match_type = 'no_match'))"""
             curs = connection.execute(sqlalchemy.text(
                 query), msids=tuple(msids.keys()))
             while True:
