@@ -386,11 +386,3 @@ def cron_request_recommendations(ctx):
     ctx.invoke(request_model)
     ctx.invoke(request_candidate_sets)
     ctx.invoke(request_recommendations, top=1000, similar=1000)
-
-
-@cli.command(name='recommendations_finished')
-@click.pass_context
-def recommendations_finished(ctx):
-    from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
-    with create_app().app_context():
-        run_post_recommendation_troi_bot()
