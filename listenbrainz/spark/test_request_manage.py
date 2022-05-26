@@ -173,6 +173,7 @@ class RequestManageTestCase(unittest.TestCase):
             'params': {
                 'recommendation_top_artist_limit': 7,
                 'recommendation_similar_artist_limit': 7,
+                'recommendation_raw_limit': 7,
                 'users': ['vansika']
             }
         }

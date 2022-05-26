@@ -209,21 +209,21 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
     for row in top_artist_rec_itr:
         row_dict = row.asDict(recursive=True)
         user_rec[row_dict["user_id"]]["top_artist"] = row_dict["recs"]
-        top_artist_rec_user_count = top_artist_rec_user_count + 1
+        top_artist_rec_user_count += 1
 
     similar_artist_rec_itr = similar_artist_recs_df.toLocalIterator()
     similar_artist_rec_user_count = 0
     for row in similar_artist_rec_itr:
         row_dict = row.asDict(recursive=True)
         user_rec[row_dict["user_id"]]["similar_artist"] = row_dict["recs"]
-        similar_artist_rec_user_count = similar_artist_rec_user_count + 1
+        similar_artist_rec_user_count += 1
 
     raw_rec_itr = raw_recs_df.toLocalIterator()
     raw_rec_user_count = 0
     for row in raw_rec_itr:
         row_dict = row.asDict(recursive=True)
         user_rec[row_dict["user_id"]]["raw"] = row_dict["recs"]
-        raw_rec_user_count = raw_rec_user_count + 1
+        raw_rec_user_count += 1
 
     for user_id, data in user_rec.items():
         messages = {
