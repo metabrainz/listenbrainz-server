@@ -101,8 +101,15 @@ class TimescaleListenStore:
         """ Return the min_ts and max_ts for the given list of users """
         query = """
             WITH last_update AS (
-                SELECT min_listened_at AS existing_min_ts
-                     , max_listened_at AS existing_max_ts
+             -- we do coalesce here and not at the end because max_listened_at and min_listened_at is set to NULL
+             -- 1) for new users
+             -- 2) users who have delete listen history and re-imported (and cron job hasn't run yet)
+             -- 3) development (cron job never runs)
+             -- the where clause in listens_after_update immediately evaluates to false if listened_at is
+             -- compared to NULL and thus preventing the query from finding new listens submitted since the
+             -- cron job ran last.
+                SELECT COALESCE(min_listened_at, 0) AS existing_min_ts
+                     , COALESCE(max_listened_at, 0) AS existing_max_ts
                   FROM listen_user_metadata
                  WHERE user_id = :user_id
             ),
@@ -127,8 +134,8 @@ class TimescaleListenStore:
                 -- listened_at and user_id have an index so we can get away with just reading the index and not
                 -- fetching actual table rows.
              )
-             SELECT COALESCE(greatest(existing_max_ts, new_max_ts), 0) AS max_ts
-                  , COALESCE(existing_min_ts, 0) AS min_ts
+             SELECT greatest(existing_max_ts, new_max_ts) AS max_ts
+                  , existing_min_ts AS min_ts
                FROM listens_after_update
                JOIN last_update ON TRUE
         """
