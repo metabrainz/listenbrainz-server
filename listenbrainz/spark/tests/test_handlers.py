@@ -391,7 +391,7 @@ class HandlersTestCase(DatabaseTestCase):
             calls = [call("recs-to-playlist", args=["lucifer", "top"], upload=True, token="fake_token", created_for="lucifer"),
                      call("recs-to-playlist", args=["lucifer", "similar"],
                           upload=True, token="fake_token", created_for="lucifer"),
-                     call("daily-jams", args=["lucifer", "top"], upload=True, token="fake_token", created_for="lucifer")]
+                     call("daily-jams", args=["lucifer"], upload=True, token="fake_token", created_for="lucifer")]
             mock_gen_playlist.assert_has_calls(calls)
             mock_get_users.assert_called_once()
 
