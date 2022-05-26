@@ -52,7 +52,7 @@ def run_daily_jams(user):
     """
     token = current_app.config["WHITELISTED_AUTH_TOKENS"][0]
     try:
-        url = generate_playlist("daily-jams", args=[user, "top"], upload=True, token=token, created_for=user)
+        url = generate_playlist("daily-jams", args=[user], upload=True, token=token, created_for=user)
     except RuntimeError as err:
         current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user, str(err)))
         return
