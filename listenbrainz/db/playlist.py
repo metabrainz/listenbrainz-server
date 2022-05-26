@@ -419,14 +419,14 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
     with ts.engine.connect() as connection:
         with connection.begin():
             if playlist.creator_id == TROI_BOT_USER_ID and playlist.created_for_id is not None and \
-                playlist.algorithm_metadata is not None and "source_patch" in playlist.algorithm_metadata:
+                    playlist.algorithm_metadata is not None and "source_patch" in playlist.algorithm_metadata:
                 del_query = sqlalchemy.text("""DELETE FROM playlist.playlist
                                                      WHERE creator_id = :creator_id
                                                        AND algorithm_metadata->>'source_patch' = :source_patch
                                                        AND created_for_id = :created_for_id""")
-                connection.execute(del_query, { "creator_id": playlist.creator_id,
-                                                "created_for_id": playlist.created_for_id,
-                                                "source_patch": playlist.algorithm_metadata["source_patch"] })
+                connection.execute(del_query, {"creator_id": playlist.creator_id,
+                                               "created_for_id": playlist.created_for_id,
+                                               "source_patch": playlist.algorithm_metadata["source_patch"]})
 
             result = connection.execute(query, fields)
             row = dict(result.fetchone())
@@ -441,8 +441,6 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
                 collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
                 collaborator_ids = collaborator_ids.get(playlist.id, [])
                 playlist.collaborators = get_collaborators_names_from_ids(collaborator_ids)
-  
-                
 
             return model_playlist.Playlist.parse_obj(playlist.dict())
 

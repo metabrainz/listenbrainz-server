@@ -324,9 +324,6 @@ class HandlersTestCase(DatabaseTestCase):
         mock_db_get_timestamp.return_value = datetime.now(timezone.utc) - timedelta(minutes=21)
         self.assertTrue(is_new_user_stats_batch())
 
-
-
-
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
     @mock.patch('listenbrainz.spark.handlers.db_user.get')
     def test_handle_recommendations(self, mock_get, mock_db_insert):
@@ -390,9 +387,10 @@ class HandlersTestCase(DatabaseTestCase):
                 'total_time': str(total_time)
             })
             mock_send_mail.assert_not_called()
-     
+
             calls = [call("recs-to-playlist", args=["lucifer", "top"], upload=True, token="fake_token", created_for="lucifer"),
-                     call("recs-to-playlist", args=["lucifer", "similar"], upload=True, token="fake_token", created_for="lucifer"),
+                     call("recs-to-playlist", args=["lucifer", "similar"],
+                          upload=True, token="fake_token", created_for="lucifer"),
                      call("daily-jams", args=["lucifer", "top"], upload=True, token="fake_token", created_for="lucifer")]
             mock_gen_playlist.assert_has_calls(calls)
             mock_get_users.assert_called_once()

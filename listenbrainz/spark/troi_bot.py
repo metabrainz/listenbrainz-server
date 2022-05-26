@@ -14,12 +14,11 @@ from flask import current_app
 from troi.core import generate_playlist
 
 
-
 def run_post_recommendation_troi_bot():
     """
         Top level function called after spark CF recommendations have been completed.
     """
-       
+
     users_to_process = ["mr_monkey", "rob", "akshaaatt", "Damselfish", "lucifer", "alastairp", "CatCat", "atj"]
     if current_app.config['TESTING']:
         current_app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token"]
@@ -67,5 +66,5 @@ def enter_timeline_notification(username, message):
 
     user = get_by_mb_id(username)
     create_user_timeline_event(user["id"],
-       UserTimelineEventType.NOTIFICATION,
-       NotificationMetadata(creator="troi-bot", message=message))
+                               UserTimelineEventType.NOTIFICATION,
+                               NotificationMetadata(creator="troi-bot", message=message))
