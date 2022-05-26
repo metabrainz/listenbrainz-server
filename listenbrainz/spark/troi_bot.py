@@ -1,17 +1,17 @@
 """ This module contains code to run the various troi-bot functions after
     recommendations have been generated.
 """
-from listenbrainz.db.user import get_by_mb_id
-from listenbrainz.db.user_relationship import get_followers_of_user
-from listenbrainz.db.user_timeline_event import create_user_timeline_event
-from listenbrainz.db.playlist import TROI_BOT_USER_ID
+from flask import current_app
+from troi.core import generate_playlist
+
 from data.model.user_timeline_event import (
-    UserTimelineEvent,
     UserTimelineEventType,
     NotificationMetadata
 )
-from flask import current_app
-from troi.core import generate_playlist
+from listenbrainz.db.playlist import TROI_BOT_USER_ID
+from listenbrainz.db.user import get_by_mb_id
+from listenbrainz.db.user_relationship import get_followers_of_user
+from listenbrainz.db.user_timeline_event import create_user_timeline_event
 
 
 def run_post_recommendation_troi_bot():

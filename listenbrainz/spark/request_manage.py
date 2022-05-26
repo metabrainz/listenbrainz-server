@@ -1,17 +1,15 @@
+import os
 import sys
 from datetime import date
 
 import click
-import listenbrainz.utils as utils
-import os
 import pika
 import ujson
-
 from flask import current_app
 
+import listenbrainz.utils as utils
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
-
 
 QUERIES_JSON_PATH = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), 'request_queries.json')

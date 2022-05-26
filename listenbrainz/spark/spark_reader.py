@@ -1,16 +1,10 @@
 import json
-import logging
-import time
-
-from flask import current_app
 
 import pika
-import sqlalchemy
 import ujson
+from flask import current_app
+
 from listenbrainz import utils
-from listenbrainz.db import stats as db_stats
-from listenbrainz.db import user as db_user
-from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_dataframes,
                                          handle_dump_imported, handle_model,

@@ -20,18 +20,18 @@ helper functions
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA"
 
-import ujson
 import os
 import unittest
 
-from click.testing import CliRunner
+import ujson
+
 from listenbrainz.spark import request_manage
 
 
 class RequestManageTestCase(unittest.TestCase):
 
     def test_get_possible_queries(self):
-        QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
+        QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../request_queries.json')
         with open(QUERIES_JSON_PATH) as f:
             expected_query_list = ujson.load(f)
         received_query_list = request_manage._get_possible_queries()

@@ -13,9 +13,9 @@ from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
                                                       UserMissingMusicBrainzDataJson)
-from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db import user as db_user
 from listenbrainz.db import stats as db_stats
+from listenbrainz.db import user as db_user
+from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
