@@ -259,6 +259,13 @@ def create_playlist():
         get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
 
+    if type(collaborators) not in (list, tuple):
+        log_raise_400("Collaborators must be a list.")
+
+    for collaborator in collaborators:
+        if type(collaborator) != str:
+            log_raise_400("Collaborator names must be strings.")
+
     # Uniquify collaborators list
     collaborators = list(set(collaborators))
 

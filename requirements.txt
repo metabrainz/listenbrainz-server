@@ -22,7 +22,7 @@ pika == 1.2.0
 git+https://github.com/metabrainz/brainzutils-python.git@v2.4.2
 spotipy == 2.17.1
 git+https://github.com/metabrainz/data-set-hoster.git@v-2021-02-10.0#egg=datasethoster
-git+https://github.com/metabrainz/troi-recommendation-playground.git@b855df3c#egg=troi
+git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2022-05-27#egg=troi
 pyyaml == 5.4.1
 eventlet == 0.33.0
 uWSGI == 2.0.20
