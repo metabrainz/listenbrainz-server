@@ -368,6 +368,21 @@ def get_recordings_for_playlists(connection, playlist_ids: List[int]):
     return dict(playlist_recordings_map)
 
 
+def _remove_old_collaborative_playlists(creator_id: int, created_for_id: int, source_patch: str):
+    """
+       Remove all the collaborative playlists for the given creator, credit_for and source_patch.
+       This function will be used in the create function in order to remove the old collaborative playlists
+       that the new playlist replaces, all in one transaction.
+    """
+    del_query = sqlalchemy.text("""DELETE FROM playlist.playlist
+                                         WHERE creator_id = :creator_id
+                                           AND algorithm_metadata->>'source_patch' = :source_patch
+                                           AND created_for_id = :created_for_id""")
+    connection.execute(del_query, {"creator_id": creator_id,
+                                   "created_for_id": created_for_id,
+                                   "source_patch": source_patch})
+
+
 def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
     """Create a playlist
 
@@ -418,15 +433,13 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
 
     with ts.engine.connect() as connection:
         with connection.begin():
+            # This code seems out of place for a create function, but in order to keep the deletion of
+            # old collaborative playlists in the same transaction as creating new playlists, it needs to
+            # to be here.
             if playlist.creator_id == TROI_BOT_USER_ID and playlist.created_for_id is not None and \
                     playlist.algorithm_metadata is not None and "source_patch" in playlist.algorithm_metadata:
-                del_query = sqlalchemy.text("""DELETE FROM playlist.playlist
-                                                     WHERE creator_id = :creator_id
-                                                       AND algorithm_metadata->>'source_patch' = :source_patch
-                                                       AND created_for_id = :created_for_id""")
-                connection.execute(del_query, {"creator_id": playlist.creator_id,
-                                               "created_for_id": playlist.created_for_id,
-                                               "source_patch": playlist.algorithm_metadata["source_patch"]})
+                _remove_old_collaborative_playlists(playlist.creator_id, playlist.created_for_id,
+                                                    playlist.algorithm_metadata["source_patch"])
 
             result = connection.execute(query, fields)
             row = dict(result.fetchone())
