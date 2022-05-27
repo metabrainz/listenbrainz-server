@@ -2,7 +2,8 @@ import os
 import unittest
 import json
 
-JSON_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
+JSON_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../request_queries.json')
+
 
 class QueryJSONTestCase(unittest.TestCase):
 

@@ -2,26 +2,24 @@
     receive from the Spark cluster.
 """
 import json
-import listenbrainz.db.user as db_user
-import listenbrainz.db.stats as db_stats
-import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
-import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
-from listenbrainz.db import year_in_music
-
-from flask import current_app, render_template
-from pydantic import ValidationError
-from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 
+from brainzutils.mail import send_mail
+from flask import current_app, render_template
+from pydantic import ValidationError
+
+import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
+import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
+import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user as db_user
 from data.model.common_stat import StatRange
-from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
+from listenbrainz.db import year_in_music
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
-
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -236,7 +234,8 @@ def handle_recommendations(data):
     current_app.logger.debug("recommendation for {} inserted".format(user["musicbrainz_id"]))
 
     current_app.logger.debug("Running post recommendation steps for user {}".format(user["musicbrainz_id"]))
-    run_post_recommendation_troi_bot(user["musicbrainz_id"])
+
+
 
 
 def notify_mapping_import(data):
@@ -280,10 +279,14 @@ def notify_artist_relation_import(data):
     )
 
 
-def notify_cf_recording_recommendations_generation(data):
+def cf_recording_recommendations_complete(data):
     """
-    Send an email to notify recommendations have been generated and are being written into db.
+    Run any troi scripts necessary now that recommendations have been generated and
+    send an email to notify recommendations have been generated and are being written into db.
     """
+
+    run_post_recommendation_troi_bot()
+
     if current_app.config['TESTING']:
         return
 
