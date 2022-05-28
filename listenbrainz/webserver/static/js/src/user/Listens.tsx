@@ -624,43 +624,7 @@ export default class Listens extends React.Component<
       <div role="main">
         <h3>Recent listens</h3>
         <div className="row">
-          <div className="col-md-4 col-md-push-8">
-            {playingNowListen && (
-              <ListenCard
-                key={`playing-now-${getTrackName(
-                  playingNowListen
-                )}-${getArtistName(playingNowListen)}`}
-                showTimestamp
-                showUsername={false}
-                listen={playingNowListen}
-                newAlert={newAlert}
-                className="playing-now"
-              />
-            )}
-            {userPinnedRecording && (
-              <PinnedRecordingCard
-                userName={user.name}
-                pinnedRecording={userPinnedRecording}
-                isCurrentUser={currentUser?.name === user?.name}
-                currentFeedback={this.getFeedbackForRecordingMsid(
-                  userPinnedRecording?.recording_msid
-                )}
-                updateFeedbackCallback={this.updateFeedback}
-                removePinFromPinsList={() => {}}
-                newAlert={newAlert}
-              />
-            )}
-            <ListenCountCard user={user} listenCount={listenCount} />
-            {user && (
-              <div
-                className="card hidden-xs hidden-sm"
-                style={{ paddingTop: "1.5em" }}
-              >
-                <UserSocialNetwork user={user} newAlert={newAlert} />
-              </div>
-            )}
-          </div>
-          <div className="col-md-8 col-md-pull-4">
+          <div className="col-md-8">
             {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
@@ -887,6 +851,42 @@ export default class Listens extends React.Component<
                     />
                   </>
                 )}
+              </div>
+            )}
+          </div>
+          <div className="col-md-4">
+            {playingNowListen && (
+              <ListenCard
+                key={`playing-now-${getTrackName(
+                  playingNowListen
+                )}-${getArtistName(playingNowListen)}`}
+                showTimestamp
+                showUsername={false}
+                listen={playingNowListen}
+                newAlert={newAlert}
+                className="playing-now"
+              />
+            )}
+            {userPinnedRecording && (
+              <PinnedRecordingCard
+                userName={user.name}
+                pinnedRecording={userPinnedRecording}
+                isCurrentUser={currentUser?.name === user?.name}
+                currentFeedback={this.getFeedbackForRecordingMsid(
+                  userPinnedRecording?.recording_msid
+                )}
+                updateFeedbackCallback={this.updateFeedback}
+                removePinFromPinsList={() => {}}
+                newAlert={newAlert}
+              />
+            )}
+            <ListenCountCard user={user} listenCount={listenCount} />
+            {user && (
+              <div
+                className="card hidden-xs hidden-sm"
+                style={{ paddingTop: "1.5em" }}
+              >
+                <UserSocialNetwork user={user} newAlert={newAlert} />
               </div>
             )}
           </div>
