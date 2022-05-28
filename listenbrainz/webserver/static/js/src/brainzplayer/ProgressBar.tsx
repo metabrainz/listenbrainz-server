@@ -1,4 +1,4 @@
-import { isNaN } from "lodash";
+import { isNaN, throttle } from "lodash";
 import * as React from "react";
 import ReactTooltip from "react-tooltip";
 import { millisecondsToStr } from "../playlists/utils";
@@ -17,6 +17,7 @@ const EVENT_KEY_ARROWLEFT: string = "ArrowLeft";
 const EVENT_KEY_ARROWRIGHT: string = "ArrowRight";
 const EVENT_TYPE_CLICK: string = "click";
 const EVENT_TYPE_MOUSEMOVE: string = "mousemove";
+const MOUSE_THROTTLE_DELAY: number = 150;
 
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
 const TOOLTIP_TOP_OFFSET: number = 102;
@@ -29,24 +30,40 @@ const ProgressBar = (props: ProgressBarProps) => {
   );
   const hideProgressBar = isNaN(progressPercentage) || progressPercentage <= 0;
 
-  const mouseEventHandler = (
-    event: React.MouseEvent<HTMLInputElement>
-  ): void => {
-    const progressBarBoundingRect = event.currentTarget.getBoundingClientRect();
-    const progressBarWidth = progressBarBoundingRect.width;
-    const musicPlayerXOffset = progressBarBoundingRect.x;
-    const absoluteClickXPos = event.clientX;
-    const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
-    const percentPos = relativeClickXPos / progressBarWidth;
-    const positionMs = Math.round(durationMs * percentPos);
-    const positionTime = millisecondsToStr(positionMs);
-
-    if (event.type === EVENT_TYPE_MOUSEMOVE) {
-      setTipContent(positionTime);
-    } else if (event.type === EVENT_TYPE_CLICK) {
-      seekToPositionMs(positionMs);
-    }
+  // Originally by ford04 - https://stackoverflow.com/a/62017005
+  const useThrottle = (callback: any, delay: number | undefined) => {
+    const options = { leading: true, trailing: false };
+    const callbackRef = React.useRef(callback);
+    React.useEffect(() => {
+      callbackRef.current = callback;
+    });
+    return React.useCallback(
+      throttle((...args: any) => callbackRef.current(...args), delay, options),
+      [delay]
+    );
   };
+
+  const mouseEventHandler = useThrottle(
+    (event: React.MouseEvent<HTMLInputElement>): void => {
+      const progressBarBoundingRect = event.currentTarget.getBoundingClientRect();
+      const progressBarWidth = progressBarBoundingRect.width;
+      const musicPlayerXOffset = progressBarBoundingRect.x;
+      const absoluteClickXPos = event.clientX;
+      const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
+      const percentPos = relativeClickXPos / progressBarWidth;
+      const positionMs = Math.round(durationMs * percentPos);
+      const positionTime = millisecondsToStr(positionMs);
+
+      if (event.type === EVENT_TYPE_MOUSEMOVE) {
+        setTipContent(positionTime);
+      } else if (event.type === EVENT_TYPE_CLICK) {
+        seekToPositionMs(positionMs);
+      }
+    },
+    MOUSE_THROTTLE_DELAY
+  );
+
+  React.useEffect(() => mouseEventHandler, []);
 
   const onKeyPressHandler = (
     event: React.KeyboardEvent<HTMLInputElement>
