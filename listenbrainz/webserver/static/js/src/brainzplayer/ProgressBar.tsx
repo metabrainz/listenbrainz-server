@@ -10,8 +10,8 @@ type ProgressBarProps = {
 };
 
 // How many milliseconds to navigate to with keyboard left/right arrows
-const KEYBOARD_BIG_STEP_MS: number = 5000;
-const KEYBOARD_STEP_MS: number = 10000;
+const KEYBOARD_STEP_MS: number = 5000;
+const KEYBOARD_BIG_STEP_MS: number = 10000;
 
 const EVENT_KEY_ARROWLEFT: string = "ArrowLeft";
 const EVENT_KEY_ARROWRIGHT: string = "ArrowRight";
@@ -59,18 +59,18 @@ const ProgressBar = (props: ProgressBarProps) => {
     if (event.key === EVENT_KEY_ARROWLEFT) {
       let oneStepEarlier;
       if (event.shiftKey) {
-        oneStepEarlier = progressMs - KEYBOARD_BIG_STEP_MS;
-      } else {
         oneStepEarlier = progressMs - KEYBOARD_STEP_MS;
+      } else {
+        oneStepEarlier = progressMs - KEYBOARD_BIG_STEP_MS;
       }
       seekToPositionMs(oneStepEarlier > 0 ? oneStepEarlier : 0);
     }
     if (event.key === EVENT_KEY_ARROWRIGHT) {
       let oneStepLater;
       if (event.shiftKey) {
-        oneStepLater = progressMs + KEYBOARD_STEP_MS;
-      } else {
         oneStepLater = progressMs + KEYBOARD_BIG_STEP_MS;
+      } else {
+        oneStepLater = progressMs + KEYBOARD_STEP_MS;
       }
       if (oneStepLater <= durationMs - 500) {
         seekToPositionMs(oneStepLater);
