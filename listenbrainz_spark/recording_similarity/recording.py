@@ -15,11 +15,11 @@ def get_complete_index_query(table, threshold):
                  , similarity
               FROM {table}
         )
-        SELECT mbid0
-             , mbid1
+        SELECT lexical_mbid0 AS mbid0
+             , lexical_mbid1 AS mbid1
              , SUM(similarity) AS total_similarity
           FROM symmetric_index
-      GROUP BY mbid0, mbid1
+      GROUP BY lexical_mbid0, lexical_mbid1
         HAVING total_similarity >= {threshold}
     """
 
