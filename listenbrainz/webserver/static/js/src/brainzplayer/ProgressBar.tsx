@@ -1,7 +1,7 @@
 import { isNaN } from "lodash";
 import * as React from "react";
 import ReactTooltip from "react-tooltip";
-import { msToTime } from "../playlists/utils";
+import { millisecondsToStr } from "../playlists/utils";
 
 type ProgressBarProps = {
   progressMs: number;
@@ -39,7 +39,7 @@ const ProgressBar = (props: ProgressBarProps) => {
     const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
     const percentPos = relativeClickXPos / progressBarWidth;
     const positionMs = Math.round(durationMs * percentPos);
-    const positionTime = msToTime(positionMs);
+    const positionTime = millisecondsToStr(positionMs);
 
     if (event.type === EVENT_TYPE_MOUSEMOVE) {
       setTipContent(positionTime);

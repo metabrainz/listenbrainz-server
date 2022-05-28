@@ -1,6 +1,3 @@
-/* eslint-disable camelcase */
-
-import { padStart } from "lodash";
 import { getArtistName, getRecordingMBID, getTrackName } from "../utils/utils";
 
 export const MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION =
@@ -42,6 +39,14 @@ export function getArtistMBIDFromURI(URI: string): string {
   return URI?.substr(PLAYLIST_ARTIST_URI_PREFIX.length) ?? "";
 }
 
+/*
+ * This function is deprecated and modified into a new function
+ * because we needed a more standard format to show track duration.
+ * The new function uses the same function name (millisecondsToStr).
+ * Discussion here:
+ * https://github.com/metabrainz/listenbrainz-server/pull/2000#discussion_r878193576
+ *
+
 // Credit goes to Dmitry Sheiko https://stackoverflow.com/a/53006402/4904467
 export function millisecondsToStr(milliseconds: number) {
   let temp = milliseconds / 1000;
@@ -64,9 +69,10 @@ export function millisecondsToStr(milliseconds: number) {
 
   return "< 1s";
 }
+*/
 
 // Originally by Sinjai https://stackoverflow.com/a/67462589
-export function msToTime(milliseconds: number) {
+export function millisecondsToStr(milliseconds: number) {
   function pad(num: number) {
     return `${num}`.padStart(2, "0");
   }
