@@ -128,6 +128,16 @@
       "max_num_users"
     ]
   },
+  "similarity.recording": {
+    "name": "similarity.recording",
+    "description": "Generate recording similarity",
+    "params": [
+      "steps",
+      "days",
+      "session",
+      "threshold"
+    ]
+  },
   "year_in_music.similar_users": {
     "name": "year_in_music.similar_users",
     "description": "Generate similar user correlation for Year in Music",

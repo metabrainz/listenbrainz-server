@@ -34,6 +34,8 @@ RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR = os.path.join(
 RECOMMENDATION_RECORDING_DATA_DIR = os.path.join(
     RECOMMENDATION_RECORDING_MODEL_DIR, 'data')
 
+RECORDING_SIMILARITY = "/data/recording-similarity"
+
 RECORDING_DISCOVERY = os.path.join(RECOMMENDATION_RECORDING_PARENT_DIR, 'discovery')
 
 # Absolute path to dataframes used in processing raw data/listens for `recording` recommendations.
