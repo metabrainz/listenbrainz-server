@@ -23,7 +23,7 @@
 	height: @brainzplayer-height;
 	background: @white-background;
 	display: flex;
-	box-shadow: 0px -1px 12px fade(@primary-color, 50%);
+	box-shadow: 0px -4px 12px fade(black, 20%);
 	
 	padding: @brainzplayer-padding;
 	border-top: 1px solid #dbccc6;
@@ -167,6 +167,7 @@
 	.elapsed {
 		display: flex;
 		flex-direction: row;
+		flex-grow: 0;
 		align-items: center;
 		padding: 1rem;
 	}
@@ -240,6 +241,7 @@
 		width: 100%;
 		cursor: pointer;
 		z-index: 2;
+		transition: height, 0.2s;
 		
 		.progress-bar {
 			height: 100%;
@@ -247,9 +249,8 @@
 			border-right: 2px solid @dark-color;
 		}
 		&:hover{
-			transition: height, 0.3s;
 			height: @progress-bar-hover-height;
-			top: -@progress-bar-height - (@progress-bar-hover-height - @progress-bar-height)/2
+			top: -@progress-bar-hover-height;
 		}
 
 		.progress-tooltip {
