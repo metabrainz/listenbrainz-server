@@ -16,7 +16,7 @@ import { get, isNaN as _isNaN, isNumber } from "lodash";
 import ProgressBar from "./ProgressBar";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import MenuOptions from "./MenuOptions";
-import { msToTime } from "../playlists/utils";
+import { millisecondsToStr } from "../playlists/utils";
 
 type BrainzPlayerUIProps = {
   playPreviousTrack: () => void;
@@ -192,9 +192,8 @@ const BrainzPlayerUI = (
         </div>
         {isPlayingATrack && (
           <div className="elapsed small text-muted">
-            {`${isNumber(progressMs) && msToTime(progressMs)}\u202f/\u202f${
-              isNumber(durationMs) && msToTime(durationMs)
-            }`}
+            {millisecondsToStr(progressMs)}&#8239;/&#8239;
+            {millisecondsToStr(durationMs)}
           </div>
         )}
       </div>
