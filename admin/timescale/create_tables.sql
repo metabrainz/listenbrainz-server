@@ -63,7 +63,8 @@ CREATE TABLE mbid_mapping (
         recording_msid      uuid not null,
         recording_mbid      uuid, -- FK mbid_mapping_metadata.recording_mbid
         match_type          mbid_mapping_match_type_enum NOT NULL,
-        last_updated        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+        last_updated        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+        check_again         TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE mbid_mapping_metadata (
