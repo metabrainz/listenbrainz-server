@@ -446,36 +446,19 @@ export default class Listens extends React.Component<
   ) => {
     const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
 
-    if (recordingMsid && recordingMbid) {
-      const newMsidFeedbackMap = {
-        ...recordingMsidFeedbackMap,
-        [recordingMsid]: score as ListenFeedBack,
-      };
-      const newMbidFeedbackMap = {
-        ...recordingMbidFeedbackMap,
-        [recordingMbid]: score as ListenFeedBack,
-      };
-      this.setState({
-        recordingMsidFeedbackMap: newMsidFeedbackMap,
-        recordingMbidFeedbackMap: newMbidFeedbackMap,
-      });
-    }
+    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
+    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
 
     if (recordingMsid) {
-      const newMsidFeedbackMap = {
-        ...recordingMsidFeedbackMap,
-        [recordingMsid]: score as ListenFeedBack,
-      };
-      this.setState({ recordingMsidFeedbackMap: newMsidFeedbackMap });
+      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
     }
-
     if (recordingMbid) {
-      const newMbidFeedbackMap = {
-        ...recordingMbidFeedbackMap,
-        [recordingMbid]: score as ListenFeedBack,
-      };
-      this.setState({ recordingMbidFeedbackMap: newMbidFeedbackMap });
+      recordingMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
     }
+    this.setState({
+      recordingMsidFeedbackMap: newMsidFeedbackMap,
+      recordingMbidFeedbackMap: newMbidFeedbackMap,
+    });
   };
 
   updateRecordingToPin = (recordingToPin: Listen) => {
