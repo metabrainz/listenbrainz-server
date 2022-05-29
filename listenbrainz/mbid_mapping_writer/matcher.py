@@ -36,131 +36,143 @@ def process_listens(app, listens, priority):
 
     # To debug the mapping, set this to True or a specific priority
     # e.g. (priority == RECHECK_LISTEN)
-    debug = False   
+    debug = False
 
     if len(msids):
+        return stats
 
-        # Remove msids for which we already have a match, unless its timestamp is 0
-        # or if the msid was last checked more than 2 weeks ago and no match was
-        # found at that time, which means we should re-check the item
-        with timescale.engine.connect() as connection:
-            query = """SELECT recording_msid, match_type
-                         FROM mbid_mapping
-                        WHERE recording_msid IN :msids
-                          AND (last_updated != '1970-01-01'
-                              -- using not because the rows returned by this query are removed from the lookups
-                              OR NOT (NOW() - last_updated > INTERVAL '2 weeks' AND match_type = 'no_match'))"""
-            curs = connection.execute(sqlalchemy.text(
-                query), msids=tuple(msids.keys()))
-            while True:
-                result = curs.fetchone()
-                if not result:
-                    break
+    listens_to_check = []
 
-                if debug:
-                    app.logger.info(f"Remove {str(result[0])}, since a match exists")
+    # Remove msids for which we already have a match, unless its timestamp is 0
+    # or if the msid was last checked more than 2 weeks ago and no match was
+    # found at that time, which means we should re-check the item
+    with timescale.engine.connect() as connection:
+        query = """
+            SELECT t.recording_msid
+                 , mm.match_type
+              FROM (VALUES (:msids)) AS t(recording_msid)
+         LEFT JOIN mbid_mapping mm
+                ON t.recording_msid::uuid = mm.recording_msid
+             WHERE mm.last_updated = '1970-01-01'  -- msid marked for rechecking manually
+                OR mm.check_again <= NOW()     -- msid not found last time, marked for rechecking
+                OR mm.recording_msid IS NULL   -- msid seen for first time
+        """
+        curs = connection.execute(sqlalchemy.text(query), msids=tuple(msids.keys()))
+        msids_to_check = curs.fetchall()
 
-                del msids[str(result[0])]
-                stats["processed"] += 1
-                if result[1] != 'no_match':
-                    stats["listens_matched"] += 1
-                skipped += 1
+        for row in msids_to_check:
+            listen = msids[row['recording_msid']]
+            listens_to_check.append(listen)
 
-        if len(msids) == 0:
-            return stats
+            if row['match_type']:
+                stats["listens_matched"] += 1
 
-        conn = timescale.engine.raw_connection()
-        with conn.cursor() as curs:
-            try:
-                # Try an exact lookup (in postgres) first.
-                matches, remaining_listens, stats = lookup_listens(
-                    app, list(msids.values()), stats, True, debug)
+        stats["processed"] += len(msids_to_check)
+        stats["skipped"] += len(msids) - len(msids_to_check)
 
-                # For all remaining listens, do a fuzzy lookup.
-                if remaining_listens:
-                    new_matches, remaining_listens, stats = lookup_listens(
-                        app, remaining_listens, stats, False, debug)
-                    matches.extend(new_matches)
+        if debug:
+            for msid in msids:
+                if msid not in msids_to_check:
+                    app.logger.info(f"Remove {msid}, since a match exists")
 
-                if priority == NEW_LISTEN:
-                    stats["listens_matched"] += len(matches)
+    if len(listens_to_check) == 0:
+        return stats
 
-                # For all listens that are not matched, enter a no match entry, so we don't
-                # keep attempting to look up more listens.
-                for listen in remaining_listens:
-                    matches.append((listen['recording_msid'], None, None, None, None, None, None, None, MATCH_TYPES[0]))
-                    stats['no_match'] += 1
+    conn = timescale.engine.raw_connection()
+    with conn.cursor() as curs:
+        try:
+            # Try an exact lookup (in postgres) first.
+            matches, remaining_listens, stats = lookup_listens(
+                app, listens_to_check, stats, True, debug)
 
-                stats["processed"] += len(matches)
+            # For all remaining listens, do a fuzzy lookup.
+            if remaining_listens:
+                new_matches, remaining_listens, stats = lookup_listens(
+                    app, remaining_listens, stats, False, debug)
+                matches.extend(new_matches)
 
-                metadata_query = """INSERT INTO mbid_mapping_metadata AS mbid
-                                              ( recording_mbid
-                                              , release_mbid
-                                              , release_name
-                                              , artist_mbids
-                                              , artist_credit_id
-                                              , artist_credit_name
-                                              , recording_name
-                                              , last_updated
-                                              )
-                                         VALUES
-                                              ( %s::UUID
-                                              , %s::UUID
-                                              , %s
-                                              , %s::UUID[]
-                                              , %s
-                                              , %s
-                                              , %s
-                                              , now()
-                                              )
-                                    ON CONFLICT (recording_mbid) DO UPDATE
-                                            SET release_mbid = EXCLUDED.release_mbid
-                                              , release_name = EXCLUDED.release_name
-                                              , artist_mbids = EXCLUDED.artist_mbids
-                                              , artist_credit_id = EXCLUDED.artist_credit_id
-                                              , artist_credit_name = EXCLUDED.artist_credit_name
-                                              , recording_name = EXCLUDED.recording_name
-                                              , last_updated = now()"""
+            if priority == NEW_LISTEN:
+                stats["listens_matched"] += len(matches)
 
-                mapping_query = """INSERT INTO mbid_mapping AS m
-                                             ( recording_msid
-                                             , recording_mbid
-                                             , match_type
-                                             , last_updated
-                                             )
-                                        VALUES
-                                             ( %s::UUID
-                                             , %s::UUID
-                                             , %s
-                                             , now()
-                                             )
-                                   ON CONFLICT (recording_msid) DO UPDATE
-                                           SET recording_msid = EXCLUDED.recording_msid
-                                             , recording_mbid = EXCLUDED.recording_mbid
-                                             , match_type = EXCLUDED.match_type
-                                             , last_updated = now()"""
+            # For all listens that are not matched, enter a no match entry, so we don't
+            # keep attempting to look up more listens.
+            for listen in remaining_listens:
+                matches.append((listen['recording_msid'], None, None, None, None, None, None, None, MATCH_TYPES[0]))
+                stats['no_match'] += 1
 
-                # Finally insert matches to PG
-                for match in matches:
-                    # Insert/update the metadata row
-                    if match[1] is not None:
-                        curs.execute(metadata_query, match[1:8])
+            stats["processed"] += len(matches)
 
-                    # Insert the mapping row
-                    curs.execute(mapping_query, (match[0], match[1], match[8]))
+            metadata_query = """
+                INSERT INTO mbid_mapping_metadata AS mbid
+                          ( recording_mbid
+                          , release_mbid
+                          , release_name
+                          , artist_mbids
+                          , artist_credit_id
+                          , artist_credit_name
+                          , recording_name
+                          , last_updated
+                          )
+                     VALUES
+                          ( %s::UUID
+                          , %s::UUID
+                          , %s
+                          , %s::UUID[]
+                          , %s
+                          , %s
+                          , %s
+                          , now()
+                          )
+                ON CONFLICT (recording_mbid) DO UPDATE
+                        SET release_mbid = EXCLUDED.release_mbid
+                          , release_name = EXCLUDED.release_name
+                          , artist_mbids = EXCLUDED.artist_mbids
+                          , artist_credit_id = EXCLUDED.artist_credit_id
+                          , artist_credit_name = EXCLUDED.artist_credit_name
+                          , recording_name = EXCLUDED.recording_name
+                          , last_updated = now()
+            """
 
-            except psycopg2.errors.CardinalityViolation as err:
-                app.logger.error("CardinalityViolation on insert to mbid mapping\n%s" % str(query))
-                conn.rollback()
-                return
+            mapping_query = """
+                INSERT INTO mbid_mapping AS m(recording_msid, recording_mbid, match_type, last_updated, check_again)
+                     VALUES (
+                            %(recording_msid)s::UUID
+                          , %(recording_mbid)s::UUID
+                          , %(match_type)s
+                          , now()
+                          -- inserting msid for first time, check again with gap of 1 day
+                          , CASE %(match_type)s WHEN 'no_match' THEN now() + INTERVAL '1 day' ELSE NULL END
+                            )
+                ON CONFLICT (recording_msid) DO UPDATE
+                        SET recording_msid = EXCLUDED.recording_msid
+                          , recording_mbid = EXCLUDED.recording_mbid
+                          , match_type = EXCLUDED.match_type
+                          , last_updated = now()
+                          -- rechecked msid already, if still no match found then check again after twice the interval time
+                          , check_again = CASE EXCLUDED.match_type WHEN 'no_match' THEN now() + (now() - last_updated) * 2 ELSE NULL END
+            """
 
-            except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
-                app.logger.info(
-                    "Cannot insert MBID mapping rows. (%s)" % str(err))
-                conn.rollback()
-                return
+            # Finally insert matches to PG
+            for match in matches:
+                # Insert/update the metadata row
+                if match[1] is not None:
+                    curs.execute(metadata_query, match[1:8])
 
-        conn.commit()
+                # Insert the mapping row
+                curs.execute(mapping_query, recording_msid=match[0], recording_mbid=match[1], match_type=match[8])
+
+        except psycopg2.errors.CardinalityViolation:
+            app.logger.error("CardinalityViolation on insert to mbid mapping\n%s" % str(query))
+            conn.rollback()
+            return
+
+        except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
+            app.logger.info(
+                "Cannot insert MBID mapping rows. (%s)" % str(err))
+            conn.rollback()
+            return
+
+    conn.commit()
 
     return stats
 
