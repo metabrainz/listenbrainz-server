@@ -3,7 +3,7 @@ import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { get } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { getRecordingMBID } from "../utils/utils";
+import {getRecordingMBID, getRecordingMSID} from "../utils/utils";
 
 export type ListenFeedbackComponentProps = {
   newAlert: (
@@ -15,7 +15,8 @@ export type ListenFeedbackComponentProps = {
   currentFeedback: ListenFeedBack;
   updateFeedbackCallback?: (
     recordingMsid: string,
-    score: ListenFeedBack
+    score: ListenFeedBack,
+    recordingMbid?: string
   ) => void;
 };
 
@@ -29,11 +30,7 @@ export default class ListenFeedbackComponent extends React.Component<
     const { listen, updateFeedbackCallback, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     if (currentUser?.auth_token) {
-      const recordingMSID = get(
-        listen,
-        "track_metadata.additional_info.recording_msid"
-      );
-
+      const recordingMSID = getRecordingMSID(listen);
       const recordingMBID = getRecordingMBID(listen);
 
       try {
@@ -44,9 +41,8 @@ export default class ListenFeedbackComponent extends React.Component<
           recordingMBID
         );
         if (status === 200) {
-          //   this.setState({ feedback: score });
           if (updateFeedbackCallback) {
-            updateFeedbackCallback(recordingMSID, score);
+            updateFeedbackCallback(recordingMSID, score, recordingMBID);
           }
         }
       } catch (error) {
@@ -61,10 +57,7 @@ export default class ListenFeedbackComponent extends React.Component<
 
   render() {
     const { currentFeedback, listen } = this.props;
-    const recordingMSID = get(
-      listen,
-      "track_metadata.additional_info.recording_msid"
-    );
+    const recordingMSID = getRecordingMSID(listen);
     if (!recordingMSID) {
       return null;
     }

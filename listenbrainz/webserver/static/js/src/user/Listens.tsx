@@ -453,7 +453,7 @@ export default class Listens extends React.Component<
       newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
     }
     if (recordingMbid) {
-      recordingMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
+      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
     }
     this.setState({
       recordingMsidFeedbackMap: newMsidFeedbackMap,
