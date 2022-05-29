@@ -36,16 +36,15 @@ import {
   getListenablePin,
   getRecordingMBID,
   getArtistMBIDs,
-  getReleaseMBID,
   getReleaseGroupMBID,
   getTrackName,
   getArtistName,
+  getRecordingMSID,
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCountCard from "../listens/ListenCountCard";
-import ListenFeedbackComponent from "../listens/ListenFeedbackComponent";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -393,10 +392,7 @@ export default class Listens extends React.Component<
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
-        const recordingMsid = _.get(
-          listen,
-          "track_metadata.additional_info.recording_msid"
-        );
+        const recordingMsid = getRecordingMSID(listen);
         if (recordingMsid) {
           recording_msids += `${recordingMsid},`;
         }
@@ -507,10 +503,7 @@ export default class Listens extends React.Component<
       return mbidFeedback;
     }
 
-    const recordingMsid = _.get(
-      listen,
-      "track_metadata.additional_info.recording_msid"
-    );
+    const recordingMsid = getRecordingMSID(listen);
 
     return recordingMsid
       ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
@@ -524,15 +517,12 @@ export default class Listens extends React.Component<
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
     if (isCurrentUser && currentUser?.auth_token) {
       const listenedAt = get(listen, "listened_at");
-      const recordingMSID = get(
-        listen,
-        "track_metadata.additional_info.recording_msid"
-      );
+      const recordingMsid = getRecordingMSID(listen);
 
       try {
         const status = await APIService.deleteListen(
           currentUser.auth_token,
-          recordingMSID,
+          recordingMsid,
           listenedAt
         );
         if (status === 200) {
@@ -751,10 +741,7 @@ export default class Listens extends React.Component<
                       Boolean(listen.user_name) &&
                       listen.user_name === currentUser?.name;
                     const listenedAt = get(listen, "listened_at");
-                    const recordingMSID = get(
-                      listen,
-                      "track_metadata.additional_info.recording_msid"
-                    );
+                    const recordingMSID = getRecordingMSID(listen);
                     const recordingMBID = getRecordingMBID(listen);
                     const artistMBIDs = getArtistMBIDs(listen);
                     const trackMBID = get(
