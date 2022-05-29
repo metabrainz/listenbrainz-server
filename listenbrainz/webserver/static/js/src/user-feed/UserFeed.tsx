@@ -25,6 +25,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { get as _get, reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
+import * as _ from "lodash";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -42,6 +43,8 @@ import {
   getAdditionalContent,
   feedReviewEventToListen,
   getReviewEventContent,
+  getRecordingMBID,
+  getRecordingMSID,
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
@@ -68,7 +71,8 @@ type UserFeedPageState = {
   earliestEventTs?: number;
   events: TimelineEvent[];
   loading: boolean;
-  recordingFeedbackMap: RecordingFeedbackMap;
+  recordingMsidFeedbackMap: RecordingFeedbackMap;
+  recordingMbidFeedbackMap: RecordingFeedbackMap;
 };
 
 export default class UserFeedPage extends React.Component<
@@ -154,7 +158,8 @@ export default class UserFeedPage extends React.Component<
   constructor(props: UserFeedPageProps) {
     super(props);
     this.state = {
-      recordingFeedbackMap: {},
+      recordingMsidFeedbackMap: {},
+      recordingMbidFeedbackMap: {},
       nextEventTs: props.events?.[props.events.length - 1]?.created,
       previousEventTs: props.events?.[0]?.created,
       events: props.events || [],
@@ -301,7 +306,8 @@ export default class UserFeedPage extends React.Component<
   getFeedback = async () => {
     const { currentUser, APIService } = this.context;
     const { events, newAlert } = this.props;
-    let recordings = "";
+    let recording_msids = "";
+    let recording_mbids = "";
 
     if (currentUser?.name && events) {
       events.forEach((event) => {
@@ -309,14 +315,22 @@ export default class UserFeedPage extends React.Component<
           event,
           "metadata.track_metadata.additional_info.recording_msid"
         );
+        const recordingMbid = _get(
+          event,
+          "metadata.track_metadata.additional_info.recording_mbid"
+        );
         if (recordingMsid) {
-          recordings += `${recordingMsid},`;
+          recording_msids += `${recordingMsid},`;
+        }
+        if (recordingMbid) {
+          recording_mbids += `${recordingMbid},`;
         }
       });
       try {
-        const data = await APIService.getFeedbackForUserForRecordings(
+        const data = await APIService.getFeedbackForUserForRecordingsNew(
           currentUser.name,
-          recordings
+          recording_msids,
+          recording_mbids
         );
         return data.feedback;
       } catch (error) {
@@ -337,30 +351,64 @@ export default class UserFeedPage extends React.Component<
     if (!feedback) {
       return;
     }
-    const recordingFeedbackMap: RecordingFeedbackMap = {};
-    feedback.forEach((fb: FeedbackResponse) => {
-      recordingFeedbackMap[fb.recording_msid] = fb.score;
+    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
+    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
+
+    feedback.forEach((item: FeedbackResponse) => {
+      if (item.recording_msid) {
+        recordingMsidFeedbackMap[item.recording_msid] = item.score;
+      }
+      if (item.recording_mbid) {
+        recordingMbidFeedbackMap[item.recording_mbid] = item.score;
+      }
     });
-    this.setState({ recordingFeedbackMap });
+    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
   };
 
-  getFeedbackForRecordingMsid = (
-    recordingMsid?: string | null
-  ): ListenFeedBack => {
-    const { recordingFeedbackMap } = this.state;
-    return recordingMsid ? _get(recordingFeedbackMap, recordingMsid, 0) : 0;
+  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    // first check whether the mbid has any feedback available
+    // if yes and the feedback is not zero, return it. if the
+    // feedback is zero or not the mbid is absent from the map,
+    // look for the feedback using the msid.
+
+    const recordingMbid = getRecordingMBID(listen);
+    const mbidFeedback = recordingMbid
+      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
+      : 0;
+
+    if (mbidFeedback) {
+      return mbidFeedback;
+    }
+
+    const recordingMsid = getRecordingMSID(listen);
+
+    return recordingMsid
+      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
+      : 0;
   };
 
   updateFeedback = (
     recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack
+    score: ListenFeedBack | RecommendationFeedBack,
+    recordingMbid?: string
   ) => {
-    const { recordingFeedbackMap } = this.state;
-    const newFeedbackMap = {
-      ...recordingFeedbackMap,
-      [recordingMsid]: score as ListenFeedBack,
-    };
-    this.setState({ recordingFeedbackMap: newFeedbackMap });
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
+    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
+
+    if (recordingMsid) {
+      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
+    }
+    if (recordingMbid) {
+      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
+    }
+    this.setState({
+      recordingMsidFeedbackMap: newMsidFeedbackMap,
+      recordingMbidFeedbackMap: newMbidFeedbackMap,
+    });
   };
 
   deleteFeedEvent = async (event: TimelineEvent) => {
@@ -571,13 +619,7 @@ export default class UserFeedPage extends React.Component<
         <div className="event-content">
           <ListenCard
             updateFeedbackCallback={this.updateFeedback}
-            currentFeedback={this.getFeedbackForRecordingMsid(
-              _get(
-                listen,
-                "track_metadata.additional_info.recording_msid",
-                null
-              )
-            )}
+            currentFeedback={this.getFeedbackForListen(listen)}
             showUsername={false}
             showTimestamp={false}
             listen={listen}

@@ -36,7 +36,6 @@ export type RecentListensProps = {
 export interface RecentListensState {
   listens: Array<Listen>;
   listenCount?: number;
-  recordingFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   recordingToReview?: Listen;
 }
@@ -54,7 +53,6 @@ export default class RecentListens extends React.Component<
       listens: props.listens || [],
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
-      recordingFeedbackMap: {},
     };
   }
 
@@ -64,13 +62,6 @@ export default class RecentListens extends React.Component<
 
   updateRecordingToReview = (recordingToReview: Listen) => {
     this.setState({ recordingToReview });
-  };
-
-  getFeedbackForRecordingMsid = (
-    recordingMsid?: string | null
-  ): ListenFeedBack => {
-    const { recordingFeedbackMap } = this.state;
-    return recordingMsid ? get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
   render() {

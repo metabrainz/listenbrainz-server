@@ -26,7 +26,8 @@ export type PinnedRecordingCardProps = {
   // Only used when not passing a custom feedbackComponent
   updateFeedbackCallback?: (
     recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack
+    score: ListenFeedBack | RecommendationFeedBack,
+    recordingMbid?: string
   ) => void;
   className?: string;
   isCurrentUser: Boolean;
