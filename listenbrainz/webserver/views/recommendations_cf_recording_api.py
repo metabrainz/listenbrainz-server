@@ -56,13 +56,15 @@ def get_recommendations(user_name):
 
         .. note::
             - This endpoint is experimental and probably will change in the future.
-            - <artist_type>: 'top' or 'similar'
+            - <artist_type>: 'top' or 'similar' or 'raw'
 
         :param artist_type: Mandatory, artist type in ['top', 'similar', 'raw']
 
             Ex. artist_type = top will fetch recommended recording mbids that belong to top artists listened to by the user.
 
             artist_type = similar will fetch recommended recording mbids that belong to artists similar to top artists listened to by the user.
+
+            artist_type = raw will fetch recommended recording mbids based on the training data fed to the CF model.
         :type artist_type: ``str``
 
         :param count: Optional, number of recording mbids to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -121,7 +123,7 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
         Args:
             recommendations: dict containing user recommendations.
             count (int): number of recommended recording mbids to return.
-            artist_type (str): artist type i.e 'top', 'similar'
+            artist_type (str): artist type i.e 'top', 'similar' or 'raw'
             user_name (str): musicbrainz id of the user.
             offset (int): number of entities to skip from the beginning
 
