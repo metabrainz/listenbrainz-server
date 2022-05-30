@@ -2,10 +2,7 @@ import * as React from "react";
 import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import UserFeedback, {
-  UserFeedbackProps,
-  UserFeedbackState,
-} from "../../src/user/UserFeedback";
+import UserFeedback, { UserFeedbackProps } from "../../src/user/UserFeedback";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
@@ -13,7 +10,6 @@ import APIService from "../../src/utils/APIService";
 import * as userFeedbackProps from "../__mocks__/userFeedbackProps.json";
 import * as userFeedbackAPIResponse from "../__mocks__/userFeedbackAPIResponse.json";
 import ListenCard from "../../src/listens/ListenCard";
-import ListenFeedbackComponent from "../../src/listens/ListenFeedbackComponent";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
 
@@ -113,7 +109,7 @@ describe("UserFeedback", () => {
 
     // We don't call loadFeedback because we already have the feedback scores in props
     expect(loadFeedbackSpy).not.toHaveBeenCalled();
-    expect(instance.state.recordingFeedbackMap).toEqual(
+    expect(instance.state.recordingMsidFeedbackMap).toEqual(
       initialRecordingFeedbackMap
     );
   });
@@ -138,10 +134,11 @@ describe("UserFeedback", () => {
     expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
     expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
       "pikachu",
-      props.feedback.map((item) => item.recording_msid).join(",")
+      props.feedback.map((item) => item.recording_msid).join(","),
+      ""
     );
     await flushPromises();
-    expect(instance.state.recordingFeedbackMap).toEqual({
+    expect(instance.state.recordingMsidFeedbackMap).toEqual({
       "some-uuid": 1,
       "some-other-uuid": -1,
     });
@@ -223,7 +220,7 @@ describe("UserFeedback", () => {
     );
     const instance = wrapper.instance();
     instance.setState({
-      recordingFeedbackMap: {
+      recordingMsidFeedbackMap: {
         "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
         "edfa0bb9-a58c-406c-9f7c-f16741443f9c": 0,
         "20059ffb-1615-4712-8235-a12840fb156e": -1,
@@ -302,12 +299,12 @@ describe("UserFeedback", () => {
     const updateFeedbackSpy = jest.spyOn(instance, "updateFeedback");
 
     instance.setState({
-      recordingFeedbackMap: {
-        ...instance.state.recordingFeedbackMap,
+      recordingMsidFeedbackMap: {
+        ...instance.state.recordingMsidFeedbackMap,
         "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
       },
     });
-    expect(instance.state.recordingFeedbackMap).toEqual({
+    expect(instance.state.recordingMsidFeedbackMap).toEqual({
       "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
     });
     const firstListenCard = listens.first();
@@ -330,10 +327,11 @@ describe("UserFeedback", () => {
     );
     expect(updateFeedbackSpy).toHaveBeenCalledWith(
       "8aa379ad-852e-4794-9c01-64959f5d0b17",
-      1
+      1,
+      "9812475d-c800-4f29-8a9a-4ac4af4b4dfd"
     );
     await flushPromises();
-    expect(instance.state.recordingFeedbackMap).toEqual({
+    expect(instance.state.recordingMsidFeedbackMap).toEqual({
       "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
     });
   });

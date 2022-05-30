@@ -327,7 +327,7 @@ export default class UserFeedPage extends React.Component<
         }
       });
       try {
-        const data = await APIService.getFeedbackForUserForRecordingsNew(
+        const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
           recording_msids,
           recording_mbids

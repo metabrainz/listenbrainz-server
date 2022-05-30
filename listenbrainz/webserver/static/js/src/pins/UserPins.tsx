@@ -3,21 +3,26 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 
-import { get } from "lodash";
+import * as _ from "lodash";
 import { Integrations } from "@sentry/tracing";
 import * as Sentry from "@sentry/react";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
-  WithAlertNotificationsInjectedProps,
   withAlertNotifications,
+  WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../utils/APIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
 import PinnedRecordingCard from "./PinnedRecordingCard";
-import { getPageProps, getListenablePin } from "../utils/utils";
+import {
+  getListenablePin,
+  getPageProps,
+  getRecordingMBID,
+  getRecordingMSID,
+} from "../utils/utils";
 
 export type UserPinsProps = {
   user: ListenBrainzUser;
@@ -31,7 +36,8 @@ export type UserPinsState = {
   page: number;
   maxPage: number;
   loading: boolean;
-  recordingFeedbackMap: RecordingFeedbackMap;
+  recordingMsidFeedbackMap: RecordingFeedbackMap;
+  recordingMbidFeedbackMap: RecordingFeedbackMap;
 };
 
 export default class UserPins extends React.Component<
@@ -51,7 +57,8 @@ export default class UserPins extends React.Component<
       page: 1,
       pins: props.pins || [],
       loading: false,
-      recordingFeedbackMap: {},
+      recordingMsidFeedbackMap: {},
+      recordingMbidFeedbackMap: {},
     };
   }
 
@@ -168,19 +175,23 @@ export default class UserPins extends React.Component<
   getFeedback = async () => {
     const { pins, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
-    let recordings = "";
+    let recording_msids = "";
+    let recording_mbids = "";
 
     if (pins && currentUser?.name) {
-      pins.forEach((pin) => {
-        const recordingMsid = pin.recording_msid;
-        if (recordingMsid) {
-          recordings += `${recordingMsid},`;
+      pins.forEach((item) => {
+        if (item.recording_msid) {
+          recording_msids += `${item.recording_msid},`;
+        }
+        if (item.recording_mbid) {
+          recording_mbids += `${item.recording_mbid},`;
         }
       });
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recordings
+          recording_msids,
+          recording_mbids
         );
         return data.feedback;
       } catch (error) {
@@ -201,30 +212,63 @@ export default class UserPins extends React.Component<
     if (!feedback) {
       return;
     }
-    const recordingFeedbackMap: RecordingFeedbackMap = {};
+    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
+    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
     feedback.forEach((fb: FeedbackResponse) => {
-      recordingFeedbackMap[fb.recording_msid] = fb.score;
+      if (fb.recording_msid) {
+        recordingMsidFeedbackMap[fb.recording_msid] = fb.score;
+      }
+      if (fb.recording_mbid) {
+        recordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
+      }
     });
-    this.setState({ recordingFeedbackMap });
+    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
   };
 
   updateFeedback = (
     recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack
+    score: ListenFeedBack | RecommendationFeedBack,
+    recordingMbid?: string
   ) => {
-    const { recordingFeedbackMap } = this.state;
-    const newFeedbackMap = {
-      ...recordingFeedbackMap,
-      [recordingMsid]: score as ListenFeedBack,
-    };
-    this.setState({ recordingFeedbackMap: newFeedbackMap });
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
+    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
+
+    if (recordingMsid) {
+      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
+    }
+    if (recordingMbid) {
+      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
+    }
+    this.setState({
+      recordingMsidFeedbackMap: newMsidFeedbackMap,
+      recordingMbidFeedbackMap: newMbidFeedbackMap,
+    });
   };
 
-  getFeedbackForRecordingMsid = (
-    recordingMsid?: string | null
-  ): ListenFeedBack => {
-    const { recordingFeedbackMap } = this.state;
-    return recordingMsid ? get(recordingFeedbackMap, recordingMsid, 0) : 0;
+  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    // first check whether the mbid has any feedback available
+    // if yes and the feedback is not zero, return it. if the
+    // feedback is zero or not the mbid is absent from the map,
+    // look for the feedback using the msid.
+
+    const recordingMbid = getRecordingMBID(listen);
+    const mbidFeedback = recordingMbid
+      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
+      : 0;
+
+    if (mbidFeedback) {
+      return mbidFeedback;
+    }
+
+    const recordingMsid = getRecordingMSID(listen);
+
+    return recordingMsid
+      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
+      : 0;
   };
 
   // BrainzPlayer functions
@@ -283,7 +327,7 @@ export default class UserPins extends React.Component<
                   id="pinned-recordings"
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
-                  {pins?.map((pin) => {
+                  {pins?.map((pin, index) => {
                     return (
                       <PinnedRecordingCard
                         key={pin.created}
@@ -292,8 +336,8 @@ export default class UserPins extends React.Component<
                         isCurrentUser={currentUser?.name === user?.name}
                         removePinFromPinsList={this.removePinFromPinsList}
                         newAlert={newAlert}
-                        currentFeedback={this.getFeedbackForRecordingMsid(
-                          pin.recording_msid
+                        currentFeedback={this.getFeedbackForListen(
+                          pinsAsListens[index]
                         )}
                         updateFeedbackCallback={this.updateFeedback}
                       />

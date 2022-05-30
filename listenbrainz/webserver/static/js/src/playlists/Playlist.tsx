@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { get, findIndex, omit, isNil, has } from "lodash";
+import { get, findIndex, omit } from "lodash";
 
 import { ActionMeta, InputActionMeta, ValueType } from "react-select";
 import {
@@ -110,13 +110,12 @@ export default class PlaylistPage extends React.Component<
     });
   }
 
-  componentDidMount(): void {
+  async componentDidMount(): Promise<void> {
     const { APIService, spotifyAuth } = this.context;
     this.APIService = APIService;
     this.connectWebsockets();
-    /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
-    /* const recordingFeedbackMap = await this.loadFeedback();
-    this.setState({ recordingFeedbackMap }); */
+    const recordingFeedbackMap = await this.loadFeedback();
+    this.setState({ recordingFeedbackMap });
     if (spotifyAuth) {
       this.SpotifyAPIService = new SpotifyAPIService(spotifyAuth);
     }
@@ -197,15 +196,14 @@ export default class PlaylistPage extends React.Component<
           [jspfTrack]
         );
         newAlert("success", "Added track", `Added track ${label}`);
-        /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
-        /* const recordingFeedbackMap = await this.loadFeedback([
+        const recordingFeedbackMap = await this.loadFeedback([
           selectedRecording.recording_mbid,
-        ]); */
+        ]);
         jspfTrack.id = selectedRecording.recording_mbid;
         this.setState(
           {
             playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
-            // recordingFeedbackMap,
+            recordingFeedbackMap,
             searchInputValue: "",
             cachedSearchResults: [],
           },
@@ -325,7 +323,7 @@ export default class PlaylistPage extends React.Component<
     if (currentUser && tracks) {
       const recordings = mbids ?? tracks.map(getRecordingMBIDFromJSPFTrack);
       try {
-        const data = await this.APIService.getFeedbackForUserForRecordings(
+        const data = await this.APIService.getFeedbackForUserForMBIDs(
           currentUser.name,
           recordings.join(", ")
         );
@@ -348,18 +346,23 @@ export default class PlaylistPage extends React.Component<
       ...recordingFeedbackMap,
     };
     feedback.forEach((fb: FeedbackResponse) => {
-      newRecordingFeedbackMap[fb.recording_msid] = fb.score;
+      if (fb.recording_mbid) {
+        newRecordingFeedbackMap[fb.recording_mbid] = fb.score;
+      }
     });
     return newRecordingFeedbackMap;
   };
 
   updateFeedback = (
     recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack
+    score: ListenFeedBack | RecommendationFeedBack,
+    recordingMbid?: string
   ) => {
-    const { recordingFeedbackMap } = this.state;
-    recordingFeedbackMap[recordingMsid] = score as ListenFeedBack;
-    this.setState({ recordingFeedbackMap });
+    if (recordingMbid) {
+      const { recordingFeedbackMap } = this.state;
+      recordingFeedbackMap[recordingMbid] = score as ListenFeedBack;
+      this.setState({ recordingFeedbackMap });
+    }
   };
 
   getFeedbackForRecordingMbid = (
@@ -382,14 +385,11 @@ export default class PlaylistPage extends React.Component<
     const { currentUser } = this.context;
     const { playlist } = this.state;
     const collaborators = getPlaylistExtension(playlist)?.collaborators ?? [];
-    if (
+    return (
       collaborators.findIndex(
         (collaborator) => collaborator === currentUser?.name
       ) >= 0
-    ) {
-      return true;
-    }
-    return false;
+    );
   };
 
   deletePlaylistItem = async (trackToDelete: JSPFTrack) => {
