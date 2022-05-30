@@ -78,7 +78,8 @@ describe("getFeedback", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(
       "Gulab Jamun",
-      "983e5620-829d-46dd-89a8-760d87076287,"
+      "983e5620-829d-46dd-89a8-760d87076287,",
+      ""
     );
     expect(result).toEqual(getFeedbackByMsidResponse.feedback);
   });
@@ -124,13 +125,13 @@ describe("loadFeedback", () => {
       );
 
     await instance.loadFeedback();
-    expect(wrapper.state("recordingFeedbackMap")).toMatchObject({
+    expect(wrapper.state("recordingMsidFeedbackMap")).toMatchObject({
       "973e5620-829d-46dd-89a8-760d87076287": 1,
     });
   });
 });
 
-describe("getFeedbackForRecordingMsid", () => {
+describe("getFeedbackForListen", () => {
   it("returns the feedback after fetching from recordingFeedbackMap state", async () => {
     const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
@@ -141,7 +142,7 @@ describe("getFeedbackForRecordingMsid", () => {
     const instance = wrapper.instance();
 
     const recordingMsidFeedbackMap: RecordingFeedbackMap = {
-      "973e5620-829d-46dd-89a8-760d87076287": 1,
+      "983e5620-829d-46dd-89a8-760d87076287": 1,
     };
     wrapper.setState({ recordingMsidFeedbackMap });
 
@@ -182,7 +183,7 @@ describe("updateFeedback", () => {
 
     await instance.updateFeedback("973e5620-829d-46dd-89a8-760d87076287", 1);
 
-    expect(wrapper.state("recordingFeedbackMap")).toMatchObject({
+    expect(wrapper.state("recordingMsidFeedbackMap")).toMatchObject({
       "973e5620-829d-46dd-89a8-760d87076287": 1,
     });
   });

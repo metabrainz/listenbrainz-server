@@ -1,13 +1,11 @@
 import * as React from "react";
-import { mount, shallow } from "enzyme";
+import {mount} from "enzyme";
 
 import ListenFeedbackComponent, {
   ListenFeedbackComponentProps,
 } from "../../src/listens/ListenFeedbackComponent";
-import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
-import RecommendationControl from "../../src/recommendations/RecommendationControl";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -68,7 +66,8 @@ describe("ListenFeedbackComponent", () => {
       expect(instance.props.updateFeedbackCallback).toHaveBeenCalledTimes(1);
       expect(instance.props.updateFeedbackCallback).toHaveBeenCalledWith(
         "bar",
-        -1
+        -1,
+        "yyyy"
       );
     });
 

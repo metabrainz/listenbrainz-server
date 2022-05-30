@@ -560,20 +560,6 @@ export default class APIService {
 
   getFeedbackForUserForRecordings = async (
     userName: string,
-    recordings: string
-  ) => {
-    if (!userName) {
-      throw new SyntaxError("Username missing");
-    }
-
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recordings=${recordings}`;
-    const response = await fetch(url);
-    await this.checkStatus(response);
-    return response.json();
-  };
-
-  getFeedbackForUserForRecordingsNew = async (
-    userName: string,
     recording_msids: string,
     recording_mbids: string
   ) => {

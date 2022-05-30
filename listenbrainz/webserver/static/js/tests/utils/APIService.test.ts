@@ -702,9 +702,13 @@ describe("getFeedbackForUserForRecordings", () => {
   });
 
   it("calls fetch correctly", async () => {
-    await apiService.getFeedbackForUserForRecordings("foo", "bar,baz");
+    await apiService.getFeedbackForUserForRecordings(
+      "foo",
+      "bar,baz",
+      "new,old"
+    );
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/feedback/user/foo/get-feedback-for-recordings?recordings=bar,baz"
+      "foobar/1/feedback/user/foo/get-feedback-for-recordings?recording_msids=bar,baz&recording_mbids=new,old"
     );
   });
 

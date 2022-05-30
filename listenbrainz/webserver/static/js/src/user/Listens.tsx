@@ -384,7 +384,7 @@ export default class Listens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, newAlert } = this.props;
+    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
     let recording_msids = "";
@@ -402,7 +402,7 @@ export default class Listens extends React.Component<
         }
       });
       try {
-        const data = await APIService.getFeedbackForUserForRecordingsNew(
+        const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
           recording_msids,
           recording_mbids
@@ -461,14 +461,6 @@ export default class Listens extends React.Component<
     });
   };
 
-  updateRecordingToPin = (recordingToPin: Listen) => {
-    this.setState({ recordingToPin });
-  };
-
-  updateRecordingToReview = (recordingToReview: Listen) => {
-    this.setState({ recordingToReview });
-  };
-
   getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
     const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
 
@@ -491,6 +483,14 @@ export default class Listens extends React.Component<
     return recordingMsid
       ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
       : 0;
+  };
+
+  updateRecordingToPin = (recordingToPin: Listen) => {
+    this.setState({ recordingToPin });
+  };
+
+  updateRecordingToReview = (recordingToReview: Listen) => {
+    this.setState({ recordingToReview });
   };
 
   deleteListen = async (listen: Listen) => {

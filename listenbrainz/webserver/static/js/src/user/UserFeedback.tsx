@@ -310,7 +310,7 @@ export default class UserFeedback extends React.Component<
         return [];
       }
       try {
-        const data = await APIService.getFeedbackForUserForRecordingsNew(
+        const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
           recording_msids,
           recording_mbids
