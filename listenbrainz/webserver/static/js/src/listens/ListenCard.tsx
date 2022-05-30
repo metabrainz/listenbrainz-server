@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, has as _has, isEqual, isNil, isNumber } from "lodash";
+import { get as _get, isEqual, isNil, isNumber } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -26,7 +26,8 @@ import {
   getReleaseMBID,
   getArtistName,
   getTrackName,
-  getTrackDuration, getRecordingMSID,
+  getTrackDuration,
+  getRecordingMSID,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";

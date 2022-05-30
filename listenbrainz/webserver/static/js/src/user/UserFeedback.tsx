@@ -11,12 +11,13 @@ import {
   faHeartBroken,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
-import { isNaN, get, clone, has } from "lodash";
+import * as _ from "lodash";
+import { clone, has, isNaN } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
-  WithAlertNotificationsInjectedProps,
   withAlertNotifications,
+  WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
 
 import Pill from "../components/Pill";
@@ -27,12 +28,12 @@ import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
 import PinRecordingModal from "../pins/PinRecordingModal";
 import {
-  getPageProps, getRecordingMBID, getRecordingMSID,
-  getTrackName,
+  getPageProps,
+  getRecordingMBID,
+  getRecordingMSID,
   handleNavigationClickEvent,
 } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
-import * as _ from "lodash";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
