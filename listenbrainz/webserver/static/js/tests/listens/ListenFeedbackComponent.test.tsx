@@ -65,9 +65,9 @@ describe("ListenFeedbackComponent", () => {
 
       expect(instance.props.updateFeedbackCallback).toHaveBeenCalledTimes(1);
       expect(instance.props.updateFeedbackCallback).toHaveBeenCalledWith(
-        "bar",
+        "yyyy",
         -1,
-        "yyyy"
+        "bar"
       );
     });
 

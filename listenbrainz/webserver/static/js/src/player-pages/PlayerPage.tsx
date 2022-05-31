@@ -130,9 +130,8 @@ export default class PlayerPage extends React.Component<
   };
 
   updateFeedback = (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
+    recordingMbid: string,
+    score: ListenFeedBack | RecommendationFeedBack
   ) => {
     if (!recordingMbid) {
       return;

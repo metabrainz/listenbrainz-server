@@ -209,9 +209,9 @@ describe("updateFeedback", () => {
     wrapper.setState({ recordingMsidFeedbackMap });
 
     await instance.updateFeedback(
-      "973e5620-829d-46dd-89a8-760d87076287",
+      "873e5620-829d-46dd-89a8-760d87076287",
       1,
-      "873e5620-829d-46dd-89a8-760d87076287"
+      "973e5620-829d-46dd-89a8-760d87076287"
     );
 
     expect(wrapper.state("recordingMsidFeedbackMap")).toMatchObject({

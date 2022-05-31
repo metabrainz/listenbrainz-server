@@ -390,9 +390,9 @@ export default class UserFeedPage extends React.Component<
   };
 
   updateFeedback = (
-    recordingMsid: string,
+    recordingMbid: string,
     score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
+    recordingMsid?: string
   ) => {
     const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
 

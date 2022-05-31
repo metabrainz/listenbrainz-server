@@ -11,8 +11,7 @@ import {
   faHeartBroken,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
-import * as _ from "lodash";
-import { clone, has, isNaN } from "lodash";
+import { get, clone, has, isNaN } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
@@ -365,9 +364,9 @@ export default class UserFeedback extends React.Component<
   };
 
   updateFeedback = (
-    recordingMsid: string,
+    recordingMbid: string,
     score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
+    recordingMsid?: string
   ) => {
     const {
       recordingMsidFeedbackMap,
@@ -425,7 +424,7 @@ export default class UserFeedback extends React.Component<
 
     const recordingMbid = getRecordingMBID(listen);
     const mbidFeedback = recordingMbid
-      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
+      ? get(recordingMbidFeedbackMap, recordingMbid, 0)
       : 0;
 
     if (mbidFeedback) {
@@ -434,9 +433,7 @@ export default class UserFeedback extends React.Component<
 
     const recordingMsid = getRecordingMSID(listen);
 
-    return recordingMsid
-      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
-      : 0;
+    return recordingMsid ? get(recordingMsidFeedbackMap, recordingMsid, 0) : 0;
   };
 
   render() {
