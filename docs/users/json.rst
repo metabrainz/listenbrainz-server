@@ -37,9 +37,13 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
    - ``payload`` should contain information about *at least one* track
 
-   - submitting multiple listens in one go is allowed, but the complete JSON
-     document may not exceed :data:`~webserver.views.api.MAX_LISTEN_SIZE` bytes
-     in size
+   - submitting multiple listens in one request is permitted. There are some
+     limitations on the size of a submission. A request must be less than
+     :data:`~listenbrainz.webserver.views.api_tools.MAX_LISTEN_PAYLOAD_SIZE`
+     bytes, and you can only submit up to
+     :data:`~listenbrainz.webserver.views.api_tools.MAX_LISTENS_PER_REQUEST` listens per
+     request. Each listen may not exceed
+     :data:`~listenbrainz.webserver.views.api_tools.MAX_LISTEN_SIZE` bytes in size
 
 The ``listen_type`` element defines different types of submissions. The element
 is placed at the top-most level of the JSON document. The only other required
@@ -153,7 +157,7 @@ A minimal payload must include
 
 The payload should also include the ``listened_at`` element, which must be an integer
 representing the Unix time when the track was listened to. The minimum accepted
-value for this field is :data:`~webserver.views.api.LISTEN_MINIMUM_TS`.
+value for this field is :data:`~listenbrainz.webserver.views.api_tools.LISTEN_MINIMUM_TS`.
 playing_now requests should not have a ``listened_at`` field
 
 Add additional metadata you may have for a track to the ``additional_info``
@@ -197,7 +201,7 @@ the data for any of the following fields, omit the key entirely:
    * - ``spotify_id``
      - The Spotify track URL associated with this recording.  e.g.: http://open.spotify.com/track/1rrgWMXGCGHru5bIRxGFV0
    * - ``tags``
-     - A list of user-defined folksonomy tags to be associated with this recording. For example, you have apply tags such as ``punk``, ``see-live``, ``smelly``. You may submit up to :data:`~webserver.views.api.MAX_TAGS_PER_LISTEN` tags and each tag may be up to :data:`~webserver.views.api.MAX_TAG_SIZE` characters large.
+     - A list of user-defined folksonomy tags to be associated with this recording. For example, you have apply tags such as ``punk``, ``see-live``, ``smelly``. You may submit up to :data:`~listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN` tags and each tag may be up to :data:`~listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE` characters large.
    * - ``media_player``
      - The name of the program being used to listen to music. Don't include a version number here.
    * - ``media_player_version``

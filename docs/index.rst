@@ -41,6 +41,7 @@ Contents
    :maxdepth: 2
    :caption: Maintainer Documentation
 
+   maintainers/deploy
    maintainers/docker-image
    maintainers/dumps
    maintainers/spotify-reader

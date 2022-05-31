@@ -1057,8 +1057,8 @@ describe("getPinsForUser", () => {
 });
 
 describe("submitReviewToCB", () => {
-  const accessToken = "foobar";
   const reviewToSubmit: CritiqueBrainzReview = {
+    entity_name: "Shakira",
     entity_id: "bf24ca37-25f4-4e34-9aec-460b94364cfc",
     entity_type: "artist",
     text: "TEXT",
@@ -1082,36 +1082,37 @@ describe("submitReviewToCB", () => {
   });
 
   it("calls fetch with correct parameters", async () => {
-    await apiService.submitReviewToCB(accessToken, reviewToSubmit);
+    await apiService.submitReviewToCB("fnord", "baz", reviewToSubmit);
     expect(window.fetch).toHaveBeenCalledWith(
-      "https://critiquebrainz.org/ws/1/review/",
+      "foobar/1/user/fnord/timeline-event/create/review",
       {
         method: "POST",
         headers: {
-          Authorization: "Bearer foobar",
+          Authorization: "Token baz",
           "Content-Type": "application/json;charset=UTF-8",
         },
         body: JSON.stringify({
-          is_draft: false,
-          entity_id: "bf24ca37-25f4-4e34-9aec-460b94364cfc",
-          entity_type: "artist",
-          text: "TEXT",
-          license_choice: "CC BY-SA 3.0",
-          language: "en",
-          rating: 4,
+          metadata: {
+            entity_name: "Shakira",
+            entity_id: "bf24ca37-25f4-4e34-9aec-460b94364cfc",
+            entity_type: "artist",
+            text: "TEXT",
+            language: "en",
+            rating: 4,
+          },
         }),
       }
     );
   });
 
   it("calls checkStatus once", async () => {
-    await apiService.submitReviewToCB(accessToken, reviewToSubmit);
+    await apiService.submitReviewToCB("fnord", "shhh", reviewToSubmit);
     expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 
   it("returns the id for the submitted review if successful", async () => {
     await expect(
-      apiService.submitReviewToCB(accessToken, reviewToSubmit)
+      apiService.submitReviewToCB("fnord", "shhh", reviewToSubmit)
     ).resolves.toEqual({ id: "bf24ca37-25f4-4e34-9aec-460b94364cfc" });
   });
 });

@@ -29,6 +29,12 @@ MAX_LISTEN_SIZE = 10240
 #: The maximum number of tags per listen.
 MAX_TAGS_PER_LISTEN = 50
 
+#: The maximum number of listens in a request.
+MAX_LISTENS_PER_REQUEST = 1000
+
+#: The maximum size of a payload in bytes. The same as MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST.
+MAX_LISTEN_PAYLOAD_SIZE = MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST
+
 #: The maximum length of a tag
 MAX_TAG_SIZE = 64
 
