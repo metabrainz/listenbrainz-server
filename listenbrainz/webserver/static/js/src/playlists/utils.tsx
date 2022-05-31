@@ -39,38 +39,6 @@ export function getArtistMBIDFromURI(URI: string): string {
   return URI?.substr(PLAYLIST_ARTIST_URI_PREFIX.length) ?? "";
 }
 
-/*
- * This function is deprecated and modified into a new function
- * because we needed a more standard format to show track duration.
- * The new function uses the same function name (millisecondsToStr).
- * Discussion here:
- * https://github.com/metabrainz/listenbrainz-server/pull/2000#discussion_r878193576
- *
-
-// Credit goes to Dmitry Sheiko https://stackoverflow.com/a/53006402/4904467
-export function millisecondsToStr(milliseconds: number) {
-  let temp = milliseconds / 1000;
-  const days = Math.floor((temp %= 31536000) / 86400);
-  const hours = Math.floor((temp %= 86400) / 3600);
-  const minutes = Math.floor((temp %= 3600) / 60);
-  const seconds = temp % 60;
-
-  if (seconds > 1 && !minutes && !hours) {
-    return `${seconds.toFixed(0)}s`;
-  }
-  if (hours || minutes) {
-    return `${
-      (days ? `${days}d ` : "") +
-      (hours ? `${hours}:` : "") +
-      (minutes ? `${minutes}:` : "") +
-      padStart(seconds.toFixed(0), 2, "0")
-    }`;
-  }
-
-  return "< 1s";
-}
-*/
-
 // Originally by Sinjai https://stackoverflow.com/a/67462589
 export function millisecondsToStr(milliseconds: number) {
   function pad(num: number) {
