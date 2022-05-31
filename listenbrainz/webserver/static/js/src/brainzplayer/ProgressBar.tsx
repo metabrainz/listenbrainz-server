@@ -17,7 +17,7 @@ const EVENT_KEY_ARROWLEFT: string = "ArrowLeft";
 const EVENT_KEY_ARROWRIGHT: string = "ArrowRight";
 const EVENT_TYPE_CLICK: string = "click";
 const EVENT_TYPE_MOUSEMOVE: string = "mousemove";
-const MOUSE_THROTTLE_DELAY: number = 150;
+const MOUSE_THROTTLE_DELAY: number = 300;
 
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
 const TOOLTIP_TOP_OFFSET: number = 102;
@@ -62,8 +62,6 @@ const ProgressBar = (props: ProgressBarProps) => {
     },
     MOUSE_THROTTLE_DELAY
   );
-
-  React.useEffect(() => mouseEventHandler, []);
 
   const onKeyPressHandler = (
     event: React.KeyboardEvent<HTMLInputElement>
