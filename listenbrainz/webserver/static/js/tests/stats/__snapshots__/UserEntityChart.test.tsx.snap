@@ -5200,13 +5200,15 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               seekToPositionMs={[Function]}
             >
               <div
-                aria-label="Audio Progress Control"
+                aria-label="Audio progress control"
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={NaN}
                 className="progress hidden"
+                data-tip="0:00"
                 onClick={[Function]}
                 onKeyDown={[Function]}
+                onMouseMove={[Function]}
                 role="progressbar"
                 tabIndex={0}
               >
@@ -5218,6 +5220,14 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                     }
                   }
                 />
+                <mockConstructor
+                  className="progress-tooltip"
+                  getContent={[Function]}
+                  globalEventOff="click"
+                  overridePosition={[Function]}
+                >
+                  This is a mocked react-tooltip component.
+                </mockConstructor>
               </div>
             </ProgressBar>
             <div
@@ -5266,7 +5276,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -14614,13 +14624,15 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               seekToPositionMs={[Function]}
             >
               <div
-                aria-label="Audio Progress Control"
+                aria-label="Audio progress control"
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={NaN}
                 className="progress hidden"
+                data-tip="0:00"
                 onClick={[Function]}
                 onKeyDown={[Function]}
+                onMouseMove={[Function]}
                 role="progressbar"
                 tabIndex={0}
               >
@@ -14632,6 +14644,14 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                     }
                   }
                 />
+                <mockConstructor
+                  className="progress-tooltip"
+                  getContent={[Function]}
+                  globalEventOff="click"
+                  overridePosition={[Function]}
+                >
+                  This is a mocked react-tooltip component.
+                </mockConstructor>
               </div>
             </ProgressBar>
             <div
@@ -14680,7 +14700,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -20780,13 +20800,15 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               seekToPositionMs={[Function]}
             >
               <div
-                aria-label="Audio Progress Control"
+                aria-label="Audio progress control"
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={NaN}
                 className="progress hidden"
+                data-tip="0:00"
                 onClick={[Function]}
                 onKeyDown={[Function]}
+                onMouseMove={[Function]}
                 role="progressbar"
                 tabIndex={0}
               >
@@ -20798,6 +20820,14 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                     }
                   }
                 />
+                <mockConstructor
+                  className="progress-tooltip"
+                  getContent={[Function]}
+                  globalEventOff="click"
+                  overridePosition={[Function]}
+                >
+                  This is a mocked react-tooltip component.
+                </mockConstructor>
               </div>
             </ProgressBar>
             <div
@@ -20846,7 +20876,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -21756,13 +21786,15 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
               seekToPositionMs={[Function]}
             >
               <div
-                aria-label="Audio Progress Control"
+                aria-label="Audio progress control"
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={NaN}
                 className="progress hidden"
+                data-tip="0:00"
                 onClick={[Function]}
                 onKeyDown={[Function]}
+                onMouseMove={[Function]}
                 role="progressbar"
                 tabIndex={0}
               >
@@ -21774,6 +21806,14 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                     }
                   }
                 />
+                <mockConstructor
+                  className="progress-tooltip"
+                  getContent={[Function]}
+                  globalEventOff="click"
+                  overridePosition={[Function]}
+                >
+                  This is a mocked react-tooltip component.
+                </mockConstructor>
               </div>
             </ProgressBar>
             <div
@@ -21822,7 +21862,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -27628,13 +27668,15 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               seekToPositionMs={[Function]}
             >
               <div
-                aria-label="Audio Progress Control"
+                aria-label="Audio progress control"
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={NaN}
                 className="progress hidden"
+                data-tip="0:00"
                 onClick={[Function]}
                 onKeyDown={[Function]}
+                onMouseMove={[Function]}
                 role="progressbar"
                 tabIndex={0}
               >
@@ -27646,6 +27688,14 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     }
                   }
                 />
+                <mockConstructor
+                  className="progress-tooltip"
+                  getContent={[Function]}
+                  globalEventOff="click"
+                  overridePosition={[Function]}
+                >
+                  This is a mocked react-tooltip component.
+                </mockConstructor>
               </div>
             </ProgressBar>
             <div
@@ -27694,7 +27744,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -37048,13 +37098,15 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               seekToPositionMs={[Function]}
             >
               <div
-                aria-label="Audio Progress Control"
+                aria-label="Audio progress control"
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={NaN}
                 className="progress hidden"
+                data-tip="0:00"
                 onClick={[Function]}
                 onKeyDown={[Function]}
+                onMouseMove={[Function]}
                 role="progressbar"
                 tabIndex={0}
               >
@@ -37066,6 +37118,14 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                     }
                   }
                 />
+                <mockConstructor
+                  className="progress-tooltip"
+                  getContent={[Function]}
+                  globalEventOff="click"
+                  overridePosition={[Function]}
+                >
+                  This is a mocked react-tooltip component.
+                </mockConstructor>
               </div>
             </ProgressBar>
             <div
@@ -37114,7 +37174,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -43220,13 +43280,15 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               seekToPositionMs={[Function]}
             >
               <div
-                aria-label="Audio Progress Control"
+                aria-label="Audio progress control"
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={NaN}
                 className="progress hidden"
+                data-tip="0:00"
                 onClick={[Function]}
                 onKeyDown={[Function]}
+                onMouseMove={[Function]}
                 role="progressbar"
                 tabIndex={0}
               >
@@ -43238,6 +43300,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                     }
                   }
                 />
+                <mockConstructor
+                  className="progress-tooltip"
+                  getContent={[Function]}
+                  globalEventOff="click"
+                  overridePosition={[Function]}
+                >
+                  This is a mocked react-tooltip component.
+                </mockConstructor>
               </div>
             </ProgressBar>
             <div
@@ -43286,7 +43356,7 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -44202,13 +44272,15 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
               seekToPositionMs={[Function]}
             >
               <div
-                aria-label="Audio Progress Control"
+                aria-label="Audio progress control"
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={NaN}
                 className="progress hidden"
+                data-tip="0:00"
                 onClick={[Function]}
                 onKeyDown={[Function]}
+                onMouseMove={[Function]}
                 role="progressbar"
                 tabIndex={0}
               >
@@ -44220,6 +44292,14 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                     }
                   }
                 />
+                <mockConstructor
+                  className="progress-tooltip"
+                  getContent={[Function]}
+                  globalEventOff="click"
+                  overridePosition={[Function]}
+                >
+                  This is a mocked react-tooltip component.
+                </mockConstructor>
               </div>
             </ProgressBar>
             <div
@@ -44268,7 +44348,7 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
