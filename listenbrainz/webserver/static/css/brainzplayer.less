@@ -7,8 +7,8 @@
 @brainzplayer-padding: 0px;
 @cover-art-size: @brainzplayer-height - @brainzplayer-padding*2;
 @big-cover-art-size: 500px;
-@progress-bar-height: 3px;
-@progress-bar-hover-height: 6px;
+@progress-bar-height: 4px;
+@progress-bar-hover-height: 8px;
 @white-background: #fff;
 // Recommended minimum size required by Youtube
 @youtube-player-height:200px;
@@ -23,6 +23,7 @@
 	height: @brainzplayer-height;
 	background: @white-background;
 	display: flex;
+	box-shadow: 0px -4px 12px fade(black, 20%);
 	
 	padding: @brainzplayer-padding;
 	border-top: 1px solid #dbccc6;
@@ -72,7 +73,7 @@
 				height: @youtube-player-height + @youtube-drag-handle-size;
 				width: @youtube-player-width;
 				max-width: calc(100vw - 20px);
-				z-index: 10;
+				z-index: 4;
 				
 				.youtube-player{
 					height: @youtube-player-height;
@@ -162,6 +163,14 @@
 		}
 
 	}
+
+	.elapsed {
+		display: flex;
+		flex-direction: row;
+		flex-grow: 0;
+		align-items: center;
+		padding: 1rem;
+	}
 	
 	.actions {
 		align-self: center;
@@ -230,8 +239,9 @@
 		margin-bottom: 0;
     	left: 0;
 		width: 100%;
-		cursor: crosshair;
-		z-index: 2;
+		cursor: pointer;
+		z-index: 5;
+		transition: height, 0.2s;
 		
 		.progress-bar {
 			height: 100%;
@@ -240,7 +250,18 @@
 		}
 		&:hover{
 			height: @progress-bar-hover-height;
-			top: -@progress-bar-height - (@progress-bar-hover-height - @progress-bar-height)/2
+			top: -@progress-bar-hover-height;
+		}
+
+		.progress-tooltip {
+			background: @primary-color;
+			margin-top: -4px;
+			border-radius: 24px;
+			font-size: 1em;
+			padding: 6px 12px;
+		}
+		& > ::after {
+			border-color: transparent;
 		}
 	}
 

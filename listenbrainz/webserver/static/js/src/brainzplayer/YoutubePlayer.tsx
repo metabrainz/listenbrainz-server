@@ -406,7 +406,7 @@ export default class YoutubePlayer
         bounds={{
           left: -leftBound,
           right: -draggableBoundPadding,
-          bottom: 60, // Brainzplaer height
+          bottom: -draggableBoundPadding,
         }}
       >
         <div className={`youtube-wrapper${!show ? " hidden" : ""}`}>
