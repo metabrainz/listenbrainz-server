@@ -26,7 +26,7 @@ exports[`YoutubePlayer renders 1`] = `
     axis="both"
     bounds={
       Object {
-        "bottom": 60,
+        "bottom": -10,
         "left": 370,
         "right": -10,
       }
