@@ -13,9 +13,9 @@ export type ListenFeedbackComponentProps = {
   listen: BaseListenFormat;
   currentFeedback: ListenFeedBack;
   updateFeedbackCallback?: (
-    recordingMsid: string,
+    recordingMbid: string,
     score: ListenFeedBack,
-    recordingMbid?: string
+    recordingMsid?: string
   ) => void;
 };
 
@@ -41,7 +41,7 @@ export default class ListenFeedbackComponent extends React.Component<
         );
         if (status === 200) {
           if (updateFeedbackCallback) {
-            updateFeedbackCallback(recordingMSID, score, recordingMBID);
+            updateFeedbackCallback(recordingMBID ?? "", score, recordingMSID);
           }
         }
       } catch (error) {

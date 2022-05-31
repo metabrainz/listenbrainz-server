@@ -354,9 +354,8 @@ export default class PlaylistPage extends React.Component<
   };
 
   updateFeedback = (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
+    recordingMbid: string,
+    score: ListenFeedBack | RecommendationFeedBack
   ) => {
     if (recordingMbid) {
       const { recordingFeedbackMap } = this.state;
