@@ -5276,7 +5276,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -14700,7 +14700,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -20876,7 +20876,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -21862,7 +21862,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -27744,7 +27744,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -37174,7 +37174,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -43356,7 +43356,7 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
@@ -44348,7 +44348,7 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                     axis="both"
                     bounds={
                       Object {
-                        "bottom": 60,
+                        "bottom": -10,
                         "left": 370,
                         "right": -10,
                       }
