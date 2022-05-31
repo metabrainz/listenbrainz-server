@@ -10,7 +10,7 @@ from flask import current_app, render_template
 from psycopg2.extras import execute_values
 from brainzutils import musicbrainz_db
 
-from data.model.user_timeline_event import NotificationMetadata
+from listenbrainz.db.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.user_timeline_event import create_user_notification_event

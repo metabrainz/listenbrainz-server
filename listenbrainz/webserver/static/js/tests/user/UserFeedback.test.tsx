@@ -325,7 +325,8 @@ describe("UserFeedback", () => {
     expect(APIsubmitFeedbackSpy).toHaveBeenCalledWith(
       "lalala",
       1,
-      "8aa379ad-852e-4794-9c01-64959f5d0b17"
+      "8aa379ad-852e-4794-9c01-64959f5d0b17",
+      "9812475d-c800-4f29-8a9a-4ac4af4b4dfd"
     );
     expect(updateFeedbackSpy).toHaveBeenCalledWith(
       "8aa379ad-852e-4794-9c01-64959f5d0b17",

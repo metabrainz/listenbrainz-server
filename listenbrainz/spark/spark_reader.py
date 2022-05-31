@@ -1,16 +1,10 @@
 import json
-import logging
-import time
-
-from flask import current_app
 
 import pika
-import sqlalchemy
 import ujson
+from flask import current_app
+
 from listenbrainz import utils
-from listenbrainz.db import stats as db_stats
-from listenbrainz.db import user as db_user
-from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_dataframes,
                                          handle_dump_imported, handle_model,
@@ -22,7 +16,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          notify_artist_relation_import,
                                          notify_mapping_import,
                                          handle_missing_musicbrainz_data,
-                                         notify_cf_recording_recommendations_generation,
+                                         cf_recording_recommendations_complete,
                                          handle_sitewide_listening_activity,
                                          handle_similar_users,
                                          handle_new_releases_of_top_artists,
@@ -54,7 +48,7 @@ response_handler_map = {
     'import_mapping': notify_mapping_import,
     'import_artist_relation': notify_artist_relation_import,
     'missing_musicbrainz_data': handle_missing_musicbrainz_data,
-    'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation,
+    'cf_recommendations_recording_mail': cf_recording_recommendations_complete,
     'similar_users': handle_similar_users,
     'similar_users_year_end': handle_similar_users_year_end,
     'year_in_music_top_stats': handle_top_stats,
