@@ -354,7 +354,7 @@ export default class UserFeedback extends React.Component<
         newRecordingMsidFeedbackMap[fb.recording_msid] = fb.score;
       }
       if (fb.recording_mbid) {
-        newRecordingMsidFeedbackMap[fb.recording_mbid] = fb.score;
+        newRecordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
       }
     });
     this.setState({
