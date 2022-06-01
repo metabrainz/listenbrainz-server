@@ -7,6 +7,44 @@ from listenbrainz.db.model.feedback import Feedback
 from typing import List
 
 
+INSERT_QUERIES = {
+    "msid": [
+        """
+        DELETE FROM recording_feedback
+              WHERE user_id = :user_id
+                AND recording_msid = :recording_msid
+        """,
+        """
+        INSERT INTO recording_feedback (user_id, recording_msid, score)
+             VALUES (:user_id, :recording_msid, :score)
+        """
+    ],
+    "mbid": [
+        """
+        DELETE FROM recording_feedback
+              WHERE user_id = :user_id
+                AND recording_mbid = :recording_mbid
+        """,
+        """
+        INSERT INTO recording_feedback (user_id, recording_mbid, score)
+             VALUES (:user_id, :recording_mbid, :score)
+        """
+    ],
+    "both": [
+        """
+        DELETE FROM recording_feedback
+              WHERE user_id = :user_id
+                AND recording_msid = :recording_msid
+                AND recording_mbid = :recording_mbid
+        """,
+        """
+        INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
+             VALUES (:user_id, :recording_mbid, :recording_msid, :score)
+        """
+    ]
+}
+
+
 def insert(feedback: Feedback):
     """ Inserts a feedback record for a user's loved/hated recording into the database.
         If the record is already present for the user, the score is updated to the new
@@ -14,32 +52,6 @@ def insert(feedback: Feedback):
 
         Args:
             feedback: An object of class Feedback
-    """
-    query_only_msid = """
-        INSERT INTO recording_feedback (user_id, recording_msid, score)
-             VALUES (:user_id, :recording_msid, :score)
-        ON CONFLICT (user_id, recording_msid)
-              WHERE recording_mbid IS NULL
-      DO UPDATE SET score = :score
-                  , created = NOW()
-    """
-
-    query_only_mbid = """
-        INSERT INTO recording_feedback (user_id, recording_mbid, score)
-             VALUES (:user_id, :recording_mbid, :score)
-        ON CONFLICT (user_id, recording_mbid)
-              WHERE recording_msid IS NULL
-      DO UPDATE SET score = :score
-                  , created = NOW()
-    """
-
-    query_both_msid_mbid = """
-        INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
-             VALUES (:user_id, :recording_mbid, :recording_msid, :score)
-        ON CONFLICT (user_id, recording_msid, recording_mbid)
-              WHERE recording_msid IS NOT NULL AND recording_mbid IS NOT NULL
-      DO UPDATE SET score = :score
-                  , created = NOW()
     """
 
     params = {
@@ -51,16 +63,22 @@ def insert(feedback: Feedback):
         # both recording_msid and recording_mbid available
         params['recording_msid'] = feedback.recording_msid
         params['recording_mbid'] = feedback.recording_mbid
-        query = query_both_msid_mbid
+        query = INSERT_QUERIES["both"]
     elif feedback.recording_mbid is not None:  # only recording_mbid available
         params['recording_mbid'] = feedback.recording_mbid
-        query = query_only_mbid
+        query = INSERT_QUERIES["mbid"]
     else: # only recording_msid available
         params['recording_msid'] = feedback.recording_msid
-        query = query_only_msid
+        query = INSERT_QUERIES["msid"]
 
-    with db.engine.connect() as connection:
-        connection.execute(text(query), params)
+    with db.engine.connect() as connection, connection.begin():
+        # delete the existing feedback and then insert new feedback. we cannot use ON CONFLICT DO UPDATE
+        # because it is possible for a user to submit the feedback using recording_msid only and then
+        # using both recording_msid and recording_mbid at once. Then the ON CONFLICT clause won't work
+        # well. We can use partial unique indexes to make it work but there will still be duplicates.
+        # therefore, we delete first then insert new feedback in the same transaction.
+        connection.execute(text(query[0]), params)
+        connection.execute(text(query[1]), params)
 
 
 def delete(feedback: Feedback):
