@@ -29,6 +29,11 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
                 "score": -1
             },
             {
+                "recording_msid": "222eb00d-9ead-42de-aec9-8f8c1509413d",
+                "recording_mbid": "0fbdb6bc-bc79-432f-9cfc-eaa055d86abf",
+                "score": -1
+            },
+            {
                 "recording_msid": None,
                 "recording_mbid": "9541592c-0102-4b94-93cc-ee0f3cf83d64",
                 "score": 1

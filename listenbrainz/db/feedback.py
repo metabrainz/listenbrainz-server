@@ -19,6 +19,7 @@ def insert(feedback: Feedback):
         INSERT INTO recording_feedback (user_id, recording_msid, score)
              VALUES (:user_id, :recording_msid, :score)
         ON CONFLICT (user_id, recording_msid)
+              WHERE recording_mbid IS NULL
       DO UPDATE SET score = :score
                   , created = NOW()
     """
@@ -27,6 +28,7 @@ def insert(feedback: Feedback):
         INSERT INTO recording_feedback (user_id, recording_mbid, score)
              VALUES (:user_id, :recording_mbid, :score)
         ON CONFLICT (user_id, recording_mbid)
+              WHERE recording_msid IS NULL
       DO UPDATE SET score = :score
                   , created = NOW()
     """
@@ -34,9 +36,9 @@ def insert(feedback: Feedback):
     query_both_msid_mbid = """
         INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
              VALUES (:user_id, :recording_mbid, :recording_msid, :score)
-        ON CONFLICT (user_id, recording_mbid)
+        ON CONFLICT (user_id, recording_msid, recording_mbid)
+              WHERE recording_msid IS NOT NULL AND recording_mbid IS NOT NULL
       DO UPDATE SET score = :score
-                  , recording_msid = :recording_msid
                   , created = NOW()
     """
 
