@@ -1,0 +1,28 @@
+{
+  "feedback": [
+    {
+      "score": 1,
+      "user_id": "lucifer",
+      "recording_msid": "f730bec5-d243-478e-ae46-2c47770ca1f0",
+      "recording_mbid": null
+    },
+    {
+      "score": 1,
+      "user_id": "lucifer",
+      "recording_msid": "d90876b7-1e0f-4b25-8a83-be210804cdd1",
+      "recording_mbid": "9f24c0f7-a644-4074-8fbd-a1dba03de129"
+    },
+    {
+      "score": -1,
+      "user_id": "lucifer",
+      "recording_msid": null,
+      "recording_mbid": "55215be2-094c-4c38-a0da-2a83863ee804"
+    },
+    {
+      "score": 0,
+      "user_id": "lucifer",
+      "recording_msid": "f16652d3-d9ac-4fc2-973f-047b7f45bee1",
+      "recording_mbid": null
+    }
+  ]
+}

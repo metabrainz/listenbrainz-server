@@ -127,6 +127,9 @@ const getArtistMBIDs = (listen: Listen): string[] | undefined =>
   _.get(listen, "track_metadata.additional_info.artist_mbids") ??
   _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
 
+const getRecordingMSID = (listen: Listen): string =>
+  _.get(listen, "track_metadata.additional_info.recording_msid");
+
 const getRecordingMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.recording_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.recording_mbid");
@@ -635,6 +638,7 @@ export {
   getListenablePin,
   countWords,
   handleNavigationClickEvent,
+  getRecordingMSID,
   getRecordingMBID,
   getReleaseMBID,
   getReleaseGroupMBID,

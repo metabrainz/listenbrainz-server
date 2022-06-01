@@ -71,12 +71,11 @@ export default class PlayerPage extends React.Component<
     };
   }
 
-  componentDidMount(): void {
-    const { APIService, spotifyAuth } = this.context;
+  async componentDidMount(): Promise<void> {
+    const { APIService } = this.context;
     this.APIService = APIService;
-    /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
-    /* const recordingFeedbackMap = await this.loadFeedback();
-    this.setState({ recordingFeedbackMap }); */
+    const recordingFeedbackMap = await this.loadFeedback();
+    this.setState({ recordingFeedbackMap });
   }
 
   getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
@@ -89,7 +88,8 @@ export default class PlayerPage extends React.Component<
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recordings.join(", ")
+          "",
+          recordings.join(",")
         );
         return data.feedback;
       } catch (error) {
@@ -122,17 +122,22 @@ export default class PlayerPage extends React.Component<
       ...recordingFeedbackMap,
     };
     feedback.forEach((fb: FeedbackResponse) => {
-      newRecordingFeedbackMap[fb.recording_msid] = fb.score;
+      if (fb.recording_mbid) {
+        newRecordingFeedbackMap[fb.recording_mbid] = fb.score;
+      }
     });
     return newRecordingFeedbackMap;
   };
 
   updateFeedback = (
-    recordingMsid: string,
+    recordingMbid: string,
     score: ListenFeedBack | RecommendationFeedBack
   ) => {
+    if (!recordingMbid) {
+      return;
+    }
     const { recordingFeedbackMap } = this.state;
-    recordingFeedbackMap[recordingMsid] = score as ListenFeedBack;
+    recordingFeedbackMap[recordingMbid] = score as ListenFeedBack;
     this.setState({ recordingFeedbackMap });
   };
 
