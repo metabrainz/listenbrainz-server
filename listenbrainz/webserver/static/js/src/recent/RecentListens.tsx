@@ -239,6 +239,7 @@ export default class RecentListens extends React.Component<
                       updateFeedbackCallback={this.updateFeedback}
                       listen={listen}
                       newAlert={newAlert}
+                      currentFeedback={this.getFeedbackForListen(listen)}
                       additionalMenuItems={additionalMenuItems}
                     />
                   );
