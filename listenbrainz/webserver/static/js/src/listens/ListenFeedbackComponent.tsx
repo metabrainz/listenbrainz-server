@@ -57,7 +57,8 @@ export default class ListenFeedbackComponent extends React.Component<
   render() {
     const { currentFeedback, listen } = this.props;
     const recordingMSID = getRecordingMSID(listen);
-    if (!recordingMSID) {
+    const recordingMBID = getRecordingMBID(listen);
+    if (!recordingMSID && !recordingMBID) {
       return null;
     }
     return (
