@@ -25,6 +25,7 @@ import {
   getArtistMBIDs,
   getReleaseGroupMBID,
   getTrackName,
+  getRecordingMSID,
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
@@ -38,6 +39,8 @@ export interface RecentListensState {
   listenCount?: number;
   recordingToPin?: Listen;
   recordingToReview?: Listen;
+  recordingMsidFeedbackMap: RecordingFeedbackMap;
+  recordingMbidFeedbackMap: RecordingFeedbackMap;
 }
 
 export default class RecentListens extends React.Component<
@@ -53,7 +56,13 @@ export default class RecentListens extends React.Component<
       listens: props.listens || [],
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
+      recordingMsidFeedbackMap: {},
+      recordingMbidFeedbackMap: {},
     };
+  }
+
+  componentDidMount(): void {
+    this.loadFeedback();
   }
 
   updateRecordingToPin = (recordingToPin: Listen) => {
@@ -62,6 +71,106 @@ export default class RecentListens extends React.Component<
 
   updateRecordingToReview = (recordingToReview: Listen) => {
     this.setState({ recordingToReview });
+  };
+
+  getFeedback = async () => {
+    const { newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
+    const { listens } = this.state;
+    let recording_msids = "";
+    let recording_mbids = "";
+
+    if (listens && listens.length && currentUser?.name) {
+      listens.forEach((listen) => {
+        const recordingMsid = getRecordingMSID(listen);
+        if (recordingMsid) {
+          recording_msids += `${recordingMsid},`;
+        }
+        const recordingMBID = getRecordingMBID(listen);
+        if (recordingMBID) {
+          recording_mbids += `${recordingMBID},`;
+        }
+      });
+      try {
+        const data = await APIService.getFeedbackForUserForRecordings(
+          currentUser.name,
+          recording_msids,
+          recording_mbids
+        );
+        return data.feedback;
+      } catch (error) {
+        if (newAlert) {
+          newAlert(
+            "danger",
+            "We could not load love/hate feedback",
+            typeof error === "object" ? error.message : error
+          );
+        }
+      }
+    }
+    return [];
+  };
+
+  loadFeedback = async () => {
+    const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
+    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
+    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
+    feedback.forEach((fb: FeedbackResponse) => {
+      if (fb.recording_msid) {
+        recordingMsidFeedbackMap[fb.recording_msid] = fb.score;
+      }
+      if (fb.recording_mbid) {
+        recordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
+      }
+    });
+    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
+  };
+
+  updateFeedback = (
+    recordingMbid: string,
+    score: ListenFeedBack | RecommendationFeedBack,
+    recordingMsid?: string
+  ) => {
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
+    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
+
+    if (recordingMsid) {
+      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
+    }
+    if (recordingMbid) {
+      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
+    }
+    this.setState({
+      recordingMsidFeedbackMap: newMsidFeedbackMap,
+      recordingMbidFeedbackMap: newMbidFeedbackMap,
+    });
+  };
+
+  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    // first check whether the mbid has any feedback available
+    // if yes and the feedback is not zero, return it. if the
+    // feedback is zero or not the mbid is absent from the map,
+    // look for the feedback using the msid.
+
+    const recordingMbid = getRecordingMBID(listen);
+    const mbidFeedback = recordingMbid
+      ? get(recordingMbidFeedbackMap, recordingMbid, 0)
+      : 0;
+
+    if (mbidFeedback) {
+      return mbidFeedback;
+    }
+
+    const recordingMsid = getRecordingMSID(listen);
+
+    return recordingMsid ? get(recordingMsidFeedbackMap, recordingMsid, 0) : 0;
   };
 
   render() {
@@ -127,6 +236,7 @@ export default class RecentListens extends React.Component<
                       }`}
                       showTimestamp
                       showUsername
+                      updateFeedbackCallback={this.updateFeedback}
                       listen={listen}
                       newAlert={newAlert}
                       additionalMenuItems={additionalMenuItems}
