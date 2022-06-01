@@ -29,10 +29,10 @@ const Blog = () => {
 
   return (
     <div className="card">
-      <div className="panel-heading center-p">
+      <div className="card-title text-center">
         <strong>News & Updates</strong>
       </div>
-      <div className="panel-body">
+      <div className="card-body">
         {blogDetails.map((post: any) => (
           <li>
             <a
@@ -46,7 +46,7 @@ const Blog = () => {
           </li>
         ))}
       </div>
-      <div className="panel-footer center-p">
+      <div className="card-footer text-center">
         <a
           href="https://twitter.com/ListenBrainz"
           target="_blank"

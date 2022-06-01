@@ -342,7 +342,7 @@ export default class YearInMusic extends React.Component<
     ];
 
     const noDataText = (
-      <div className="center-p">
+      <div className="text-center">
         We were not able to calculate this data for {youOrUsername}
       </div>
     );
@@ -357,7 +357,7 @@ export default class YearInMusic extends React.Component<
             />
             <div>
               <h4>
-                <div className="center-p">
+                <div className="text-center">
                   Share your year with your friends
                   <p id="share-link">
                     <a
@@ -463,7 +463,7 @@ export default class YearInMusic extends React.Component<
         <hr className="wide" />
         <div className="row">
           <div className="card content-card" id="top-releases">
-            <div className="col-md-12 d-flex center-p">
+            <div className="col-md-12 d-flex text-center">
               <h3>{capitalize(yourOrUsersName)} top albums of 2021</h3>
               {yearInMusicData.top_releases && (
                 <ComponentToImage
@@ -537,7 +537,7 @@ export default class YearInMusic extends React.Component<
         </div>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
-            <div className="col-md-12 d-flex center-p">
+            <div className="col-md-12 d-flex text-center">
               <h3>
                 {capitalize(yourOrUsersName)} 50 most played songs of 2021
               </h3>
@@ -585,7 +585,7 @@ export default class YearInMusic extends React.Component<
             )}
           </div>
           <div className="card content-card" id="top-artists">
-            <div className="col-md-12 d-flex center-p">
+            <div className="col-md-12 d-flex text-center">
               <h3>{capitalize(yourOrUsersName)} top 50 artists of 2021</h3>
               {yearInMusicData.top_artists && (
                 <ComponentToImage

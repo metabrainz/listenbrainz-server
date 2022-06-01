@@ -37,10 +37,11 @@
   </div>
   {%- endblock -%}
 
-  {%- block scripts -%}
-  <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
-  {%- endblock -%}
 </div>
 {%- include 'footer.html' -%}
+
+{%- block scripts -%}
+<script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
+{%- endblock -%}
 </body>
 </html>

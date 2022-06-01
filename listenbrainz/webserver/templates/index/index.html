@@ -59,12 +59,11 @@
       For more information about this project and its goals, please take a look at our
       <a href="{{ url_for('index.about') }}">about page</a>.
     </p>
-    <div class="col-md-7"
-         style="margin-top: 12px; margin-bottom: 12px"
+    <div class="col-md-7 p-4"
          id="stats">
       <div class="card">
-        <div class="panel-heading center-p"><strong>Data Statistics</strong></div>
-        <div class="panel-body">
+        <div class="card-title text-center"><strong>Data Statistics</strong></div>
+        <div class="card-body">
           <table class="table table-collapsed">
             <thead>
             <tr>
@@ -88,14 +87,13 @@
             </tbody>
           </table>
         </div>
-        <div class="panel-footer" style="text-align: center">
+        <div class="card-footer text-center">
           <small>Updated every 5 minutes</small><br />
           <small><a href="{{ url_for('index.current_status') }}">more on the current status page</a></small>
         </div>
       </div>
     </div>
-    <div class="col-md-5"
-         style="margin-top: 12px; margin-bottom: 12px"
+    <div class="col-md-5 p-4"
          id="blogs"></div>
   </div>
 {%- endblock -%}
