@@ -30,7 +30,7 @@ export type RecommendationFeedbackComponentProps = {
   listen: BaseListenFormat;
   currentFeedback: RecommendationFeedBack | null;
   updateFeedbackCallback?: (
-    recordingMsid: string,
+    recordingMbid: string,
     score: RecommendationFeedBack
   ) => void;
 };

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, has as _has, isEqual, isNil, isNumber } from "lodash";
+import { get as _get, isEqual, isNil, isNumber } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -27,6 +27,7 @@ import {
   getArtistName,
   getTrackName,
   getTrackDuration,
+  getRecordingMSID,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
@@ -48,7 +49,8 @@ export type ListenCardProps = {
   // Only used when not passing a custom feedbackComponent
   updateFeedbackCallback?: (
     recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack
+    score: ListenFeedBack | RecommendationFeedBack,
+    recordingMbid?: string
   ) => void;
   newAlert: (
     alertType: AlertType,
@@ -170,10 +172,7 @@ export default class ListenCard extends React.Component<
         track_name: getTrackName(listen),
         release_name: _get(listen, "track_metadata.release_name"),
         recording_mbid: getRecordingMBID(listen),
-        recording_msid: _get(
-          listen,
-          "track_metadata.additional_info.recording_msid"
-        ),
+        recording_msid: getRecordingMSID(listen),
       };
       try {
         const status = await APIService.recommendTrackToFollowers(
@@ -230,10 +229,7 @@ export default class ListenCard extends React.Component<
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
     const { additionalActions } = this.props;
 
-    const recordingMSID = _get(
-      listen,
-      "track_metadata.additional_info.recording_msid"
-    );
+    const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
     const releaseMBID = getReleaseMBID(listen);
     const spotifyURL = SpotifyPlayer.getSpotifyURLFromListen(listen);
