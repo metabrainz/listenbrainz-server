@@ -24,7 +24,7 @@ def process_listens(app, listens, priority):
 
     from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
 
-    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
+    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0, "skipped": 0}
     for typ in MATCH_TYPES:
         stats[typ] = 0
 
@@ -51,7 +51,7 @@ def process_listens(app, listens, priority):
         query = """
             SELECT t.recording_msid
                  , mm.match_type
-              FROM (VALUES (:msids)) AS t(recording_msid)
+              FROM (VALUES :msids) AS t(recording_msid)
          LEFT JOIN mbid_mapping mm
                 ON t.recording_msid::uuid = mm.recording_msid
              WHERE mm.last_updated = '1970-01-01'  -- msid marked for rechecking manually
