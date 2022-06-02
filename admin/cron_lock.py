@@ -7,23 +7,25 @@ import click
 
 
 CRON_LOGS_DIR = "/logs"
+ADMIN_CONFIG_FILE = "/code/listenbrainz/admin/config.sh"
 
 
 def sanity_check():
-    """ Check to make sure the logs dir exists and that the CONTAINER_NAME env
-        var is set correctly for the cron container. If the DEPLOY_ENV var is not
-        set, assume that we are not running in production and exist with success. """
-
-    if "DEPLOY_ENV" not in os.environ:
-        print("Not running in a production env, not locking cron.")
-        sys.exit(0)
+    """ Check to make sure the logs dir exists, read the admin config file and
+     check that the file contains listenbrainz-cron-prod. if not exit with success
+     and not locking the cron."""
+    try:
+        with open(ADMIN_CONFIG_FILE, mode="r") as f:
+            data = f.read()
+            if "listenbrainz-cron-prod" not in data:
+                print("we do not seem to be running inside the cron prod container.")
+                sys.exit(0)
+    except IOError:
+        print("Didn't find config file, not locking cron.")
+        sys.exit(-1)
 
     if not os.path.exists(CRON_LOGS_DIR):
         print("cron logs dir does not exist. Is this code running in the container?")
-        sys.exit(-1)
-
-    if "CONTAINER_NAME" not in os.environ or os.environ["CONTAINER_NAME"] != "listenbrainz-cron-prod":
-        print("we do not seem to be running inside the cron prod container.")
         sys.exit(-1)
 
 
