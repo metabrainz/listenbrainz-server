@@ -368,7 +368,7 @@ def get_recordings_for_playlists(connection, playlist_ids: List[int]):
     return dict(playlist_recordings_map)
 
 
-def _remove_old_collaborative_playlists(creator_id: int, created_for_id: int, source_patch: str):
+def _remove_old_collaborative_playlists(connection, creator_id: int, created_for_id: int, source_patch: str):
     """
        Remove all the collaborative playlists for the given creator, credit_for and source_patch.
        This function will be used in the create function in order to remove the old collaborative playlists
@@ -438,8 +438,12 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
             # to be here.
             if playlist.creator_id == TROI_BOT_USER_ID and playlist.created_for_id is not None and \
                     playlist.algorithm_metadata is not None and "source_patch" in playlist.algorithm_metadata:
-                _remove_old_collaborative_playlists(playlist.creator_id, playlist.created_for_id,
-                                                    playlist.algorithm_metadata["source_patch"])
+                _remove_old_collaborative_playlists(
+                    connection,
+                    playlist.creator_id,
+                    playlist.created_for_id,
+                    playlist.algorithm_metadata["source_patch"]
+                )
 
             result = connection.execute(query, fields)
             row = dict(result.fetchone())
