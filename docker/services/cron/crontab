@@ -32,3 +32,6 @@ MAILTO=""
 
 # Request missing MB data each month after a new dump has been imported to spark cluster
 30 7 * * 1 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_missing_mb_data >> /logs/stats.log 2>&1
+
+# cron job to test cron_lock script
+@reboot root /code/listenbrainz/admin/test_cron_job.sh >> /logs/test_cron_job.log 2>&1
