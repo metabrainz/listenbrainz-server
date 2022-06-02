@@ -24,11 +24,9 @@ def process_listens(app, listens, priority):
 
     from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
 
-    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0, "skipped": 0}
+    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
     for typ in MATCH_TYPES:
         stats[typ] = 0
-
-    skipped = 0
 
     msids = {str(listen['recording_msid']): listen for listen in listens}
     stats["total"] = len(msids)
@@ -75,7 +73,6 @@ def process_listens(app, listens, priority):
         app.logger.info("MSIDS REMAINING: %s", rem_msids)
 
         stats["processed"] += len(msids_to_check)
-        stats["skipped"] += len(msids) - len(msids_to_check)
 
         if debug:
             for msid in msids:
