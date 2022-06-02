@@ -163,7 +163,10 @@ def process_listens(app, listens, priority):
                     curs.execute(metadata_query, match[1:8])
 
                 # Insert the mapping row
-                curs.execute(mapping_query, recording_msid=match[0], recording_mbid=match[1], match_type=match[8])
+                curs.execute(
+                    mapping_query,
+                    {"recording_msid": match[0], "recording_mbid": match[1], "match_type": match[8]}
+                )
 
         except psycopg2.errors.CardinalityViolation:
             app.logger.error("CardinalityViolation on insert to mbid mapping\n%s" % str(query))
