@@ -57,7 +57,6 @@ def process_listens(app, listens, priority):
                 OR mm.check_again <= NOW()     -- msid not found last time, marked for rechecking
                 OR mm.recording_msid IS NULL   -- msid seen for first time
         """
-        app.logger.info("MSIDS ALL: %s", msids.keys())
         curs = connection.execute(sqlalchemy.text(query), msids=list(msids.keys()))
         msids_to_check = curs.fetchall()
 
@@ -69,8 +68,6 @@ def process_listens(app, listens, priority):
 
             if row['match_type']:
                 stats["listens_matched"] += 1
-
-        app.logger.info("MSIDS REMAINING: %s", rem_msids)
 
         stats["processed"] += len(msids_to_check)
 
@@ -152,8 +149,8 @@ def process_listens(app, listens, priority):
                           , recording_mbid = EXCLUDED.recording_mbid
                           , match_type = EXCLUDED.match_type
                           , last_updated = now()
-                          -- rechecked msid already, if still no match found then check again after twice the interval time
-                          , check_again = CASE EXCLUDED.match_type WHEN 'no_match' THEN now() + (now() - m.last_updated) * 2 ELSE NULL END
+                          -- rechecked msid already, if still no match found then check again after twice the previous interval time
+                          , check_again = CASE EXCLUDED.match_type WHEN 'no_match' THEN now() + (m.check_again - m.last_updated) * 2 ELSE NULL END
             """
 
             # Finally insert matches to PG
@@ -174,8 +171,7 @@ def process_listens(app, listens, priority):
             return
 
         except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
-            app.logger.info(
-                "Cannot insert MBID mapping rows. (%s)" % str(err))
+            app.logger.info("Cannot insert MBID mapping rows. (%s)" % str(err))
             conn.rollback()
             return
 
