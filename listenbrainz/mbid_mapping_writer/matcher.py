@@ -51,7 +51,8 @@ def process_listens(app, listens, priority):
         query = """
             SELECT t.recording_msid
                  , mm.match_type
-              FROM (VALUES :msids) AS t(recording_msid)
+        -- unable to use values here because sqlachemy having trouble to pass list/tuple to values clause
+              FROM unnest(:msids) AS t(recording_msid)
          LEFT JOIN mbid_mapping mm
                 ON t.recording_msid::uuid = mm.recording_msid
              WHERE mm.last_updated = '1970-01-01'  -- msid marked for rechecking manually
