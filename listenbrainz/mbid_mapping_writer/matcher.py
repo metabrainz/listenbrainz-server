@@ -39,7 +39,7 @@ def process_listens(app, listens, priority):
     # e.g. (priority == RECHECK_LISTEN)
     debug = False
 
-    if len(msids):
+    if len(msids) == 0:
         return stats
 
     listens_to_check = []
