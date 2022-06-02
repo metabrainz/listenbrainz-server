@@ -25,9 +25,12 @@ def run_post_recommendation_troi_bot():
         make_playlist_from_recommendations(user)
 
     # Now generate daily jams (and other in the future) for users who follow troi bot
-    users = get_followers_of_user(TROI_BOT_USER_ID)
     if current_app.config['TESTING']:
         users = users_to_process
+    else:
+        users = get_followers_of_user(TROI_BOT_USER_ID)
+        users = [user["musicbrainz_id"] for user in users]
+
     for user in users:
         run_daily_jams(user)
         # Add others here
