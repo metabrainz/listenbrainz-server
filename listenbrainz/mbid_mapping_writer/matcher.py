@@ -3,6 +3,7 @@ from operator import itemgetter
 
 import sqlalchemy
 import psycopg2
+from flask import current_app
 from psycopg2.extras import execute_values
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_NO_MATCH, MATCH_TYPE_EXACT_MATCH
@@ -57,15 +58,20 @@ def process_listens(app, listens, priority):
                 OR mm.check_again <= NOW()     -- msid not found last time, marked for rechecking
                 OR mm.recording_msid IS NULL   -- msid seen for first time
         """
+        current_app.logger.info("MSIDS ALL: %s", msids.keys())
         curs = connection.execute(sqlalchemy.text(query), msids=tuple(msids.keys()))
         msids_to_check = curs.fetchall()
 
+        rem_msids = []
         for row in msids_to_check:
+            rem_msids.append(row['recording_msid'])
             listen = msids[row['recording_msid']]
             listens_to_check.append(listen)
 
             if row['match_type']:
                 stats["listens_matched"] += 1
+
+        current_app.logger.info("MSIDS REMAINING: %s", rem_msids)
 
         stats["processed"] += len(msids_to_check)
         stats["skipped"] += len(msids) - len(msids_to_check)
