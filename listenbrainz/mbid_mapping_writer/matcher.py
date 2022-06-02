@@ -59,7 +59,7 @@ def process_listens(app, listens, priority):
                 OR mm.recording_msid IS NULL   -- msid seen for first time
         """
         app.logger.info("MSIDS ALL: %s", msids.keys())
-        curs = connection.execute(sqlalchemy.text(query), msids=tuple(msids.keys()))
+        curs = connection.execute(sqlalchemy.text(query), msids=list(msids.keys()))
         msids_to_check = curs.fetchall()
 
         rem_msids = []
