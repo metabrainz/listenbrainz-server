@@ -366,10 +366,12 @@ class HandlersTestCase(DatabaseTestCase):
             )
         )
 
+    @mock.patch('listenbrainz.spark.troi_bot.get_users_to_process')
     @mock.patch('listenbrainz.spark.troi_bot.get_followers_of_user')
     @mock.patch('listenbrainz.spark.troi_bot.generate_playlist')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_gen_playlist, mock_get_users):
+    def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_gen_playlist,
+                                                   mock_get_followers, mock_get_users):
         with self.app.app_context():
             active_user_count = 10
             top_artist_user_count = 5
@@ -381,7 +383,9 @@ class HandlersTestCase(DatabaseTestCase):
             self.app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token"]
 
             mock_gen_playlist.return_value = "https://listenbrainz.org/playlist/97889d4d-1474-4a9b-925a-851148356f9d/"
-            mock_get_users.return_value = [{"musicbrainz_id": "lucifer"}]
+            mock_get_followers.return_value = [{"musicbrainz_id": "lucifer"}]
+            mock_get_users.return_value = ["lucifer"]
+
             cf_recording_recommendations_complete({
                 'active_user_count': active_user_count,
                 'top_artist_user_count': top_artist_user_count,
