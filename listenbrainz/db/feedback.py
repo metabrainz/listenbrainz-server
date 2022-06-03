@@ -66,10 +66,8 @@ def insert(feedback: Feedback):
 
     with db.engine.connect() as connection, connection.begin():
         # delete the existing feedback and then insert new feedback. we cannot use ON CONFLICT DO UPDATE
-        # because it is possible for a user to submit the feedback using recording_msid only and then
-        # using both recording_msid and recording_mbid at once. Then the ON CONFLICT clause won't work
-        # well. We can use partial unique indexes to make it work but there will still be duplicates.
-        # therefore, we delete first then insert new feedback in the same transaction.
+        # because it is possible for a user to submit the feedback using recording_msid only and then using
+        # both recording_msid and recording_mbid at once in which case the ON CONFLICT doesn't work well.
         connection.execute(text(delete_query), params)
         connection.execute(text(insert_query), params)
 
