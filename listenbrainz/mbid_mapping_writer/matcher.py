@@ -150,7 +150,7 @@ def process_listens(app, listens, priority):
                           , match_type = EXCLUDED.match_type
                           , last_updated = now()
                           -- rechecked msid already, if still no match found then check again after twice the previous interval time
-                          , check_again = CASE EXCLUDED.match_type WHEN 'no_match' THEN now() + (m.check_again - m.last_updated) * 2 ELSE NULL END
+                          , check_again = CASE EXCLUDED.match_type WHEN 'no_match' THEN now() + least((m.check_again - m.last_updated) * 2, INTERVAL '32 days') ELSE NULL END
             """
 
             # Finally insert matches to PG
