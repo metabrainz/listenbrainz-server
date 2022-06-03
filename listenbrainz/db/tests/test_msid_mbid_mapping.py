@@ -17,7 +17,7 @@ class MappingTestCase(TimescaleTestCase):
         with self.assertRaisesRegex(ValueError, "(?s)recording_msid.*must be a valid UUID"):
             model = MsidMbidModel(recording_msid='', recording_mbid=str(uuid.uuid4()))
 
-        with self.assertRaises(ValueError, "(?s)recording_mbid.*must be a valid UUID"):
+        with self.assertRaisesRegex(ValueError, "(?s)recording_mbid.*must be a valid UUID"):
             model = MsidMbidModel(recording_msid=str(uuid.uuid4()), recording_mbid='')
 
         # test that 2 valid uuids doesn't raise error
