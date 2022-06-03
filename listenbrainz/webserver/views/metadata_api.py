@@ -147,13 +147,13 @@ def get_mbid_mapping():
     ]
 
     q = ArtistCreditRecordingLookupQuery(debug=False)
-    result = q.fetch(params)
-    if result:
-        return process_results(result[0], metadata, incs)
+    exact_results = q.fetch(params)
+    if exact_results:
+        return process_results(exact_results[0], metadata, incs)
 
     q = MBIDMapperMetadataAPI(timeout=10, remove_stop_words=True, debug=False)
-    result = q.search(artist_name, recording_name)
-    if result:
-        return process_results(result[0], metadata, incs)
+    fuzzy_result = q.search(artist_name, recording_name)
+    if fuzzy_result:
+        return process_results(fuzzy_result, metadata, incs)
 
     return jsonify({})
