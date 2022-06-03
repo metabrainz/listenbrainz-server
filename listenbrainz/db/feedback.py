@@ -6,42 +6,19 @@ from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.feedback import Feedback
 from typing import List
 
-
 INSERT_QUERIES = {
-    "msid": [
-        """
-        DELETE FROM recording_feedback
-              WHERE user_id = :user_id
-                AND recording_msid = :recording_msid
-        """,
-        """
+    "msid": """
         INSERT INTO recording_feedback (user_id, recording_msid, score)
              VALUES (:user_id, :recording_msid, :score)
-        """
-    ],
-    "mbid": [
-        """
-        DELETE FROM recording_feedback
-              WHERE user_id = :user_id
-                AND recording_mbid = :recording_mbid
-        """,
-        """
+    """,
+    "mbid": """
         INSERT INTO recording_feedback (user_id, recording_mbid, score)
              VALUES (:user_id, :recording_mbid, :score)
-        """
-    ],
-    "both": [
-        """
-        DELETE FROM recording_feedback
-              WHERE user_id = :user_id
-                AND recording_msid = :recording_msid
-                AND recording_mbid = :recording_mbid
-        """,
-        """
+    """,
+    "both": """
         INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
              VALUES (:user_id, :recording_mbid, :recording_msid, :score)
-        """
-    ]
+    """
 }
 
 DELETE_QUERIES = {
@@ -76,13 +53,16 @@ def insert(feedback: Feedback):
         # both recording_msid and recording_mbid available
         params['recording_msid'] = feedback.recording_msid
         params['recording_mbid'] = feedback.recording_mbid
-        query = INSERT_QUERIES["both"]
+        delete_query = DELETE_QUERIES["both"]
+        insert_query = INSERT_QUERIES["both"]
     elif feedback.recording_mbid is not None:  # only recording_mbid available
         params['recording_mbid'] = feedback.recording_mbid
-        query = INSERT_QUERIES["mbid"]
+        delete_query = DELETE_QUERIES["mbid"]
+        insert_query = INSERT_QUERIES["mbid"]
     else:  # only recording_msid available
         params['recording_msid'] = feedback.recording_msid
-        query = INSERT_QUERIES["msid"]
+        delete_query = DELETE_QUERIES["msid"]
+        insert_query = INSERT_QUERIES["msid"]
 
     with db.engine.connect() as connection, connection.begin():
         # delete the existing feedback and then insert new feedback. we cannot use ON CONFLICT DO UPDATE
@@ -90,8 +70,8 @@ def insert(feedback: Feedback):
         # using both recording_msid and recording_mbid at once. Then the ON CONFLICT clause won't work
         # well. We can use partial unique indexes to make it work but there will still be duplicates.
         # therefore, we delete first then insert new feedback in the same transaction.
-        connection.execute(text(query[0]), params)
-        connection.execute(text(query[1]), params)
+        connection.execute(text(delete_query), params)
+        connection.execute(text(insert_query), params)
 
 
 def delete(feedback: Feedback):
