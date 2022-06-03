@@ -1,5 +1,5 @@
 import sqlalchemy
-from sqlalchemy import text, select
+from sqlalchemy import text
 
 from listenbrainz import db
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
@@ -44,6 +44,19 @@ INSERT_QUERIES = {
     ]
 }
 
+DELETE_QUERIES = {
+    "msid": "DELETE FROM recording_feedback WHERE user_id = :user_id AND recording_msid = :recording_msid",
+    "mbid": "DELETE FROM recording_feedback WHERE user_id = :user_id AND recording_mbid = :recording_mbid",
+    "both": """
+        DELETE FROM recording_feedback
+              WHERE user_id = :user_id
+                AND (
+                    recording_msid = :recording_msid
+                 OR recording_mbid = :recording_mbid
+                    )
+    """
+}
+
 
 def insert(feedback: Feedback):
     """ Inserts a feedback record for a user's loved/hated recording into the database.
@@ -67,7 +80,7 @@ def insert(feedback: Feedback):
     elif feedback.recording_mbid is not None:  # only recording_mbid available
         params['recording_mbid'] = feedback.recording_mbid
         query = INSERT_QUERIES["mbid"]
-    else: # only recording_msid available
+    else:  # only recording_msid available
         params['recording_msid'] = feedback.recording_msid
         query = INSERT_QUERIES["msid"]
 
@@ -87,20 +100,22 @@ def delete(feedback: Feedback):
         Args:
             feedback: An object of class Feedback
     """
-    conditions = ["user_id = :user_id"]
-    args = {"user_id": feedback.user_id}
+    params = {"user_id": feedback.user_id}
 
-    if feedback.recording_msid:
-        conditions.append("recording_msid = :recording_msid")
-        args["recording_msid"] = feedback.recording_msid
+    if feedback.recording_msid is not None and feedback.recording_mbid is not None:
+        # both recording_msid and recording_mbid available
+        params['recording_msid'] = feedback.recording_msid
+        params['recording_mbid'] = feedback.recording_mbid
+        query = DELETE_QUERIES["both"]
+    elif feedback.recording_mbid is not None:  # only recording_mbid available
+        params['recording_mbid'] = feedback.recording_mbid
+        query = DELETE_QUERIES["mbid"]
+    else:  # only recording_msid available
+        params['recording_msid'] = feedback.recording_msid
+        query = DELETE_QUERIES["msid"]
 
-    if feedback.recording_mbid:
-        conditions.append("recording_mbid = :recording_mbid")
-        args["recording_mbid"] = feedback.recording_mbid
-
-    where_clause = " AND ".join(conditions)
     with db.engine.connect() as connection:
-        connection.execute(text("DELETE FROM recording_feedback WHERE " + where_clause), args)
+        connection.execute(text(query), params)
 
 
 def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None, metadata: bool = False) -> List[Feedback]:
