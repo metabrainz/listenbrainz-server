@@ -3,7 +3,7 @@ from typing import Iterable, Dict, List, TypeVar
 from typing import Optional, Tuple
 
 from flask import current_app
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, root_validator
 from sqlalchemy import text
 
 from data.model.validators import check_valid_uuid
@@ -27,6 +27,13 @@ class MsidMbidModel(BaseModel):
         "recording_mbid",
         allow_reuse=True
     )(check_valid_uuid)
+
+    @root_validator
+    def check_at_least_mbid_or_msid(cls, values):
+        recording_msid, recording_mbid = values.get('recording_msid'), values.get('recording_mbid')
+        if recording_msid is None and recording_mbid is None:
+            raise ValueError("at least one of recording_msid or recording_mbid should be specified")
+        return values
 
 
 def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]) -> Tuple[Dict, Dict]:
