@@ -3,26 +3,21 @@ from datetime import datetime
 
 
 def check_valid_uuid(param: str):
-    """Validates that a UUID is valid. Otherwise, raises a ValueError.
-
-    * Validating constr(min_length=1) accepts valid UUID's only, while
-      validating Optional[str] accepts valid UUID's, None, and ''.
+    """Validates that a UUID is valid or None. Otherwise, raises a ValueError.
 
     Args:
-        id: the UUID to validate.
+        param: the UUID to validate.
 
     Returns:
         The validated recording UUID as a string.
     """
     if param is None:
         return None
-    if param == '':
-        return ''
     try:
         param = uuid.UUID(param)
         return str(param)
     except (AttributeError, ValueError):
-        raise ValueError("'{}' must be a valid UUID.".format(param))
+        raise ValueError(f"'{param}' must be a valid UUID.")
 
 
 def check_datetime_has_tzinfo(date_time: datetime):
