@@ -16,9 +16,6 @@ def run_post_recommendation_troi_bot():
     """
 
     users_to_process = ["mr_monkey", "rob", "akshaaatt", "Damselfish", "lucifer", "alastairp", "CatCat", "atj"]
-    if current_app.config['TESTING']:
-        current_app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token"]
-        users_to_process = ["lucifer"]
 
     # Save playlists for just a handful of people
     for user in users_to_process:

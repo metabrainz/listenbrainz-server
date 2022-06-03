@@ -378,6 +378,8 @@ class HandlersTestCase(DatabaseTestCase):
 
             # testing, should not send a mail
             self.app.config['TESTING'] = True
+            self.app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token"]
+
             mock_gen_playlist.return_value = "https://listenbrainz.org/playlist/97889d4d-1474-4a9b-925a-851148356f9d/"
             mock_get_users.return_value = [{"musicbrainz_id": "lucifer"}]
             cf_recording_recommendations_complete({
