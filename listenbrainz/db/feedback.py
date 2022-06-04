@@ -1,10 +1,38 @@
 import sqlalchemy
-from sqlalchemy import text, select
+from sqlalchemy import text
 
 from listenbrainz import db
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.feedback import Feedback
 from typing import List
+
+INSERT_QUERIES = {
+    "msid": """
+        INSERT INTO recording_feedback (user_id, recording_msid, score)
+             VALUES (:user_id, :recording_msid, :score)
+    """,
+    "mbid": """
+        INSERT INTO recording_feedback (user_id, recording_mbid, score)
+             VALUES (:user_id, :recording_mbid, :score)
+    """,
+    "both": """
+        INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
+             VALUES (:user_id, :recording_mbid, :recording_msid, :score)
+    """
+}
+
+DELETE_QUERIES = {
+    "msid": "DELETE FROM recording_feedback WHERE user_id = :user_id AND recording_msid = :recording_msid",
+    "mbid": "DELETE FROM recording_feedback WHERE user_id = :user_id AND recording_mbid = :recording_mbid",
+    "both": """
+        DELETE FROM recording_feedback
+              WHERE user_id = :user_id
+                AND (
+                    recording_msid = :recording_msid
+                 OR recording_mbid = :recording_mbid
+                    )
+    """
+}
 
 
 def insert(feedback: Feedback):
@@ -14,30 +42,6 @@ def insert(feedback: Feedback):
 
         Args:
             feedback: An object of class Feedback
-    """
-    query_only_msid = """
-        INSERT INTO recording_feedback (user_id, recording_msid, score)
-             VALUES (:user_id, :recording_msid, :score)
-        ON CONFLICT (user_id, recording_msid)
-      DO UPDATE SET score = :score
-                  , created = NOW()
-    """
-
-    query_only_mbid = """
-        INSERT INTO recording_feedback (user_id, recording_mbid, score)
-             VALUES (:user_id, :recording_mbid, :score)
-        ON CONFLICT (user_id, recording_mbid)
-      DO UPDATE SET score = :score
-                  , created = NOW()
-    """
-
-    query_both_msid_mbid = """
-        INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
-             VALUES (:user_id, :recording_mbid, :recording_msid, :score)
-        ON CONFLICT (user_id, recording_mbid)
-      DO UPDATE SET score = :score
-                  , recording_msid = :recording_msid
-                  , created = NOW()
     """
 
     params = {
@@ -49,16 +53,23 @@ def insert(feedback: Feedback):
         # both recording_msid and recording_mbid available
         params['recording_msid'] = feedback.recording_msid
         params['recording_mbid'] = feedback.recording_mbid
-        query = query_both_msid_mbid
+        delete_query = DELETE_QUERIES["both"]
+        insert_query = INSERT_QUERIES["both"]
     elif feedback.recording_mbid is not None:  # only recording_mbid available
         params['recording_mbid'] = feedback.recording_mbid
-        query = query_only_mbid
-    else: # only recording_msid available
+        delete_query = DELETE_QUERIES["mbid"]
+        insert_query = INSERT_QUERIES["mbid"]
+    else:  # only recording_msid available
         params['recording_msid'] = feedback.recording_msid
-        query = query_only_msid
+        delete_query = DELETE_QUERIES["msid"]
+        insert_query = INSERT_QUERIES["msid"]
 
-    with db.engine.connect() as connection:
-        connection.execute(text(query), params)
+    with db.engine.connect() as connection, connection.begin():
+        # delete the existing feedback and then insert new feedback. we cannot use ON CONFLICT DO UPDATE
+        # because it is possible for a user to submit the feedback using recording_msid only and then using
+        # both recording_msid and recording_mbid at once in which case the ON CONFLICT doesn't work well.
+        connection.execute(text(delete_query), params)
+        connection.execute(text(insert_query), params)
 
 
 def delete(feedback: Feedback):
@@ -67,20 +78,22 @@ def delete(feedback: Feedback):
         Args:
             feedback: An object of class Feedback
     """
-    conditions = ["user_id = :user_id"]
-    args = {"user_id": feedback.user_id}
+    params = {"user_id": feedback.user_id}
 
-    if feedback.recording_msid:
-        conditions.append("recording_msid = :recording_msid")
-        args["recording_msid"] = feedback.recording_msid
+    if feedback.recording_msid is not None and feedback.recording_mbid is not None:
+        # both recording_msid and recording_mbid available
+        params['recording_msid'] = feedback.recording_msid
+        params['recording_mbid'] = feedback.recording_mbid
+        query = DELETE_QUERIES["both"]
+    elif feedback.recording_mbid is not None:  # only recording_mbid available
+        params['recording_mbid'] = feedback.recording_mbid
+        query = DELETE_QUERIES["mbid"]
+    else:  # only recording_msid available
+        params['recording_msid'] = feedback.recording_msid
+        query = DELETE_QUERIES["msid"]
 
-    if feedback.recording_mbid:
-        conditions.append("recording_mbid = :recording_mbid")
-        args["recording_mbid"] = feedback.recording_mbid
-
-    where_clause = " AND ".join(conditions)
     with db.engine.connect() as connection:
-        connection.execute(text("DELETE FROM recording_feedback WHERE " + where_clause), args)
+        connection.execute(text(query), params)
 
 
 def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None, metadata: bool = False) -> List[Feedback]:
