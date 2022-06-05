@@ -1,5 +1,11 @@
 import * as timeago from "time-ago";
-import { formatWSMessageToListen, preciseTimestamp } from "../../src/utils/utils";
+import {
+  formatWSMessageToListen,
+  preciseTimestamp,
+  searchForSpotifyTrack,
+} from "../../src/utils/utils";
+
+const spotifySearchResponse = require("../__mocks__/spotifySearchResponse.json");
 
 describe("formatWSMessageToListen", () => {
   const mockListen: Listen = {
@@ -97,5 +103,39 @@ describe("preciseTimestamp", () => {
   it("returns itself for invalid date inputs", () => {
     const invalidISO: string = "foo-01-01T01:01:bar";
     expect(preciseTimestamp(invalidISO)).toMatch(invalidISO);
+  });
+});
+
+describe("searchForSpotifyTrack", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(spotifySearchResponse),
+      });
+    });
+    jest.useFakeTimers();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await searchForSpotifyTrack("foobar", "import", "vs", "star");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "https://api.spotify.com/v1/search?type=track&q=track:import artist:vs album:star",
+      {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer foobar",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  });
+
+  it("we retrieve first track from json", async () => {
+    await expect(
+      searchForSpotifyTrack("foobar", "import", "vs", "star")
+    ).resolves.toEqual(spotifySearchResponse.tracks.items[0]);
   });
 });
