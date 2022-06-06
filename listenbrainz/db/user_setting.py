@@ -108,6 +108,13 @@ def update_timezone(user_id: int, timezone_name:str):
                 "Couldn't update user's timezone: %s" % str(err))
 
 def standardize_timezone(timezones):
+    """standardize timezone format
+    Args:
+        timezone (list): timezone retrived by pg
+    return:
+        list of tuples: [(Africa/Abidjan, +0:00:00 GMT), (Africa/addis_Ababa, +3:00:00 GMT),...]
+
+    """
     result = []
     for (name, offset) in timezones:
         if offset.days > -1:
