@@ -780,7 +780,7 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info(
                             'Importing data into %s table...', file_name)
                         try:
-                            cursor.copy_from(tar.extractfile(member), '%s' % file_name,
+                            cursor.copy_from(tar.extractfile(member), file_name,
                                              columns=tables[file_name])
                             connection.commit()
                         except IOError as e:
