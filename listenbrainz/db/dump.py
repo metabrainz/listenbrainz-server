@@ -636,7 +636,8 @@ def copy_table(cursor, location, columns, table_name):
     with open(os.path.join(location, table_name), 'w') as f:
         query = sql.SQL("COPY (SELECT {fields} FROM {table}) TO STDOUT").format(
             fields=sql.SQL(',').join([sql.Identifier(column) for column in columns]),
-            table=sql.Identifier(table_name)
+            # for schema qualified table names, need to pass schema and table name as separate args
+            table=sql.Identifier(*table_name.split("."))
         )
         cursor.copy_expert(query, f)
 
@@ -787,7 +788,8 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         try:
                             query = sql.SQL("COPY {table}({fields}) FROM STDIN").format(
                                 fields=sql.SQL(',').join([sql.Identifier(column) for column in tables[file_name]]),
-                                table=sql.Identifier(file_name)
+                                # for schema qualified table names, need to pass schema and table name as separate args
+                                table=sql.Identifier(*file_name.split("."))
                             )
                             cursor.copy_expert(query, file_name)
                             connection.commit()
