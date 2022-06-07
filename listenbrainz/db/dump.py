@@ -53,7 +53,7 @@ FEEDBACK_MAX_AGE = 8  # days
 # this dict contains the tables dumped in public dump as keys
 # and a tuple of columns that should be dumped as values
 PUBLIC_TABLES_DUMP = {
-    '"user"': (
+    'user': (
         'id',
         'created',
         'musicbrainz_id',
@@ -132,7 +132,7 @@ PUBLIC_TABLES_TIMESCALE_DUMP = {
 PUBLIC_TABLES_IMPORT = PUBLIC_TABLES_DUMP.copy()
 # When importing fields with COPY we need to use the names of the fields, rather
 # than the placeholders that we set for the export
-PUBLIC_TABLES_IMPORT['"user"'] = (
+PUBLIC_TABLES_IMPORT['user'] = (
         'id',
         'created',
         'musicbrainz_id',
@@ -145,7 +145,7 @@ PUBLIC_TABLES_IMPORT['"user"'] = (
 # this dict contains the tables dumped in the private dump as keys
 # and a tuple of columns that should be dumped as values
 PRIVATE_TABLES = {
-    '"user"': (
+    'user': (
         'id',
         'created',
         'musicbrainz_id',
