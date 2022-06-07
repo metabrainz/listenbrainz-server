@@ -49,7 +49,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
             data={'csrf_token': g.csrf_token}
         )
         self.assertStatus(response, 302)  # should have redirected to the info page
-        self.assertRedirects(response, url_for('profile.info'))
+        self.assertEqual(response.location, url_for('profile.info'))
         ts = listens_importer.get_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM)
         self.assertEqual(int(ts.strftime('%s')), 0)
 
@@ -58,7 +58,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         profile_info_url = url_for('profile.info')
         response = self.client.get(profile_info_url)
         self.assertStatus(response, 302)
-        self.assertRedirects(response, url_for('login.index', next=profile_info_url))
+        self.assertEqual(response.location, url_for('login.index', next=profile_info_url))
 
     def test_delete_listens(self):
         """Tests delete listens end point"""
@@ -71,18 +71,19 @@ class ProfileViewsTestCase(IntegrationTestCase):
 
         response = self.client.post(delete_listens_url, data={'csrf_token': g.csrf_token})
         self.assertMessageFlashed("Successfully deleted listens for %s." % self.user['musicbrainz_id'], 'info')
-        self.assertRedirects(response, url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        self.assertStatus(response, 302)
+        self.assertEqual(response.location, url_for('user.profile', user_name=self.user['musicbrainz_id']))
 
     def test_delete_listens_not_logged_in(self):
         """Tests delete listens view when not logged in"""
         delete_listens_url = url_for('profile.delete_listens')
         response = self.client.get(delete_listens_url)
         self.assertStatus(response, 302)
-        self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
+        self.assertEqual(response.location, url_for('login.index', next=delete_listens_url))
 
         response = self.client.post(delete_listens_url)
         self.assertStatus(response, 302)
-        self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
+        self.assertEqual(response.location, url_for('login.index', next=delete_listens_url))
 
     def test_delete_listens_csrf_token_not_provided(self):
         """Tests delete listens end point when auth token is missing"""
@@ -94,7 +95,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
         response = self.client.post(delete_listens_url)
         self.assertMessageFlashed('Cannot delete listens due to error during authentication, please try again later.',
                                   'error')
-        self.assertRedirects(response, url_for('profile.info'))
+        self.assertStatus(response, 302)
+        self.assertEqual(response.location, url_for('profile.info'))
 
     def test_delete_listens_invalid_csrf_token(self):
         """Tests delete listens end point when auth token is invalid"""
@@ -106,7 +108,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
         response = self.client.post(delete_listens_url, data={'csrf_token': 'invalid-auth-token'})
         self.assertMessageFlashed('Cannot delete listens due to error during authentication, please try again later.',
                                   'error')
-        self.assertRedirects(response, url_for('profile.info'))
+        self.assertStatus(response, 302)
+        self.assertEqual(response.location, url_for('profile.info'))
 
     def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])
@@ -350,4 +353,4 @@ class ProfileViewsTestCase(IntegrationTestCase):
         export_feedback_url = url_for('profile.export_feedback')
         response = self.client.post(export_feedback_url)
         self.assertStatus(response, 302)
-        self.assertRedirects(response, url_for('login.index', next=export_feedback_url))
+        self.assertEqual(response.location, url_for('login.index', next=export_feedback_url))
