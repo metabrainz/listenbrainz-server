@@ -732,7 +732,7 @@ def import_postgres_dump(private_dump_archive_path=None,
             # if the private dump exists and has been imported, we need to
             # ignore the sanitized user table in the public dump
             # so remove it from tables_to_import
-            del tables_to_import['"user"']
+            del tables_to_import['user']
 
         _import_dump(public_dump_archive_path, db.engine, tables_to_import, db.SCHEMA_VERSION_CORE, threads)
         current_app.logger.info('Import of Public dump %s done!', public_dump_archive_path)
