@@ -102,7 +102,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.client.get(url_for('profile.delete_listens'))
         resp = self.client.post(url_for('profile.delete_listens'), data={'csrf_token': g.csrf_token})
         self.assertEqual(resp.status_code, 302)
-        self.assertEqual(resp.location, url_for("review.entity", id=self.review["id"]))
+        self.assertEqual(resp.location, url_for('user.profile', user_name=self.user['musicbrainz_id']))
 
         # listen counts are cached for 5 min, so delete key otherwise cached will be returned
         cache.delete(REDIS_USER_LISTEN_COUNT + str(self.user['id']))
