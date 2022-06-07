@@ -37,7 +37,7 @@ import sqlalchemy
 import ujson
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
-from psycopg2 import sql
+from psycopg2.sql import Identifier, SQL, Composable
 
 import listenbrainz.db as db
 from listenbrainz import DUMP_LICENSE_FILE_PATH
@@ -61,9 +61,9 @@ PUBLIC_TABLES_DUMP = {
         'musicbrainz_row_id',
         # the following are dummy values for columns that we do not want to
         # dump in the public dump
-        'null',  # auth token
-        'to_timestamp(0)',  # last_login
-        'to_timestamp(0)',  # latest_import
+        SQL('null'),  # auth token
+        SQL('to_timestamp(0)'),  # last_login
+        SQL('to_timestamp(0)'),  # latest_import
     ),
     'statistics.user': (
         'user_id',
@@ -632,12 +632,18 @@ def copy_table(cursor, location, columns, table_name):
                      that should be dumped
             table_name: the name of the table to be copied
     """
+    fields = []
+    for column in columns:
+        if isinstance(column, Composable):
+            fields.append(column)
+        else:
+            fields.append(Identifier(column))
 
     with open(os.path.join(location, table_name), 'w') as f:
-        query = sql.SQL("COPY (SELECT {fields} FROM {table}) TO STDOUT").format(
-            fields=sql.SQL(',').join([sql.Identifier(column) for column in columns]),
+        query = SQL("COPY (SELECT {fields} FROM {table}) TO STDOUT").format(
+            fields=SQL(',').join(fields),
             # for schema qualified table names, need to pass schema and table name as separate args
-            table=sql.Identifier(*table_name.split("."))
+            table=Identifier(*table_name.split("."))
         )
         cursor.copy_expert(query, f)
 
@@ -786,10 +792,17 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info(
                             'Importing data into %s table...', file_name)
                         try:
-                            query = sql.SQL("COPY {table}({fields}) FROM STDIN").format(
-                                fields=sql.SQL(',').join([sql.Identifier(column) for column in tables[file_name]]),
+                            fields = []
+                            for column in tables[file_name]:
+                                if isinstance(column, Composable):
+                                    fields.append(column)
+                                else:
+                                    fields.append(Identifier(column))
+
+                            query = SQL("COPY {table}({fields}) FROM STDIN").format(
+                                fields=SQL(',').join(fields),
                                 # for schema qualified table names, need to pass schema and table name as separate args
-                                table=sql.Identifier(*file_name.split("."))
+                                table=Identifier(*file_name.split("."))
                             )
                             cursor.copy_expert(query, file_name)
                             connection.commit()
