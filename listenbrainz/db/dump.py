@@ -434,7 +434,7 @@ def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: 
                                 copy_table(
                                     cursor=cursor,
                                     location=archive_tables_dir,
-                                    columns=','.join(tables[table]),
+                                    columns=tables[table],
                                     table_name=table,
                                 )
                             except IOError as e:
