@@ -804,7 +804,7 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                                 # for schema qualified table names, need to pass schema and table name as separate args
                                 table=Identifier(*file_name.split("."))
                             )
-                            cursor.copy_expert(query, file_name)
+                            cursor.copy_expert(query, tar.extractfile(member))
                             connection.commit()
                         except IOError as e:
                             current_app.logger.critical(
