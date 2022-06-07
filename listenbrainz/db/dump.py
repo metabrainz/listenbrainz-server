@@ -633,10 +633,7 @@ def copy_table(cursor, location, columns, table_name):
     """
 
     with open(os.path.join(location, table_name), 'w') as f:
-        cursor.copy_to(f, '(SELECT {columns} FROM {table})'.format(
-            columns=columns,
-            table=table_name
-        ))
+        cursor.copy_to(f, table_name, columns=columns)
 
 
 def add_dump_entry(timestamp):
