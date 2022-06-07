@@ -37,6 +37,7 @@ import sqlalchemy
 import ujson
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
+from psycopg2 import sql
 
 import listenbrainz.db as db
 from listenbrainz import DUMP_LICENSE_FILE_PATH
@@ -633,7 +634,11 @@ def copy_table(cursor, location, columns, table_name):
     """
 
     with open(os.path.join(location, table_name), 'w') as f:
-        cursor.copy_to(f, table_name, columns=columns)
+        query = sql.SQL("COPY (SELECT {fields} FROM {table}) TO STDOUT").format(
+            fields=sql.SQL(',').join([sql.Identifier(column) for column in columns]),
+            table=sql.Identifier(table_name)
+        )
+        cursor.copy_expert(query, f)
 
 
 def add_dump_entry(timestamp):
@@ -780,8 +785,11 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info(
                             'Importing data into %s table...', file_name)
                         try:
-                            cursor.copy_from(tar.extractfile(member), file_name,
-                                             columns=tables[file_name])
+                            query = sql.SQL("COPY {table}({fields}) FROM STDIN").format(
+                                fields=sql.SQL(',').join([sql.Identifier(column) for column in tables[file_name]]),
+                                table=sql.Identifier(file_name)
+                            )
+                            cursor.copy_expert(query, file_name)
                             connection.commit()
                         except IOError as e:
                             current_app.logger.critical(
