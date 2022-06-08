@@ -153,7 +153,7 @@ COPY ./docker/services/cron/crontab /etc/cron.d/crontab
 RUN chmod 0644 /etc/cron.d/crontab
 
 # Compile front-end (static) files
-COPY webpack.config.js babel.config.js .eslintrc.js tsconfig.json ./listenbrainz/webserver/static /static/
+COPY webpack.config.js babel.config.js .eslintrc.js .stylelintrc.js tsconfig.json ./listenbrainz/webserver/static /static/
 RUN npm run build:prod
 
 # Now install our code, which may change frequently

@@ -45,12 +45,8 @@ module.exports = function (env, argv) {
       },
     }),
     new StylelintPlugin({
-      configFile: ".stylelintrc",
-      files: "**/*.less",
-      exclude: [
-        "**/static/css/theme/bootstrap/*",
-        "**/static/css/theme/bootstrap/mixins/*",
-      ],
+      configFile: ".stylelintrc.js",
+      files: "**/static/css/**/*.less",
       fix: !isProd,
       threads: true,
     }),
