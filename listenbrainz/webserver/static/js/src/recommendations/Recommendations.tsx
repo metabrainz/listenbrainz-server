@@ -270,7 +270,7 @@ export default class Recommendations extends React.Component<
                         discoveryTimestamp
                       )}
                     >
-                      Discovered on
+                      Last listened at
                       <br />
                       {preciseTimestamp(discoveryTimestamp)}
                     </span>
