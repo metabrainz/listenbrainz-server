@@ -17,7 +17,7 @@ def get_recording_discovery():
     run_query("""
         SELECT user_id
              , recording_mbid
-             , last(listened_at) AS latest_listened_at
+             , max(listened_at) AS latest_listened_at
           FROM recording_discovery
          WHERE recording_mbid IS NOT NULL
       GROUP BY user_id
