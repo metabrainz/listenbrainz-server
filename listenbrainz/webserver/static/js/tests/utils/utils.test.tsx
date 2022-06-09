@@ -116,7 +116,6 @@ describe("searchForSpotifyTrack", () => {
         json: () => Promise.resolve(spotifySearchResponse),
       });
     });
-    jest.useFakeTimers();
   });
 
   it("calls fetch with correct parameters", async () => {
@@ -133,7 +132,7 @@ describe("searchForSpotifyTrack", () => {
     );
   });
 
-  it("we retrieve first track from json", async () => {
+  it("returns the first track from the json response", async () => {
     await expect(
       searchForSpotifyTrack("foobar", "import", "vs", "star")
     ).resolves.toEqual(spotifySearchResponse.tracks.items[0]);
