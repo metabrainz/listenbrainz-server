@@ -42,14 +42,6 @@
     }
 
     // Dropdowns
-    > .open > a {
-      &,
-      &:hover,
-      &:focus {
-        background-color: @active-bg;
-        color: @active-color;
-      }
-    }
     > .dropdown > a:hover .caret {
       border-top-color: @active-color;
       border-bottom-color: @active-color;
@@ -62,6 +54,8 @@
       &,
       &:hover,
       &:focus {
+        background-color: @active-bg;
+        color: @active-color;
         .caret {
           border-top-color: @active-color;
           border-bottom-color: @active-color;

@@ -36,16 +36,6 @@ body {
   width: auto !important;
 }
 
-.navbar {
-  .nav {
-    > li {
-      > a {
-        color: @blue;
-      }
-    }
-  }
-}
-
 .btn {
   .glyphicon {
     margin-right: 4px;
@@ -55,6 +45,13 @@ body {
 // Navbar
 @grid-float-breakpoint: @screen-md-min; // Point at which the navbar becomes uncollapsed
 .navbar {
+  .nav {
+    > li {
+      > a {
+        color: @blue;
+      }
+    }
+  }
   .beta {
     .pull-right;
     color: @red;
