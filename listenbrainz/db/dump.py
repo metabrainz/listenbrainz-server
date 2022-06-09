@@ -31,7 +31,7 @@ import tempfile
 import traceback
 from datetime import datetime, timedelta
 from ftplib import FTP
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 import sqlalchemy
 import ujson
@@ -59,8 +59,8 @@ PUBLIC_TABLES_DUMP = {
         'created',
         'musicbrainz_id',
         'musicbrainz_row_id',
-        # the following are dummy values for columns that we do not want to
-        # dump in the public dump
+        # the following are dummy values for columns that we do not want to dump in the public dump
+        # for items that are not columns or need manual quoting, wrap in SQL/Literal accordingly here
         SQL('null'),  # auth token
         SQL('to_timestamp(0)'),  # last_login
         SQL('to_timestamp(0)'),  # latest_import
@@ -632,19 +632,10 @@ def copy_table(cursor, location, columns, table_name):
                      that should be dumped
             table_name: the name of the table to be copied
     """
-    fields = []
-    for column in columns:
-        if isinstance(column, Composable):
-            fields.append(column)
-        else:
-            fields.append(Identifier(column))
-
+    table, fields = _escape_table_columns(table_name, columns)
     with open(os.path.join(location, table_name), 'w') as f:
-        query = SQL("COPY (SELECT {fields} FROM {table}) TO STDOUT").format(
-            fields=SQL(',').join(fields),
-            # for schema qualified table names, need to pass schema and table name as separate args
-            table=Identifier(*table_name.split("."))
-        )
+        query = SQL("COPY (SELECT {fields} FROM {table}) TO STDOUT") \
+            .format(fields=fields, table=table)
         cursor.copy_expert(query, f)
 
 
@@ -752,6 +743,37 @@ def import_postgres_dump(private_dump_archive_path=None,
         raise
 
 
+def _escape_table_columns(table: str, columns: list[str | Composable]) \
+        -> tuple[Composable, Composable]:
+    """
+    Escape the given table name and columns/values if those are not already escaped.
+
+    Args:
+        table: name of the table
+        columns: list of column names or values
+
+    Returns:
+        tuple consisting of properly escaped table name and joined columns
+    """
+    fields = []
+    for column in columns:
+        # Composable is the base class for all types of escaping in psycopg2.sql
+        # therefore, instances of Composable are already escaped and should be
+        # passed as is. for all other cases, escape as an Identifier which is the
+        # type used to escape column names, table names etc.
+        if isinstance(column, Composable):
+            fields.append(column)
+        else:
+            fields.append(Identifier(column))
+    joined_fields = SQL(',').join(fields)
+
+    # for schema qualified table names, need to pass schema and table name as
+    # separate args therefore the split
+    escaped_table_name = Identifier(*table.split("."))
+
+    return escaped_table_name, joined_fields
+
+
 def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                  tables, schema_version: int, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Import dump present in passed archive path into postgres db.
@@ -792,18 +814,8 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info(
                             'Importing data into %s table...', file_name)
                         try:
-                            fields = []
-                            for column in tables[file_name]:
-                                if isinstance(column, Composable):
-                                    fields.append(column)
-                                else:
-                                    fields.append(Identifier(column))
-
-                            query = SQL("COPY {table}({fields}) FROM STDIN").format(
-                                fields=SQL(',').join(fields),
-                                # for schema qualified table names, need to pass schema and table name as separate args
-                                table=Identifier(*file_name.split("."))
-                            )
+                            table, fields = _escape_table_columns(file_name, tables[file_name])
+                            query = SQL("COPY {table}({fields}) FROM STDIN").format(fields=fields, table=table)
                             cursor.copy_expert(query, tar.extractfile(member))
                             connection.commit()
                         except IOError as e:
