@@ -25,7 +25,8 @@ class ServerTestCase(flask_testing.TestCase):
         not_redirect = "HTTP Status %s expected but got %d" % (valid_status_code_str, response.status_code)
 
         self.assertIn(response.status_code, valid_status_codes, message or not_redirect)
-        self.assertTrue(response.location.endswith(location), message)
+        location_mismatch = "Expected redirect location %s but got %s" % (response.location, location)
+        self.assertTrue(response.location.endswith(location), message or location_mismatch)
 
     assert_redirects = assertRedirects
 
