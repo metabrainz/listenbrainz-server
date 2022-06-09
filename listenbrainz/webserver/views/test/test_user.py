@@ -39,57 +39,54 @@ class UserViewsTestCase(IntegrationTestCase):
         """Test the /my/[something]/ endponts which redirect to the /user/ namespace"""
         # Not logged in
         response = self.client.get(url_for("redirect.redirect_listens"))
-        self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/login/?next=%2Fmy%2Flistens%2F")
+        self.assertRedirects(response, "/login/?next=%2Fmy%2Flistens%2F")
 
         # Logged in
         self.temporary_login(self.user.login_id)
         response = self.client.get(url_for("redirect.redirect_listens"))
-        self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/user/iliekcomputers/")
+        self.assertRedirects(response, "/user/iliekcomputers/")
 
         response = self.client.get(url_for("redirect.redirect_charts"))
-        self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/user/iliekcomputers/charts/")
+        self.assertRedirects(response, "/user/iliekcomputers/charts/")
 
         response = self.client.get(url_for("redirect.redirect_charts") + "?foo=bar")
-        self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/user/iliekcomputers/charts/?foo=bar")
+        self.assertRedirects(response, "/user/iliekcomputers/charts/?foo=bar")
 
     def test_user_redirects(self):
         response = self.client.get('/user/iliekcomputers/')
         self.assert200(response)
         response = self.client.get('/user/iliekcomputers')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/')
+        self.assertRedirects(response, '/user/iliekcomputers/', permanent=True)
 
         response = self.client.get('/user/iliekcomputers/charts/')
         self.assert200(response)
         response = self.client.get('/user/iliekcomputers/charts')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/charts/')
+        self.assertRedirects(response, '/user/iliekcomputers/charts/', permanent=True)
 
         response = self.client.get('/user/iliekcomputers/reports/')
         self.assert200(response)
         response = self.client.get('/user/iliekcomputers/reports')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/reports/')
+        self.assertRedirects(response, '/user/iliekcomputers/reports/', permanent=True)
 
         # these are permanent redirects to user/<username>/charts
 
         response = self.client.get('/user/iliekcomputers/history/')
-        self.assertEqual(response.status_code, 301)
-        assert response.location.endswith('/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time')
+        self.assertRedirects(
+            response,
+            '/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time',
+            permanent=True
+        )
         response = self.client.get('/user/iliekcomputers/history')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/history/')
+        self.assertRedirects(response, '/user/iliekcomputers/history/', permanent=True)
 
         response = self.client.get('/user/iliekcomputers/artists/')
-        self.assertEqual(response.status_code, 301)
-        assert response.location.endswith('/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time')
+        self.assertRedirects(
+            response,
+            '/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time',
+            permanent=True
+        )
         response = self.client.get('/user/iliekcomputers/artists')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/artists/')
+        self.assertRedirects(response, '/user/iliekcomputers/artists/', permanent=True)
 
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))

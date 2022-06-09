@@ -15,6 +15,20 @@ class ServerTestCase(flask_testing.TestCase):
             session['_user_id'] = user_login_id
             session['_fresh'] = True
 
+    def assertRedirects(self, response, location, message=None, permanent=False):
+        if permanent:
+            valid_status_codes = (301, 308)
+        else:
+            valid_status_codes = (301, 302, 303, 305, 307, 308)
+
+        valid_status_code_str = ', '.join(str(code) for code in valid_status_codes)
+        not_redirect = "HTTP Status %s expected but got %d" % (valid_status_code_str, response.status_code)
+
+        self.assertIn(response.status_code, valid_status_codes, message or not_redirect)
+        self.assertTrue(response.location.endswith(location), message)
+
+    assert_redirects = assertRedirects
+
 
 class APICompatServerTestCase(flask_testing.TestCase):
 

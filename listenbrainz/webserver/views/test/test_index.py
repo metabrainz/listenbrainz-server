@@ -26,8 +26,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def test_downloads(self):
         resp = self.client.get(url_for('index.downloads'))
-        self.assertEqual(resp.status_code, 302)
-        self.assertEqual(resp.location, url_for('index.data'))
+        self.assertRedirects(resp, url_for('index.data'))
 
     def test_data(self):
         resp = self.client.get(url_for('index.data'))
