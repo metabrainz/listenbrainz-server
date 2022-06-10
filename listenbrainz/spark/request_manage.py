@@ -314,6 +314,12 @@ def request_recording_discovery():
     send_request_to_spark_cluster('cf.recommendations.recording.discovery')
 
 
+@cli.command(name='request_release_radar')
+def request_release_radar():
+    """ Send the cluster a request to generate release radar data. """
+    send_request_to_spark_cluster('releases.release_radar')
+
+
 @cli.command(name='request_import_artist_relation')
 def request_import_artist_relation():
     """ Send the spark cluster a request to import artist relation.
