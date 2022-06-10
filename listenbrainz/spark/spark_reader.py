@@ -29,7 +29,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_most_listened_year,
                                          handle_top_stats,
                                          handle_listens_per_day,
-                                         handle_yearly_listen_counts)
+                                         handle_yearly_listen_counts, handle_release_radar)
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
@@ -59,7 +59,8 @@ response_handler_map = {
     'similar_users_year_end': handle_similar_users_year_end,
     'year_in_music_top_stats': handle_top_stats,
     'year_in_music_listens_per_day': handle_listens_per_day,
-    'year_in_music_listen_count': handle_yearly_listen_counts
+    'year_in_music_listen_count': handle_yearly_listen_counts,
+    'release_radar': handle_release_radar
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds

@@ -93,6 +93,12 @@ CREATE TABLE recommendation.similar_user (
   last_updated    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE recommendation.release_radar (
+  user_id         INTEGER NOT NULL, -- FK to "user".id
+  data            JSONB,
+  last_updated    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE user_timeline_event (
   id                    SERIAL, -- PK
   user_id               INTEGER, -- FK to "user"
