@@ -315,9 +315,10 @@ def request_recording_discovery():
 
 
 @cli.command(name='request_release_radar')
-def request_release_radar():
+@click.option("--days", type=int, required=False, help="Number of days of listens to consider for artist listening data")
+def request_release_radar(days):
     """ Send the cluster a request to generate release radar data. """
-    send_request_to_spark_cluster('releases.release_radar')
+    send_request_to_spark_cluster('releases.release_radar', days=days)
 
 
 @cli.command(name='request_import_artist_relation')
