@@ -1,11 +1,12 @@
 import json
-from datetime import timedelta
+from datetime import timedelta, datetime
 from pathlib import Path
 
 from more_itertools import chunked
 from pyspark import Row
 
 import listenbrainz_spark
+from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.schema import release_radar_schema
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_new_dump
@@ -102,7 +103,10 @@ def get_query():
 
 def main(days: int):
     to_date = get_latest_listen_ts()
-    from_date = to_date + timedelta(days=-days)
+    if days:
+        from_date = to_date + timedelta(days=-days)
+    else:
+        from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
     get_listens_from_new_dump(from_date, to_date) \
         .createOrReplaceTempView("release_radar_listens")
 
