@@ -18,7 +18,8 @@ exports[`ListenCountCard renders correctly when listen count is not zero 1`] = `
       id="listen-count-card"
     >
       <div>
-        track_listener has listened to
+        track_listener has
+         listened to
         <hr />
         100
         <br />
@@ -49,9 +50,30 @@ exports[`ListenCountCard renders correctly when listen count is zero or undefine
       className="card "
       id="listen-count-card"
     >
-      <p>
-        track_listener has not listened to any songs so far
+      <p
+        className="text-muted"
+      >
+        track_listener's
+         listens count
       </p>
+      <hr
+        style={
+          Object {
+            "margin": "10px 0px",
+          }
+        }
+      />
+      <div
+        className="text-muted"
+        style={
+          Object {
+            "fontSize": "14px",
+          }
+        }
+      >
+        track_listener hasn't
+         listened to any songs.
+      </div>
     </div>
   </ForwardRef>
 </ListenCountCard>
