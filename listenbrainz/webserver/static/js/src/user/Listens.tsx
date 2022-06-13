@@ -687,14 +687,7 @@ export default class Listens extends React.Component<
               />
             )}
             <ListenCountCard user={user} listenCount={listenCount} />
-            {user && (
-              <div
-                className="card hidden-xs hidden-sm"
-                style={{ paddingTop: "1.5em" }}
-              >
-                <UserSocialNetwork user={user} newAlert={newAlert} />
-              </div>
-            )}
+            {user && <UserSocialNetwork user={user} newAlert={newAlert} />}
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
