@@ -17,9 +17,7 @@ const ListenCountCard = (props: ListenCountCardProps) => {
   if (listenCount) {
     content = (
       <div>
-        {isCurrentUser
-          ? "You have listened to"
-          : `${user.name} has listened to`}
+        {isCurrentUser ? "You have" : `${user.name} has`} listened to
         <hr />
         {listenCount.toLocaleString()}
         <br />
@@ -28,11 +26,16 @@ const ListenCountCard = (props: ListenCountCardProps) => {
     );
   } else {
     content = (
-      <p>
-        {isCurrentUser
-          ? "You have not listened to any songs so far"
-          : `${user.name} has not listened to any songs so far`}
-      </p>
+      <>
+        <p className="text-muted">
+          {isCurrentUser ? "Your" : `${user.name}'s`} listens count
+        </p>
+        <hr style={{ margin: "10px 0px" }} />
+        <div style={{ fontSize: "14px" }} className="text-muted">
+          {isCurrentUser ? "You haven't" : `${user.name} hasn't`} listened to
+          any songs.
+        </div>
+      </>
     );
   }
 
