@@ -14,6 +14,7 @@ import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
   faPencilAlt,
+  faRecordVinyl,
   faThumbtack,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
@@ -660,7 +661,7 @@ export default class Listens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
-        <h3>Recent listens</h3>
+        {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {playingNowListen && (
@@ -691,8 +692,26 @@ export default class Listens extends React.Component<
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
-              <div className="lead text-center">
-                <p>No listens yet</p>
+              <div className="empty-listens">
+                <FontAwesomeIcon icon={faRecordVinyl as IconProp} size="10x" />
+                <div className="lead empty-text">Empty record</div>
+                <div className="empty-message text-muted">
+                  {currentUser?.name === user?.name
+                    ? "You haven't"
+                    : `${user.name} hasn't`}{" "}
+                  listened to any songs yet.
+                </div>
+                {currentUser?.name === user?.name && (
+                  <div className="empty-action">
+                    Import <a href="/profile/import/">your listening history</a>{" "}
+                    and track your listens by{" "}
+                    <a href="/profile/music-services/details/">
+                      connecting to a music service
+                    </a>
+                    , or use <a href="/add-data/">one of the players</a> to
+                    start submitting your listens.
+                  </div>
+                )}
               </div>
             )}
             {listens.length > 0 && (
