@@ -119,7 +119,8 @@ export default class Listens extends React.Component<
   componentDidMount(): void {
     const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
-    const { APIService, currentUser } = this.context;
+    const { APIService } = this.context;
+    const { playingNowListen } = this.state;
     this.APIService = APIService;
 
     this.connectWebsockets();
@@ -141,6 +142,9 @@ export default class Listens extends React.Component<
             error?.toString()
           );
         });
+    }
+    if (playingNowListen) {
+      this.receiveNewPlayingNow(playingNowListen);
     }
     this.loadFeedback();
   }
@@ -211,7 +215,8 @@ export default class Listens extends React.Component<
       this.receiveNewListen(data);
     });
     this.socket.on("playing_now", (data: string) => {
-      this.receiveNewPlayingNow(data);
+      const playingNow = JSON.parse(data) as Listen;
+      this.receiveNewPlayingNow(playingNow);
     });
   };
 
@@ -243,10 +248,8 @@ export default class Listens extends React.Component<
     }
   };
 
-  receiveNewPlayingNow = async (newPlayingNow: string): Promise<void> => {
-    const playingNow = JSON.parse(newPlayingNow) as Listen;
-    playingNow.playing_now = true;
-
+  receiveNewPlayingNow = async (newPlayingNow: Listen): Promise<void> => {
+    const playingNow = newPlayingNow;
     const { APIService } = this.context;
     const metadata = await APIService.lookupRecordingMetadata(
       playingNow.track_metadata.track_name,
@@ -396,7 +399,7 @@ export default class Listens extends React.Component<
   getFeedback = async () => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
-    const { listens, playingNowListen } = this.state;
+    const { listens } = this.state;
     let recording_msids = "";
     let recording_mbids = "";
 
@@ -411,11 +414,6 @@ export default class Listens extends React.Component<
           recording_mbids += `${recordingMBID},`;
         }
       });
-
-      if (playingNowListen) {
-        const playingNowMbid = getRecordingMBID(playingNowListen);
-        recording_mbids += `${playingNowMbid}`;
-      }
 
       try {
         const data = await APIService.getFeedbackForUserForRecordings(

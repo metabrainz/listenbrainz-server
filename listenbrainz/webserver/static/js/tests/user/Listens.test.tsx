@@ -225,7 +225,7 @@ describe("addWebsocketsHandlers", () => {
     instance.addWebsocketsHandlers();
 
     expect(instance.receiveNewPlayingNow).toHaveBeenCalledWith(
-      JSON.stringify(recentListensPropsPlayingNow.listens[0])
+      recentListensPropsPlayingNow.listens[0]
     );
     spy.mockReset();
   });
@@ -331,7 +331,7 @@ describe("receiveNewPlayingNow", () => {
     expect(wrapper.state("listens")).toEqual(result);
     expect(wrapper.state("playingNowListen")).toEqual(firstPlayingNow);
 
-    instance.receiveNewPlayingNow(JSON.stringify(mockListenOne));
+    instance.receiveNewPlayingNow(mockListenOne);
     wrapper.update();
     expect(wrapper.state("listens")).toEqual(result);
     expect(wrapper.state("playingNowListen")).toEqual({
