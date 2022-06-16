@@ -396,7 +396,7 @@ export default class Listens extends React.Component<
   getFeedback = async () => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
-    const { listens } = this.state;
+    const { listens, playingNowListen } = this.state;
     let recording_msids = "";
     let recording_mbids = "";
 
@@ -411,6 +411,12 @@ export default class Listens extends React.Component<
           recording_mbids += `${recordingMBID},`;
         }
       });
+
+      if (playingNowListen) {
+        const playingNowMbid = getRecordingMBID(playingNowListen);
+        recording_mbids += `${playingNowMbid}`;
+      }
+
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
