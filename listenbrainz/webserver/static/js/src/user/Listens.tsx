@@ -255,6 +255,8 @@ export default class Listens extends React.Component<
     );
     playingNow.track_metadata.mbid_mapping = metadata as MbidMapping;
 
+    this.loadFeedbackForNowPlaying(playingNow);
+
     this.setState({
       playingNowListen: playingNow,
     });
@@ -427,6 +429,38 @@ export default class Listens extends React.Component<
       }
     }
     return [];
+  };
+
+  loadFeedbackForNowPlaying = async (listen: Listen): Promise<void> => {
+    const { newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
+    const recordingMBID = getRecordingMBID(listen);
+
+    if (!currentUser?.name || !recordingMBID) {
+      return;
+    }
+    try {
+      const data = await APIService.getFeedbackForUserForRecordings(
+        currentUser.name,
+        "",
+        recordingMBID
+      );
+      if (data.feedback.length) {
+        const { recordingMbidFeedbackMap } = this.state;
+        const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
+        const item = data.feedback[0];
+        newMbidFeedbackMap[item.recording_mbid] = item.score;
+        this.setState({ recordingMbidFeedbackMap: newMbidFeedbackMap });
+      }
+    } catch (error) {
+      if (newAlert) {
+        newAlert(
+          "danger",
+          "We could not load love/hate feedback",
+          typeof error === "object" ? error.message : error
+        );
+      }
+    }
   };
 
   loadFeedback = async () => {
