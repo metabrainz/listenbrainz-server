@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}Reset Timezone- ListenBrainz{% endblock %}
+{% block title %}Select Timezone- ListenBrainz{% endblock %}
 
 {% block content %}
-  <h3 class="page-title">Reset Timezone</h3>
+  <h3 class="page-title">Select Timezone</h3>
   <p>
-    Your current timezone setting is: {{ user_timezone }}. By choosing your local time zone, 
-    you will have a local timestamp for your submitted listens.
-    You can also get new recommendations in the morning. 
+    Your current timezone setting is <b>{{ user_timezone }}</b>. 
+    <br>By choosing your local time zone, 
+    you will have a local timestamps part of your submitted listens. 
+    This also informs as when to generate daily playlists and other recommendations for you.
   </p>
 
   <form method="post">
