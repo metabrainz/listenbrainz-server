@@ -54,18 +54,18 @@ def reset_token():
     )
 
 
-@profile_bp.route("/reset_time_zone/", methods=["GET", "POST"])
+@profile_bp.route("/select_timezone/", methods=["GET", "POST"])
 @login_required
-def reset_time_zone():
+def select_timezone():
     pg_timezones = db_usersetting.get_pg_timezone()
     form = TimezoneForm()
-    form.timezone.choices = [(zone_name, zone_name) for (zone_name,offset) in pg_timezones]
-    user_settings = db_usersetting.get_or_create(current_user.id)
+    form.timezone.choices = [(zone_name, zone_name) for (zone_name, offset) in pg_timezones]
+    user_settings = db_usersetting.get(current_user.id)
     user_timezone = user_settings['timezone_name']
     if form.validate_on_submit():
         try:
             update_timezone = str(form.timezone.data)
-            db_usersetting.update_timezone(current_user.id, update_timezone)
+            db_usersetting.set_timezone(current_user.id, update_timezone)
             flash.info("timezone reset")
         except DatabaseException:
             flash.error("Something went wrong! Unable to update timezone right now.")
@@ -77,12 +77,12 @@ def reset_time_zone():
 
     return render_template(
         "profile/resettimezone.html",
-        user_timezone = user_timezone,
-        pg_timezones = pg_timezones,
-        form=form
+        user_timezone=user_timezone,
+        pg_timezones=pg_timezones,
+        form=form,
     )
 
-    
+
 @profile_bp.route("/resetlatestimportts/", methods=["GET", "POST"])
 @login_required
 def reset_latest_import_timestamp():
@@ -109,9 +109,11 @@ def reset_latest_import_timestamp():
 @login_required
 def info():
 
+    user_setting = db_usersetting.get(current_user.id)
     return render_template(
         "profile/info.html",
-        user=current_user
+        user=current_user,
+        user_setting = user_setting,
     )
 
 
