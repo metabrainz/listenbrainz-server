@@ -50,7 +50,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
 
         query = """INSERT INTO listen (listened_at, track_name, user_name, user_id, data, created)
                         VALUES %s
-                   ON CONFLICT (listened_at, track_name, user_id)
+                   ON CONFLICT (listened_at, user_id, LOWER(track_name))
                     DO NOTHING
                 """
 
