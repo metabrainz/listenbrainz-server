@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-DEFAULT_TIMEZONE  = "UTC"
+DEFAULT_TIMEZONE = "UTC"
 
 
 def get_pg_timezone():
@@ -44,7 +44,7 @@ def get(user_id: int):
             """), {
                 "user_id": user_id,
             })
-            
+
             if result.rowcount:
                 user_setting = dict(result.fetchone())
                 if not user_setting["timezone_name"]:
