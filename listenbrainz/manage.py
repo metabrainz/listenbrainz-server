@@ -8,6 +8,7 @@ from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.db import timescale as ts
 from listenbrainz.listenstore import timescale_fill_userid
+from listenbrainz.listenstore import timescale_dedup_listens
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
@@ -335,3 +336,13 @@ def listen_add_userid():
     app = create_app()
     with app.app_context():
         timescale_fill_userid.fill_userid()
+
+
+@cli.command()
+def listen_deduplicate():
+    """
+        Deduplicate listens using case insensitivity for track name.
+    """
+    app = create_app()
+    with app.app_context():
+        timescale_dedup_listens.dedup_listens()
