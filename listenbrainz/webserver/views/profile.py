@@ -113,7 +113,7 @@ def info():
     return render_template(
         "profile/info.html",
         user=current_user,
-        user_setting = user_setting,
+        user_setting=user_setting,
     )
 
 
