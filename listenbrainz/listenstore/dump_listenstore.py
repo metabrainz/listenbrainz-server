@@ -411,9 +411,10 @@ class DumpListenStore:
                             + len(result["m_release_mbid"] or "0") + len(str(result["m_artist_credit_mbids"] or 0)) \
                             + len(str(result["artist_credit_id"]))
 
-                    current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
-                    data['listened_at'].append(current_listened_at)
-                    approx_size += len(str(result['listened_at']))
+                    current_listened_at = datetime.utcfromtimestamp(result["listened_at"])
+                    data["listened_at"].append(current_listened_at)
+                    data["user_id"].append(result["user_id"])
+                    approx_size += len(str(result["listened_at"])) + len(str(result["user_id"]))
 
                     written += 1
                     listen_count += 1
