@@ -333,26 +333,33 @@ class DumpListenStore:
             }
 
         query = psycopg2.sql.SQL("""
-                     SELECT listened_at,
-                           user_id,
-                           artist_credit_id,
-                           artist_mbids::TEXT[] AS artist_credit_mbids,
-                           artist_credit_name AS m_artist_name,
-                           data->'track_metadata'->>'artist_name' AS l_artist_name,
-                           release_name AS m_release_name,
-                           data->'track_metadata'->>'release_name' AS l_release_name,
-                           release_mbid::TEXT,
-                           recording_name AS m_recording_name,
-                           track_name AS l_recording_name,
-                           mm.recording_mbid::TEXT
-                      FROM listen l
-           FULL OUTER JOIN mbid_mapping mm
-                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
-           FULL OUTER JOIN mbid_mapping_metadata m
-                        ON mm.recording_mbid = m.recording_mbid
-                     WHERE {criteria} > %(start)s
-                       AND {criteria} <= %(end)s
-                  ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
+        -- can't use coalesce here because we want all listen data or all mapping data to be used for a given
+        -- listen, coalesce mapping data with listen data can yield values from different sources for same listen.
+        -- an alternative is to use to CASE, but need to put case for each column because SQL CASE doesn't allow
+        -- setting multiple columns at once.
+                     SELECT listened_at
+                          , user_id
+                          , artist_credit_id
+                          , artist_mbids::TEXT[] AS m_artist_credit_mbids
+                          , data->'track_metadata'->'additional_info'->>'artist_mbids' AS l_artist_credit_mbids
+                          , artist_credit_name AS m_artist_name
+                          , data->'track_metadata'->>'artist_name' AS l_artist_name
+                          , release_name AS m_release_name
+                          , data->'track_metadata'->>'release_name' AS l_release_name
+                          , release_mbid::TEXT AS m_release_mbid
+                          , data->'track_metadata'->'additional_info'->>'release_mbid' AS l_release_mbid
+                          , recording_name AS m_recording_name
+                          , track_name AS l_recording_name
+                          , mm.recording_mbid::TEXT AS m_recording_mbid
+                          , data->'track_metadata'->'additional_info'->>'recording_mbid' AS l_recording_mbid
+                       FROM listen l
+                  LEFT JOIN mbid_mapping mm
+                         ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+                  LEFT JOIN mbid_mapping_metadata m
+                         ON mm.recording_mbid = m.recording_mbid
+                      WHERE {criteria} > %(start)s
+                        AND {criteria} <= %(end)s
+                   ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
 
         listen_count = 0
         current_listened_at = None
@@ -385,26 +392,29 @@ class DumpListenStore:
                         data["release_name"].append(result["l_release_name"])
                         data["recording_name"].append(result["l_recording_name"])
                         data["artist_credit_id"].append(None)
-                        approx_size += len(result["l_artist_name"]) + len(result["l_release_name"] or "0") + \
-                                       len(result["l_recording_name"])
+                        data["artist_credit_mbids"].append(result["l_artist_credit_mbids"])
+                        data["release_mbid"].append(result["l_release_mbid"])
+                        data["recording_mbid"].append(result["l_recording_mbid"])
+                        approx_size += len(result["l_artist_name"]) + len(result["l_recording_name"]) \
+                            + len(result["l_release_name"] or "0") + len(result["l_recording_mbid"] or "0") \
+                            + len(result["l_release_mbid"] or "0") + len(str(result["l_artist_credit_mbids"] or 0))
                     else:
                         data["artist_name"].append(result["m_artist_name"])
                         data["release_name"].append(result["m_release_name"])
                         data["recording_name"].append(result["m_recording_name"])
                         data["artist_credit_id"].append(result["artist_credit_id"])
-                        approx_size += len(result["m_artist_name"]) + len(result["m_release_name"]) + \
-                                       len(result["m_recording_name"]) + len(str(result["artist_credit_id"]))
+                        data["artist_credit_mbids"].append(result["m_artist_credit_mbids"])
+                        data["release_mbid"].append(result["m_release_mbid"])
+                        data["recording_mbid"].append(result["m_recording_mbid"])
+                        approx_size += len(result["m_artist_name"]) + len(result["m_recording_name"]) \
+                            + len(result["m_release_name"] or "0") + len(result["m_recording_mbid"] or "0") \
+                            + len(result["m_release_mbid"] or "0") + len(str(result["m_artist_credit_mbids"] or 0)) \
+                            + len(str(result["artist_credit_id"]))
 
-                    for col in data:
-                        if col == 'listened_at':
-                            current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
-                            data[col].append(current_listened_at)
-                            approx_size += len(str(result[col]))
-                        elif col in ['artist_name', 'release_name', 'recording_name', 'artist_credit_id']:
-                            pass
-                        else:
-                            data[col].append(result[col])
-                            approx_size += len(str(result[col]))
+                    current_listened_at = datetime.utcfromtimestamp(result["listened_at"])
+                    data["listened_at"].append(current_listened_at)
+                    data["user_id"].append(result["user_id"])
+                    approx_size += len(str(result["listened_at"])) + len(str(result["user_id"]))
 
                     written += 1
                     listen_count += 1
