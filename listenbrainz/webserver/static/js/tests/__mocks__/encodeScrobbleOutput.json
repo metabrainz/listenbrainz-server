@@ -5,7 +5,7 @@
       "artist_name": "Coldplay",
       "release_name": "A Head Full Of Dreams",
       "additional_info": {
-        "listening_from": "lastfm",
+        "submission_client": "ListenBrainz lastfm importer",
         "lastfm_track_mbid": "02b47acf-3bc5-47dc-a516-e8c2c95bc07b",
         "lastfm_release_mbid": "002183a5-c087-4c0a-9c47-65ef79261dd2",
         "lastfm_artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234"
@@ -19,7 +19,7 @@
       "artist_name": "Imagine Dragons",
       "release_name": "Evolve",
       "additional_info": {
-        "listening_from": "lastfm",
+        "submission_client": "ListenBrainz lastfm importer",
         "lastfm_track_mbid": "022d6bfb-2a57-486b-a784-2af9b4b93fa9",
         "lastfm_release_mbid": "25c11880-bc5e-43db-927b-522eb871dc9e",
         "lastfm_artist_mbid": "012151a8-0f9a-44c9-997f-ebd68b5389f9"
@@ -33,7 +33,7 @@
       "artist_name": "Imagine Dragons",
       "release_name": "Evolve",
       "additional_info": {
-        "listening_from": "lastfm",
+        "submission_client": "ListenBrainz lastfm importer",
         "lastfm_track_mbid": "022d6bfb-2a57-486b-a784-2af9b4b93fa9"
       }
     },
