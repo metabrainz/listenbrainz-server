@@ -210,7 +210,9 @@ def _to_native_api(lookup, method, output_format="xml"):
     for ind, data in lookup.items():
         listen = {
             'track_metadata': {
-                'additional_info': {}
+                'additional_info': {
+                    'submission_client': 'ListenBrainz lastfm API'
+                }
             }
         }
         if 'artist' in data:
