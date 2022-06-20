@@ -353,9 +353,9 @@ class DumpListenStore:
                           , mm.recording_mbid::TEXT AS m_recording_mbid
                           , data->'track_metadata'->'additional_info'->>'recording_mbid' AS l_recording_mbid
                        FROM listen l
-            FULL OUTER JOIN mbid_mapping mm
+                  LEFT JOIN mbid_mapping mm
                          ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
-            FULL OUTER JOIN mbid_mapping_metadata m
+                  LEFT JOIN mbid_mapping_metadata m
                          ON mm.recording_mbid = m.recording_mbid
                       WHERE {criteria} > %(start)s
                         AND {criteria} <= %(end)s
