@@ -2,6 +2,7 @@ const path = require("path");
 const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const LessPluginCleanCSS = require("less-plugin-clean-css");
+const StylelintPlugin = require("stylelint-webpack-plugin");
 
 const baseDir = "/static";
 const jsDir = path.join(baseDir, "js");
@@ -42,6 +43,12 @@ module.exports = function (env, argv) {
         files: "**/js/src/**/*.{ts,tsx,js,jsx}",
         options: { fix: !isProd },
       },
+    }),
+    new StylelintPlugin({
+      configFile: ".stylelintrc.js",
+      files: "**/static/css/**/*.less",
+      fix: !isProd,
+      threads: true,
     }),
   ];
   return {
