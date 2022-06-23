@@ -19,7 +19,8 @@ from data.model.user_cf_recommendations_recording_message import UserRecommendat
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import year_in_music, couchdb, release_radar
+from listenbrainz.db import year_in_music, couchdb
+from listenbrainz.db.recent_releases import insert_recent_releases
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
 
@@ -257,9 +258,8 @@ def handle_recommendations(data):
     current_app.logger.debug("Running post recommendation steps for user {}".format(user["musicbrainz_id"]))
 
 
-def handle_release_radar(message):
-    """Save release radar data into ListenBrainz database"""
-    release_radar.insert_release_radar_data(message["data"])
+def handle_recent_releases(message):
+    insert_recent_releases(message["database"], message["data"])
 
 
 def notify_mapping_import(data):

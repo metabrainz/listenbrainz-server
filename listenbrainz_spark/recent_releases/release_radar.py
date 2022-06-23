@@ -101,7 +101,7 @@ def get_query():
     """
 
 
-def main(days: int):
+def main(days: int, database: str):
     to_date = get_latest_listen_ts()
     if days:
         from_date = to_date + timedelta(days=-days)
@@ -114,40 +114,12 @@ def main(days: int):
 
     itr = run_query(get_query()).toLocalIterator()
     for rows in chunked(itr, USERS_PER_MESSAGE):
+        entries = []
+        for row in rows:
+            entry = row.asDict(recursive=True)
+            entry["database"] = database
+            entries.append(entry)
         yield {
-            "type": "release_radar",
-            "data": [row.asDict(recursive=True) for row in rows]
+            "type": "recent_releases",
+            "data": entries
         }
-
-
-"""
-    SELECT DISTINCT rl.gid AS release_mbid
-                  , rl.name AS release_name
-                  , rgpt.name AS release_group_primary_type
-                  , rgst.name AS release_group_secondary_type
-                  , rc.year || '-' || rc.month || '-' || rc.day AS date
-                  , ac.name AS artist_credit_name
-                  , array_agg(distinct a.gid) AS artist_mbids
-              FROM release rl
-              JOIN release_first_release_date rc
-                ON rc.release = rl.id
-              JOIN release_group rg
-                ON rl.release_group = rg.id
-         LEFT JOIN release_group_primary_type rgpt
-                ON rg.type = rgpt.id
-         LEFT JOIN release_group_secondary_type_join rgstj
-                ON rgstj.release_group = rg.id
-         LEFT JOIN release_group_secondary_type rgst
-                ON rgstj.secondary_type = rgst.id
-              JOIN artist_credit ac
-                ON rl.artist_credit = ac.id
-              JOIN artist_credit_name acn
-                ON acn.artist_credit = ac.id
-              JOIN artist a
-                ON acn.artist = a.id
-             WHERE make_date(rc.year, rc.month, rc.day) >= '2022-05-15'
-               AND make_date(rc.year, rc.month, rc.day) <= '2022-06-15' 
-          GROUP BY release_mbid, release_name, date, artist_credit_name, release_group_primary_type, release_group_secondary_type
-          ORDER BY date, artist_credit_name;
-"""
-
