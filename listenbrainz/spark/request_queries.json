@@ -148,9 +148,9 @@
     "description": "Calculate the top artists/recordings/releases stats for the current year for each user",
     "params": ["year"]
   },
-  "releases.release_radar": {
-    "name": "releases.release_radar",
+  "releases.recent": {
+    "name": "releases.recent",
     "description": "Calculate the intersection of recent releases and user's listening history",
-    "params": ["days"]
+    "params": ["days", "database"]
   }
 }
