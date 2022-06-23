@@ -19,7 +19,7 @@ fi
 # ./test.sh fe -u          run frontend tests, update snapshots
 # ./test.sh fe -b          build frontend test containers
 # ./test.sh fe -t          run type-checker
-# ./test.sh fe -f          run linter
+# ./test.sh fe -f          run linters
 
 # SPARK TESTS
 # ./test.sh spark          run spark tests
@@ -259,7 +259,7 @@ if [ "$1" == "fe" ]; then
     fi
 
     if [ "$2" == "-f" ]; then
-        echo "Running linter"
+        echo "Running linters"
         run_lint_check
         exit $?
     fi

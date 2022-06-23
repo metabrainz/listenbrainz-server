@@ -1,7 +1,6 @@
-
 .follow-button {
   margin-left: 10px;
-  font-family: "Sintony";
+  font-family: "Sintony", sans-serif;
   color: @white;
   background: @blue;
   border: 2px solid @blue;
@@ -10,7 +9,6 @@
   border-radius: 4px;
   transition: color 0.42s, background 0.42s;
   text-align: center;
-
 
   &.icon-only {
     > .text {
@@ -22,9 +20,10 @@
       overflow-x: hidden;
     }
 
-    &:hover, &:focus {
+    &:hover,
+    &:focus {
       background: white;
-      color:@blue;
+      color: @blue;
 
       > .text {
         width: 4.75em;
@@ -36,7 +35,9 @@
   &.block {
     width: 85px;
 
-    &.following, &:hover, &:focus {
+    &.following,
+    &:hover,
+    &:focus {
       background: white;
       color: @blue;
     }
@@ -51,7 +52,8 @@
   padding-bottom: 10px;
 }
 
-.follower-following-list, .similar-users-list {
+.follower-following-list,
+.similar-users-list {
   max-height: 250px;
   padding: 10px;
   overflow-y: scroll;
