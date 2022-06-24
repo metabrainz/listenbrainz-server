@@ -11,6 +11,8 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_recommendations,
                                          handle_user_daily_activity,
                                          handle_user_entity,
+                                         handle_user_entity_start,
+                                         handle_user_entity_end,
                                          handle_user_listening_activity,
                                          handle_sitewide_entity,
                                          notify_artist_relation_import,
@@ -31,6 +33,8 @@ from listenbrainz.webserver import create_app
 
 response_handler_map = {
     'user_entity': handle_user_entity,
+    'user_entity_start': handle_user_entity_start,
+    'user_entity_end': handle_user_entity_end,
     'user_listening_activity': handle_user_listening_activity,
     'user_daily_activity': handle_user_daily_activity,
     'sitewide_entity': handle_sitewide_entity,
