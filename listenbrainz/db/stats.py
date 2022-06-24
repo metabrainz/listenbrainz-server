@@ -31,7 +31,7 @@ import sqlalchemy
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import execute_values
-
+from sentry_sdk import start_span
 
 from data.model.common_stat import StatRange, StatApi
 from data.model.user_artist_map import UserArtistMapRecord
@@ -51,19 +51,29 @@ from listenbrainz.db.recent_releases import check_create_recent_release_database
 SITEWIDE_STATS_USER_ID = 15753
 
 
-def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
+def create_couchdb_database(stats_type, stats_range):
     db_name = f"{stats_type}_{stats_range}"
-    check_create_recent_release_database(db_name)
-
-    couchdb_url = f"{get_couchdb_base_url()}/{db_name}/_bulk_docs"
-    for doc in values:
-        doc["_id"] = str(doc["user_id"])
-        doc["from_ts"] = from_ts
-        doc["to_ts"] = to_ts
-        doc["last_updated"] = datetime.now().isoformat()
-
-    response = requests.post(couchdb_url, json={"docs": values})
+    databases_url = f"{get_couchdb_base_url()}/{db_name}"
+    response = requests.put(databases_url)
     response.raise_for_status()
+
+
+def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
+    with start_span(op="processing", description="add _id, from_ts, to_ts and last_updated to docs"):
+        for doc in values:
+            doc["_id"] = str(doc["user_id"])
+            doc["from_ts"] = from_ts
+            doc["to_ts"] = to_ts
+            doc["last_updated"] = datetime.now().isoformat()
+
+    with start_span(op="serializing", description="serialize data to json"):
+        docs = json.dumps({"docs": values})
+
+    with start_span(op="http", description="insert docs in couchdb using api"):
+        db_name = f"{stats_type}_{stats_range}"
+        couchdb_url = f"{get_couchdb_base_url()}/{db_name}/_bulk_docs"
+        response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
+        response.raise_for_status()
 
 
 def get_stats_from_couchdb(user_id, stats_range, stats_type) -> Optional[StatApi[EntityRecord]]:

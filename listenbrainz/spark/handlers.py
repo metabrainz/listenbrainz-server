@@ -7,6 +7,8 @@ from datetime import datetime, timezone, timedelta
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
 from pydantic import ValidationError
+from requests import HTTPError
+from sentry_sdk import start_transaction
 
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
@@ -50,18 +52,30 @@ def notify_user_stats_update(stat_type):
         )
 
 
+def handle_user_entity_start(message):
+    try:
+        db_stats.create_couchdb_database(message["entity"], message["stats_range"])
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
     try:
-        db_stats.insert_stats_in_couchdb(
-            data["entity"],
-            data["stats_range"],
-            data["from_ts"],
-            data["to_ts"],
-            data["data"]
-        )
+        with start_transaction(op=f"insert", name=f'insert {data["entity"]} - {data["stats_range"]} stats'):
+            db_stats.insert_stats_in_couchdb(
+                data["entity"],
+                data["stats_range"],
+                data["from_ts"],
+                data["to_ts"],
+                data["data"]
+            )
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+
+def handle_user_entity_end(message):
+    pass
 
 
 def _handle_user_activity_stats(stats_type, data):

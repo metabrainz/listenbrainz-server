@@ -109,6 +109,12 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
     Returns:
         messages: A list of messages to be sent via RabbitMQ
     """
+    yield {
+        "type": f"{message_type}_start",
+        "entity": entity,
+        "stats_range": stats_range
+    }
+
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
 
@@ -117,6 +123,8 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         for entry in entries:
             processed_stat = parse_one_user_stats(entry, entity, stats_range, message_type)
             multiple_user_stats.append(processed_stat)
+
+        logger.info("Numbers of users in this chunk: %s", len(multiple_user_stats))
 
         try:
             model = UserEntityStatMessage(**{
@@ -130,5 +138,11 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error(f"""ValidationError while calculating {stats_range} top {entity}:""", exc_info=True)
+            logger.error(f"ValidationError while calculating {stats_range} top {entity}:", exc_info=True)
             yield None
+
+    yield {
+        "type": f"{message_type}_end",
+        "entity": entity,
+        "stats_range": stats_range
+    }
