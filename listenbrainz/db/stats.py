@@ -29,6 +29,7 @@ import requests
 import sqlalchemy
 
 import psycopg2
+import ujson
 from psycopg2 import sql
 from psycopg2.extras import execute_values
 from sentry_sdk import start_span
@@ -42,12 +43,12 @@ from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
 
+from listenbrainz.db.recent_releases import get_couchdb_base_url
+
 
 # sitewide statistics are stored in the user statistics table
 # as statistics for a special user with the following user_id.
 # Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
-from listenbrainz.db.recent_releases import check_create_recent_release_database, get_couchdb_base_url
-
 SITEWIDE_STATS_USER_ID = 15753
 
 
@@ -67,7 +68,7 @@ def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
             doc["last_updated"] = datetime.now().isoformat()
 
     with start_span(op="serializing", description="serialize data to json"):
-        docs = json.dumps({"docs": values})
+        docs = ujson.dumps({"docs": values})
 
     with start_span(op="http", description="insert docs in couchdb using api"):
         db_name = f"{stats_type}_{stats_range}"

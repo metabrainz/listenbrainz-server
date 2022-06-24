@@ -62,7 +62,7 @@ def handle_user_entity_start(message):
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
     try:
-        with start_transaction(op=f"insert", name=f'insert {data["entity"]} - {data["stats_range"]} stats'):
+        with start_transaction(op="insert", name=f'insert {data["entity"]} - {data["stats_range"]} stats'):
             db_stats.insert_stats_in_couchdb(
                 data["entity"],
                 data["stats_range"],
