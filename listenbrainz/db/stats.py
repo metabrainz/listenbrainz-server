@@ -60,7 +60,7 @@ def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
         doc["_id"] = str(doc["user_id"])
         doc["from_ts"] = from_ts
         doc["to_ts"] = to_ts
-        doc["last_update"] = datetime.now().isoformat()
+        doc["last_updated"] = datetime.now().isoformat()
 
     response = requests.post(couchdb_url, json={"docs": values})
     response.raise_for_status()
