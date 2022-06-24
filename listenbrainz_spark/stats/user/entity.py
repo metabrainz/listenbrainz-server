@@ -64,16 +64,15 @@ def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str
     _dict = entry.asDict(recursive=True)
     total_entity_count = len(_dict[entity])
 
-    # Clip the recordings to top 1000 so that we don't drop messages
-    if entity == "recordings" and stats_range == "all_time":
-        _dict[entity] = _dict[entity][:1000]
-
-    # for year in music, only retain top 50 stats
     if message_type == "year_in_music_top_stats":
-        _dict[entity] = _dict[entity][:50]
+        # for year in music, only retain top 50 stats
+        retain = 50
+    else:
+        # otherwise retain top 1000 stats
+        retain = 1000
 
     entity_list = []
-    for item in _dict[entity]:
+    for item in _dict[entity][:retain]:
         try:
             entity_list.append(entity_model_map[entity](**item))
         except ValidationError:
