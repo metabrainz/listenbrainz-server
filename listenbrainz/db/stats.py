@@ -57,7 +57,7 @@ def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
 
     couchdb_url = f"{get_couchdb_base_url()}/{db_name}/_bulk_docs"
     for doc in values:
-        doc["_id"] = str(doc["user_id"])
+        doc["_id"] = doc["user_id"]
         doc["from_ts"] = from_ts
         doc["to_ts"] = to_ts
         doc["last_updated"] = datetime.now().isoformat()
