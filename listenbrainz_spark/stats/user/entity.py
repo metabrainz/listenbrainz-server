@@ -124,8 +124,6 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             processed_stat = parse_one_user_stats(entry, entity, stats_range, message_type)
             multiple_user_stats.append(processed_stat)
 
-        logger.info("Numbers of users in this chunk: %s", len(multiple_user_stats))
-
         try:
             model = UserEntityStatMessage(**{
                 "type": message_type,
