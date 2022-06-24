@@ -40,7 +40,6 @@ CREATE UNIQUE INDEX user_id_mbid_ndx_rec_feedback ON recording_feedback (user_id
 
 -- NOTE: If the indexes for the similar_user table changes, update the code in listenbrainz/db/similar_users.py !
 CREATE UNIQUE INDEX user_id_ndx_similar_user ON recommendation.similar_user (user_id);
-CREATE UNIQUE INDEX user_id_ndx_release_radar ON recommendation.release_radar (user_id);
 
 CREATE INDEX user_0_user_relationship_ndx ON user_relationship (user_0);
 CREATE INDEX user_1_user_relationship_ndx ON user_relationship (user_1);
