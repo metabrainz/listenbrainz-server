@@ -15,7 +15,7 @@ listens_new_schema = StructType([
     StructField('artist_credit_mbids', ArrayType(StringType()), nullable=True),
 ])
 
-release_radar_schema = StructType([
+recent_releases_schema = StructType([
     StructField('date', StringType(), nullable=False),
     StructField('artist_credit_name', StringType(), nullable=False),
     StructField('artist_mbids', ArrayType(StringType()), nullable=False),

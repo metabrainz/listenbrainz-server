@@ -62,7 +62,6 @@ response_handler_map = {
     'year_in_music_top_stats': handle_top_stats,
     'year_in_music_listens_per_day': handle_listens_per_day,
     'year_in_music_listen_count': handle_yearly_listen_counts,
-    'recent_releases': handle_release_radar
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds

@@ -317,7 +317,7 @@ def request_recording_discovery():
 @cli.command(name='request_recent_releases')
 @click.option("--days", type=int, required=False, help="Number of days of listens to consider for artist listening data")
 @click.option("--database", type=str, help="Name of the couchdb database to store data in")
-def request_release_radar(database, days):
+def request_recent_releases(database, days):
     """ Send the cluster a request to generate release radar data. """
     if not database:
         database = "recent_releases_" + date.today().strftime("%Y%m%d")
