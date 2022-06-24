@@ -15,7 +15,6 @@ ALTER TABLE statistics.year_in_music ADD CONSTRAINT stats_year_in_music_pkey PRI
 ALTER TABLE recommendation.cf_recording ADD CONSTRAINT rec_cf_recording_pkey PRIMARY KEY (id);
 ALTER TABLE recommendation.recommender ADD CONSTRAINT rec_recommender_pkey PRIMARY KEY (id);
 ALTER TABLE recommendation.recommender_session ADD CONSTRAINT rec_recommender_session_pkey PRIMARY KEY (id);
-ALTER TABLE recommendation.release_radar ADD CONSTRAINT rec_release_radar_pkey PRIMARY KEY (user_id);
 
 ALTER TABLE user_timeline_event ADD CONSTRAINT user_timeline_event_pkey PRIMARY KEY (id);
 
