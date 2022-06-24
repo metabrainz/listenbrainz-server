@@ -86,9 +86,10 @@ def get_stats_from_couchdb(user_id, stats_range, stats_type) -> Optional[StatApi
             data=data["data"],
             last_updated=data["last_updated"]
         )
-    except (ValidationError, KeyError):
-        current_app.logger.error(f"Error when getting {stats_range} top artists for user with user_id: {user_id}."
-                                 f"Data: {json.dumps(dict(data)[stats_range], indent=4)}", exc_info=True)
+    except (ValidationError, KeyError) as e:
+        current_app.logger.error(f"{e}. Occurred while processing {stats_range} top artists for user"
+                                 f" with user_id: {user_id} and data: {json.dumps(data, indent=4)}",
+                                 exc_info=True)
         return None
 
 
