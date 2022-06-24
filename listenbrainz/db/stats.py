@@ -22,8 +22,10 @@
 
 
 import json
+from datetime import datetime
 from typing import Optional
 
+import requests
 import sqlalchemy
 
 import psycopg2
@@ -44,7 +46,50 @@ from pydantic import ValidationError
 # sitewide statistics are stored in the user statistics table
 # as statistics for a special user with the following user_id.
 # Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
+from listenbrainz.db.recent_releases import check_create_recent_release_database, get_couchdb_base_url
+
 SITEWIDE_STATS_USER_ID = 15753
+
+
+def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
+    db_name = f"{stats_type}_{stats_range}"
+    check_create_recent_release_database(db_name)
+
+    couchdb_url = f"{get_couchdb_base_url()}/{db_name}/_bulk_docs"
+    for doc in values:
+        doc["_id"] = str(doc["user_id"])
+        doc["from_ts"] = from_ts
+        doc["to_ts"] = to_ts
+        doc["last_update"] = datetime.now().isoformat()
+
+    response = requests.post(couchdb_url, json={"docs": values})
+    response.raise_for_status()
+
+
+def get_stats_from_couchdb(user_id, stats_range, stats_type) -> Optional[StatApi[EntityRecord]]:
+    database = f"{stats_type}_{stats_range}"
+    document_url = f"{get_couchdb_base_url()}/{database}/{user_id}"
+
+    response = requests.get(document_url)
+    if response.status_code == 404:
+        return None
+    response.raise_for_status()
+    data = response.json()
+
+    try:
+        return StatApi[EntityRecord](
+            user_id=user_id,
+            from_ts=data["from_ts"],
+            to_ts=data["to_ts"],
+            count=data["count"],
+            stats_range=stats_range,
+            data=data["data"],
+            last_updated=data["last_updated"]
+        )
+    except (ValidationError, KeyError):
+        current_app.logger.error(f"Error when getting {stats_range} top artists for user with user_id: {user_id}."
+                                 f"Data: {json.dumps(dict(data)[stats_range], indent=4)}", exc_info=True)
+        return None
 
 
 def get_timestamp_for_last_user_stats_update():

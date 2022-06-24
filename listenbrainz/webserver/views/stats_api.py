@@ -233,7 +233,7 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_user_stats(user["id"], stats_range, entity)
+    stats = db_stats.get_stats_from_couchdb(user["id"], stats_range, entity)
     if stats is None:
         raise APINoContent('')
 
