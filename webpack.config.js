@@ -86,6 +86,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
       ),
+      recentReleases: path.resolve(
+        jsDir,
+        "src/recent-releases/RecentReleases.tsx"
+      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

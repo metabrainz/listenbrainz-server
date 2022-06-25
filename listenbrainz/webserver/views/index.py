@@ -148,6 +148,11 @@ def recent_listens():
 
     return render_template("index/recent.html", props=ujson.dumps(props))
 
+@index_bp.route("/recent-releases/")
+def recent_releases():
+
+    return render_template("index/recent_releases.html")
+
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required
