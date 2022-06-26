@@ -76,7 +76,7 @@ def select_timezone():
         return redirect(url_for('profile.info'))
 
     return render_template(
-        "profile/resettimezone.html",
+        "profile/selecttimezone.html",
         user_timezone=user_timezone,
         pg_timezones=pg_timezones,
         form=form,
