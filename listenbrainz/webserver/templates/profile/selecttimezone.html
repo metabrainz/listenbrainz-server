@@ -20,8 +20,6 @@
             <select name="timezone" id="timezone" class="span5">
               {% for timezone in pg_timezones %}
                 <option value="{{ timezone[0] }}">{{ timezone[0] }} ({{ timezone[1] }})</option>
-                <!-- <option value="Africa/Accra">(GMT 00:00) Africa/Accra</option>
-                <option value="Africa/Addis_Ababa">(EAT 03:00) Africa/Addis_Ababa</option> -->
                 {% endfor %}
             </select>
             
