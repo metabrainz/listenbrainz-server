@@ -66,13 +66,13 @@ def select_timezone():
         try:
             update_timezone = str(form.timezone.data)
             db_usersetting.set_timezone(current_user.id, update_timezone)
-            flash.info("timezone reset")
+            flash.info("Your timezone has been saved.")
         except DatabaseException:
             flash.error("Something went wrong! Unable to update timezone right now.")
         return redirect(url_for("profile.info"))
 
     if form.csrf_token.errors:
-        flash.error('Cannot update timezone due to error during authentication, please try again later.')
+        flash.error('Unable to update timezone.')
         return redirect(url_for('profile.info'))
 
     return render_template(
