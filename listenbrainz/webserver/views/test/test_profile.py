@@ -130,7 +130,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=select_timezone_url))
 
-    def test_delete_listens_invalid_csrf_token(self):
+    def test_select_timezone_invalid_csrf_token(self):
         """Tests select timezone end point with invalid auth token """
         self.temporary_login(self.user['login_id'])
         select_timezone_url = url_for('profile.select_timezone')
