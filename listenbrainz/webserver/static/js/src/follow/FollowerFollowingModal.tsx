@@ -56,7 +56,6 @@ export default class FollowerFollowingModal extends React.Component<
         <div className="text-center follower-following-pills">
           <div className="btn-group btn-group-justified" role="group">
             <Pill
-              style={{ margin: "0px 6px" }}
               active={activeMode === "follower"}
               type="secondary"
               onClick={() => this.updateMode("follower")}
@@ -64,7 +63,6 @@ export default class FollowerFollowingModal extends React.Component<
               Followers ({followerList.length})
             </Pill>
             <Pill
-              style={{ margin: "0px 6px" }}
               active={activeMode === "following"}
               type="secondary"
               onClick={() => this.updateMode("following")}
@@ -76,7 +74,7 @@ export default class FollowerFollowingModal extends React.Component<
 
         {activeModeList.length === 0 ? (
           <>
-            <hr style={{ margin: "0px 2em", borderTop: "1px solid #eee" }} />
+            <hr />
             {activeMode === "follower" ? (
               <div className="follower-following-empty text-center text-muted">
                 {user.name === currentUser?.name
