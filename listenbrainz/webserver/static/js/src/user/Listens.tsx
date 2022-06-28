@@ -704,12 +704,12 @@ export default class Listens extends React.Component<
                 {currentUser?.name === user?.name && (
                   <div className="empty-action">
                     Import <a href="/profile/import/">your listening history</a>{" "}
-                    and track your listens by{" "}
+                    from last.fm/libre.fm and track your listens by{" "}
                     <a href="/profile/music-services/details/">
-                      connecting to a music service
+                      connecting to a music streaming service
                     </a>
-                    , or use <a href="/add-data/">one of the players</a> to
-                    start submitting your listens.
+                    , or use <a href="/add-data/">one of these music players</a>{" "}
+                    to start submitting your listens.
                   </div>
                 )}
               </div>

@@ -33,7 +33,7 @@ const ListenCountCard = (props: ListenCountCardProps) => {
         <hr style={{ margin: "10px 0px" }} />
         <div style={{ fontSize: "14px" }} className="text-muted">
           {isCurrentUser ? "You haven't" : `${user.name} hasn't`} listened to
-          any songs.
+          any songs yet.
         </div>
       </>
     );
