@@ -3,10 +3,6 @@ from datetime import datetime, timedelta
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 
-import logging
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 DEFAULT_TIMEZONE = "UTC"
 
@@ -52,7 +48,6 @@ def get(user_id: int):
                 return user_setting
             return {"timezone_name": DEFAULT_TIMEZONE}
         except sqlalchemy.exc.ProgrammingError as err:
-            logger.error(err)
             raise DatabaseException(
                 "Couldn't get user's setting: %s" % str(err))
 
@@ -77,7 +72,6 @@ def set_timezone(user_id: int, timezone_name: str):
                 "timezone_name": timezone_name,
             })
         except sqlalchemy.exc.ProgrammingError as err:
-            logger.error(err)
             raise DatabaseException(
                 "Couldn't update user's timezone: %s" % str(err))
 

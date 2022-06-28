@@ -71,7 +71,7 @@ def select_timezone():
             flash.error("Something went wrong! Unable to update timezone right now.")
         return redirect(url_for("profile.info"))
 
-    if form.csrf_token.errors:
+    if form.errors:
         flash.error('Unable to update timezone.')
         return redirect(url_for('profile.info'))
 

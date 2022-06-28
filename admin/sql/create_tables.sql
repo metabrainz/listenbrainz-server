@@ -260,9 +260,12 @@ ALTER TABLE pinned_recording
 CREATE TABLE user_setting(
     id                     SERIAL, --PK
     user_id                INTEGER NOT NULL, --FK to "user".id
-    timezone_name          TEXT NOT NULL CHECK (now() AT TIME ZONE timezone_name IS NOT NULL)   
+    timezone_name          TEXT   
 );
-ALTER TABLE user_setting ADD CONSTRAINT setting_user_id_unique UNIQUE (user_id);
+
+ALTER TABLE user_setting
+    ADD CONSTRAINT user_setting_timezone_name_check
+    CHECK ( timezone_name IS NULL OR now() AT TIME ZONE timezone_name IS NOT NULL );
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
