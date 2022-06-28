@@ -140,7 +140,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         response = self.client.post(select_timezone_url, data={'csrf_token': 'invalid-auth-token'})
         self.assertMessageFlashed('Unable to update timezone.', 'error')
         self.assertRedirects(response, url_for('profile.info'))
-        
+  
     def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])
         r = self.client.get(url_for('profile.music_services_details'))
