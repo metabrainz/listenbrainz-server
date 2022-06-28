@@ -1,9 +1,8 @@
 import listenbrainz.db.user_setting as db_setting
-import listenbrainz.db.external_service_oauth as db_oauth
-
 import listenbrainz.db.user as db_user
 
 from listenbrainz.db.testing import DatabaseTestCase
+
 
 class UserSettingTestCase(DatabaseTestCase):
     def setUp(self):
