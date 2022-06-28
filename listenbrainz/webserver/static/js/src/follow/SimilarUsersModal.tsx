@@ -30,7 +30,7 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
       </h3>
       {similarUsersList.length === 0 ? (
         <>
-          <hr style={{ margin: "0px 2em", borderTop: "1px solid #eee" }} />
+          <hr />
           <div className="similar-users-empty text-center text-muted">
             Users with similar music tastes to{" "}
             {user.name === currentUser?.name ? "you" : user.name} will appear
