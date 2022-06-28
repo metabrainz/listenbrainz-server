@@ -472,10 +472,13 @@ const getAlbumArtFromListenMetadata = async (
       );
       if (CAAResponse.ok) {
         const body: CoverArtArchiveResponse = await CAAResponse.json();
-        if (!body.images?.[0]?.thumbnails) {
+        const frontImage =
+          body.images.find((image) => image.front && image.thumbnails) ??
+          body.images[0];
+        if (!frontImage.thumbnails) {
           return undefined;
         }
-        const { thumbnails } = body.images[0];
+        const { thumbnails } = frontImage;
         return (
           thumbnails[250] ??
           thumbnails.small ??
