@@ -393,3 +393,11 @@ def cron_request_recommendations(ctx):
     ctx.invoke(request_candidate_sets)
     ctx.invoke(request_recording_discovery)
     ctx.invoke(request_recommendations)
+
+@cli.command(name='cron_request_recommendations_without_model')
+@click.pass_context
+def cron_request_recommendations_without_model(ctx):
+    ctx.invoke(request_dataframes)
+    ctx.invoke(request_candidate_sets)
+    ctx.invoke(request_recording_discovery)
+    ctx.invoke(request_recommendations)
