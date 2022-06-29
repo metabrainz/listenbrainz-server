@@ -147,6 +147,7 @@ const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
 
 const getTrackDuration = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "track_metadata.additional_info.duration_ms", "") ||
+  _.get(listen, "track_metadata.additional_info.duration", "") ||
   _.get(listen, "duration", "");
 
 const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
