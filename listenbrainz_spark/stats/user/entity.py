@@ -31,6 +31,9 @@ entity_model_map = {
     "recordings": RecordingRecord
 }
 
+NUMBER_OF_TOP_ENTITIES = 1000  # number of top entities to retain for user stats
+NUMBER_OF_YIM_ENTITIES = 50  # number of top entities to retain for Year in Music stats
+
 
 def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
         -> Iterator[Optional[Dict]]:
@@ -65,11 +68,9 @@ def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str
     total_entity_count = len(_dict[entity])
 
     if message_type == "year_in_music_top_stats":
-        # for year in music, only retain top 50 stats
-        retain = 50
+        retain = NUMBER_OF_YIM_ENTITIES
     else:
-        # otherwise retain top 1000 stats
-        retain = 1000
+        retain = NUMBER_OF_TOP_ENTITIES
 
     entity_list = []
     for item in _dict[entity][:retain]:
