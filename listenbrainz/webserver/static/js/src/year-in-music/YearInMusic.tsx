@@ -1,7 +1,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import Coverflow from "react-coverflow";
+// import Coverflow from "react-coverflow";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import {
   get,
@@ -491,7 +491,8 @@ export default class YearInMusic extends React.Component<
 
             {yearInMusicData.top_releases ? (
               <div id="releases-coverflow">
-                <Coverflow
+                {noDataText}
+                {/* <Coverflow
                   displayQuantityOfSide={3}
                   currentFigureScale={2}
                   otherFigureScale={1}
@@ -528,7 +529,7 @@ export default class YearInMusic extends React.Component<
                       alt={release.release_name}
                     />
                   ))}
-                </Coverflow>
+                </Coverflow> */}
               </div>
             ) : (
               noDataText
