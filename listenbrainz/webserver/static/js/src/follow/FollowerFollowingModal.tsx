@@ -51,6 +51,56 @@ export default class FollowerFollowingModal extends React.Component<
 
     const activeModeList =
       activeMode === "follower" ? followerList : followingList;
+
+    function renderFollowerFollowingList() {
+      if (activeModeList.length === 0) {
+        if (activeMode === "follower") {
+          return (
+            <>
+              <hr />
+              <div className="follower-following-empty text-center text-muted">
+                {user.name === currentUser?.name
+                  ? "You don't"
+                  : `${user.name} doesn't`}{" "}
+                have any followers.
+              </div>
+            </>
+          );
+        }
+        return (
+          <>
+            <hr />
+            <div className="follower-following-empty text-center text-muted">
+              {user.name === currentUser?.name
+                ? "You aren't"
+                : `${user.name} isn't`}{" "}
+              following anyone.
+            </div>
+          </>
+        );
+      }
+      return (
+        <div className="follower-following-list">
+          {activeModeList.map((listEntry: string) => {
+            const formattedAsUser: ListenBrainzUser = {
+              name: listEntry,
+            };
+            return (
+              <UserListModalEntry
+                mode="follow-following"
+                key={listEntry}
+                user={formattedAsUser}
+                loggedInUserFollowsUser={loggedInUserFollowsUser(
+                  formattedAsUser
+                )}
+                updateFollowingList={updateFollowingList}
+              />
+            );
+          })}
+        </div>
+      );
+    }
+
     return (
       <>
         <div className="text-center follower-following-pills">
@@ -71,46 +121,7 @@ export default class FollowerFollowingModal extends React.Component<
             </Pill>
           </div>
         </div>
-
-        {activeModeList.length === 0 ? (
-          <>
-            <hr />
-            {activeMode === "follower" ? (
-              <div className="follower-following-empty text-center text-muted">
-                {user.name === currentUser?.name
-                  ? "You don't"
-                  : `${user.name} doesn't`}{" "}
-                have any followers.
-              </div>
-            ) : (
-              <div className="follower-following-empty text-center text-muted">
-                {user.name === currentUser?.name
-                  ? "You aren't"
-                  : `${user.name} isn't`}{" "}
-                following anyone.
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="follower-following-list">
-            {activeModeList.map((listEntry: string) => {
-              const formattedAsUser: ListenBrainzUser = {
-                name: listEntry,
-              };
-              return (
-                <UserListModalEntry
-                  mode="follow-following"
-                  key={listEntry}
-                  user={formattedAsUser}
-                  loggedInUserFollowsUser={loggedInUserFollowsUser(
-                    formattedAsUser
-                  )}
-                  updateFollowingList={updateFollowingList}
-                />
-              );
-            })}
-          </div>
-        )}
+        {renderFollowerFollowingList()}
       </>
     );
   }
