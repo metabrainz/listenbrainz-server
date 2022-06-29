@@ -23,7 +23,8 @@ interface AdditionalInfo {
   discnumber?: number | null;
   duration_ms?: number | null;
   isrc?: string | null;
-  listening_from?: string | null;
+  listening_from?: string | null; // Deprecated
+  music_service?: string | null;
   recording_mbid?: string | null;
   recording_msid?: string | null;
   release_artist_name?: string | null;
