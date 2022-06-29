@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import * as React from "react";
 import { includes as _includes } from "lodash";
 
@@ -23,12 +24,9 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
   } = props;
   const { currentUser } = React.useContext(GlobalAppContext);
 
-  return (
-    <>
-      <h3 className="text-center" style={{ marginTop: "10px" }}>
-        Similar Users
-      </h3>
-      {similarUsersList.length === 0 ? (
+  function renderSimilarUsersList() {
+    if (similarUsersList.length === 0) {
+      return (
         <>
           <hr />
           <div className="similar-users-empty text-center text-muted">
@@ -37,21 +35,31 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
             here.
           </div>
         </>
-      ) : (
-        <div className="similar-users-list">
-          {similarUsersList.map((listEntry: SimilarUser) => {
-            return (
-              <UserListModalEntry
-                mode="similar-users"
-                key={listEntry.name}
-                user={listEntry}
-                loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
-                updateFollowingList={updateFollowingList}
-              />
-            );
-          })}
-        </div>
-      )}
+      );
+    }
+    return (
+      <div className="similar-users-list">
+        {similarUsersList.map((listEntry: SimilarUser) => {
+          return (
+            <UserListModalEntry
+              mode="similar-users"
+              key={listEntry.name}
+              user={listEntry}
+              loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
+              updateFollowingList={updateFollowingList}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <h3 className="text-center" style={{ marginTop: "10px" }}>
+        Similar Users
+      </h3>
+      {renderSimilarUsersList()}
     </>
   );
 };
