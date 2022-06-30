@@ -137,7 +137,7 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 # Users who are allowed to view the LB admin interface
 ADMINS = []
 # Users who are allowed to submit playlists made for someone else.
-APPROVED_PLAYLIST_BOTS = ['troi-bot, 'troi-bot-debug']
+APPROVED_PLAYLIST_BOTS = ['troi-bot', 'troi-bot-debug']
 
 # Auth tokens that are not subject to rate limits:
 WHITELISTED_AUTH_TOKENS = []
