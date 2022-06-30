@@ -32,7 +32,7 @@ def make_playlist_from_recommendations(user):
     """
         Save the top 100 tracks from the current tracks you might like into a playlist.
     """
-    token = current_app.config["WHITELISTED_AUTH_TOKENS"][0]
+    token = current_app.config["WHITELISTED_AUTH_TOKENS"][1]
     for type in ["top", "similar"]:
         generate_playlist("recs-to-playlist", args=[user, type], upload=True, token=token, created_for=user)
 
