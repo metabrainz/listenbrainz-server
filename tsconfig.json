@@ -9,6 +9,9 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    // Preserving old behavior after moving to TypeScript ^4.4
+    // https://www.typescriptlang.org/tsconfig#useUnknownInCatchVariables
+    "useUnknownInCatchVariables": false,
     // Having some errors from SortableJS types, fixed by disabling .d.ts files checking
     // See https://github.com/SortableJS/react-sortablejs/issues/186
     // Remove skipLibCheck once the issue is fixed.
