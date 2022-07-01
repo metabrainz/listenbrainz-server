@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import YouTube, { Options } from "react-youtube";
+import YouTube, { YouTubeProps } from "react-youtube";
 import {
   get as _get,
   isEqual as _isEqual,
@@ -382,7 +382,7 @@ export default class YoutubePlayer
 
   render() {
     const { show } = this.props;
-    const options: Options = {
+    const options: YouTubeProps["opts"] = {
       playerVars: {
         autoplay: 1,
         controls: 0,

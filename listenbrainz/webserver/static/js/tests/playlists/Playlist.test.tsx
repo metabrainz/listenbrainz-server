@@ -75,7 +75,10 @@ describe("PlaylistPage", () => {
     expect(searchInput.props().inputValue).toEqual("");
 
     searchInput.simulate("focus");
-    instance.handleInputChange("mysearch", { action: "input-change" });
+    instance.handleInputChange("mysearch", {
+      action: "input-change",
+      prevInputValue: "",
+    });
     wrapper.update();
 
     expect(instance.state.searchInputValue).toEqual("mysearch");
@@ -86,7 +89,10 @@ describe("PlaylistPage", () => {
 
     // simulate ReactSelect input blur event
     searchInput.simulate("blur");
-    instance.handleInputChange("", { action: "input-blur" });
+    instance.handleInputChange("", {
+      action: "input-blur",
+      prevInputValue: "",
+    });
     wrapper.update();
 
     searchInput = wrapper.find(AsyncSelect);
@@ -95,7 +101,10 @@ describe("PlaylistPage", () => {
     expect(searchInput.props().inputValue).toEqual("mysearch");
 
     // simulate ReactSelect menu close event (blur)
-    instance.handleInputChange("", { action: "menu-close" });
+    instance.handleInputChange("", {
+      action: "menu-close",
+      prevInputValue: "",
+    });
     wrapper.update();
 
     searchInput = wrapper.find(AsyncSelect);

@@ -46,49 +46,49 @@ export default class UserListeningActivity extends React.Component<
         timeZone: "UTC",
       },
       perRange: "day",
-    },
+    } as const,
     this_week: {
       dateFormat: {
         weekday: "short",
         timeZone: "UTC",
       },
       perRange: "day",
-    },
+    } as const,
     month: {
       dateFormat: {
         day: "2-digit",
         timeZone: "UTC",
       },
       perRange: "day",
-    },
+    } as const,
     this_month: {
       dateFormat: {
         day: "2-digit",
         timeZone: "UTC",
       },
       perRange: "day",
-    },
+    } as const,
     year: {
       dateFormat: {
         month: "short",
         timeZone: "UTC",
       },
       perRange: "month",
-    },
+    } as const,
     this_year: {
       dateFormat: {
         month: "short",
         timeZone: "UTC",
       },
       perRange: "month",
-    },
+    } as const,
     all_time: {
       dateFormat: {
         year: "numeric",
         timeZone: "UTC",
       },
       perRange: "year",
-    },
+    } as const,
   };
 
   constructor(props: UserListeningActivityProps) {

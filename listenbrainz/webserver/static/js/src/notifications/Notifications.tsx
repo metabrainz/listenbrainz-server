@@ -148,6 +148,7 @@ export function overwriteMediaSession(
       // Certain handlers might not be supported so we wrap each call in a try/catch
       actionHandlers.forEach(({ action, handler }) => {
         try {
+          // @ts-ignore
           navigator.mediaSession.setActionHandler(action, (actionDetails) => {
             handler();
           });
