@@ -87,6 +87,8 @@ def info():
 @login_required
 def import_data():
     """ Displays the import page to user, giving various options """
+    user = db_user.get(current_user.id, fetch_email=True)
+    user_has_email = user["email"] is None
 
     # Return error if LASTFM_API_KEY is not given in config.py
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
@@ -96,6 +98,7 @@ def import_data():
         "id": current_user.id,
         "name": current_user.musicbrainz_id,
         "auth_token": current_user.auth_token,
+        "user_has_email": user_has_email
     }
 
     props = {
