@@ -265,6 +265,16 @@ ALTER TABLE pinned_recording
     ADD CONSTRAINT pinned_rec_recording_msid_or_recording_mbid_check
     CHECK ( recording_msid IS NOT NULL OR recording_mbid IS NOT NULL );
 
+CREATE TABLE user_setting(
+    id                     SERIAL, --PK
+    user_id                INTEGER NOT NULL, --FK to "user".id
+    timezone_name          TEXT   
+);
+
+ALTER TABLE user_setting
+    ADD CONSTRAINT user_setting_timezone_name_check
+    CHECK ( timezone_name IS NULL OR now() AT TIME ZONE timezone_name IS NOT NULL );
+
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
 COMMIT;
