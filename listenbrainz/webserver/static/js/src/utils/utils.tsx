@@ -472,20 +472,23 @@ const getAlbumArtFromListenMetadata = async (
       );
       if (CAAResponse.ok) {
         const body: CoverArtArchiveResponse = await CAAResponse.json();
-        const frontImage =
-          body.images.find((image) => image.front && image.thumbnails) ??
-          body.images[0];
-        if (!frontImage.thumbnails) {
+        if (!body.images?.length) {
           return undefined;
         }
-        const { thumbnails } = frontImage;
-        return (
-          thumbnails[250] ??
-          thumbnails.small ??
-          // If neither of the above exists, return the first one we find
-          // @ts-ignore
-          thumbnails[Object.keys(thumbnails)?.[0]]
-        );
+
+        const frontImage =
+          body.images.find((image) => image.front) ?? body.images[0];
+        if (frontImage.thumbnails) {
+          const { thumbnails } = frontImage;
+          return (
+            thumbnails[250] ??
+            thumbnails.small ??
+            // If neither of the above exists, return the first one we find
+            // @ts-ignore
+            thumbnails[Object.keys(thumbnails)?.[0]]
+          );
+        }
+        return frontImage.image;
       }
     } catch (error) {
       // eslint-disable-next-line no-console
