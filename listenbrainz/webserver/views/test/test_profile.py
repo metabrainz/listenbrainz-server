@@ -104,6 +104,39 @@ class ProfileViewsTestCase(IntegrationTestCase):
                                   'error')
         self.assertRedirects(response, url_for('profile.info'))
 
+    def test_select_timezone(self):
+        """Tests select timezone end point"""
+        self.temporary_login(self.user['login_id'])
+        select_timezone_url = url_for('profile.select_timezone')
+        response = self.client.get(select_timezone_url)
+        self.assert200(response)
+
+        response = self.client.post(select_timezone_url, data={'csrf_token': g.csrf_token, 'timezone': 'America/New_York'})
+        self.assertMessageFlashed('Your timezone has been saved.', 'info')
+        self.assertRedirects(response, url_for('profile.info'))
+
+    def test_select_timezone_logged_out(self):
+        """Tests select timezone view when not logged in"""
+        select_timezone_url = url_for('profile.select_timezone')
+        response = self.client.get(select_timezone_url)
+        self.assertStatus(response, 302)
+        self.assertRedirects(response, url_for('login.index', next=select_timezone_url))
+
+        response = self.client.post(select_timezone_url)
+        self.assertStatus(response, 302)
+        self.assertRedirects(response, url_for('login.index', next=select_timezone_url))
+
+    def test_select_timezone_invalid_csrf_token(self):
+        """Tests select timezone end point with invalid auth token """
+        self.temporary_login(self.user['login_id'])
+        select_timezone_url = url_for('profile.select_timezone')
+        response = self.client.get(select_timezone_url)
+        self.assert200(response)
+
+        response = self.client.post(select_timezone_url, data={'csrf_token': 'invalid-auth-token'})
+        self.assertMessageFlashed('Unable to update timezone.', 'error')
+        self.assertRedirects(response, url_for('profile.info'))
+
     def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])
         r = self.client.get(url_for('profile.music_services_details'))
