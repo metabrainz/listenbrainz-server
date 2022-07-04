@@ -98,7 +98,6 @@ def import_data():
         "id": current_user.id,
         "name": current_user.musicbrainz_id,
         "auth_token": current_user.auth_token,
-        "user_has_email": user_has_email
     }
 
     props = {
@@ -113,6 +112,7 @@ def import_data():
     return render_template(
         "user/import.html",
         user=current_user,
+        user_has_email=user_has_email,
         props=ujson.dumps(props),
     )
 
