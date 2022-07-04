@@ -80,7 +80,8 @@ export default class SpotifyPlayer
     );
     return (
       (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
-      (isString(musicService) && musicService.toLowerCase() === "spotify.com") ||
+      (isString(musicService) &&
+        musicService.toLowerCase() === "spotify.com") ||
       Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
     );
   };
@@ -125,8 +126,15 @@ export default class SpotifyPlayer
   static getSpotifyURLFromListen(
     listen: Listen | JSPFTrack
   ): string | undefined {
-    return _get(listen, "track_metadata.additional_info.spotify_id") ??
-    _get(listen, "track_metadata.additional_info.origin_url");
+    const spotifyId = _get(listen, "track_metadata.additional_info.spotify_id");
+    if (spotifyId) {
+      return spotifyId;
+    }
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && /open\.spotify\.com\/track\//.test(originURL)) {
+      return originURL;
+    }
+    return undefined;
   }
 
   static getSpotifyTrackIDFromListen(listen: Listen | JSPFTrack): string {
