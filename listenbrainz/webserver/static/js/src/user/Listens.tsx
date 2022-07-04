@@ -251,15 +251,25 @@ export default class Listens extends React.Component<
   receiveNewPlayingNow = async (newPlayingNow: Listen): Promise<void> => {
     const playingNow = newPlayingNow;
     const { APIService } = this.context;
-    const metadata = await APIService.lookupRecordingMetadata(
-      playingNow.track_metadata.track_name,
-      playingNow.track_metadata.artist_name,
-      false
-    );
-    playingNow.track_metadata.mbid_mapping = metadata as MbidMapping;
+    try {
+      const metadata = await APIService.lookupRecordingMetadata(
+        playingNow.track_metadata.track_name,
+        playingNow.track_metadata.artist_name,
+        false
+      );
+      playingNow.track_metadata.mbid_mapping = metadata as MbidMapping;
 
-    this.loadFeedbackForNowPlaying(playingNow);
-
+      await this.loadFeedbackForNowPlaying(playingNow);
+    } catch (error) {
+      const { newAlert } = this.props;
+      if (newAlert) {
+        newAlert(
+          "danger",
+          "We could not load data for the now playing listen",
+          typeof error === "object" ? error.message : error
+        );
+      }
+    }
     this.setState({
       playingNowListen: playingNow,
     });
@@ -678,8 +688,7 @@ export default class Listens extends React.Component<
       artistMBIDs?.length ||
       Boolean(trackMBID) ||
       Boolean(releaseGroupMBID);
-    // All listens in this array should have either an MSID or MBID or both,
-    // so we can assume we can pin them. Playing_now listens are displayed separately.
+
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = (
       <>
