@@ -92,25 +92,11 @@ export default class YoutubePlayer
   static getYoutubeURLFromListen(
     listen: Listen | JSPFTrack
   ): string | undefined {
-    // Checks if there is a youtube ID in the listen
-    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    const youtubeId = this.getVideoIDFromListen(listen);
     if (youtubeId) {
       return `https://www.youtube.com/watch?v=${youtubeId}`;
     }
 
-    // or if the origin URL contains youtube.com
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (_isString(originURL) && originURL.length) {
-      try {
-        const parsedURL = new URL(originURL);
-        const { hostname, searchParams } = parsedURL;
-        if (/youtube\.com/.test(hostname)) {
-          return originURL;
-        }
-      } catch {
-        return undefined;
-      }
-    }
     return undefined;
   }
 
