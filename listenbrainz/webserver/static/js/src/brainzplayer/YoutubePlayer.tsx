@@ -38,18 +38,20 @@ export default class YoutubePlayer
   extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
   static getVideoIDFromListen(listen: Listen | JSPFTrack): string | undefined {
-    // Checks if there is a youtube ID in the listen
-    // or if the origin_url field contains youtube.com
-    const videoURL =
-      _get(listen, "track_metadata.additional_info.youtube_id") ??
-      _get(listen, "track_metadata.additional_info.origin_url");
-    if (_isString(videoURL) && videoURL.length) {
+    // This may be either video ID or video link.
+    // In theory we could check the length of this string: currently all IDs have the length of 11
+    // characters. However, we shouldn't do so as this is not in YouTube's specification and thus,
+    // although unlikely, might change in the future.
+    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+
+    const videoIdOrUrl = youtubeId ?? _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(videoIdOrUrl) && videoIdOrUrl.length) {
       /** Credit for this regular expression goes to Soufiane Sakhi:
        * https://stackoverflow.com/a/61033353/4904467
        */
       const youtubeURLRegexp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/g;
-      const match = youtubeURLRegexp.exec(videoURL);
-      return match?.[1];
+      const match = youtubeURLRegexp.exec(videoIdOrUrl);
+      return match?.[1] ?? youtubeId;
     }
 
     return undefined;
