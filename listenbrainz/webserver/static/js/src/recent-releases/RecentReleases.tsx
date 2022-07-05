@@ -11,11 +11,13 @@ import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ReleaseCard from "./ReleaseCard";
 import * as fakeData from "./fakeData.json";
+import ReleaseFilters from "./ReleaseFilters";
 
 export default function RecentReleases() {
   return (
     <div className="releases-page">
       <h3 id="releases-title">Recent and upcoming releases</h3>
+      <ReleaseFilters />
       <div className="release-cards-container">
         <div className="release-cards-grid">
           {// Deduplicate releases based on same release name by same artist name.
@@ -51,6 +53,7 @@ export default function RecentReleases() {
             })}
         </div>
       </div>
+      <div className="releases-timeline">Timeline</div>
     </div>
   );
 }
