@@ -1,0 +1,129 @@
+.releases-page {
+  display: grid;
+  grid-template-columns: 15% 70% 15%;
+
+  #releases-title {
+    grid-column: span 3;
+  }
+
+  #release-filters-container {
+    display: flex;
+    flex-direction: column;
+
+    #coverart-checkbox {
+      // TODO add :checked color
+      input[type="checkbox"] {
+        transform: scale(1.5);
+        margin: 0.5rem;
+        &:checked::after {
+          background: @orange;
+          color: @white;
+        }
+      }
+
+      label {
+        display: inline;
+        font-weight: 500;
+      }
+    }
+
+    #release-filters {
+      #filters-title-container {
+        display: flex;
+        margin-top: 2em;
+        align-items: flex-end;
+
+        #filters-title {
+          flex-grow: 1;
+          text-transform: uppercase;
+          font-size: large;
+          font-weight: bold;
+        }
+
+        #clear-btn {
+          display: none;
+          flex-grow: 2;
+        }
+      }
+    }
+  }
+
+  .release-cards-grid {
+    display: grid;
+    justify-items: center;
+    grid-template-columns: repeat(4, 1fr);
+
+    .release-card-container {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+
+      .release-date {
+        text-transform: uppercase;
+        text-align: center;
+        font-weight: 700;
+        cursor: default;
+      }
+
+      .release-coverart {
+        width: 180px;
+        height: 180px;
+        border-radius: 4px;
+        box-shadow: 4px 4px 8px -2px fade(@asphalt, 20%);
+        user-select: none;
+        transition: box-shadow 0.3s cubic-bezier(0, 0, 0.2, 1) 0.1s;
+
+        &:hover {
+          box-shadow: 8px 2px 20px -4px fade(@asphalt, 60%);
+        }
+      }
+
+      .name-type-container {
+        margin-top: 0.5rem;
+        width: 180px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .release-name {
+        // font-size: larger;
+        flex-grow: 1;
+        padding-right: 4px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .release-type-chip {
+        padding: 2px 4px;
+        border-radius: 4px;
+        background: fade(@asphalt, 90%);
+        color: #fff;
+        line-height: 1.2;
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: 700;
+        font-size: x-small;
+        letter-spacing: 1px;
+        cursor: default;
+      }
+
+      .release-artist {
+        width: 180px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+
+        a {
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  // .releases-timeline {
+  // }
+}
