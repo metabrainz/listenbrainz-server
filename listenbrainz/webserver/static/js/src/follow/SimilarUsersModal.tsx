@@ -24,7 +24,7 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
   } = props;
   const { currentUser } = React.useContext(GlobalAppContext);
 
-  function renderSimilarUsersList() {
+   const renderSimilarUsersList = React.useCallback(() => {
     if (similarUsersList.length === 0) {
       return (
         <>
@@ -37,6 +37,22 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
         </>
       );
     }
+    return (
+      <div className="similar-users-list">
+        {similarUsersList.map((listEntry: SimilarUser) => {
+          return (
+            <UserListModalEntry
+              mode="similar-users"
+              key={listEntry.name}
+              user={listEntry}
+              loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
+              updateFollowingList={updateFollowingList}
+            />
+          );
+        })}
+      </div>
+    );
+  }, [similarUsersList, user, currentUser, loggedInUserFollowsUser, updateFollowingList]);
     return (
       <div className="similar-users-list">
         {similarUsersList.map((listEntry: SimilarUser) => {
