@@ -14,6 +14,7 @@ from flask import current_app
 
 
 TROI_BOT_USER_ID = 12939
+TROI_BOT_DEBUG_USER_ID = 19055
 
 
 def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
