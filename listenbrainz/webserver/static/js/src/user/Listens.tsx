@@ -13,6 +13,7 @@ import { io, Socket } from "socket.io-client";
 import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
+  faCompactDisc,
   faPencilAlt,
   faThumbtack,
   faTrashAlt,
@@ -785,7 +786,7 @@ export default class Listens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
-        <h3>Recent listens</h3>
+        {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {playingNowListen && this.getListenCard(playingNowListen)}
@@ -801,19 +802,31 @@ export default class Listens extends React.Component<
               />
             )}
             <ListenCountCard user={user} listenCount={listenCount} />
-            {user && (
-              <div
-                className="card hidden-xs hidden-sm"
-                style={{ paddingTop: "1.5em" }}
-              >
-                <UserSocialNetwork user={user} newAlert={newAlert} />
-              </div>
-            )}
+            {user && <UserSocialNetwork user={user} newAlert={newAlert} />}
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
-              <div className="lead text-center">
-                <p>No listens yet</p>
+              <div className="empty-listens">
+                <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
+                {currentUser?.name === user?.name ? (
+                  <div className="lead empty-text">Get listening</div>
+                ) : (
+                  <div className="lead empty-text">
+                    {user.name} hasn&apos;t listened to any songs yet.
+                  </div>
+                )}
+
+                {currentUser?.name === user?.name && (
+                  <div className="empty-action">
+                    Import <a href="/profile/import/">your listening history</a>{" "}
+                    from last.fm/libre.fm and track your listens by{" "}
+                    <a href="/profile/music-services/details/">
+                      connecting to a music streaming service
+                    </a>
+                    , or use <a href="/add-data/">one of these music players</a>{" "}
+                    to start submitting your listens.
+                  </div>
+                )}
               </div>
             )}
             {listens.length > 0 && (
