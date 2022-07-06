@@ -69,8 +69,10 @@
         width: 180px;
         height: 180px;
         border-radius: 4px;
-        box-shadow: 4px 4px 8px -2px fade(@asphalt, 20%);
         user-select: none;
+        aspect-ratio: 1;
+        object-fit: cover;
+        box-shadow: 4px 4px 8px -2px fade(@asphalt, 20%);
         transition: box-shadow 0.3s cubic-bezier(0, 0, 0.2, 1) 0.1s;
 
         &:hover {
