@@ -453,7 +453,7 @@ export default class SpotifyPlayer
       paused,
       position,
       duration,
-      track_window: { current_track },
+      track_window: { current_track, previous_tracks },
     } = playerState;
 
     const { currentSpotifyTrack, durationMs } = this.state;
@@ -468,18 +468,22 @@ export default class SpotifyPlayer
       onPlayerPausedChange(paused);
     }
 
+    if (!current_track) {
+      // Assume we got a state update from another device, and don't try to do anything
+      // which could overwrite the user's action (like playing next song with this 'device')
+      return;
+    }
     // How do we accurately detect the end of a song?
-    // Adapted from https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
-    if (position === 0 && paused === true && !current_track) {
-      // Track finished, play next track
+    // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
+    if (position === 0 && paused === true) {
+      // If we finished playing the full song, previous_tracks[0].id will === current_track.id
+      // If the user skipped the song, previous_tracks wil be an empty array
+      // Track finished or skipped, play next track
       this.debouncedOnTrackEnd();
       return;
     }
 
-    if (
-      current_track &&
-      !_isEqual(_get(currentSpotifyTrack, "id"), current_track.id)
-    ) {
+    if (!_isEqual(_get(currentSpotifyTrack, "id"), current_track.id)) {
       const { onTrackInfoChange } = this.props;
 
       const artists = current_track.artists
