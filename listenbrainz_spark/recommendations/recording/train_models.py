@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration alpha model_id')
 
 
-NUM_FOLDS = 5  # number of folds to use for k-folds cross validation
+NUM_FOLDS = 2  # number of folds to use for k-folds cross validation
 
 
 def get_model_path(model_id: str):

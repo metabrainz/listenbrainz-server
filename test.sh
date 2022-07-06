@@ -65,6 +65,10 @@ function docker_compose_run {
     invoke_docker_compose run --rm --user `id -u`:`id -g` "$@"
 }
 
+function docker_compose_run_fe {
+  invoke_docker_compose run --rm frontend_tester npm run "$@"
+}
+
 function docker_compose_run_spark {
     # We run spark tests as root and not the local user due to the requirement for
     # the uid to exist as a real user
@@ -130,7 +134,7 @@ function build_frontend_containers {
 }
 
 function update_snapshots {
-    docker_compose_run frontend_tester npm run test:update-snapshots
+    docker_compose_run_fe test:update-snapshots
 }
 
 function run_lint_check {
@@ -140,7 +144,7 @@ function run_lint_check {
         command="format"
     fi
 
-    docker_compose_run frontend_tester npm run $command
+    docker_compose_run_fe $command
 }
 
 function run_frontend_tests {
@@ -149,11 +153,11 @@ function run_frontend_tests {
     else
         command="test"
     fi
-    docker_compose_run frontend_tester npm run $command
+    docker_compose_run_fe $command
 }
 
 function run_type_check {
-    docker_compose_run frontend_tester npm run type-check
+    docker_compose_run_fe type-check
 }
 
 function spark_setup {
