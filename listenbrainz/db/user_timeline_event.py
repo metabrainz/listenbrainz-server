@@ -193,7 +193,7 @@ def get_personal_recommendation_events_for_feed(user_ids: List[int], min_ts: int
             SELECT id, user_id, event_type, metadata, created
               FROM user_timeline_event
              WHERE 
-               (metadata ->> 'recommender_id')::int IN :user_ids
+               (metadata ->> 'recommendee_id')::int IN :user_ids
                OR user_id IN :user_ids
                AND created > :min_ts
                AND created < :max_ts

@@ -57,7 +57,7 @@ class PersonalRecordingRecommendationMetadata(BaseModel):
     release_name: Optional[str]
     recording_mbid: Optional[str]
     recording_msid: constr(min_length=1)
-    recommender_id: NonNegativeInt
+    recommendee_id: NonNegativeInt
     blurb_content: Optional[str]
 
     _validate_uuids: classmethod = validator(
@@ -115,7 +115,7 @@ class APIPersonalRecommendationEvent(BaseModel):
     release_name: Optional[str]
     recording_mbid: Optional[str]
     recording_msid: constr(min_length=1)
-    recommender_id: NonNegativeInt
+    recommendee_id: NonNegativeInt
     blurb_content: Optional[str]
 
 
