@@ -72,7 +72,7 @@ exports[`ListenCountCard renders correctly when listen count is zero or undefine
         }
       >
         track_listener hasn't
-         listened to any songs.
+         listened to any songs yet.
       </div>
     </div>
   </ForwardRef>
