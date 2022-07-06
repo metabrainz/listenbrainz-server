@@ -476,7 +476,10 @@ export default class SpotifyPlayer
       return;
     }
 
-    if (!_isEqual(_get(currentSpotifyTrack, "id"), current_track.id)) {
+    if (
+      current_track &&
+      !_isEqual(_get(currentSpotifyTrack, "id"), current_track.id)
+    ) {
       const { onTrackInfoChange } = this.props;
 
       const artists = current_track.artists
@@ -502,7 +505,7 @@ export default class SpotifyPlayer
 
       this.setState({
         durationMs: duration,
-        currentSpotifyTrack: current_track,
+        currentSpotifyTrack: current_track ?? undefined,
       });
       return;
     }
