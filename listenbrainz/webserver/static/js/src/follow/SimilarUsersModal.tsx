@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import * as React from "react";
 import { includes as _includes } from "lodash";
 
@@ -24,7 +23,7 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
   } = props;
   const { currentUser } = React.useContext(GlobalAppContext);
 
-   const renderSimilarUsersList = React.useCallback(() => {
+  const renderSimilarUsersList = React.useCallback(() => {
     if (similarUsersList.length === 0) {
       return (
         <>
@@ -52,23 +51,13 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
         })}
       </div>
     );
-  }, [similarUsersList, user, currentUser, loggedInUserFollowsUser, updateFollowingList]);
-    return (
-      <div className="similar-users-list">
-        {similarUsersList.map((listEntry: SimilarUser) => {
-          return (
-            <UserListModalEntry
-              mode="similar-users"
-              key={listEntry.name}
-              user={listEntry}
-              loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
-              updateFollowingList={updateFollowingList}
-            />
-          );
-        })}
-      </div>
-    );
-  }
+  }, [
+    similarUsersList,
+    user,
+    currentUser,
+    loggedInUserFollowsUser,
+    updateFollowingList,
+  ]);
 
   return (
     <>
