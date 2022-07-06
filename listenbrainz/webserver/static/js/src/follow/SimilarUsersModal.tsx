@@ -23,11 +23,20 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
   } = props;
   const { currentUser } = React.useContext(GlobalAppContext);
 
-  return (
-    <>
-      <h3 className="text-center">
-        Users similar to {user.name === currentUser?.name ? "you" : user.name}
-      </h3>
+  const renderSimilarUsersList = React.useCallback(() => {
+    if (similarUsersList.length === 0) {
+      return (
+        <>
+          <hr />
+          <div className="similar-users-empty text-center text-muted">
+            Users with similar music tastes to{" "}
+            {user.name === currentUser?.name ? "you" : user.name} will appear
+            here.
+          </div>
+        </>
+      );
+    }
+    return (
       <div className="similar-users-list">
         {similarUsersList.map((listEntry: SimilarUser) => {
           return (
@@ -41,6 +50,21 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
           );
         })}
       </div>
+    );
+  }, [
+    similarUsersList,
+    user,
+    currentUser,
+    loggedInUserFollowsUser,
+    updateFollowingList,
+  ]);
+
+  return (
+    <>
+      <h3 className="text-center" style={{ marginTop: "10px" }}>
+        Similar Users
+      </h3>
+      {renderSimilarUsersList()}
     </>
   );
 };

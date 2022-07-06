@@ -1,5 +1,6 @@
 import { isEmpty, isNil } from "lodash";
 import * as React from "react";
+import Card from "../components/Card";
 
 import GlobalAppContext from "../utils/GlobalAppContext";
 import FollowerFollowingModal from "./FollowerFollowingModal";
@@ -148,19 +149,23 @@ export default class UserSocialNetwork extends React.Component<
     const { followerList, followingList, similarUsersList } = this.state;
     return (
       <>
-        <FollowerFollowingModal
-          user={user}
-          followerList={followerList}
-          followingList={followingList}
-          loggedInUserFollowsUser={this.loggedInUserFollowsUser}
-          updateFollowingList={this.updateFollowingList}
-        />
-        <SimilarUsersModal
-          user={user}
-          similarUsersList={similarUsersList}
-          loggedInUserFollowsUser={this.loggedInUserFollowsUser}
-          updateFollowingList={this.updateFollowingList}
-        />
+        <Card className="card-user-sn hidden-xs hidden-sm">
+          <FollowerFollowingModal
+            user={user}
+            followerList={followerList}
+            followingList={followingList}
+            loggedInUserFollowsUser={this.loggedInUserFollowsUser}
+            updateFollowingList={this.updateFollowingList}
+          />
+        </Card>
+        <Card className="card-user-sn hidden-xs hidden-sm">
+          <SimilarUsersModal
+            user={user}
+            similarUsersList={similarUsersList}
+            loggedInUserFollowsUser={this.loggedInUserFollowsUser}
+            updateFollowingList={this.updateFollowingList}
+          />
+        </Card>
       </>
     );
   }

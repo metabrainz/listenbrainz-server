@@ -3,6 +3,7 @@ import { includes as _includes } from "lodash";
 
 import Pill from "../components/Pill";
 import UserListModalEntry from "./UserListModalEntry";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 export type FollowerFollowingModalProps = {
   user: ListenBrainzUser;
@@ -23,6 +24,9 @@ export default class FollowerFollowingModal extends React.Component<
   FollowerFollowingModalProps,
   FollowerFollowingModalState
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   constructor(props: FollowerFollowingModalProps) {
     super(props);
     this.state = {
@@ -40,11 +44,63 @@ export default class FollowerFollowingModal extends React.Component<
       updateFollowingList,
       followerList,
       followingList,
+      user,
     } = this.props;
     const { activeMode } = this.state;
+    const { currentUser } = this.context;
 
     const activeModeList =
       activeMode === "follower" ? followerList : followingList;
+
+    function renderFollowerFollowingList() {
+      if (activeModeList.length === 0) {
+        if (activeMode === "follower") {
+          return (
+            <>
+              <hr />
+              <div className="follower-following-empty text-center text-muted">
+                {user.name === currentUser?.name
+                  ? "You don't"
+                  : `${user.name} doesn't`}{" "}
+                have any followers.
+              </div>
+            </>
+          );
+        }
+        return (
+          <>
+            <hr />
+            <div className="follower-following-empty text-center text-muted">
+              {user.name === currentUser?.name
+                ? "You aren't"
+                : `${user.name} isn't`}{" "}
+              following anyone.
+            </div>
+          </>
+        );
+      }
+      return (
+        <div className="follower-following-list">
+          {activeModeList.map((listEntry: string) => {
+            const formattedAsUser: ListenBrainzUser = {
+              name: listEntry,
+            };
+            return (
+              <UserListModalEntry
+                mode="follow-following"
+                key={listEntry}
+                user={formattedAsUser}
+                loggedInUserFollowsUser={loggedInUserFollowsUser(
+                  formattedAsUser
+                )}
+                updateFollowingList={updateFollowingList}
+              />
+            );
+          })}
+        </div>
+      );
+    }
+
     return (
       <>
         <div className="text-center follower-following-pills">
@@ -65,24 +121,7 @@ export default class FollowerFollowingModal extends React.Component<
             </Pill>
           </div>
         </div>
-        <div className="follower-following-list">
-          {activeModeList.map((listEntry: string) => {
-            const formattedAsUser: ListenBrainzUser = {
-              name: listEntry,
-            };
-            return (
-              <UserListModalEntry
-                mode="follow-following"
-                key={listEntry}
-                user={formattedAsUser}
-                loggedInUserFollowsUser={loggedInUserFollowsUser(
-                  formattedAsUser
-                )}
-                updateFollowingList={updateFollowingList}
-              />
-            );
-          })}
-        </div>
+        {renderFollowerFollowingList()}
       </>
     );
   }
