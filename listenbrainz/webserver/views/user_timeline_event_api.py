@@ -33,7 +33,7 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
-    CBReviewTimelineMetadata
+    CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
@@ -252,6 +252,7 @@ def user_feed(user_name: str):
         max_ts = int(time.time())
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
+    users_followers = db_user_relationship.get_followers_of_user(user['id'])
 
     # get all listen events
     if len(users_following) == 0:
@@ -272,6 +273,15 @@ def user_feed(user_name: str):
     recording_recommendation_events = get_recording_recommendation_events(
         user=user,
         users_for_events=users_for_feed_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    personal_recording_recommendation_events = get_personal_recording_recommendation_events(
+        user=user,
+        users_for_events=users_followers + [user],
+        users_following=users_following + [user],
         min_ts=min_ts or 0,
         max_ts=max_ts or int(time.time()),
         count=count,
@@ -315,7 +325,7 @@ def user_feed(user_name: str):
     # TODO: add playlist event and like event
     all_events = sorted(
         listen_events + follow_events + recording_recommendation_events + recording_pin_events
-        + cb_review_events + notification_events,
+        + cb_review_events + notification_events + personal_recording_recommendation_events,
         key=lambda event: -event.created,
     )
 
@@ -492,6 +502,76 @@ def unhide_user_timeline_event(user_name):
     db_user_timeline_event.unhide_timeline_event(user['id'], data['event_type'], data['event_id'])
     return jsonify({"status": "ok"})
 
+
+@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recommend-personal', methods=['POST', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+def create_personal_recommendation_event(user_name):
+    '''
+    Make the user recommend a recording to their followers.
+    The request should post the following data about the recording being
+    recommended, and also the list of followers getting recommended:
+
+    .. code-block:: json
+    {
+        "metadata": {
+            "artist_name": "<The name of the artist, required>",
+            "track_name": "<The name of the track, required>",
+            "recording_msid": "<The MessyBrainz ID of the recording, required>",
+            "release_name": "<The name of the release, optional>",
+            "recording_mbid": "<The MusicBrainz ID of the recording, optional>",
+            "followers": [<Row IDs (integer) of the follower, required>]
+            "blurb_content": "<String containing personalized recommendation>"
+        }
+    }
+
+    :statuscode 200: Successful query, recording has been recommended!
+    :statuscode 400: Bad request, check ``response['error']`` for more
+    details.
+    :statuscode 401: Unauthorized, you do not have permissions to recommend
+    personal recordings on the behalf of this user
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+
+    '''
+    user = validate_auth_header()
+    events = []
+
+    try:
+        data = ujson.loads(request.get_data())
+    except ValueError as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+    metadata = data['metadata']
+
+    try:
+        metadata_db = {
+            "artist_name": metadata["artist_name"],
+            "track_name": metadata["track_name"],
+            "recording_msid": metadata["recording_msid"],
+            "release_name": metadata["release_name"],
+            "recording_mbid": metadata["recording_mbid"],
+            "recommender_id": 0,
+            "blurb_content": metadata["blurb_content"]
+        }
+        metadata_db = PersonalRecordingRecommendationMetadata(**metadata_db)
+    except pydantic.ValidationError as e:
+        raise APIBadRequest(f"Invalid metadata: {str(e)}")
+
+    try:
+        for follower in metadata["followers"]:
+            if not db_user_relationship.is_following_user(follower, user['id']):
+                raise APIBadRequest(f"The person doesn't follow you")
+            metadata_db.recommender_id = follower
+            event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata_db)
+            event_data = event.dict()
+            event_data['created'] = event_data['created'].timestamp()
+            event_data['event_type'] = event_data['event_type'].value
+            events.append(event_data)
+    except DatabaseException:
+        raise APIInternalServerError("Something went wrong, please try again.")
+
+    return jsonify(events)
 
 def get_listen_events(
     users: List[Dict],
@@ -731,5 +811,52 @@ def get_recording_pin_events(
             ))
         except (pydantic.ValidationError, TypeError, KeyError):
             current_app.logger.error("Could not convert pinned recording to feed event", exc_info=True)
+            continue
+    return events
+
+
+def get_personal_recording_recommendation_events(
+        user: dict,
+        users_for_events: List[dict],
+        users_following: List[dict],
+        min_ts: int,
+        max_ts: int,
+        count: int
+        ) -> List[APITimelineEvent]:
+    """ Gets all personal recording recommendation events in the feed.
+    """
+
+    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
+    id_following_username_map = {user['id']: user['musicbrainz_id'] for user in users_following}
+    personal_recording_recommendation_events_db = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+        user_ids=(user['id'] for user in users_for_events),
+        min_ts=min_ts,
+        max_ts=max_ts,
+        count=count,
+    )
+
+    events = []
+    for event in personal_recording_recommendation_events_db:
+        try:
+            personal_recommendation = APIPersonalRecommendationEvent(
+                artist_name=event.metadata.artist_name,
+                track_name=event.metadata.track_name,
+                release_name=event.metadata.release_name,
+                recording_mbid=event.metadata.recording_mbid,
+                recording_msid=event.metadata.recording_msid,
+                recommender_id=event.metadata.recommender_id,
+                blurb_content=event.metadata.blurb_content
+            )
+
+            events.append(APITimelineEvent(
+                id=event.id,
+                event_type=UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION,
+                user_name=id_following_username_map[event.user_id],
+                created=event.created.timestamp(),
+                metadata=personal_recommendation,
+                hidden=False,
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
             continue
     return events

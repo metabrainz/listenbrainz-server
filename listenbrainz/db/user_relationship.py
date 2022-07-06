@@ -82,7 +82,7 @@ def get_followers_of_user(user: int) -> List[dict]:
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT "user".musicbrainz_id AS musicbrainz_id
+            SELECT "user".musicbrainz_id AS musicbrainz_id, "user".id as id
               FROM user_relationship
               JOIN "user"
                 ON "user".id = user_0

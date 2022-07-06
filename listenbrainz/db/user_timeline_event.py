@@ -27,7 +27,8 @@ from listenbrainz.db.model.user_timeline_event import (
     UserTimelineEventMetadata,
     RecordingRecommendationMetadata,
     NotificationMetadata,
-    HiddenUserTimelineEvent
+    HiddenUserTimelineEvent,
+    PersonalRecordingRecommendationMetadata
 )
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
@@ -110,6 +111,18 @@ def create_user_cb_review_event(user_id: int, metadata: CBReviewTimelineMetadata
         metadata=metadata
     )
 
+
+def create_personal_recommendation_event(user_id: int, metadata:
+    PersonalRecordingRecommendationMetadata) -> UserTimelineEvent:
+    """ Creates a personal recommendation event in the database and returns it.
+    """
+    return create_user_timeline_event(
+        user_id=user_id,
+        event_type=UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION,
+        metadata=metadata,
+    )
+
+
 def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, count: int = 50) -> List[UserTimelineEvent]:
     """ Gets user timeline events of the specified type associated with the specified user.
 
@@ -168,6 +181,35 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
         })
 
         return [UserTimelineEvent(**row) for row in result.fetchall()]
+
+
+def get_personal_recommendation_events_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
+    """ Gets a list of personal_recording_recommendation events for specified users.
+
+    user_ids is a tuple of user row IDs.
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, user_id, event_type, metadata, created
+              FROM user_timeline_event
+             WHERE 
+               (metadata ->> 'recommender_id')::int IN :user_ids
+               OR user_id IN :user_ids
+               AND created > :min_ts
+               AND created < :max_ts
+               AND event_type = :event_type
+          ORDER BY created DESC
+             LIMIT :count
+        """), {
+            "user_ids": tuple(user_ids),
+            "min_ts": datetime.utcfromtimestamp(min_ts),
+            "max_ts": datetime.utcfromtimestamp(max_ts),
+            "count": count,
+            "event_type": UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
+        })
+
+        return [UserTimelineEvent(**row) for row in result.fetchall()]
+
 
 
 def get_cb_review_events(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:

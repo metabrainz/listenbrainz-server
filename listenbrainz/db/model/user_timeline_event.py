@@ -34,6 +34,7 @@ class UserTimelineEventType(Enum):
     NOTIFICATION = 'notification'
     RECORDING_PIN = 'recording_pin'
     CRITIQUEBRAINZ_REVIEW = 'critiquebrainz_review'
+    PERSONAL_RECORDING_RECOMMENDATION = 'personal_recording_recommendation'
 
 
 class RecordingRecommendationMetadata(BaseModel):
@@ -50,12 +51,29 @@ class RecordingRecommendationMetadata(BaseModel):
     )(check_valid_uuid)
 
 
+class PersonalRecordingRecommendationMetadata(BaseModel):
+    artist_name: constr(min_length=1)
+    track_name: constr(min_length=1)
+    release_name: Optional[str]
+    recording_mbid: Optional[str]
+    recording_msid: constr(min_length=1)
+    recommender_id: NonNegativeInt
+    blurb_content: Optional[str]
+
+    _validate_uuids: classmethod = validator(
+        "recording_mbid",
+        "recording_msid",
+        allow_reuse=True
+    )(check_valid_uuid)
+
+
 class NotificationMetadata(BaseModel):
     creator: constr(min_length=1)
     message: constr(min_length=1)
 
 
-UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, RecordingRecommendationMetadata, NotificationMetadata]
+UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata,
+    RecordingRecommendationMetadata, NotificationMetadata]
 
 
 class UserTimelineEvent(BaseModel):
@@ -91,7 +109,17 @@ class APICBReviewEvent(BaseModel):
     review_mbid: str
 
 
-APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent]
+class APIPersonalRecommendationEvent(BaseModel):
+    artist_name: constr(min_length=1)
+    track_name: constr(min_length=1)
+    release_name: Optional[str]
+    recording_mbid: Optional[str]
+    recording_msid: constr(min_length=1)
+    recommender_id: NonNegativeInt
+    blurb_content: Optional[str]
+
+
+APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent, APIPersonalRecommendationEvent]
 
 
 class APITimelineEvent(BaseModel):
