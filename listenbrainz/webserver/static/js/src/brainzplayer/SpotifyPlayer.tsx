@@ -274,17 +274,11 @@ export default class SpotifyPlayer
   };
 
   datasourceRecordsListens = (): boolean => {
-    const { spotifyUser } = this.props;
-    const permissionsRequiredForScrobbling = [
-      "user-read-currently-playing",
-      "user-read-recently-played",
-    ];
-    return (
-      difference(
-        permissionsRequiredForScrobbling,
-        spotifyUser?.permission ?? []
-      ).length === 0
-    );
+    // Starting 2022 we realized tracks played through BrainzPlayer + Spotify
+    // don't appear in the Spotify listening history anymore
+    // and consequently don't appear in LB user's listens.
+    // From here onwards we submit listens ourselves and hope there are no duplicates…
+    return false;
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {
