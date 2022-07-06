@@ -84,7 +84,7 @@ export default class CBReviewModal extends React.Component<
           style={{ color: "black" }}
         />
       </span>
-      <ReactTooltip place="bottom" globalEventOff="click" clickable />
+      <ReactTooltip place="bottom" globalEventOff="click" clickable html={true} />
     </span>
   );
 
@@ -546,7 +546,7 @@ export default class CBReviewModal extends React.Component<
               data-toggle="dropdown"
               type="button"
             >
-              {`${entityToReview.name} (
+              {`${entityToReview.name}(
               ${entityToReview.type.replace("_", " ")})`}
               <span className="caret" />
             </button>
