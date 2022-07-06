@@ -270,22 +270,18 @@ describe("SpotifyPlayer", () => {
       const mockProps = { ...props, onTrackEnd };
       const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
-      const modifiedSpotifyPlayerState = {
-        ...spotifyPlayerState,
-        track_window: { current_track: null },
-      };
       // Spotify has a tendency to send multiple messages in a short burst,
       // and we debounce calls to onTrackEnd
       instance.handlePlayerStateChanged({
-        ...modifiedSpotifyPlayerState,
+        ...spotifyPlayerState,
         position: 0,
       });
       instance.handlePlayerStateChanged({
-        ...modifiedSpotifyPlayerState,
+        ...spotifyPlayerState,
         position: 0,
       });
       instance.handlePlayerStateChanged({
-        ...modifiedSpotifyPlayerState,
+        ...spotifyPlayerState,
         position: 0,
       });
       expect(instance.props.onTrackEnd).toHaveBeenCalledTimes(1);
