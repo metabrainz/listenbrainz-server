@@ -475,8 +475,8 @@ export default class SpotifyPlayer
     }
 
     // How do we accurately detect the end of a song?
-    // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
-    if (position === 0 && paused === true) {
+    // Adapted from https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
+    if (position === 0 && paused === true && !current_track) {
       // Track finished, play next track
       this.debouncedOnTrackEnd();
       return;
