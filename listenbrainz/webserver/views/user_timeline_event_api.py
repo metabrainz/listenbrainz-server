@@ -551,7 +551,7 @@ def create_personal_recommendation_event(user_name):
             "recording_msid": metadata["recording_msid"],
             "release_name": metadata["release_name"],
             "recording_mbid": metadata["recording_mbid"],
-            "recommender_id": 0,
+            "recommendee_id": 0,
             "blurb_content": metadata["blurb_content"]
         }
         metadata_db = PersonalRecordingRecommendationMetadata(**metadata_db)
@@ -562,7 +562,7 @@ def create_personal_recommendation_event(user_name):
         for follower in metadata["followers"]:
             if not db_user_relationship.is_following_user(follower, user['id']):
                 raise APIBadRequest(f"The person doesn't follow you")
-            metadata_db.recommender_id = follower
+            metadata_db.recommendee_id = follower
             event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata_db)
             event_data = event.dict()
             event_data['created'] = event_data['created'].timestamp()
@@ -844,7 +844,7 @@ def get_personal_recording_recommendation_events(
                 release_name=event.metadata.release_name,
                 recording_mbid=event.metadata.recording_mbid,
                 recording_msid=event.metadata.recording_msid,
-                recommender_id=event.metadata.recommender_id,
+                recommendee_id=event.metadata.recommendee_id,
                 blurb_content=event.metadata.blurb_content
             )
 
