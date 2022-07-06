@@ -694,7 +694,14 @@ export default class Listens extends React.Component<
             {!listens.length && (
               <div className="empty-listens">
                 <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
-                <div className="lead empty-text">Get listening</div>
+                {currentUser?.name === user?.name ? (
+                  <div className="lead empty-text">Get listening</div>
+                ) : (
+                  <div className="lead empty-text">
+                    {user.name} hasn&apos;t listened to any songs yet.
+                  </div>
+                )}
+
                 {currentUser?.name === user?.name && (
                   <div className="empty-action">
                     Import <a href="/profile/import/">your listening history</a>{" "}
