@@ -138,7 +138,6 @@ declare type SpotifyPlayerSDKState = {
   duration: number;
   track_window: {
     current_track: SpotifyTrack | null;
-    previous_tracks?: SpotifyTrack[]; // always an array even if empty
   };
 };
 
