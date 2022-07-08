@@ -84,7 +84,7 @@ export default class CBReviewModal extends React.Component<
           style={{ color: "black" }}
         />
       </span>
-      <ReactTooltip place="bottom" globalEventOff="click" clickable html={true} />
+      <ReactTooltip place="bottom" globalEventOff="click" clickable html />
     </span>
   );
 
