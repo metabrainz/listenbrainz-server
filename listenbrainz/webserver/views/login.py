@@ -45,8 +45,7 @@ def musicbrainz_post():
             user = provider.get_user()
             if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and not user["email"]:
                 # existing user without email, show a warning
-                flash.warning(no_email_warning + 'before 1 November 2021, or you will be unable to submit '
-                                                 'listens. ' + blog_link)
+                flash.warning(no_email_warning + 'to submit listens. ' + blog_link)
 
             db_user.update_last_login(user["musicbrainz_id"])
             login_user(User.from_dbrow(user),
