@@ -193,25 +193,25 @@ class TimescaleWriterSubscriber:
         for listen in data:
             k = '%d-%s-%s' % (listen.ts_since_epoch, listen.data['track_name'], listen.user_name)
             if k in inserted_index:
-                unique.append(listen.to_json())
+                unique.append(listen)
 
         if not unique:
             return len(data)
+
+        self.redis_listenstore.update_recent_listens(unique)
+        self.unique_listens += len(unique)
 
         while True:
             try:
                 self.unique_ch.basic_publish(
                     exchange=current_app.config['UNIQUE_EXCHANGE'],
                     routing_key='',
-                    body=ujson.dumps(unique),
+                    body=ujson.dumps([listen.to_json() for listen in unique]),
                     properties=pika.BasicProperties(delivery_mode=2,),
                 )
                 break
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
-
-        self.redis_listenstore.update_recent_listens(unique)
-        self.unique_listens += len(unique)
 
         if monotonic() > self.metric_submission_time:
             self.metric_submission_time += METRIC_UPDATE_INTERVAL
