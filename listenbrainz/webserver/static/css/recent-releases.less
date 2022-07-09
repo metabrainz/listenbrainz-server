@@ -6,7 +6,7 @@
     grid-column: span 3;
   }
 
-  #release-filters-container {
+  #filters-container {
     display: flex;
     flex-direction: column;
 
@@ -28,21 +28,51 @@
     }
 
     #release-filters {
-      #filters-title-container {
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+
+      #title-container {
         display: flex;
         margin-top: 2em;
         align-items: flex-end;
 
-        #filters-title {
+        #type-title {
           flex-grow: 1;
           text-transform: uppercase;
           font-size: large;
           font-weight: bold;
+          // color: @orange;
         }
 
-        #clear-btn {
+        #clearall-btn {
           display: none;
+          font-size: small;
+          // font-weight: 700;
           flex-grow: 2;
+        }
+      }
+
+      #filters-list {
+        text-transform: lowercase;
+
+        .type-container {
+          margin: 1rem 0;
+          font-size: larger;
+          &:hover {
+            color: fade(@orange, 75%);
+          }
+
+          .type-name {
+            margin-right: 0.25rem;
+            // font-weight: 700;
+          }
+
+          .clear-btn {
+            display: none;
+            font-weight: 700;
+            color: @orange;
+          }
         }
       }
     }
