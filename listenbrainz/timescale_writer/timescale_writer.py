@@ -193,7 +193,7 @@ class TimescaleWriterSubscriber:
         for listen in data:
             k = '%d-%s-%s' % (listen.ts_since_epoch, listen.data['track_name'], listen.user_name)
             if k in inserted_index:
-                unique.append(listen)
+                unique.append(listen.to_json())
 
         if not unique:
             return len(data)
