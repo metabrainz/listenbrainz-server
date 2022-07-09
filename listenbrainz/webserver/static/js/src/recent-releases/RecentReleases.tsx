@@ -2,7 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import { uniqBy } from "lodash";
+import { isEqual, uniqBy, uniqWith } from "lodash";
 import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
@@ -14,10 +14,34 @@ import * as fakeData from "./fakeData.json";
 import ReleaseFilters from "./ReleaseFilters";
 
 export default function RecentReleases() {
+  const RELEASE_TYPE_OTHER = "Other";
+
+  const [typesList, setTypesList] = React.useState<Array<string | null>>([]);
+
+  React.useEffect(() => {
+    setTypesList(
+      uniqWith(
+        fakeData.map((release) => {
+          if (
+            release.release_group_primary_type !== null ||
+            release.release_group_secondary_type !== null
+          )
+            return (
+              release.release_group_primary_type ||
+              release.release_group_secondary_type
+            );
+
+          return RELEASE_TYPE_OTHER;
+        }),
+        isEqual
+      )
+    );
+  }, []);
+
   return (
     <div className="releases-page">
       <h3 id="releases-title">Recent and upcoming releases</h3>
-      <ReleaseFilters />
+      <ReleaseFilters filters={typesList} />
       <div className="release-cards-container">
         <div className="release-cards-grid">
           {// Deduplicate releases based on same release name by same artist name.
@@ -34,7 +58,7 @@ export default function RecentReleases() {
               datum.artist_credit_name.toLowerCase()
             );
           })
-            .slice(620, 650)
+            .slice(990, 1005)
             .map((release) => {
               return (
                 <ReleaseCard
