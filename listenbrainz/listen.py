@@ -180,7 +180,7 @@ class Listen(object):
         return {
             'user_id': self.user_id,
             'user_name': self.user_name,
-            'timestamp': self.timestamp,
+            'timestamp': int(self.timestamp.timestamp()) if self.timestamp else None,
             'track_metadata': self.data,
             'recording_msid': self.recording_msid
         }
