@@ -39,11 +39,16 @@ export default function RecentReleases() {
   }, []);
 
   return (
-    <div className="releases-page">
-      <h3 id="releases-title">Recent and upcoming releases</h3>
-      <ReleaseFilters filters={typesList} />
-      <div className="release-cards-container">
-        <div className="release-cards-grid">
+    <>
+      <h3 id="row">Recent and upcoming releases</h3>
+      <div className="releases-page row">
+        <div
+          className="col-md-1 hidden-xs hidden-sm hidden-md"
+          style={{ padding: "2rem 0" }}
+        >
+          <ReleaseFilters filters={typesList} />
+        </div>
+        <div className="release-cards-grid col-xs-12 col-md-10">
           {// Deduplicate releases based on same release name by same artist name.
           uniqBy(fakeData, (datum) => {
             return (
@@ -76,9 +81,9 @@ export default function RecentReleases() {
               );
             })}
         </div>
+        <div className="releases-timeline col-xs-12 col-md-1">Timeline</div>
       </div>
-      <div className="releases-timeline">Timeline</div>
-    </div>
+    </>
   );
 }
 
