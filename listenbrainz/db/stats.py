@@ -44,7 +44,7 @@ from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
 
-from listenbrainz.db.couch import get_data_from_couchdb, get_couchdb_base_url
+from listenbrainz.db.couchdb import get_data_from_couchdb, get_couchdb_base_url
 
 
 # sitewide statistics are stored in the user statistics table
@@ -53,7 +53,7 @@ from listenbrainz.db.couch import get_data_from_couchdb, get_couchdb_base_url
 SITEWIDE_STATS_USER_ID = 15753
 
 
-def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
+def insert_stats_in_couchdb(database, from_ts, to_ts, values):
     with start_span(op="processing", description="add _id, from_ts, to_ts and last_updated to docs"):
         for doc in values:
             doc["_id"] = str(doc["user_id"])
@@ -65,8 +65,7 @@ def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
         docs = ujson.dumps({"docs": values})
 
     with start_span(op="http", description="insert docs in couchdb using api"):
-        db_name = f"{stats_type}_{stats_range}"
-        couchdb_url = f"{get_couchdb_base_url()}/{db_name}/_bulk_docs"
+        couchdb_url = f"{get_couchdb_base_url()}/{database}/_bulk_docs"
         response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
         response.raise_for_status()
 

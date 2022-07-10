@@ -4,14 +4,14 @@ import requests
 from flask import current_app
 
 
-def get_couchdb_base_url():
+def get_base_url():
     return f"http://{current_app.config['COUCHDB_USER']}" \
            f":{current_app.config['COUCHDB_ADMIN_KEY']}" \
            f"@{current_app.config['COUCHDB_HOST']}" \
            f":{current_app.config['COUCHDB_PORT']}"
 
 
-def create_couchdb_database(prefix: str):
+def create_database(prefix: str):
     """ Create a couchdb database using `{prefix}_{today's date in YYYYMMDD}` as its name.
 
     For example, if prefix is artists_weekly and the day is 2022-07-10 then the newly
@@ -22,12 +22,12 @@ def create_couchdb_database(prefix: str):
     """
     today = date.today().strftime("%Y%m%d")
     db_name = f"{prefix}_{today}"
-    databases_url = f"{get_couchdb_base_url()}/{db_name}"
+    databases_url = f"{get_base_url()}/{db_name}"
     response = requests.put(databases_url)
     response.raise_for_status()
 
 
-def list_couchdb_database(prefix: str) -> list[str]:
+def list_databases(prefix: str) -> list[str]:
     """ List all couchdb database whose name starts with the given prefix
     sorted in the descending order of creation.
 
@@ -38,7 +38,7 @@ def list_couchdb_database(prefix: str) -> list[str]:
     whose name starts with the stat name and then deletes all of those except the latest
     one.
     """
-    databases_url = f"{get_couchdb_base_url()}/_all_dbs"
+    databases_url = f"{get_base_url()}/_all_dbs"
     response = requests.get(databases_url)
     response.raise_for_status()
     all_databases = response.json()
@@ -54,12 +54,12 @@ def delete_couchdb_database(prefix: str):
     Args:
          prefix: the string to match database names with
     """
-    databases = list_couchdb_database(prefix)
+    databases = list_databases(prefix)
     # remove the latest database from the list then delete the databases remaining in the list.
     databases.pop(0)
 
     for database in databases:
-        databases_url = f"{get_couchdb_base_url()}/{database}"
+        databases_url = f"{get_base_url()}/{database}"
         response = requests.delete(databases_url)
         response.raise_for_status()
 
@@ -75,8 +75,8 @@ def get_data_from_couchdb(prefix: str, user_id: int):
          prefix: the string to match database names with
          user_id: the user to retrieve data for
     """
-    databases = list_couchdb_database(prefix)
-    base_url = get_couchdb_base_url()
+    databases = list_databases(prefix)
+    base_url = get_base_url()
 
     for database in databases:
         document_url = f"{base_url}/{database}/{user_id}"
