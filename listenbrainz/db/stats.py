@@ -22,7 +22,7 @@
 
 
 import json
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 import requests
@@ -52,8 +52,9 @@ from listenbrainz.db.recent_releases import get_couchdb_base_url
 SITEWIDE_STATS_USER_ID = 15753
 
 
-def create_couchdb_database(stats_type, stats_range):
-    db_name = f"{stats_type}_{stats_range}"
+def create_couchdb_database(prefix):
+    today = date.today().strftime("%Y%m%d")
+    db_name = f"{prefix}_{today}"
     databases_url = f"{get_couchdb_base_url()}/{db_name}"
     response = requests.put(databases_url)
     response.raise_for_status()
@@ -74,6 +75,29 @@ def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
         db_name = f"{stats_type}_{stats_range}"
         couchdb_url = f"{get_couchdb_base_url()}/{db_name}/_bulk_docs"
         response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
+        response.raise_for_status()
+
+
+def delete_couchdb_database(prefix):
+    databases_url = f"{get_couchdb_base_url()}/_all_dbs"
+    response = requests.get(databases_url)
+    response.raise_for_status()
+    all_databases = response.json()
+
+    prefix_len = len(prefix)
+    dates = []
+    for database in all_databases:
+        if database.startswith(prefix):
+            db_date = int(database[prefix_len:])
+            dates.append(db_date)
+
+    dates.sort()
+    dates.pop()
+
+    for db_date in dates:
+        db_name = f"{prefix}_{db_date}"
+        databases_url = f"{get_couchdb_base_url()}/{db_name}"
+        response = requests.delete(databases_url)
         response.raise_for_status()
 
 

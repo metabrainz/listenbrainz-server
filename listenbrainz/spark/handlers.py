@@ -54,7 +54,7 @@ def notify_user_stats_update(stat_type):
 
 def handle_user_entity_start(message):
     try:
-        db_stats.create_couchdb_database(message["entity"], message["stats_range"])
+        db_stats.create_couchdb_database(f'{message["entity"]}_{message["stats_range"]}')
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
@@ -75,7 +75,10 @@ def handle_user_entity(data):
 
 
 def handle_user_entity_end(message):
-    pass
+    try:
+        db_stats.delete_couchdb_database(f'{message["entity"]}_{message["stats_range"]}')
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
 def _handle_user_activity_stats(stats_type, data):
