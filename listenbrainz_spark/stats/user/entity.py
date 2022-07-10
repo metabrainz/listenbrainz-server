@@ -105,6 +105,7 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         to_date: The end time of the stats
         message_type: used to decide which handler on LB webserver side should
             handle this message. can be "user_entity" or "year_in_music_top_stats"
+        database: the name of the database in which the webserver should store the data
 
     Returns:
         messages: A list of messages to be sent via RabbitMQ
@@ -113,9 +114,8 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         database = f"{entity}_{stats_range}"
 
     yield {
-        "type": f"{message_type}_start",
-        "entity": entity,
-        "stats_range": stats_range
+        "type": "couchdb_data_start",
+        "database": database
     }
 
     from_ts = int(from_date.timestamp())
@@ -144,7 +144,6 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             yield None
 
     yield {
-        "type": f"{message_type}_end",
-        "entity": entity,
-        "stats_range": stats_range
+        "type": "couchdb_data_end",
+        "database": database
     }
