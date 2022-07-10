@@ -32,6 +32,7 @@ import psycopg2
 import ujson
 from psycopg2 import sql
 from psycopg2.extras import execute_values
+from requests import HTTPError
 from sentry_sdk import start_span
 
 from data.model.common_stat import StatRange, StatApi
@@ -43,21 +44,13 @@ from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
 
-from listenbrainz.db.recent_releases import get_couchdb_base_url
+from listenbrainz.db.couch import get_data_from_couchdb, get_couchdb_base_url
 
 
 # sitewide statistics are stored in the user statistics table
 # as statistics for a special user with the following user_id.
 # Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
 SITEWIDE_STATS_USER_ID = 15753
-
-
-def create_couchdb_database(prefix):
-    today = date.today().strftime("%Y%m%d")
-    db_name = f"{prefix}_{today}"
-    databases_url = f"{get_couchdb_base_url()}/{db_name}"
-    response = requests.put(databases_url)
-    response.raise_for_status()
 
 
 def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
@@ -78,38 +71,15 @@ def insert_stats_in_couchdb(stats_type, stats_range, from_ts, to_ts, values):
         response.raise_for_status()
 
 
-def delete_couchdb_database(prefix):
-    databases_url = f"{get_couchdb_base_url()}/_all_dbs"
-    response = requests.get(databases_url)
-    response.raise_for_status()
-    all_databases = response.json()
-
-    prefix_len = len(prefix)
-    dates = []
-    for database in all_databases:
-        if database.startswith(prefix):
-            db_date = int(database[prefix_len:])
-            dates.append(db_date)
-
-    dates.sort()
-    dates.pop()
-
-    for db_date in dates:
-        db_name = f"{prefix}_{db_date}"
-        databases_url = f"{get_couchdb_base_url()}/{db_name}"
-        response = requests.delete(databases_url)
-        response.raise_for_status()
-
-
 def get_stats_from_couchdb(user_id, stats_range, stats_type) -> Optional[StatApi[EntityRecord]]:
-    database = f"{stats_type}_{stats_range}"
-    document_url = f"{get_couchdb_base_url()}/{database}/{user_id}"
-
-    response = requests.get(document_url)
-    if response.status_code == 404:
+    prefix = f"{stats_type}_{stats_range}"
+    try:
+        data = get_data_from_couchdb(prefix, user_id)
+        if data is None:
+            return None
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
         return None
-    response.raise_for_status()
-    data = response.json()
 
     try:
         return StatApi[EntityRecord](
