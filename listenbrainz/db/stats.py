@@ -22,14 +22,12 @@
 
 
 import json
-from datetime import datetime, date
+from datetime import datetime
 from typing import Optional
 
-import requests
 import sqlalchemy
 
 import psycopg2
-import ujson
 from psycopg2 import sql
 from psycopg2.extras import execute_values
 from requests import HTTPError
@@ -44,7 +42,7 @@ from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
 
-from listenbrainz.db.couchdb import get_data_from_couchdb, get_couchdb_base_url
+from listenbrainz.db import couchdb
 
 
 # sitewide statistics are stored in the user statistics table
@@ -61,19 +59,13 @@ def insert_stats_in_couchdb(database, from_ts, to_ts, values):
             doc["to_ts"] = to_ts
             doc["last_updated"] = datetime.now().isoformat()
 
-    with start_span(op="serializing", description="serialize data to json"):
-        docs = ujson.dumps({"docs": values})
-
-    with start_span(op="http", description="insert docs in couchdb using api"):
-        couchdb_url = f"{get_couchdb_base_url()}/{database}/_bulk_docs"
-        response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
-        response.raise_for_status()
+    couchdb.insert_data(database, values)
 
 
 def get_stats_from_couchdb(user_id, stats_range, stats_type) -> Optional[StatApi[EntityRecord]]:
     prefix = f"{stats_type}_{stats_range}"
     try:
-        data = get_data_from_couchdb(prefix, user_id)
+        data = couchdb.fetch_data(prefix, user_id)
         if data is None:
             return None
     except HTTPError as e:

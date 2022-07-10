@@ -1,7 +1,13 @@
-from datetime import date
+import re
 
 import requests
+import ujson
 from flask import current_app
+from sentry_sdk import start_span
+
+
+# stat type followed by a underscore followed by a date in YYYYMMDD format
+DATABASE_NAME_PATTERN = re.compile(r"(.*)_(\d{8})")
 
 
 def get_base_url():
@@ -11,18 +17,16 @@ def get_base_url():
            f":{current_app.config['COUCHDB_PORT']}"
 
 
-def create_database(prefix: str):
-    """ Create a couchdb database using `{prefix}_{today's date in YYYYMMDD}` as its name.
+def create_database(database: str):
+    """ Create a couchdb database with the given name.
 
     For example, if prefix is artists_weekly and the day is 2022-07-10 then the newly
     created couchdb database will be named artists_weekly_20220710.
 
     Args:
-         prefix: the string to start the database's name with
+         database: the database's name
     """
-    today = date.today().strftime("%Y%m%d")
-    db_name = f"{prefix}_{today}"
-    databases_url = f"{get_base_url()}/{db_name}"
+    databases_url = f"{get_base_url()}/{database}"
     response = requests.put(databases_url)
     response.raise_for_status()
 
@@ -48,7 +52,7 @@ def list_databases(prefix: str) -> list[str]:
     return databases
 
 
-def delete_couchdb_database(prefix: str):
+def delete_database(prefix: str):
     """ Delete all but the latest database whose name starts with the given prefix.
 
     Args:
@@ -64,7 +68,7 @@ def delete_couchdb_database(prefix: str):
         response.raise_for_status()
 
 
-def get_data_from_couchdb(prefix: str, user_id: int):
+def fetch_data(prefix: str, user_id: int):
     """ Retrieve data from couchdb for given stat type and user.
 
     For each stat type, a database is created daily. We do not have a way to do this atomically so the latest
@@ -87,3 +91,14 @@ def get_data_from_couchdb(prefix: str, user_id: int):
         return response.json()
 
     return None
+
+
+def insert_data(database: str, data):
+    """ Insert the given data into the specified database. """
+    with start_span(op="serializing", description="serialize data to json"):
+        docs = ujson.dumps({"docs": data})
+
+    with start_span(op="http", description="insert docs in couchdb using api"):
+        couchdb_url = f"{get_base_url()}/{database}/_bulk_docs"
+        response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
+        response.raise_for_status()

@@ -19,7 +19,7 @@ from data.model.user_cf_recommendations_recording_message import UserRecommendat
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import year_in_music
+from listenbrainz.db import year_in_music, couchdb
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
 
@@ -52,30 +52,36 @@ def notify_user_stats_update(stat_type):
         )
 
 
-def handle_user_entity_start(message):
+def handle_couchdb_data_start(message):
     try:
-        couch.create_couchdb_database(f'{message["entity"]}_{message["stats_range"]}')
+        couchdb.create_database(message["database"])
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
-def handle_user_entity(data):
+def handle_couchdb_data_end(message):
+    # database names are of the format, prefix_YYYYMMDD. calculate and pass the prefix to the
+    # method to delete all database of the type except the latest one.
+    database = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
+    # if the database name does not match pattern, abort to avoid deleting any data inadvertently
+    if not database:
+        return
+    try:
+        couchdb.delete_database(database)
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+
+def handle_user_entity(message):
     """ Take entity stats for a user and save it in the database. """
     try:
-        with start_transaction(op="insert", name=f'insert {data["entity"]} - {data["stats_range"]} stats'):
+        with start_transaction(op="insert", name=f'insert {message["entity"]} - {message["stats_range"]} stats'):
             db_stats.insert_stats_in_couchdb(
-                data["database"],
-                data["from_ts"],
-                data["to_ts"],
-                data["data"]
+                message["database"],
+                message["from_ts"],
+                message["to_ts"],
+                message["data"]
             )
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-
-
-def handle_user_entity_end(message):
-    try:
-        db_stats.delete_couchdb_database(f'{message["entity"]}_{message["stats_range"]}')
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
