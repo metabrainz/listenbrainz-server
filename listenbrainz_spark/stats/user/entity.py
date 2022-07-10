@@ -57,7 +57,11 @@ def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
 def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str,
                            entity: str, stats_range: str, message_type: str):
     handler = entity_handler_map[entity]
-    data = handler(table)
+    if message_type == "year_in_music_top_stats":
+        number_of_results = NUMBER_OF_YIM_ENTITIES
+    else:
+        number_of_results = NUMBER_OF_TOP_ENTITIES
+    data = handler(table, number_of_results)
     return create_messages(data=data, entity=entity, stats_range=stats_range,
                            from_date=from_date, to_date=to_date, message_type=message_type)
 
@@ -67,13 +71,8 @@ def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str
     _dict = entry.asDict(recursive=True)
     total_entity_count = len(_dict[entity])
 
-    if message_type == "year_in_music_top_stats":
-        retain = NUMBER_OF_YIM_ENTITIES
-    else:
-        retain = NUMBER_OF_TOP_ENTITIES
-
     entity_list = []
-    for item in _dict[entity][:retain]:
+    for item in _dict[entity]:
         try:
             entity_list.append(entity_model_map[entity](**item))
         except ValidationError:

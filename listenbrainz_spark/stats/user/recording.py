@@ -1,13 +1,14 @@
 from listenbrainz_spark.stats import run_query
 
 
-def get_recordings(table):
+def get_recordings(table: str, number_of_results: int):
     """
     Get recording information (recording_name, recording_mbid etc) for every user
     ordered by listen count (number of times a user has listened to the track/recording).
 
     Args:
         table: name of the temporary table
+        number_of_results: number of top results to keep per user.
 
     Returns:
         iterator (iter): an iterator over result:
@@ -44,6 +45,17 @@ def get_recordings(table):
                  , artist_credit_mbids
                  , lower(release_name)
                  , release_mbid
+        ), ranked_stats as (
+            SELECT user_id
+                 , any_recording_name AS recording_name
+                 , recording_mbid
+                 , any_release_name AS release_name
+                 , release_mbid
+                 , any_artist_name AS artist_name
+                 , artist_credit_mbids
+                 , listen_count
+                 , row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rank
+              FROM intermediate_table
         )
         SELECT user_id
              , sort_array(
@@ -60,7 +72,8 @@ def get_recordings(table):
                     )
                    , false
                 ) as recordings
-          FROM intermediate_table
+          FROM ranked_stats
+         WHERE rank < {number_of_results}
       GROUP BY user_id
         """)
 
