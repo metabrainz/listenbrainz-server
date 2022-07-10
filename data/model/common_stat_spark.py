@@ -19,3 +19,4 @@ class StatMessage(GenericModel, Generic[SparkT]):
     from_ts: NonNegativeInt
     to_ts: NonNegativeInt
     data: List[SparkT]
+    database: str

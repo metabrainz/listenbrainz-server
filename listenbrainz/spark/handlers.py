@@ -54,7 +54,7 @@ def notify_user_stats_update(stat_type):
 
 def handle_user_entity_start(message):
     try:
-        db_stats.create_couchdb_database(f'{message["entity"]}_{message["stats_range"]}')
+        couch.create_couchdb_database(f'{message["entity"]}_{message["stats_range"]}')
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
@@ -64,8 +64,7 @@ def handle_user_entity(data):
     try:
         with start_transaction(op="insert", name=f'insert {data["entity"]} - {data["stats_range"]} stats'):
             db_stats.insert_stats_in_couchdb(
-                data["entity"],
-                data["stats_range"],
+                data["database"],
                 data["from_ts"],
                 data["to_ts"],
                 data["data"]
