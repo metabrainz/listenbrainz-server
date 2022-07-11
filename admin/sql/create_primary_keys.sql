@@ -32,4 +32,6 @@ ALTER TABLE pinned_recording ADD CONSTRAINT pinned_recording_pkey PRIMARY KEY (i
 
 ALTER TABLE release_color ADD CONSTRAINT release_color_pkey PRIMARY KEY (id);
 
+ALTER TABLE user_setting ADD CONSTRAINT user_setting_pkey PRIMARY KEY (id);
+
 COMMIT;

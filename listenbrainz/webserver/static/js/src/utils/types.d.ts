@@ -137,7 +137,7 @@ declare type SpotifyPlayerSDKState = {
   position: number;
   duration: number;
   track_window: {
-    current_track: SpotifyTrack;
+    current_track: SpotifyTrack | null;
   };
 };
 
