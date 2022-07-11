@@ -123,7 +123,9 @@ def profile(user_name):
 
     pin = get_current_pin_for_user(user_id=user.id)
     if pin:
-        pin = dict(fetch_track_metadata_for_items([pin])[0])
+        pin = fetch_track_metadata_for_items([pin])[0].dict()
+        pin["created"] = int(pin["created"].timestamp())
+        pin["pinned_until"] = int(pin["pinned_until"].timestamp())
 
     props = {
         "user": {

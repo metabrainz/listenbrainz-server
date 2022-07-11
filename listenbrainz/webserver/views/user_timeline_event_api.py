@@ -525,7 +525,6 @@ def get_listen_events(
     for listen in listens:
         try:
             listen_dict = listen.to_api()
-            listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
             api_listen = APIListen(**listen_dict)
             events.append(APITimelineEvent(
                 event_type=UserTimelineEventType.LISTEN,

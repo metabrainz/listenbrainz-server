@@ -274,17 +274,11 @@ export default class SpotifyPlayer
   };
 
   datasourceRecordsListens = (): boolean => {
-    const { spotifyUser } = this.props;
-    const permissionsRequiredForScrobbling = [
-      "user-read-currently-playing",
-      "user-read-recently-played",
-    ];
-    return (
-      difference(
-        permissionsRequiredForScrobbling,
-        spotifyUser?.permission ?? []
-      ).length === 0
-    );
+    // Starting 2022 we realized tracks played through BrainzPlayer + Spotify
+    // don't appear in the Spotify listening history anymore
+    // and consequently don't appear in LB user's listens.
+    // From here onwards we submit listens ourselves and hope there are no duplicates…
+    return false;
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {
@@ -474,10 +468,15 @@ export default class SpotifyPlayer
       onPlayerPausedChange(paused);
     }
 
+    if (!current_track) {
+      // Assume we got a state update from another device, and don't try to do anything
+      // which could overwrite the user's action (like playing next song with this 'device')
+      return;
+    }
     // How do we accurately detect the end of a song?
     // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
     if (position === 0 && paused === true) {
-      // Track finished, play next track
+      // Track finished or skipped, play next track
       this.debouncedOnTrackEnd();
       return;
     }
@@ -508,7 +507,7 @@ export default class SpotifyPlayer
 
       this.setState({
         durationMs: duration,
-        currentSpotifyTrack: current_track,
+        currentSpotifyTrack: current_track ?? undefined,
       });
       return;
     }
