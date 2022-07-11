@@ -47,7 +47,7 @@ def get_recordings(table: str, number_of_results: int):
                  , release_mbid
         ), ranked_stats as (
             SELECT user_id
-                 , any_recording_name AS recording_name
+                 , any_recording_name AS track_name
                  , recording_mbid
                  , any_release_name AS release_name
                  , release_mbid
@@ -62,11 +62,11 @@ def get_recordings(table: str, number_of_results: int):
                     collect_list(
                         struct(
                             listen_count
-                          , any_recording_name AS track_name
+                          , track_name
                           , recording_mbid
-                          , any_artist_name AS artist_name
+                          , artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids
-                          , any_release_name AS release_name
+                          , release_name
                           , release_mbid
                         )
                     )
