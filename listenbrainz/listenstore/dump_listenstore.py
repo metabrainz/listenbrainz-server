@@ -341,7 +341,9 @@ class DumpListenStore:
                           , user_id
                           , artist_credit_id
                           , artist_mbids::TEXT[] AS m_artist_credit_mbids
-                          , data->'track_metadata'->'additional_info'->>'artist_mbids' AS l_artist_credit_mbids
+                          -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
+                          -- here and let psycopg2 adapt it to a python list which is what we want anyway
+                          , data->'track_metadata'->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
                           , artist_credit_name AS m_artist_name
                           , data->'track_metadata'->>'artist_name' AS l_artist_name
                           , release_name AS m_release_name
