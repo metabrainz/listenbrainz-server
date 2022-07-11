@@ -13,7 +13,7 @@ setproctitle == 1.2.2
 markupsafe == 2.1.1
 psycopg2-binary == 2.9.3
 python-dateutil == 2.8.2
-ujson == 1.35
+ujson == 5.4.0
 redis == 4.3.3
 yattag == 1.14.0
 xmltodict == 0.13.0
@@ -22,7 +22,7 @@ pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v2.6.1
 spotipy == 2.19.0
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@v-2021-02-10.0
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2022-06-30
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2022-07-11
 PyYAML==6.0
 eventlet == 0.33.1
 uWSGI == 2.0.20
