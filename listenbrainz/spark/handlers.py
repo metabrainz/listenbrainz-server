@@ -67,7 +67,8 @@ def handle_couchdb_data_end(message):
     if not database:
         return
     try:
-        couchdb.delete_database(database)
+        # the prefix in the database name is the first group of regex
+        couchdb.delete_database(database[1])
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
