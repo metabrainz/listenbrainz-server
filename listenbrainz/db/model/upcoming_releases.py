@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum
-from datetime import datetime
-from typing import List
+from datetime import date
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -32,7 +32,7 @@ class UpcomingRelease(BaseModel):
     """This model contains all of the information needed for one upcoming/recent release"""
 
     # The release date for this release
-    date: datetime
+    release_date: date
 
     # The MBID for this release
     release_mbid: uuid.UUID
@@ -47,10 +47,26 @@ class UpcomingRelease(BaseModel):
     artist_mbids: List[uuid.UUID]
 
     # The release group for this release
-    release_group: uuid.UUID
+    release_group_mbid: uuid.UUID
 
     # The release group's primary type
-    release_group_primary_type: ReleaseGroupPrimaryType
+    release_group_primary_type: Optional[ReleaseGroupPrimaryType]
 
     # The release group's secondary type
-    release_group_secondary_type: ReleaseGroupSecondaryType
+    release_group_secondary_type: Optional[ReleaseGroupSecondaryType]
+
+    def to_dict(self):
+        """Convert this model to a dict for easy jsonification"""
+
+        release = dict(self)
+        release["release_date"] = release["release_date"].strftime("%Y-%m-%d")
+        if release["release_group_primary_type"] is None:
+            del release["release_group_primary_type"]
+        else:
+            release["release_group_primary_type"] = release["release_group_primary_type"].value
+        if release["release_group_secondary_type"] is None:
+            del release["release_group_secondary_type"]
+        else:
+            release["release_group_secondary_type"] = release["release_group_secondary_type"].value
+
+        return release

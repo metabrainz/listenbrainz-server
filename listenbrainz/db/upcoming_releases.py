@@ -1,14 +1,14 @@
-from datetime import date
+from datetime import date, timedelta
 import psycopg2
 import psycopg2.extras
 
-from listenbrainz.db.model.upcoming_releases import UpcomingReleases
+from listenbrainz.db.model.upcoming_releases import UpcomingRelease
 from typing import List
 from flask import current_app
 
 
 
-def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window_days: int) -> List[UpcomingReleases]:
+def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window_days: int) -> List[UpcomingRelease]:
     """ Fetch upcoming and recent releases from the MusicBrainz DB with a given window that is days number
         of days into the past and days number of days into the future.
 
@@ -25,23 +25,24 @@ def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window
     if release_date_window_days > 30 or release_date_window_days < 1:
         release_date_window_days = 30
 
-    from_date = pivot_release_date + datetime.timedelta(days=-30)
-    to_date = pivot_release_date + datetime.timedelta(days=30)
+    from_date = pivot_release_date + timedelta(days=-30)
+    to_date = pivot_release_date + timedelta(days=30)
 
     query = """ SELECT release_mbid
                      , release_name
-                     , date
+                     , release_group_mbid
+                     , release_date 
                      , artist_credit_name
                      , artist_mbids
-                     , release_group_primary_type AS primary_type
-                     , release_group_secondary_type AS secondary_type
+                     , release_group_primary_type
+                     , release_group_secondary_type
                   FROM (
                         SELECT DISTINCT rl.gid AS release_mbid
-                                      , rg.id AS release_group_id
+                                      , rg.gid AS release_group_mbid
                                       , rl.name AS release_name
                                       , make_date(rgm.first_release_date_year,
                                                   rgm.first_release_date_month,
-                                                  rgm.first_release_date_day) AS date
+                                                  rgm.first_release_date_day) AS release_date
                                       , ac.name AS artist_credit_name
                                       , array_agg(distinct a.gid) AS artist_mbids
                                       , rgpt.name AS release_group_primary_type
@@ -73,20 +74,22 @@ def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window
                                                  rgm.first_release_date_month,
                                                  rgm.first_release_date_day) <= %s
                               GROUP BY rg.id
-                                     , date
+                                     , release_date
                                      , release_mbid
                                      , release_name
-                                     , date
+                                     , release_date
                                      , artist_credit_name
                                      , release_group_primary_type
                                      , release_group_secondary_type
                         ) AS q
                   WHERE q.rnum = 1
-               ORDER BY date
+               ORDER BY release_date
                       , artist_credit_name
                       , release_name"""
 
+    psycopg2.extras.register_uuid()
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             curs.execute(query, (from_date, to_date))
-            return [UpcomingReleases(**dict(row)) for row in curs.fetchall()]
+            row = curs.fetchone()
+            return [UpcomingRelease(**dict(row)) for row in curs.fetchall()]
