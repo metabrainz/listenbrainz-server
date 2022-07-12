@@ -51,7 +51,15 @@ from listenbrainz.db import couchdb
 SITEWIDE_STATS_USER_ID = 15753
 
 
-def insert_stats_in_couchdb(database, from_ts, to_ts, values):
+def insert_stats_in_couchdb(database: str, from_ts: int, to_ts: int, values: list[dict]):
+    """ Insert stats in couchdb.
+
+        Args:
+            database: the name of the database to insert the stat in
+            from_ts: the start of the time period for which the stat is
+            to_ts: the end of the time period for which the stat is
+            values: list with each item as stat for 1 user
+    """
     with start_span(op="processing", description="add _id, from_ts, to_ts and last_updated to docs"):
         for doc in values:
             doc["_id"] = str(doc["user_id"])
@@ -63,6 +71,14 @@ def insert_stats_in_couchdb(database, from_ts, to_ts, values):
 
 
 def get_stats_from_couchdb(user_id, stats_range, stats_type) -> Optional[StatApi[EntityRecord]]:
+    """ Retrieve stats for the given user, stats range and stats type.
+
+        Args:
+            user_id: ListenBrainz id of the user
+            stats_range: time period to retrieve stats for
+            stats_type: the stat to retrieve
+
+    """
     prefix = f"{stats_type}_{stats_range}"
     try:
         data = couchdb.fetch_data(prefix, user_id)

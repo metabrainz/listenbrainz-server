@@ -35,12 +35,11 @@ def list_databases(prefix: str) -> list[str]:
     """ List all couchdb database whose name starts with the given prefix
     sorted in the descending order of creation.
 
-    This method is useful because we name
-        Consider statistics, we generate those daily and create a new database each time
-    for each stat daily. After statistics for the day have been inserted, we want to
-    get rid of the older database for that stat. This method looks up all the databases
-    whose name starts with the stat name and then deletes all of those except the latest
-    one.
+    Consider statistics, we generate those daily and create a new database each time for each
+    stat daily. We name databases as `prefix_YYYYMMDD` where prefix describes the stat name and
+    YYYYMMDD is the date. After statistics for the day have been inserted, we want to get rid
+    of the older database for that stat. This method looks up all the databases whose name starts
+    with the given prefix.
     """
     databases_url = f"{get_base_url()}/_all_dbs"
     response = requests.get(databases_url)
@@ -93,7 +92,7 @@ def fetch_data(prefix: str, user_id: int):
     return None
 
 
-def insert_data(database: str, data):
+def insert_data(database: str, data: list[dict]):
     """ Insert the given data into the specified database. """
     with start_span(op="serializing", description="serialize data to json"):
         docs = ujson.dumps({"docs": data})
