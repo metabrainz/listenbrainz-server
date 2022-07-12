@@ -100,7 +100,6 @@ class RequestConsumer:
             avg_size_of_message = 0
             logger.warning("No messages calculated", exc_info=True)
 
-        logger.info("Done!")
         logger.info("Number of messages sent: {}".format(num_of_messages))
         logger.info("Average size of message: {} bytes".format(avg_size_of_message))
 
