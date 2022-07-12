@@ -59,39 +59,6 @@ class UserEntityTestCase(StatsTestCase):
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='all_time',
                                                 from_date=from_date, to_date=to_date, message_type="user_entity")
 
-    def test_create_messages_recordings(self):
-        """ Test to check if the number of recordings are clipped to top 1000 """
-        recordings = []
-        for i in range(0, 2000):
-            recordings.append({
-                'artist_name': 'artist_{}'.format(i),
-                'artist_mbids': [str(uuid.uuid4())],
-                'release_name': 'release_{}'.format(i),
-                'release_mbid': str(uuid.uuid4()),
-                'track_name': 'recording_{}'.format(i),
-                'recording_mbid': str(uuid.uuid4()),
-                'listen_count': i
-            })
-
-        mock_result = MagicMock()
-        mock_result.asDict.return_value = {
-            'user_id': 1,
-            'recordings': recordings
-        }
-
-        messages = entity.create_messages([mock_result], 'recordings', 'all_time',
-                                          datetime.now(), datetime.now(), "user_entity")
-
-        message = next(messages)
-        user_data = message["data"][0]
-        received_list = user_data["data"]
-        expected_list = recordings[:1000]
-        self.assertCountEqual(received_list, expected_list)
-
-        received_count = user_data['count']
-        expected_count = 2000
-        self.assertEqual(received_count, expected_count)
-
     def test_skip_incorrect_artists_stats(self):
         """ Test to check if entries with incorrect data is skipped for top user artists """
         with open(self.path_to_data_file('user_top_artists_incorrect.json')) as f:
