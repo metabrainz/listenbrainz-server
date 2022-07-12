@@ -69,7 +69,7 @@ def pin_recording_for_user():
         current_app.logger.error("Error while inserting pinned track record: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
-    return jsonify({"pinned_recording": _pinned_recording_to_api(recording_to_pin_with_id)})
+    return jsonify({"pinned_recording": recording_to_pin_with_id.to_api()})
 
 
 @pinned_recording_api_bp.route("/pin/unpin", methods=["POST", "OPTIONS"])
@@ -192,7 +192,7 @@ def get_pins_for_user(user_name):
         raise APIInternalServerError("Something went wrong. Please try again.")
 
     pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
-    pinned_recordings = [_pinned_recording_to_api(pin) for pin in pinned_recordings]
+    pinned_recordings = [pin.to_api() for pin in pinned_recordings]
     total_count = db_pinned_rec.get_pin_count_for_user(user_id=user["id"])
 
     return jsonify(
@@ -265,7 +265,7 @@ def get_pins_for_user_following(user_name):
 
     pinned_recordings = db_pinned_rec.get_pins_for_user_following(user_id=user["id"], count=count, offset=offset)
     pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
-    pinned_recordings = [_pinned_recording_to_api(pin) for pin in pinned_recordings]
+    pinned_recordings = [pin.to_api() for pin in pinned_recordings]
 
     return jsonify(
         {
@@ -275,13 +275,3 @@ def get_pins_for_user_following(user_name):
             "user_name": user_name,
         }
     )
-
-
-def _pinned_recording_to_api(pinnedRecording: PinnedRecording) -> dict:
-    pin = pinnedRecording.dict()
-    pin["created"] = int(pin["created"].timestamp())
-    pin["pinned_until"] = int(pin["pinned_until"].timestamp())
-    del pin["user_id"]
-    if pin["user_name"] is None:
-        del pin["user_name"]
-    return pin
