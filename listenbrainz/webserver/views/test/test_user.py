@@ -1,14 +1,16 @@
+import json
 import logging
 import time
 from unittest import mock
 
 import ujson
 from flask import url_for
+from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
 
-from listenbrainz.db import external_service_oauth as db_oauth
+from listenbrainz.db import external_service_oauth as db_oauth, timescale
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import timescale_connection
@@ -259,3 +261,56 @@ class UserViewsTestCase(IntegrationTestCase):
             json=data,
         )
         self.assert400(response, "Reason must be a string.")
+
+    def test_user_pins(self):
+        with timescale.engine.connect() as connection:
+            connection.execute(text("""
+                INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
+                                                   artist_mbids, artist_credit_name, recording_name)
+                 VALUES (
+                      204
+                    , '00000737-3a59-4499-b30a-31fe2464555d'
+                    , '5b24fbab-c58f-4c37-a59d-ab232e2d98c4'
+                    , 'Batman Returns'
+                    , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'
+                    , 'Danny Elfman'
+                    , 'The Final Confrontation, Part 1'
+                );
+                INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+                 VALUES (
+                    'b7ffd2af-418f-4be2-bdd1-22f8b48613da'
+                  , '00000737-3a59-4499-b30a-31fe2464555d'
+                  , 'exact_match'
+                );
+            """))
+
+        pinned_rec = {
+            "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
+            "recording_mbid": "00000737-3a59-4499-b30a-31fe2464555d",
+            "blurb_content": "Amazing first recording"
+        }
+        response = self.client.post(
+            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            data=json.dumps(pinned_rec),
+            headers={"Authorization": f"Token {self.user.auth_token}"},
+            content_type="application/json",
+        )
+        self.assert200(response)
+        submitted_pin = response.json["pinned_recording"]
+        submitted_pin["track_metadata"] = {
+            "track_name": "The Final Confrontation, Part 1",
+            "artist_name": "Danny Elfman",
+            "release_name": "Batman Returns",
+            "additional_info": {
+                "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
+                "recording_mbid": "00000737-3a59-4499-b30a-31fe2464555d",
+                "release_mbid": "5b24fbab-c58f-4c37-a59d-ab232e2d98c4",
+                "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"]
+            }
+        }
+
+        response = self.client.get(url_for('user.pins', user_name=self.user.musicbrainz_id))
+        self.assert200(response)
+
+        props = json.loads(self.get_context_variable("props"))
+        self.assertEqual(props["pins"], [submitted_pin])
