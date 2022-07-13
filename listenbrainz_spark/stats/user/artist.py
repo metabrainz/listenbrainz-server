@@ -4,12 +4,13 @@ from data.model.user_artist_stat import ArtistRecord
 from listenbrainz_spark.stats import run_query
 
 
-def get_artists(table: str) -> Iterator[ArtistRecord]:
+def get_artists(table: str, number_of_results: int) -> Iterator[ArtistRecord]:
     """ Get artist information (artist_name, artist_credit_id etc) for every user
         ordered by listen count
 
         Args:
             table: name of the temporary table.
+            number_of_results: number of top results to keep per user.
 
         Returns:
             iterator (iter): an iterator over result
@@ -35,19 +36,27 @@ def get_artists(table: str) -> Iterator[ArtistRecord]:
           GROUP BY user_id
                  , lower(artist_name)
                  , artist_credit_mbids
+        ), ranked_stats as (
+            SELECT user_id
+                 , any_artist_name AS artist_name
+                 , artist_credit_mbids
+                 , listen_count
+                 , row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rank
+              FROM intermediate_table
         )
         SELECT user_id
              , sort_array(
                     collect_list(
                         struct(
                             listen_count
-                          , any_artist_name AS artist_name
+                          , artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids
                         )
                     )
                     , false
                ) as artists
-          FROM intermediate_table
+          FROM ranked_stats
+         WHERE rank < {number_of_results}
       GROUP BY user_id 
     """)
 
