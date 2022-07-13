@@ -29,7 +29,7 @@ def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window
     query = """ SELECT release_mbid
                      , release_name
                      , release_group_mbid
-                     , release_date 
+                     , release_date
                      , artist_credit_name
                      , artist_mbids
                      , release_group_primary_type
@@ -47,7 +47,8 @@ def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window
                                       , rgst.name AS release_group_secondary_type
                                       , row_number() OVER (PARTITION BY rg.id ORDER BY make_date(rgm.first_release_date_year,
                                                                                                  rgm.first_release_date_month,
-                                                                                                 rgm.first_release_date_day)) AS rnum
+                                                                                                 rgm.first_release_date_day)
+                                                                                                ) AS rnum
                                   FROM release rl
                                   JOIN release_group rg
                                     ON rl.release_group = rg.id
