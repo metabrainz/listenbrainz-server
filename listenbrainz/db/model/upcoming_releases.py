@@ -22,7 +22,7 @@ class ReleaseGroupSecondaryType(Enum):
     AUDIOBOOK = "Audiobook"
     LIVE = "Live"
     REMIX = "Remix"
-    DJMIX= "DJ-mix"
+    DJMIX = "DJ-mix"
     MIXTAPESTREET = "Mixtape/Street"
     DEMO = "Demo"
     AUDIO = "drama Audio drama"

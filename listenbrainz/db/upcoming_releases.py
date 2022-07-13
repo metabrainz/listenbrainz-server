@@ -7,7 +7,6 @@ from typing import List
 from flask import current_app
 
 
-
 def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window_days: int) -> List[UpcomingRelease]:
     """ Fetch upcoming and recent releases from the MusicBrainz DB with a given window that is days number
         of days into the past and days number of days into the future.
@@ -20,7 +19,6 @@ def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window
         Returns:
             A list of UpcomingReleases objects
     """
-
 
     if release_date_window_days > 30 or release_date_window_days < 1:
         release_date_window_days = 30
