@@ -84,16 +84,15 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   /** On page load, hit the API to get the user's most recent playing-now (if any) */
   React.useEffect(() => {
     // Only run this if no playing-now was present in the props on load
-    if (!currentListen) {
+    if (!currentListen || !recordingData) {
       const fetchPlayingNow = async () => {
         if (!recordingData && currentUser) {
           try {
-            // lookup playing_now from API
-            const newPlayingNow = await APIService.getPlayingNowForUser(
-              currentUser.name
-            );
-            if (newPlayingNow) {
-              await onNewPlayingNow(newPlayingNow);
+            const propOrFetchedPlayingNow =
+              currentListen ??
+              (await APIService.getPlayingNowForUser(currentUser.name));
+            if (propOrFetchedPlayingNow) {
+              await onNewPlayingNow(propOrFetchedPlayingNow);
             }
           } catch (error) {
             props.newAlert(
