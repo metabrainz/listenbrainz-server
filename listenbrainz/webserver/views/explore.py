@@ -15,6 +15,7 @@ def huesound():
         props=ujson.dumps({})
     )
 
+
 @explore_bp.route("/similar-users/")
 def similar_users():
     """ Show all of the users with the highest similarity in order to make
@@ -27,6 +28,7 @@ def similar_users():
         "explore/similar-users.html",
         similar_users=similar_users
     )
+
 
 @explore_bp.route("/upcoming-releases/")
 def upcoming_releases():

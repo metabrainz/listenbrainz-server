@@ -25,8 +25,8 @@ def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window
     if release_date_window_days > 30 or release_date_window_days < 1:
         release_date_window_days = 30
 
-    from_date = pivot_release_date + timedelta(days=-30)
-    to_date = pivot_release_date + timedelta(days=30)
+    from_date = pivot_release_date + timedelta(days=-release_date_window_days)
+    to_date = pivot_release_date + timedelta(days=release_date_window_days)
 
     query = """ SELECT release_mbid
                      , release_name

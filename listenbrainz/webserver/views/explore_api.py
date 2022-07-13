@@ -1,5 +1,5 @@
 import datetime
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 from listenbrainz.db.upcoming_releases import get_sitewide_upcoming_releases
 from listenbrainz.webserver.decorators import crossdomain
@@ -9,10 +9,12 @@ from listenbrainz.db.color import get_releases_for_color
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
 
-
+DEFAULT_NUMBER_OF_UPCOMING_RELEASE_DAYS = 14
+MAX_NUMBER_OF_UPCOMING_RELEASE_DAYS = 30
 DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
 DEFAULT_CACHE_EXPIRE_TIME = 3600 * 24  # 1 day
 HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
+
 explore_api_bp = Blueprint('explore_api_v1', __name__)
 
 
@@ -21,12 +23,43 @@ explore_api_bp = Blueprint('explore_api_v1', __name__)
 @ratelimit()
 def get_upcoming_releases():
     """
-    This endpoint fetches upcoming and recently released releases. 
+    This endpoint fetches upcoming and recently released releases and returns a list of:
 
+    .. code-block:: json
+        {
+            "artist_credit_name": "R\u00f6yksopp",
+            "artist_mbids": [
+              "1c70a3fc-fa3c-4be1-8b55-c3192db8a884"
+            ],
+            "release_date": "2022-04-29",
+            "release_group_mbid": "4f1c579a-8a9c-4f96-92ae-befcdf3e0d32",
+            "release_group_primary_type": "Album",
+            "release_mbid": "1f1db316-8361-4a40-9633-550b259642f5",
+            "release_name": "Profound Mysteries"
+        }
+
+    :param release_date: Recent releases and upcoming releases will be shown around this pivot date.
+                         Must be in YYYY-MM-DD format
+    :param days: The number of days of recent releases/upcoming releases to show. Max 30 days.
     :statuscode 200: fetch succeeded
+    :statuscode 400: invalid date or number of days passed.
+    :resheader Content-Type: *application/json*
     """
 
-    return jsonify([ r.to_dict() for r in get_sitewide_upcoming_releases(datetime.date.today(), 30)])
+    days = _parse_int_arg("days", DEFAULT_NUMBER_OF_UPCOMING_RELEASE_DAYS)
+    if days < 1 or days > MAX_NUMBER_OF_UPCOMING_RELEASE_DAYS:
+        raise APIBadRequest(f"days must be between 1 and {MAX_NUMBER_OF_UPCOMING_RELEASE_DAYS}.")
+
+    release_date = request.args.get("release_date", "")
+    if release_date != "":
+        try:
+            release_date = datetime.datetime.strptime(release_date, "%Y-%m-%d")
+        except ValueError as err:
+            raise APIBadRequest("Cannot parse date. Must be in YYYY-MM-DD format.")
+    else:
+        release_date = datetime.date.today()
+
+    return jsonify([r.to_dict() for r in get_sitewide_upcoming_releases(release_date, days)])
 
 
 @explore_api_bp.route("/<color>", methods=["GET", "OPTIONS"])
