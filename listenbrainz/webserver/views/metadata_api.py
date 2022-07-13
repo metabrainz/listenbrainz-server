@@ -3,7 +3,6 @@ from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify, current_app
 
 from listenbrainz.db.metadata import get_metadata_for_recording
-from listenbrainz.db.upcoming_releases import get_sitewide_upcoming_releases
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
 from listenbrainz.mbid_mapping_writer.mbid_mapper_metadata_api import MBIDMapperMetadataAPI
@@ -159,16 +158,3 @@ def get_mbid_mapping():
         return process_results(fuzzy_result, metadata, incs)
 
     return jsonify({})
-
-
-@metadata_bp.route("/upcoming-releases/", methods=["GET", "OPTIONS"])
-@crossdomain
-@ratelimit()
-def get_upcoming_releases():
-    """
-    This endpoint fetches upcoming and recently released releases. 
-
-    :statuscode 200: fetch succeeded
-    """
-
-    return jsonify([ r.to_dict() for r in get_sitewide_upcoming_releases(datetime.date.today(), 30)])
