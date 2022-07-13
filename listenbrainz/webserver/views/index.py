@@ -261,6 +261,7 @@ def _get_user_count():
 def similar_users():
     return redirect(url_for("explore.similar_users"))
 
+
 @index_bp.route("/listens-offline/")
 def listens_offline():
     """
