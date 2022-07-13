@@ -1,7 +1,7 @@
 import datetime
 from flask import Blueprint, jsonify, request
 
-from listenbrainz.db.upcoming_releases import get_sitewide_upcoming_releases
+import listenbrainz.db.upcoming_releases
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.views.api_tools import _parse_int_arg
@@ -53,13 +53,13 @@ def get_upcoming_releases():
     release_date = request.args.get("release_date", "")
     if release_date != "":
         try:
-            release_date = datetime.datetime.strptime(release_date, "%Y-%m-%d")
+            release_date = datetime.datetime.strptime(release_date, "%Y-%m-%d").date()
         except ValueError as err:
             raise APIBadRequest("Cannot parse date. Must be in YYYY-MM-DD format.")
     else:
         release_date = datetime.date.today()
 
-    return jsonify([r.to_dict() for r in get_sitewide_upcoming_releases(release_date, days)])
+    return jsonify([r.to_dict() for r in listenbrainz.db.upcoming_releases.get_sitewide_upcoming_releases(release_date, days)])
 
 
 @explore_api_bp.route("/<color>", methods=["GET", "OPTIONS"])
