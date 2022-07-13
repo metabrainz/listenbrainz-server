@@ -322,3 +322,6 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.metadata_api import metadata_bp
     app.register_blueprint(metadata_bp, url_prefix=API_PREFIX+'/metadata')
+
+    from listenbrainz.webserver.views.explore import explore_bp
+    app.register_blueprint(explore_bp, url_prefix=API_PREFIX+'/explore')
