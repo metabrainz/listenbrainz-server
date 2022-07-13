@@ -513,6 +513,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               aria-labelledby="headingTwo"
             >
               <div className="panel-body">
+                <TagsComponent tags={metadata?.tag?.release_group} />
                 <OpenInMusicBrainzButton
                   entityType="release"
                   entityMBID={recordingData?.release_mbid}
