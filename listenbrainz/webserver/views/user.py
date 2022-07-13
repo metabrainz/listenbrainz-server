@@ -123,9 +123,7 @@ def profile(user_name):
 
     pin = get_current_pin_for_user(user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items([pin])[0].dict()
-        pin["created"] = int(pin["created"].timestamp())
-        pin["pinned_until"] = int(pin["pinned_until"].timestamp())
+        pin = fetch_track_metadata_for_items([pin])[0].to_api()
 
     props = {
         "user": {
@@ -375,7 +373,7 @@ def pins(user_name: str):
     }
 
     pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
-    pins = [dict(pin) for pin in fetch_track_metadata_for_items(pins)]
+    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(pins)]
     total_count = get_pin_count_for_user(user_id=user.id)
 
     props = {
