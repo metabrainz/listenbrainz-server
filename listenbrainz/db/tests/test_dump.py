@@ -68,7 +68,7 @@ class DumpTestCase(DatabaseTestCase):
             db_dump.copy_table(
                 cursor=connection.connection.cursor(),
                 location=self.tempdir,
-                columns='id, created',
+                columns=['id', 'created'],
                 table_name='data_dump',
             )
         dumps = db_dump.get_dump_entries()

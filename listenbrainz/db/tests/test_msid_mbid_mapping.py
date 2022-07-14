@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import text
 
 from listenbrainz import messybrainz
@@ -7,6 +9,19 @@ from listenbrainz.db import timescale as ts
 
 
 class MappingTestCase(TimescaleTestCase):
+
+    def test_msid_mbid_model(self):
+        with self.assertRaisesRegex(ValueError, 'at least one of recording_msid or recording_mbid should be specified'):
+            model = MsidMbidModel(recording_mbid=None, recording_msid=None)
+
+        with self.assertRaisesRegex(ValueError, "(?s)recording_msid.*must be a valid UUID"):
+            model = MsidMbidModel(recording_msid='', recording_mbid=str(uuid.uuid4()))
+
+        with self.assertRaisesRegex(ValueError, "(?s)recording_mbid.*must be a valid UUID"):
+            model = MsidMbidModel(recording_msid=str(uuid.uuid4()), recording_mbid='')
+
+        # test that 2 valid uuids doesn't raise error
+        model = MsidMbidModel(recording_msid=str(uuid.uuid4()), recording_mbid=str(uuid.uuid4()))
 
     def insert_recording_in_mapping(self, recording, match_type):
         with ts.engine.connect() as connection:

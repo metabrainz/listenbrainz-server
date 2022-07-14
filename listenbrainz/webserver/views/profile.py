@@ -10,6 +10,7 @@ from werkzeug.exceptions import NotFound, BadRequest
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
@@ -22,7 +23,9 @@ from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 from listenbrainz.webserver.login import api_login_required
+from listenbrainz.webserver.forms import TimezoneForm
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
+
 
 profile_bp = Blueprint("profile", __name__)
 
@@ -47,6 +50,35 @@ def reset_token():
 
     return render_template(
         "user/resettoken.html",
+        form=form,
+    )
+
+
+@profile_bp.route("/select_timezone/", methods=["GET", "POST"])
+@login_required
+def select_timezone():
+    pg_timezones = db_usersetting.get_pg_timezone()
+    form = TimezoneForm()
+    form.timezone.choices = [(zone_name, zone_name) for (zone_name, offset) in pg_timezones]
+    user_settings = db_usersetting.get(current_user.id)
+    user_timezone = user_settings['timezone_name']
+    if form.validate_on_submit():
+        try:
+            update_timezone = str(form.timezone.data)
+            db_usersetting.set_timezone(current_user.id, update_timezone)
+            flash.info("Your timezone has been saved.")
+        except DatabaseException:
+            flash.error("Something went wrong! Unable to update timezone right now.")
+        return redirect(url_for("profile.info"))
+
+    if form.errors:
+        flash.error('Unable to update timezone.')
+        return redirect(url_for('profile.info'))
+
+    return render_template(
+        "profile/selecttimezone.html",
+        user_timezone=user_timezone,
+        pg_timezones=pg_timezones,
         form=form,
     )
 
@@ -77,9 +109,11 @@ def reset_latest_import_timestamp():
 @login_required
 def info():
 
+    user_setting = db_usersetting.get(current_user.id)
     return render_template(
         "profile/info.html",
-        user=current_user
+        user=current_user,
+        user_setting=user_setting,
     )
 
 
@@ -87,6 +121,8 @@ def info():
 @login_required
 def import_data():
     """ Displays the import page to user, giving various options """
+    user = db_user.get(current_user.id, fetch_email=True)
+    user_has_email = user["email"] is not None
 
     # Return error if LASTFM_API_KEY is not given in config.py
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
@@ -110,6 +146,7 @@ def import_data():
     return render_template(
         "user/import.html",
         user=current_user,
+        user_has_email=user_has_email,
         props=ujson.dumps(props),
     )
 

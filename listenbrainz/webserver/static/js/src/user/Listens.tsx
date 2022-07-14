@@ -13,6 +13,7 @@ import { io, Socket } from "socket.io-client";
 import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
+  faCompactDisc,
   faPencilAlt,
   faThumbtack,
   faTrashAlt,
@@ -36,10 +37,10 @@ import {
   getListenablePin,
   getRecordingMBID,
   getArtistMBIDs,
-  getReleaseMBID,
   getReleaseGroupMBID,
   getTrackName,
   getArtistName,
+  getRecordingMSID,
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
@@ -62,7 +63,8 @@ export interface ListensState {
   loading: boolean;
   nextListenTs?: number;
   previousListenTs?: number;
-  recordingFeedbackMap: RecordingFeedbackMap;
+  recordingMsidFeedbackMap: RecordingFeedbackMap;
+  recordingMbidFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   recordingToReview?: Listen;
   dateTimePickerValue: Date | Date[];
@@ -102,7 +104,8 @@ export default class Listens extends React.Component<
       previousListenTs: props.listens?.[0]?.listened_at,
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
-      recordingFeedbackMap: {},
+      recordingMsidFeedbackMap: {},
+      recordingMbidFeedbackMap: {},
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
         : new Date(Date.now()),
@@ -117,7 +120,8 @@ export default class Listens extends React.Component<
   componentDidMount(): void {
     const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
-    const { APIService, currentUser } = this.context;
+    const { APIService } = this.context;
+    const { playingNowListen } = this.state;
     this.APIService = APIService;
 
     this.connectWebsockets();
@@ -139,6 +143,9 @@ export default class Listens extends React.Component<
             error?.toString()
           );
         });
+    }
+    if (playingNowListen) {
+      this.receiveNewPlayingNow(playingNowListen);
     }
     this.loadFeedback();
   }
@@ -209,7 +216,8 @@ export default class Listens extends React.Component<
       this.receiveNewListen(data);
     });
     this.socket.on("playing_now", (data: string) => {
-      this.receiveNewPlayingNow(data);
+      const playingNow = JSON.parse(data) as Listen;
+      this.receiveNewPlayingNow(playingNow);
     });
   };
 
@@ -241,10 +249,28 @@ export default class Listens extends React.Component<
     }
   };
 
-  receiveNewPlayingNow = (newPlayingNow: string): void => {
-    const playingNow = JSON.parse(newPlayingNow) as Listen;
-    playingNow.playing_now = true;
+  receiveNewPlayingNow = async (newPlayingNow: Listen): Promise<void> => {
+    const playingNow = newPlayingNow;
+    const { APIService } = this.context;
+    try {
+      const metadata = await APIService.lookupRecordingMetadata(
+        playingNow.track_metadata.track_name,
+        playingNow.track_metadata.artist_name,
+        false
+      );
+      playingNow.track_metadata.mbid_mapping = metadata as MbidMapping;
 
+      await this.loadFeedbackForNowPlaying(playingNow);
+    } catch (error) {
+      const { newAlert } = this.props;
+      if (newAlert) {
+        newAlert(
+          "danger",
+          "We could not load data for the now playing listen",
+          typeof error === "object" ? error.message : error
+        );
+      }
+    }
     this.setState({
       playingNowListen: playingNow,
     });
@@ -382,25 +408,29 @@ export default class Listens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, newAlert } = this.props;
+    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
-    let recordings = "";
+    let recording_msids = "";
+    let recording_mbids = "";
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
-        const recordingMsid = _.get(
-          listen,
-          "track_metadata.additional_info.recording_msid"
-        );
+        const recordingMsid = getRecordingMSID(listen);
         if (recordingMsid) {
-          recordings += `${recordingMsid},`;
+          recording_msids += `${recordingMsid},`;
+        }
+        const recordingMBID = getRecordingMBID(listen);
+        if (recordingMBID) {
+          recording_mbids += `${recordingMBID},`;
         }
       });
+
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recordings
+          recording_msids,
+          recording_mbids
         );
         return data.feedback;
       } catch (error) {
@@ -416,28 +446,100 @@ export default class Listens extends React.Component<
     return [];
   };
 
+  loadFeedbackForNowPlaying = async (listen: Listen): Promise<void> => {
+    const { newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
+    const recordingMBID = getRecordingMBID(listen);
+
+    if (!currentUser?.name || !recordingMBID) {
+      return;
+    }
+    try {
+      const data = await APIService.getFeedbackForUserForRecordings(
+        currentUser.name,
+        "",
+        recordingMBID
+      );
+      if (data.feedback.length) {
+        const { recordingMbidFeedbackMap } = this.state;
+        const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
+        const item = data.feedback[0];
+        newMbidFeedbackMap[item.recording_mbid] = item.score;
+        this.setState({ recordingMbidFeedbackMap: newMbidFeedbackMap });
+      }
+    } catch (error) {
+      if (newAlert) {
+        newAlert(
+          "danger",
+          "We could not load love/hate feedback",
+          typeof error === "object" ? error.message : error
+        );
+      }
+    }
+  };
+
   loadFeedback = async () => {
     const feedback = await this.getFeedback();
     if (!feedback) {
       return;
     }
-    const recordingFeedbackMap: RecordingFeedbackMap = {};
+    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
+    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
     feedback.forEach((fb: FeedbackResponse) => {
-      recordingFeedbackMap[fb.recording_msid] = fb.score;
+      if (fb.recording_msid) {
+        recordingMsidFeedbackMap[fb.recording_msid] = fb.score;
+      }
+      if (fb.recording_mbid) {
+        recordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
+      }
     });
-    this.setState({ recordingFeedbackMap });
+    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
   };
 
   updateFeedback = (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack
+    recordingMbid: string,
+    score: ListenFeedBack | RecommendationFeedBack,
+    recordingMsid?: string
   ) => {
-    const { recordingFeedbackMap } = this.state;
-    const newFeedbackMap = {
-      ...recordingFeedbackMap,
-      [recordingMsid]: score as ListenFeedBack,
-    };
-    this.setState({ recordingFeedbackMap: newFeedbackMap });
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
+    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
+
+    if (recordingMsid) {
+      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
+    }
+    if (recordingMbid) {
+      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
+    }
+    this.setState({
+      recordingMsidFeedbackMap: newMsidFeedbackMap,
+      recordingMbidFeedbackMap: newMbidFeedbackMap,
+    });
+  };
+
+  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
+    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
+
+    // first check whether the mbid has any feedback available
+    // if yes and the feedback is not zero, return it. if the
+    // feedback is zero or not the mbid is absent from the map,
+    // look for the feedback using the msid.
+
+    const recordingMbid = getRecordingMBID(listen);
+    const mbidFeedback = recordingMbid
+      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
+      : 0;
+
+    if (mbidFeedback) {
+      return mbidFeedback;
+    }
+
+    const recordingMsid = getRecordingMSID(listen);
+
+    return recordingMsid
+      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
+      : 0;
   };
 
   updateRecordingToPin = (recordingToPin: Listen) => {
@@ -448,13 +550,6 @@ export default class Listens extends React.Component<
     this.setState({ recordingToReview });
   };
 
-  getFeedbackForRecordingMsid = (
-    recordingMsid?: string | null
-  ): ListenFeedBack => {
-    const { recordingFeedbackMap } = this.state;
-    return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
-  };
-
   deleteListen = async (listen: Listen) => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -462,15 +557,12 @@ export default class Listens extends React.Component<
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
     if (isCurrentUser && currentUser?.auth_token) {
       const listenedAt = get(listen, "listened_at");
-      const recordingMSID = get(
-        listen,
-        "track_metadata.additional_info.recording_msid"
-      );
+      const recordingMsid = getRecordingMSID(listen);
 
       try {
         const status = await APIService.deleteListen(
           currentUser.auth_token,
-          recordingMSID,
+          recordingMsid,
           listenedAt
         );
         if (status === 200) {
@@ -577,6 +669,76 @@ export default class Listens extends React.Component<
     window.history.pushState(null, "", `?min_ts=${minTimestampInSeconds}`);
   };
 
+  getListenCard = (listen: Listen): JSX.Element => {
+    const { deletedListen } = this.state;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
+    const isCurrentUser =
+      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
+    const listenedAt = get(listen, "listened_at");
+    const recordingMSID = getRecordingMSID(listen);
+    const recordingMBID = getRecordingMBID(listen);
+    const artistMBIDs = getArtistMBIDs(listen);
+    const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
+    const releaseGroupMBID = getReleaseGroupMBID(listen);
+    const canDelete =
+      isCurrentUser && Boolean(listenedAt) && Boolean(recordingMSID);
+
+    const isListenReviewable =
+      Boolean(recordingMBID) ||
+      artistMBIDs?.length ||
+      Boolean(trackMBID) ||
+      Boolean(releaseGroupMBID);
+
+    /* eslint-disable react/jsx-no-bind */
+    const additionalMenuItems = (
+      <>
+        <ListenControl
+          text="Pin this recording"
+          icon={faThumbtack}
+          action={this.updateRecordingToPin.bind(this, listen)}
+          dataToggle="modal"
+          dataTarget="#PinRecordingModal"
+        />
+        {isListenReviewable && (
+          <ListenControl
+            text="Write a review"
+            icon={faPencilAlt}
+            action={this.updateRecordingToReview.bind(this, listen)}
+            dataToggle="modal"
+            dataTarget="#CBReviewModal"
+          />
+        )}
+        {canDelete && (
+          <ListenControl
+            text="Delete Listen"
+            icon={faTrashAlt}
+            action={this.deleteListen.bind(this, listen)}
+          />
+        )}
+      </>
+    );
+    const shouldBeDeleted = isEqual(deletedListen, listen);
+    /* eslint-enable react/jsx-no-bind */
+    return (
+      <ListenCard
+        key={`${listen.listened_at}-${getTrackName(listen)}-${
+          listen.track_metadata?.additional_info?.recording_msid
+        }-${listen.user_name}`}
+        showTimestamp
+        showUsername={false}
+        listen={listen}
+        currentFeedback={this.getFeedbackForListen(listen)}
+        updateFeedbackCallback={this.updateFeedback}
+        newAlert={newAlert}
+        className={`${listen.playing_now ? "playing-now " : ""}${
+          shouldBeDeleted ? "deleted " : ""
+        }`}
+        additionalMenuItems={additionalMenuItems}
+      />
+    );
+  };
+
   afterListensFetch() {
     this.setState({ loading: false });
     // Scroll to the top of the listens list
@@ -601,7 +763,6 @@ export default class Listens extends React.Component<
       dateTimePickerValue,
       recordingToPin,
       recordingToReview,
-      deletedListen,
       userPinnedRecording,
       playingNowListen,
     } = this.state;
@@ -609,8 +770,11 @@ export default class Listens extends React.Component<
     const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
+    let userPinnedRecordingFeedback: ListenFeedBack = 0;
     if (userPinnedRecording) {
-      allListenables = [getListenablePin(userPinnedRecording), ...listens];
+      const listenablePin = getListenablePin(userPinnedRecording);
+      allListenables = [listenablePin, ...listens];
+      userPinnedRecordingFeedback = this.getFeedbackForListen(listenablePin);
     }
 
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
@@ -622,48 +786,47 @@ export default class Listens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
-        <h3>Recent listens</h3>
+        {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
         <div className="row">
           <div className="col-md-4 col-md-push-8">
-            {playingNowListen && (
-              <ListenCard
-                key={`playing-now-${getTrackName(
-                  playingNowListen
-                )}-${getArtistName(playingNowListen)}`}
-                showTimestamp
-                showUsername={false}
-                listen={playingNowListen}
-                newAlert={newAlert}
-                className="playing-now"
-              />
-            )}
+            {playingNowListen && this.getListenCard(playingNowListen)}
             {userPinnedRecording && (
               <PinnedRecordingCard
                 userName={user.name}
                 pinnedRecording={userPinnedRecording}
                 isCurrentUser={currentUser?.name === user?.name}
-                currentFeedback={this.getFeedbackForRecordingMsid(
-                  userPinnedRecording?.recording_msid
-                )}
+                currentFeedback={userPinnedRecordingFeedback}
                 updateFeedbackCallback={this.updateFeedback}
                 removePinFromPinsList={() => {}}
                 newAlert={newAlert}
               />
             )}
             <ListenCountCard user={user} listenCount={listenCount} />
-            {user && (
-              <div
-                className="card hidden-xs hidden-sm"
-                style={{ paddingTop: "1.5em" }}
-              >
-                <UserSocialNetwork user={user} newAlert={newAlert} />
-              </div>
-            )}
+            {user && <UserSocialNetwork user={user} newAlert={newAlert} />}
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
-              <div className="lead text-center">
-                <p>No listens yet</p>
+              <div className="empty-listens">
+                <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
+                {currentUser?.name === user?.name ? (
+                  <div className="lead empty-text">Get listening</div>
+                ) : (
+                  <div className="lead empty-text">
+                    {user.name} hasn&apos;t listened to any songs yet.
+                  </div>
+                )}
+
+                {currentUser?.name === user?.name && (
+                  <div className="empty-action">
+                    Import <a href="/profile/import/">your listening history</a>{" "}
+                    from last.fm/libre.fm and track your listens by{" "}
+                    <a href="/profile/music-services/details/">
+                      connecting to a music streaming service
+                    </a>
+                    , or use <a href="/add-data/">one of these music players</a>{" "}
+                    to start submitting your listens.
+                  </div>
+                )}
               </div>
             )}
             {listens.length > 0 && (
@@ -683,87 +846,7 @@ export default class Listens extends React.Component<
                   ref={this.listensTable}
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
-                  {listens.map((listen) => {
-                    const isCurrentUser =
-                      Boolean(listen.user_name) &&
-                      listen.user_name === currentUser?.name;
-                    const listenedAt = get(listen, "listened_at");
-                    const recordingMSID = get(
-                      listen,
-                      "track_metadata.additional_info.recording_msid"
-                    );
-                    const recordingMBID = getRecordingMBID(listen);
-                    const artistMBIDs = getArtistMBIDs(listen);
-                    const trackMBID = get(
-                      listen,
-                      "track_metadata.additional_info.track_mbid"
-                    );
-                    const releaseGroupMBID = getReleaseGroupMBID(listen);
-                    const canDelete =
-                      isCurrentUser &&
-                      Boolean(listenedAt) &&
-                      Boolean(recordingMSID);
-
-                    const isListenReviewable =
-                      Boolean(recordingMBID) ||
-                      artistMBIDs?.length ||
-                      Boolean(trackMBID) ||
-                      Boolean(releaseGroupMBID);
-                    // All listens in this array should have either an MSID or MBID or both,
-                    // so we can assume we can pin them. Playing_now listens are displayed separately.
-                    /* eslint-disable react/jsx-no-bind */
-                    const additionalMenuItems = (
-                      <>
-                        <ListenControl
-                          text="Pin this recording"
-                          icon={faThumbtack}
-                          action={this.updateRecordingToPin.bind(this, listen)}
-                          dataToggle="modal"
-                          dataTarget="#PinRecordingModal"
-                        />
-                        {isListenReviewable && (
-                          <ListenControl
-                            text="Write a review"
-                            icon={faPencilAlt}
-                            action={this.updateRecordingToReview.bind(
-                              this,
-                              listen
-                            )}
-                            dataToggle="modal"
-                            dataTarget="#CBReviewModal"
-                          />
-                        )}
-                        {canDelete && (
-                          <ListenControl
-                            text="Delete Listen"
-                            icon={faTrashAlt}
-                            action={this.deleteListen.bind(this, listen)}
-                          />
-                        )}
-                      </>
-                    );
-                    const shouldBeDeleted = isEqual(deletedListen, listen);
-                    /* eslint-enable react/jsx-no-bind */
-                    return (
-                      <ListenCard
-                        key={`${listen.listened_at}-${getTrackName(listen)}-${
-                          listen.track_metadata?.additional_info?.recording_msid
-                        }-${listen.user_name}`}
-                        showTimestamp
-                        showUsername={false}
-                        listen={listen}
-                        currentFeedback={this.getFeedbackForRecordingMsid(
-                          listen.track_metadata?.additional_info?.recording_msid
-                        )}
-                        updateFeedbackCallback={this.updateFeedback}
-                        newAlert={newAlert}
-                        className={`${
-                          listen.playing_now ? "playing-now " : ""
-                        }${shouldBeDeleted ? "deleted " : ""}`}
-                        additionalMenuItems={additionalMenuItems}
-                      />
-                    );
-                  })}
+                  {listens.map((listen) => this.getListenCard(listen))}
                 </div>
                 {listens.length < this.expectedListensPerPage && (
                   <h5 className="text-center">No more listens to show</h5>

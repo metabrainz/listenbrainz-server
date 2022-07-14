@@ -22,7 +22,8 @@ export type PlaylistItemCardProps = {
   removeTrackFromPlaylist: (track: JSPFTrack) => void;
   updateFeedbackCallback: (
     recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack
+    score: ListenFeedBack | RecommendationFeedBack,
+    recordingMbid?: string
   ) => void;
   newAlert: (
     alertType: AlertType,

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from unittest import mock
+from unittest.mock import call
 
 from flask import current_app
 
@@ -12,9 +13,9 @@ from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
                                                       UserMissingMusicBrainzDataJson)
-from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db import user as db_user
 from listenbrainz.db import stats as db_stats
+from listenbrainz.db import user as db_user
+from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
@@ -23,7 +24,7 @@ from listenbrainz.spark.handlers import (
     is_new_user_stats_batch, notify_artist_relation_import,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
-    notify_cf_recording_recommendations_generation)
+    cf_recording_recommendations_complete)
 from listenbrainz.webserver import create_app
 
 
@@ -365,8 +366,10 @@ class HandlersTestCase(DatabaseTestCase):
             )
         )
 
+    @mock.patch('listenbrainz.spark.troi_bot.get_followers_of_user')
+    @mock.patch('listenbrainz.spark.troi_bot.generate_playlist')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_notify_cf_recording_recommendations_generation(self, mock_send_mail):
+    def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_gen_playlist, mock_get_followers):
         with self.app.app_context():
             active_user_count = 10
             top_artist_user_count = 5
@@ -375,7 +378,13 @@ class HandlersTestCase(DatabaseTestCase):
 
             # testing, should not send a mail
             self.app.config['TESTING'] = True
-            notify_cf_recording_recommendations_generation({
+            self.app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token0", "fake_token1"]
+
+            mock_gen_playlist.return_value = "https://listenbrainz.org/playlist/97889d4d-1474-4a9b-925a-851148356f9d/"
+            mock_get_followers.side_effect = [[{"musicbrainz_id": "lucifer"}], [{"musicbrainz_id": "lucifer"}],
+                                              [{"musicbrainz_id": "lucifer"}], [{"musicbrainz_id": "lucifer"}]]
+
+            cf_recording_recommendations_complete({
                 'active_user_count': active_user_count,
                 'top_artist_user_count': top_artist_user_count,
                 'similar_artist_user_count': similar_artist_user_count,
@@ -383,9 +392,16 @@ class HandlersTestCase(DatabaseTestCase):
             })
             mock_send_mail.assert_not_called()
 
+            calls = [
+                call("recs-to-playlist", args=["lucifer", "top"], upload=True, token="fake_token1", created_for="lucifer"),
+                call("recs-to-playlist", args=["lucifer", "similar"], upload=True, token="fake_token1", created_for="lucifer"),
+                call("daily-jams", args=["lucifer"], upload=True, token="fake_token0", created_for="lucifer")
+            ]
+            mock_gen_playlist.assert_has_calls(calls)
+
             # in prod now, should send it
             self.app.config['TESTING'] = False
-            notify_cf_recording_recommendations_generation({
+            cf_recording_recommendations_complete({
                 'active_user_count': active_user_count,
                 'top_artist_user_count': top_artist_user_count,
                 'similar_artist_user_count': similar_artist_user_count,

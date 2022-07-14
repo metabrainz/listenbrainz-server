@@ -14,5 +14,6 @@ DROP TABLE IF EXISTS hide_user_timeline_event       CASCADE;
 DROP TABLE IF EXISTS reported_users                 CASCADE;
 DROP TABLE IF EXISTS pinned_recording               CASCADE;
 DROP TABLE IF EXISTS release_color                  CASCADE;
+DROP TABLE IF EXISTS user_setting                   CASCADE;
 
 COMMIT;
