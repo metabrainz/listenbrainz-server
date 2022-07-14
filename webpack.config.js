@@ -86,9 +86,9 @@ module.exports = function (env, argv) {
         jsDir,
         "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
       ),
-      recentReleases: path.resolve(
+      freshReleases: path.resolve(
         jsDir,
-        "src/recent-releases/RecentReleases.tsx"
+        "src/fresh-releases/FreshReleases.tsx"
       ),
     },
     output: {
