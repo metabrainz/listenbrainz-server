@@ -383,7 +383,7 @@ def delete_feed_events(user_name):
         event = ujson.loads(request.get_data())
 
         if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
-                UserTimelineEventType.NOTIFICATION.value]:
+                UserTimelineEventType.NOTIFICATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
             try:
                 event_deleted = db_user_timeline_event.delete_user_timeline_event(event["id"], user["id"])
             except Exception as e:
