@@ -137,7 +137,7 @@ declare type SpotifyPlayerSDKState = {
   position: number;
   duration: number;
   track_window: {
-    current_track: SpotifyTrack;
+    current_track: SpotifyTrack | null;
   };
 };
 
@@ -394,6 +394,7 @@ declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike";
 declare type FeedbackResponse = {
   created: number;
   recording_msid: string;
+  recording_mbid?: string | null;
   score: ListenFeedBack;
   user_id: string;
 };
@@ -420,7 +421,7 @@ declare type RecommendationFeedbackResponse = {
 };
 
 declare type RecordingFeedbackMap = {
-  [recordingMsid: string]: ListenFeedBack;
+  [recording_id: string]: ListenFeedBack;
 };
 
 declare type ACRMSearchResult = {

@@ -127,6 +127,9 @@ const getArtistMBIDs = (listen: Listen): string[] | undefined =>
   _.get(listen, "track_metadata.additional_info.artist_mbids") ??
   _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
 
+const getRecordingMSID = (listen: Listen): string =>
+  _.get(listen, "track_metadata.additional_info.recording_msid");
+
 const getRecordingMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.recording_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.recording_mbid");
@@ -469,17 +472,23 @@ const getAlbumArtFromListenMetadata = async (
       );
       if (CAAResponse.ok) {
         const body: CoverArtArchiveResponse = await CAAResponse.json();
-        if (!body.images?.[0]?.thumbnails) {
+        if (!body.images?.length) {
           return undefined;
         }
-        const { thumbnails } = body.images[0];
-        return (
-          thumbnails[250] ??
-          thumbnails.small ??
-          // If neither of the above exists, return the first one we find
-          // @ts-ignore
-          thumbnails[Object.keys(thumbnails)?.[0]]
-        );
+
+        const frontImage =
+          body.images.find((image) => image.front) ?? body.images[0];
+        if (frontImage.thumbnails) {
+          const { thumbnails } = frontImage;
+          return (
+            thumbnails[250] ??
+            thumbnails.small ??
+            // If neither of the above exists, return the first one we find
+            // @ts-ignore
+            thumbnails[Object.keys(thumbnails)?.[0]]
+          );
+        }
+        return frontImage.image;
       }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -635,6 +644,7 @@ export {
   getListenablePin,
   countWords,
   handleNavigationClickEvent,
+  getRecordingMSID,
   getRecordingMBID,
   getReleaseMBID,
   getReleaseGroupMBID,

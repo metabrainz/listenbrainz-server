@@ -3,7 +3,9 @@ import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
+import * as recentListensPropsThreeListens from "../__mocks__/recentListensPropsThreeListens.json";
 import * as getFeedbackByMsidResponse from "../__mocks__/getFeedbackByMsidResponse.json";
+import * as getMultipleFeedbackResponse from "../__mocks__/getMultipleFeedbackResponse.json";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import Listens, { ListensProps } from "../../src/user/Listens";
@@ -78,7 +80,8 @@ describe("getFeedback", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(
       "Gulab Jamun",
-      "983e5620-829d-46dd-89a8-760d87076287,"
+      "983e5620-829d-46dd-89a8-760d87076287,",
+      ""
     );
     expect(result).toEqual(getFeedbackByMsidResponse.feedback);
   });
@@ -108,10 +111,15 @@ describe("getFeedback", () => {
 });
 
 describe("loadFeedback", () => {
+  const feedbackProps: ListensProps = {
+    ...recentListensPropsThreeListens,
+    newAlert: jest.fn(),
+  };
+
   it("updates the recordingFeedbackMap state", async () => {
     const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
-        <Listens {...props} />
+        <Listens {...feedbackProps} />
       </GlobalAppContext.Provider>
     );
 
@@ -120,36 +128,54 @@ describe("loadFeedback", () => {
     instance.getFeedback = jest
       .fn()
       .mockImplementationOnce(() =>
-        Promise.resolve(getFeedbackByMsidResponse.feedback)
+        Promise.resolve(getMultipleFeedbackResponse.feedback)
       );
 
     await instance.loadFeedback();
-    expect(wrapper.state("recordingFeedbackMap")).toMatchObject({
-      "973e5620-829d-46dd-89a8-760d87076287": 1,
+    expect(wrapper.state("recordingMsidFeedbackMap")).toMatchObject({
+      "f730bec5-d243-478e-ae46-2c47770ca1f0": 1,
+      "d90876b7-1e0f-4b25-8a83-be210804cdd1": 1,
+      "f16652d3-d9ac-4fc2-973f-047b7f45bee1": 0,
+    });
+    expect(wrapper.state("recordingMbidFeedbackMap")).toMatchObject({
+      "9f24c0f7-a644-4074-8fbd-a1dba03de129": 1,
+      "55215be2-094c-4c38-a0da-2a83863ee804": -1,
     });
   });
 });
 
-describe("getFeedbackForRecordingMsid", () => {
+describe("getFeedbackForListen", () => {
+  const feedbackProps: ListensProps = {
+    ...props,
+    listens: recentListensPropsThreeListens.listens,
+  };
+
   it("returns the feedback after fetching from recordingFeedbackMap state", async () => {
     const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
-        <Listens {...props} />
+        <Listens {...feedbackProps} />
       </GlobalAppContext.Provider>
     );
 
-    const instance = wrapper.instance();
-
-    const recordingFeedbackMap: RecordingFeedbackMap = {
-      "973e5620-829d-46dd-89a8-760d87076287": 1,
+    const recordingMsidFeedbackMap: RecordingFeedbackMap = {
+      "d90876b7-1e0f-4b25-8a83-be210804cdd1": 1,
     };
-    wrapper.setState({ recordingFeedbackMap });
+    const recordingMbidFeedbackMap: RecordingFeedbackMap = {
+      "9541592c-0102-4b94-93cc-ee0f3cf83d64": 1,
+      "55215be2-094c-4c38-a0da-2a83863ee804": -1,
+    };
+    wrapper.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
 
-    const res = await instance.getFeedbackForRecordingMsid(
-      "973e5620-829d-46dd-89a8-760d87076287"
-    );
-
-    expect(res).toEqual(1);
+    const instance = wrapper.instance();
+    expect(
+      instance.getFeedbackForListen(recentListensPropsThreeListens.listens[0])
+    ).toEqual(1);
+    expect(
+      instance.getFeedbackForListen(recentListensPropsThreeListens.listens[1])
+    ).toEqual(1);
+    expect(
+      instance.getFeedbackForListen(recentListensPropsThreeListens.listens[2])
+    ).toEqual(-1);
   });
 
   it("returns 0 if the recording is not in recordingFeedbackMap state", async () => {
@@ -161,9 +187,7 @@ describe("getFeedbackForRecordingMsid", () => {
 
     const instance = wrapper.instance();
 
-    const res = await instance.getFeedbackForRecordingMsid(
-      "973e5620-829d-46dd-89a8-760d87076287"
-    );
+    const res = await instance.getFeedbackForListen(listens[0]);
 
     expect(res).toEqual(0);
   });
@@ -179,15 +203,22 @@ describe("updateFeedback", () => {
 
     const instance = wrapper.instance();
 
-    const recordingFeedbackMap: RecordingFeedbackMap = {
+    const recordingMsidFeedbackMap: RecordingFeedbackMap = {
       "973e5620-829d-46dd-89a8-760d87076287": 0,
     };
-    wrapper.setState({ recordingFeedbackMap });
+    wrapper.setState({ recordingMsidFeedbackMap });
 
-    await instance.updateFeedback("973e5620-829d-46dd-89a8-760d87076287", 1);
+    await instance.updateFeedback(
+      "873e5620-829d-46dd-89a8-760d87076287",
+      1,
+      "973e5620-829d-46dd-89a8-760d87076287"
+    );
 
-    expect(wrapper.state("recordingFeedbackMap")).toMatchObject({
+    expect(wrapper.state("recordingMsidFeedbackMap")).toMatchObject({
       "973e5620-829d-46dd-89a8-760d87076287": 1,
+    });
+    expect(wrapper.state("recordingMbidFeedbackMap")).toMatchObject({
+      "873e5620-829d-46dd-89a8-760d87076287": 1,
     });
   });
 });

@@ -137,10 +137,16 @@ class MappingJobQueue(threading.Thread):
                 if not result:
                     break
 
-                self.queue.put(JobItem(priority, [{"data": {"artist_name": result[2],
-                                                            "track_name": result[1]},
-                                                   "recording_msid": result[0],
-                                                   "priority": priority}]))
+                self.queue.put(JobItem(priority, [
+                    {
+                        "track_metadata": {
+                            "artist_name": result[2],
+                            "track_name": result[1]
+                        },
+                        "recording_msid": result[0],
+                        "priority": priority
+                    }
+                ]))
                 count += 1
 
         return count

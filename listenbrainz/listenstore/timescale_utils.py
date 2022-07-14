@@ -201,7 +201,7 @@ def delete_listens():
             return
 
         max_id = row["max_id"]
-        logger.info("Found max id in listen_delete_metadata table: %d", max_id)
+        logger.info("Found max id in listen_delete_metadata table: %s", max_id)
 
         logger.info("Deleting Listens and updating affected listens counts")
         connection.execute(text(delete_listens_and_update_listen_counts), max_id=max_id)

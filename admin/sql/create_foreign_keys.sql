@@ -139,4 +139,10 @@ ALTER TABLE pinned_recording
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE user_setting
+    ADD CONSTRAINT user_setting_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+    
 COMMIT;

@@ -47,6 +47,15 @@ class PinnedRecording(MsidMbidModel):
                         See https://pydantic-docs.helpmanual.io/usage/types/#datetime-types for acceptable formats."""
             )
 
+    def to_api(self):
+        pin = self.dict()
+        pin["created"] = int(pin["created"].timestamp())
+        pin["pinned_until"] = int(pin["pinned_until"].timestamp())
+        del pin["user_id"]
+        if pin["user_name"] is None:
+            del pin["user_name"]
+        return pin
+
 
 class WritablePinnedRecording(PinnedRecording):
     """Represents a pinned recording object to pin/submit to the DB.

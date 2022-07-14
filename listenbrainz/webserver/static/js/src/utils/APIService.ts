@@ -560,13 +560,14 @@ export default class APIService {
 
   getFeedbackForUserForRecordings = async (
     userName: string,
-    recordings: string
+    recording_msids: string,
+    recording_mbids: string
   ) => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recordings=${recordings}`;
+    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_msids=${recording_msids}&recording_mbids=${recording_mbids}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1092,24 +1093,29 @@ export default class APIService {
 
   lookupRecordingMetadata = async (
     trackName: string,
-    artistName: string
+    artistName: string,
+    metadata: boolean = true
   ): Promise<MetadataLookup | null> => {
     if (!trackName) {
       return null;
     }
     const queryParams: any = {
       recording_name: trackName,
-      metadata: true,
     };
     if (artistName) {
       queryParams.artist_name = artistName;
+    }
+    if (metadata) {
+      queryParams.metadata = true;
     }
     const url = new URL(`${this.APIBaseURI}/metadata/lookup/`);
     // Iterate and add each queryParams
     Object.keys(queryParams).map((key) =>
       url.searchParams.append(key, queryParams[key])
     );
-    url.searchParams.append("inc", "artist tag release");
+    if (metadata) {
+      url.searchParams.append("inc", "artist tag release");
+    }
 
     const response = await fetch(url.toString());
     await this.checkStatus(response);

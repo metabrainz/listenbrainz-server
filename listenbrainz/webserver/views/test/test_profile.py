@@ -48,8 +48,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
             url_for('profile.reset_latest_import_timestamp'),
             data={'csrf_token': g.csrf_token}
         )
-        self.assertStatus(response, 302)  # should have redirected to the info page
-        self.assertRedirects(response, url_for('profile.info'))
+        self.assertRedirects(response, url_for('profile.info'))  # should have redirected to the info page
         ts = listens_importer.get_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM)
         self.assertEqual(int(ts.strftime('%s')), 0)
 
@@ -57,7 +56,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         """Tests user info view when not logged in"""
         profile_info_url = url_for('profile.info')
         response = self.client.get(profile_info_url)
-        self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=profile_info_url))
 
     def test_delete_listens(self):
@@ -77,11 +75,9 @@ class ProfileViewsTestCase(IntegrationTestCase):
         """Tests delete listens view when not logged in"""
         delete_listens_url = url_for('profile.delete_listens')
         response = self.client.get(delete_listens_url)
-        self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
 
         response = self.client.post(delete_listens_url)
-        self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
 
     def test_delete_listens_csrf_token_not_provided(self):
@@ -106,6 +102,39 @@ class ProfileViewsTestCase(IntegrationTestCase):
         response = self.client.post(delete_listens_url, data={'csrf_token': 'invalid-auth-token'})
         self.assertMessageFlashed('Cannot delete listens due to error during authentication, please try again later.',
                                   'error')
+        self.assertRedirects(response, url_for('profile.info'))
+
+    def test_select_timezone(self):
+        """Tests select timezone end point"""
+        self.temporary_login(self.user['login_id'])
+        select_timezone_url = url_for('profile.select_timezone')
+        response = self.client.get(select_timezone_url)
+        self.assert200(response)
+
+        response = self.client.post(select_timezone_url, data={'csrf_token': g.csrf_token, 'timezone': 'America/New_York'})
+        self.assertMessageFlashed('Your timezone has been saved.', 'info')
+        self.assertRedirects(response, url_for('profile.info'))
+
+    def test_select_timezone_logged_out(self):
+        """Tests select timezone view when not logged in"""
+        select_timezone_url = url_for('profile.select_timezone')
+        response = self.client.get(select_timezone_url)
+        self.assertStatus(response, 302)
+        self.assertRedirects(response, url_for('login.index', next=select_timezone_url))
+
+        response = self.client.post(select_timezone_url)
+        self.assertStatus(response, 302)
+        self.assertRedirects(response, url_for('login.index', next=select_timezone_url))
+
+    def test_select_timezone_invalid_csrf_token(self):
+        """Tests select timezone end point with invalid auth token """
+        self.temporary_login(self.user['login_id'])
+        select_timezone_url = url_for('profile.select_timezone')
+        response = self.client.get(select_timezone_url)
+        self.assert200(response)
+
+        response = self.client.post(select_timezone_url, data={'csrf_token': 'invalid-auth-token'})
+        self.assertMessageFlashed('Unable to update timezone.', 'error')
         self.assertRedirects(response, url_for('profile.info'))
 
     def test_music_services_details(self):
@@ -349,5 +378,4 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def test_export_feedback_streaming_not_logged_in(self):
         export_feedback_url = url_for('profile.export_feedback')
         response = self.client.post(export_feedback_url)
-        self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=export_feedback_url))
