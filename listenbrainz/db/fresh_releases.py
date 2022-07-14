@@ -2,22 +2,22 @@ from datetime import date, timedelta
 import psycopg2
 import psycopg2.extras
 
-from listenbrainz.db.model.upcoming_releases import UpcomingRelease
+from listenbrainz.db.model.fresh_releases import FreshRelease
 from typing import List
 from flask import current_app
 
 
-def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window_days: int) -> List[UpcomingRelease]:
-    """ Fetch upcoming and recent releases from the MusicBrainz DB with a given window that is days number
+def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_days: int) -> List[FreshRelease]:
+    """ Fetch fresh and recent releases from the MusicBrainz DB with a given window that is days number
         of days into the past and days number of days into the future.
 
         Args:
-            pivot_release_date: The release_date around which to fetch the upcoming and recent releases.
+            pivot_release_date: The release_date around which to fetch the fresh releases.
             release_date_window_days: The number of days into the past and future to show releases for. Must be
                                       between 1 and 30 days. If an invalid value is passed, 30 days is used.
 
         Returns:
-            A list of UpcomingReleases objects
+            A list of FreshReleases objects
     """
 
     if release_date_window_days > 30 or release_date_window_days < 1:
@@ -91,4 +91,4 @@ def get_sitewide_upcoming_releases(pivot_release_date: date, release_date_window
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             curs.execute(query, (from_date, to_date))
             row = curs.fetchone()
-            return [UpcomingRelease(**dict(row)) for row in curs.fetchall()]
+            return [FreshRelease(**dict(row)) for row in curs.fetchall()]

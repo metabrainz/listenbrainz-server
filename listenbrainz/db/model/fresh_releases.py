@@ -28,8 +28,8 @@ class ReleaseGroupSecondaryType(Enum):
     AUDIO = "drama Audio drama"
 
 
-class UpcomingRelease(BaseModel):
-    """This model contains all of the information needed for one upcoming/recent release"""
+class FreshRelease(BaseModel):
+    """This model contains all of the information needed for one fresh release"""
 
     # The release date for this release
     release_date: date

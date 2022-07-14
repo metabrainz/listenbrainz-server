@@ -30,11 +30,11 @@ def similar_users():
     )
 
 
-@explore_bp.route("/upcoming-releases/")
-def upcoming_releases():
-    """ Explore upcoming releases """
+@explore_bp.route("/fresh-releases/")
+def fresh_releases():
+    """ Explore fresh releases """
 
     return render_template(
-        "explore/upcoming-releases.html",
+        "explore/fresh-releases.html",
         props=ujson.dumps({})
     )

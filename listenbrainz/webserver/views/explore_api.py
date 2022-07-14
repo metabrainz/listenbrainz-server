@@ -1,7 +1,7 @@
 import datetime
 from flask import Blueprint, jsonify, request
 
-import listenbrainz.db.upcoming_releases
+import listenbrainz.db.fresh_releases
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.views.api_tools import _parse_int_arg
@@ -9,8 +9,8 @@ from listenbrainz.db.color import get_releases_for_color
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
 
-DEFAULT_NUMBER_OF_UPCOMING_RELEASE_DAYS = 14
-MAX_NUMBER_OF_UPCOMING_RELEASE_DAYS = 30
+DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
+MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 30
 DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
 DEFAULT_CACHE_EXPIRE_TIME = 3600 * 24  # 1 day
 HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
@@ -18,12 +18,12 @@ HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
 explore_api_bp = Blueprint('explore_api_v1', __name__)
 
 
-@explore_api_bp.route("/upcoming-releases/", methods=["GET", "OPTIONS"])
+@explore_api_bp.route("/fresh-releases/", methods=["GET", "OPTIONS"])
 @crossdomain
 @ratelimit()
-def get_upcoming_releases():
+def get_fresh_releases():
     """
-    This endpoint fetches upcoming and recently released releases and returns a list of:
+    This endpoint fetches upcoming and recently released (fresh) releases and returns a list of:
 
     .. code-block:: json
         {
@@ -38,17 +38,17 @@ def get_upcoming_releases():
             "release_name": "Profound Mysteries"
         }
 
-    :param release_date: Recent releases and upcoming releases will be shown around this pivot date.
+    :param release_date: Fresh releases will be shown around this pivot date.
                          Must be in YYYY-MM-DD format
-    :param days: The number of days of recent releases/upcoming releases to show. Max 30 days.
+    :param days: The number of days of fresh releases to show. Max 30 days.
     :statuscode 200: fetch succeeded
     :statuscode 400: invalid date or number of days passed.
     :resheader Content-Type: *application/json*
     """
 
-    days = _parse_int_arg("days", DEFAULT_NUMBER_OF_UPCOMING_RELEASE_DAYS)
-    if days < 1 or days > MAX_NUMBER_OF_UPCOMING_RELEASE_DAYS:
-        raise APIBadRequest(f"days must be between 1 and {MAX_NUMBER_OF_UPCOMING_RELEASE_DAYS}.")
+    days = _parse_int_arg("days", DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS)
+    if days < 1 or days > MAX_NUMBER_OF_FRESH_RELEASE_DAYS:
+        raise APIBadRequest(f"days must be between 1 and {MAX_NUMBER_OF_FRESH_RELEASE_DAYS}.")
 
     release_date = request.args.get("release_date", "")
     if release_date != "":
@@ -59,7 +59,7 @@ def get_upcoming_releases():
     else:
         release_date = datetime.date.today()
 
-    return jsonify([r.to_dict() for r in listenbrainz.db.upcoming_releases.get_sitewide_upcoming_releases(release_date, days)])
+    return jsonify([r.to_dict() for r in listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days)])
 
 
 @explore_api_bp.route("/<color>", methods=["GET", "OPTIONS"])
