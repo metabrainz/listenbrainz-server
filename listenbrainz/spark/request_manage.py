@@ -242,8 +242,8 @@ def request_missing_mb_data(days):
     send_request_to_spark_cluster('cf.missing_mb_data', days=days)
 
 
-def parse_list(ctx, args):
-    return list(args)
+def parse_list(ctx, param, value):
+    return list(value)
 
 
 @cli.command(name='request_model')
