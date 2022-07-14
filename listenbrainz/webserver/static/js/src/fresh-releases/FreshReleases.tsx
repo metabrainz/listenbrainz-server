@@ -13,7 +13,7 @@ import ReleaseCard from "./ReleaseCard";
 import * as fakeData from "./fakeData.json";
 import ReleaseFilters from "./ReleaseFilters";
 
-export default function RecentReleases() {
+export default function FreshReleases() {
   const RELEASE_TYPE_OTHER = "Other";
 
   const [typesList, setTypesList] = React.useState<Array<string | null>>([]);
@@ -40,7 +40,7 @@ export default function RecentReleases() {
 
   return (
     <>
-      <h3 id="row">Recent and upcoming releases</h3>
+      <h3 id="row">Fresh releases</h3>
       <div className="releases-page row">
         <div
           className="col-md-1 hidden-xs hidden-sm hidden-md"
@@ -112,8 +112,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const RecentReleasesPageWithAlertNotifications = withAlertNotifications(
-    RecentReleases
+  const FreshReleasesPageWithAlertNotifications = withAlertNotifications(
+    FreshReleases
   );
 
   const apiService = new APIServiceClass(
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <RecentReleasesPageWithAlertNotifications />
+        <FreshReleasesPageWithAlertNotifications />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
