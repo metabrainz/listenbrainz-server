@@ -199,192 +199,42 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const supportLinks = pick(artist?.rels, ...supportLinkTypes);
   const lyricsLink = pick(artist?.rels, "lyrics");
 
-  return (
-    <div id="metadata-viewer">
-      {!playingNow && (
-        <div className="no-listen-container">
-          <div className="no-listen">
-            <p>
-              <hr />
-              <div style={{ marginTop: "-2.1em" }}>
-                <FontAwesomeIcon icon={faPauseCircle} size="2x" />
-              </div>
-              Sorry, we do not know what music you are currently listening to,
-              since we have not received any recent <i>Playing Now</i> events
-              for your account.
-              <br />
-              As soon as a <i>Playing Now</i> listen comes through, this page
-              will be updated automatically.
-              <br />
-              <br />
-              <small>
-                In order to receive these events, you will need to{" "}
-                <a href="/add-data/">send listens</a> to ListenBrainz.
-                <br />
-                We work hard to make this data available to you as soon as we
-                receive it, but until your music service sends us a{" "}
-                <a href="https://listenbrainz.readthedocs.io/en/production/dev/json/?highlight=playing%20now#submission-json">
-                  <i>Playing Now</i> event
-                </a>
-                , we cannot display anything here.
-              </small>
-              <hr />
-            </p>
-          </div>
-        </div>
-      )}
-      <div
-        className="left-side"
-        style={{
-          backgroundColor: adjustedAlbumColor.toRgbString(),
-          color: textColor.toString(),
-        }}
-      >
-        <div className="track-info">
-          <div className="track-details">
-            <div
-              title={trackName}
-              className="track-name strong ellipsis-2-lines"
-            >
-              <a
-                href={
-                  recordingData?.recording_mbid
-                    ? `${musicBrainzURLRoot}recording/${recordingData?.recording_mbid}`
-                    : undefined
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {trackName}
-              </a>
-            </div>
-            <span className="artist-name small ellipsis" title={artistName}>
-              <a
-                href={
-                  artistMBID
-                    ? `${musicBrainzURLRoot}artist/${artistMBID}`
-                    : undefined
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {artistName}
-              </a>
+  let rightSideContent;
+  if (!playingNow) {
+    rightSideContent = (
+      <div className="right-side">
+        <div className="no-listen">
+          <p>
+            <hr />
+            <span className="pause-icon">
+              <FontAwesomeIcon icon={faPauseCircle} size="2x" />
             </span>
-          </div>
-          <div className="love-hate">
-            <button
-              className="btn-transparent"
-              onClick={() =>
-                submitFeedback(currentListenFeedback === 1 ? 0 : 1)
-              }
-              type="button"
-            >
-              <FontAwesomeIcon
-                icon={faHeart}
-                title="Love"
-                size="2x"
-                className={`${currentListenFeedback === 1 ? " loved" : ""}`}
-              />
-            </button>
-            <button
-              className="btn-transparent"
-              onClick={() =>
-                submitFeedback(currentListenFeedback === -1 ? 0 : -1)
-              }
-              type="button"
-            >
-              <FontAwesomeIcon
-                icon={faHeartBroken}
-                title="Hate"
-                size="2x"
-                className={`${currentListenFeedback === -1 ? " hated" : ""}`}
-              />
-            </button>
-          </div>
-        </div>
-
-        <div className="album-art">
-          <img
-            src={coverArtSrc}
-            ref={albumArtRef}
-            crossOrigin="anonymous"
-            alt="Album art"
-          />
-        </div>
-        <div className="bottom">
-          <a href="https://listenbrainz.org/my/listens">
+            <h3>What are you listening to?</h3>
+            We have not received any recent <i>playing-now</i> events for your
+            account.
+            <br />
+            As soon as a <i>playing-now</i> listen comes through, this page will
+            be updated automatically.
+            <br />
+            <br />
             <small>
-              Powered by&nbsp;
-              <img
-                className="logo"
-                src="/static/img/navbar_logo.svg"
-                alt="ListenBrainz"
-              />
+              In order to receive these events, you will need to{" "}
+              <a href="/add-data/">send listens</a> to ListenBrainz.
+              <br />
+              We work hard to make this data available to you as soon as we
+              receive it, but until your music service sends us a{" "}
+              <a href="https://listenbrainz.readthedocs.io/en/production/dev/json/?highlight=playing%20now#submission-json">
+                <i>playing-now</i> event
+              </a>
+              , we cannot display anything here.
             </small>
-          </a>
-          <div className="support-artist-btn dropup">
-            <button
-              className={`dropdown-toggle btn btn-primary${
-                isPlainObject(artist?.rels) &&
-                !Object.keys(artist?.rels as object).length
-                  ? " disabled"
-                  : ""
-              }`}
-              data-toggle="dropdown"
-              type="button"
-            >
-              <b>Support the artist</b>
-              <span className="caret" />
-            </button>
-            <ul className="dropdown-menu dropdown-menu-right" role="menu">
-              {!isEmpty(supportLinks) ? (
-                Object.entries(supportLinks).map(([key, value]) => {
-                  return (
-                    <li key={key}>
-                      <a href={value} target="_blank" rel="noopener noreferrer">
-                        {key}
-                      </a>
-                    </li>
-                  );
-                })
-              ) : (
-                <>
-                  <li
-                    className="dropdown-header"
-                    style={{ textAlign: "center" }}
-                  >
-                    We couldn&apos;t find any links
-                  </li>
-                  <li>
-                    <a
-                      href={
-                        artistMBID
-                          ? `${musicBrainzURLRoot}artist/${artistMBID}`
-                          : `${musicBrainzURLRoot}artist/create`
-                      }
-                      aria-label="Edit in MusicBrainz"
-                      title="Edit in MusicBrainz"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img
-                        src="/static/img/meb-icons/MusicBrainz.svg"
-                        width="18"
-                        height="18"
-                        alt="MusicBrainz"
-                        style={{ verticalAlign: "bottom" }}
-                      />{" "}
-                      {artistMBID ? "Add links" : "Create"} in MusicBrainz
-                    </a>
-                  </li>
-                </>
-              )}
-            </ul>
-          </div>
+            <hr />
+          </p>
         </div>
       </div>
-
+    );
+  } else {
+    rightSideContent = (
       <div
         className="right-side panel-group"
         id="accordion"
@@ -572,6 +422,164 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div id="metadata-viewer">
+      <div
+        className="left-side"
+        style={{
+          backgroundColor: adjustedAlbumColor.toRgbString(),
+          color: textColor.toString(),
+        }}
+      >
+        <div className="track-info">
+          <div className="track-details">
+            <div
+              title={trackName}
+              className="track-name strong ellipsis-2-lines"
+            >
+              <a
+                href={
+                  recordingData?.recording_mbid
+                    ? `${musicBrainzURLRoot}recording/${recordingData?.recording_mbid}`
+                    : undefined
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {trackName}
+              </a>
+            </div>
+            <span className="artist-name small ellipsis" title={artistName}>
+              <a
+                href={
+                  artistMBID
+                    ? `${musicBrainzURLRoot}artist/${artistMBID}`
+                    : undefined
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {artistName}
+              </a>
+            </span>
+          </div>
+          <div className="love-hate">
+            <button
+              className="btn-transparent"
+              onClick={() =>
+                submitFeedback(currentListenFeedback === 1 ? 0 : 1)
+              }
+              type="button"
+            >
+              <FontAwesomeIcon
+                icon={faHeart}
+                title="Love"
+                size="2x"
+                className={`${currentListenFeedback === 1 ? " loved" : ""}`}
+              />
+            </button>
+            <button
+              className="btn-transparent"
+              onClick={() =>
+                submitFeedback(currentListenFeedback === -1 ? 0 : -1)
+              }
+              type="button"
+            >
+              <FontAwesomeIcon
+                icon={faHeartBroken}
+                title="Hate"
+                size="2x"
+                className={`${currentListenFeedback === -1 ? " hated" : ""}`}
+              />
+            </button>
+          </div>
+        </div>
+
+        <div className="album-art">
+          <img
+            src={coverArtSrc}
+            ref={albumArtRef}
+            crossOrigin="anonymous"
+            alt="Album art"
+          />
+        </div>
+        <div className="bottom">
+          <a href="https://listenbrainz.org/my/listens">
+            <small>
+              Powered by&nbsp;
+              <img
+                className="logo"
+                src="/static/img/navbar_logo.svg"
+                alt="ListenBrainz"
+              />
+            </small>
+          </a>
+          <div className="support-artist-btn dropup">
+            <button
+              className={`dropdown-toggle btn btn-primary${
+                isPlainObject(artist?.rels) &&
+                !Object.keys(artist?.rels as object).length
+                  ? " disabled"
+                  : ""
+              }`}
+              data-toggle="dropdown"
+              type="button"
+            >
+              <b>Support the artist</b>
+              <span className="caret" />
+            </button>
+            <ul className="dropdown-menu dropdown-menu-right" role="menu">
+              {!isEmpty(supportLinks) ? (
+                Object.entries(supportLinks).map(([key, value]) => {
+                  return (
+                    <li key={key}>
+                      <a href={value} target="_blank" rel="noopener noreferrer">
+                        {key}
+                      </a>
+                    </li>
+                  );
+                })
+              ) : (
+                <>
+                  <li
+                    className="dropdown-header"
+                    style={{ textAlign: "center" }}
+                  >
+                    We couldn&apos;t find any links
+                  </li>
+                  <li>
+                    <a
+                      href={
+                        artistMBID
+                          ? `${musicBrainzURLRoot}artist/${artistMBID}`
+                          : `${musicBrainzURLRoot}artist/create`
+                      }
+                      aria-label="Edit in MusicBrainz"
+                      title="Edit in MusicBrainz"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        src="/static/img/meb-icons/MusicBrainz.svg"
+                        width="18"
+                        height="18"
+                        alt="MusicBrainz"
+                        style={{ verticalAlign: "bottom" }}
+                      />{" "}
+                      {artistMBID ? "Add links" : "Create"} in MusicBrainz
+                    </a>
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {rightSideContent}
     </div>
   );
 }
