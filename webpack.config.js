@@ -86,6 +86,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
       ),
+      selectTimezone: path.resolve(
+        jsDir,
+        "src/user-setting/SelectTimezone.tsx"
+      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
