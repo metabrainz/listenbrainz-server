@@ -42,7 +42,7 @@ export default class SelectTimezones extends React.Component<
       <>
         <h3>Select Timezone</h3>
         <p>
-          Your current timezone setting is
+          Your current timezone setting is{" "}
           {user_timezone ? `${user_timezone}` : "no select"}.
           <br />
           By choosing your local time zone, you will have a local timestamps
@@ -60,17 +60,17 @@ export default class SelectTimezones extends React.Component<
 
             <select onChange={(e) => this.zoneSelection(e.target.value)}>
               {pg_timezones.map((zone: [string, string]) => {
-                return <option value={zone}>zone</option>;
+                return (
+                  <option value={zone[0]}>
+                    {zone[0]} ({zone[1]})
+                  </option>
+                );
               })}
             </select>
             <br />
             <br />
             <p>
-              <button
-                type="submit"
-                className="btn btn-info btn-lg"
-                // style="width: 240px"
-              >
+              <button type="submit" className="btn btn-info btn-lg">
                 Save Timezone
               </button>
             </p>
