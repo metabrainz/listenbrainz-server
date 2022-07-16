@@ -183,25 +183,27 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
         return [UserTimelineEvent(**row) for row in result.fetchall()]
 
 
-def get_personal_recommendation_events_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
+def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
     """ Gets a list of personal_recording_recommendation events for specified users.
 
     user_ids is a tuple of user row IDs.
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, user_id, event_type, metadata, created
+            SELECT user_timeline_event.id, user_timeline_event.user_id, user_timeline_event.event_type, user_timeline_event.metadata,
+            user_timeline_event.created, "user".musicbrainz_id as user_name
               FROM user_timeline_event
-             WHERE 
-               (metadata ->> 'recommendee_id')::int IN :user_ids
-               OR user_id IN :user_ids
-               AND created > :min_ts
-               AND created < :max_ts
-               AND event_type = :event_type
-          ORDER BY created DESC
+              INNER JOIN "user" ON user_timeline_event.user_id = "user".id
+             WHERE
+               (metadata ->> 'recommendee_id')::int = :user_id
+               OR user_timeline_event.user_id = :user_id
+               AND user_timeline_event.created > :min_ts
+               AND user_timeline_event.created < :max_ts
+               AND user_timeline_event.event_type = :event_type
+          ORDER BY user_timeline_event.created DESC
              LIMIT :count
         """), {
-            "user_ids": tuple(user_ids),
+            "user_id": user_id,
             "min_ts": datetime.utcfromtimestamp(min_ts),
             "max_ts": datetime.utcfromtimestamp(max_ts),
             "count": count,

@@ -82,6 +82,7 @@ class UserTimelineEvent(BaseModel):
     metadata: UserTimelineEventMetadata
     event_type: UserTimelineEventType
     created: Optional[datetime]
+    user_name: Optional[str]
 
 
 class APINotificationEvent(BaseModel):
