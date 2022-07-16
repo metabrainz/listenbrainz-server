@@ -51,12 +51,12 @@ class RecordingRecommendationMetadata(BaseModel):
     )(check_valid_uuid)
 
 
-class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata):
+class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata, validate_assignment=True):
     recommendee_id: NonNegativeInt
     blurb_content: Optional[str]
 
 
-class NotificationMetadata(BaseModel, validate_assignment=True):
+class NotificationMetadata(BaseModel):
     creator: constr(min_length=1)
     message: constr(min_length=1)
 
