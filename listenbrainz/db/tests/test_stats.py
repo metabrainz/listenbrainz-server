@@ -45,7 +45,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
             received = db_stats.get_stats_from_couchdb(1, "artists", "week").dict()
             expected = data[0] | {
-                "to_ts": 1657411200,
+                "to_ts": 1658016000,
                 "from_ts": 1657411200,
                 "stats_range": "week",
                 "last_updated": received["last_updated"]
