@@ -41,9 +41,11 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             self.create_entity_test_data("artists", "week")
 
             stats = db_stats.get_stats_from_couchdb(1, "artists", "week")
+            print(stats)
             self.assertEqual(stats, [])
 
             stats = db_stats.get_stats_from_couchdb(2, "artists", "week")
+            print(stats)
             self.assertEqual(stats, [])
 
     # def test_insert_user_artists(self):
