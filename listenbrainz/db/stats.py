@@ -70,7 +70,7 @@ def insert_stats_in_couchdb(database: str, from_ts: int, to_ts: int, values: lis
     couchdb.insert_data(database, values)
 
 
-def get_stats_from_couchdb(user_id, stats_range, stats_type) -> Optional[StatApi[EntityRecord]]:
+def get_stats_from_couchdb(user_id, stats_type, stats_range) -> Optional[StatApi[EntityRecord]]:
     """ Retrieve stats for the given user, stats range and stats type.
 
         Args:

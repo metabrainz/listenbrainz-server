@@ -70,7 +70,7 @@ TYPESENSE_PORT = 8108
 TYPESENSE_API_KEY = "API_KEY"
 
 # Couchdb instance config
-COUCHDB_HOST = "localhost"
+COUCHDB_HOST = "couchdb"
 COUCHDB_PORT = 5984
 COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = "listenbrainz"
