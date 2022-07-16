@@ -551,14 +551,19 @@ def create_personal_recommendation_event(user_name):
             "recommendee_id": 0,
             "blurb_content": metadata["blurb_content"]
         }
+        for follower in metadata["followers"]:
+            if type(follower) != int:
+                raise TypeError(f"Value {str(follower)} is not a valid ID")
         metadata_db = PersonalRecordingRecommendationMetadata(**metadata_db)
     except pydantic.ValidationError as e:
+        raise APIBadRequest(f"Invalid metadata: {str(e)}")
+    except TypeError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
     try:
         for follower in metadata["followers"]:
             if not db_user_relationship.is_following_user(follower, user['id']):
-                raise APIBadRequest(f"On of the person doesn't follow you")
+                raise APIBadRequest(f"User with ID: {follower} doesn't follow you")
             metadata_db.recommendee_id = follower
             event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata_db)
             event_data = event.dict()
