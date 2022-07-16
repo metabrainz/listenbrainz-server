@@ -44,21 +44,15 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             data = self.create_entity_test_data("artists", "week")
 
             received = db_stats.get_stats_from_couchdb(1, "artists", "week").dict()
-            expected = data[0] | {
-                "to_ts": 1658016000,
-                "from_ts": 1657411200,
-                "stats_range": "week",
-                "last_updated": received["last_updated"]
-            }
+            expected = data[0]
+            expected["user_id"] = expected["_id"]
+            del expected["_id"]
             self.assertEqual(received, expected)
 
             received = db_stats.get_stats_from_couchdb(2, "artists", "week").dict()
-            expected = data[1] | {
-                "to_ts": 1657411200,
-                "from_ts": 1657411200,
-                "stats_range": "week",
-                "last_updated": received["last_updated"]
-            }
+            expected = data[1]
+            expected["user_id"] = expected["_id"]
+            del expected["_id"]
             self.assertEqual(received, expected)
 
     # def test_insert_user_artists(self):
