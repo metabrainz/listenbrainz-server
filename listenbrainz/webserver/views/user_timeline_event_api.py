@@ -252,7 +252,6 @@ def user_feed(user_name: str):
         max_ts = int(time.time())
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
-    users_followers = db_user_relationship.get_followers_of_user(user['id'])
 
     # get all listen events
     if len(users_following) == 0:
@@ -280,8 +279,6 @@ def user_feed(user_name: str):
 
     personal_recording_recommendation_events = get_personal_recording_recommendation_events(
         user=user,
-        users_for_events=users_followers + [user],
-        users_following=users_following + [user],
         min_ts=min_ts or 0,
         max_ts=max_ts or int(time.time()),
         count=count,
@@ -561,7 +558,7 @@ def create_personal_recommendation_event(user_name):
     try:
         for follower in metadata["followers"]:
             if not db_user_relationship.is_following_user(follower, user['id']):
-                raise APIBadRequest(f"The person doesn't follow you")
+                raise APIBadRequest(f"On of the person doesn't follow you")
             metadata_db.recommendee_id = follower
             event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata_db)
             event_data = event.dict()
@@ -816,8 +813,6 @@ def get_recording_pin_events(
 
 def get_personal_recording_recommendation_events(
         user: dict,
-        users_for_events: List[dict],
-        users_following: List[dict],
         min_ts: int,
         max_ts: int,
         count: int
@@ -825,10 +820,9 @@ def get_personal_recording_recommendation_events(
     """ Gets all personal recording recommendation events in the feed.
     """
 
-    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
-    id_following_username_map = {user['id']: user['musicbrainz_id'] for user in users_following}
     personal_recording_recommendation_events_db = db_user_timeline_event.get_personal_recommendation_events_for_feed(
-        user_ids=(user['id'] for user in users_for_events),
+        # user_ids=(user['id'] for user in users_for_events),
+        user_id=user['id'],
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
@@ -850,7 +844,8 @@ def get_personal_recording_recommendation_events(
             events.append(APITimelineEvent(
                 id=event.id,
                 event_type=UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION,
-                user_name=id_following_username_map[event.user_id],
+                # user_name=id_following_username_map[event.user_id],
+                user_name=event.user_name,
                 created=event.created.timestamp(),
                 metadata=personal_recommendation,
                 hidden=False,
