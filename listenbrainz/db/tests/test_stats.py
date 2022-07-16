@@ -4,8 +4,9 @@ from datetime import datetime, timezone
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-from data.model.common_stat import StatRange
+from data.model.common_stat import StatRange, StatApi, StatRecordList
 from data.model.user_artist_map import UserArtistMapRecord
+from data.model.user_artist_stat import ArtistRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
@@ -31,22 +32,34 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         from_ts2, to_ts2 = int(datetime(2022, 7, 10).timestamp()), int(datetime(2022, 7, 17).timestamp())
 
         couchdb.create_database(database1)
-        db_stats.insert_stats_in_couchdb(database1, from_ts1, from_ts1, data)
+        db_stats.insert_stats_in_couchdb(database1, from_ts1, to_ts1, data)
 
         couchdb.create_database(database2)
-        db_stats.insert_stats_in_couchdb(database2, from_ts2, from_ts2, data[:1])
+        db_stats.insert_stats_in_couchdb(database2, from_ts2, to_ts2, data[:1])
+
+        return data
 
     def test_user_artists(self):
         with create_app().app_context():
-            self.create_entity_test_data("artists", "week")
+            data = self.create_entity_test_data("artists", "week")
 
-            stats = db_stats.get_stats_from_couchdb(1, "artists", "week")
-            print(stats)
-            self.assertEqual(stats, [])
+            received = db_stats.get_stats_from_couchdb(1, "artists", "week").dict()
+            expected = data[0] | {
+                "to_ts": 1657411200,
+                "from_ts": 1657411200,
+                "stats_range": "week",
+                "last_updated": received["last_updated"]
+            }
+            self.assertEqual(received, expected)
 
-            stats = db_stats.get_stats_from_couchdb(2, "artists", "week")
-            print(stats)
-            self.assertEqual(stats, [])
+            received = db_stats.get_stats_from_couchdb(2, "artists", "week").dict()
+            expected = data[1] | {
+                "to_ts": 1657411200,
+                "from_ts": 1657411200,
+                "stats_range": "week",
+                "last_updated": received["last_updated"]
+            }
+            self.assertEqual(received, expected)
 
     # def test_insert_user_artists(self):
     #     """ Test if artist stats are inserted correctly """
