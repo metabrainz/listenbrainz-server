@@ -51,20 +51,9 @@ class RecordingRecommendationMetadata(BaseModel):
     )(check_valid_uuid)
 
 
-class PersonalRecordingRecommendationMetadata(BaseModel):
-    artist_name: constr(min_length=1)
-    track_name: constr(min_length=1)
-    release_name: Optional[str]
-    recording_mbid: Optional[str]
-    recording_msid: constr(min_length=1)
+class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata):
     recommendee_id: NonNegativeInt
     blurb_content: Optional[str]
-
-    _validate_uuids: classmethod = validator(
-        "recording_mbid",
-        "recording_msid",
-        allow_reuse=True
-    )(check_valid_uuid)
 
 
 class NotificationMetadata(BaseModel):
