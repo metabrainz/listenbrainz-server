@@ -11,6 +11,8 @@ from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import couchdb
+from listenbrainz.webserver import create_app
+
 
 class StatsDatabaseTestCase(DatabaseTestCase):
 
@@ -35,13 +37,14 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         db_stats.insert_stats_in_couchdb(database2, from_ts2, from_ts2, data[:1])
 
     def test_user_artists(self):
-        self.create_entity_test_data("artists", "week")
+        with create_app().app_context():
+            self.create_entity_test_data("artists", "week")
 
-        stats = db_stats.get_stats_from_couchdb(1, "artists", "week")
-        self.assertEqual(stats, [])
+            stats = db_stats.get_stats_from_couchdb(1, "artists", "week")
+            self.assertEqual(stats, [])
 
-        stats = db_stats.get_stats_from_couchdb(2, "artists", "week")
-        self.assertEqual(stats, [])
+            stats = db_stats.get_stats_from_couchdb(2, "artists", "week")
+            self.assertEqual(stats, [])
 
     # def test_insert_user_artists(self):
     #     """ Test if artist stats are inserted correctly """
