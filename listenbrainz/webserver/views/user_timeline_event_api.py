@@ -551,14 +551,14 @@ def create_personal_recommendation_event(user_name):
             "recommendee_id": 0,
             "blurb_content": metadata["blurb_content"]
         }
-        for follower in metadata["followers"]:
-            if type(follower) != int:
-                raise TypeError(f"Value {str(follower)} is not a valid ID")
+        # for follower in metadata["followers"]:
+            # if type(follower) != int:
+                # raise TypeError(f"Value {str(follower)} is not a valid ID")
         metadata_db = PersonalRecordingRecommendationMetadata(**metadata_db)
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
-    except TypeError as e:
-        raise APIBadRequest(f"Invalid metadata: {str(e)}")
+    # except TypeError as e:
+        # raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
     try:
         for follower in metadata["followers"]:
@@ -572,6 +572,8 @@ def create_personal_recommendation_event(user_name):
             events.append(event_data)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
+    except pydantic.ValidationError as e:
+        raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
     return jsonify(events)
 

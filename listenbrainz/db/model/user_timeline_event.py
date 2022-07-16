@@ -56,7 +56,7 @@ class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata):
     blurb_content: Optional[str]
 
 
-class NotificationMetadata(BaseModel):
+class NotificationMetadata(BaseModel, validate_assignment=True):
     creator: constr(min_length=1)
     message: constr(min_length=1)
 
