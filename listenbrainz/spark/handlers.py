@@ -73,10 +73,9 @@ def handle_couchdb_data_end(message):
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
-def handle_user_entity(message):
-    """ Take entity stats for a user and save it in the database. """
+def _handle_stats(message, stats_type):
     try:
-        with start_transaction(op="insert", name=f'insert {message["entity"]} - {message["stats_range"]} stats'):
+        with start_transaction(op="insert", name=f'insert {stats_type} - {message["stats_range"]} stats'):
             db_stats.insert_stats_in_couchdb(
                 message["database"],
                 message["from_ts"],
@@ -87,25 +86,19 @@ def handle_user_entity(message):
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
-def _handle_user_activity_stats(stats_type, data):
-    values = [(entry["user_id"], 0, json.dumps(entry["data"])) for entry in data["data"]]
-    db_stats.insert_multiple_user_jsonb_data(
-        stats_type,
-        data["stats_range"],
-        data["from_ts"],
-        data["to_ts"],
-        values
-    )
+def handle_user_entity(message):
+    """ Take entity stats for a user and save it in the database. """
+    _handle_stats(message, message["entity"])
 
 
-def handle_user_listening_activity(data):
+def handle_user_listening_activity(message):
     """ Take listening activity stats for user and save it in database. """
-    _handle_user_activity_stats("listening_activity", data)
+    _handle_stats(message, "listening_activity")
 
 
-def handle_user_daily_activity(data):
+def handle_user_daily_activity(message):
     """ Take daily activity stats for user and save it in database. """
-    _handle_user_activity_stats("daily_activity", data)
+    _handle_stats(message, "daily_activity")
 
 
 def handle_sitewide_entity(data):
