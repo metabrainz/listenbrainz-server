@@ -1,147 +1,152 @@
-{
-  "data": [
-    {
-      "day": "Friday",
-      "hour": 1,
-      "listen_count": 5
-    },
-    {
-      "day": "Friday",
-      "hour": 2,
-      "listen_count": 5
-    },
-    {
-      "day": "Thursday",
-      "hour": 2,
-      "listen_count": 1
-    },
-    {
-      "day": "Friday",
-      "hour": 3,
-      "listen_count": 7
-    },
-    {
-      "day": "Friday",
-      "hour": 4,
-      "listen_count": 2
-    },
-    {
-      "day": "Sunday",
-      "hour": 4,
-      "listen_count": 3
-    },
-    {
-      "day": "Wednesday",
-      "hour": 4,
-      "listen_count": 3
-    },
-    {
-      "day": "Friday",
-      "hour": 5,
-      "listen_count": 4
-    },
-    {
-      "day": "Saturday",
-      "hour": 5,
-      "listen_count": 3
-    },
-    {
-      "day": "Wednesday",
-      "hour": 5,
-      "listen_count": 8
-    },
-    {
-      "day": "Saturday",
-      "hour": 6,
-      "listen_count": 8
-    },
-    {
-      "day": "Saturday",
-      "hour": 7,
-      "listen_count": 1
-    },
-    {
-      "day": "Friday",
-      "hour": 10,
-      "listen_count": 9
-    },
-    {
-      "day": "Thursday",
-      "hour": 10,
-      "listen_count": 1
-    },
-    {
-      "day": "Wednesday",
-      "hour": 10,
-      "listen_count": 1
-    },
-    {
-      "day": "Friday",
-      "hour": 11,
-      "listen_count": 4
-    },
-    {
-      "day": "Thursday",
-      "hour": 11,
-      "listen_count": 8
-    },
-    {
-      "day": "Tuesday",
-      "hour": 11,
-      "listen_count": 1
-    },
-    {
-      "day": "Wednesday",
-      "hour": 11,
-      "listen_count": 11
-    },
-    {
-      "day": "Thursday",
-      "hour": 12,
-      "listen_count": 2
-    },
-    {
-      "day": "Wednesday",
-      "hour": 12,
-      "listen_count": 5
-    },
-    {
-      "day": "Friday",
-      "hour": 13,
-      "listen_count": 4
-    },
-    {
-      "day": "Thursday",
-      "hour": 13,
-      "listen_count": 7
-    },
-    {
-      "day": "Friday",
-      "hour": 14,
-      "listen_count": 3
-    },
-    {
-      "day": "Friday",
-      "hour": 15,
-      "listen_count": 5
-    },
-    {
-      "day": "Friday",
-      "hour": 16,
-      "listen_count": 9
-    },
-    {
-      "day": "Friday",
-      "hour": 17,
-      "listen_count": 12
-    },
-    {
-      "day": "Friday",
-      "hour": 18,
-      "listen_count": 6
-    }
-  ],
-  "from_ts": 1546300800,
-  "to_ts": 1593043183,
-  "stats_range": "year"
-}
+[
+  {
+    "user_id": 1,
+    "data": [
+      {
+        "day": "Friday",
+        "hour": 1,
+        "listen_count": 5
+      },
+      {
+        "day": "Friday",
+        "hour": 2,
+        "listen_count": 5
+      },
+      {
+        "day": "Thursday",
+        "hour": 2,
+        "listen_count": 1
+      },
+      {
+        "day": "Friday",
+        "hour": 3,
+        "listen_count": 7
+      },
+      {
+        "day": "Friday",
+        "hour": 4,
+        "listen_count": 2
+      },
+      {
+        "day": "Sunday",
+        "hour": 4,
+        "listen_count": 3
+      },
+      {
+        "day": "Wednesday",
+        "hour": 4,
+        "listen_count": 3
+      },
+      {
+        "day": "Friday",
+        "hour": 5,
+        "listen_count": 4
+      },
+      {
+        "day": "Saturday",
+        "hour": 5,
+        "listen_count": 3
+      },
+      {
+        "day": "Wednesday",
+        "hour": 5,
+        "listen_count": 8
+      },
+      {
+        "day": "Saturday",
+        "hour": 6,
+        "listen_count": 8
+      },
+      {
+        "day": "Saturday",
+        "hour": 7,
+        "listen_count": 1
+      },
+      {
+        "day": "Friday",
+        "hour": 10,
+        "listen_count": 9
+      },
+      {
+        "day": "Thursday",
+        "hour": 10,
+        "listen_count": 1
+      },
+      {
+        "day": "Wednesday",
+        "hour": 10,
+        "listen_count": 1
+      }
+    ]
+  },
+  {
+    "user_id": 2,
+    "data": [
+      {
+        "day": "Friday",
+        "hour": 11,
+        "listen_count": 4
+      },
+      {
+        "day": "Thursday",
+        "hour": 11,
+        "listen_count": 8
+      },
+      {
+        "day": "Tuesday",
+        "hour": 11,
+        "listen_count": 1
+      },
+      {
+        "day": "Wednesday",
+        "hour": 11,
+        "listen_count": 11
+      },
+      {
+        "day": "Thursday",
+        "hour": 12,
+        "listen_count": 2
+      },
+      {
+        "day": "Wednesday",
+        "hour": 12,
+        "listen_count": 5
+      },
+      {
+        "day": "Friday",
+        "hour": 13,
+        "listen_count": 4
+      },
+      {
+        "day": "Thursday",
+        "hour": 13,
+        "listen_count": 7
+      },
+      {
+        "day": "Friday",
+        "hour": 14,
+        "listen_count": 3
+      },
+      {
+        "day": "Friday",
+        "hour": 15,
+        "listen_count": 5
+      },
+      {
+        "day": "Friday",
+        "hour": 16,
+        "listen_count": 9
+      },
+      {
+        "day": "Friday",
+        "hour": 17,
+        "listen_count": 12
+      },
+      {
+        "day": "Friday",
+        "hour": 18,
+        "listen_count": 6
+      }
+    ]
+  }
+]
