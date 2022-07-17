@@ -1,91 +1,180 @@
-{
-  "from_ts": 1587945600,
-  "data": [
-    {
-      "from_ts": 1587945600,
-      "listen_count": 26,
-      "time_range": "Monday 27 April 2020",
-      "to_ts": 1588031999
-    },
-    {
-      "from_ts": 1588032000,
-      "listen_count": 57,
-      "time_range": "Tuesday 28 April 2020",
-      "to_ts": 1588118399
-    },
-    {
-      "from_ts": 1588118400,
-      "listen_count": 33,
-      "time_range": "Wednesday 29 April 2020",
-      "to_ts": 1588204799
-    },
-    {
-      "from_ts": 1588204800,
-      "listen_count": 40,
-      "time_range": "Thursday 30 April 2020",
-      "to_ts": 1588291199
-    },
-    {
-      "from_ts": 1588291200,
-      "listen_count": 26,
-      "time_range": "Friday 01 May 2020",
-      "to_ts": 1588377599
-    },
-    {
-      "from_ts": 1588377600,
-      "listen_count": 17,
-      "time_range": "Saturday 02 May 2020",
-      "to_ts": 1588463999
-    },
-    {
-      "from_ts": 1588464000,
-      "listen_count": 26,
-      "time_range": "Sunday 03 May 2020",
-      "to_ts": 1588550399
-    },
-    {
-      "from_ts": 1588550400,
-      "listen_count": 32,
-      "time_range": "Monday 04 May 2020",
-      "to_ts": 1588636799
-    },
-    {
-      "from_ts": 1588636800,
-      "listen_count": 26,
-      "time_range": "Tuesday 05 May 2020",
-      "to_ts": 1588723199
-    },
-    {
-      "from_ts": 1588723200,
-      "listen_count": 28,
-      "time_range": "Wednesday 06 May 2020",
-      "to_ts": 1588809599
-    },
-    {
-      "from_ts": 1588809600,
-      "listen_count": 21,
-      "time_range": "Thursday 07 May 2020",
-      "to_ts": 1588895999
-    },
-    {
-      "from_ts": 1588896000,
-      "listen_count": 26,
-      "time_range": "Friday 08 May 2020",
-      "to_ts": 1588982399
-    },
-    {
-      "from_ts": 1588982400,
-      "listen_count": 0,
-      "time_range": "Saturday 09 May 2020",
-      "to_ts": 1589068799
-    },
-    {
-      "from_ts": 1589068800,
-      "listen_count": 4,
-      "time_range": "Sunday 10 May 2020",
-      "to_ts": 1589155199
-    }
-  ],
-  "to_ts": 1589155200,
-  "stats_range": "week"
-}
+[
+  {
+    "user_id": 1,
+    "data": [
+      {
+        "from_ts": 1587945600,
+        "listen_count": 26,
+        "time_range": "Monday 27 April 2020",
+        "to_ts": 1588031999
+      },
+      {
+        "from_ts": 1588032000,
+        "listen_count": 57,
+        "time_range": "Tuesday 28 April 2020",
+        "to_ts": 1588118399
+      },
+      {
+        "from_ts": 1588118400,
+        "listen_count": 33,
+        "time_range": "Wednesday 29 April 2020",
+        "to_ts": 1588204799
+      },
+      {
+        "from_ts": 1588204800,
+        "listen_count": 40,
+        "time_range": "Thursday 30 April 2020",
+        "to_ts": 1588291199
+      },
+      {
+        "from_ts": 1588291200,
+        "listen_count": 26,
+        "time_range": "Friday 01 May 2020",
+        "to_ts": 1588377599
+      },
+      {
+        "from_ts": 1588377600,
+        "listen_count": 17,
+        "time_range": "Saturday 02 May 2020",
+        "to_ts": 1588463999
+      },
+      {
+        "from_ts": 1588464000,
+        "listen_count": 26,
+        "time_range": "Sunday 03 May 2020",
+        "to_ts": 1588550399
+      },
+      {
+        "from_ts": 1588550400,
+        "listen_count": 32,
+        "time_range": "Monday 04 May 2020",
+        "to_ts": 1588636799
+      },
+      {
+        "from_ts": 1588636800,
+        "listen_count": 26,
+        "time_range": "Tuesday 05 May 2020",
+        "to_ts": 1588723199
+      },
+      {
+        "from_ts": 1588723200,
+        "listen_count": 28,
+        "time_range": "Wednesday 06 May 2020",
+        "to_ts": 1588809599
+      },
+      {
+        "from_ts": 1588809600,
+        "listen_count": 21,
+        "time_range": "Thursday 07 May 2020",
+        "to_ts": 1588895999
+      },
+      {
+        "from_ts": 1588896000,
+        "listen_count": 26,
+        "time_range": "Friday 08 May 2020",
+        "to_ts": 1588982399
+      },
+      {
+        "from_ts": 1588982400,
+        "listen_count": 0,
+        "time_range": "Saturday 09 May 2020",
+        "to_ts": 1589068799
+      },
+      {
+        "from_ts": 1589068800,
+        "listen_count": 4,
+        "time_range": "Sunday 10 May 2020",
+        "to_ts": 1589155199
+      }
+    ]
+  },
+  {
+    "user_id": 2,
+    "data": [
+      {
+        "from_ts": 1587945600,
+        "listen_count": 11,
+        "time_range": "Monday 27 April 2020",
+        "to_ts": 1588031999
+      },
+      {
+        "from_ts": 1588032000,
+        "listen_count": 5,
+        "time_range": "Tuesday 28 April 2020",
+        "to_ts": 1588118399
+      },
+      {
+        "from_ts": 1588118400,
+        "listen_count": 13,
+        "time_range": "Wednesday 29 April 2020",
+        "to_ts": 1588204799
+      },
+      {
+        "from_ts": 1588204800,
+        "listen_count": 0,
+        "time_range": "Thursday 30 April 2020",
+        "to_ts": 1588291199
+      },
+      {
+        "from_ts": 1588291200,
+        "listen_count": 9,
+        "time_range": "Friday 01 May 2020",
+        "to_ts": 1588377599
+      },
+      {
+        "from_ts": 1588377600,
+        "listen_count": 7,
+        "time_range": "Saturday 02 May 2020",
+        "to_ts": 1588463999
+      },
+      {
+        "from_ts": 1588464000,
+        "listen_count": 4,
+        "time_range": "Sunday 03 May 2020",
+        "to_ts": 1588550399
+      },
+      {
+        "from_ts": 1588550400,
+        "listen_count": 3,
+        "time_range": "Monday 04 May 2020",
+        "to_ts": 1588636799
+      },
+      {
+        "from_ts": 1588636800,
+        "listen_count": 5,
+        "time_range": "Tuesday 05 May 2020",
+        "to_ts": 1588723199
+      },
+      {
+        "from_ts": 1588723200,
+        "listen_count": 8,
+        "time_range": "Wednesday 06 May 2020",
+        "to_ts": 1588809599
+      },
+      {
+        "from_ts": 1588809600,
+        "listen_count": 1,
+        "time_range": "Thursday 07 May 2020",
+        "to_ts": 1588895999
+      },
+      {
+        "from_ts": 1588896000,
+        "listen_count": 6,
+        "time_range": "Friday 08 May 2020",
+        "to_ts": 1588982399
+      },
+      {
+        "from_ts": 1588982400,
+        "listen_count": 7,
+        "time_range": "Saturday 09 May 2020",
+        "to_ts": 1589068799
+      },
+      {
+        "from_ts": 1589068800,
+        "listen_count": 8,
+        "time_range": "Sunday 10 May 2020",
+        "to_ts": 1589155199
+      }
+    ]
+  }
+]
