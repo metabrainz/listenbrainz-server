@@ -62,11 +62,11 @@ def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, e
     else:
         number_of_results = NUMBER_OF_TOP_ENTITIES
     data = handler(table, number_of_results)
-    return create_messages(data=data, entity=entity, stats_range=stats_range,
-                           from_date=from_date, to_date=to_date, message_type=message_type)
+    return create_messages(data=data, entity=entity, stats_range=stats_range, from_date=from_date,
+                           to_date=to_date, message_type=message_type, database=database)
 
 
-def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str) \
+def parse_one_user_stats(entry, entity: str, stats_range: str) \
         -> Optional[UserEntityRecords]:
     _dict = entry.asDict(recursive=True)
     total_entity_count = len(_dict[entity])
@@ -124,7 +124,7 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
     for entries in chunked(data, USERS_PER_MESSAGE):
         multiple_user_stats = []
         for entry in entries:
-            processed_stat = parse_one_user_stats(entry, entity, stats_range, message_type)
+            processed_stat = parse_one_user_stats(entry, entity, stats_range)
             multiple_user_stats.append(processed_stat)
 
         try:
