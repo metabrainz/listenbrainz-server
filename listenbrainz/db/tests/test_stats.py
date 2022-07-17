@@ -51,7 +51,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
             received = db_stats.get_stats_from_couchdb(2, "artists", "week").dict()
             expected = data[1]
-            expected["user_id"] = expected["_id"]
+            expected["user_id"] = int(expected["_id"])
             del expected["_id"]
             self.assertEqual(received, expected)
 
