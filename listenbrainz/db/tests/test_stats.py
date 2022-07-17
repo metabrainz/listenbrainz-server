@@ -1,3 +1,4 @@
+import itertools
 import json
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -23,8 +24,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
         self.maxDiff = None
 
-    def create_entity_test_data(self, entity, range_):
-        with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_week.json')) as f:
+    def test_one_user_stat(self, entity, range_):
+        with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_{range_}.json')) as f:
             original = json.load(f)
 
         # insert_stats_in_couchdb modifies the data in place so make a copy first
@@ -40,29 +41,32 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         couchdb.create_database(database2)
         db_stats.insert_stats_in_couchdb(database2, from_ts2, to_ts2, data[:1])
 
-        return original, from_ts1, to_ts1, from_ts2, to_ts2
+        received = db_stats.get_stats_from_couchdb(1, "artists", "week").dict()
+        expected = original[0] | {
+            "from_ts": from_ts2,
+            "to_ts": to_ts2,
+            "last_updated": received["last_updated"],
+            "stats_range": "week"
+        }
+        self.assertEqual(received, expected)
 
-    def test_user_artists(self):
+        received = db_stats.get_stats_from_couchdb(2, "artists", "week").dict()
+        expected = original[1] | {
+            "from_ts": from_ts1,
+            "to_ts": to_ts1,
+            "last_updated": received["last_updated"],
+            "stats_range": "week"
+        }
+        self.assertEqual(received, expected)
+
+    def test_user_stats(self):
+        entities = ["artists", "releases", "recordings"]
+        ranges = ["week", "this_week", "month", "this_month", "year", "this_year", "all_time"]
+
         with create_app().app_context():
-            data, from_ts1, to_ts1, from_ts2, to_ts2 = self.create_entity_test_data("artists", "week")
-
-            received = db_stats.get_stats_from_couchdb(1, "artists", "week").dict()
-            expected = data[0] | {
-                "from_ts": from_ts2,
-                "to_ts": to_ts2,
-                "last_updated": received["last_updated"],
-                "stats_range": "week"
-            }
-            self.assertEqual(received, expected)
-
-            received = db_stats.get_stats_from_couchdb(2, "artists", "week").dict()
-            expected = data[1] | {
-                "from_ts": from_ts1,
-                "to_ts": to_ts1,
-                "last_updated": received["last_updated"],
-                "stats_range": "week"
-            }
-            self.assertEqual(received, expected)
+            for (entity, range_) in itertools.product(entities, ranges):
+                with self.subTest(f"{range_} {entity} user stats", entity=entity, range_=range_):
+                    self.test_one_user_stat(entity, range_)
 
     # def test_insert_user_artists(self):
     #     """ Test if artist stats are inserted correctly """
