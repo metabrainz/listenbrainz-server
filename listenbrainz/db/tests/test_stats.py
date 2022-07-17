@@ -25,7 +25,10 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
     def create_entity_test_data(self, entity, range_):
         with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_week.json')) as f:
-            data = json.load(f)
+            original = json.load(f)
+
+        # insert_stats_in_couchdb modifies the data in place so make a copy first
+        data = deepcopy(original)
 
         database1, database2 = f"{entity}_{range_}_20220716", f"{entity}_{range_}_20220717"
         from_ts1, to_ts1 = int(datetime(2022, 7, 9).timestamp()), int(datetime(2022, 7, 16).timestamp())
@@ -37,22 +40,28 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         couchdb.create_database(database2)
         db_stats.insert_stats_in_couchdb(database2, from_ts2, to_ts2, data[:1])
 
-        return data
+        return original, from_ts1, to_ts1, from_ts2, to_ts2
 
     def test_user_artists(self):
         with create_app().app_context():
-            data = self.create_entity_test_data("artists", "week")
+            data, from_ts1, to_ts1, from_ts2, to_ts2 = self.create_entity_test_data("artists", "week")
 
             received = db_stats.get_stats_from_couchdb(1, "artists", "week").dict()
-            expected = data[0]
-            expected["user_id"] = expected["_id"]
-            del expected["_id"]
+            expected = data[0] | {
+                "from_ts": from_ts2,
+                "to_ts": to_ts2,
+                "last_updated": received["last_updated"],
+                "stats_range": "week"
+            }
             self.assertEqual(received, expected)
 
             received = db_stats.get_stats_from_couchdb(2, "artists", "week").dict()
-            expected = data[1]
-            expected["user_id"] = int(expected["_id"])
-            del expected["_id"]
+            expected = data[1] | {
+                "from_ts": from_ts1,
+                "to_ts": to_ts1,
+                "last_updated": received["last_updated"],
+                "stats_range": "week"
+            }
             self.assertEqual(received, expected)
 
     # def test_insert_user_artists(self):
