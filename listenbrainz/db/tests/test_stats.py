@@ -48,24 +48,24 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         received = db_stats.get_entity_stats(1, entity, range_)
         received["user_id"] = int(received["_id"])
         del received["_id"]
+        del received["_rev"]
 
         expected = original[0] | {
             "from_ts": from_ts2,
             "to_ts": to_ts2,
             "last_updated": received["last_updated"],
-            "stats_range": range_
         }
         self.assertEqual(received, expected)
 
         received = db_stats.get_entity_stats(2, entity, range_)
         received["user_id"] = int(received["_id"])
         del received["_id"]
+        del received["_rev"]
 
         expected = original[1] | {
             "from_ts": from_ts1,
             "to_ts": to_ts1,
             "last_updated": received["last_updated"],
-            "stats_range": range_
         }
         self.assertEqual(received, expected)
 
@@ -79,8 +79,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                     with self.subTest(f"{range_} {entity} user stats", entity=entity, range_=range_):
                         self._test_one_stat(entity, range_, f'user_top_{entity}_db_data_for_api_test_{range_}.json')
 
-                with self.subTest(f"{range_} daily_activity user stats", entity="daily_activity", range_=range_):
-                    self._test_one_stat(entity, range_, f'user_daily_activity_db_data_for_api_test_{range_}.json')
+                with self.subTest(f"{range_} daily_activity user stats", range_=range_):
+                    self._test_one_stat("daily_activity", range_, f'user_daily_activity_db_data_for_api_test_{range_}.json')
 
     # def test_insert_user_listening_activity(self):
     #     """ Test if listening activity stats are inserted correctly """
