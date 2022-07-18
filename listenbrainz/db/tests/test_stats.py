@@ -42,10 +42,11 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         db_stats.insert_stats_in_couchdb(database2, from_ts2, to_ts2, data[:1])
         return original, from_ts1, to_ts1, from_ts2, to_ts2
 
-    def _test_one_stat(self, entity, range_, data_file, model):
+    def _test_one_stat(self, entity, range_, data_file, model, exclude_count=False):
         original, from_ts1, to_ts1, from_ts2, to_ts2 = self.insert_stats(entity, range_, data_file)
 
-        received = db_stats.get_entity_stats(1, entity, range_, model).dict(exclude_none=True)
+        received = db_stats.get_entity_stats(1, entity, range_, model) \
+            .dict(exclude={"count"} if exclude_count else None)
 
         expected = original[0] | {
             "from_ts": from_ts2,
@@ -55,7 +56,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         }
         self.assertEqual(received, expected)
 
-        received = db_stats.get_entity_stats(2, entity, range_, model).dict(exclude_none=True)
+        received = db_stats.get_entity_stats(2, entity, range_, model) \
+            .dict(exclude={"count"} if exclude_count else None)
 
         expected = original[1] | {
             "from_ts": from_ts1,
