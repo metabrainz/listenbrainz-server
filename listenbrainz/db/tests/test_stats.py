@@ -87,7 +87,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                         "daily_activity",
                         range_,
                         f'user_daily_activity_db_data_for_api_test_{range_}.json',
-                        DailyActivityRecord
+                        DailyActivityRecord,
+                        exclude_count=True
                     )
 
                 with self.subTest(f"{range_} listening_activity user stats", range_=range_):
@@ -95,7 +96,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                         "listening_activity",
                         range_,
                         f'user_listening_activity_db_data_for_api_test_{range_}.json',
-                        ListeningActivityRecord
+                        ListeningActivityRecord,
+                        exclude_count=True
                     )
 
                 with self.subTest(f"{range_} artist_map user stats", range_=range_):
@@ -103,7 +105,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                         "artist_map",
                         range_,
                         f'user_artist_map_db_data_for_api_test_{range_}.json',
-                        UserArtistMapRecord
+                        UserArtistMapRecord,
+                        exclude_count=True
                     )
 
    # def test_get_sitewide_artists(self):
