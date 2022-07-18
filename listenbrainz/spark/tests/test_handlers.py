@@ -67,7 +67,8 @@ class HandlersTestCase(DatabaseTestCase):
                     ],
                     'count': 2,
                 }
-            ]
+            ],
+            'database': 'artists_all_time_20220718'
         }
 
         handle_user_entity(data)
@@ -152,7 +153,8 @@ class HandlersTestCase(DatabaseTestCase):
                         }
                     ]
                 }
-            ]
+            ],
+            'database': 'listening_activity_all_time_20220718'
         }
 
         handle_user_listening_activity(data)
@@ -234,6 +236,7 @@ class HandlersTestCase(DatabaseTestCase):
                     ]
                 }
             ],
+            'database': 'daily_activity_20220718'
         }
 
         handle_user_daily_activity(data)
