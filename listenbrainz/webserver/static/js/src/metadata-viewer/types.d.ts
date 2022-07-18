@@ -15,19 +15,19 @@ declare type MusicBrainzRecordingRel = {
 };
 
 /** Tags / Genres / Moods */
-declare type ArtistTag = {
-  artist_mbid: string;
-  count: number;
-  genre_mbid?: string;
-  tag: string;
-};
-declare type RecordingTag = {
+declare type EntityTag = {
   count: number;
   genre_mbid?: string;
   tag: string;
 };
 
-declare type ReleaseGroupTag = RecordingTag & {
+declare type RecordingTag = EntityTag;
+
+declare type ArtistTag = EntityTag & {
+  artist_mbid: string;
+};
+
+declare type ReleaseGroupTag = EntityTag & {
   release_group_mbid: string;
 };
 
@@ -41,6 +41,7 @@ declare type ListenMetadata = {
     caa_id: ?number;
     mbid?: string;
     year?: number;
+    release_group_mbid?: string;
   };
   tag?: {
     artist?: Array<ArtistTag>;
