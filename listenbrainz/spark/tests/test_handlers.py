@@ -21,7 +21,7 @@ from listenbrainz.spark.handlers import (
     handle_model, handle_recommendations, handle_sitewide_entity,
     handle_user_daily_activity, handle_user_entity,
     handle_user_listening_activity,
-    is_new_user_stats_batch, notify_artist_relation_import,
+    notify_artist_relation_import,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete)
@@ -280,9 +280,8 @@ class HandlersTestCase(DatabaseTestCase):
         ))
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.insert_sitewide_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_daily_activity(self, mock_send_mail, mock_sitewide_stats, mock_db_insert):
+    def test_handle_user_daily_activity(self, mock_send_mail, mock_db_insert):
         data = {
             'type': 'sitewide_entity',
             'stats_range': 'all_time',
@@ -316,13 +315,6 @@ class HandlersTestCase(DatabaseTestCase):
                 )
             ])))
         mock_send_mail.assert_called_once()
-
-    @mock.patch('listenbrainz.spark.handlers.db_stats.get_timestamp_for_last_user_stats_update')
-    def test_is_new_user_stats_batch(self, mock_db_get_timestamp):
-        mock_db_get_timestamp.return_value = datetime.now(timezone.utc)
-        self.assertFalse(is_new_user_stats_batch())
-        mock_db_get_timestamp.return_value = datetime.now(timezone.utc) - timedelta(minutes=21)
-        self.assertTrue(is_new_user_stats_batch())
 
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
     @mock.patch('listenbrainz.spark.handlers.db_user.get')

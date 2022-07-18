@@ -102,18 +102,6 @@ def get_entity_stats(user_id, stats_type, stats_range, stats_model) -> Optional[
     return None
 
 
-def get_timestamp_for_last_user_stats_update():
-    """ Get the time when the user stats table was last updated
-    """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT MAX(last_updated) as last_update_ts
-              FROM statistics.user
-            """))
-        row = result.fetchone()
-        return row['last_update_ts'] if row else None
-
-
 def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
     """ Inserts jsonb data into the given column
 
@@ -263,7 +251,7 @@ def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[Stat
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'listening_activity', )
+    return get_user_activity_stats(user_id, stats_range, 'listening_activity', ListeningActivityRecord)
 
 
 def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[StatApi[DailyActivityRecord]]:
@@ -273,7 +261,7 @@ def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[StatApi[
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'daily_activity', StatApi[DailyActivityRecord])
+    return get_user_activity_stats(user_id, stats_range, 'daily_activity', DailyActivityRecord)
 
 
 def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[UserArtistMapRecord]]:
@@ -283,7 +271,7 @@ def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[User
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'artist_map', StatApi[UserArtistMapRecord])
+    return get_user_activity_stats(user_id, stats_range, 'artist_map', UserArtistMapRecord)
 
 
 def get_sitewide_stats(stats_range: str, stats_type: str) -> Optional[StatApi[EntityRecord]]:

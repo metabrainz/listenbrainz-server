@@ -27,31 +27,6 @@ TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
 
 
-def is_new_user_stats_batch():
-    """ Returns True if this batch of user stats is new, False otherwise
-
-    User stats come in as multiple rabbitmq messages. We only wish to send an email once per batch.
-    So, we check the database and see if the difference between the last time stats were updated
-    and right now is greater than 12 hours.
-    """
-    last_update_ts = db_stats.get_timestamp_for_last_user_stats_update()
-    if last_update_ts is None:
-        last_update_ts = datetime.min.replace(tzinfo=timezone.utc)  # use min datetime value if last_update_ts is None
-
-    return datetime.now(timezone.utc) - last_update_ts > timedelta(minutes=TIME_TO_CONSIDER_STATS_AS_OLD)
-
-
-def notify_user_stats_update(stat_type):
-    if not current_app.config['TESTING']:
-        send_mail(
-            subject="New user stats are being written into the DB - ListenBrainz",
-            text=render_template('emails/user_stats_notification.txt', now=str(datetime.utcnow()), stat_type=stat_type),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
-        )
-
-
 def handle_couchdb_data_start(message):
     try:
         couchdb.create_database(message["database"])
@@ -101,24 +76,38 @@ def handle_user_daily_activity(message):
     _handle_stats(message, "daily_activity")
 
 
-def handle_sitewide_entity(data):
-    """ Take sitewide entity stats and save it in the database. """
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-
-    stats_range = data['stats_range']
-    entity = data['entity']
-
+def _handle_sitewide_stats(message, stat_type):
     try:
-        db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**data))
-    except ValidationError:
-        current_app.logger.error(f"""ValidationError while inserting {stats_range} sitewide top {entity}.
-        Data: {json.dumps(data, indent=3)}""", exc_info=True)
+        stats_range = message['stats_range']
+        databases = couchdb.list_databases(f"{stat_type}_{stats_range}")
+        if not databases:
+            current_app.logger.error(f"No database found to insert {stats_range} sitewide {stat_type} stats")
+            return
+
+        stats = [
+            {
+                "user_id": db_stats.SITEWIDE_STATS_USER_ID,
+                "data": message["data"]
+            }
+        ]
+
+        db_stats.insert_stats_in_couchdb(
+            databases[0],
+            message["from_ts"],
+            message["to_ts"],
+            stats
+        )
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
-def handle_sitewide_listening_activity(data):
-    db_stats.insert_sitewide_jsonb_data("listening_activity", StatRange[ListeningActivityRecord](**data))
+def handle_sitewide_entity(message):
+    """ Take sitewide entity stats and save it in the database. """
+    _handle_sitewide_stats(message, message["entity"])
+
+
+def handle_sitewide_listening_activity(message):
+    _handle_sitewide_stats(message, "listening_activity")
 
 
 def handle_dump_imported(data):
