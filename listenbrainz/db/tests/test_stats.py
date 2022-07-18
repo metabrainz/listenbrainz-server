@@ -24,7 +24,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
         self.maxDiff = None
 
-    def _test_one_stat(self, entity, range_, data_file):
+    def insert_stats(self, entity, range_, data_file):
         with open(self.path_to_data_file(data_file)) as f:
             original = json.load(f)
 
@@ -40,8 +40,15 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
         couchdb.create_database(database2)
         db_stats.insert_stats_in_couchdb(database2, from_ts2, to_ts2, data[:1])
+        return original, from_ts1, to_ts1, from_ts2, to_ts2
 
-        received = db_stats.get_stats_from_couchdb(1, entity, range_).dict()
+    def _test_one_stat(self, entity, range_, data_file):
+        original, from_ts1, to_ts1, from_ts2, to_ts2 = self.insert_stats(entity, range_, data_file)
+
+        received = db_stats.get_entity_stats(1, entity, range_)
+        received["user_id"] = int(received["_id"])
+        del received["_id"]
+
         expected = original[0] | {
             "from_ts": from_ts2,
             "to_ts": to_ts2,
@@ -50,7 +57,10 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         }
         self.assertEqual(received, expected)
 
-        received = db_stats.get_stats_from_couchdb(2, entity, range_).dict()
+        received = db_stats.get_entity_stats(2, entity, range_)
+        received["user_id"] = int(received["_id"])
+        del received["_id"]
+
         expected = original[1] | {
             "from_ts": from_ts1,
             "to_ts": to_ts1,
@@ -59,19 +69,18 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         }
         self.assertEqual(received, expected)
 
-    def test_user_stats(self):
+    def test_user_entity_stats(self):
         entities = ["artists", "releases", "recordings"]
-        other_stats = ["daily_activity", "listening_activity", "artist_map"]
         ranges = ["week", "month", "year"]
 
         with create_app().app_context():
-            for (entity, range_) in itertools.product(entities, ranges):
-                with self.subTest(f"{range_} {entity} user stats", entity=entity, range_=range_):
-                    self._test_one_stat(entity, range_, f'user_top_{entity}_db_data_for_api_test_{range_}.json')
+            for range_ in ranges:
+                for entity in entities:
+                    with self.subTest(f"{range_} {entity} user stats", entity=entity, range_=range_):
+                        self._test_one_stat(entity, range_, f'user_top_{entity}_db_data_for_api_test_{range_}.json')
 
-            for (stat_type, range_) in itertools.product(other_stats, ranges):
-                with self.subTest(f"{range_} {stat_type} user stats", stat_type=stat_type, range_=range_):
-                    self._test_one_stat(stat_type, range_, f'user_{stat_type}_db_data_for_api_test_{range_}.json')
+                with self.subTest(f"{range_} daily_activity user stats", entity="daily_activity", range_=range_):
+                    self._test_one_stat(entity, range_, f'user_daily_activity_db_data_for_api_test_{range_}.json')
 
     # def test_insert_user_listening_activity(self):
     #     """ Test if listening activity stats are inserted correctly """
