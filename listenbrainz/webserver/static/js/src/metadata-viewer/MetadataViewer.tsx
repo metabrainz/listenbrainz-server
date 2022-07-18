@@ -24,6 +24,10 @@ const supportLinkTypes = [
   "official homepage",
   "purchase for download",
   "purchase for mail-order",
+  "social network",
+  "patronage",
+  "crowdfunding",
+  "blog",
 ];
 
 function OpenInMusicBrainzButton(props: {
@@ -276,6 +280,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <h4 className="panel-title">
               <div className="recordingheader">
                 <div className="name strong">{trackName}</div>
+                &nbsp;<small>Track</small>
                 <div className="date">
                   {isNumber(duration) && millisecondsToStr(duration)}
                 </div>
@@ -295,7 +300,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <TagsComponent
                 tags={metadata?.tag?.recording}
                 entityType="recording"
-                entityMBID={recordingMBID}
+                entityMBID={recordingMBID ?? ""}
               />
               {/* <div className="ratings content-box" /> */}
               {Boolean(flattenedRecRels?.length) && (
@@ -369,6 +374,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   <div className="name strong">
                     {recordingData?.release_name}
                   </div>
+                  &nbsp;<small>Album</small>
                   <div className="date">{metadata?.release?.year}</div>
                   <div className="caret" />
                 </div>
@@ -420,6 +426,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <h4 className="panel-title">
               <div className="artistheader">
                 <div className="name strong">{artistName}</div>
+                &nbsp;<small>Artist</small>
                 <div className="date">{artist?.begin_year}</div>
                 <div className="caret" />
               </div>
@@ -437,7 +444,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <TagsComponent
                 tags={metadata?.tag?.artist}
                 entityType="artist"
-                entityMBID={artistMBID}
+                entityMBID={artistMBID ?? ""}
               />
               {/* <div className="ratings content-box" /> */}
               {(artist?.begin_year || artist?.area) && (

@@ -148,6 +148,8 @@
       border-radius: @border-radius;
       box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1) inset;
       background-color: @boxes-background-color;
+      min-height: 2.8em; // adapt to add-tag component height
+      align-items: center;
 
       &.white {
         background-color: white;
@@ -255,11 +257,11 @@
               vertical-align: initial;
               &.upvote.selected {
                 color: @btn-success-color;
-                background-color: @btn-success-bg;
+                background-color: lighten(@btn-success-bg, 20%);
               }
               &.downvote.selected {
                 color: @btn-danger-color;
-                background-color: @btn-danger-bg;
+                background-color: lighten(@btn-danger-bg, 20%);
               }
               &.selected {
                 pointer-events: none;
@@ -277,7 +279,7 @@
           position: relative; // For the overlay
           form input {
             height: 2em; // same height as the buttons
-            max-width: 13em;
+            max-width: 11em;
           }
           // Faded overlay to hide extra tags in .tags
           &:before {
