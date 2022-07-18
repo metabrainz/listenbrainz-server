@@ -91,12 +91,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         return;
       }
       try {
-        const feedbackArray = await APIService.getFeedbackForUserForMBIDs(
+        const feedbackObject = await APIService.getFeedbackForUserForMBIDs(
           currentUser.name,
           recordingMBID
         );
-        if (feedbackArray.length) {
-          const feedback: any = first(feedbackArray);
+        if (feedbackObject?.feedback?.length) {
+          const feedback: any = first(feedbackObject.feedback);
           setCurrentListenFeedback(feedback.score);
         } else {
           setCurrentListenFeedback(0);
