@@ -70,7 +70,7 @@ def insert_stats_in_couchdb(database: str, from_ts: int, to_ts: int, values: lis
     couchdb.insert_data(database, values)
 
 
-def get_stats_from_couchdb(user_id, stats_type, stats_range) -> Optional[StatApi[EntityRecord]]:
+def get_entity_stats(user_id, stats_type, stats_range) -> Optional[dict]:
     """ Retrieve stats for the given user, stats range and stats type.
 
         Args:
@@ -87,22 +87,7 @@ def get_stats_from_couchdb(user_id, stats_type, stats_range) -> Optional[StatApi
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
         return None
-
-    try:
-        return StatApi[EntityRecord](
-            user_id=user_id,
-            from_ts=data["from_ts"],
-            to_ts=data["to_ts"],
-            count=data["count"],
-            stats_range=stats_range,
-            data=data["data"],
-            last_updated=data["last_updated"]
-        )
-    except (ValidationError, KeyError) as e:
-        current_app.logger.error(f"{e}. Occurred while processing {stats_range} top artists for user"
-                                 f" with user_id: {user_id} and data: {json.dumps(data, indent=4)}",
-                                 exc_info=True)
-        return None
+    return data
 
 
 def get_timestamp_for_last_user_stats_update():

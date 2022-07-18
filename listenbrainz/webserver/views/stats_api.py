@@ -3,6 +3,9 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Dict, List, Tuple, Iterable
 
+import ujson
+from pydantic import ValidationError
+
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import pycountry
@@ -233,8 +236,24 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_stats_from_couchdb(user["id"], entity, stats_range)
-    if stats is None:
+    data = db_stats.get_entity_stats(user["id"], entity, stats_range)
+    if data is None:
+        raise APINoContent('')
+
+    try:
+        stats = StatApi[EntityRecord](
+            user_id=user["id"],
+            from_ts=data["from_ts"],
+            to_ts=data["to_ts"],
+            count=data["count"],
+            stats_range=stats_range,
+            data=data["data"],
+            last_updated=data["last_updated"]
+        )
+    except (ValidationError, KeyError) as e:
+        current_app.logger.error(f"{e}. Occurred while processing {stats_range} top artists for user"
+                                 f" with user_id: {user['id']} and data: {ujson.dumps(data, indent=4)}",
+                                 exc_info=True)
         raise APINoContent('')
 
     entity_list, total_entity_count = _process_user_entity(stats, offset, count)
