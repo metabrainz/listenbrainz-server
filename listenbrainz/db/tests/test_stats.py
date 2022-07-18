@@ -45,7 +45,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
     def _test_one_stat(self, entity, range_, data_file, model):
         original, from_ts1, to_ts1, from_ts2, to_ts2 = self.insert_stats(entity, range_, data_file)
 
-        received = db_stats.get_entity_stats(1, entity, range_, model).dict()
+        received = db_stats.get_entity_stats(1, entity, range_, model).dict(exclude_none=True)
 
         expected = original[0] | {
             "from_ts": from_ts2,
@@ -55,7 +55,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         }
         self.assertEqual(received, expected)
 
-        received = db_stats.get_entity_stats(2, entity, range_, model).dict()
+        received = db_stats.get_entity_stats(2, entity, range_, model).dict(exclude_none=True)
 
         expected = original[1] | {
             "from_ts": from_ts1,
