@@ -8,6 +8,7 @@ import TagsComponent from "./TagsComponent";
 import {
   getArtistName,
   getAverageRGBOfImage,
+  getRecordingMBID,
   getTrackName,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -54,6 +55,18 @@ function OpenInMusicBrainzButton(props: {
   );
 }
 
+function getNowPlayingRecordingMBID(
+  recordingData?: MetadataLookup,
+  playingNow?: Listen
+) {
+  if (!recordingData && !playingNow) {
+    return undefined;
+  }
+  return (
+    recordingData?.recording_mbid ?? getRecordingMBID(playingNow as Listen)
+  );
+}
+
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { recordingData, playingNow } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
@@ -84,9 +97,10 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   React.useEffect(() => {
     const getFeedbackPromise = async () => {
-      const recordingMBID =
-        recordingData?.recording_mbid ||
-        get(playingNow, "track_metadata.additional_info.recording_mbid");
+      const recordingMBID = getNowPlayingRecordingMBID(
+        recordingData,
+        playingNow
+      );
       if (!recordingMBID) {
         return;
       }
@@ -114,9 +128,10 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const submitFeedback = React.useCallback(
     async (score: ListenFeedBack) => {
       if (currentUser?.auth_token) {
-        const recordingMBID =
-          recordingData?.recording_mbid ||
-          get(playingNow, "track_metadata.additional_info.recording_mbid");
+        const recordingMBID = getNowPlayingRecordingMBID(
+          recordingData,
+          playingNow
+        );
         if (!recordingMBID) {
           return;
         }
@@ -153,7 +168,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   // Default to empty object
   const { metadata } = recordingData ?? {};
-
+  const recordingMBID = getNowPlayingRecordingMBID(recordingData, playingNow);
   const artistMBID = first(recordingData?.artist_mbids);
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
   if (metadata?.release?.mbid) {
@@ -321,7 +336,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 )}
                 <OpenInMusicBrainzButton
                   entityType="recording"
-                  entityMBID={recordingData?.recording_mbid}
+                  entityMBID={recordingMBID}
                 />
               </div>
             </div>
@@ -442,8 +457,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             >
               <a
                 href={
-                  recordingData?.recording_mbid
-                    ? `${musicBrainzURLRoot}recording/${recordingData?.recording_mbid}`
+                  recordingMBID
+                    ? `${musicBrainzURLRoot}recording/${recordingMBID}`
                     : undefined
                 }
                 target="_blank"
