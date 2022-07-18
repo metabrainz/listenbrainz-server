@@ -396,6 +396,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 <TagsComponent
                   tags={metadata?.tag?.release_group}
                   entityType="release-group"
+                  entityMBID={
+                    metadata?.release?.release_group_mbid ??
+                    metadata?.tag?.release_group?.[0]?.release_group_mbid ??
+                    recordingData?.release_mbid ??
+                    ""
+                  }
                 />
                 <OpenInMusicBrainzButton
                   entityType="release"
@@ -438,7 +444,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingThree"
           >
             <div className="panel-body">
-              <TagsComponent tags={metadata?.tag?.artist} entityType="artist" />
+              <TagsComponent
+                tags={metadata?.tag?.artist}
+                entityType="artist"
+                entityMBID={artistMBID}
+              />
               {/* <div className="ratings content-box" /> */}
               {(artist?.begin_year || artist?.area) && (
                 <div>

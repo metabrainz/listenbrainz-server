@@ -27,7 +27,7 @@ function AddTagComponent() {
 export default function TagsComponent(props: {
   tags?: Array<ArtistTag | RecordingTag | ReleaseGroupTag>;
   entityType: "artist" | "release-group" | "recording";
-  entityMBID?: string;
+  entityMBID: string;
 }) {
   const { tags, entityType, entityMBID } = props;
   return (
