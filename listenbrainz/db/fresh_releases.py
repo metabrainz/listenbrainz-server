@@ -86,9 +86,7 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                       , artist_credit_name
                       , release_name"""
 
-    psycopg2.extras.register_uuid()
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             curs.execute(query, (from_date, to_date))
-            row = curs.fetchone()
             return [FreshRelease(**dict(row)) for row in curs.fetchall()]
