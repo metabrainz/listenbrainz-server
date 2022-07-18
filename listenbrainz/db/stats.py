@@ -88,7 +88,7 @@ def get_entity_stats(user_id, stats_type, stats_range, stats_model) -> Optional[
                 user_id=int(user_id),
                 from_ts=data["from_ts"],
                 to_ts=data["to_ts"],
-                count=data.get("count", 0),  # all stats may not have a count field
+                count=data.get("count"),  # all stats may not have a count field
                 stats_range=stats_range,
                 data=data["data"],
                 last_updated=data["last_updated"]
