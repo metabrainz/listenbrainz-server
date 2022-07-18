@@ -271,16 +271,21 @@
             margin-left: 0.3em;
           }
         }
+
         .add-tag {
           flex: none;
+          position: relative; // For the overlay
+          form input {
+            height: 2em; // same height as the buttons
+            max-width: 13em;
+          }
           // Faded overlay to hide extra tags in .tags
           &:before {
             content: "";
             position: absolute;
             width: 60px;
-            height: 80%;
-            right: 75px;
-            top: 10%;
+            left: -60px;
+            height: 100%;
             background: linear-gradient(
               to right,
               transparent,
