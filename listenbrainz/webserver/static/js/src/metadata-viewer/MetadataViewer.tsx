@@ -170,6 +170,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const { metadata } = recordingData ?? {};
   const recordingMBID = getNowPlayingRecordingMBID(recordingData, playingNow);
   const artistMBID = first(recordingData?.artist_mbids);
+
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
   if (metadata?.release?.mbid) {
     if (metadata.release.caa_id) {
@@ -291,7 +292,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingOne"
           >
             <div className="panel-body">
-              <TagsComponent tags={metadata?.tag?.recording} />
+              <TagsComponent
+                tags={metadata?.tag?.recording}
+                entityType="recording"
+                entityMBID={recordingMBID}
+              />
               {/* <div className="ratings content-box" /> */}
               {Boolean(flattenedRecRels?.length) && (
                 <div className="white content-box">
@@ -378,7 +383,10 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               aria-labelledby="headingTwo"
             >
               <div className="panel-body">
-                <TagsComponent tags={metadata?.tag?.release_group} />
+                <TagsComponent
+                  tags={metadata?.tag?.release_group}
+                  entityType="release-group"
+                />
                 <OpenInMusicBrainzButton
                   entityType="release"
                   entityMBID={recordingData?.release_mbid}
@@ -420,7 +428,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingThree"
           >
             <div className="panel-body">
-              <TagsComponent tags={metadata?.tag?.artist} />
+              <TagsComponent tags={metadata?.tag?.artist} entityType="artist" />
               {/* <div className="ratings content-box" /> */}
               {(artist?.begin_year || artist?.area) && (
                 <div>
