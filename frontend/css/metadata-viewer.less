@@ -229,12 +229,45 @@
             // hidden scrollbar
             display: none;
           }
-          .badge {
+          .tag {
             flex: none;
             color: currentcolor;
-            background-color: lightgrey;
+            > * {
+              background-color: lightgrey;
+              display: inline-block;
+              padding: 3px 7px;
+              &:first-child {
+                border-top-left-radius: 10px;
+                border-bottom-left-radius: 10px;
+              }
+              &:last-child {
+                border-top-right-radius: 10px;
+                border-bottom-right-radius: 10px;
+              }
+            }
+            .tag-vote-button {
+              border-left: 1px dashed @boxes-background-color;
+              // Cancelling some .btn styling; we want the .btn class applied
+              // for interactivity reasons, but not all the CSS styling
+              margin: 0;
+              font-size: inherit;
+              line-height: inherit;
+              vertical-align: initial;
+              &.upvote.selected {
+                color: @btn-success-color;
+                background-color: @btn-success-bg;
+              }
+              &.downvote.selected {
+                color: @btn-danger-color;
+                background-color: @btn-danger-bg;
+              }
+              &.selected {
+                pointer-events: none;
+                cursor: not-allowed;
+              }
+            }
           }
-          .badge + .badge {
+          .tag + .tag {
             margin-left: 0.3em;
           }
         }
