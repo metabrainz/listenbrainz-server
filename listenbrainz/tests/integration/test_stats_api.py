@@ -36,43 +36,37 @@ class StatsAPITestCase(IntegrationTestCase):
         # Insert user top artists
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             self.user_artist_payload = json.load(f)
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists',
-                                        StatRange[EntityRecord](**self.user_artist_payload))
+        db_stats.insert_stats_in_couchdb('artists_all_time_20220718', 0, 5, self.user_artist_payload)
 
         # Insert release data
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             self.user_release_payload = json.load(f)
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases',
-                                        StatRange[EntityRecord](**self.user_release_payload))
+        db_stats.insert_stats_in_couchdb('releases_all_time_20220718', 0, 5, self.user_release_payload)
 
         # Insert recording data
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
             self.recording_payload = json.load(f)
-        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings',
-                                        StatRange[EntityRecord](**self.recording_payload))
+        db_stats.insert_stats_in_couchdb('recordings_all_time_20220718', 0, 5, self.recording_payload)
 
         # Insert listening activity data
         with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test.json')) as f:
             self.listening_activity_payload = json.load(f)
-        db_stats.insert_user_jsonb_data(self.user['id'], 'listening_activity',
-                                        StatRange[ListeningActivityRecord](**self.listening_activity_payload))
+        db_stats.insert_stats_in_couchdb('listening_activity_all_time_20220718', 0, 5, self.listening_activity_payload)
 
         # Insert daily activity data
         with open(self.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
-            data = json.load(f)
-        db_stats.insert_user_jsonb_data(self.user['id'], 'daily_activity',
-                                        StatRange[DailyActivityRecord](**data))
+            self.daily_activity_payload = json.load(f)
+        db_stats.insert_stats_in_couchdb('daily_activity_all_time_20220718', 0, 5, self.daily_activity_payload)
 
         # Insert artist map data
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             self.artist_map_payload = json.load(f)
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map',
-                                        StatRange[UserArtistMapRecord](**self.artist_map_payload))
+        db_stats.insert_stats_in_couchdb('artist_map_all_time', 0, 5, self.artist_map_payload)
 
         # Insert all_time sitewide top artists
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
             self.sitewide_artist_payload = json.load(f)
-        db_stats.insert_sitewide_jsonb_data('artists', StatRange[EntityRecord](**self.sitewide_artist_payload))
+        db_stats.insert_stats_in_couchdb('artists_all_time_20220718', 0, 5, self.sitewide_artist_payload)
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
