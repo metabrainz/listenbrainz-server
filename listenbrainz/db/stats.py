@@ -28,6 +28,7 @@ from typing import Optional
 import sqlalchemy
 
 import psycopg2
+import ujson
 from psycopg2 import sql
 from psycopg2.extras import execute_values
 from requests import HTTPError
@@ -70,24 +71,35 @@ def insert_stats_in_couchdb(database: str, from_ts: int, to_ts: int, values: lis
     couchdb.insert_data(database, values)
 
 
-def get_entity_stats(user_id, stats_type, stats_range) -> Optional[dict]:
+def get_entity_stats(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
     """ Retrieve stats for the given user, stats range and stats type.
 
         Args:
             user_id: ListenBrainz id of the user
             stats_range: time period to retrieve stats for
             stats_type: the stat to retrieve
-
+            stats_model: the pydantic model for the stats
     """
     prefix = f"{stats_type}_{stats_range}"
     try:
         data = couchdb.fetch_data(prefix, user_id)
-        if data is None:
-            return None
+        if data is not None:
+            return StatApi[stats_model](
+                user_id=int(user_id),
+                from_ts=data["from_ts"],
+                to_ts=data["to_ts"],
+                count=data.get("count", 0),  # all stats may not have a count field
+                stats_range=stats_range,
+                data=data["data"],
+                last_updated=data["last_updated"]
+            )
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-        return None
-    return data
+    except (ValidationError, KeyError) as e:
+        current_app.logger.error(
+            f"{e}. Occurred while processing {stats_range} top artists for user_id: {user_id}"
+            f" and data: {ujson.dumps(data, indent=4)}", exc_info=True)
+    return None
 
 
 def get_timestamp_for_last_user_stats_update():
@@ -251,7 +263,7 @@ def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[Stat
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'listening_activity', StatApi[ListeningActivityRecord])
+    return get_user_activity_stats(user_id, stats_range, 'listening_activity', )
 
 
 def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[StatApi[DailyActivityRecord]]:
@@ -291,33 +303,6 @@ def get_sitewide_listening_activity(stats_range: str) -> Optional[StatApi[Listen
             stats_range: the time range to fetch the stats for
     """
     return get_user_listening_activity(SITEWIDE_STATS_USER_ID, stats_range)
-
-
-def valid_stats_exist(user_id, days):
-    """ Returns True if statistics for a user have been calculated in
-    the last X days (where x is passed to the function), and are present in the db
-
-    Args:
-        user_id (int): the row ID of the user
-        days (int): the number of days in which stats should have been calculated
-            to consider them valid
-
-    Returns:
-        bool value signifying if valid stats exist for the user in the db
-    """
-
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-                SELECT user_id
-                  FROM statistics.user
-                 WHERE user_id = :user_id
-                   AND last_updated >= NOW() - INTERVAL ':x days'
-            """), {
-            'user_id': user_id,
-            'x': days,
-        })
-        row = result.fetchone()
-        return True if row is not None else False
 
 
 def delete_user_stats(user_id):
