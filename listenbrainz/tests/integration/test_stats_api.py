@@ -16,6 +16,7 @@ from flask import current_app, url_for
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
+from listenbrainz import config
 from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.db import couchdb
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -31,13 +32,10 @@ class MockDate(datetime):
 
 
 class StatsAPITestCase(IntegrationTestCase):
-    def setUp(self):
-        # app context
-        super(StatsAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
-        self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
 
-        # Insert user top artists
+    @classmethod
+    def setUpClass(self) -> None:
+        couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST, config.COUCHDB_PORT)
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             self.user_artist_payload = json.load(f)
         database = 'artists_all_time_20220718'
@@ -84,21 +82,78 @@ class StatsAPITestCase(IntegrationTestCase):
             self.sitewide_artist_payload = json.load(f)
         db_stats.insert_stats_in_couchdb('artists_all_time_20220718', 0, 5, self.sitewide_artist_payload)
 
+    def setUp(self):
+        # app context
+        super(StatsAPITestCase, self).setUp()
+        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
+        self.no_stat_user = db_user.get_or_create(2111, 'no_stat_user')
+        self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
+
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
         r.flushall()
+        super(StatsAPITestCase, self).tearDown()
 
+    @classmethod
+    def tearDownClass(cls) -> None:
         base_url = couchdb.get_base_url()
         databases_url = f"{base_url}/_all_dbs"
         response = requests.get(databases_url)
         all_databases = response.json()
-        print(all_databases)
-        
+
         for database in all_databases:
+            if database == "_users":
+                continue
             databases_url = f"{base_url}/{database}"
             requests.delete(databases_url)
+        super(StatsAPITestCase, cls).tearDownClass()
 
-        super(StatsAPITestCase, self).tearDown()
+    def test_query_params_validation(self):
+        """ Test to make sure the query params sent to stats' api are validated and appropriate error
+         message is given for invalid params """
+        non_entity_endpoints = ["get_listening_activity", "get_daily_activity", "get_artist_map"]
+        all_endpoints = ["get_user_artist", "get_release", "get_recording", "get_sitewide_artist"] + non_entity_endpoints
+
+        for endpoint in all_endpoints:
+            url = f'stats_api_v1.{endpoint}'
+            user_name = self.user['musicbrainz_id']
+            with self.subTest(f"test 400 is received for invalid range query param on endpoint : {url}", url=url):
+                response = self.client.get(url_for(url, user_name=user_name, query_string={'range': 'foobar'}))
+                self.assert400(response)
+                self.assertEqual("Invalid range: foobar", response.json['error'])
+
+            with self.subTest(f"test that the API sends 404 if user does not exist on endpoint : {url}", url=url):
+                response = self.client.get(url_for(url, user_name='nouser'))
+                self.assert404(response)
+                self.assertEqual('Cannot find user: nouser', response.json['error'])
+
+            with self.subTest(f"test to make sure that the API sends 204 if statistics for user have not"
+                              f" been calculated yet on endpoint: {url}", url=url):
+                response = self.client.get(url_for(url, user_name=self.no_stat_user['musicbrainz_id']))
+                self.assertEqual(response.status_code, 204)
+
+            if endpoint in non_entity_endpoints:
+                continue
+
+            with self.subTest(f"test 400 is received if offset is not an integer on endpoint : {url}", url=url):
+                response = self.client.get(url_for(url, user_name=user_name), query_string={'offset': 'foobar'})
+                self.assert400(response)
+                self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
+
+            with self.subTest(f"test 400 is received if offset is a negative integer on endpoint : {url}", url=url):
+                response = self.client.get(url_for(url, user_name=user_name), query_string={'offset': -5})
+                self.assert400(response)
+                self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
+
+            with self.subTest(f"test 400 is received if count is not an integer on endpoint : {url}", url=url):
+                response = self.client.get(url_for(url, user_name=user_name), query_string={'count': 'foobar'})
+                self.assert400(response)
+                self.assertEqual("'count' should be a non-negative integer", response.json['error'])
+
+            with self.subTest(f"test 400 is received if count is a negative integer on endpoint : {url}", url=url):
+                response = self.client.get(url_for(url, user_name=user_name), query_string={'count': -5})
+                self.assert400(response)
+                self.assertEqual("'count' should be a non-negative integer", response.json['error'])
 
     def test_user_artist_stat(self):
         """ Test to make sure valid response is received """
@@ -217,13 +272,6 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(data['range'], 'year')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    def test_user_artist_stat_invalid_range(self):
-        """ Test to make sure 400 is received if range argument is invalid """
-        response = self.client.get(url_for('stats_api_v1.get_user_artist',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("Invalid range: foobar", response.json['error'])
-
     def test_user_artist_stat_count(self):
         """ Test to make sure valid response is received if count argument is passed """
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
@@ -246,20 +294,6 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertListEqual(sent_artist_list, received_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    def test_user_artist_stat_invalid_count(self):
-        """ Test to make sure 400 response is received if count argument is not of type integer """
-        response = self.client.get(url_for('stats_api_v1.get_user_artist',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("'count' should be a non-negative integer", response.json['error'])
-
-    def test_user_artist_stat_negative_count(self):
-        """ Test to make sure 400 response is received if count is negative """
-        response = self.client.get(url_for('stats_api_v1.get_user_artist',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': -5})
-        self.assert400(response)
-        self.assertEqual("'count' should be a non-negative integer", response.json['error'])
-
     def test_user_artist_stat_offset(self):
         """ Test to make sure valid response is received if offset argument is passed """
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
@@ -281,38 +315,6 @@ class StatsAPITestCase(IntegrationTestCase):
         received_total_artist_count = data['total_artist_count']
         self.assertEqual(sent_total_artist_count, received_total_artist_count)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-    def test_user_artist_stat_invalid_offset(self):
-        """ Test to make sure 400 response is received if offset argument is not of type integer """
-        response = self.client.get(url_for('stats_api_v1.get_user_artist',
-                                           user_name=self.user['musicbrainz_id']), query_string={'offset': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
-
-    def test_user_artist_stat_negative_offset(self):
-        """ Test to make sure 400 response is received if offset is negative """
-        response = self.client.get(url_for('stats_api_v1.get_user_artist',
-                                           user_name=self.user['musicbrainz_id']), query_string={'offset': -5})
-        self.assert400(response)
-        self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
-
-    def test_user_artist_stat_invalid_user(self):
-        """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for('stats_api_v1.get_user_artist', user_name='nouser'))
-        self.assert404(response)
-        self.assertEqual('Cannot find user: nouser', response.json['error'])
-
-    def test_user_artist_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if statistics for user have not been calculated yet """
-        db_stats.delete_user_stats(self.user['id'])
-        response = self.client.get(url_for('stats_api_v1.get_user_artist', user_name=self.user['musicbrainz_id']))
-        self.assertEqual(response.status_code, 204)
-
-    def test_user_artist_range_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if particular range statistics for user have not been calculated yet """
-        response = self.client.get(url_for('stats_api_v1.get_user_artist',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
-        self.assertEqual(response.status_code, 204)
 
     def test_release_stat(self):
         """ Test to make sure valid response is received """
@@ -431,13 +433,6 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(data['range'], 'year')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    def test_release_stat_invalid_range(self):
-        """ Test to make sure 400 is received if range argument is invalid """
-        response = self.client.get(url_for('stats_api_v1.get_release',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("Invalid range: foobar", response.json['error'])
-
     def test_release_stat_count(self):
         """ Test to make sure valid response is received if count argument is passed """
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
@@ -460,20 +455,6 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertListEqual(sent_release_list, received_release_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    def test_release_stat_invalid_count(self):
-        """ Test to make sure 400 response is received if count argument is not of type integer """
-        response = self.client.get(url_for('stats_api_v1.get_release',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("'count' should be a non-negative integer", response.json['error'])
-
-    def test_release_stat_negative_count(self):
-        """ Test to make sure 400 response is received if count is negative """
-        response = self.client.get(url_for('stats_api_v1.get_release',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': -5})
-        self.assert400(response)
-        self.assertEqual("'count' should be a non-negative integer", response.json['error'])
-
     def test_release_stat_offset(self):
         """ Test to make sure valid response is received if offset argument is passed """
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
@@ -495,38 +476,6 @@ class StatsAPITestCase(IntegrationTestCase):
         received_total_release_count = data['total_release_count']
         self.assertEqual(sent_total_release_count, received_total_release_count)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-    def test_release_stat_invalid_offset(self):
-        """ Test to make sure 400 response is received if offset argument is not of type integer """
-        response = self.client.get(url_for('stats_api_v1.get_release',
-                                           user_name=self.user['musicbrainz_id']), query_string={'offset': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
-
-    def test_release_stat_negative_offset(self):
-        """ Test to make sure 400 response is received if offset is negative """
-        response = self.client.get(url_for('stats_api_v1.get_release',
-                                           user_name=self.user['musicbrainz_id']), query_string={'offset': -5})
-        self.assert400(response)
-        self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
-
-    def test_release_stat_invalid_user(self):
-        """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for('stats_api_v1.get_release', user_name='nouser'))
-        self.assert404(response)
-        self.assertEqual('Cannot find user: nouser', response.json['error'])
-
-    def test_release_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if statistics for user have not been calculated yet """
-        db_stats.delete_user_stats(self.user['id'])
-        response = self.client.get(url_for('stats_api_v1.get_release', user_name=self.user['musicbrainz_id']))
-        self.assertEqual(response.status_code, 204)
-
-    def test_release_range_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if particular range statistics for user have not been calculated yet """
-        response = self.client.get(url_for('stats_api_v1.get_release',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
-        self.assertEqual(response.status_code, 204)
 
     def test_recording_stat(self):
         """ Test to make sure valid response is received """
@@ -645,13 +594,6 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(data['range'], 'year')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    def test_recording_stat_invalid_range(self):
-        """ Test to make sure 400 is received if range argument is invalid """
-        response = self.client.get(url_for('stats_api_v1.get_recording',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("Invalid range: foobar", response.json['error'])
-
     def test_recording_stat_count(self):
         """ Test to make sure valid response is received if count argument is passed """
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
@@ -674,20 +616,6 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertListEqual(sent_recording_list, received_recording_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    def test_recording_stat_invalid_count(self):
-        """ Test to make sure 400 response is received if count argument is not of type integer """
-        response = self.client.get(url_for('stats_api_v1.get_recording',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("'count' should be a non-negative integer", response.json['error'])
-
-    def test_recording_stat_negative_count(self):
-        """ Test to make sure 400 response is received if count is negative """
-        response = self.client.get(url_for('stats_api_v1.get_recording',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': -5})
-        self.assert400(response)
-        self.assertEqual("'count' should be a non-negative integer", response.json['error'])
-
     def test_recording_stat_offset(self):
         """ Test to make sure valid response is received if offset argument is passed """
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
@@ -709,38 +637,6 @@ class StatsAPITestCase(IntegrationTestCase):
         received_total_recording_count = data['total_recording_count']
         self.assertEqual(sent_total_recording_count, received_total_recording_count)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-    def test_recording_stat_invalid_offset(self):
-        """ Test to make sure 400 response is received if offset argument is not of type integer """
-        response = self.client.get(url_for('stats_api_v1.get_recording',
-                                           user_name=self.user['musicbrainz_id']), query_string={'offset': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
-
-    def test_recording_stat_negative_offset(self):
-        """ Test to make sure 400 response is received if offset is negative """
-        response = self.client.get(url_for('stats_api_v1.get_recording',
-                                           user_name=self.user['musicbrainz_id']), query_string={'offset': -5})
-        self.assert400(response)
-        self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
-
-    def test_recording_stat_invalid_user(self):
-        """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for('stats_api_v1.get_recording', user_name='nouser'))
-        self.assert404(response)
-        self.assertEqual('Cannot find user: nouser', response.json['error'])
-
-    def test_recording_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if statistics for user have not been calculated yet """
-        db_stats.delete_user_stats(self.user['id'])
-        response = self.client.get(url_for('stats_api_v1.get_recording', user_name=self.user['musicbrainz_id']))
-        self.assertEqual(response.status_code, 204)
-
-    def test_recording_range_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if particular range statistics for user have not been calculated yet """
-        response = self.client.get(url_for('stats_api_v1.get_recording',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
-        self.assertEqual(response.status_code, 204)
 
     def test_entity_stat_not_calculated(self):
         """ Test to make sure that the API sends 204 if particular entity
@@ -853,31 +749,6 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(data['range'], 'year')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    def test_listening_activity_stat_invalid_user(self):
-        """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for('stats_api_v1.get_listening_activity', user_name='nouser'))
-        self.assert404(response)
-        self.assertEqual('Cannot find user: nouser', response.json['error'])
-
-    def test_listening_activity_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if statistics for user have not been calculated yet """
-        db_stats.delete_user_stats(self.user['id'])
-        response = self.client.get(url_for('stats_api_v1.get_listening_activity', user_name=self.user['musicbrainz_id']))
-        self.assertEqual(response.status_code, 204)
-
-    def test_listening_activity_range_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if particular range statistics for user have not been calculated yet """
-        response = self.client.get(url_for('stats_api_v1.get_listening_activity',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
-        self.assertEqual(response.status_code, 204)
-
-    def test_listening_activity_stat_invalid_range(self):
-        """ Test to make sure 400 is received if range argument is invalid """
-        response = self.client.get(url_for('stats_api_v1.get_listening_activity',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("Invalid range: foobar", response.json['error'])
-
     def test_daily_activity_stat(self):
         """ Test to make sure valid response is received """
         response = self.client.get(url_for('stats_api_v1.get_daily_activity', user_name=self.user['musicbrainz_id']))
@@ -958,31 +829,6 @@ class StatsAPITestCase(IntegrationTestCase):
         received = json.loads(response.data)["payload"]
         self.assertDictEqual(expected["daily_activity"], received["daily_activity"])
         self.assertEqual(received["range"], "year")
-
-    def test_daily_activity_stat_invalid_user(self):
-        """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for('stats_api_v1.get_daily_activity', user_name='nouser'))
-        self.assert404(response)
-        self.assertEqual('Cannot find user: nouser', response.json['error'])
-
-    def test_daily_activity_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if statistics for user have not been calculated yet """
-        db_stats.delete_user_stats(self.user['id'])
-        response = self.client.get(url_for('stats_api_v1.get_daily_activity', user_name=self.user['musicbrainz_id']))
-        self.assertEqual(response.status_code, 204)
-
-    def test_daily_activity_range_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if particular range statistics for user have not been calculated yet """
-        response = self.client.get(url_for('stats_api_v1.get_daily_activity',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
-        self.assertEqual(response.status_code, 204)
-
-    def test_daily_activity_stat_invalid_range(self):
-        """ Test to make sure 400 is received if range argument is invalid """
-        response = self.client.get(url_for('stats_api_v1.get_daily_activity',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("Invalid range: foobar", response.json['error'])
 
     @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
     def test_artist_map_all_time_cached(self):
@@ -1103,19 +949,6 @@ class StatsAPITestCase(IntegrationTestCase):
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
         self.assertEqual(response.status_code, 204)
-
-    def test_artist_map_stat_invalid_user(self):
-        """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name='nouser'))
-        self.assert404(response)
-        self.assertEqual('Cannot find user: nouser', response.json['error'])
-
-    def test_artist_map_stat_invalid_range(self):
-        """ Test to make sure 400 is received if range argument is invalid """
-        response = self.client.get(url_for('stats_api_v1.get_artist_map',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("Invalid range: foobar", response.json['error'])
 
     def test_artist_map_stat_invalid_force_recalculate(self):
         """ Test to make sure 400 is received if force_recalculate argument is invalid """
@@ -1307,12 +1140,6 @@ class StatsAPITestCase(IntegrationTestCase):
 
         self.assertDictContainsSubset(expected_response, received_data)
 
-    def test_sitewide_artist_stat_invalid_range(self):
-        """ Test to make sure 400 is received if range argument is invalid """
-        response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'range': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("Invalid range: foobar", response.json['error'])
-
     def test_sitewide_artist_stat_count(self):
         """ Test to make sure valid response is received if count argument is passed """
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'count': 10})
@@ -1332,18 +1159,6 @@ class StatsAPITestCase(IntegrationTestCase):
 
         self.assertDictContainsSubset(expected_response, received_data)
 
-    def test_sitewide_artist_stat_negative_count(self):
-        """ Test to make sure 400 response is received if count is negative """
-        response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'count': -5})
-        self.assert400(response)
-        self.assertEqual("'count' should be a non-negative integer", response.json['error'])
-
-    def test_sitewide_artist_stat_invalid_count(self):
-        """ Test to make sure 400 response is received if count argument is not of type integer """
-        response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'count': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("'count' should be a non-negative integer", response.json['error'])
-
     def test_sitewide_artist_stat_offset(self):
         """ Test to make sure valid response is received if offset argument is passed """
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'offset': 10})
@@ -1361,18 +1176,6 @@ class StatsAPITestCase(IntegrationTestCase):
         }
 
         self.assertDictContainsSubset(expected_response, received_data)
-
-    def test_sitewide_artist_stat_invalid_offset(self):
-        """ Test to make sure 400 response is received if offset argument is not of type integer """
-        response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'offset': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
-
-    def test_sitewide_artist_stat_negative_offset(self):
-        """ Test to make sure 400 response is received if offset is negative """
-        response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'offset': -5})
-        self.assert400(response)
-        self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
 
     def test_sitewide_artist_stat_not_calculated(self):
         """ Test to make sure that the API sends 204 if statistics have not been calculated yet """

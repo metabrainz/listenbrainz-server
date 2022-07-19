@@ -106,6 +106,13 @@ def create_app(debug=None):
     from listenbrainz.webserver.timescale_connection import init_timescale_connection
     init_timescale_connection(app)
 
+    from listenbrainz.db import couchdb
+    couchdb.init(
+        app.config['COUCHDB_USER'],
+        app.config['COUCHDB_ADMIN_KEY'],
+        app.config['COUCHDB_HOST'],
+        app.config['COUCHDB_PORT']
+    )
     # RabbitMQ connection
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
     try:

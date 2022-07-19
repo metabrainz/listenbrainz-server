@@ -10,11 +10,31 @@ from sentry_sdk import start_span
 DATABASE_NAME_PATTERN = re.compile(r"(.*)_(\d{8})")
 
 
+_user = None
+_admin_key = None
+_host = None
+_port = None
+
+
+def init(user, password, host, port):
+    """
+    Initialize config to connect to couchdb instance.
+    
+    Args:
+        user: couchdb admin user name
+        password: couchdb admin password
+        host: couchdb service host
+        port: couchdb service port
+    """
+    global _user, _admin_key, _host, _port
+    _user = user
+    _admin_key = password
+    _host = host
+    _port = port    
+
+
 def get_base_url():
-    return f"http://{current_app.config['COUCHDB_USER']}" \
-           f":{current_app.config['COUCHDB_ADMIN_KEY']}" \
-           f"@{current_app.config['COUCHDB_HOST']}" \
-           f":{current_app.config['COUCHDB_PORT']}"
+    return f"http://{_user}:{_admin_key}@{_host}:{_port}"
 
 
 def create_database(database: str):
