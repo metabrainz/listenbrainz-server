@@ -257,7 +257,10 @@ export default class ListenCard extends React.Component<
       <>
         {listen.playing_now ? (
           <span className="listen-time">
-            <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now &#8212;
+            <a href="/listening-now/" target="_blank" rel="noopener noreferrer">
+              <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now
+              &#8212;
+            </a>
           </span>
         ) : (
           <span
