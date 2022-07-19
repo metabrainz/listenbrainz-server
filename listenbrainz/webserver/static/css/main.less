@@ -16,8 +16,7 @@
 @import "metadata-viewer.less";
 @import "musicbrainz-entity-icons.less";
 
-
-@icon-font-path:"/static/fonts/";
+@icon-font-path: "/static/fonts/";
 
 @pager-border-radius: @border-radius-base;
 // Height of the BrainzPlayer component (fixed at the bottom of the page)
@@ -29,18 +28,12 @@ body {
 }
 
 .table {
-  > thead > tr > th { border-bottom-width: 1px; }
+  > thead > tr > th {
+    border-bottom-width: 1px;
+  }
 }
 .table-nonfluid {
-   width: auto !important;
-}
-
-.navbar {
-  .nav {
-    > li {
-      > a { color: @blue; }
-    }
-  }
+  width: auto !important;
 }
 
 .btn {
@@ -52,6 +45,13 @@ body {
 // Navbar
 @grid-float-breakpoint: @screen-md-min; // Point at which the navbar becomes uncollapsed
 .navbar {
+  .nav {
+    > li {
+      > a {
+        color: @blue;
+      }
+    }
+  }
   .beta {
     .pull-right;
     color: @red;
@@ -63,7 +63,8 @@ body {
       color: white !important;
       font-size: 1.5em !important;
       background-color: @orange !important;
-      &:hover, &:focus {
+      &:hover,
+      &:focus {
         background-color: darken(@orange, 6.5%) !important;
       }
     }
@@ -94,11 +95,11 @@ body {
   ul {
     line-height: 2;
   }
-  li{
+  li {
     vertical-align: middle;
   }
 }
-.center-p{
+.center-p {
   color: var(--color);
   text-align: center;
   padding-top: 20px;
@@ -137,7 +138,9 @@ body {
     margin-bottom: 6px;
     margin-right: 26px;
   }
-  #twitter-block > iframe { width: 100%; }
+  #twitter-block > iframe {
+    width: 100%;
+  }
 }
 
 #user-profile {
@@ -152,27 +155,27 @@ body {
 }
 
 .mt-5 {
-  margin-top: 5px
+  margin-top: 5px;
 }
 
 .mt-10 {
-  margin-top: 10px
+  margin-top: 10px;
 }
 
 .mt-15 {
-  margin-top: 15px
+  margin-top: 15px;
 }
 
 .mb-5 {
-  margin-bottom: 5px
+  margin-bottom: 5px;
 }
 
 .mb-10 {
-  margin-bottom: 10px
+  margin-bottom: 10px;
 }
 
 .mb-15 {
-  margin-bottom: 15px
+  margin-bottom: 15px;
 }
 
 .flex {
@@ -181,14 +184,15 @@ body {
     flex: 1;
   }
 }
-.flex-center, .vertical-align {
+.flex-center,
+.vertical-align {
   display: flex;
   align-items: center;
 }
-.flex-center{
+.flex-center {
   justify-content: center;
 }
-.flex-wrap{
+.flex-wrap {
   flex-wrap: wrap;
 }
 
@@ -229,7 +233,7 @@ body {
       width: 80px;
       margin-right: 5px;
     }
-   }
+  }
 
   .progress {
     box-shadow: none;
@@ -259,8 +263,8 @@ body {
 
 #feedback-button {
   .icon {
-    > :not(:first-child){
-      color:@orange;
+    > :not(:first-child) {
+      color: @orange;
     }
     margin-right: 0.7em;
   }
@@ -268,8 +272,8 @@ body {
 
 // For cover art in alerts
 @alertThumbnailSize: 60px;
-.alert .alert-thumbnail{
-	max-height: @alertThumbnailSize;
-	margin: -@alert-padding;
-	margin-right: 0;
+.alert .alert-thumbnail {
+  max-height: @alertThumbnailSize;
+  margin: -@alert-padding;
+  margin-right: 0;
 }

@@ -31,12 +31,13 @@ import tempfile
 import traceback
 from datetime import datetime, timedelta
 from ftplib import FTP
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 import sqlalchemy
 import ujson
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
+from psycopg2.sql import Identifier, SQL, Composable
 
 import listenbrainz.db as db
 from listenbrainz import DUMP_LICENSE_FILE_PATH
@@ -53,16 +54,16 @@ FEEDBACK_MAX_AGE = 8  # days
 # this dict contains the tables dumped in public dump as keys
 # and a tuple of columns that should be dumped as values
 PUBLIC_TABLES_DUMP = {
-    '"user"': (
+    'user': (
         'id',
         'created',
         'musicbrainz_id',
         'musicbrainz_row_id',
-        # the following are dummy values for columns that we do not want to
-        # dump in the public dump
-        'null',  # auth token
-        'to_timestamp(0)',  # last_login
-        'to_timestamp(0)',  # latest_import
+        # the following are dummy values for columns that we do not want to dump in the public dump
+        # for items that are not columns or need manual quoting, wrap in SQL/Literal accordingly here
+        SQL('null'),  # auth token
+        SQL('to_timestamp(0)'),  # last_login
+        SQL('to_timestamp(0)'),  # latest_import
     ),
     'statistics.user': (
         'user_id',
@@ -132,7 +133,7 @@ PUBLIC_TABLES_TIMESCALE_DUMP = {
 PUBLIC_TABLES_IMPORT = PUBLIC_TABLES_DUMP.copy()
 # When importing fields with COPY we need to use the names of the fields, rather
 # than the placeholders that we set for the export
-PUBLIC_TABLES_IMPORT['"user"'] = (
+PUBLIC_TABLES_IMPORT['user'] = (
         'id',
         'created',
         'musicbrainz_id',
@@ -145,7 +146,7 @@ PUBLIC_TABLES_IMPORT['"user"'] = (
 # this dict contains the tables dumped in the private dump as keys
 # and a tuple of columns that should be dumped as values
 PRIVATE_TABLES = {
-    '"user"': (
+    'user': (
         'id',
         'created',
         'musicbrainz_id',
@@ -434,7 +435,7 @@ def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: 
                                 copy_table(
                                     cursor=cursor,
                                     location=archive_tables_dir,
-                                    columns=','.join(tables[table]),
+                                    columns=tables[table],
                                     table_name=table,
                                 )
                             except IOError as e:
@@ -631,12 +632,11 @@ def copy_table(cursor, location, columns, table_name):
                      that should be dumped
             table_name: the name of the table to be copied
     """
-
+    table, fields = _escape_table_columns(table_name, columns)
     with open(os.path.join(location, table_name), 'w') as f:
-        cursor.copy_to(f, '(SELECT {columns} FROM {table})'.format(
-            columns=columns,
-            table=table_name
-        ))
+        query = SQL("COPY (SELECT {fields} FROM {table}) TO STDOUT") \
+            .format(fields=fields, table=table)
+        cursor.copy_expert(query, f)
 
 
 def add_dump_entry(timestamp):
@@ -723,7 +723,7 @@ def import_postgres_dump(private_dump_archive_path=None,
             # if the private dump exists and has been imported, we need to
             # ignore the sanitized user table in the public dump
             # so remove it from tables_to_import
-            del tables_to_import['"user"']
+            del tables_to_import['user']
 
         _import_dump(public_dump_archive_path, db.engine, tables_to_import, db.SCHEMA_VERSION_CORE, threads)
         current_app.logger.info('Import of Public dump %s done!', public_dump_archive_path)
@@ -741,6 +741,37 @@ def import_postgres_dump(private_dump_archive_path=None,
         current_app.logger.critical(
             'Exception while trying to update sequences: %s', str(e), exc_info=True)
         raise
+
+
+def _escape_table_columns(table: str, columns: list[str | Composable]) \
+        -> tuple[Composable, Composable]:
+    """
+    Escape the given table name and columns/values if those are not already escaped.
+
+    Args:
+        table: name of the table
+        columns: list of column names or values
+
+    Returns:
+        tuple consisting of properly escaped table name and joined columns
+    """
+    fields = []
+    for column in columns:
+        # Composable is the base class for all types of escaping in psycopg2.sql
+        # therefore, instances of Composable are already escaped and should be
+        # passed as is. for all other cases, escape as an Identifier which is the
+        # type used to escape column names, table names etc.
+        if isinstance(column, Composable):
+            fields.append(column)
+        else:
+            fields.append(Identifier(column))
+    joined_fields = SQL(',').join(fields)
+
+    # for schema qualified table names, need to pass schema and table name as
+    # separate args therefore the split
+    escaped_table_name = Identifier(*table.split("."))
+
+    return escaped_table_name, joined_fields
 
 
 def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
@@ -783,8 +814,9 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info(
                             'Importing data into %s table...', file_name)
                         try:
-                            cursor.copy_from(tar.extractfile(member), '%s' % file_name,
-                                             columns=tables[file_name])
+                            table, fields = _escape_table_columns(file_name, tables[file_name])
+                            query = SQL("COPY {table}({fields}) FROM STDIN").format(fields=fields, table=table)
+                            cursor.copy_expert(query, tar.extractfile(member))
                             connection.commit()
                         except IOError as e:
                             current_app.logger.critical(

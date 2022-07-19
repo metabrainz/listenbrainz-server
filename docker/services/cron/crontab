@@ -13,22 +13,20 @@ MAILTO=""
 # After the daily dumping is done, make sure everything turned out ok, otherwise mail the observability list.
 0 2 * * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py dump check_dump_ages >> /logs/dumps.log 2>&1
 
+# Dump user feedback before we generate recommendations
+15 2 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
+
+# batch up all the spark requests, spaced by 1 minute in order to ensure the correct order
 # Request all statistics
-00 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_all_stats >> /logs/stats.log 2>&1
+0 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_all_stats >> /logs/stats.log 2>&1
+# Request recommendations after dump and mapping has been imported into the spark cluster
+1 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_recommendations >> /logs/stats.log 2>&1
+# Request missing MB data each month after a new dump has been imported to spark cluster
+2 2 * * 1 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_missing_mb_data >> /logs/stats.log 2>&1
+# Calculate user similarity
+3 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
 
 ## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
 0 4 1,15 * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/dumps.log 2>&1
 ## Around 24 hours later, trigger a full import into the spark cluster, and this time wait for the lock, in case the dump hasn't finished.
 0 4 2,16 * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full >> /logs/dumps.log 2>&1
-
-# Calculate user similarity
-30 5 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
-
-# Dump user feedback before we generate recommendations
-00 6 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
-
-# Request recommendations after dump and mapping has been imported into the spark cluster
-30 6 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_recommendations >> /logs/stats.log 2>&1
-
-# Request missing MB data each month after a new dump has been imported to spark cluster
-30 7 * * 1 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_missing_mb_data >> /logs/stats.log 2>&1

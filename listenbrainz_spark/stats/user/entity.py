@@ -31,6 +31,9 @@ entity_model_map = {
     "recordings": RecordingRecord
 }
 
+NUMBER_OF_TOP_ENTITIES = 1000  # number of top entities to retain for user stats
+NUMBER_OF_YIM_ENTITIES = 50  # number of top entities to retain for Year in Music stats
+
 
 def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
         -> Iterator[Optional[Dict]]:
@@ -54,7 +57,11 @@ def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
 def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str,
                            entity: str, stats_range: str, message_type: str):
     handler = entity_handler_map[entity]
-    data = handler(table)
+    if message_type == "year_in_music_top_stats":
+        number_of_results = NUMBER_OF_YIM_ENTITIES
+    else:
+        number_of_results = NUMBER_OF_TOP_ENTITIES
+    data = handler(table, number_of_results)
     return create_messages(data=data, entity=entity, stats_range=stats_range,
                            from_date=from_date, to_date=to_date, message_type=message_type)
 
@@ -63,14 +70,6 @@ def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str
         -> Optional[UserEntityRecords]:
     _dict = entry.asDict(recursive=True)
     total_entity_count = len(_dict[entity])
-
-    # Clip the recordings to top 1000 so that we don't drop messages
-    if entity == "recordings" and stats_range == "all_time":
-        _dict[entity] = _dict[entity][:1000]
-
-    # for year in music, only retain top 50 stats
-    if message_type == "year_in_music_top_stats":
-        _dict[entity] = _dict[entity][:50]
 
     entity_list = []
     for item in _dict[entity]:

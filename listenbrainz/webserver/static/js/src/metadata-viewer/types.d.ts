@@ -27,6 +27,10 @@ declare type RecordingTag = {
   tag: string;
 };
 
+declare type ReleaseGroupTag = RecordingTag & {
+  release_group_mbid: string;
+};
+
 declare type ListenMetadata = {
   artist?: Array<MusicBrainzArtist>;
   recording?: {
@@ -41,6 +45,7 @@ declare type ListenMetadata = {
   tag?: {
     artist?: Array<ArtistTag>;
     recording?: Array<RecordingTag>;
+    release_group?: Array<ReleaseGroupTag>;
   };
 };
 

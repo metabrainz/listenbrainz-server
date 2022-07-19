@@ -1,14 +1,16 @@
+import json
 import logging
 import time
 from unittest import mock
 
 import ujson
 from flask import url_for
+from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
 
-from listenbrainz.db import external_service_oauth as db_oauth
+from listenbrainz.db import external_service_oauth as db_oauth, timescale
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import timescale_connection
@@ -39,57 +41,54 @@ class UserViewsTestCase(IntegrationTestCase):
         """Test the /my/[something]/ endponts which redirect to the /user/ namespace"""
         # Not logged in
         response = self.client.get(url_for("redirect.redirect_listens"))
-        self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/login/?next=%2Fmy%2Flistens%2F")
+        self.assertRedirects(response, "/login/?next=%2Fmy%2Flistens%2F")
 
         # Logged in
         self.temporary_login(self.user.login_id)
         response = self.client.get(url_for("redirect.redirect_listens"))
-        self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/user/iliekcomputers/")
+        self.assertRedirects(response, "/user/iliekcomputers/")
 
         response = self.client.get(url_for("redirect.redirect_charts"))
-        self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/user/iliekcomputers/charts/")
+        self.assertRedirects(response, "/user/iliekcomputers/charts/")
 
         response = self.client.get(url_for("redirect.redirect_charts") + "?foo=bar")
-        self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/user/iliekcomputers/charts/?foo=bar")
+        self.assertRedirects(response, "/user/iliekcomputers/charts/?foo=bar")
 
     def test_user_redirects(self):
         response = self.client.get('/user/iliekcomputers/')
         self.assert200(response)
         response = self.client.get('/user/iliekcomputers')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/')
+        self.assertRedirects(response, '/user/iliekcomputers/', permanent=True)
 
         response = self.client.get('/user/iliekcomputers/charts/')
         self.assert200(response)
         response = self.client.get('/user/iliekcomputers/charts')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/charts/')
+        self.assertRedirects(response, '/user/iliekcomputers/charts/', permanent=True)
 
         response = self.client.get('/user/iliekcomputers/reports/')
         self.assert200(response)
         response = self.client.get('/user/iliekcomputers/reports')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/reports/')
+        self.assertRedirects(response, '/user/iliekcomputers/reports/', permanent=True)
 
         # these are permanent redirects to user/<username>/charts
 
         response = self.client.get('/user/iliekcomputers/history/')
-        self.assertEqual(response.status_code, 301)
-        assert response.location.endswith('/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time')
+        self.assertRedirects(
+            response,
+            '/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time',
+            permanent=True
+        )
         response = self.client.get('/user/iliekcomputers/history')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/history/')
+        self.assertRedirects(response, '/user/iliekcomputers/history/', permanent=True)
 
         response = self.client.get('/user/iliekcomputers/artists/')
-        self.assertEqual(response.status_code, 301)
-        assert response.location.endswith('/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time')
+        self.assertRedirects(
+            response,
+            '/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time',
+            permanent=True
+        )
         response = self.client.get('/user/iliekcomputers/artists')
-        self.assertEqual(response.status_code, 308)
-        assert response.location.endswith('/user/iliekcomputers/artists/')
+        self.assertRedirects(response, '/user/iliekcomputers/artists/', permanent=True)
 
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
@@ -262,3 +261,56 @@ class UserViewsTestCase(IntegrationTestCase):
             json=data,
         )
         self.assert400(response, "Reason must be a string.")
+
+    def test_user_pins(self):
+        with timescale.engine.connect() as connection:
+            connection.execute(text("""
+                INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
+                                                   artist_mbids, artist_credit_name, recording_name)
+                 VALUES (
+                      204
+                    , '00000737-3a59-4499-b30a-31fe2464555d'
+                    , '5b24fbab-c58f-4c37-a59d-ab232e2d98c4'
+                    , 'Batman Returns'
+                    , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'
+                    , 'Danny Elfman'
+                    , 'The Final Confrontation, Part 1'
+                );
+                INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+                 VALUES (
+                    'b7ffd2af-418f-4be2-bdd1-22f8b48613da'
+                  , '00000737-3a59-4499-b30a-31fe2464555d'
+                  , 'exact_match'
+                );
+            """))
+
+        pinned_rec = {
+            "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
+            "recording_mbid": "00000737-3a59-4499-b30a-31fe2464555d",
+            "blurb_content": "Amazing first recording"
+        }
+        response = self.client.post(
+            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            data=json.dumps(pinned_rec),
+            headers={"Authorization": f"Token {self.user.auth_token}"},
+            content_type="application/json",
+        )
+        self.assert200(response)
+        submitted_pin = response.json["pinned_recording"]
+        submitted_pin["track_metadata"] = {
+            "track_name": "The Final Confrontation, Part 1",
+            "artist_name": "Danny Elfman",
+            "release_name": "Batman Returns",
+            "additional_info": {
+                "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
+                "recording_mbid": "00000737-3a59-4499-b30a-31fe2464555d",
+                "release_mbid": "5b24fbab-c58f-4c37-a59d-ab232e2d98c4",
+                "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"]
+            }
+        }
+
+        response = self.client.get(url_for('user.pins', user_name=self.user.musicbrainz_id))
+        self.assert200(response)
+
+        props = json.loads(self.get_context_variable("props"))
+        self.assertEqual(props["pins"], [submitted_pin])

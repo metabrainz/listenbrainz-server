@@ -225,7 +225,7 @@ describe("addWebsocketsHandlers", () => {
     instance.addWebsocketsHandlers();
 
     expect(instance.receiveNewPlayingNow).toHaveBeenCalledWith(
-      JSON.stringify(recentListensPropsPlayingNow.listens[0])
+      recentListensPropsPlayingNow.listens[0]
     );
     spy.mockReset();
   });
@@ -301,22 +301,28 @@ describe("receiveNewPlayingNow", () => {
       artist_name: "Coldplay",
       track_name: "Viva La Vida",
     },
+    playing_now: true,
     user_name: "ishaanshah",
     listened_at: 1586580524,
     listened_at_iso: "2020-04-10T10:12:04Z",
   };
 
-  it("sets state correctly for other modes", () => {
+  it("sets state correctly for other modes", async () => {
+    const spy = jest
+      .spyOn(mountOptions.context.APIService, "lookupRecordingMetadata")
+      .mockImplementation(() => Promise.resolve(null));
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
     const wrapper = mount<Listens>(
-      <Listens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsPlayingNow)
-        ) as ListensProps)}
-        newAlert={jest.fn()}
-      />
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Listens
+          {...(JSON.parse(
+            JSON.stringify(recentListensPropsPlayingNow)
+          ) as ListensProps)}
+          newAlert={jest.fn()}
+        />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 
@@ -331,13 +337,11 @@ describe("receiveNewPlayingNow", () => {
     expect(wrapper.state("listens")).toEqual(result);
     expect(wrapper.state("playingNowListen")).toEqual(firstPlayingNow);
 
-    instance.receiveNewPlayingNow(JSON.stringify(mockListenOne));
+    await instance.receiveNewPlayingNow(mockListenOne);
     wrapper.update();
     expect(wrapper.state("listens")).toEqual(result);
-    expect(wrapper.state("playingNowListen")).toEqual({
-      ...mockListenOne,
-      playing_now: true,
-    });
+    expect(wrapper.state("playingNowListen")).toEqual(mockListenOne);
+    spy.mockRestore();
   });
 });
 
