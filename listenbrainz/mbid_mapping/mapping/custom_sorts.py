@@ -1,6 +1,18 @@
 import psycopg2
 from psycopg2.errors import OperationalError, UndefinedTable
 
+RELEASE_GROUP_SECONDARY_TYPES = [
+    (1, "Compilation"),
+    (2, "Soundtrack"),
+    (6, "Live"),
+    (7, "Remix"),
+    (8, "DJ-mix"),
+    (9, "Mixtape/Street"),
+    (5, "Audiobook"),
+    (3, "Spokenword"),
+    (4, "Interview")
+]
+
 DIGITAL_FORMATS = [
     (1, "CD"),
     (3, "SACD"),
@@ -104,9 +116,9 @@ def insert_rows(id, curs, formats):
     return id
 
 
-def create_formats_table(conn):
+def create_custom_sort_tables(conn):
     """
-        Create the formats table that contains the preferred sort order for releases in the MSB mapping.
+        Create the custom sort tables that contains the preferred sort orders for releases in the MSB mapping.
     """
 
     try:
@@ -121,5 +133,25 @@ def create_formats_table(conn):
         conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable):
         print("failed to create formats table")
+        conn.rollback()
+        raise
+
+    try:
+        with conn.cursor() as curs:
+            curs.execute("DROP TABLE IF EXISTS mapping.release_group_secondary_type_sort")
+            curs.execute("CREATE TABLE mapping.release_group_secondary_type_sort ( secondary_type integer, sort integer )")
+
+            id = 1
+            for type_id, _ in RELEASE_GROUP_SECONDARY_TYPES:
+                curs.execute("INSERT INTO mapping.release_group_secondary_type_sort values (%s, %s);",  tuple((id, type_id)))
+                id += 1
+
+            curs.execute("""CREATE INDEX release_group_secondary_type_sort_ndx_secondary_type
+                                      ON mapping.release_group_secondary_type_sort(secondary_type)""")
+            curs.execute("""CREATE INDEX release_group_secondary_type_sort_ndx_sort
+                                      ON mapping.release_group_secondary_type_sort(sort)""")
+        conn.commit()
+    except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable):
+        print("failed to create release_group_secondary_type_sort table")
         conn.rollback()
         raise
