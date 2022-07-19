@@ -532,7 +532,6 @@ def create_personal_recommendation_event(user_name):
 
     '''
     user = validate_auth_header()
-    events = []
 
     try:
         data = ujson.loads(request.get_data())
@@ -542,40 +541,14 @@ def create_personal_recommendation_event(user_name):
     metadata = data['metadata']
 
     try:
-        metadata_db = {
-            "artist_name": metadata["artist_name"],
-            "track_name": metadata["track_name"],
-            "recording_msid": metadata["recording_msid"],
-            "release_name": metadata["release_name"],
-            "recording_mbid": metadata["recording_mbid"],
-            "recommendee_id": 0,
-            "blurb_content": metadata["blurb_content"]
-        }
-        # for follower in metadata["followers"]:
-            # if type(follower) != int:
-                # raise TypeError(f"Value {str(follower)} is not a valid ID")
-        metadata_db = PersonalRecordingRecommendationMetadata(**metadata_db)
+        metadata = PersonalRecordingRecommendationMetadata(**metadata)
+        event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata)
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
-    # except TypeError as e:
-        # raise APIBadRequest(f"Invalid metadata: {str(e)}")
-
-    try:
-        for follower in metadata["followers"]:
-            if not db_user_relationship.is_following_user(follower, user['id']):
-                raise APIBadRequest(f"User with ID: {follower} doesn't follow you")
-            metadata_db.recommendee_id = follower
-            event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata_db)
-            event_data = event.dict()
-            event_data['created'] = event_data['created'].timestamp()
-            event_data['event_type'] = event_data['event_type'].value
-            events.append(event_data)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
-    except pydantic.ValidationError as e:
-        raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
-    return jsonify(events)
+    return jsonify({"status": "ok"})
 
 def get_listen_events(
     users: List[Dict],
@@ -828,12 +801,12 @@ def get_personal_recording_recommendation_events(
     """
 
     personal_recording_recommendation_events_db = db_user_timeline_event.get_personal_recommendation_events_for_feed(
-        # user_ids=(user['id'] for user in users_for_events),
         user_id=user['id'],
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
     )
+
 
     events = []
     for event in personal_recording_recommendation_events_db:
@@ -844,14 +817,13 @@ def get_personal_recording_recommendation_events(
                 release_name=event.metadata.release_name,
                 recording_mbid=event.metadata.recording_mbid,
                 recording_msid=event.metadata.recording_msid,
-                recommendee_id=event.metadata.recommendee_id,
+                followers=event.metadata.followers,
                 blurb_content=event.metadata.blurb_content
             )
 
             events.append(APITimelineEvent(
                 id=event.id,
                 event_type=UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION,
-                # user_name=id_following_username_map[event.user_id],
                 user_name=event.user_name,
                 created=event.created.timestamp(),
                 metadata=personal_recommendation,
