@@ -21,7 +21,7 @@ from data.model.validators import check_valid_uuid
 
 from datetime import datetime
 from enum import Enum
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 from data.model.listen import APIListen
 from listenbrainz.db.model.review import CBReviewTimelineMetadata
@@ -52,7 +52,8 @@ class RecordingRecommendationMetadata(BaseModel):
 
 
 class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata, validate_assignment=True):
-    recommendee_id: NonNegativeInt
+    # followers: NonNegativeInt
+    followers: List[NonNegativeInt]
     blurb_content: Optional[str]
 
 
@@ -105,7 +106,7 @@ class APIPersonalRecommendationEvent(BaseModel):
     release_name: Optional[str]
     recording_mbid: Optional[str]
     recording_msid: constr(min_length=1)
-    recommendee_id: NonNegativeInt
+    followers: List[NonNegativeInt]
     blurb_content: Optional[str]
 
 

@@ -195,7 +195,7 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
               FROM user_timeline_event
               INNER JOIN "user" ON user_timeline_event.user_id = "user".id
              WHERE
-               (metadata ->> 'recommendee_id')::int = :user_id
+               (user_timeline_event.metadata ->> 'followers')::jsonb @> (:user_id)::text::jsonb
                OR user_timeline_event.user_id = :user_id
                AND user_timeline_event.created > :min_ts
                AND user_timeline_event.created < :max_ts
