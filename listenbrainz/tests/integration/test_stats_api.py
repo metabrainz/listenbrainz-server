@@ -3,6 +3,8 @@ from copy import deepcopy
 from datetime import datetime
 from unittest.mock import patch
 
+import requests
+
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import requests_mock
@@ -15,6 +17,7 @@ from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
+from listenbrainz.db import couchdb
 from listenbrainz.tests.integration import IntegrationTestCase
 from redis import Redis
 from flask import current_app
@@ -29,6 +32,7 @@ class MockDate(datetime):
 
 class StatsAPITestCase(IntegrationTestCase):
     def setUp(self):
+        # app context
         super(StatsAPITestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
@@ -36,32 +40,44 @@ class StatsAPITestCase(IntegrationTestCase):
         # Insert user top artists
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             self.user_artist_payload = json.load(f)
-        db_stats.insert_stats_in_couchdb('artists_all_time_20220718', 0, 5, self.user_artist_payload)
+        database = 'artists_all_time_20220718'
+        couchdb.create_database(database)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, self.user_artist_payload)
 
         # Insert release data
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             self.user_release_payload = json.load(f)
-        db_stats.insert_stats_in_couchdb('releases_all_time_20220718', 0, 5, self.user_release_payload)
+        database = 'releases_all_time_20220718'
+        couchdb.create_database(database)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, self.user_release_payload)
 
         # Insert recording data
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
             self.recording_payload = json.load(f)
-        db_stats.insert_stats_in_couchdb('recordings_all_time_20220718', 0, 5, self.recording_payload)
+        database = 'recordings_all_time_20220718'
+        couchdb.create_database(database)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, self.recording_payload)
 
         # Insert listening activity data
         with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test.json')) as f:
             self.listening_activity_payload = json.load(f)
-        db_stats.insert_stats_in_couchdb('listening_activity_all_time_20220718', 0, 5, self.listening_activity_payload)
+        database = 'listening_activity_all_time_20220718'
+        couchdb.create_database(database)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, self.listening_activity_payload)
 
         # Insert daily activity data
         with open(self.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
             self.daily_activity_payload = json.load(f)
-        db_stats.insert_stats_in_couchdb('daily_activity_all_time_20220718', 0, 5, self.daily_activity_payload)
+        database = 'daily_activity_all_time_20220718'
+        couchdb.create_database(database)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, self.daily_activity_payload)
 
         # Insert artist map data
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             self.artist_map_payload = json.load(f)
-        db_stats.insert_stats_in_couchdb('artist_map_all_time', 0, 5, self.artist_map_payload)
+        database = 'artist_map_all_time'
+        couchdb.create_database(database)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, self.artist_map_payload)
 
         # Insert all_time sitewide top artists
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
@@ -71,6 +87,12 @@ class StatsAPITestCase(IntegrationTestCase):
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
         r.flushall()
+
+        databases = couchdb.list_databases("")
+        for database in databases:
+            databases_url = f"{couchdb.get_base_url()}/{database}"
+            requests.delete(databases_url)
+
         super(StatsAPITestCase, self).tearDown()
 
     def test_user_artist_stat(self):
