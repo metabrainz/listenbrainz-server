@@ -28,6 +28,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        # add app context
         databases = couchdb.list_databases("")
         for database in databases:
             databases_url = f"{couchdb.get_base_url()}/{database}"
