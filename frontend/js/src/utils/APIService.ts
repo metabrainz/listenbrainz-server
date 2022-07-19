@@ -1,4 +1,6 @@
-import { isNil, isUndefined, omit } from "lodash";
+import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
+import async from "react-select/async";
+import { TagActionType } from "../metadata-viewer/TagComponent";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -1302,5 +1304,77 @@ export default class APIService {
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
+  };
+  /** MusicBrainz */
+
+  getMusicBrainzAccessToken = async (): Promise<string | null> => {
+    const response = await fetch(`${this.APIBaseURI}/profile/mbtoken`);
+    await this.checkStatus(response);
+    return response.text();
+  };
+
+  submitTagToMusicBrainz = async (
+    entityType: string,
+    entityMBID: string,
+    tagName: string,
+    action: TagActionType
+  ): Promise<boolean> => {
+    const formattedEntityName = kebabCase(entityType);
+    // encode reserved characters
+    const safeTagName = tagName
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+    try {
+      const parser = new DOMParser();
+      const xmlDocument = parser.parseFromString(
+        `
+        <metadata xmlns="http://musicbrainz.org/ns/mmd-2.0#">
+          <${formattedEntityName}-list>
+              <${formattedEntityName} id="${entityMBID}">
+                  <user-tag-list>
+                      <user-tag vote="${lowerCase(
+                        action
+                      )}"><name>${safeTagName}</name></user-tag>
+                  </user-tag-list>
+              </${formattedEntityName}>
+          </${formattedEntityName}-list>
+        </metadata>
+      `,
+        "application/xml"
+      );
+
+      // Check if the XML parsing threw an error; if so the first element will be a <parseerror>
+      const isInvalid =
+        xmlDocument.documentElement?.childNodes?.[0]?.nodeName ===
+        "parsererror";
+      if (isInvalid) {
+        // Get the error text content from the <parseerror> element
+        const errorText =
+          xmlDocument.documentElement.childNodes[0].childNodes?.[1]
+            ?.textContent;
+        throw SyntaxError(`Invalid XML: ${errorText}`);
+      }
+
+      const url = `${this.MBBaseURI}/tag?client=listenbrainz-listening-now`;
+      const serializer = new XMLSerializer();
+      const body = serializer.serializeToString(xmlDocument);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/xml",
+        },
+        body,
+      });
+      if (response.ok) {
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 }

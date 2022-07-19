@@ -1,9 +1,10 @@
 import { noop, upperFirst } from "lodash";
 import * as React from "react";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 type UserTagScore = 0 | 1 | -1;
 
-enum TagActionType {
+export enum TagActionType {
   UPVOTE = "upvote",
   DOWNVOTE = "downvote",
   WITHDRAW = "withdraw",
@@ -75,6 +76,7 @@ export default function TagComponent(props: {
 }) {
   const { tag, entityType, entityMBID } = props;
   const [userScore, setUserScore] = React.useState<UserTagScore>(0);
+  const { APIService } = React.useContext(GlobalAppContext);
 
   const [upvote, downvote, withdraw] = Object.values(TagActionType).map(
     (actionVerb: TagActionType) => {
@@ -86,32 +88,28 @@ export default function TagComponent(props: {
         if (entityType === "release-group") {
           MBID = (tag as ReleaseGroupTag).release_group_mbid;
         }
-        const requestURL = `https://musicbrainz.org/${entityType}/${MBID}/tags/${actionVerb}?tags=${tag.tag}&client=brainzplayer`;
-        try {
-          const request = await fetch(requestURL, {
-            method: "GET",
-            mode: "cors",
-            credentials: "include",
-            headers: {
-              Accept: "application/json",
-            },
-          });
-          if (request.ok) {
-            switch (actionVerb) {
-              case TagActionType.UPVOTE:
-                setUserScore(1);
-                break;
-              case TagActionType.DOWNVOTE:
-                setUserScore(-1);
-                break;
-              case TagActionType.WITHDRAW:
-              default:
-                setUserScore(0);
-                break;
-            }
+        if (!MBID) {
+          return;
+        }
+        const success = await APIService.submitTagToMusicBrainz(
+          entityType,
+          MBID,
+          tag.tag,
+          actionVerb
+        );
+        if (success) {
+          switch (actionVerb) {
+            case TagActionType.UPVOTE:
+              setUserScore(1);
+              break;
+            case TagActionType.DOWNVOTE:
+              setUserScore(-1);
+              break;
+            case TagActionType.WITHDRAW:
+            default:
+              setUserScore(0);
+              break;
           }
-        } catch (err) {
-          console.error(err);
         }
       }, [tag, entityType, entityMBID]);
     }
