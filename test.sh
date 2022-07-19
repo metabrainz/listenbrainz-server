@@ -194,7 +194,7 @@ function int_setup {
 }
 
 function bring_up_int_containers {
-    invoke_docker_compose_int up -d lb_db redis timescale_writer rabbitmq
+    invoke_docker_compose_int up -d lb_db redis timescale_writer rabbitmq couchdb
 }
 
 # Exit immediately if a command exits with a non-zero status.

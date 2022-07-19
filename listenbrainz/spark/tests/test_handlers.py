@@ -24,18 +24,16 @@ from listenbrainz.spark.handlers import (
     notify_artist_relation_import,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
-    cf_recording_recommendations_complete)
-from listenbrainz.webserver import create_app
+    cf_recording_recommendations_complete, handle_couchdb_data_start)
+from listenbrainz.tests.integration import IntegrationTestCase
 
 
-class HandlersTestCase(DatabaseTestCase):
+class HandlersTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(HandlersTestCase, self).setUp()
-        self.app = create_app()
         db_user.create(1, 'iliekcomputers')
         db_user.create(2, 'lucifer')
-        self.maxDiff = None
 
     def test_handle_user_entity(self):
         data = {
@@ -70,10 +68,10 @@ class HandlersTestCase(DatabaseTestCase):
             ],
             'database': 'artists_all_time_20220718'
         }
-
+        handle_couchdb_data_start({"database": "artists_all_time_20220718"})
         handle_user_entity(data)
 
-        received = db_stats.get_user_stats(1, 'all_time', 'artists')
+        received = db_stats.get_entity_stats(1, 'artists', 'all_time', EntityRecord)
         expected = StatApi[EntityRecord](
             user_id=1,
             to_ts=10,
@@ -93,7 +91,7 @@ class HandlersTestCase(DatabaseTestCase):
         )
         self.assertEqual(received, expected)
 
-        received = db_stats.get_user_stats(2, 'all_time', 'artists')
+        received = db_stats.get_entity_stats(2, 'artists', 'all_time', EntityRecord)
         expected = StatApi[EntityRecord](
             user_id=2,
             to_ts=10,
@@ -156,10 +154,10 @@ class HandlersTestCase(DatabaseTestCase):
             ],
             'database': 'listening_activity_all_time_20220718'
         }
-
+        handle_couchdb_data_start({"database": "listening_activity_all_time_20220718"})
         handle_user_listening_activity(data)
 
-        received = db_stats.get_user_listening_activity(1, 'all_time')
+        received = db_stats.get_entity_stats(1, 'listening_activity', 'all_time', ListeningActivityRecord)
         self.assertEqual(received, StatApi[ListeningActivityRecord](
             user_id=1,
             to_ts=10,
@@ -184,7 +182,7 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-        received = db_stats.get_user_listening_activity(2, 'all_time')
+        received = db_stats.get_entity_stats(2, 'listening_activity', 'all_time', ListeningActivityRecord)
         self.assertEqual(received, StatApi[ListeningActivityRecord](
             user_id=2,
             to_ts=10,
@@ -236,12 +234,12 @@ class HandlersTestCase(DatabaseTestCase):
                     ]
                 }
             ],
-            'database': 'daily_activity_20220718'
+            'database': 'daily_activity_all_time_20220718'
         }
-
+        handle_couchdb_data_start({"database": "daily_activity_all_time_20220718"})
         handle_user_daily_activity(data)
 
-        received = db_stats.get_user_daily_activity(1, 'all_time')
+        received = db_stats.get_entity_stats(1, 'daily_activity', 'all_time', DailyActivityRecord)
         self.assertEqual(received, StatApi[DailyActivityRecord](
             user_id=1,
             to_ts=10,
@@ -259,7 +257,7 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-        received = db_stats.get_user_daily_activity(2, 'all_time')
+        received = db_stats.get_entity_stats(2, 'daily_activity', 'all_time', DailyActivityRecord)
         self.assertEqual(received, StatApi[DailyActivityRecord](
             user_id=2,
             to_ts=10,
@@ -282,42 +280,46 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_sitewide_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_daily_activity(self, mock_send_mail, mock_db_insert):
-        data = {
-            'type': 'sitewide_entity',
-            'stats_range': 'all_time',
-            'from_ts': 1,
-            'to_ts': 10,
-            'entity': 'artists',
-            'data': [
-                {
-                    'artist_name': 'Coldplay',
-                    'artist_mbid': [],
-                    'listen_count': 20
-                }
-            ],
-            'count': 1
-        }
-
+    def test_handle_sitewide_artists(self):
         with self.app.app_context():
-            current_app.config['TESTING'] = False  # set testing to false to check the notifications
+            data = {
+                'type': 'sitewide_entity',
+                'stats_range': 'all_time',
+                'from_ts': 1,
+                'to_ts': 10,
+                'entity': 'artists',
+                'data': [
+                    {
+                        'artist_name': 'Coldplay',
+                        'artist_mbid': [],
+                        'listen_count': 20
+                    }
+                ],
+                'count': 1
+            }
+            handle_couchdb_data_start({"database": "artists_all_time_20220818"})
             handle_sitewide_entity(data)
-
-        mock_db_insert.assert_called_with('artists', StatRange[ArtistRecord](
-            to_ts=10,
-            from_ts=1,
-            count=1,
-            stats_range='all_time',
-            data=StatRecordList[ArtistRecord](__root__=[
-                ArtistRecord(
-                    artist_name='Coldplay',
-                    artist_mbid=[],
-                    listen_count=20,
-                )
-            ])))
-        mock_send_mail.assert_called_once()
+            stats = db_stats.get_entity_stats(
+                db_stats.SITEWIDE_STATS_USER_ID,
+                "artists",
+                "all_time",
+                ArtistRecord
+            )
+            self.assertEqual(stats.dict(), StatApi[ArtistRecord](
+                user_id=db_stats.SITEWIDE_STATS_USER_ID,
+                to_ts=10,
+                from_ts=1,
+                count=1,
+                stats_range='all_time',
+                data=StatRecordList[ArtistRecord](__root__=[
+                    ArtistRecord(
+                        artist_name='Coldplay',
+                        artist_mbid=[],
+                        listen_count=20,
+                    )
+                ]),
+                last_updated=stats.last_updated
+            ).dict())
 
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
     @mock.patch('listenbrainz.spark.handlers.db_user.get')

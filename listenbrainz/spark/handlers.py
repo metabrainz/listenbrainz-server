@@ -76,7 +76,7 @@ def handle_user_daily_activity(message):
     _handle_stats(message, "daily_activity")
 
 
-def _handle_sitewide_stats(message, stat_type):
+def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
         stats_range = message['stats_range']
         databases = couchdb.list_databases(f"{stat_type}_{stats_range}")
@@ -84,18 +84,18 @@ def _handle_sitewide_stats(message, stat_type):
             current_app.logger.error(f"No database found to insert {stats_range} sitewide {stat_type} stats")
             return
 
-        stats = [
-            {
-                "user_id": db_stats.SITEWIDE_STATS_USER_ID,
-                "data": message["data"]
-            }
-        ]
+        stats = {
+            "user_id": db_stats.SITEWIDE_STATS_USER_ID,
+            "data": message["data"]
+        }
+        if has_count:
+            stats["count"] = message["count"]
 
         db_stats.insert_stats_in_couchdb(
             databases[0],
             message["from_ts"],
             message["to_ts"],
-            stats
+            [stats]
         )
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
@@ -103,7 +103,7 @@ def _handle_sitewide_stats(message, stat_type):
 
 def handle_sitewide_entity(message):
     """ Take sitewide entity stats and save it in the database. """
-    _handle_sitewide_stats(message, message["entity"])
+    _handle_sitewide_stats(message, message["entity"], has_count=True)
 
 
 def handle_sitewide_listening_activity(message):
