@@ -15,32 +15,22 @@
     max-width: 100%;
   }
 
-  .no-listen-container {
-    position: fixed;
-    padding: 5em;
-    width: 100%;
-    height: 80%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2;
-  }
   .no-listen {
-    max-width: 50em;
-    min-width: 340px;
-    height: 300px;
-    // frosted glass effect
-    background: fade(#ccc, 35%);
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 2rem 0 fade(black, 20%);
-    // contents
-    font-size: 1.3em;
+    height: 100%;
+    font-size: 1.2em;
     padding: 2em;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
+    .pause-icon {
+      margin-top: -2.1em;
+      background-color: white;
+      display: block;
+      width: max-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
   }
 
   @media (min-width: @screen-xs) {
