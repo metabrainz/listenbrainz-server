@@ -15,24 +15,21 @@ from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import couchdb
+from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import create_app
 
 
-class StatsDatabaseTestCase(DatabaseTestCase):
+class StatsDatabaseTestCase(IntegrationTestCase):
 
     def setUp(self):
-        DatabaseTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, 'stats_user')
-        self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
-        self.maxDiff = None
+        super(StatsDatabaseTestCase, self).setUp()
 
-    @classmethod
-    def tearDownClass(cls):
-        # add app context
-        databases = couchdb.list_databases("")
-        for database in databases:
-            databases_url = f"{couchdb.get_base_url()}/{database}"
-            requests.delete(databases_url)
+    def tearDown(self):
+        with self.app.app_context():
+            databases = couchdb.list_databases("")
+            for database in databases:
+                databases_url = f"{couchdb.get_base_url()}/{database}"
+                requests.delete(databases_url)
 
     def insert_stats(self, entity, range_, data_file):
         with open(self.path_to_data_file(data_file)) as f:

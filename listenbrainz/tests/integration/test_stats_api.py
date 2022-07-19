@@ -88,9 +88,14 @@ class StatsAPITestCase(IntegrationTestCase):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
         r.flushall()
 
-        databases = couchdb.list_databases("")
-        for database in databases:
-            databases_url = f"{couchdb.get_base_url()}/{database}"
+        base_url = couchdb.get_base_url()
+        databases_url = f"{base_url}/_all_dbs"
+        response = requests.get(databases_url)
+        all_databases = response.json()
+        print(all_databases)
+        
+        for database in all_databases:
+            databases_url = f"{base_url}/{database}"
             requests.delete(databases_url)
 
         super(StatsAPITestCase, self).tearDown()
