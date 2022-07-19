@@ -1,5 +1,7 @@
 import * as React from "react";
-import TagComponent from "./TagComponent";
+import { isFunction } from "lodash";
+import TagComponent, { TagActionType } from "./TagComponent";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 function AddTagComponent(props: {
   entityType: "artist" | "release-group" | "recording";
@@ -8,27 +10,24 @@ function AddTagComponent(props: {
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const { APIService } = React.useContext(GlobalAppContext);
   const { entityMBID, entityType, callback } = props;
 
   const submitNewTag = React.useCallback(
     async (event: React.FormEvent) => {
       event.preventDefault();
       const newTag = inputRef?.current?.value;
-      const requestURL = `https://musicbrainz.org/${entityType}/${entityMBID}/tags/upvote?tags=${newTag}&client=brainzplayer`;
-      try {
-        const request = await fetch(requestURL, {
-          method: "GET",
-          mode: "cors",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
-        });
-        if (request.ok && callback) {
-          callback(newTag);
-        }
-      } catch (err) {
-        console.error(err);
+      if (!newTag || !entityMBID) {
+        return;
+      }
+      const success = await APIService.submitTagToMusicBrainz(
+        entityType,
+        entityMBID,
+        newTag,
+        TagActionType.UPVOTE
+      );
+      if (success && isFunction(callback)) {
+        callback(newTag);
       }
     },
     [entityType, entityMBID]
