@@ -1,5 +1,6 @@
 import itertools
 import json
+import unittest
 from copy import deepcopy
 from datetime import datetime, timezone
 
@@ -19,17 +20,18 @@ from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import create_app
 
 
-class StatsDatabaseTestCase(IntegrationTestCase):
+class StatsDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(StatsDatabaseTestCase, self).setUp()
 
     def tearDown(self):
-        with self.app.app_context():
-            databases = couchdb.list_databases("")
-            for database in databases:
-                databases_url = f"{couchdb.get_base_url()}/{database}"
-                requests.delete(databases_url)
+        databases = couchdb.list_databases("")
+        for database in databases:
+            if database == "_users":
+                continue
+            databases_url = f"{couchdb.get_base_url()}/{database}"
+            requests.delete(databases_url)
 
     def insert_stats(self, entity, range_, data_file):
         with open(self.path_to_data_file(data_file)) as f:

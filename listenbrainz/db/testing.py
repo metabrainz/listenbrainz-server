@@ -41,7 +41,8 @@ class DatabaseTestCase(unittest.TestCase):
     def drop_schema(self):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_schema.sql'))
 
-    def path_to_data_file(self, file_name):
+    @classmethod
+    def path_to_data_file(cls, file_name):
         """ Returns the path of the test data file relative to listenbrainz/db/testing.py.
 
             Args:
