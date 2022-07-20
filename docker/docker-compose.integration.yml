@@ -38,6 +38,7 @@ services:
       - redis
       - lb_db
       - rabbitmq
+      - couchdb
 
   timescale_writer:
     image: listenbrainz
