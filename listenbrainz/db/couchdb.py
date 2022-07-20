@@ -1,3 +1,4 @@
+import json
 import re
 
 import requests
@@ -121,3 +122,23 @@ def insert_data(database: str, data: list[dict]):
         couchdb_url = f"{get_base_url()}/{database}/_bulk_docs"
         response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
         response.raise_for_status()
+
+
+def delete_data(database: str, user_id: int):
+    """ Delete the given document from couchdb database.
+
+    Once a document is deleted, it will return a 404 if someone tries to fetch it afterwards. However,
+    the document will still remain in the database. To actually remove the document from the database,
+    look for the purge endpoint in couchdb docs.
+
+    Args:
+         database: the database to delete data from
+         user_id: the user to retrieve data for
+    """
+    document_url = f"{get_base_url()}/{database}/{user_id}"
+    response = requests.head(document_url)
+    response.raise_for_status()
+
+    rev = json.loads(response.headers.get("ETag"))
+    response = requests.delete(document_url, params={"rev": rev})
+    response.raise_for_status()
