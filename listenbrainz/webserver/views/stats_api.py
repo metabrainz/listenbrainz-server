@@ -685,7 +685,7 @@ def _get_sitewide_stats(entity: str):
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_entity_stats(db_stats.SITEWIDE_STATS_USER_ID, stats_range, entity, EntityRecord)
+    stats = db_stats.get_entity_stats(db_stats.SITEWIDE_STATS_USER_ID, entity, stats_range, EntityRecord)
     if stats is None:
         raise APINoContent("")
 
