@@ -1,9 +1,11 @@
+import itertools
 import json
 from copy import deepcopy
 from datetime import datetime
 from unittest.mock import patch
 
 import requests
+import ujson
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
@@ -26,6 +28,7 @@ from flask import current_app
 
 class MockDate(datetime):
     """ Mock class for datetime which returns epoch """
+
     @classmethod
     def now(cls, tzinfo=None):
         return cls.fromtimestamp(0, tzinfo)
@@ -34,53 +37,53 @@ class MockDate(datetime):
 class StatsAPITestCase(IntegrationTestCase):
 
     @classmethod
-    def setUpClass(self) -> None:
+    def setUpClass(cls) -> None:
         couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST, config.COUCHDB_PORT)
-        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
-            self.user_artist_payload = json.load(f)
+        stats = ["artists", "releases", "recordings", "daily_activity", "listening_activity", "artist_map"]
+        ranges = ["week", "month", "year", "all_time"]
+        for stat in stats:
+            for range_ in ranges:
+                couchdb.create_database(f"{stat}_{range_}_20220718")
+
+        with open(cls.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
+            cls.user_artist_payload = json.load(f)
         database = 'artists_all_time_20220718'
-        couchdb.create_database(database)
-        db_stats.insert_stats_in_couchdb(database, 0, 5, self.user_artist_payload)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.user_artist_payload)
 
         # Insert release data
-        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
-            self.user_release_payload = json.load(f)
+        with open(cls.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
+            cls.user_release_payload = json.load(f)
         database = 'releases_all_time_20220718'
-        couchdb.create_database(database)
-        db_stats.insert_stats_in_couchdb(database, 0, 5, self.user_release_payload)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.user_release_payload)
 
         # Insert recording data
-        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
-            self.recording_payload = json.load(f)
+        with open(cls.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
+            cls.recording_payload = json.load(f)
         database = 'recordings_all_time_20220718'
-        couchdb.create_database(database)
-        db_stats.insert_stats_in_couchdb(database, 0, 5, self.recording_payload)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.recording_payload)
 
         # Insert listening activity data
-        with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test.json')) as f:
-            self.listening_activity_payload = json.load(f)
+        with open(cls.path_to_data_file('user_listening_activity_db_data_for_api_test.json')) as f:
+            cls.listening_activity_payload = json.load(f)
         database = 'listening_activity_all_time_20220718'
-        couchdb.create_database(database)
-        db_stats.insert_stats_in_couchdb(database, 0, 5, self.listening_activity_payload)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.listening_activity_payload)
 
         # Insert daily activity data
-        with open(self.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
-            self.daily_activity_payload = json.load(f)
+        with open(cls.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
+            cls.daily_activity_payload = json.load(f)
         database = 'daily_activity_all_time_20220718'
-        couchdb.create_database(database)
-        db_stats.insert_stats_in_couchdb(database, 0, 5, self.daily_activity_payload)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.daily_activity_payload)
 
         # Insert artist map data
-        with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
-            self.artist_map_payload = json.load(f)
+        with open(cls.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
+            cls.artist_map_payload = json.load(f)
         database = 'artist_map_all_time'
-        couchdb.create_database(database)
-        db_stats.insert_stats_in_couchdb(database, 0, 5, self.artist_map_payload)
+        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.artist_map_payload)
 
         # Insert all_time sitewide top artists
-        with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
-            self.sitewide_artist_payload = json.load(f)
-        db_stats.insert_stats_in_couchdb('artists_all_time_20220718', 0, 5, self.sitewide_artist_payload)
+        with open(cls.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
+            cls.sitewide_artist_payload = json.load(f)
+        db_stats.insert_stats_in_couchdb('artists_all_time_20220718', 0, 5, cls.sitewide_artist_payload)
 
     def setUp(self):
         # app context
@@ -88,6 +91,38 @@ class StatsAPITestCase(IntegrationTestCase):
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
         self.no_stat_user = db_user.get_or_create(2111, 'no_stat_user')
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
+        self.entity_endpoints = {
+            "artists": {
+                "endpoint": "stats_api_v1.get_user_artist",
+                "total_count_key": "total_artist_count",
+                "payload": self.user_artist_payload
+            },
+            "releases": {
+                "endpoint": "stats_api_v1.get_release",
+                "total_count_key": "total_release_count",
+                "payload": self.user_release_payload
+            },
+            "recordings": {
+                "endpoint": "stats_api_v1.get_recording",
+                "total_count_key": "total_recording_count",
+                "payload": self.recording_payload
+            }
+        }
+
+        self.non_entity_endpoints = {
+            "listening_activity": {
+                "endpoint": "stats_api_v1.get_listening_activity",
+            },
+            "daily_activity": {
+                "endpoint": "stats_api_v1.get_daily_activity",
+            },
+            "artist_map": {
+                "endpoint": "stats_api_v1.get_artist_map",
+            }
+        }
+
+        self.all_endpoints = self.entity_endpoints | self.non_entity_endpoints
+
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
@@ -111,14 +146,13 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_query_params_validation(self):
         """ Test to make sure the query params sent to stats' api are validated and appropriate error
          message is given for invalid params """
-        non_entity_endpoints = ["get_listening_activity", "get_daily_activity", "get_artist_map"]
-        all_endpoints = ["get_user_artist", "get_release", "get_recording", "get_sitewide_artist"] + non_entity_endpoints
-
-        for endpoint in all_endpoints:
-            url = f'stats_api_v1.{endpoint}'
+        for stat_type in self.all_endpoints:
+            url = self.all_endpoints[stat_type]["endpoint"]
             user_name = self.user['musicbrainz_id']
+            endpoint_user_url = url_for(url, user_name=user_name)
+
             with self.subTest(f"test 400 is received for invalid range query param on endpoint : {url}", url=url):
-                response = self.client.get(url_for(url, user_name=user_name, query_string={'range': 'foobar'}))
+                response = self.client.get(endpoint_user_url, query_string={'range': 'foobar'})
                 self.assert400(response)
                 self.assertEqual("Invalid range: foobar", response.json['error'])
 
@@ -132,74 +166,78 @@ class StatsAPITestCase(IntegrationTestCase):
                 response = self.client.get(url_for(url, user_name=self.no_stat_user['musicbrainz_id']))
                 self.assertEqual(response.status_code, 204)
 
-            if endpoint in non_entity_endpoints:
+            if stat_type in self.non_entity_endpoints:
                 continue
 
             with self.subTest(f"test 400 is received if offset is not an integer on endpoint : {url}", url=url):
-                response = self.client.get(url_for(url, user_name=user_name), query_string={'offset': 'foobar'})
+                response = self.client.get(endpoint_user_url, query_string={'offset': 'foobar'})
                 self.assert400(response)
                 self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
 
             with self.subTest(f"test 400 is received if offset is a negative integer on endpoint : {url}", url=url):
-                response = self.client.get(url_for(url, user_name=user_name), query_string={'offset': -5})
+                response = self.client.get(endpoint_user_url, query_string={'offset': -5})
                 self.assert400(response)
                 self.assertEqual("'offset' should be a non-negative integer", response.json['error'])
 
             with self.subTest(f"test 400 is received if count is not an integer on endpoint : {url}", url=url):
-                response = self.client.get(url_for(url, user_name=user_name), query_string={'count': 'foobar'})
+                response = self.client.get(endpoint_user_url, query_string={'count': 'foobar'})
                 self.assert400(response)
                 self.assertEqual("'count' should be a non-negative integer", response.json['error'])
 
             with self.subTest(f"test 400 is received if count is a negative integer on endpoint : {url}", url=url):
-                response = self.client.get(url_for(url, user_name=user_name), query_string={'count': -5})
+                response = self.client.get(endpoint_user_url, query_string={'count': -5})
                 self.assert400(response)
                 self.assertEqual("'count' should be a non-negative integer", response.json['error'])
 
-    def test_user_artist_stat(self):
+    def assertUserStatEqual(self, request, response, entity, stats_range, total_count_key, count, offset=0):
+        """ Checks the stats response received from the api is valid and then compare the stats payload inserted in db
+            with the payload received from the api.
+            Many tests insert larger payloads but expect a smaller number of stats to returned so
+            this method also accepts a count and offset parameter denoting how many stats and which
+            entries to check.
+        """
+        self.assert200(response)
+
+        sent = request[0]
+        sent['user_id'] = int(sent['_id'])
+        del sent['_id']
+
+        received = ujson.loads(response.data)['payload']
+        self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
+        self.assertEqual(count, received['count'])
+        self.assertEqual(sent['count'], received[total_count_key])
+        self.assertEqual(sent['from_ts'], received['from_ts'])
+        self.assertEqual(sent['to_ts'], received['to_ts'])
+        self.assertEqual(stats_range, received['range'])
+        self.assertListEqual(sent['data'][offset:count + offset], received[entity])
+
+    def test_user_entity_stat(self):
         """ Test to make sure valid response is received """
-        response = self.client.get(url_for('stats_api_v1.get_user_artist', user_name=self.user['musicbrainz_id']))
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        received_count = data['count']
+        for entity in self.entity_endpoints:
+            endpoint = self.entity_endpoints[entity]["endpoint"]
+            total_count_key = self.entity_endpoints[entity]["total_count_key"]
+            payload = self.entity_endpoints[entity]["payload"]
+            with self.subTest(f"test api returns valid response for {entity} stats", entity=entity):
+                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']))
+                self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 25)
 
-        self.assertEqual(25, received_count)
-        sent_total_artist_count = self.user_artist_payload['count']
-        received_total_artist_count = data['total_artist_count']
-        self.assertEqual(sent_total_artist_count, received_total_artist_count)
-        sent_from = self.user_artist_payload['from_ts']
-        received_from = data['from_ts']
-        self.assertEqual(sent_from, received_from)
-        sent_to = self.user_artist_payload['to_ts']
-        received_to = data['to_ts']
-        self.assertEqual(sent_to, received_to)
-        sent_artist_list = self.user_artist_payload['data'][:25]
-        received_artist_list = data['artists']
-        self.assertListEqual(sent_artist_list, received_artist_list)
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+            with self.subTest(f"test api returns valid response for {entity} stats when using offset", entity=entity):
+                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                                           query_string={'offset': 5})
+                self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 25, 5)
 
-    def test_user_artist_stat_too_many(self):
-        """ Test to make sure response received has maximum 100 listens """
-        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test_too_many.json'), 'r') as f:
-            payload = json.load(f)
+            with self.subTest(f"test api returns valid response for {entity} stats when using count", entity=entity):
+                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                                           query_string={'count': 5})
+                self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 5)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[EntityRecord](**payload))
-
-        response = self.client.get(url_for('stats_api_v1.get_user_artist',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': 105})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        received_count = data['count']
-        self.assertEqual(100, received_count)
-        sent_from = payload['from_ts']
-        received_from = data['from_ts']
-        self.assertEqual(sent_from, received_from)
-        sent_to = payload['to_ts']
-        received_to = data['to_ts']
-        self.assertEqual(sent_to, received_to)
-        sent_artist_list = payload['data'][:100]
-        received_artist_list = data['artists']
-        self.assertListEqual(sent_artist_list, received_artist_list)
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+            with self.subTest(f"test api returns at most 100 stats in a response for {entity}", entity=entity):
+                with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_too_many.json'), 'r') as f:
+                    payload = json.load(f)
+                db_stats.insert_stats_in_couchdb(f"{entity}_all_time_20220718", 0, 5, payload)
+                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                                           query_string={'count': 105})
+                self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 100)
 
     def test_user_artist_stat_all_time(self):
         """ Test to make sure valid response is received when range is 'all_time' """
@@ -270,72 +308,6 @@ class StatsAPITestCase(IntegrationTestCase):
         received_artist_list = data['artists']
         self.assertListEqual(sent_artist_list, received_artist_list)
         self.assertEqual(data['range'], 'year')
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-    def test_user_artist_stat_count(self):
-        """ Test to make sure valid response is received if count argument is passed """
-        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
-            payload = json.load(f)
-
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[EntityRecord](**payload))
-
-        response = self.client.get(url_for('stats_api_v1.get_user_artist',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': 5})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_count = 5
-        received_count = data['count']
-        self.assertEqual(sent_count, received_count)
-        sent_total_artist_count = payload['count']
-        received_total_artist_count = data['total_artist_count']
-        self.assertEqual(sent_total_artist_count, received_total_artist_count)
-        sent_artist_list = payload['data'][:5]
-        received_artist_list = data['artists']
-        self.assertListEqual(sent_artist_list, received_artist_list)
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-    def test_user_artist_stat_offset(self):
-        """ Test to make sure valid response is received if offset argument is passed """
-        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
-            payload = json.load(f)
-
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists', StatRange[EntityRecord](**payload))
-
-        response = self.client.get(url_for('stats_api_v1.get_user_artist',
-                                           user_name=self.user['musicbrainz_id']), query_string={'offset': 5})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_offset = 5
-        received_offset = data['offset']
-        self.assertEqual(sent_offset, received_offset)
-        sent_artist_list = payload['data'][5:30]
-        received_artist_list = data['artists']
-        self.assertListEqual(sent_artist_list, received_artist_list)
-        sent_total_artist_count = payload['count']
-        received_total_artist_count = data['total_artist_count']
-        self.assertEqual(sent_total_artist_count, received_total_artist_count)
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-    def test_release_stat(self):
-        """ Test to make sure valid response is received """
-        response = self.client.get(url_for('stats_api_v1.get_release', user_name=self.user['musicbrainz_id']))
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        received_count = data['count']
-
-        self.assertEqual(25, received_count)
-        sent_total_release_count = self.user_release_payload['count']
-        received_total_release_count = data['total_release_count']
-        self.assertEqual(sent_total_release_count, received_total_release_count)
-        sent_from = self.user_release_payload['from_ts']
-        received_from = data['from_ts']
-        self.assertEqual(sent_from, received_from)
-        sent_to = self.user_release_payload['to_ts']
-        received_to = data['to_ts']
-        self.assertEqual(sent_to, received_to)
-        sent_release_list = self.user_release_payload['data'][:25]
-        received_release_list = data['releases']
-        self.assertListEqual(sent_release_list, received_release_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
     def test_release_stat_too_many(self):
@@ -431,50 +403,6 @@ class StatsAPITestCase(IntegrationTestCase):
         received_release_list = data['releases']
         self.assertListEqual(sent_release_list, received_release_list)
         self.assertEqual(data['range'], 'year')
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-    def test_release_stat_count(self):
-        """ Test to make sure valid response is received if count argument is passed """
-        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
-            payload = json.load(f)
-
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
-
-        response = self.client.get(url_for('stats_api_v1.get_release',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': 5})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_count = 5
-        received_count = data['count']
-        self.assertEqual(sent_count, received_count)
-        sent_total_release_count = payload['count']
-        received_total_release_count = data['total_release_count']
-        self.assertEqual(sent_total_release_count, received_total_release_count)
-        sent_release_list = payload['data'][:5]
-        received_release_list = data['releases']
-        self.assertListEqual(sent_release_list, received_release_list)
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-    def test_release_stat_offset(self):
-        """ Test to make sure valid response is received if offset argument is passed """
-        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
-            payload = json.load(f)
-
-        db_stats.insert_user_jsonb_data(self.user['id'], 'releases', StatRange[EntityRecord](**payload))
-
-        response = self.client.get(url_for('stats_api_v1.get_release',
-                                           user_name=self.user['musicbrainz_id']), query_string={'offset': 5})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_offset = 5
-        received_offset = data['offset']
-        self.assertEqual(sent_offset, received_offset)
-        sent_release_list = payload['data'][5:30]
-        received_release_list = data['releases']
-        self.assertListEqual(sent_release_list, received_release_list)
-        sent_total_release_count = payload['count']
-        received_total_release_count = data['total_release_count']
-        self.assertEqual(sent_total_release_count, received_total_release_count)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
     def test_recording_stat(self):
@@ -594,50 +522,6 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(data['range'], 'year')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    def test_recording_stat_count(self):
-        """ Test to make sure valid response is received if count argument is passed """
-        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
-            payload = json.load(f)
-
-        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[EntityRecord](**payload))
-
-        response = self.client.get(url_for('stats_api_v1.get_recording',
-                                           user_name=self.user['musicbrainz_id']), query_string={'count': 5})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_count = 5
-        received_count = data['count']
-        self.assertEqual(sent_count, received_count)
-        sent_total_recording_count = payload['count']
-        received_total_recording_count = data['total_recording_count']
-        self.assertEqual(sent_total_recording_count, received_total_recording_count)
-        sent_recording_list = payload['data'][:5]
-        received_recording_list = data['recordings']
-        self.assertListEqual(sent_recording_list, received_recording_list)
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-    def test_recording_stat_offset(self):
-        """ Test to make sure valid response is received if offset argument is passed """
-        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
-            payload = json.load(f)
-
-        db_stats.insert_user_jsonb_data(self.user['id'], 'recordings', StatRange[EntityRecord](**payload))
-
-        response = self.client.get(url_for('stats_api_v1.get_recording',
-                                           user_name=self.user['musicbrainz_id']), query_string={'offset': 5})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_offset = 5
-        received_offset = data['offset']
-        self.assertEqual(sent_offset, received_offset)
-        sent_recording_list = payload['data'][5:30]
-        received_recording_list = data['recordings']
-        self.assertListEqual(sent_recording_list, received_recording_list)
-        sent_total_recording_count = payload['count']
-        received_total_recording_count = data['total_recording_count']
-        self.assertEqual(sent_total_recording_count, received_total_recording_count)
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
     def test_entity_stat_not_calculated(self):
         """ Test to make sure that the API sends 204 if particular entity
             statistics for user have not been calculated yet
@@ -668,7 +552,8 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_listening_activity_stat(self):
         """ Test to make sure valid response is received """
-        response = self.client.get(url_for('stats_api_v1.get_listening_activity', user_name=self.user['musicbrainz_id']))
+        response = self.client.get(
+            url_for('stats_api_v1.get_listening_activity', user_name=self.user['musicbrainz_id']))
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -953,7 +838,8 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_artist_map_stat_invalid_force_recalculate(self):
         """ Test to make sure 400 is received if force_recalculate argument is invalid """
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
-                                           user_name=self.user['musicbrainz_id']), query_string={'force_recalculate': 'foobar'})
+                                           user_name=self.user['musicbrainz_id']),
+                                   query_string={'force_recalculate': 'foobar'})
         self.assert400(response)
         self.assertEqual("Invalid value of force_recalculate: foobar", response.json['error'])
 
