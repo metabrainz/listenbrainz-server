@@ -1,7 +1,8 @@
 import itertools
 import json
+import sys
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 import requests
@@ -31,7 +32,7 @@ class MockDate(datetime):
 
     @classmethod
     def now(cls, tzinfo=None):
-        return cls.fromtimestamp(0, tzinfo)
+        return cls.fromtimestamp(0)
 
 
 class StatsAPITestCase(IntegrationTestCase):
@@ -91,10 +92,11 @@ class StatsAPITestCase(IntegrationTestCase):
     def setUp(self):
         # app context
         super(StatsAPITestCase, self).setUp()
+        self.app.config["DEBUG"] = True
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
-        self.another_user = db_user.get_or_create(1999, 'another_user')
-        self.create_user_with_id(2111, 2111, 'no_stat_user')
-        self.no_stat_user = db_user.get(2111)
+        self.create_user_with_id(1999, 1999, 'another_user')
+        self.another_user = db_user.get(1999)
+        self.no_stat_user = db_user.get_or_create(1999, 'nostatuser')
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
         self.entity_endpoints = {
             "artists": {
@@ -226,10 +228,9 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(stats_range, received['range'])
         self.assertListEqual(sent['data'][offset:count + offset], received[entity])
 
-    def assertSitewideStatEqual(self, request, response, entity, stats_range, count, offset: int = 0):
+    def assertSitewideStatEqual(self, sent, response, entity, stats_range, count, offset: int = 0):
         self.assert200(response)
 
-        sent = request[0]
         received = ujson.loads(response.data)['payload']
 
         self.assertEqual(sent['count'], received['count'])
@@ -258,15 +259,13 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(sent['data'], received['artist_map'])
         self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
 
-    def assertDailyActivityEqual(self, expected, response):
+    def assertDailyActivityEqual(self, sent, response):
         self.assert200(response)
         received = json.loads(response.data)['payload']
-        sent = expected["payload"]
-
-        self.assertEqual(sent['from_ts'], received['from_ts'])
-        self.assertEqual(sent['to_ts'], received['to_ts'])
+        self.assertEqual(0, received['from_ts'])
+        self.assertEqual(5, received['to_ts'])
         self.assertEqual(sent['range'], received['range'])
-        self.assertEqual(sent['daily_activity'], received['daily_activity'])
+        self.assertCountEqual(sent['daily_activity'], received['daily_activity'])
         self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
 
     def test_user_entity_stat(self):
@@ -297,7 +296,8 @@ class StatsAPITestCase(IntegrationTestCase):
                 db_stats.insert_stats_in_couchdb(f"{entity}_all_time_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.another_user['musicbrainz_id']),
                                            query_string={'count': 200})
-                self.assertUserStatEqual(payload, response, entity, "this_year", total_count_key, 100)
+                self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 100,
+                                         user_name=self.another_user['musicbrainz_id'])
 
             for range_ in ["week", "month", "year"]:
                 with self.subTest(f"test api returns valid stats response for {range_} {entity}", entity=entity, range_=range_):
@@ -306,8 +306,7 @@ class StatsAPITestCase(IntegrationTestCase):
                     db_stats.insert_stats_in_couchdb(f"{entity}_{range_}_20220718", 0, 5, payload)
                     response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                                query_string={'range': range_})
-                    self.assertUserStatEqual(payload, response, entity, range_, total_count_key, payload[0]['count'],
-                                             user_name=self.user['musicbrainz_id'])
+                    self.assertUserStatEqual(payload, response, entity, range_, total_count_key, payload[0]['count'])
 
     def test_listening_activity_stat(self):
         endpoint = self.non_entity_endpoints["listening_activity"]["endpoint"]
@@ -338,13 +337,14 @@ class StatsAPITestCase(IntegrationTestCase):
                 with open(self.path_to_data_file(f'user_daily_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
                 db_stats.insert_stats_in_couchdb(f"daily_activity_{range_}_20220718", 0, 5, payload)
-                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']))
+                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                                           query_string={'range': range_})
                 with open(self.path_to_data_file(f'user_daily_activity_api_output_{range_}.json')) as f:
-                    expected = json.load(f)
+                    expected = json.load(f)["payload"]
                 self.assertDailyActivityEqual(expected, response)
 
     @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
-    def test_artist_map_stat(self):
+    def test_artist_map_stat(self, mock_date):
         endpoint = self.non_entity_endpoints["artist_map"]["endpoint"]
         with self.subTest(f"test valid response is received for artist_map stats"):
             response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']))
@@ -364,7 +364,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_artist_map_not_calculated(self, mock_get_country_wise_counts):
         """ Test to make sure stats are calculated if not present in DB """
         mock_get_country_wise_counts.return_value = [
-            UserArtistMapRecord(**country) for country in self.artist_map_payload['data']
+            UserArtistMapRecord(**country) for country in self.artist_map_payload[0]['data']
         ]
         couchdb.delete_data("artist_map_all_time", user_id=self.user['id'])
         response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
@@ -372,7 +372,8 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertArtistMapEqual(self.artist_map_payload, response)
         mock_get_country_wise_counts.assert_called_once()
 
-    def test_artist_map_not_calculated_artist_stat_not_present(self):
+    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
+    def test_artist_map_not_calculated_artist_stat_not_present(self, mock_date):
         """ Test to make sure that if artist stats and artist_map stats both are missing from DB, we return 204 """
 
         # Delete stats
@@ -400,6 +401,7 @@ class StatsAPITestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
                                    query_string={'range': 'all_time', 'force_recalculate': 'true'})
+        self.app.logger.error(response.text)
         data = response.json["payload"]
         received = data["artist_map"]
         expected = [
@@ -454,8 +456,8 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_sitewide_entity_stat(self):
         for entity in self.sitewide_entity_endpoints:
-            endpoint = self.entity_endpoints[entity]["endpoint"]
-            payload = self.entity_endpoints[entity]["payload"]
+            endpoint = self.sitewide_entity_endpoints[entity]["endpoint"]
+            payload = self.sitewide_entity_endpoints[entity]["payload"]
             with self.subTest(f"test api returns valid response for {entity} stats", entity=entity):
                 response = self.client.get(url_for(endpoint))
                 self.assertSitewideStatEqual(payload, response, entity, "all_time", 25)
@@ -482,9 +484,8 @@ class StatsAPITestCase(IntegrationTestCase):
 
             # week data file has 200 items in it so using it for this test
             with self.subTest(f"test api returns at most 100 stats in a response for {entity}", entity=entity):
-                with open(self.path_to_data_file(f'sitewide_top_week_db_data_for_api_test_{range_}.json'), 'r') as f:
+                with open(self.path_to_data_file(f'sitewide_top_{entity}_db_data_for_api_test_week.json'), 'r') as f:
                     payload = json.load(f)
-                db_stats.insert_stats_in_couchdb(f"{entity}_week_20220718", 0, 5, payload)
-                response = self.client.get(url_for(endpoint, user_name=self.another_user['musicbrainz_id']),
-                                           query_string={'count': 200})
+                db_stats.insert_sitewide_stats(f"{entity}_week_20220718", 0, 5, payload)
+                response = self.client.get(url_for(endpoint), query_string={'count': 200})
                 self.assertSitewideStatEqual(payload, response, entity, "week", 100)
