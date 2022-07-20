@@ -86,7 +86,7 @@ class StatsAPITestCase(IntegrationTestCase):
         # Insert all_time sitewide top artists
         with open(cls.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
             cls.sitewide_artist_payload = json.load(f)
-        db_stats.insert_stats_in_couchdb('artists_all_time_20220718', 0, 5, cls.sitewide_artist_payload)
+        db_stats.insert_sitewide_stats('artists_all_time_20220718', 0, 5, cls.sitewide_artist_payload)
 
     def setUp(self):
         # app context
@@ -472,7 +472,7 @@ class StatsAPITestCase(IntegrationTestCase):
                 with self.subTest(f"test api returns valid stats response for {range_} {entity}", entity=entity, range_=range_):
                     with open(self.path_to_data_file(f'sitewide_top_{entity}_db_data_for_api_test_{range_}.json'), 'r') as f:
                         payload = json.load(f)
-                    db_stats.insert_stats_in_couchdb(f"{entity}_{range_}_20220718", 0, 5, payload)
+                    db_stats.insert_sitewide_stats(f"{entity}_{range_}_20220718", 0, 5, payload)
                     response = self.client.get(url_for(endpoint), query_string={'range': range_})
                     self.assertSitewideStatEqual(payload, response, entity, range_, 25)
 

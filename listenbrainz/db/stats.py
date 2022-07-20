@@ -102,6 +102,19 @@ def get_entity_stats(user_id, stats_type, stats_range, stats_model) -> Optional[
     return None
 
 
+def insert_sitewide_stats(database: str, from_ts: int, to_ts: int, data: dict):
+    """ Insert sitewide stats in couchdb.
+
+        Args:
+            database: the name of the database to insert the stat in
+            from_ts: the start of the time period for which the stat is
+            to_ts: the end of the time period for which the stat is
+            data: sitewide stat to insert
+    """
+    data["user_id"] = SITEWIDE_STATS_USER_ID
+    insert_stats_in_couchdb(database, from_ts, to_ts, [data])
+
+
 def delete_user_stats(user_id):
     """ Delete stats for user with the given row ID.
 
