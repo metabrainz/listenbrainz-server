@@ -56,9 +56,10 @@ def metadata_recording():
     a recording and the artist. Using the inc parameter, you can control which portions of metadata
     to fetch.
 
-    The data returned by this endpoint can be seen here: (TODO: Changes this to a fancy link)
+    The data returned by this endpoint can be seen here:
 
-       listenbrainz-server/listenbrainz/testdata/mb_metadata_cache_example.json
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_metadata_cache_example.json
+       :language: json
 
     :param recording_mbids: A comma separated list of recording_mbids
     :type recording_mbids: ``str``
