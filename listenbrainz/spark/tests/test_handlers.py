@@ -72,7 +72,7 @@ class HandlersTestCase(DatabaseTestCase):
         handle_couchdb_data_start({"database": "artists_all_time_20220718"})
         handle_user_entity(data)
 
-        received = db_stats.get_entity_stats(1, 'artists', 'all_time', EntityRecord)
+        received = db_stats.get(1, 'artists', 'all_time', EntityRecord)
         expected = StatApi[EntityRecord](
             user_id=1,
             to_ts=10,
@@ -92,7 +92,7 @@ class HandlersTestCase(DatabaseTestCase):
         )
         self.assertEqual(received, expected)
 
-        received = db_stats.get_entity_stats(2, 'artists', 'all_time', EntityRecord)
+        received = db_stats.get(2, 'artists', 'all_time', EntityRecord)
         expected = StatApi[EntityRecord](
             user_id=2,
             to_ts=10,
@@ -158,7 +158,7 @@ class HandlersTestCase(DatabaseTestCase):
         handle_couchdb_data_start({"database": "listening_activity_all_time_20220718"})
         handle_user_listening_activity(data)
 
-        received = db_stats.get_entity_stats(1, 'listening_activity', 'all_time', ListeningActivityRecord)
+        received = db_stats.get(1, 'listening_activity', 'all_time', ListeningActivityRecord)
         self.assertEqual(received, StatApi[ListeningActivityRecord](
             user_id=1,
             to_ts=10,
@@ -183,7 +183,7 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-        received = db_stats.get_entity_stats(2, 'listening_activity', 'all_time', ListeningActivityRecord)
+        received = db_stats.get(2, 'listening_activity', 'all_time', ListeningActivityRecord)
         self.assertEqual(received, StatApi[ListeningActivityRecord](
             user_id=2,
             to_ts=10,
@@ -240,7 +240,7 @@ class HandlersTestCase(DatabaseTestCase):
         handle_couchdb_data_start({"database": "daily_activity_all_time_20220718"})
         handle_user_daily_activity(data)
 
-        received = db_stats.get_entity_stats(1, 'daily_activity', 'all_time', DailyActivityRecord)
+        received = db_stats.get(1, 'daily_activity', 'all_time', DailyActivityRecord)
         self.assertEqual(received, StatApi[DailyActivityRecord](
             user_id=1,
             to_ts=10,
@@ -258,7 +258,7 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-        received = db_stats.get_entity_stats(2, 'daily_activity', 'all_time', DailyActivityRecord)
+        received = db_stats.get(2, 'daily_activity', 'all_time', DailyActivityRecord)
         self.assertEqual(received, StatApi[DailyActivityRecord](
             user_id=2,
             to_ts=10,
@@ -299,7 +299,7 @@ class HandlersTestCase(DatabaseTestCase):
         }
         handle_couchdb_data_start({"database": "artists_all_time_20220818"})
         handle_sitewide_entity(data)
-        stats = db_stats.get_entity_stats(
+        stats = db_stats.get(
             db_stats.SITEWIDE_STATS_USER_ID,
             "artists",
             "all_time",

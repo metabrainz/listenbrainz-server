@@ -52,37 +52,37 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(cls.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             cls.user_artist_payload = json.load(f)
         database = 'artists_all_time_20220718'
-        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.user_artist_payload)
+        db_stats.insert(database, 0, 5, cls.user_artist_payload)
 
         # Insert release data
         with open(cls.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             cls.user_release_payload = json.load(f)
         database = 'releases_all_time_20220718'
-        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.user_release_payload)
+        db_stats.insert(database, 0, 5, cls.user_release_payload)
 
         # Insert recording data
         with open(cls.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
             cls.recording_payload = json.load(f)
         database = 'recordings_all_time_20220718'
-        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.recording_payload)
+        db_stats.insert(database, 0, 5, cls.recording_payload)
 
         # Insert listening activity data
         with open(cls.path_to_data_file('user_listening_activity_db_data_for_api_test.json')) as f:
             cls.listening_activity_payload = json.load(f)
         database = 'listening_activity_all_time_20220718'
-        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.listening_activity_payload)
+        db_stats.insert(database, 0, 5, cls.listening_activity_payload)
 
         # Insert daily activity data
         with open(cls.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
             cls.daily_activity_payload = json.load(f)
         database = 'daily_activity_all_time_20220718'
-        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.daily_activity_payload)
+        db_stats.insert(database, 0, 5, cls.daily_activity_payload)
 
         # Insert artist map data
         with open(cls.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             cls.artist_map_payload = json.load(f)
         database = 'artist_map_all_time'
-        db_stats.insert_stats_in_couchdb(database, 0, 5, cls.artist_map_payload)
+        db_stats.insert(database, 0, 5, cls.artist_map_payload)
 
         # Insert all_time sitewide top artists
         with open(cls.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
@@ -293,7 +293,7 @@ class StatsAPITestCase(IntegrationTestCase):
             with self.subTest(f"test api returns at most 100 stats in a response for {entity}", entity=entity):
                 with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_too_many.json'), 'r') as f:
                     payload = json.load(f)
-                db_stats.insert_stats_in_couchdb(f"{entity}_all_time_20220718", 0, 5, payload)
+                db_stats.insert(f"{entity}_all_time_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.another_user['musicbrainz_id']),
                                            query_string={'count': 200})
                 self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 100,
@@ -303,7 +303,7 @@ class StatsAPITestCase(IntegrationTestCase):
                 with self.subTest(f"test api returns valid stats response for {range_} {entity}", entity=entity, range_=range_):
                     with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_{range_}.json'), 'r') as f:
                         payload = json.load(f)
-                    db_stats.insert_stats_in_couchdb(f"{entity}_{range_}_20220718", 0, 5, payload)
+                    db_stats.insert(f"{entity}_{range_}_20220718", 0, 5, payload)
                     response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                                query_string={'range': range_})
                     self.assertUserStatEqual(payload, response, entity, range_, total_count_key, payload[0]['count'])
@@ -319,7 +319,7 @@ class StatsAPITestCase(IntegrationTestCase):
             with self.subTest(f"test valid response is received for {range_} listening_activity stats", range_=range_):
                 with open(self.path_to_data_file(f'user_listening_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
-                db_stats.insert_stats_in_couchdb(f"listening_activity_{range_}_20220718", 0, 5, payload)
+                db_stats.insert(f"listening_activity_{range_}_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
                 self.assertListeningActivityEqual(payload, response)
@@ -336,7 +336,7 @@ class StatsAPITestCase(IntegrationTestCase):
             with self.subTest(f"test valid response is received for {range_} daily_activity stats", range_=range_):
                 with open(self.path_to_data_file(f'user_daily_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
-                db_stats.insert_stats_in_couchdb(f"daily_activity_{range_}_20220718", 0, 5, payload)
+                db_stats.insert(f"daily_activity_{range_}_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
                 with open(self.path_to_data_file(f'user_daily_activity_api_output_{range_}.json')) as f:
@@ -355,7 +355,7 @@ class StatsAPITestCase(IntegrationTestCase):
             with self.subTest(f"test valid response is received for {range_} artist_map stats", range_=range_):
                 with open(self.path_to_data_file(f'user_artist_map_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
-                db_stats.insert_stats_in_couchdb(f"artist_map_{range_}", 0, 5, payload)
+                db_stats.insert(f"artist_map_{range_}", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
                 self.assertArtistMapEqual(payload, response)
@@ -442,7 +442,7 @@ class StatsAPITestCase(IntegrationTestCase):
             artist['artist_mbids'] = []
             artist['artist_msid'] = None
         couchdb.create_database("artists_this_week_20220718")
-        db_stats.insert_stats_in_couchdb("artists_this_week_20220718", 0, 5, artist_stats)
+        db_stats.insert("artists_this_week_20220718", 0, 5, artist_stats)
         response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
                                    query_string={'range': 'this_week', 'force_recalculate': 'true'})
         self.assert200(response)

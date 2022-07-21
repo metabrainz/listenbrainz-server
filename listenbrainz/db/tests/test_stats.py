@@ -37,7 +37,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         with open(self.path_to_data_file(data_file)) as f:
             original = json.load(f)
 
-        # insert_stats_in_couchdb modifies the data in place so make a copy first
+        # insert modifies the data in place so make a copy first
         data = deepcopy(original)
 
         database1, database2 = f"{entity}_{range_}_20220716", f"{entity}_{range_}_20220717"
@@ -45,16 +45,16 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         from_ts2, to_ts2 = int(datetime(2022, 7, 10).timestamp()), int(datetime(2022, 7, 17).timestamp())
 
         couchdb.create_database(database1)
-        db_stats.insert_stats_in_couchdb(database1, from_ts1, to_ts1, data)
+        db_stats.insert(database1, from_ts1, to_ts1, data)
 
         couchdb.create_database(database2)
-        db_stats.insert_stats_in_couchdb(database2, from_ts2, to_ts2, data[:1])
+        db_stats.insert(database2, from_ts2, to_ts2, data[:1])
         return original, from_ts1, to_ts1, from_ts2, to_ts2
 
     def _test_one_stat(self, entity, range_, data_file, model, exclude_count=False):
         original, from_ts1, to_ts1, from_ts2, to_ts2 = self.insert_stats(entity, range_, data_file)
 
-        received = db_stats.get_entity_stats(1, entity, range_, model) \
+        received = db_stats.get(1, entity, range_, model) \
             .dict(exclude={"count"} if exclude_count else None)
 
         expected = original[0] | {
@@ -65,7 +65,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         }
         self.assertEqual(received, expected)
 
-        received = db_stats.get_entity_stats(2, entity, range_, model) \
+        received = db_stats.get(2, entity, range_, model) \
             .dict(exclude={"count"} if exclude_count else None)
 
         expected = original[1] | {

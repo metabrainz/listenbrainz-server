@@ -239,7 +239,7 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_entity_stats(user["id"], entity, stats_range, EntityRecord)
+    stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
     if stats is None:
         raise APINoContent('')
 
@@ -318,7 +318,7 @@ def get_listening_activity(user_name: str):
     """
     user, stats_range = _validate_stats_user_params(user_name)
 
-    stats = db_stats.get_entity_stats(user["id"], "listening_activity", stats_range, ListeningActivityRecord)
+    stats = db_stats.get(user["id"], "listening_activity", stats_range, ListeningActivityRecord)
     if stats is None:
         raise APINoContent('')
 
@@ -389,7 +389,7 @@ def get_daily_activity(user_name: str):
     """
     user, stats_range = _validate_stats_user_params(user_name)
 
-    stats = db_stats.get_entity_stats(user['id'], "daily_activity", stats_range, DailyActivityRecord)
+    stats = db_stats.get(user['id'], "daily_activity", stats_range, DailyActivityRecord)
     if stats is None:
         raise APINoContent('')
 
@@ -685,7 +685,7 @@ def _get_sitewide_stats(entity: str):
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_entity_stats(db_stats.SITEWIDE_STATS_USER_ID, entity, stats_range, EntityRecord)
+    stats = db_stats.get(db_stats.SITEWIDE_STATS_USER_ID, entity, stats_range, EntityRecord)
     if stats is None:
         raise APINoContent("")
 
@@ -762,7 +762,7 @@ def get_sitewide_listening_activity():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    stats = db_stats.get_entity_stats(
+    stats = db_stats.get(
         db_stats.SITEWIDE_STATS_USER_ID,
         "listening_activity",
         stats_range,
@@ -858,7 +858,7 @@ def _get_artist_map_stats(user_id, stats_range):
 
     # Check if stats are present in DB, if not calculate them
     calculated = not force_recalculate
-    stats = db_stats.get_entity_stats(user_id, "artist_map", stats_range, UserArtistMapRecord)
+    stats = db_stats.get(user_id, "artist_map", stats_range, UserArtistMapRecord)
     if stats is None:
         calculated = False
 
@@ -869,7 +869,7 @@ def _get_artist_map_stats(user_id, stats_range):
             stale = True
 
     if stale or not calculated:
-        artist_stats = db_stats.get_entity_stats(user_id, "artists", stats_range, EntityRecord)
+        artist_stats = db_stats.get(user_id, "artists", stats_range, EntityRecord)
 
         # If top artists are missing, return the stale stats if present, otherwise return 204
         if artist_stats is None:
@@ -895,7 +895,7 @@ def _get_artist_map_stats(user_id, stats_range):
             )
 
             try:
-                db_stats.insert_stats_in_couchdb(
+                db_stats.insert(
                     f"artist_map_{stats_range}",
                     artist_stats.from_ts,
                     artist_stats.to_ts,
