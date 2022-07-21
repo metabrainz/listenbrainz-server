@@ -26,6 +26,7 @@ def get_fresh_releases():
     This endpoint fetches upcoming and recently released (fresh) releases and returns a list of:
 
     .. code-block:: json
+
         {
             "artist_credit_name": "R\u00f6yksopp",
             "artist_mbids": [
