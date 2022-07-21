@@ -869,7 +869,7 @@ def _get_artist_map_stats(user_id, stats_range):
             stale = True
 
     if stale or not calculated:
-        artist_stats = db_stats.get_entity_stats(user_id, stats_range, 'artists', UserArtistMapRecord)
+        artist_stats = db_stats.get_entity_stats(user_id, "artists", stats_range, EntityRecord)
 
         # If top artists are missing, return the stale stats if present, otherwise return 204
         if artist_stats is None:
@@ -885,7 +885,14 @@ def _get_artist_map_stats(user_id, stats_range):
                     artist_mbid_counts[artist_mbid] += artist.listen_count
 
             country_code_data = _get_country_wise_counts(artist_mbid_counts)
-            result = StatRecordList[UserArtistMapRecord](__root__=country_code_data)
+            result = StatApi[UserArtistMapRecord](
+                to_ts=artist_stats.to_ts,
+                from_ts=artist_stats.from_ts,
+                stats_range=stats_range,
+                data=StatRecordList[UserArtistMapRecord](__root__=country_code_data),
+                user_id=user_id,
+                last_updated=datetime.now()
+            )
 
             try:
                 db_stats.insert_stats_in_couchdb(

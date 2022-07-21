@@ -113,26 +113,3 @@ def insert_sitewide_stats(database: str, from_ts: int, to_ts: int, data: dict):
     """
     data["user_id"] = SITEWIDE_STATS_USER_ID
     insert_stats_in_couchdb(database, from_ts, to_ts, [data])
-
-
-def delete_user_stats(user_id):
-    """ Delete stats for user with the given row ID.
-
-        Args:
-            user_id (int): the row ID of the user in the DB
-    """
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            DELETE FROM statistics.user
-             WHERE user_id = :user_id
-            """), {
-            'user_id': user_id
-        })
-
-
-# TODO: Add tests for this function
-
-
-def delete_sitewide_stats():
-    """ Delete sitewide stats """
-    delete_user_stats(SITEWIDE_STATS_USER_ID)

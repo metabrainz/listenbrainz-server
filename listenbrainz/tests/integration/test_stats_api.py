@@ -344,7 +344,7 @@ class StatsAPITestCase(IntegrationTestCase):
                 self.assertDailyActivityEqual(expected, response)
 
     @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
-    def test_artist_map_stat(self, mock_date):
+    def test_artist_map_stat(self):
         endpoint = self.non_entity_endpoints["artist_map"]["endpoint"]
         with self.subTest(f"test valid response is received for artist_map stats"):
             response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']))
@@ -373,14 +373,10 @@ class StatsAPITestCase(IntegrationTestCase):
         mock_get_country_wise_counts.assert_called_once()
 
     @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
-    def test_artist_map_not_calculated_artist_stat_not_present(self, mock_date):
+    def test_artist_map_not_calculated_artist_stat_not_present(self):
         """ Test to make sure that if artist stats and artist_map stats both are missing from DB, we return 204 """
-
-        # Delete stats
-        db_stats.delete_user_stats(user_id=self.user['id'])
-
-        response = self.client.get(url_for('stats_api_v1.get_artist_map',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
+        response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
+                                   query_string={'range': 'this_month'})
         self.assertEqual(response.status_code, 204)
 
     def test_artist_map_stat_invalid_force_recalculate(self):
@@ -401,7 +397,6 @@ class StatsAPITestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
                                    query_string={'range': 'all_time', 'force_recalculate': 'true'})
-        self.app.logger.error(response.text)
         data = response.json["payload"]
         received = data["artist_map"]
         expected = [
@@ -419,7 +414,6 @@ class StatsAPITestCase(IntegrationTestCase):
             }
         ]
         self.assertListEqual(expected, received)
-        self.assertTrue('count' in mock_requests.request_history[0].qs)
 
     @requests_mock.Mocker(real_http=True)
     def test_get_country_code_mbid_country_mapping_failure(self, mock_requests):
@@ -487,5 +481,5 @@ class StatsAPITestCase(IntegrationTestCase):
                 with open(self.path_to_data_file(f'sitewide_top_{entity}_db_data_for_api_test_week.json'), 'r') as f:
                     payload = json.load(f)
                 db_stats.insert_sitewide_stats(f"{entity}_week_20220718", 0, 5, payload)
-                response = self.client.get(url_for(endpoint), query_string={'count': 200})
+                response = self.client.get(url_for(endpoint), query_string={'count': 200, 'range': 'week'})
                 self.assertSitewideStatEqual(payload, response, entity, "week", 100)
