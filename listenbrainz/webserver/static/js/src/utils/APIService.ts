@@ -1018,7 +1018,7 @@ export default class APIService {
     color: string,
     count?: number
   ): Promise<any> => {
-    let query = `${this.APIBaseURI}/color/${color}`;
+    let query = `${this.APIBaseURI}/explore/color/${color}`;
     if (!isUndefined(count)) query += `?count=${count}`;
     const response = await fetch(query);
     await this.checkStatus(response);

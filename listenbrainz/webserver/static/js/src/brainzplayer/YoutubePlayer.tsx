@@ -44,7 +44,8 @@ export default class YoutubePlayer
     // although unlikely, might change in the future.
     const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
 
-    const videoIdOrUrl = youtubeId ?? _get(listen, "track_metadata.additional_info.origin_url");
+    const videoIdOrUrl =
+      youtubeId ?? _get(listen, "track_metadata.additional_info.origin_url");
     if (_isString(videoIdOrUrl) && videoIdOrUrl.length) {
       /** Credit for this regular expression goes to Soufiane Sakhi:
        * https://stackoverflow.com/a/61033353/4904467
