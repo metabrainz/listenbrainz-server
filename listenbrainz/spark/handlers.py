@@ -51,7 +51,7 @@ def handle_couchdb_data_end(message):
 def _handle_stats(message, stats_type):
     try:
         with start_transaction(op="insert", name=f'insert {stats_type} - {message["stats_range"]} stats'):
-            db_stats.insert_stats_in_couchdb(
+            db_stats.insert(
                 message["database"],
                 message["from_ts"],
                 message["to_ts"],

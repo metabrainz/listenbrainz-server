@@ -52,7 +52,7 @@ from listenbrainz.db import couchdb
 SITEWIDE_STATS_USER_ID = 15753
 
 
-def insert_stats_in_couchdb(database: str, from_ts: int, to_ts: int, values: list[dict]):
+def insert(database: str, from_ts: int, to_ts: int, values: list[dict]):
     """ Insert stats in couchdb.
 
         Args:
@@ -71,7 +71,7 @@ def insert_stats_in_couchdb(database: str, from_ts: int, to_ts: int, values: lis
     couchdb.insert_data(database, values)
 
 
-def get_entity_stats(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
+def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
     """ Retrieve stats for the given user, stats range and stats type.
 
         Args:
@@ -112,4 +112,4 @@ def insert_sitewide_stats(database: str, from_ts: int, to_ts: int, data: dict):
             data: sitewide stat to insert
     """
     data["user_id"] = SITEWIDE_STATS_USER_ID
-    insert_stats_in_couchdb(database, from_ts, to_ts, [data])
+    insert(database, from_ts, to_ts, [data])
