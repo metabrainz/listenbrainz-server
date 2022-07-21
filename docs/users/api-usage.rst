@@ -76,15 +76,9 @@ artist name. For instance,
 .. include:: ./api_usage_examples/lookup_metadata.py
    :code: python
 
-.. code-block:: bash
-
-  ./lookup_metadata.py
-
-  Please input the track name of the listen: One Last Time
-  Please input the artist name of the listen: Ariana Grande
-  Please input extra metadata to include (leave empty if not desired): artist tag release
-
-  Metadata found.
+Please provide the prompted data to the script to lookup the given track. Currently the release
+argument for a listen is not used, but we plan to support in the near future, so we encourage
+you to start sending release information if you have it.
 
 .. code-block:: json
 
@@ -134,14 +128,7 @@ the ListenBrainz API. Refer to :ref:`feedback-api` for more details.
 .. include:: ./api_usage_examples/submit_feedback.py
    :code: python
 
-.. code-block:: bash
-
-  ./submit_feedback.py
-  Please input the recording mbid of the listen: 70c75409-4224-4bab-836a-eb5f3a9c31d3
-  Please input the feedback score (1, 0 or -1): -1
-  Please enter your auth token:  LISTENBRAINZ_AUTH_TOKEN
-
-  Feedback submitted.
+Please provide the prompted data to the script to submit feedback.
 
 Latest Import
 -------------
