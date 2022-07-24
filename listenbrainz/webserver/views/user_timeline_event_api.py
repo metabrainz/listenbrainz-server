@@ -533,6 +533,9 @@ def create_personal_recommendation_event(user_name):
     '''
     user = validate_auth_header()
 
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+
     try:
         data = ujson.loads(request.get_data())
     except ValueError as e:
