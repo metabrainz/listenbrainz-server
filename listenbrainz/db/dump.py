@@ -377,8 +377,8 @@ def dump_statistics(location: str):
             couchdb.dump_database(stat, fp)
 
 
-def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], dump_type: str,
-                 tables, schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], dump_type: str, tables: Optional[dict],
+                 schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
@@ -466,12 +466,17 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
                                     raise
                             transaction.rollback()
 
-            # Add the files to the archive in the order that they are defined in the dump definition.
-            # This is so that when imported into a db with FK constraints added, we import dependent
-            # tables first
-            for table in tables:
-                tar.add(os.path.join(archive_tables_dir, table),
-                        arcname=os.path.join(archive_name, 'lbdump', table))
+            if not tables:
+                # order doesn't matter or name of tables can't be determined before dumping so just
+                # add entire directory with all files inside it
+                tar.add(archive_tables_dir, arcname=os.path.join(archive_name, 'lbdump'))
+            else:
+                # Add the files to the archive in the order that they are defined in the dump definition.
+                # This is so that when imported into a db with FK constraints added, we import dependent
+                # tables first
+                for table in tables:
+                    tar.add(os.path.join(archive_tables_dir, table),
+                            arcname=os.path.join(archive_name, 'lbdump', table))
 
             shutil.rmtree(temp_dir)
 
@@ -555,7 +560,7 @@ def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAUL
         location=location,
         db_engine=db.engine,
         dump_type='feedback',
-        tables=[],
+        tables=None,
         schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
@@ -568,7 +573,7 @@ def create_statistics_dump(location: str, dump_time: datetime, threads=DUMP_DEFA
         location=location,
         db_engine=None,
         dump_type='statistics',
-        tables=[],
+        tables=None,
         schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
