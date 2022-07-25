@@ -121,7 +121,7 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
         if do_spark_dump:
             ls.dump_listens_for_spark(dump_path, dump_id=dump_id, dump_type="full", end_time=end_time)
             expected_num_dumps += 1
-        if do_spark_dump:
+        if do_stats_dump:
             db_dump.create_statistics_dump(dump_path, end_time, threads)
             expected_num_dumps += 1
 
