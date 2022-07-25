@@ -190,13 +190,17 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_timeline_event.id, user_timeline_event.user_id, user_timeline_event.event_type, user_timeline_event.metadata,
-            user_timeline_event.created, "user".musicbrainz_id as user_name
+            SELECT user_timeline_event.id
+                 , user_timeline_event.user_id
+                 , user_timeline_event.event_type
+                 , user_timeline_event.metadata
+                 , user_timeline_event.created
+                 , "user".musicbrainz_id as user_name
               FROM user_timeline_event
-              INNER JOIN "user" ON user_timeline_event.user_id = "user".id
-             WHERE
-               (user_timeline_event.metadata ->> 'followers')::jsonb @> (:user_id)::text::jsonb
-               OR user_timeline_event.user_id = :user_id
+              JOIN "user"
+                ON user_timeline_event.user_id = "user".id
+             WHERE (user_timeline_event.metadata ->> 'followers')::jsonb @> (:user_id)::text::jsonb
+                OR user_timeline_event.user_id = :user_id
                AND user_timeline_event.created > :min_ts
                AND user_timeline_event.created < :max_ts
                AND user_timeline_event.event_type = :event_type
@@ -211,7 +215,6 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
         })
 
         return [UserTimelineEvent(**row) for row in result.fetchall()]
-
 
 
 def get_cb_review_events(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
