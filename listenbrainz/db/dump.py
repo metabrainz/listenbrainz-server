@@ -31,7 +31,7 @@ import tempfile
 import traceback
 from datetime import datetime, timedelta
 from ftplib import FTP
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, Iterable
 
 import sqlalchemy
 import ujson
@@ -378,7 +378,7 @@ def dump_statistics(location: str):
 
 
 def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], dump_type: str,
-                 tables: Optional[dict], schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+                 tables, schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
@@ -441,29 +441,30 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
 
             if dump_type == "statistics":
                 dump_statistics(archive_tables_dir)
-            with db_engine.connect() as connection:
-                if dump_type == "feedback":
-                    dump_user_feedback(connection, location=archive_tables_dir)
-                else:
-                    with connection.begin() as transaction:
-                        cursor = connection.connection.cursor()
-                        for table in tables:
-                            try:
-                                copy_table(
-                                    cursor=cursor,
-                                    location=archive_tables_dir,
-                                    columns=tables[table],
-                                    table_name=table,
-                                )
-                            except IOError as e:
-                                current_app.logger.error(
-                                    'IOError while copying table %s', table, exc_info=True)
-                                raise
-                            except Exception as e:
-                                current_app.logger.error(
-                                    'Error while copying table %s: %s', table, str(e), exc_info=True)
-                                raise
-                        transaction.rollback()
+            else:
+                with db_engine.connect() as connection:
+                    if dump_type == "feedback":
+                        dump_user_feedback(connection, location=archive_tables_dir)
+                    else:
+                        with connection.begin() as transaction:
+                            cursor = connection.connection.cursor()
+                            for table in tables:
+                                try:
+                                    copy_table(
+                                        cursor=cursor,
+                                        location=archive_tables_dir,
+                                        columns=tables[table],
+                                        table_name=table,
+                                    )
+                                except IOError as e:
+                                    current_app.logger.error(
+                                        'IOError while copying table %s', table, exc_info=True)
+                                    raise
+                                except Exception as e:
+                                    current_app.logger.error(
+                                        'Error while copying table %s: %s', table, str(e), exc_info=True)
+                                    raise
+                            transaction.rollback()
 
             # Add the files to the archive in the order that they are defined in the dump definition.
             # This is so that when imported into a db with FK constraints added, we import dependent
@@ -554,7 +555,7 @@ def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAUL
         location=location,
         db_engine=db.engine,
         dump_type='feedback',
-        tables=None,
+        tables=[],
         schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
@@ -567,7 +568,7 @@ def create_statistics_dump(location: str, dump_time: datetime, threads=DUMP_DEFA
         location=location,
         db_engine=None,
         dump_type='statistics',
-        tables=None,
+        tables=[],
         schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
