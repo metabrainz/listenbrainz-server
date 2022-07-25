@@ -58,33 +58,8 @@ def reset_token():
 @login_required
 def select_timezone():
     pg_timezones = db_usersetting.get_pg_timezone()
-    # timezones = []
-    # for timezone in pg_timezones:
-    #     timezones.append({
-    #             "zone_name": timezone[0],
-    #             "utc_offset" : timezone[1],
-    #         })
-
-    # props = {
-    #     "timezones": timezones,
-    # }
-
-    # form = TimezoneForm()
-    # form.timezone.choices = [(zone_name, zone_name) for (zone_name, offset) in pg_timezones]
     user_settings = db_usersetting.get(current_user.id)
     user_timezone = user_settings['timezone_name']
-    # if form.validate_on_submit():
-    #     try:
-    #         update_timezone = str(form.timezone.data)
-    #         db_usersetting.set_timezone(current_user.id, update_timezone)
-    #         flash.info("Your timezone has been saved.")
-    #     except DatabaseException:
-    #         flash.error("Something went wrong! Unable to update timezone right now.")
-    #     return redirect(url_for("profile.info"))
-
-    # if form.errors:
-    #     flash.error('Unable to update timezone.')
-    #     return redirect(url_for('profile.info'))
     props={
         "pg_timezones":pg_timezones,
         "user_timezone":user_timezone,

@@ -3,6 +3,10 @@ import * as ReactDOM from "react-dom";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import {
+  withAlertNotifications,
+  WithAlertNotificationsInjectedProps,
+} from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 
@@ -12,18 +16,21 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 export type SelectTimezoneProps = {
   pg_timezones: Array<[string, string]>;
   user_timezone: string;
-};
-export interface PlaylistPageState {
+} & WithAlertNotificationsInjectedProps;
+export interface SelectTimezoneState {
   selectZone: string;
 }
 export default class SelectTimezones extends React.Component<
   SelectTimezoneProps,
-  PlaylistPageState
+  SelectTimezoneState
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   constructor(props: SelectTimezoneProps) {
     super(props);
     this.state = {
-      selectZone: "",
+      selectZone: props.user_timezone,
     };
   }
 
@@ -31,6 +38,39 @@ export default class SelectTimezones extends React.Component<
     this.setState({
       selectZone: zone,
     });
+  };
+
+  submitTimezone = async (
+    event?: React.FormEvent<HTMLFormElement>
+  ): Promise<null> => {
+    const { APIService, currentUser } = this.context;
+    const { name, auth_token } = currentUser;
+    const { selectZone } = this.state;
+    const { newAlert } = this.props;
+
+    if (event) {
+      event.preventDefault();
+    }
+
+    if (auth_token) {
+      try {
+        const status = await APIService.resetUserTimezone(
+          name,
+          auth_token,
+          selectZone
+        );
+        if (status === 200) {
+          newAlert.bind(this, "success", "Reset timezone", `Reset timezone`);
+        }
+      } catch (error) {
+        newAlert(
+          "danger",
+          "Error",
+          typeof error === "object" ? error?.message : error
+        );
+      }
+    }
+    return null;
   };
 
   render() {
@@ -51,14 +91,16 @@ export default class SelectTimezones extends React.Component<
         </p>
 
         <div>
-          <form>
+          <form onSubmit={this.submitTimezone}>
             <label>
-              {selectZone
+              {/* {selectZone
                 ? `You selected ${selectZone} for your local timezone `
-                : "Select you local timezone: "}
+                : "Select you local timezone: "} */}
+              Select you local timezone:
             </label>
 
             <select onChange={(e) => this.zoneSelection(e.target.value)}>
+              {/* <select ref="zonename"> */}
               {pg_timezones.map((zone: [string, string]) => {
                 return (
                   <option value={zone[0]}>
@@ -106,6 +148,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const SelectTimezonesWithAlertNotifications = withAlertNotifications(
+    SelectTimezones
+  );
+
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
   );
@@ -120,7 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <SelectTimezones
+        <SelectTimezonesWithAlertNotifications
+          initialAlerts={optionalAlerts}
           pg_timezones={pg_timezones}
           user_timezone={user_timezone}
         />
