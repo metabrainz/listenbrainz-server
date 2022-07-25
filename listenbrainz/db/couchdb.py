@@ -138,7 +138,7 @@ def insert_data(database: str, data: list[dict]):
 
     with start_span(op="http", description="insert docs in couchdb using api"):
         couchdb_url = f"{get_base_url()}/{database}/_bulk_docs"
-        response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
+        response = requests.put(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
         response.raise_for_status()
 
 
@@ -164,7 +164,8 @@ def delete_data(database: str, doc_id: int | str):
 
 def lock_database(database: str):
     document_url = f"{get_base_url()}/{database}/{DATABASE_LOCK_FILE}"
-    response = requests.post(document_url, json={})
+    # TODO: figure out why PUT works but POST fails with a weird referer header error
+    response = requests.put(document_url, json={})
     response.raise_for_status()
 
 
