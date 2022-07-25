@@ -64,6 +64,7 @@ def insert(database: str, from_ts: int, to_ts: int, values: list[dict]):
     with start_span(op="processing", description="add _id, from_ts, to_ts and last_updated to docs"):
         for doc in values:
             doc["_id"] = str(doc["user_id"])
+            doc["key"] = doc["user_id"]
             doc["from_ts"] = from_ts
             doc["to_ts"] = to_ts
             doc["last_updated"] = datetime.now().isoformat()
@@ -85,7 +86,7 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
         data = couchdb.fetch_data(prefix, user_id)
         if data is not None:
             return StatApi[stats_model](
-                user_id=int(user_id),
+                user_id=user_id,
                 from_ts=data["from_ts"],
                 to_ts=data["to_ts"],
                 count=data.get("count"),  # all stats may not have a count field

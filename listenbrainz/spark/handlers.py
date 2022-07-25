@@ -43,7 +43,10 @@ def handle_couchdb_data_end(message):
         return
     try:
         # the prefix in the database name is the first group of regex
-        couchdb.delete_database(database[1])
+        _, retained = couchdb.delete_database(database[1])
+        if retained:
+            current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
+                                    f" _LOCK file existed")
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
