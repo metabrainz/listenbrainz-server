@@ -211,8 +211,9 @@ def dump_database(prefix: str, fp: TextIO):
                     "limit": limit,
                     "include_docs": True
                 })
-                docs = ujson.loads(response.content)["docs"]
-                for doc in docs:
+                rows = ujson.loads(response.content)["rows"]
+                for row in rows:
+                    doc = row["doc"]
                     if not doc:
                         continue
                     doc.pop("_id", None)
