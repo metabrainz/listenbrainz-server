@@ -53,7 +53,8 @@ class RecordingRecommendationMetadata(BaseModel):
 
 class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata, validate_assignment=True):
     # followers: NonNegativeInt
-    followers: List[NonNegativeInt]
+    followers: Optional[List[NonNegativeInt]]
+    followers_username: Optional[List[str]]
     blurb_content: Optional[str]
 
 
@@ -106,7 +107,7 @@ class APIPersonalRecommendationEvent(BaseModel):
     release_name: Optional[str]
     recording_mbid: Optional[str]
     recording_msid: constr(min_length=1)
-    followers: List[NonNegativeInt]
+    followers_username: List[str]
     blurb_content: Optional[str]
 
 

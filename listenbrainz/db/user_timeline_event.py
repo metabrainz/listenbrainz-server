@@ -193,13 +193,26 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
             SELECT user_timeline_event.id
                  , user_timeline_event.user_id
                  , user_timeline_event.event_type
-                 , user_timeline_event.metadata
+                 ,
+                 (
+                    SELECT jsonb_build_object(
+                        'track_name', user_timeline_event.metadata -> 'track_name',
+                        'artist_name', user_timeline_event.metadata -> 'artist_name',
+                        'release_name', user_timeline_event.metadata -> 'release_name',
+                        'recording_mbid', user_timeline_event.metadata -> 'recording_mbid',
+                        'recording_msid', user_timeline_event.metadata -> 'recording_msid',
+                        'followers_username', jsonb_agg("user".musicbrainz_id),
+                        'blurb_content', user_timeline_event.metadata -> 'blurb_content'
+                    ) AS metadata
+                    FROM jsonb_array_elements_text(user_timeline_event.metadata -> 'followers') AS arr
+                   INNER JOIN "user" ON arr.value::int = "user".id
+                 )
                  , user_timeline_event.created
                  , "user".musicbrainz_id as user_name
               FROM user_timeline_event
               JOIN "user"
                 ON user_timeline_event.user_id = "user".id
-             WHERE (user_timeline_event.metadata ->> 'followers')::jsonb @> (:user_id)::text::jsonb
+             WHERE (user_timeline_event.metadata -> 'followers') @> (:user_id)::text::jsonb
                 OR user_timeline_event.user_id = :user_id
                AND user_timeline_event.created > :min_ts
                AND user_timeline_event.created < :max_ts
