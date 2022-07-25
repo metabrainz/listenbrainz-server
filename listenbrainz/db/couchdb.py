@@ -12,7 +12,7 @@ from urllib3 import Retry
 # stat type followed by a underscore followed by a date in YYYYMMDD format
 DATABASE_NAME_PATTERN = re.compile(r"(.*)_(\d{8})")
 
-DATABASE_LOCK_FILE = "_LOCK"
+DATABASE_LOCK_FILE = "LOCK"
 
 _user = None
 _admin_key = None
