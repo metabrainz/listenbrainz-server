@@ -202,7 +202,7 @@ add_rsync_include_rule \
     "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.xz"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-stats-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-statistics-dump-$DUMP_TIMESTAMP.tar.xz"
 
 EXCLUDE_RULE="exclude *"
 echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
