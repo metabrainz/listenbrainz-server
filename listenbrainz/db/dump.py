@@ -566,7 +566,7 @@ def create_statistics_dump(location: str, dump_time: datetime, threads=DUMP_DEFA
     return _create_dump(
         location=location,
         db_engine=None,
-        dump_type='couchdb',
+        dump_type='statistics',
         tables=None,
         schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
