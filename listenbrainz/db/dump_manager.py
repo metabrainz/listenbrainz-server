@@ -73,8 +73,9 @@ def send_dump_creation_notification(dump_name, dump_type):
 @click.option('--spark/--no-spark', 'do_spark_dump', type=bool, default=True)
 @click.option('--db/--no-db', 'do_db_dump', type=bool, default=True)
 @click.option('--timescale/--no-timescale', 'do_timescale_dump', type=bool, default=True)
+@click.option('--stats/--no-stats', 'do_stats_dump', type=bool, default=True)
 def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump: bool,
-                do_db_dump: bool, do_timescale_dump: bool):
+                do_db_dump: bool, do_timescale_dump: bool, do_stats_dump: bool):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from the listenstore.
 
@@ -86,6 +87,7 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
             do_spark_dump: If True, make a spark listens dump
             do_db_dump: If True, make a public/private postgres dump
             do_timescale_dump: If True, make a public/private timescale dump
+            do_stats_dump: If True, make a couchdb stats dump
     """
     app = create_app()
     with app.app_context():
@@ -118,6 +120,9 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
             expected_num_dumps += 1
         if do_spark_dump:
             ls.dump_listens_for_spark(dump_path, dump_id=dump_id, dump_type="full", end_time=end_time)
+            expected_num_dumps += 1
+        if do_spark_dump:
+            db_dump.create_statistics_dump(dump_path, end_time, threads)
             expected_num_dumps += 1
 
         try:

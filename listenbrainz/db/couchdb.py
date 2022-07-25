@@ -1,15 +1,18 @@
 import json
 import re
+from typing import TextIO
 
 import requests
 import ujson
-from flask import current_app
+from requests.adapters import HTTPAdapter
 from sentry_sdk import start_span
 
+from urllib3 import Retry
 
 # stat type followed by a underscore followed by a date in YYYYMMDD format
 DATABASE_NAME_PATTERN = re.compile(r"(.*)_(\d{8})")
 
+DATABASE_LOCK_FILE = "_LOCK"
 
 _user = None
 _admin_key = None
@@ -31,7 +34,7 @@ def init(user, password, host, port):
     _user = user
     _admin_key = password
     _host = host
-    _port = port    
+    _port = port
 
 
 def get_base_url():
@@ -75,17 +78,32 @@ def list_databases(prefix: str) -> list[str]:
 def delete_database(prefix: str):
     """ Delete all but the latest database whose name starts with the given prefix.
 
+    Before deleting, the existence of a _LOCK file is checked. If a file named _LOCK,
+    exists in the database then it is not deleted.
+
     Args:
          prefix: the string to match database names with
+
+    Returns:
+        tuple of name of databases that were deleted and which matched the prefix
+        but weren't deleted
     """
     databases = list_databases(prefix)
     # remove the latest database from the list then delete the databases remaining in the list.
     databases.pop(0)
 
+    deleted = [], retained = []
+
     for database in databases:
         databases_url = f"{get_base_url()}/{database}"
-        response = requests.delete(databases_url)
-        response.raise_for_status()
+        response = requests.get(f"{databases_url}/{DATABASE_LOCK_FILE}")
+
+        if response.status_code == 200:
+            response = requests.delete(databases_url)
+            response.raise_for_status()
+            deleted.append(database)
+        else:
+            retained.append(database)
 
 
 def fetch_data(prefix: str, user_id: int):
@@ -124,7 +142,7 @@ def insert_data(database: str, data: list[dict]):
         response.raise_for_status()
 
 
-def delete_data(database: str, user_id: int):
+def delete_data(database: str, doc_id: int | str):
     """ Delete the given document from couchdb database.
 
     Once a document is deleted, it will return a 404 if someone tries to fetch it afterwards. However,
@@ -133,12 +151,75 @@ def delete_data(database: str, user_id: int):
 
     Args:
          database: the database to delete data from
-         user_id: the user to retrieve data for
+         doc_id: the id of the document to delete
     """
-    document_url = f"{get_base_url()}/{database}/{user_id}"
+    document_url = f"{get_base_url()}/{database}/{doc_id}"
     response = requests.head(document_url)
     response.raise_for_status()
 
     rev = json.loads(response.headers.get("ETag"))
     response = requests.delete(document_url, params={"rev": rev})
     response.raise_for_status()
+
+
+def lock_database(database: str):
+    document_url = f"{get_base_url()}/{database}/{DATABASE_LOCK_FILE}"
+    response = requests.post(document_url, json={})
+    response.raise_for_status()
+
+
+def unlock_database(database: str):
+    delete_data(database, DATABASE_LOCK_FILE)
+
+
+def _assert_status_hook(r, *args, **kwargs):
+    r.raise_for_status()
+
+
+def _get_requests_session():
+    retry_strategy = Retry(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        method_whitelist=["HEAD", "GET", "OPTIONS"]
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    http = requests.Session()
+    http.hooks["response"] = [_assert_status_hook]
+    http.mount("https://", adapter)
+    http.mount("http://", adapter)
+    return http
+
+
+def dump_database(prefix: str, fp: TextIO):
+    databases = list_databases(prefix)
+    # get the older database for this stat type because it will likely be the complete one
+    # the newer one is probably incomplete and that's why the old one has not been cleaned up yet.
+    database = databases[-1]
+    lock_database(database)
+
+    try:
+        with _get_requests_session() as http:
+            database_url = f"{get_base_url()}/{database}"
+            response = http.get(database_url)
+            total_docs = response.json()["doc_count"]
+
+            limit = 50
+            for skip in range(0, total_docs, limit):
+                response = http.get(f"{database_url}/_all_docs", params={
+                    "skip": skip,
+                    "limit": limit,
+                    "include_docs": True
+                })
+                docs = ujson.loads(response.content)["docs"]
+                for doc in docs:
+                    if not doc:
+                        continue
+                    doc.pop("_id", None)
+                    doc.pop("key", None)
+                    doc.pop("rev", None)
+                    doc.pop("_revisions", None)
+
+                    ujson.dump(doc, fp)
+                    fp.write("\n")
+    finally:
+        unlock_database(database)
