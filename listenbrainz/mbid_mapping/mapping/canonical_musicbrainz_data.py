@@ -5,7 +5,7 @@ from psycopg2.errors import OperationalError
 from unidecode import unidecode
 
 from mapping.utils import create_schema, insert_rows, log
-from mapping.formats import create_formats_table
+from mapping.custom_sorts import create_custom_sort_tables
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
 from mapping.canonical_release_redirect import CanonicalReleaseRedirect
@@ -167,7 +167,7 @@ def create_canonical_musicbrainz_data():
         mapping.add_additional_bulk_table(can)
 
         # Carry out the bulk of the work
-        create_formats_table(mb_conn)
+        create_custom_sort_tables(mb_conn)
         releases.run(no_swap=True)
         mapping.run(no_swap=True)
         can_rel.run(no_swap=True)
