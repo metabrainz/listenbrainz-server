@@ -22,3 +22,7 @@ Rust
 Python
 ^^^^^^
 * `pylistenbrainz <https://pypi.org/project/pylistenbrainz/>`_
+
+Java
+^^^^^^
+* `listenbrainz-java <https://github.com/rain0r/listenbrainz-java/>`_
