@@ -868,7 +868,7 @@ def _get_artist_map_stats(user_id, stats_range):
     }
 
     try:
-        cache.set(key, ujson.dumps(stats).encode('utf-8'), ARTIST_MAP_CACHE_DURATION)
+        cache.set(key, ujson.dumps(stats), ARTIST_MAP_CACHE_DURATION)
     except Exception as err:
         current_app.logger.error(f"Error while inserting artist map stats for {user_id}. "
                                  f"Error: {err}. Data: {stats}", exc_info=True)
