@@ -59,8 +59,6 @@ response_handler_map = {
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds
 
-metrics.init("listenbrainz")
-
 
 class SparkReader:
     def __init__(self):
