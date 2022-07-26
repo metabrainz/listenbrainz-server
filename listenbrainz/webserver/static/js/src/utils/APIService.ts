@@ -1123,11 +1123,10 @@ export default class APIService {
   };
 
   resetUserTimezone = async (
-    userName: string,
     userToken: string,
     zonename: string
   ): Promise<any> => {
-    const url = `${this.APIBaseURI}/user-setting/${userName}/timezone`;
+    const url = `${this.APIBaseURI}/user-setting/timezone`;
     const response = await fetch(url, {
       method: "POST",
       headers: {

@@ -19,6 +19,7 @@ export type SelectTimezoneProps = {
 } & WithAlertNotificationsInjectedProps;
 export interface SelectTimezoneState {
   selectZone: string;
+  userTimezone: string;
 }
 export default class SelectTimezones extends React.Component<
   SelectTimezoneProps,
@@ -31,6 +32,7 @@ export default class SelectTimezones extends React.Component<
     super(props);
     this.state = {
       selectZone: props.user_timezone,
+      userTimezone: props.user_timezone,
     };
   }
 
@@ -42,9 +44,9 @@ export default class SelectTimezones extends React.Component<
 
   submitTimezone = async (
     event?: React.FormEvent<HTMLFormElement>
-  ): Promise<null> => {
+  ): Promise<any> => {
     const { APIService, currentUser } = this.context;
-    const { name, auth_token } = currentUser;
+    const { auth_token } = currentUser;
     const { selectZone } = this.state;
     const { newAlert } = this.props;
 
@@ -55,35 +57,36 @@ export default class SelectTimezones extends React.Component<
     if (auth_token) {
       try {
         const status = await APIService.resetUserTimezone(
-          name,
           auth_token,
           selectZone
         );
         if (status === 200) {
-          newAlert.bind(this, "success", "Reset timezone", `Reset timezone`);
+          newAlert("success", "Your timezone has been saved.", "");
         }
       } catch (error) {
         newAlert(
           "danger",
           "Error",
-          typeof error === "object" ? error?.message : error
+          "Something went wrong! Unable to update timezone right now."
         );
       }
     }
-    return null;
+    this.setState({
+      userTimezone: selectZone,
+    });
   };
 
   render() {
-    const { selectZone } = this.state;
+    const { selectZone, userTimezone } = this.state;
     // const { APIService } = this.context;
-    const { pg_timezones, user_timezone } = this.props;
+    const { pg_timezones } = this.props;
 
     return (
       <>
         <h3>Select Timezone</h3>
         <p>
           Your current timezone setting is{" "}
-          {user_timezone ? `${user_timezone}` : "no select"}.
+          <span style={{ fontWeight: "bold" }}>{userTimezone}.</span>
           <br />
           By choosing your local time zone, you will have a local timestamps
           part of your submitted listens. This also informs as when to generate
@@ -93,22 +96,23 @@ export default class SelectTimezones extends React.Component<
         <div>
           <form onSubmit={this.submitTimezone}>
             <label>
-              {/* {selectZone
-                ? `You selected ${selectZone} for your local timezone `
-                : "Select you local timezone: "} */}
               Select you local timezone:
+              <select
+                defaultValue={userTimezone}
+                onChange={(e) => this.zoneSelection(e.target.value)}
+              >
+                <option value="default" disabled>
+                  Choose an option
+                </option>
+                {pg_timezones.map((zone: [string, string]) => {
+                  return (
+                    <option value={zone[0]}>
+                      {zone[0]} ({zone[1]})
+                    </option>
+                  );
+                })}
+              </select>
             </label>
-
-            <select onChange={(e) => this.zoneSelection(e.target.value)}>
-              {/* <select ref="zonename"> */}
-              {pg_timezones.map((zone: [string, string]) => {
-                return (
-                  <option value={zone[0]}>
-                    {zone[0]} ({zone[1]})
-                  </option>
-                );
-              })}
-            </select>
             <br />
             <br />
             <p>
