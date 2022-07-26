@@ -52,9 +52,7 @@ class RecordingRecommendationMetadata(BaseModel):
 
 
 class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata, validate_assignment=True):
-    # followers: NonNegativeInt
-    followers: Optional[List[NonNegativeInt]]
-    followers_username: Optional[List[str]]
+    followers_username: List[str]
     blurb_content: Optional[str]
 
 

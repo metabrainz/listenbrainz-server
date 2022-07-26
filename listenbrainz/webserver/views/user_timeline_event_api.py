@@ -545,11 +545,11 @@ def create_personal_recommendation_event(user_name):
 
     try:
         metadata = PersonalRecordingRecommendationMetadata(**metadata)
-        if not metadata.followers:
-            raise APIBadRequest("Invalid metadata: followers list not present")
-        for follower in metadata.followers:
-            if not db_user_relationship.is_following_user(follower, user['id']):
-                raise APIBadRequest(f"The person doesn't follow you")
+        # if not metadata.followers:
+            # raise APIBadRequest("Invalid metadata: followers list not present")
+        # for follower in metadata.followers:
+            # if not db_user_relationship.is_following_user(follower, user['id']):
+                # raise APIBadRequest(f"The person doesn't follow you")
         event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata)
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")

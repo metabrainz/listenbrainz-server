@@ -116,11 +116,45 @@ def create_personal_recommendation_event(user_id: int, metadata:
     PersonalRecordingRecommendationMetadata) -> UserTimelineEvent:
     """ Creates a personal recommendation event in the database and returns it.
     """
-    return create_user_timeline_event(
-        user_id=user_id,
-        event_type=UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION,
-        metadata=metadata,
-    )
+    try:
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text("""
+                INSERT INTO user_timeline_event (user_id, event_type, metadata)
+                    VALUES (
+                        :user_id,
+                        'personal_recording_recommendation',
+                        jsonb_build_object(
+                            'track_name', :track_name,
+                            'artist_name', :artist_name,
+                            'release_name', :release_name,
+                            'recording_mbid', :recording_mbid,
+                            'recording_msid', :recording_msid,
+                            'followers', (
+                                SELECT jsonb_agg("user".id) as followers_username
+                                  FROM unnest(:followers_username) as arr
+                                  INNER JOIN "user"
+                                  ON "user".musicbrainz_id = arr
+                            ),
+                            'blurb_content', :blurb_content
+                        )
+                    )
+                RETURNING id, user_id, event_type, metadata, created
+                """), {
+                    'user_id': user_id,
+                    'track_name': metadata.track_name,
+                    'artist_name': metadata.artist_name,
+                    'release_name': metadata.release_name,
+                    'recording_mbid': metadata.recording_mbid,
+                    'recording_msid': metadata.recording_msid,
+                    'followers_username': metadata.followers_username,
+                    'blurb_content': metadata.blurb_content
+                }
+            )
+
+            r = dict(result.fetchone())
+            return UserTimelineEvent(**r)
+    except Exception as e:
+        raise DatabaseException(str(e))
 
 
 def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, count: int = 50) -> List[UserTimelineEvent]:
