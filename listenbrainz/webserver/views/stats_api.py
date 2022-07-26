@@ -843,7 +843,7 @@ def _get_artist_map_stats(user_id, stats_range):
     key = f"{ARTIST_MAP_CACHE_PREFIX}:{stats_range}:{user_id}"
 
     if not force_recalculate:
-        stats = cache.get(key, decode=False)
+        stats = cache.get(key)
         if stats is not None:
             return ujson.loads(stats)
 
@@ -868,7 +868,7 @@ def _get_artist_map_stats(user_id, stats_range):
     }
 
     try:
-        cache.set(key, ujson.dumps(stats), ARTIST_MAP_CACHE_DURATION, encode=False)
+        cache.set(key, ujson.dumps(stats).encode('utf-8'), ARTIST_MAP_CACHE_DURATION)
     except Exception as err:
         current_app.logger.error(f"Error while inserting artist map stats for {user_id}. "
                                  f"Error: {err}. Data: {stats}", exc_info=True)

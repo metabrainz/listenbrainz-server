@@ -3,6 +3,9 @@ from copy import deepcopy
 from datetime import datetime
 from unittest.mock import patch
 
+import ujson
+from brainzutils import cache
+
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import requests_mock
@@ -18,6 +21,8 @@ from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.tests.integration import IntegrationTestCase
 from redis import Redis
 from flask import current_app
+
+from listenbrainz.webserver.views.stats_api import ARTIST_MAP_CACHE_PREFIX
 
 
 class MockDate(datetime):
@@ -66,8 +71,7 @@ class StatsAPITestCase(IntegrationTestCase):
         # Insert artist map data
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             self.artist_map_payload = json.load(f)
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map',
-                                        StatRange[UserArtistMapRecord](**self.artist_map_payload))
+        cache.set(f"{ARTIST_MAP_CACHE_PREFIX}:all_time:{self.user['id']}", ujson.dumps(self.artist_map_payload), 0)
 
         # Insert all_time sitewide top artists
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
@@ -75,8 +79,7 @@ class StatsAPITestCase(IntegrationTestCase):
         db_stats.insert_sitewide_jsonb_data('artists', StatRange[EntityRecord](**self.sitewide_artist_payload))
 
     def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
+        cache.flush_all()
         super(StatsAPITestCase, self).tearDown()
 
     def test_user_artist_stat(self):
@@ -970,7 +973,7 @@ class StatsAPITestCase(IntegrationTestCase):
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
-        sent_artist_map = self.artist_map_payload['data']
+        sent_artist_map = self.artist_map_payload['artist_map']
         received_artist_map = data['artist_map']
         self.assertListEqual(sent_artist_map, received_artist_map)
         self.assertEqual(data['range'], 'all_time')
@@ -981,13 +984,13 @@ class StatsAPITestCase(IntegrationTestCase):
         """ Test to make sure the endpoint returns correct cached response """
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
+        cache.set(f"{ARTIST_MAP_CACHE_PREFIX}:week:{self.user['id']}", ujson.dumps(payload), 0)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map', StatRange[UserArtistMapRecord](**payload))
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
-        sent_artist_map = payload['data']
+        sent_artist_map = payload['artist_map']
         received_artist_map = data['artist_map']
         self.assertListEqual(sent_artist_map, received_artist_map)
         self.assertEqual(data['range'], 'week')
@@ -998,13 +1001,13 @@ class StatsAPITestCase(IntegrationTestCase):
         """ Test to make sure the endpoint returns correct cached response """
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
+        cache.set(f"{ARTIST_MAP_CACHE_PREFIX}:month:{self.user['id']}", ujson.dumps(payload), 0)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map', StatRange[UserArtistMapRecord](**payload))
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
-        sent_artist_map = payload['data']
+        sent_artist_map = payload['artist_map']
         received_artist_map = data['artist_map']
         self.assertListEqual(sent_artist_map, received_artist_map)
         self.assertEqual(data['range'], 'month')
@@ -1015,13 +1018,13 @@ class StatsAPITestCase(IntegrationTestCase):
         """ Test to make sure the endpoint returns correct cached response """
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
+        cache.set(f"{ARTIST_MAP_CACHE_PREFIX}:year:{self.user['id']}", ujson.dumps(payload), 0)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map', StatRange[UserArtistMapRecord](**payload))
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
-        sent_artist_map = payload['data']
+        sent_artist_map = payload['artist_map']
         received_artist_map = data['artist_map']
         self.assertListEqual(sent_artist_map, received_artist_map)
         self.assertEqual(data['range'], 'year')
@@ -1030,54 +1033,34 @@ class StatsAPITestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.stats_api._get_country_wise_counts')
     def test_artist_map_not_calculated(self, mock_get_country_wise_counts):
         """ Test to make sure stats are calculated if not present in DB """
-        mock_get_country_wise_counts.return_value = [UserArtistMapRecord(
-            **country) for country in self.artist_map_payload['data']]
+        mock_get_country_wise_counts.return_value = [
+            UserArtistMapRecord(**country)
+            for country in self.artist_map_payload['artist_map']
+        ]
 
         # Delete stats
-        db_stats.delete_user_stats(user_id=self.user['id'])
-        # Reinsert artist stats
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artists',
-                                        StatRange[EntityRecord](**self.user_artist_payload))
+        cache.flush_all()
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
-        sent_artist_map = self.artist_map_payload['data']
+        sent_artist_map = self.artist_map_payload['artist_map']
         received_artist_map = data['artist_map']
         self.assertListEqual(sent_artist_map, received_artist_map)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
         self.assertGreater(data['last_updated'], 0)
         mock_get_country_wise_counts.assert_called_once()
 
-        # Check if stats have been saved in DB
-        data = db_stats.get_user_artist_map(self.user['id'], 'all_time')
-        self.assertEqual(data.data.dict()['__root__'], sent_artist_map)
-
-    @patch('listenbrainz.webserver.views.stats_api.db_stats.insert_user_jsonb_data', side_effect=NotImplementedError)
-    @patch('listenbrainz.webserver.views.stats_api._get_country_wise_counts')
-    def test_artist_map_db_insertion_failed(self, mock_get_country_wise_counts, mock_db_insert):
-        """ Test to make sure that stats are calculated returned even if DB insertion fails """
-        mock_get_country_wise_counts.return_value = [UserArtistMapRecord(
-            **country) for country in self.artist_map_payload['data']]
-
-        response = self.client.get(url_for('stats_api_v1.get_artist_map',
-                                           user_name=self.user['musicbrainz_id']),
-                                   query_string={'range': 'all_time', 'force_recalculate': 'true'})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_artist_map = self.artist_map_payload['data']
-        received_artist_map = data['artist_map']
-        self.assertListEqual(sent_artist_map, received_artist_map)
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-        self.assertGreater(data['last_updated'], 0)
-        mock_get_country_wise_counts.assert_called_once()
+        # Check if stats have been saved in cache
+        data = cache.get(f"{ARTIST_MAP_CACHE_PREFIX}:all_time:{self.user['id']}")
+        self.assertEqual(ujson.loads(data)["artist_map"], sent_artist_map)
 
     def test_artist_map_not_calculated_artist_stat_not_present(self):
         """ Test to make sure that if artist stats and artist_map stats both are missing from DB, we return 204 """
-
         # Delete stats
         db_stats.delete_user_stats(user_id=self.user['id'])
+        cache.flush_all()
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
