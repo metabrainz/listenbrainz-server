@@ -101,7 +101,7 @@ class SparkReader:
         try:
             response_handler(response)
             if not current_app.config['TESTING']:
-                metrics.set(f"listenbrainz-spark-{response_type}", 1)
+                metrics.set(f"listenbrainz-spark-{response_type}", None, None, received=1)
         except Exception:
             current_app.logger.error("Error in the spark reader response handler: data: %s",
                                      json.dumps(response, indent=4), exc_info=True)
