@@ -286,7 +286,7 @@ class MBIDMapper:
                         <td>{hit['document']["artist_credit_name"]}</td>
                         <td><a href="https://musicbrainz.org/recording/{hit['document']['recording_mbid']}">{hit['document']["recording_mbid"]}</a></td>
                         <td><a href="https://musicbrainz.org/release/{hit['document']['release_mbid']}">{hit['document']["release_mbid"]}</a></td>
-                        <td><{hit['document']["artist_credit_id"]}</td>
+                        <td>{hit['document']["artist_credit_id"]}</td>
                     </tr>
                 </table>
             """))
