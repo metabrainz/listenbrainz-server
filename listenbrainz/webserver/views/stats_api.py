@@ -1,7 +1,10 @@
 import calendar
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Tuple, Iterable
+
+import ujson
+from brainzutils import cache
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
@@ -23,7 +26,8 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param)
 
-STATS_CALCULATION_INTERVAL = 7  # Stats are recalculated every 7 days
+ARTIST_MAP_CACHE_DURATION = int(timedelta(days=7).total_seconds())  # artist map stats are cached for 7 days
+ARTIST_MAP_CACHE_PREFIX = 'artist_map'  # prefix used in cache keys to store artist map data
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -467,16 +471,8 @@ def get_artist_map(user_name: str):
     """
     user, stats_range = _validate_stats_user_params(user_name)
     result = _get_artist_map_stats(user["id"], stats_range)
-    return jsonify({
-        "payload": {
-            "user_id": user_name,
-            "range": stats_range,
-            "from_ts": result.from_ts,
-            "to_ts": result.to_ts,
-            "last_updated": int(result.last_updated.timestamp()),
-            "artist_map": [x.dict() for x in result.data.__root__]
-        }
-    })
+    result["user_id"] = user_name
+    return jsonify({"payload": result})
 
 
 @stats_api_bp.route("/sitewide/artists")
@@ -842,61 +838,42 @@ def get_sitewide_artist_map():
 def _get_artist_map_stats(user_id, stats_range):
     recalculate_param = request.args.get('force_recalculate', default='false')
     if recalculate_param.lower() not in ['true', 'false']:
-        raise APIBadRequest("Invalid value of force_recalculate: {}".format(recalculate_param))
+        raise APIBadRequest(f"Invalid value of force_recalculate: {recalculate_param}")
     force_recalculate = recalculate_param.lower() == 'true'
+    key = f"{ARTIST_MAP_CACHE_PREFIX}:{stats_range}:{user_id}"
 
-    # Check if stats are present in DB, if not calculate them
-    calculated = not force_recalculate
-    stats = db_stats.get_user_artist_map(user_id, stats_range)
-    if stats is None:
-        calculated = False
+    if not force_recalculate:
+        stats = cache.get(key, decode=False)
+        if stats is not None:
+            return ujson.loads(stats)
 
-    # Check if the stats present in DB have been calculated in the past week, if not recalculate them
-    stale = False
-    if calculated:
-        if (datetime.now(timezone.utc) - stats.last_updated).days >= STATS_CALCULATION_INTERVAL:
-            stale = True
+    artist_stats = db_stats.get_user_stats(user_id, stats_range, 'artists')
+    # If top artists are missing, return the stale stats if present, otherwise return 204
+    if artist_stats is None:
+        raise APINoContent('')
 
-    if stale or not calculated:
-        artist_stats = db_stats.get_user_stats(user_id, stats_range, 'artists')
+    # Calculate the data
+    artist_mbid_counts = defaultdict(int)
+    for artist in artist_stats.data.__root__:
+        for artist_mbid in artist.artist_mbids:
+            artist_mbid_counts[artist_mbid] += artist.listen_count
 
-        # If top artists are missing, return the stale stats if present, otherwise return 204
-        if artist_stats is None:
-            if stale:
-                result = stats
-            else:
-                raise APINoContent('')
-        else:
-            # Calculate the data
-            artist_mbid_counts = defaultdict(int)
-            for artist in artist_stats.data.__root__:
-                for artist_mbid in artist.artist_mbids:
-                    artist_mbid_counts[artist_mbid] += artist.listen_count
+    country_code_data = _get_country_wise_counts(artist_mbid_counts)
+    stats = {
+        "range": stats_range,
+        "from_ts": artist_stats.from_ts,
+        "to_ts": artist_stats.to_ts,
+        "last_updated": int(datetime.now().timestamp()),
+        "artist_map": country_code_data
+    }
 
-            country_code_data = _get_country_wise_counts(artist_mbid_counts)
-            result = StatApi[UserArtistMapRecord](**{
-                "data": country_code_data,
-                "from_ts": artist_stats.from_ts,
-                "to_ts": artist_stats.to_ts,
-                "stats_range": stats_range,
-                # this isn't stored in the database, but adding it here to avoid a subsequent db call to
-                # just fetch last updated. could just store this value instead in db but that complicates
-                # the implementation a bit
-                "last_updated": datetime.now(),
-                "user_id": user_id
-            })
+    try:
+        cache.set(key, ujson.dumps(stats), ARTIST_MAP_CACHE_DURATION, encode=False)
+    except Exception as err:
+        current_app.logger.error(f"Error while inserting artist map stats for {user_id}. "
+                                 f"Error: {err}. Data: {stats}", exc_info=True)
 
-            # Store in DB for future use
-            try:
-                db_stats.insert_user_jsonb_data(user_id, 'artist_map', result)
-            except Exception as err:
-                current_app.logger.error(
-                    "Error while inserting artist map stats for {user}. Error: {err}. Data: {data}".format(
-                        user=user_id, err=err, data=result), exc_info=True)
-    else:
-        result = stats
-
-    return result
+    return stats
 
 
 @stats_api_bp.route("/user/<user_name>/year-in-music/")
