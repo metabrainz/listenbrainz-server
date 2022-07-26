@@ -4,7 +4,6 @@
 import json
 from datetime import datetime, timezone, timedelta
 
-from brainzutils import metrics
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
 from pydantic import ValidationError
@@ -24,8 +23,6 @@ from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
-
-metrics.init("listenbrainz")
 
 def is_new_user_stats_batch():
     """ Returns True if this batch of user stats is new, False otherwise
@@ -50,7 +47,6 @@ def notify_user_stats_update(stat_type):
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
         )
-        metrics.set("listenbrainz-spark-user-stats", 1)
 
 
 def handle_user_entity(data):
@@ -79,15 +75,11 @@ def _handle_user_activity_stats(stats_type, data):
 def handle_user_listening_activity(data):
     """ Take listening activity stats for user and save it in database. """
     _handle_user_activity_stats("listening_activity", data)
-    if not current_app.config['TESTING']:
-        metrics.set("listenbrainz-spark-user-listening-activity", 1)
 
 
 def handle_user_daily_activity(data):
     """ Take daily activity stats for user and save it in database. """
     _handle_user_activity_stats("daily_activity", data)
-    if not current_app.config['TESTING']:
-        metrics.set("listenbrainz-spark-user-daily-activity", 1)
 
 
 def handle_sitewide_entity(data):
@@ -101,8 +93,6 @@ def handle_sitewide_entity(data):
 
     try:
         db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**data))
-        if not current_app.config['TESTING']:
-            metrics.set("listenbrainz-spark-sitewide-entity-stats", 1)
     except ValidationError:
         current_app.logger.error(f"""ValidationError while inserting {stats_range} sitewide top {entity}.
         Data: {json.dumps(data, indent=3)}""", exc_info=True)
@@ -110,8 +100,6 @@ def handle_sitewide_entity(data):
 
 def handle_sitewide_listening_activity(data):
     db_stats.insert_sitewide_jsonb_data("listening_activity", StatRange[ListeningActivityRecord](**data))
-    if not current_app.config['TESTING']:
-        metrics.set("listenbrainz-spark-sitewide-listening-activity", 1)
 
 
 def handle_dump_imported(data):
@@ -133,7 +121,6 @@ def handle_dump_imported(data):
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
         )
-    metrics.set("listenbrainz-spark-dump-imported", 1)
 
 
 def handle_dataframes(data):
@@ -154,7 +141,6 @@ def handle_dataframes(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
-    metrics.set("listenbrainz-spark-handle-dataframes", 1)
 
 
 def handle_missing_musicbrainz_data(data):
@@ -177,8 +163,6 @@ def handle_missing_musicbrainz_data(data):
             UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source
         )
-        if not current_app.config['TESTING']:
-            metrics.set("listenbrainz-spark-missing-mb-data", 1)
     except ValidationError:
         current_app.logger.error(f"""
         ValidationError while inserting missing MusicBrainz data from source "{source}" for user with musicbrainz_id:
@@ -203,7 +187,6 @@ def handle_model(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
-    metrics.set("listenbrainz-spark-model-created", 1)
 
 
 def handle_candidate_sets(data):
@@ -224,7 +207,6 @@ def handle_candidate_sets(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
-    metrics.set("listenbrainz-spark-candidate-sets-created", 1)
 
 
 def handle_recommendations(data):
@@ -244,8 +226,6 @@ def handle_recommendations(data):
             user_id,
             UserRecommendationsJson(**recommendations)
         )
-        if not current_app.config['TESTING']:
-            metrics.set("listenbrainz-spark-recommendations", 1)
     except ValidationError:
         current_app.logger.error(f"""ValidationError while inserting recommendations for user with musicbrainz_id:
                                  {user["musicbrainz_id"]}. \nData: {json.dumps(data, indent=3)}""")
@@ -275,7 +255,6 @@ def notify_mapping_import(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
-    metrics.set("listenbrainz-spark-mapping-imported", 1)
 
 
 def notify_artist_relation_import(data):
@@ -297,7 +276,6 @@ def notify_artist_relation_import(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
-    metrics.set("listenbrainz-spark-relation-imported", 1)
 
 
 def cf_recording_recommendations_complete(data):
@@ -324,7 +302,6 @@ def cf_recording_recommendations_complete(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
-    metrics.set("listenbrainz-spark-recommendations-complete", 1)
 
 
 def handle_similar_users(message):
@@ -351,7 +328,6 @@ def handle_similar_users(message):
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
         )
-        metrics.set("listenbrainz-spark-similar-users", 1)
 
 
 def handle_similar_users_year_end(message):

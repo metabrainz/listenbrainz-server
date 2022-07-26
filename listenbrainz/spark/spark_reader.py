@@ -28,6 +28,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_listens_per_day,
                                          handle_yearly_listen_counts)
 from listenbrainz.webserver import create_app
+from brainzutils import metrics
 
 response_handler_map = {
     'user_entity': handle_user_entity,
@@ -57,6 +58,8 @@ response_handler_map = {
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds
+
+metrics.init("listenbrainz")
 
 
 class SparkReader:
@@ -99,6 +102,8 @@ class SparkReader:
 
         try:
             response_handler(response)
+            if not current_app.config['TESTING']:
+                metrics.set(f"listenbrainz-spark-{response_type}", 1)
         except Exception:
             current_app.logger.error("Error in the spark reader response handler: data: %s",
                                      json.dumps(response, indent=4), exc_info=True)
