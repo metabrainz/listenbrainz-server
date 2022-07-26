@@ -13,7 +13,7 @@ Go
 
 Rust
 ^^^^
-* `listenbrainz-rust <https://github.com/treeshateorcs/listenbrainz-rust>`_
+* `listenbrainz <https://crates.io/crates/listenbrainz>`_
 
 .NET
 ^^^^
