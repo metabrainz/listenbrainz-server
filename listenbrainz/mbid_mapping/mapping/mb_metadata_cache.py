@@ -7,7 +7,6 @@ import psycopg2.extras
 import ujson
 
 from mapping.utils import create_schema, insert_rows, log
-from mapping.formats import create_formats_table
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 import config

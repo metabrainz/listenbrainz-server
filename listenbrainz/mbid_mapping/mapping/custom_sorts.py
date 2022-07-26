@@ -1,6 +1,20 @@
 import psycopg2
 from psycopg2.errors import OperationalError, UndefinedTable
 
+RELEASE_GROUP_SECONDARY_TYPES = [
+    (1, "Compilation"),
+    (2, "Soundtrack"),
+    (6, "Live"),
+    (7, "Remix"),
+    (10, "Demo"),
+    (8, "DJ-mix"),
+    (9, "Mixtape/Street"),
+    (5, "Audiobook"),
+    (11, "Audio drama"),
+    (3, "Spokenword"),
+    (4, "Interview")
+]
+
 DIGITAL_FORMATS = [
     (1, "CD"),
     (3, "SACD"),
@@ -92,34 +106,60 @@ ANALOG_FORMATS = [
 ]
 
 
-def insert_rows(id, curs, formats):
+def insert_rows(sort_index, curs, formats):
     '''
         Helper function for inserting format rows.
     '''
 
     for format_id, _ in formats:
-        curs.execute("INSERT INTO mapping.format_sort values (%s, %s);",  tuple((id, format_id)))
-        id += 1
+        curs.execute("""INSERT INTO mapping.format_sort
+                                    (format, sort)
+                             VALUES (%s, %s);""",  tuple((format_id, sort_index)))
+        sort_index += 1
 
-    return id
+    return sort_index
 
 
-def create_formats_table(conn):
+def create_custom_sort_tables(conn):
     """
-        Create the formats table that contains the preferred sort order for releases in the MSB mapping.
+        Create the custom sort tables that contains the preferred sort orders for releases in the MSB mapping.
     """
 
     try:
         with conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.format_sort")
             curs.execute("CREATE TABLE mapping.format_sort ( format integer, sort integer )")
-            id = insert_rows(1, curs, DIGITAL_FORMATS)
-            id = insert_rows(id, curs, VIDEO_FORMATS)
-            id = insert_rows(id, curs, ANALOG_FORMATS)
+            sort_index = insert_rows(1, curs, DIGITAL_FORMATS)
+            sort_index = insert_rows(sort_index, curs, VIDEO_FORMATS)
+            sort_index = insert_rows(sort_index, curs, ANALOG_FORMATS)
             curs.execute("CREATE INDEX format_sort_format_ndx ON mapping.format_sort(format)")
             curs.execute("CREATE INDEX format_sort_sort_ndx ON mapping.format_sort(sort)")
         conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable):
         print("failed to create formats table")
+        conn.rollback()
+        raise
+
+    try:
+        with conn.cursor() as curs:
+            curs.execute("DROP TABLE IF EXISTS mapping.release_group_secondary_type_sort")
+            curs.execute("""CREATE TABLE mapping.release_group_secondary_type_sort (
+                                         sort INTEGER
+                                       , secondary_type INTEGER)""")
+
+            sort_index = 1
+            for secondary_type_id, _ in RELEASE_GROUP_SECONDARY_TYPES:
+                curs.execute("""INSERT INTO mapping.release_group_secondary_type_sort
+                                            (sort, secondary_type)
+                                     VALUES (%s, %s);""", tuple((sort_index, secondary_type_id)))
+                sort_index += 1
+
+            curs.execute("""CREATE INDEX release_group_secondary_type_sort_ndx_secondary_type
+                                      ON mapping.release_group_secondary_type_sort(secondary_type)""")
+            curs.execute("""CREATE INDEX release_group_secondary_type_sort_ndx_sort
+                                      ON mapping.release_group_secondary_type_sort(sort)""")
+        conn.commit()
+    except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable):
+        print("failed to create release_group_secondary_type_sort table")
         conn.rollback()
         raise
