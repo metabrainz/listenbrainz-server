@@ -864,7 +864,7 @@ def _get_artist_map_stats(user_id, stats_range):
         "from_ts": artist_stats.from_ts,
         "to_ts": artist_stats.to_ts,
         "last_updated": int(datetime.now().timestamp()),
-        "artist_map": country_code_data
+        "artist_map": [x.dict() for x in country_code_data]
     }
 
     try:
