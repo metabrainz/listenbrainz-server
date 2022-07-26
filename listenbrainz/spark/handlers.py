@@ -24,6 +24,7 @@ from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
 
+
 def is_new_user_stats_batch():
     """ Returns True if this batch of user stats is new, False otherwise
 
