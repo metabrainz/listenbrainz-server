@@ -877,6 +877,15 @@ def _get_artist_map_stats(user_id, stats_range):
         except HTTPError as e:
             current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
+        stats = StatApi[UserArtistMapRecord](
+            user_id=user_id,
+            from_ts=artist_stats.from_ts,
+            to_ts=artist_stats.to_ts,
+            stats_range=stats_range,
+            data=StatRecordList[UserArtistMapRecord](__root__=country_code_data),
+            last_updated=int(datetime.now().timestamp())
+        )
+
     return stats
 
 
