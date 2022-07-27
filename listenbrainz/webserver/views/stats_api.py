@@ -253,7 +253,7 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
         "range": stats_range,
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
-        "last_updated": int(stats.last_updated.timestamp()),
+        "last_updated": stats.last_updated,
     }})
 
 
@@ -328,7 +328,7 @@ def get_listening_activity(user_name: str):
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "range": stats_range,
-        "last_updated": int(stats.last_updated.timestamp())
+        "last_updated": stats.last_updated
     }})
 
 
@@ -413,7 +413,7 @@ def get_daily_activity(user_name: str):
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "range": stats_range,
-        "last_updated": int(stats.last_updated.timestamp())
+        "last_updated": stats.last_updated
     }})
 
 
@@ -478,7 +478,7 @@ def get_artist_map(user_name: str):
             "range": stats_range,
             "from_ts": result.from_ts,
             "to_ts": result.to_ts,
-            "last_updated": int(result.last_updated.timestamp()),
+            "last_updated": result.last_updated,
             "artist_map": [x.dict() for x in result.data.__root__]
         }
     })
@@ -697,7 +697,7 @@ def _get_sitewide_stats(entity: str):
             "count": total_entity_count,
             "from_ts": stats.from_ts,
             "to_ts": stats.to_ts,
-            "last_updated": int(stats.last_updated.timestamp())
+            "last_updated": stats.last_updated
         }
     })
 
@@ -776,7 +776,7 @@ def get_sitewide_listening_activity():
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "range": stats_range,
-        "last_updated": int(stats.last_updated.timestamp())
+        "last_updated": stats.last_updated
     }})
 
 
@@ -843,7 +843,7 @@ def get_sitewide_artist_map():
             "range": stats_range,
             "from_ts": result.from_ts,
             "to_ts": result.to_ts,
-            "last_updated": int(result.last_updated.timestamp()),
+            "last_updated": result.last_updated,
             "artist_map": [x.dict() for x in result.data.__root__]
         }
     })
