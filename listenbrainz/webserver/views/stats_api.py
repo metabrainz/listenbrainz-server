@@ -857,7 +857,7 @@ def _get_artist_map_stats(user_id, stats_range):
 
     stats = None
     if not force_recalculate:
-        stats = db_stats.get(user_id, "artist_map", stats_range, UserArtistMapRecord)
+        stats = db_stats.get(user_id, "artistmap", stats_range, UserArtistMapRecord)
 
     if stats is None:
         artist_stats = db_stats.get(user_id, "artists", stats_range, EntityRecord)

@@ -355,7 +355,7 @@ class StatsAPITestCase(IntegrationTestCase):
             with self.subTest(f"test valid response is received for {range_} artist_map stats", range_=range_):
                 with open(self.path_to_data_file(f'user_artist_map_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
-                db_stats.insert(f"artist_map_{range_}", 0, 5, payload)
+                db_stats.insert(f"artistmap_{range_}", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
                 self.assertArtistMapEqual(payload, response)
