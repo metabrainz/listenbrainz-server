@@ -10,7 +10,7 @@ from sentry_sdk import start_span
 from urllib3 import Retry
 
 # stat type followed by a underscore followed by a date in YYYYMMDD format
-DATABASE_NAME_PATTERN = re.compile(r"(.*)_(\d{8})")
+DATABASE_NAME_PATTERN = re.compile(r"([a-zA-Z]+)_(\w+)_(\d{8})")
 
 DATABASE_LOCK_FILE = "LOCK"
 
