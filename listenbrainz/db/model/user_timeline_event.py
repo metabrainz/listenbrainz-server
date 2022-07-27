@@ -51,7 +51,7 @@ class RecordingRecommendationMetadata(BaseModel):
     )(check_valid_uuid)
 
 
-class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata, validate_assignment=True):
+class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata):
     followers_username: List[str]
     blurb_content: Optional[str]
 

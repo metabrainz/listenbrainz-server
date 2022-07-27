@@ -829,7 +829,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers": [user_one['id'], user_two['id']],
+            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
@@ -840,12 +840,16 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(r)
 
-        events = db_user_timeline_event.get_user_timeline_events(self.user['id'],
-            UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION)
+        events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            user_id=self.user['id'],
+            min_ts=0,
+            max_ts=int(time.time())+10,
+            count=50
+        )
 
         self.assertEqual(1, len(events))
 
-        self.assertEqual(metadata, events[0].metadata)
+        self.assertEqual(metadata, events[0].metadata.dict())
 
     def test_personal_recommendation_checks_auth_token(self):
         user_one = db_user.get_or_create(2, "riksucks")
@@ -859,7 +863,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers": [user_one['id'], user_two['id']],
+            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
@@ -898,7 +902,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers": [user_one['id'], user_two['id']],
+            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
@@ -923,7 +927,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers": [user_one['id'], user_two['id']],
+            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
@@ -935,3 +939,66 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert401(r)
         data = json.loads(r.data)
         self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
+
+    def test_personal_recommendation_not_for_non_followers(self):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        # Only riksucks is following
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+
+        metadata = {
+            "track_name": "Natkhat",
+            "artist_name": "Seedhe Maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+        data = json.loads(r.data)
+        self.assertEqual("These people don't follow you ['hrik2001']", data['error'])
+
+    def test_personal_recommendation_stays_after_unfollowing(self):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+
+        metadata = {
+            "track_name": "Natkhat",
+            "artist_name": "Seedhe Maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+
+        self.assert200(r)
+        db_user_relationship.delete(user_two['id'], self.user['id'], 'follow')
+
+        events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            user_id=self.user['id'],
+            min_ts=0,
+            max_ts=int(time.time())+10,
+            count=50
+        )
+
+        self.assertEqual(1, len(events))
+
+        self.assertEqual(metadata, events[0].metadata.dict())
