@@ -546,7 +546,6 @@ def create_personal_recommendation_event(user_name):
     try:
         metadata = PersonalRecordingRecommendationMetadata(**metadata)
         follower_results = db_user_relationship.multiple_users_by_username_following_user(user['id'], metadata.followers_username)
-        current_app.logger.error(follower_results)
         non_followers = []
         for follower in metadata.followers_username:
             if not follower_results[follower]:

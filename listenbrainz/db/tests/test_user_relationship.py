@@ -159,3 +159,14 @@ class UserRelationshipTestCase(DatabaseTestCase):
 
         # 3 events exist, but should only return 2
         self.assertEqual(2, len(events))
+
+    def test_multiple_users_by_username_following_user(self):
+        # Only followed_user_1 follows main user
+        db_user_relationship.insert(self.followed_user_1['id'], self.main_user['id'], 'follow')
+
+        follower_results = db_user_relationship.multiple_users_by_username_following_user(
+            followed=1,
+            followers=['followed_user_1', 'followed_user_2']
+        )
+
+        self.assertDictEqual({'followed_user_1': True, 'followed_user_2': False}, follower_results)
