@@ -12,13 +12,9 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import requests_mock
 
-from data.model.common_stat import StatRange
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecord
-from flask import current_app, url_for
+from data.model.user_artist_map import UserArtistMapRecord
+from flask import url_for
 
-from data.model.user_daily_activity import DailyActivityRecord
-from data.model.user_entity import EntityRecord
-from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz import config
 from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.db import couchdb
@@ -40,11 +36,11 @@ class StatsAPITestCase(IntegrationTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST, config.COUCHDB_PORT)
-        stats = ["artists", "releases", "recordings", "daily_activity", "listening_activity", "artist_map"]
+        stats = ["artists", "releases", "recordings", "daily_activity", "listening_activity", "artistmap"]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
             for range_ in ranges:
-                if stat == "artist_map":
+                if stat == "artistmap":
                     couchdb.create_database(f"{stat}_{range_}")
                 else:
                     couchdb.create_database(f"{stat}_{range_}_20220718")
@@ -81,7 +77,7 @@ class StatsAPITestCase(IntegrationTestCase):
         # Insert artist map data
         with open(cls.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             cls.artist_map_payload = json.load(f)
-        database = 'artist_map_all_time'
+        database = 'artistmap_all_time'
         db_stats.insert(database, 0, 5, cls.artist_map_payload)
 
         # Insert all_time sitewide top artists
@@ -366,7 +362,7 @@ class StatsAPITestCase(IntegrationTestCase):
         mock_get_country_wise_counts.return_value = [
             UserArtistMapRecord(**country) for country in self.artist_map_payload[0]['data']
         ]
-        couchdb.delete_data("artist_map_all_time", user_id=self.user['id'])
+        couchdb.delete_data("artistmap_all_time", self.user['id'])
         response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
                                    query_string={'range': 'all_time'})
         self.assertArtistMapEqual(self.artist_map_payload, response)
@@ -442,6 +438,7 @@ class StatsAPITestCase(IntegrationTestCase):
             artist['artist_mbids'] = []
             artist['artist_msid'] = None
         couchdb.create_database("artists_this_week_20220718")
+        couchdb.create_database("artistmap_this_week")
         db_stats.insert("artists_this_week_20220718", 0, 5, artist_stats)
         response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
                                    query_string={'range': 'this_week', 'force_recalculate': 'true'})
