@@ -50,4 +50,4 @@ class StatApi(StatRange[StatT], Generic[StatT]):
     """ Generic base mode for representing a stat retrieved from the database and
     to send using the api."""
     user_id: int
-    last_updated: datetime
+    last_updated: int

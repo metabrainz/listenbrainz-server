@@ -55,7 +55,7 @@ def insert(database: str, from_ts: int, to_ts: int, values: list[dict]):
             doc["key"] = doc["user_id"]
             doc["from_ts"] = from_ts
             doc["to_ts"] = to_ts
-            doc["last_updated"] = datetime.now().isoformat()
+            doc["last_updated"] = int(datetime.now().timestamp())
 
     couchdb.insert_data(database, values)
 
