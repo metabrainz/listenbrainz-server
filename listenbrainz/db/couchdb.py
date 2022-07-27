@@ -92,7 +92,7 @@ def delete_database(prefix: str):
     # remove the latest database from the list then delete the databases remaining in the list.
     databases.pop(0)
 
-    deleted = [], retained = []
+    deleted, retained = [], []
 
     for database in databases:
         databases_url = f"{get_base_url()}/{database}"
