@@ -28,8 +28,13 @@ TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
 
 
 def handle_couchdb_data_start(message):
+    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
+    if not match:
+        return
     try:
-        couchdb.create_database(message["database"])
+        couchdb.create_database(match[1] + "_" + match[2] + "_" + match[3])
+        if match[1] == "artists":
+            couchdb.create_database("artistmap" + "_" + match[2] + "_" + match[3])
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
@@ -37,16 +42,23 @@ def handle_couchdb_data_start(message):
 def handle_couchdb_data_end(message):
     # database names are of the format, prefix_YYYYMMDD. calculate and pass the prefix to the
     # method to delete all database of the type except the latest one.
-    database = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
+    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
     # if the database name does not match pattern, abort to avoid deleting any data inadvertently
-    if not database:
+    if not match:
         return
     try:
-        # the prefix in the database name is the first group of regex
-        _, retained = couchdb.delete_database(database[1])
+        _, retained = couchdb.delete_database(match[1] + "_" + match[2])
         if retained:
             current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
                                     f" _LOCK file existed")
+
+        # when new artist stats received, also invalidate old artist map stats
+        if match[1] == "artists":
+            _, retained = couchdb.delete_database("artistmap" + "_" + match[2])
+            if retained:
+                current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
+                                        f" _LOCK file existed")
+
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 

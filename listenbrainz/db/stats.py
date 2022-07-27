@@ -21,30 +21,18 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-import json
 from datetime import datetime
 from typing import Optional
 
-import sqlalchemy
-
-import psycopg2
 import ujson
-from psycopg2 import sql
-from psycopg2.extras import execute_values
+from flask import current_app
+from pydantic import ValidationError
 from requests import HTTPError
 from sentry_sdk import start_span
 
-from data.model.common_stat import StatRange, StatApi
+from data.model.common_stat import StatApi
 from data.model.user_artist_map import UserArtistMapRecord
-from data.model.user_daily_activity import DailyActivityRecord
-from data.model.user_entity import EntityRecord
-from data.model.user_listening_activity import ListeningActivityRecord
-from flask import current_app
-from listenbrainz import db
-from pydantic import ValidationError
-
 from listenbrainz.db import couchdb
-
 
 # sitewide statistics are stored in the user statistics table
 # as statistics for a special user with the following user_id.
@@ -101,6 +89,15 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
             f"{e}. Occurred while processing {stats_range} top artists for user_id: {user_id}"
             f" and data: {ujson.dumps(data, indent=4)}", exc_info=True)
     return None
+
+
+def insert_artist_map(user_id: int, stats_range: str, from_ts: int, to_ts: int, data: list[UserArtistMapRecord]):
+    """ Insert artist map stats in database.
+
+        We do not know the database name in advance here so first find the latest artist map database.
+    """
+    databases = couchdb.list_databases(f"artistmap_{stats_range}")
+    insert(databases[0], from_ts, to_ts, [{"user_id": user_id, "data": [x.dict() for x in data]}])
 
 
 def insert_sitewide_stats(database: str, from_ts: int, to_ts: int, data: dict):

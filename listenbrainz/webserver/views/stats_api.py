@@ -29,7 +29,6 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param)
 
-STATS_CALCULATION_INTERVAL = 7  # Stats are recalculated every 7 days
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -856,57 +855,29 @@ def _get_artist_map_stats(user_id, stats_range):
         raise APIBadRequest("Invalid value of force_recalculate: {}".format(recalculate_param))
     force_recalculate = recalculate_param.lower() == 'true'
 
-    # Check if stats are present in DB, if not calculate them
-    calculated = not force_recalculate
-    stats = db_stats.get(user_id, "artist_map", stats_range, UserArtistMapRecord)
+    stats = None
+    if not force_recalculate:
+        stats = db_stats.get(user_id, "artist_map", stats_range, UserArtistMapRecord)
+
     if stats is None:
-        calculated = False
-
-    # Check if the stats present in DB have been calculated in the past week, if not recalculate them
-    stale = False
-    if calculated:
-        if (datetime.now(timezone.utc) - stats.last_updated).days >= STATS_CALCULATION_INTERVAL:
-            stale = True
-
-    if stale or not calculated:
         artist_stats = db_stats.get(user_id, "artists", stats_range, EntityRecord)
-
-        # If top artists are missing, return the stale stats if present, otherwise return 204
         if artist_stats is None:
-            if stale:
-                result = stats
-            else:
-                raise APINoContent('')
-        else:
-            # Calculate the data
-            artist_mbid_counts = defaultdict(int)
-            for artist in artist_stats.data.__root__:
-                for artist_mbid in artist.artist_mbids:
-                    artist_mbid_counts[artist_mbid] += artist.listen_count
+            raise APINoContent('')
 
-            country_code_data = _get_country_wise_counts(artist_mbid_counts)
-            result = StatApi[UserArtistMapRecord](
-                to_ts=artist_stats.to_ts,
-                from_ts=artist_stats.from_ts,
-                stats_range=stats_range,
-                data=StatRecordList[UserArtistMapRecord](__root__=country_code_data),
-                user_id=user_id,
-                last_updated=datetime.now()
-            )
+        # Calculate the data
+        artist_mbid_counts = defaultdict(int)
+        for artist in artist_stats.data.__root__:
+            for artist_mbid in artist.artist_mbids:
+                artist_mbid_counts[artist_mbid] += artist.listen_count
 
-            try:
-                db_stats.insert(
-                    f"artist_map_{stats_range}",
-                    artist_stats.from_ts,
-                    artist_stats.to_ts,
-                    [result.dict(include={"data", "user_id"})]
-                )
-            except HTTPError as e:
-                current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-    else:
-        result = stats
+        country_code_data = _get_country_wise_counts(artist_mbid_counts)
 
-    return result
+        try:
+            db_stats.insert_artist_map(user_id, stats_range, artist_stats.from_ts, artist_stats.to_ts, country_code_data)
+        except HTTPError as e:
+            current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+    return stats
 
 
 @stats_api_bp.route("/user/<user_name>/year-in-music/")
