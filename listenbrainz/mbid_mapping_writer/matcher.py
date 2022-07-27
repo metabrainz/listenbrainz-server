@@ -213,7 +213,7 @@ def lookup_listens(app, listens, stats, exact, debug):
                      hit["recording_mbid"],
                      hit["release_mbid"],
                      hit["release_name"],
-                     [str(x) for x in hit["artist_mbids"]],
+                     hit["artist_mbids"],
                      hit["artist_credit_id"],
                      hit["artist_credit_name"],
                      hit["recording_name"],
