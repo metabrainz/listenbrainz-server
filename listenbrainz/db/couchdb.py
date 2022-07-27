@@ -105,6 +105,8 @@ def delete_database(prefix: str):
         else:
             retained.append(database)
 
+    return deleted, retained
+
 
 def fetch_data(prefix: str, user_id: int):
     """ Retrieve data from couchdb for given stat type and user.
