@@ -139,9 +139,10 @@ class DumpManagerTestCase(DatabaseTestCase):
         print(os.listdir(os.path.join(self.tempdir, dump_name)))
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+                print("MATCH: ", file_name)
                 archive_count += 1
             else:
-                print(file_name)
+                print("NO MATCH: ", file_name)
         self.assertEqual(archive_count, 6)
 
     def test_create_full_dump_with_id(self):
