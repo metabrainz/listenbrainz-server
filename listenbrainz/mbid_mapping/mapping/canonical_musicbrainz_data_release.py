@@ -4,7 +4,6 @@ import psycopg2
 from unidecode import unidecode
 
 from mapping.utils import create_schema, insert_rows, log
-from mapping.formats import create_formats_table
 from mapping.bulk_table import BulkInsertTable
 import config
 
@@ -38,6 +37,8 @@ class CanonicalMusicBrainzDataRelease(BulkInsertTable):
         """
 
         # The 1 in the WHERE clause refers to MB's Various Artists ID of 1 -- all the various artist albums.
+        # The sorting the release group prinary type by id just happens to be a good sort order for primary
+        # type. This isn't the case for the secondary type, thus the custom sort order.
         query = """             SELECT r.id AS release
                                      , r.gid AS release_mbid
                                   FROM musicbrainz.release_group rg
@@ -59,13 +60,17 @@ class CanonicalMusicBrainzDataRelease(BulkInsertTable):
                                     ON rg.id = rgstj.release_group
                              LEFT JOIN musicbrainz.release_group_secondary_type rgst
                                     ON rgstj.secondary_type = rgst.id
+                             LEFT JOIN mapping.release_group_secondary_type_sort rgsts
+                                    ON rgst.id = rgsts.secondary_type
                                  WHERE rg.artist_credit %s 1
                                        %s
-                                 ORDER BY rg.type, rgst.id desc, fs.sort NULLS LAST,
-                                          to_date(date_year::TEXT || '-' ||
-                                                  COALESCE(date_month,12)::TEXT || '-' ||
-                                                  COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),
-                                          country, rg.artist_credit, rg.name, r.id"""
+                              ORDER BY rg.type
+                                     , rgsts.sort NULLS FIRST
+                                     , fs.sort NULLS LAST
+                                     , to_date(date_year::TEXT || '-' ||
+                                               COALESCE(date_month,12)::TEXT || '-' ||
+                                               COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD')
+                                     , country, rg.artist_credit, rg.name, r.id"""
 
         queries = []
         for op in ['!=', '=']:
