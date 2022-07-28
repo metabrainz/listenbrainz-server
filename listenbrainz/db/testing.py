@@ -28,18 +28,14 @@ class DatabaseTestCase(unittest.TestCase):
         self.init_db()
 
     def init_db(self):
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
+        db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db2.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     def drop_tables(self):
-        self.drop_schema()
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
-
-    def drop_schema(self):
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_schema.sql'))
+        db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
 
     def path_to_data_file(self, file_name):
         """ Returns the path of the test data file relative to listenbrainz/db/testing.py.

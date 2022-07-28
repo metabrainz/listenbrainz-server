@@ -76,6 +76,8 @@ def init_db(force, create_db):
 
     application = webserver.create_app()
     with application.app_context():
+        db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
+
         print('PG: Creating schema...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
 
@@ -95,6 +97,14 @@ def init_db(force, create_db):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
         print("Done!")
+
+    db.init_db_connection(config.POSTGRES_ADMIN_URI)
+    if force:
+        res = db.run_sql_script_without_transaction(
+            os.path.join(ADMIN_SQL_DIR, 'create_template.sql'))
+        if not res:
+            raise Exception(
+                'Failed to drop existing database and user! Exit code: %i' % res)
 
 
 @cli.command(name="init_msb_db")

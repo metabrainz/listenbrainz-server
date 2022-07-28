@@ -2,4 +2,4 @@
 
 CREATE USER listenbrainz NOCREATEDB NOSUPERUSER;
 ALTER USER listenbrainz WITH PASSWORD 'listenbrainz';
-CREATE DATABASE listenbrainz WITH OWNER = listenbrainz TEMPLATE template0 ENCODING = 'UNICODE';
+CREATE DATABASE listenbrainz_template WITH OWNER = listenbrainz TEMPLATE template0 ENCODING = 'UNICODE';

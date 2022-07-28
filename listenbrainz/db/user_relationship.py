@@ -112,7 +112,8 @@ def get_following_for_user(user: int) -> List[dict]:
         })
         return [dict(row) for row in result.fetchall()]
 
-def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[dict]:
+
+def get_follow_events(user_ids: Tuple[int], min_ts: float, max_ts: float, count: int) -> List[dict]:
     """ Gets a list of follow events for specified users.
 
     user_ids is a tuple of user row IDs.

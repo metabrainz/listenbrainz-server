@@ -115,15 +115,15 @@ class UserRelationshipTestCase(DatabaseTestCase):
         self.assertEqual('followed_user_1', events[2]['user_name_1'])
 
     def test_get_follow_events_honors_timestamp_parameters(self):
-        ts = int(time.time())
+        ts = time.time()
 
         db_user_relationship.insert(self.main_user['id'], self.followed_user_1['id'], 'follow')
         db_user_relationship.insert(self.main_user['id'], self.followed_user_2['id'], 'follow')
 
-        time.sleep(3)
+        ts2 = time.time()
+
         new_user = db_user.get_or_create(4, 'new_user')
         db_user_relationship.insert(self.followed_user_1['id'], new_user['id'], 'follow')
-
 
         # max_ts is too low, won't return anything
         events = db_user_relationship.get_follow_events(
@@ -137,7 +137,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
         # check that it honors min_ts as well
         events = db_user_relationship.get_follow_events(
             user_ids=(self.main_user['id'], self.followed_user_1['id']),
-            min_ts=ts + 1,
+            min_ts=ts2,
             max_ts=ts + 10,
             count=50
         )
