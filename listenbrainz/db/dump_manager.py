@@ -147,9 +147,6 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
             f.write("%s %s full\n" % (ts, dump_id))
 
-        # if in production, send an email to interested people for observability
-        send_dump_creation_notification(dump_name, 'fullexport')
-
         sys.exit(0)
 
 
@@ -203,9 +200,6 @@ def create_incremental(location, threads, dump_id):
         except OSError as e:
             sys.exit(-1)
 
-        # if in production, send an email to interested people for observability
-        send_dump_creation_notification(dump_name, 'incremental')
-
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
             f.write("%s %s incremental\n" %
@@ -245,9 +239,6 @@ def create_feedback(location, threads):
                 sys.exit(-1)
         except OSError as e:
             sys.exit(-1)
-
-        # if in production, send an email to interested people for observability
-        send_dump_creation_notification(dump_name, 'feedback')
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
