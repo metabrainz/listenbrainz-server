@@ -139,10 +139,16 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 tag["genre_mbid"] = genre_mbid
             release_group_tags.append(tag)
 
+        recording_data = {
+            "rels": recording_rels
+        }
+        if row["length"]:
+            recording_data["length"] = row["length"]
+
         return (row["recording_mbid"],
                 list(set(artist_mbids)),
                 row["release_mbid"],
-                ujson.dumps({"rels": recording_rels}),
+                ujson.dumps(recording_data),
                 ujson.dumps(artists),
                 ujson.dumps({"recording": recording_tags, "artist": artist_tags, "release_group": release_group_tags}),
                 ujson.dumps(release))
