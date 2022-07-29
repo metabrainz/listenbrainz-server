@@ -34,7 +34,7 @@ class UserListensSessionQuery(Query):
             to_ts = from_ts + MAX_TIME_RANGE
 
         with db.engine.connect() as conn:
-            curs = conn.execute('SELECT id FROM "user" WHERE musicbrainz_id = :user_name', user_name=user_name)
+            curs = conn.execute(text('SELECT id FROM "user" WHERE musicbrainz_id = :user_name'), user_name=user_name)
             row = curs.fetchone()
             if row:
                 user_id = row["id"]
@@ -52,10 +52,10 @@ class UserListensSessionQuery(Query):
                       , COALESCE(artist_credit_name, data->'track_metadata'->>'artist_name') AS artist_name
                       , COALESCE(recording_name, data->'track_metadata'->>'track_name') AS track_name
                       , COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid') AS recording_mbid
-                   FROM listen l
-              LEFT JOIN mbid_mapping mm
-                     ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
-              LEFT JOIN mbid_mapping_metadata m
+                   FROM listen
+              LEFT JOIN mbid_mapping
+                     ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
+              LEFT JOIN mbid_mapping_metadata
                   USING (recording_mbid)
                   WHERE listened_at > :from_ts
                     AND listened_at <= :to_ts
