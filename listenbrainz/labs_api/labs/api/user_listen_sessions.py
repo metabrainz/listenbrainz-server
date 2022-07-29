@@ -2,6 +2,7 @@ from datasethoster import Query
 from markupsafe import Markup
 from sqlalchemy import text
 
+from listenbrainz import db
 from listenbrainz.db import timescale
 
 
@@ -23,6 +24,28 @@ class UserListensSessionQuery(Query):
         return None
 
     def fetch(self, params, offset=-1, count=-1):
+        user_name = params[0]["user_name"].strip()
+        from_ts = int(params[0]["from_ts"])
+        to_ts = int(params[0]["to_ts"])
+        threshold = int(params[0]["threshold"])
+
+        MAX_TIME_RANGE = 7 * 24 * 60 * 60
+        if to_ts - from_ts >= MAX_TIME_RANGE:
+            to_ts = from_ts + MAX_TIME_RANGE
+
+        with db.engine.connect() as conn:
+            curs = conn.execute('SELECT id FROM "user" WHERE musicbrainz_id = :user_name', user_name=user_name)
+            row = curs.fetchone()
+            if row:
+                user_id = row["id"]
+            else:
+                return [
+                    {
+                        "type": "markup",
+                        "data": f"User {user_name} not found"
+                    }
+                ]
+
         query = """
             WITH listens AS (
                  SELECT listened_at
@@ -34,8 +57,8 @@ class UserListensSessionQuery(Query):
                      ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
               LEFT JOIN mbid_mapping_metadata m
                   USING (recording_mbid)
-                  WHERE listened_at > :from_ts::INT
-                    AND listened_at <= :to_ts::INT
+                  WHERE listened_at > :from_ts
+                    AND listened_at <= :to_ts
                     AND user_id = :user_id
                ORDER BY listened_at
             ), ordered AS (
@@ -48,7 +71,7 @@ class UserListensSessionQuery(Query):
             ), sessions AS (
                 SELECT listened_at
                      , difference
-                     , COUNT(*) FILTER ( WHERE difference > :threshold::INT ) OVER (ORDER BY listened_at) AS session_id
+                     , COUNT(*) FILTER ( WHERE difference > :threshold ) OVER (ORDER BY listened_at) AS session_id
                      , artist_name
                      , track_name
                      , recording_mbid
@@ -69,7 +92,7 @@ class UserListensSessionQuery(Query):
         """
         results = []
         with timescale.engine.connect() as conn:
-            curs = conn.execute(text(query), **params[0])
+            curs = conn.execute(text(query), user_id=user_id, from_ts=from_ts, to_ts=to_ts, threshold=threshold)
             for row in curs.fetchall():
                 results.append({
                     "type": "markup",

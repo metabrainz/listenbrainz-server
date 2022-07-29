@@ -12,6 +12,7 @@ from listenbrainz.labs_api.labs.api.spotify.spotify_mbid_lookup import SpotifyId
 from listenbrainz.labs_api.labs.api.spotify.spotify_metadata_lookup import SpotifyIdFromMetadataQuery
 from listenbrainz.labs_api.labs.api.user_listen_sessions import UserListensSessionQuery
 from listenbrainz.webserver import load_config
+from listenbrainz import db
 from listenbrainz.db import timescale as ts
 
 register_query(ArtistCountryFromArtistMBIDQuery())
@@ -28,4 +29,5 @@ register_query(UserListensSessionQuery())
 app = create_app()
 load_config(app)
 init_sentry(app, "DATASETS_SENTRY_DSN")
+db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
 ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
