@@ -10,7 +10,9 @@ from listenbrainz.labs_api.labs.api.recording_search import RecordingSearchQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.labs_api.labs.api.spotify.spotify_mbid_lookup import SpotifyIdFromMBIDQuery
 from listenbrainz.labs_api.labs.api.spotify.spotify_metadata_lookup import SpotifyIdFromMetadataQuery
+from listenbrainz.labs_api.labs.api.user_listen_sessions import UserListensSessionQuery
 from listenbrainz.webserver import load_config
+from listenbrainz.webserver.timescale_connection import init_timescale_connection
 
 register_query(ArtistCountryFromArtistMBIDQuery())
 register_query(ArtistCreditIdFromArtistMBIDQuery())
@@ -21,7 +23,9 @@ register_query(RecordingSearchQuery())
 register_query(ArtistCreditRecordingLookupQuery())
 register_query(SpotifyIdFromMetadataQuery())
 register_query(SpotifyIdFromMBIDQuery())
+register_query(UserListensSessionQuery())
 
 app = create_app()
 load_config(app)
 init_sentry(app, "DATASETS_SENTRY_DSN")
+init_timescale_connection(app)
