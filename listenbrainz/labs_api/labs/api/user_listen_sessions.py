@@ -54,24 +54,35 @@ class UserListensSessionQuery(Query):
                       , COALESCE(artist_credit_name, data->'track_metadata'->>'artist_name') AS artist_name
                       , COALESCE(recording_name, track_name) AS track_name
                       , COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid') AS recording_mbid
+                      , COALESCE(
+                            mbc.recording_data->>'length'::INT
+                          , data->'track_metadata'->'additional_info'->>'duration'::INT
+                          , (data->'track_metadata'->'additional_info'->>'duration_ms'::INT / 1000)::INT
+                          , 180 -- default track length to 3 minutes
+                        ) AS duration
                    FROM listen
               LEFT JOIN mbid_mapping
                      ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
               LEFT JOIN mbid_mapping_metadata
                   USING (recording_mbid)
+              LEFT JOIN mapping.mb_metadata_cache mbc
+                     ON mbc.recording_mbid = COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid
                   WHERE listened_at > :from_ts
                     AND listened_at <= :to_ts
                     AND user_id = :user_id
                ORDER BY listened_at
             ), ordered AS (
                 SELECT listened_at
-                     , listened_at - LAG(listened_at, 1) OVER (ORDER BY listened_at) AS difference
+                     , duration
+                     , listened_at - LAG(listened_at, 1) OVER w - LAG(duration, 1) OVER w AS difference
                      , artist_name
                      , track_name
                      , recording_mbid
                   FROM listens
+                WINDOW w AS (ORDER BY listened_at)
             ), sessions AS (
                 SELECT listened_at
+                     , duration
                      , difference
                      , COUNT(*) FILTER ( WHERE difference > :threshold ) OVER (ORDER BY listened_at) AS session_id
                      , artist_name
@@ -83,6 +94,7 @@ class UserListensSessionQuery(Query):
                      , jsonb_agg(
                             jsonb_build_object(
                                 'listened_at', listened_at
+                              , 'duration', duration  
                               , 'difference', difference
                               , 'artist_name', artist_name
                               , 'track_name', track_name
