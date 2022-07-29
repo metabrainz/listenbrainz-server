@@ -48,7 +48,7 @@ class UserListensSessionQuery(Query):
             ), sessions AS (
                 SELECT listened_at
                      , difference
-                     , COUNT(*) FILTER ( WHERE difference > :threshold ) OVER (ORDER BY listened_at) AS session_id
+                     , COUNT(*) FILTER ( WHERE difference > :threshold::INT ) OVER (ORDER BY listened_at) AS session_id
                      , artist_name
                      , track_name
                      , recording_mbid
@@ -69,7 +69,7 @@ class UserListensSessionQuery(Query):
         """
         results = []
         with timescale.engine.connect() as conn:
-            curs = conn.execute(text(query), **params)
+            curs = conn.execute(text(query), **params[0])
             for row in curs.fetchall():
                 results.append({
                     "type": "markup",
