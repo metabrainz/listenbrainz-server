@@ -34,8 +34,8 @@ class UserListensSessionQuery(Query):
                      ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
               LEFT JOIN mbid_mapping_metadata m
                   USING (recording_mbid)
-                  WHERE listened_at > :from_ts
-                    AND listened_at <= :to_ts
+                  WHERE listened_at > :from_ts::INT
+                    AND listened_at <= :to_ts::INT
                     AND user_id = :user_id
                ORDER BY listened_at
             ), ordered AS (
