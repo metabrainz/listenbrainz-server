@@ -1,6 +1,8 @@
 from datasethoster import Query
+from flask import current_app
 from markupsafe import Markup
 from sqlalchemy import text
+from sqlalchemy.dialects.postgresql import psycopg2
 
 from listenbrainz import db
 from listenbrainz.db import timescale
@@ -54,7 +56,7 @@ class UserListensSessionQuery(Query):
                       , COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid') AS recording_mbid
                    FROM listen
               LEFT JOIN mbid_mapping
-                     ON data->'track_metadata'->'additional_info'->>'recording_msid'::uuid = recording_msid
+                     ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
               LEFT JOIN mbid_mapping_metadata
                   USING (recording_mbid)
                   WHERE listened_at > :from_ts
