@@ -140,6 +140,29 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
 
     return feedback
 
+"""
+WITH ordered AS (
+    SELECT user_id
+         , listened_at
+         , listened_at - LAG(listened_at, 1) OVER w > :threshold AS session_ended
+      FROM listen
+    WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
+), sessions AS (
+    SELECT user_id
+         , listened_at
+         , session_ended
+         , COUNT(*) 
+   FILTER ( WHERE session_ended = 1 )
+     OVER (PARTITION BY user_id ORDER BY listened_at) AS session_id
+     FROM ordered
+)
+SELECT user_id
+     , listened_at
+     , session_ended
+     , session_id
+  FROM sessions
+"""
+
 
 def get_feedback_count_for_user(user_id: int, score=None) -> int:
     """ Get total number of recording feedback given by the user
