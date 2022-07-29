@@ -269,28 +269,6 @@ class MBIDMapper:
         if not hit:
             return None
 
-        self._log(
-            Markup(f"""\
-                <table>
-                    <tr>
-                        <th>recording name</th>
-                        <th>release name</th>
-                        <th>artist credit name</th>
-                        <th>recording MBID</th>
-                        <th>release MBID</th>
-                        <th>artist_credit_id</th>
-                    </tr>
-                    <tr>
-                        <td>{hit['document']["recording_name"]}</td>
-                        <td>{hit['document']["release_name"]}</td>
-                        <td>{hit['document']["artist_credit_name"]}</td>
-                        <td><a href="https://musicbrainz.org/recording/{hit['document']['recording_mbid']}">{hit['document']["recording_mbid"]}</a></td>
-                        <td><a href="https://musicbrainz.org/release/{hit['document']['release_mbid']}">{hit['document']["release_mbid"]}</a></td>
-                        <td>{hit['document']["artist_credit_id"]}</td>
-                    </tr>
-                </table>
-            """))
-
         return {
             'artist_credit_name': hit['document']['artist_credit_name'],
             'artist_credit_id': hit['document']['artist_credit_id'],
