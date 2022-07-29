@@ -50,11 +50,11 @@ class UserListensSessionQuery(Query):
             WITH listens AS (
                  SELECT listened_at
                       , COALESCE(artist_credit_name, data->'track_metadata'->>'artist_name') AS artist_name
-                      , COALESCE(recording_name, data->'track_metadata'->>'track_name') AS track_name
+                      , COALESCE(recording_name, track_name) AS track_name
                       , COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid') AS recording_mbid
                    FROM listen
               LEFT JOIN mbid_mapping
-                     ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
+                     ON data->'track_metadata'->'additional_info'->>'recording_msid'::uuid = recording_msid
               LEFT JOIN mbid_mapping_metadata
                   USING (recording_mbid)
                   WHERE listened_at > :from_ts
