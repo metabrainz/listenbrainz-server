@@ -68,6 +68,8 @@ class DumpTestCase(DatabaseTestCase):
 
         couchdb.create_database("artists_week_20210731")
         data, from_ts1, to_ts1, from_ts2, to_ts2 = insert_test_stats("artists", "week", "user_top_artists_db_data_for_api_test_week.json")
+        print(couchdb.list_databases("artists_week"))
+        print(couchdb.fetch_data("artists_week", 1))
 
         time_now = datetime.today()
         dump_location = db_dump.create_statistics_dump(self.tempdir, time_now)
