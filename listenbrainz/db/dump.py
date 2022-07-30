@@ -372,7 +372,7 @@ def dump_statistics(location: str):
     ]
     full_path = os.path.join(location, "statistics")
     for stat in stats:
-        os.makedirs(full_path)
+        os.makedirs(full_path, exist_ok=True)
         with open(os.path.join(full_path, f"{stat}.jsonl"), "w+", encoding="utf-8") as fp:
             couchdb.dump_database(stat, fp)
 
