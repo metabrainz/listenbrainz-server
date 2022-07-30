@@ -114,7 +114,7 @@ class UserListensSessionQuery(Query):
                 })
                 results.append({
                     "type": "dataset",
-                    "columns": ["listened_at", "difference", "artist_name", "track_name", "recording_mbid"],
+                    "columns": ["listened_at", "duration", "difference", "artist_name", "track_name", "recording_mbid"],
                     "data": row["data"]
                 })
         return results
