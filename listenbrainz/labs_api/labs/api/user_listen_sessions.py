@@ -20,7 +20,11 @@ class UserListensSessionQuery(Query):
     def introduction(self):
         return """This page allows you to view the listens of the given time period for a user distributed
          into sessions. Listens are considered to belong to same session if the time difference between any
-         two consecutive listens in that set is less than a given threshold."""
+         two consecutive listens in that set is less than a given threshold. 
+         
+         The difference takes into consideration the duration of the recording listened. If the duration of
+         the recording is unavailable in MB and the listen metadata, it is assumed to be 180s.
+        """
 
     def outputs(self):
         return None
