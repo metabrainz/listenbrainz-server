@@ -1,22 +1,10 @@
-import itertools
-import json
-import unittest
-from copy import deepcopy
-from datetime import datetime, timezone
-
-import requests
-
 import listenbrainz.db.stats as db_stats
-import listenbrainz.db.user as db_user
-from data.model.common_stat import StatRange, StatApi, StatRecordList
 from data.model.user_artist_map import UserArtistMapRecord
-from data.model.user_artist_stat import ArtistRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db import couchdb
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.db.tests.utils import insert_test_stats, delete_all_couch_databases
 from listenbrainz.webserver import create_app
 
 
@@ -26,33 +14,10 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         super(StatsDatabaseTestCase, self).setUp()
 
     def tearDown(self):
-        databases = couchdb.list_databases("")
-        for database in databases:
-            if database == "_users":
-                continue
-            databases_url = f"{couchdb.get_base_url()}/{database}"
-            requests.delete(databases_url)
-
-    def insert_stats(self, entity, range_, data_file):
-        with open(self.path_to_data_file(data_file)) as f:
-            original = json.load(f)
-
-        # insert modifies the data in place so make a copy first
-        data = deepcopy(original)
-
-        database1, database2 = f"{entity}_{range_}_20220716", f"{entity}_{range_}_20220717"
-        from_ts1, to_ts1 = int(datetime(2022, 7, 9).timestamp()), int(datetime(2022, 7, 16).timestamp())
-        from_ts2, to_ts2 = int(datetime(2022, 7, 10).timestamp()), int(datetime(2022, 7, 17).timestamp())
-
-        couchdb.create_database(database1)
-        db_stats.insert(database1, from_ts1, to_ts1, data)
-
-        couchdb.create_database(database2)
-        db_stats.insert(database2, from_ts2, to_ts2, data[:1])
-        return original, from_ts1, to_ts1, from_ts2, to_ts2
+        delete_all_couch_databases()
 
     def _test_one_stat(self, entity, range_, data_file, model, exclude_count=False):
-        original, from_ts1, to_ts1, from_ts2, to_ts2 = self.insert_stats(entity, range_, data_file)
+        original, from_ts1, to_ts1, from_ts2, to_ts2 = insert_test_stats(entity, range_, data_file)
 
         received = db_stats.get(1, entity, range_, model) \
             .dict(exclude={"count"} if exclude_count else None)
@@ -117,14 +82,3 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                         UserArtistMapRecord,
                         exclude_count=True
                     )
-
-   # def test_get_sitewide_artists(self):
-    #     data_inserted = self.insert_test_data()
-    #     result = db_stats.get_sitewide_stats('all_time', 'artists')
-    #     self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), data_inserted['sitewide_artists'])
-    #
-    # def test_delete_user_stats(self):
-    #     self.assertFalse(db_stats.valid_stats_exist(self.user['id'], 7))
-    #     self.insert_test_data()
-    #     db_stats.delete_user_stats(self.user['id'])
-    #     self.assertFalse(db_stats.valid_stats_exist(self.user['id'], 7))

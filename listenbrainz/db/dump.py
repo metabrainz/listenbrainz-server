@@ -371,7 +371,7 @@ def dump_statistics(location: str):
         for stat_range in ALLOWED_STATISTICS_RANGE
     ]
     full_path = os.path.join(location, "statistics")
-    for stat in ["artists_this_week"]:
+    for stat in stats:
         os.makedirs(full_path)
         with open(os.path.join(full_path, f"{stat}.jsonl"), "w+", encoding="utf-8") as fp:
             couchdb.dump_database(stat, fp)
