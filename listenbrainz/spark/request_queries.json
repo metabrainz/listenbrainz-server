@@ -148,9 +148,9 @@
     "description": "Calculate the top artists/recordings/releases stats for the current year for each user",
     "params": ["year"]
   },
-  "releases.recent": {
-    "name": "releases.recent",
-    "description": "Calculate the intersection of recent releases and user's listening history",
+  "releases.fresh": {
+    "name": "releases.fresh",
+    "description": "Calculate the intersection of fresh releases and user's listening history",
     "params": ["days", "database"]
   }
 }
