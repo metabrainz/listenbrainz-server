@@ -56,8 +56,8 @@ class UserListensSessionQuery(Query):
                       , COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid') AS recording_mbid
                       , COALESCE(
                             rlct.length
-                          , data->'track_metadata'->'additional_info'->>'duration'::INT
-                          , (data->'track_metadata'->'additional_info'->>'duration_ms'::INT / 1000)::INT
+                          , (data->'track_metadata'->'additional_info'->>'duration')::INT
+                          , ((data->'track_metadata'->'additional_info'->>'duration_ms')::FLOAT / 1000)::INT
                           , 180 -- default track length to 3 minutes
                         ) AS duration
                    FROM listen
