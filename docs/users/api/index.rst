@@ -18,6 +18,7 @@ Reference
    playlist
    recordings
    statistics
+   metadata
    social
    recommendation
    misc

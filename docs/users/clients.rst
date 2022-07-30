@@ -13,7 +13,7 @@ Go
 
 Rust
 ^^^^
-* `listenbrainz-rust <https://github.com/treeshateorcs/listenbrainz-rust>`_
+* `listenbrainz <https://crates.io/crates/listenbrainz>`_
 
 .NET
 ^^^^
@@ -22,3 +22,7 @@ Rust
 Python
 ^^^^^^
 * `pylistenbrainz <https://pypi.org/project/pylistenbrainz/>`_
+
+Java
+^^^^^^
+* `listenbrainz-java <https://github.com/rain0r/listenbrainz-java/>`_

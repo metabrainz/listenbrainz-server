@@ -455,8 +455,8 @@ def get_artist_map(user_name: str):
 
     .. note::
         - This endpoint is currently in beta
-        - We cache the results for this query for a week to improve page load times, if you want to request fresh data you
-          can use the ``force_recalculate`` flag.
+        - We cache the results for this query for a week to improve page load times, if you want to request fresh data
+          you can use the ``force_recalculate`` flag.
 
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
@@ -818,7 +818,7 @@ def get_sitewide_artist_map():
     .. note::
         - This endpoint is currently in beta
         - We cache the results for this query for a week to improve page load times, if you want to request fresh data
-         you can use the ``force_recalculate`` flag.
+          you can use the ``force_recalculate`` flag.
 
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
