@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 import time
 import psycopg2
+import psycopg2.extras
 
 # The schema version of the core database. This includes data in the "user" database
 # (tables created from ./admin/sql/create-tables.sql) and includes user data,
@@ -15,6 +16,9 @@ SCHEMA_VERSION_CORE = 8
 engine = None
 
 DUMP_DEFAULT_THREAD_COUNT = 4
+
+# Load the UUID extension
+psycopg2.extras.register_uuid()
 
 
 def init_db_connection(connect_str):
