@@ -78,7 +78,7 @@ def list_databases(prefix: str) -> list[str]:
 def delete_database(prefix: str):
     """ Delete all but the latest database whose name starts with the given prefix.
 
-    Before deleting, the existence of a _LOCK file is checked. If a file named _LOCK,
+    Before deleting, the existence of a LOCK file is checked. If a file named LOCK,
     exists in the database then it is not deleted.
 
     Args:
@@ -165,6 +165,12 @@ def delete_data(database: str, doc_id: int | str):
 
 
 def lock_database(database: str):
+    """ 'Lock' the database so that it does not get deleted.
+
+        Note that, this is not a couchdb feature but a way we made up to co-ordinate process in LB.
+        The onus is the on other users to check for existence of the LOCK file before deleting a
+        database.
+    """
     document_url = f"{get_base_url()}/{database}/{DATABASE_LOCK_FILE}"
     # TODO: figure out why PUT works but POST fails with a weird referer header error
     response = requests.put(document_url, json={})
@@ -172,6 +178,7 @@ def lock_database(database: str):
 
 
 def unlock_database(database: str):
+    """ 'Unlock' the database so that it can be cleaned up when needed. """
     delete_data(database, DATABASE_LOCK_FILE)
 
 
@@ -194,6 +201,15 @@ def _get_requests_session():
 
 
 def dump_database(prefix: str, fp: TextIO):
+    """ Dump the contents of the earliest database of the asked type.
+
+        The earliest database of the type is chosen because its most probably the complete one while
+        the same may not be true for latest one.
+
+        Args:
+            prefix: the string to match database names with
+            fp: the text stream to dump the contents to
+    """
     databases = list_databases(prefix)
     # get the older database for this stat type because it will likely be the complete one
     # the newer one is probably incomplete and that's why the old one has not been cleaned up yet.
