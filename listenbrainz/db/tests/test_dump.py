@@ -60,7 +60,6 @@ class DumpTestCase(DatabaseTestCase):
         self.assertTrue(os.path.isfile(dump_location))
 
     def test_create_stats_dump(self):
-        self.maxDiff = None
         all_stats = {
             f"{stat_type}_{stat_range}"
             for stat_type in ["artists", "recordings", "releases", "daily_activity", "listening_activity"]
@@ -69,9 +68,9 @@ class DumpTestCase(DatabaseTestCase):
 
         data, from_ts1, to_ts1, from_ts2, to_ts2 = insert_test_stats("artists", "week", "user_top_artists_db_data_for_api_test_week.json")
         data[0]["from_ts"] = from_ts1
-        data[1]["from_ts"] = from_ts2
+        data[1]["from_ts"] = from_ts1
         data[0]["to_ts"] = to_ts1
-        data[1]["to_ts"] = to_ts2
+        data[1]["to_ts"] = to_ts1
 
         time_now = datetime.today()
         dump_location = db_dump.create_statistics_dump(self.tempdir, time_now)
@@ -89,6 +88,8 @@ class DumpTestCase(DatabaseTestCase):
                 if file_name == "artists_week.jsonl":
                     f = tar.extractfile(member)
                     found_stats = [ujson.loads(line) for line in f.read().splitlines()]
+                    for stat in found_stats:
+                        del stat["last_updated"]
 
         self.assertEqual(all_stats, found)
         self.assertEqual(data, found_stats)
