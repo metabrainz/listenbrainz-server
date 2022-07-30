@@ -60,8 +60,9 @@ class CouchdbTestCase(unittest.TestCase):
         dumped = StringIO()
         couchdb.dump_database("couchdb_dump_test_db", dumped)
         dumped.seek(0)
-        received = ujson.loads("[" + dumped.read() + "]")
-        self.assertEqual([{"data": "foo"}, {"data": "bar"}], received)
+        received = dumped.read()
+        print(received)
+        self.assertEqual([{"data": "foo"}, {"data": "bar"}], ujson.loads("[" + received + "]"))
 
         mock_lock.assert_called_with(database)
         mock_unlock.assert_called_with(database)
