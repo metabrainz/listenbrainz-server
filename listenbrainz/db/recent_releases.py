@@ -8,7 +8,7 @@ def insert_recent_releases(database, docs):
 
 
 def get_recent_releases(user_id):
-    data = couchdb.fetch_data("recent_releases", user_id)
+    data = couchdb.fetch_data("fresh_releases", user_id)
     if not data:
         return None
     return {
