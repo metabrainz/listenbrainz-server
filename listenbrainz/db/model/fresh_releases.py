@@ -25,7 +25,7 @@ class ReleaseGroupSecondaryType(Enum):
     DJMIX = "DJ-mix"
     MIXTAPESTREET = "Mixtape/Street"
     DEMO = "Demo"
-    AUDIO = "drama Audio drama"
+    AUDIO = "Audio drama"
 
 
 class FreshRelease(BaseModel):
