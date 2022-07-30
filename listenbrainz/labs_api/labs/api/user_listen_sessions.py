@@ -31,7 +31,7 @@ class UserListensSessionQuery(Query):
         to_ts = int(params[0]["to_ts"])
         threshold = int(params[0]["threshold"])
 
-        MAX_TIME_RANGE = 7 * 24 * 60 * 60
+        MAX_TIME_RANGE = 30 * 24 * 60 * 60
         if to_ts - from_ts >= MAX_TIME_RANGE:
             to_ts = from_ts + MAX_TIME_RANGE
 
