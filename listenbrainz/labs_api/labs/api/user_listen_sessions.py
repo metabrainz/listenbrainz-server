@@ -55,7 +55,7 @@ class UserListensSessionQuery(Query):
                       , COALESCE(recording_name, track_name) AS track_name
                       , COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid') AS recording_mbid
                       , COALESCE(
-                            mbc.recording_data->>'length'::INT
+                            rlct.length
                           , data->'track_metadata'->'additional_info'->>'duration'::INT
                           , (data->'track_metadata'->'additional_info'->>'duration_ms'::INT / 1000)::INT
                           , 180 -- default track length to 3 minutes
@@ -65,8 +65,8 @@ class UserListensSessionQuery(Query):
                      ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
               LEFT JOIN mbid_mapping_metadata
                   USING (recording_mbid)
-              LEFT JOIN mapping.mb_metadata_cache mbc
-                     ON mbc.recording_mbid = COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid
+              LEFT JOIN mapping.recording_length_cache_tmp rlct
+                     ON rlct.gid = COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid
                   WHERE listened_at > :from_ts
                     AND listened_at <= :to_ts
                     AND user_id = :user_id
