@@ -20,7 +20,7 @@ from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from listenbrainz.db import year_in_music, couchdb
-from listenbrainz.db.recent_releases import insert_recent_releases
+from listenbrainz.db.fresh_releases import insert_fresh_releases
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
 
@@ -258,9 +258,9 @@ def handle_recommendations(data):
     current_app.logger.debug("Running post recommendation steps for user {}".format(user["musicbrainz_id"]))
 
 
-def handle_recent_releases(message):
+def handle_fresh_releases(message):
     try:
-        insert_recent_releases(message["database"], message["data"])
+        insert_fresh_releases(message["database"], message["data"])
     except HTTPError as e:
         current_app.logger.error(f"{str(e)}. Response: %s", e.response.json(), exc_info=True)
 

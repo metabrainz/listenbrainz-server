@@ -49,7 +49,7 @@ functions = {
     'year_in_music.top_stats': listenbrainz_spark.year_in_music.top_stats.calculate_top_entity_stats,
     'year_in_music.listens_per_day': listenbrainz_spark.year_in_music.listens_per_day.calculate_listens_per_day,
     'year_in_music.listen_count': listenbrainz_spark.year_in_music.listen_count.get_listen_count,
-    'releases.recent': listenbrainz_spark.fresh_releases.fresh_releases.main,
+    'releases.fresh': listenbrainz_spark.fresh_releases.fresh_releases.main,
 }
 
 
