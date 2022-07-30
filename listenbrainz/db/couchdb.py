@@ -211,6 +211,9 @@ def dump_database(prefix: str, fp: TextIO):
             fp: the text stream to dump the contents to
     """
     databases = list_databases(prefix)
+    if not databases:
+        return
+
     # get the older database for this stat type because it will likely be the complete one
     # the newer one is probably incomplete and that's why the old one has not been cleaned up yet.
     database = databases[-1]
