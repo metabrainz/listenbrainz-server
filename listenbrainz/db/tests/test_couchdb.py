@@ -59,6 +59,7 @@ class CouchdbTestCase(unittest.TestCase):
 
         dumped = StringIO()
         couchdb.dump_database("couchdb_dump_test_db", dumped)
+        dumped.seek(0)
         received = ujson.loads("[" + dumped.read() + "]")
         self.assertEqual([{"data": "foo"}, {"data": "bar"}], received)
 
