@@ -99,11 +99,11 @@ def delete_database(prefix: str):
         response = requests.get(f"{databases_url}/{DATABASE_LOCK_FILE}")
 
         if response.status_code == 200:
+            retained.append(database)
+        else:
             response = requests.delete(databases_url)
             response.raise_for_status()
             deleted.append(database)
-        else:
-            retained.append(database)
 
     return deleted, retained
 
