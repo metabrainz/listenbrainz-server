@@ -234,7 +234,7 @@ def dump_database(prefix: str, fp: TextIO):
                     doc = row["doc"]
                     doc.pop("_id", None)
                     doc.pop("key", None)
-                    doc.pop("-rev", None)
+                    doc.pop("_rev", None)
                     doc.pop("_revisions", None)
 
                     if not doc:
