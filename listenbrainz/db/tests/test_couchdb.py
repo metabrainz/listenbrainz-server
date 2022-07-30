@@ -16,6 +16,10 @@ class CouchdbTestCase(unittest.TestCase):
         couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST, config.COUCHDB_PORT)
 
     def test_lock_unlock_delete(self):
+        # delete ignore the latest database thus creating 1 extra here
+        # so that we can actually test functions
+        couchdb.create_database("couchdb_test_db_20220731")
+
         database = "couchdb_test_db_20220730"
         couchdb.create_database(database)
 
@@ -37,8 +41,8 @@ class CouchdbTestCase(unittest.TestCase):
         self.assertEqual(deleted, [database])
         self.assertEqual(retained, [])
 
-    @patch("couchdb.unlock_database", wraps=couchdb.unlock_database)
-    @patch("couchdb.lock_database", wraps=couchdb.lock_database)
+    @patch("listenbrainz.db.couchdb.unlock_database", wraps=couchdb.unlock_database)
+    @patch("listenbrainz.db.couchdb.lock_database", wraps=couchdb.lock_database)
     def test_dump(self, mock_lock, mock_unlock):
         database = "couchdb_dump_test_db_20220730"
         couchdb.create_database(database)
