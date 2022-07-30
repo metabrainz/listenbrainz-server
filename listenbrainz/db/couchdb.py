@@ -232,12 +232,13 @@ def dump_database(prefix: str, fp: TextIO):
                 rows = ujson.loads(response.content)["rows"]
                 for row in rows:
                     doc = row["doc"]
-                    if not doc:
-                        continue
                     doc.pop("_id", None)
                     doc.pop("key", None)
-                    doc.pop("rev", None)
+                    doc.pop("-rev", None)
                     doc.pop("_revisions", None)
+
+                    if not doc:
+                        continue
 
                     ujson.dump(doc, fp)
                     fp.write("\n")
