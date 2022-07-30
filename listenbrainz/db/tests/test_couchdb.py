@@ -12,7 +12,7 @@ from listenbrainz.db.couchdb import get_base_url, DATABASE_LOCK_FILE
 
 class CouchdbTestCase(unittest.TestCase):
 
-    def setUpClass(self) -> None:
+    def setUp(self) -> None:
         couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST, config.COUCHDB_PORT)
 
     def test_lock_unlock_delete(self):
