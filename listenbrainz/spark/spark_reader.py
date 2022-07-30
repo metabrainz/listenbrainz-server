@@ -30,7 +30,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_top_stats,
                                          handle_listens_per_day,
                                          handle_yearly_listen_counts,
-                                         handle_recent_releases)
+                                         handle_fresh_releases)
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
@@ -46,7 +46,7 @@ response_handler_map = {
     'most_prominent_color': handle_most_prominent_color,
     'day_of_week': handle_day_of_week,
     'most_listened_year': handle_most_listened_year,
-    'fresh_releases': handle_recent_releases,
+    'fresh_releases': handle_fresh_releases,
     'import_full_dump': handle_dump_imported,
     'import_incremental_dump': handle_dump_imported,
     'cf_recommendations_recording_dataframes': handle_dataframes,

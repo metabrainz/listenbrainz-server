@@ -317,8 +317,8 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.stats_api import stats_api_bp
     app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
 
-    from listenbrainz.webserver.views.recent_releases import recent_releases_bp
-    app.register_blueprint(recent_releases_bp, url_prefix=API_PREFIX)
+    from listenbrainz.webserver.views.fresh_releases import fresh_releases_bp
+    app.register_blueprint(fresh_releases_bp, url_prefix=API_PREFIX)
 
     from listenbrainz.webserver.views.status_api import status_api_bp
     app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
