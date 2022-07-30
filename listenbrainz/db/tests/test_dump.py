@@ -38,7 +38,7 @@ from datetime import datetime
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.db import couchdb
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db.tests.utils import insert_test_stats
+from listenbrainz.db.tests.utils import insert_test_stats, delete_all_couch_databases
 from listenbrainz.webserver import create_app
 from listenbrainz.db.model.feedback import Feedback
 
@@ -66,10 +66,7 @@ class DumpTestCase(DatabaseTestCase):
             for stat_range in ALLOWED_STATISTICS_RANGE
         }
 
-        couchdb.create_database("artists_week_20210731")
         data, from_ts1, to_ts1, from_ts2, to_ts2 = insert_test_stats("artists", "week", "user_top_artists_db_data_for_api_test_week.json")
-        print(couchdb.list_databases("artists_week"))
-        print(couchdb.fetch_data("artists_week", 1))
 
         time_now = datetime.today()
         dump_location = db_dump.create_statistics_dump(self.tempdir, time_now)
@@ -90,6 +87,8 @@ class DumpTestCase(DatabaseTestCase):
 
         self.assertEqual(all_stats, found)
         self.assertEqual(data, found_stats)
+
+        delete_all_couch_databases()
 
     def test_add_dump_entry(self):
         prev_dumps = db_dump.get_dump_entries()
