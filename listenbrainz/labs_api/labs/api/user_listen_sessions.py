@@ -93,7 +93,7 @@ class UserListensSessionQuery(Query):
                 SELECT session_id
                      , jsonb_agg(
                             jsonb_build_object(
-                                'listened_at', listened_at
+                                'listened_at', to_char(to_timestamp(listened_at), 'YYYY-MM-DD HH24:MI:SS')
                               , 'duration', duration  
                               , 'difference', difference
                               , 'artist_name', artist_name
