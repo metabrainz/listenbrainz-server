@@ -51,22 +51,22 @@ class UserListensSessionQuery(Query):
         query = """
             WITH listens AS (
                  SELECT listened_at
-                      , COALESCE(artist_credit_name, data->'track_metadata'->>'artist_name') AS artist_name
-                      , COALESCE(recording_name, track_name) AS track_name
-                      , COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid') AS recording_mbid
+                      , COALESCE(mmm.artist_credit_name, l.data->'track_metadata'->>'artist_name') AS artist_name
+                      , COALESCE(mmm.recording_name, l.track_name) AS track_name
+                      , COALESCE(mmm.recording_mbid::TEXT, l.data->'track_metadata'->'additional_info'->>'recording_mbid') AS recording_mbid
                       , COALESCE(
                             (mbc.recording_data->>'length')::INT / 1000
-                          , (data->'track_metadata'->'additional_info'->>'duration')::INT
-                          , (data->'track_metadata'->'additional_info'->>'duration_ms')::INT / 1000
+                          , (l.data->'track_metadata'->'additional_info'->>'duration')::INT
+                          , (l.data->'track_metadata'->'additional_info'->>'duration_ms')::INT / 1000
                           , 180 -- default track length to 3 minutes
                         ) AS duration
-                   FROM listen
-              LEFT JOIN mbid_mapping
-                     ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
-              LEFT JOIN mbid_mapping_metadata
-                  USING (recording_mbid)
+                   FROM listen l
+              LEFT JOIN mbid_mapping mm
+                     ON (l.data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
+              LEFT JOIN mbid_mapping_metadata mmm
+                     ON mm.recording_mbid = mmm.recording_mbid
               LEFT JOIN mapping.mb_metadata_cache mbc
-                     ON mbc.recording_mbid = COALESCE(recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid
+                     ON mbc.recording_mbid = COALESCE(mmm.recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid
                   WHERE listened_at > :from_ts
                     AND listened_at <= :to_ts
                     AND user_id = :user_id
