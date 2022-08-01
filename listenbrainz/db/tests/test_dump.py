@@ -30,12 +30,12 @@ import tempfile
 import listenbrainz.db.feedback as db_feedback
 
 from datetime import datetime
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.webserver import create_app
 from listenbrainz.db.model.feedback import Feedback
 
 
-class DumpTestCase(DatabaseTestCase):
+class DumpTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):
         super().setUp()
@@ -103,14 +103,14 @@ class DumpTestCase(DatabaseTestCase):
             db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
-            two_id = db_user.create(2, 'vnskprk')
+            two_id = db_user.create(self.conn, 2, 'vnskprk')
             self.assertGreater(two_id, one_id)
 
     def test_dump_recording_feedback(self):
 
         # create a user
         with self.app.app_context():
-            one_id = db_user.create(1, 'test_user')
+            one_id = db_user.create(self.conn, 1, 'test_user')
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
 
@@ -120,7 +120,7 @@ class DumpTestCase(DatabaseTestCase):
                     recording_msid="d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
                     score=1
                 )
-            db_feedback.insert(feedback)
+            db_feedback.insert(self.conn, feedback)
 
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
@@ -134,7 +134,7 @@ class DumpTestCase(DatabaseTestCase):
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, one_id, limit=1, offset=0)
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
@@ -150,7 +150,7 @@ class DumpTestCase(DatabaseTestCase):
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, one_id, limit=1, offset=0)
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)

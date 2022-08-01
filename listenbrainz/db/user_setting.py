@@ -1,5 +1,4 @@
 import sqlalchemy
-from datetime import datetime, timedelta
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 
@@ -7,23 +6,22 @@ from listenbrainz.db.exceptions import DatabaseException
 DEFAULT_TIMEZONE = "UTC"
 
 
-def get_pg_timezone():
+def get_pg_timezone(connection):
     """ Get list of time zones PostgreSQL supports.
 
     Returns:
         list of tuple('zone_name', 'utc_offset')
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT * FROM pg_timezone_names
-            ORDER BY name
-        """))
-        timezones = [(row["name"], row["utc_offset"]) for row in result.fetchall()]
-        timezones = standardize_timezone(timezones)
-        return timezones
+    result = connection.execute(sqlalchemy.text("""
+        SELECT * FROM pg_timezone_names
+        ORDER BY name
+    """))
+    timezones = [(row["name"], row["utc_offset"]) for row in result.fetchall()]
+    timezones = standardize_timezone(timezones)
+    return timezones
 
 
-def get(user_id: int):
+def get(connection, user_id: int):
     """ Get user settings with the row ID of the user in the DB.
     Args:
         user_id (int): the row ID of the user in the DB
@@ -31,49 +29,47 @@ def get(user_id: int):
         user settings (dict) where
         timezone_name: user selected local timezone, with default value "UTC".
     """
-    with db.engine.connect() as connection:
-        try:
-            result = connection.execute(sqlalchemy.text("""
-                SELECT timezone_name
-                FROM user_setting
-                WHERE user_id = :user_id
-            """), {
-                "user_id": user_id,
-            })
+    try:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT timezone_name
+            FROM user_setting
+            WHERE user_id = :user_id
+        """), {
+            "user_id": user_id,
+        })
 
-            if result.rowcount:
-                user_setting = dict(result.fetchone())
-                if not user_setting["timezone_name"]:
-                    user_setting["timezone_name"] = DEFAULT_TIMEZONE
-                return user_setting
-            return {"timezone_name": DEFAULT_TIMEZONE}
-        except sqlalchemy.exc.ProgrammingError as err:
-            raise DatabaseException(
-                "Couldn't get user's setting: %s" % str(err))
+        if result.rowcount:
+            user_setting = dict(result.fetchone())
+            if not user_setting["timezone_name"]:
+                user_setting["timezone_name"] = DEFAULT_TIMEZONE
+            return user_setting
+        return {"timezone_name": DEFAULT_TIMEZONE}
+    except sqlalchemy.exc.ProgrammingError as err:
+        raise DatabaseException(
+            "Couldn't get user's setting: %s" % str(err))
 
 
-def set_timezone(user_id: int, timezone_name: str):
+def set_timezone(connection, user_id: int, timezone_name: str):
     """ Set user's timezone. Update user timezone if the row exists. Otherwise insert a new row.
     Args:
         user_id (int): the row ID of the user in the DB
         timezone_name (str): the user selected timezone name
 
     """
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                INSERT INTO user_setting (user_id, timezone_name)
-                VALUES (:user_id, :timezone_name)
-                ON CONFLICT (user_id)
-                DO 
-                    UPDATE SET timezone_name = :timezone_name
-                """), {
-                "user_id": user_id,
-                "timezone_name": timezone_name,
-            })
-        except sqlalchemy.exc.ProgrammingError as err:
-            raise DatabaseException(
-                "Couldn't update user's timezone: %s" % str(err))
+    try:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO user_setting (user_id, timezone_name)
+            VALUES (:user_id, :timezone_name)
+            ON CONFLICT (user_id)
+            DO 
+                UPDATE SET timezone_name = :timezone_name
+            """), {
+            "user_id": user_id,
+            "timezone_name": timezone_name,
+        })
+    except sqlalchemy.exc.ProgrammingError as err:
+        raise DatabaseException(
+            "Couldn't update user's timezone: %s" % str(err))
 
 
 def standardize_timezone(timezones):

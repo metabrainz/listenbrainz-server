@@ -2,7 +2,6 @@ import json
 import uuid
 
 from hashlib import sha256
-from listenbrainz.messybrainz import exceptions
 from sqlalchemy import text
 
 

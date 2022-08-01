@@ -27,7 +27,7 @@ from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData
 from flask import current_app
 
 
-def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data: UserMissingMusicBrainzDataJson, source: str):
+def insert_user_missing_musicbrainz_data(connection, user_id: int, data: UserMissingMusicBrainzDataJson, source: str):
     """ Insert missing musicbrainz data that a user has submitted to ListenBrainz but
         has not submitted to MusicBrainz in the db.
 
@@ -37,24 +37,23 @@ def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data:
                    but is not submitted to MusicBrainz.
             source : Source of generation of missing MusicBrainz data.
     """
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO missing_musicbrainz_data (user_id, data, source)
-                 VALUES (:user_id, :missing_musicbrainz_data, :source)
-            ON CONFLICT (user_id)
-          DO UPDATE SET user_id = :user_id,
-                        data = :missing_musicbrainz_data,
-                        source = :source,
-                        created = NOW()
-            """), {
-                'user_id': user_id,
-                'missing_musicbrainz_data': ujson.dumps(missing_musicbrainz_data.dict()),
-                'source': source
-            }
-        )
+    connection.execute(sqlalchemy.text("""
+        INSERT INTO missing_musicbrainz_data (user_id, data, source)
+             VALUES (:user_id, :missing_musicbrainz_data, :source)
+        ON CONFLICT (user_id)
+      DO UPDATE SET user_id = :user_id,
+                    data = :data,
+                    source = :source,
+                    created = NOW()
+        """), {
+            'user_id': user_id,
+            'data': ujson.dumps(data.dict()),
+            'source': source
+        }
+    )
 
 
-def get_user_missing_musicbrainz_data(user_id: int, source: str):
+def get_user_missing_musicbrainz_data(connection, user_id: int, source: str):
     """ Get missing musicbrainz data that has not been submitted to LB
         for a user with the given row ID.
 
@@ -100,18 +99,17 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
         }
 
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, data, created
-              FROM missing_musicbrainz_data
-             WHERE user_id = :user_id
-               AND source = :source
-            """), {
-                    'user_id': user_id,
-                    'source': source
-                }
-        )
-        row = result.fetchone()
+    result = connection.execute(sqlalchemy.text("""
+        SELECT user_id, data, created
+          FROM missing_musicbrainz_data
+         WHERE user_id = :user_id
+           AND source = :source
+        """), {
+                'user_id': user_id,
+                'source': source
+            }
+    )
+    row = result.fetchone()
 
     try:
         return UserMissingMusicBrainzData(**dict(row)) if row else None

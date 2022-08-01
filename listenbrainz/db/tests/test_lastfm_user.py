@@ -20,18 +20,18 @@ class TestAPICompatUserClass(DatabaseTestCase):
         self.logstore = timescale_connection._ts
 
         # Create a user
-        uid = db_user.create(1, "test_api_compat_user")
-        self.assertIsNotNone(db_user.get(uid))
-        with db.engine.connect() as connection:
-            result = connection.execute(text("""
-                SELECT *
-                  FROM "user"
-                 WHERE id = :id
-            """), {
-                "id": uid,
-            })
-            row = result.fetchone()
-            self.user = User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
+        uid = db_user.create(self.conn, 1, "test_api_compat_user")
+        self.assertIsNotNone(db_user.get(self.conn, uid))
+
+        result = self.conn.execute(text("""
+            SELECT *
+              FROM "user"
+             WHERE id = :id
+        """), {
+            "id": uid,
+        })
+        row = result.fetchone()
+        self.user = User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
 
     def tearDown(self):
         super(TestAPICompatUserClass, self).tearDown()

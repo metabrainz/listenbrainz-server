@@ -298,9 +298,8 @@ class DumpManagerTestCase(DatabaseTestCase):
 
     @patch('listenbrainz.db.dump_manager.send_dump_creation_notification')
     def test_create_feedback(self, mock_notify):
-
-        self.user = db_user.get_or_create(1, "ernie")
-        self.user2 = db_user.get_or_create(2, "bert")
+        self.user = db_user.get_or_create(self.conn, 1, "ernie")
+        self.user2 = db_user.get_or_create(self.conn, 2, "bert")
         sample_feedback = [
             {
                 "user_id": self.user['id'],
@@ -315,6 +314,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         ]
         for fb in sample_feedback:
             db_feedback.insert(
+                self.conn,
                 Feedback(
                     user_id=fb["user_id"],
                     recording_msid=fb["recording_msid"],
@@ -341,6 +341,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         ]
         for fb in rec_feedback:
             db_rec_feedback.insert(
+                self.conn,
                 RecommendationFeedbackSubmit(
                     user_id=fb['user_id'],
                     recording_mbid=fb["recording_mbid"],

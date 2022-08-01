@@ -9,8 +9,8 @@ from listenbrainz.db.similar_users import get_top_similar_users
 class SimilarUserTestCase(DatabaseTestCase):
 
     def test_fetch_top_similar_users(self):
-        user_id = db_user.create(1, "tom")
-        user_id2 = db_user.create(2, "jerry")
+        user_id = db_user.create(self.conn, 1, "tom")
+        user_id2 = db_user.create(self.conn, 2, "jerry")
 
         with db.engine.connect() as connection:
             connection.execute(sqlalchemy.text("""
