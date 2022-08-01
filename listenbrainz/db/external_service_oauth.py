@@ -113,7 +113,9 @@ def update_token(connection, user_id: int, service: ExternalServiceType,
            SET access_token = :access_token
              , refresh_token = :refresh_token
              , token_expires = :token_expires
-             , last_updated = now()
+        -- using clock_timestamp because value returned by now() is always fixed during a transaction
+        -- this creates issues during tests where we want to test that the last_updated field was updated
+             , last_updated = clock_timestamp()
          WHERE user_id = :user_id AND service = :service
     """), {
         "access_token": access_token,
