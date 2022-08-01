@@ -264,7 +264,7 @@ def _register_blueprints(app):
     _register_blueprint_with_context(app, player_bp, url_prefix='/player')
 
     from listenbrainz.webserver.views.metadata_viewer import metadata_viewer_bp
-    _register_blueprint_with_context(app, metadata_viewer_bp, url_prefix='/playing-now')
+    _register_blueprint_with_context(app, metadata_viewer_bp, url_prefix='/listening-now')
 
     from listenbrainz.webserver.views.playlist import playlist_bp
     _register_blueprint_with_context(app, playlist_bp, url_prefix='/playlist')
@@ -283,6 +283,9 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
     app.register_blueprint(api_bp_compat)
+
+    from listenbrainz.webserver.views.explore import explore_bp
+    _register_blueprint_with_context(app, explore_bp, url_prefix='/explore')
 
     from listenbrainz.webserver.views.api import api_bp
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
@@ -317,11 +320,11 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.pinned_recording_api import pinned_recording_api_bp
     app.register_blueprint(pinned_recording_api_bp, url_prefix=API_PREFIX)
 
-    from listenbrainz.webserver.views.color_api import color_api_bp
-    app.register_blueprint(color_api_bp, url_prefix=API_PREFIX+'/color')
-
     from listenbrainz.webserver.views.metadata_api import metadata_bp
     app.register_blueprint(metadata_bp, url_prefix=API_PREFIX+'/metadata')
 
     from listenbrainz.webserver.views.user_setting_api import user_setting_api_bp
     app.register_blueprint(user_setting_api_bp, url_prefix=API_PREFIX+'/user-setting')
+    
+    from listenbrainz.webserver.views.explore_api import explore_api_bp
+    app.register_blueprint(explore_api_bp, url_prefix=API_PREFIX+'/explore')

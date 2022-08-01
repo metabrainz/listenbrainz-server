@@ -198,8 +198,8 @@ def lookup_listens(app, listens, stats, exact, debug):
 
     params = []
     for listen in listens:
-        params.append({'[artist_credit_name]': listen["data"]["artist_name"],
-                       '[recording_name]': listen["data"]["track_name"]})
+        params.append({'[artist_credit_name]': listen["track_metadata"]["artist_name"],
+                       '[recording_name]': listen["track_metadata"]["track_name"]})
 
     rows = []
     hits = q.fetch(params)
@@ -213,7 +213,7 @@ def lookup_listens(app, listens, stats, exact, debug):
                      hit["recording_mbid"],
                      hit["release_mbid"],
                      hit["release_name"],
-                     str(hit["artist_mbids"]),
+                     hit["artist_mbids"],
                      hit["artist_credit_id"],
                      hit["artist_credit_name"],
                      hit["recording_name"],
