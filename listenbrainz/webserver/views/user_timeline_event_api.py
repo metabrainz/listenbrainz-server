@@ -31,6 +31,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
+from listenbrainz import db
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
     CBReviewTimelineMetadata
@@ -96,10 +97,8 @@ def create_user_recording_recommendation_event(user_name):
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
-    try:
-        event = db_user_timeline_event.create_user_track_recommendation_event(user['id'], metadata)
-    except DatabaseException:
-        raise APIInternalServerError("Something went wrong, please try again.")
+    with db.engine.connect() as connection:
+        event = db_user_timeline_event.create_user_track_recommendation_event(connection, user['id'], metadata)
 
     event_data = event.dict()
     event_data['created'] = event_data['created'].timestamp()
@@ -153,10 +152,8 @@ def create_user_notification_event(user_name):
     message = data["message"]
     metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
 
-    try:
-        db_user_timeline_event.create_user_notification_event(user['id'], metadata)
-    except DatabaseException:
-        raise APIInternalServerError("Something went wrong, please try again.")
+    with db.engine.connect() as connection:
+        db_user_timeline_event.create_user_notification_event(connection, user['id'], metadata)
 
     return jsonify({'status': 'ok'})
 
@@ -215,7 +212,8 @@ def create_user_cb_review_event(user_name):
         entity_id=review.entity_id,
         entity_name=review.name
     )
-    event = db_user_timeline_event.create_user_cb_review_event(user["id"], metadata)
+    with db.engine.connect() as connection:
+        event = db_user_timeline_event.create_user_cb_review_event(connection, user["id"], metadata)
 
     event_data = event.dict()
     event_data["created"] = event_data["created"].timestamp()
@@ -251,7 +249,47 @@ def user_feed(user_name: str):
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
-    users_following = db_user_relationship.get_following_for_user(user['id'])
+    with db.engine.connect() as connection:
+        users_following = db_user_relationship.get_following_for_user(connection, user['id'])
+
+        # for events like "follow" and "recording recommendations", we want to show the user
+        # their own events as well
+        users_for_feed_events = users_following + [user]
+        follow_events = get_follow_events(
+            connection,
+            user_ids=tuple(user['id'] for user in users_for_feed_events),
+            min_ts=min_ts or 0,
+            max_ts=max_ts or int(time.time()),
+            count=count,
+        )
+
+        recording_recommendation_events = get_recording_recommendation_events(
+            connection,
+            users_for_events=users_for_feed_events,
+            min_ts=min_ts or 0,
+            max_ts=max_ts or int(time.time()),
+            count=count,
+        )
+
+        cb_review_events = get_cb_review_events(
+            connection,
+            users_for_events=users_for_feed_events,
+            min_ts=min_ts or 0,
+            max_ts=max_ts or int(time.time()),
+            count=count,
+        )
+
+        notification_events = get_notification_events(connection, user, count)
+
+        recording_pin_events = get_recording_pin_events(
+            connection,
+            users_for_events=users_for_feed_events,
+            min_ts=min_ts or 0,
+            max_ts=max_ts or int(time.time()),
+            count=count,
+        )
+
+        hidden_events = db_user_timeline_event.get_hidden_timeline_events(connection, user['id'], count)
 
     # get all listen events
     if len(users_following) == 0:
@@ -259,42 +297,6 @@ def user_feed(user_name: str):
     else:
         listen_events = get_listen_events(users_following, min_ts, max_ts)
 
-    # for events like "follow" and "recording recommendations", we want to show the user
-    # their own events as well
-    users_for_feed_events = users_following + [user]
-    follow_events = get_follow_events(
-        user_ids=tuple(user['id'] for user in users_for_feed_events),
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    recording_recommendation_events = get_recording_recommendation_events(
-        user=user,
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    cb_review_events = get_cb_review_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    notification_events = get_notification_events(user, count)
-
-    recording_pin_events = get_recording_pin_events(
-        user=user,
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    hidden_events = db_user_timeline_event.get_hidden_timeline_events(user['id'], count)
     hidden_events_pin = {}
     hidden_events_recommendation = {}
 
@@ -370,15 +372,16 @@ def delete_feed_events(user_name):
     try:
         event = ujson.loads(request.get_data())
 
-        if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
-                UserTimelineEventType.NOTIFICATION.value]:
-            try:
-                event_deleted = db_user_timeline_event.delete_user_timeline_event(event["id"], user["id"])
-            except Exception as e:
-                raise APIInternalServerError("Something went wrong. Please try again")
+        if event["event_type"] in [
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+            UserTimelineEventType.NOTIFICATION.value
+        ]:
+            with db.engine.connect() as connection:
+                event_deleted = db_user_timeline_event.delete_user_timeline_event(connection, event["id"], user["id"])
+
             if not event_deleted:
-                raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" % (event["event_type"], event["id"],
-                    user["id"]))
+                raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" %
+                                  (event["event_type"], event["id"], user["id"]))
             return jsonify({"status": "ok"})
 
         raise APIBadRequest("This event type is not supported for deletion via this method")
@@ -432,22 +435,28 @@ def hide_user_timeline_event(user_name):
     if 'event_type' not in data or 'event_id' not in data:
         raise APIBadRequest("JSON document must contain both event_type and event_id", data)
 
-    row_id = data["event_id"]
-    if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
-        result = db_user_timeline_event.get_user_timeline_event_by_id(row_id)
-    elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
-        result = get_pin_by_id(row_id)
-    else:
-        raise APIBadRequest("This event type is not supported for hiding")
+    with db.engine.connect() as connection:
+        row_id = data["event_id"]
+        if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
+            result = db_user_timeline_event.get_user_timeline_event_by_id(connection, row_id)
+        elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
+            result = get_pin_by_id(connection, row_id)
+        else:
+            raise APIBadRequest("This event type is not supported for hiding")
 
-    if not result:
-        raise APIBadRequest(f"{data['event_type']} event with id {row_id} not found")
+        if not result:
+            raise APIBadRequest(f"{data['event_type']} event with id {row_id} not found")
 
-    if db_user_relationship.is_following_user(user['id'], result.user_id):
-        db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"])
-        return jsonify({"status": "ok"})
-    else:
-        raise APIUnauthorized("You cannot hide events of this user")
+        if db_user_relationship.is_following_user(connection, user['id'], result.user_id):
+            db_user_timeline_event.hide_user_timeline_event(
+                connection,
+                user['id'],
+                data["event_type"],
+                data["event_id"]
+            )
+            return jsonify({"status": "ok"})
+        else:
+            raise APIUnauthorized("You cannot hide events of this user")
 
 
 @user_timeline_event_api_bp.route("/user/<user_name>/feed/events/unhide", methods=['OPTIONS', 'POST'])
@@ -535,10 +544,11 @@ def get_listen_events(
     return events
 
 
-def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+def get_follow_events(connection, user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets all follow events in the feed.
     """
     follow_events_db = db_user_relationship.get_follow_events(
+        connection,
         user_ids=user_ids,
         min_ts=min_ts,
         max_ts=max_ts,
@@ -567,9 +577,13 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
     return events
 
 
-def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
+def get_notification_events(connection, user: dict, count: int) -> List[APITimelineEvent]:
     """ Gets notification events for the user in the feed."""
-    notification_events_db = db_user_timeline_event.get_user_notification_events(user_id=user['id'], count=count)
+    notification_events_db = db_user_timeline_event.get_user_notification_events(
+        connection,
+        user_id=user['id'],
+        count=count
+    )
     events = []
     for event in notification_events_db:
         events.append(APITimelineEvent(
@@ -584,7 +598,7 @@ def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
 
 
 def get_recording_recommendation_events(
-        user: dict,
+        connection,
         users_for_events: List[dict],
         min_ts: int,
         max_ts: int,
@@ -595,6 +609,7 @@ def get_recording_recommendation_events(
 
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     recording_recommendation_events_db = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+        connection,
         user_ids=(user['id'] for user in users_for_events),
         min_ts=min_ts,
         max_ts=max_ts,
@@ -631,11 +646,18 @@ def get_recording_recommendation_events(
     return events
 
 
-def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+def get_cb_review_events(
+    connection,
+    users_for_events: List[dict],
+    min_ts: int,
+    max_ts: int,
+    count: int
+) -> List[APITimelineEvent]:
     """ Gets all CritiqueBrainz review events in the feed.
     """
     id_username_map = {user["id"]: user["musicbrainz_id"] for user in users_for_events}
     cb_review_events_db = db_user_timeline_event.get_cb_review_events(
+        connection,
         user_ids=[user["id"] for user in users_for_events],
         min_ts=min_ts,
         max_ts=max_ts,
@@ -682,16 +704,17 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
 
 
 def get_recording_pin_events(
-        user: dict,
-        users_for_events: List[dict],
-        min_ts: int,
-        max_ts: int,
-        count: int
-        ) -> List[APITimelineEvent]:
+    connection,
+    users_for_events: List[dict],
+    min_ts: int,
+    max_ts: int,
+    count: int
+) -> List[APITimelineEvent]:
     """ Gets all recording pin events in the feed."""
 
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     recording_pin_events_db = get_pins_for_feed(
+        connection,
         user_ids=(user['id'] for user in users_for_events),
         min_ts=min_ts,
         max_ts=max_ts,
