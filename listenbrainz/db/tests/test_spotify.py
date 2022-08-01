@@ -13,9 +13,10 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(SpotifyDatabaseTestCase, self).setUp()
-        db_user.create(1, 'testspotifyuser')
-        self.user = db_user.get(1)
+        db_user.create(self.conn, 1, 'testspotifyuser')
+        self.user = db_user.get(self.conn, 1)
         db_oauth.save_token(
+            self.conn,
             user_id=1,
             service=ExternalServiceType.SPOTIFY,
             access_token='token',
@@ -26,8 +27,9 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         )
 
     def test_get_active_users_to_process(self):
-        db_user.create(2, 'newspotifyuser')
+        db_user.create(self.conn, 2, 'newspotifyuser')
         db_oauth.save_token(
+            self.conn,
             user_id=2,
             service=ExternalServiceType.SPOTIFY,
             access_token='token',
@@ -36,7 +38,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             record_listens=True,
             scopes=['user-read-recently-played']
         )
-        users = db_spotify.get_active_users_to_process()
+        users = db_spotify.get_active_users_to_process(self.user)
         self.assertEqual(len(users), 2)
         self.assertEqual(users[0]['user_id'], 1)
         self.assertEqual(users[0]['musicbrainz_row_id'], 1)
@@ -44,8 +46,9 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(users[1]['musicbrainz_row_id'], 2)
 
         # check order, the users should be sorted by latest_listened_at timestamp
-        db_user.create(3, 'newnewspotifyuser')
+        db_user.create(self.conn, 3, 'newnewspotifyuser')
         db_oauth.save_token(
+            self.conn,
             user_id=3,
             service=ExternalServiceType.SPOTIFY,
             access_token='tokentoken',
@@ -57,7 +60,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         t = int(time.time())
         db_import.update_latest_listened_at(2, ExternalServiceType.SPOTIFY, t + 20)
         db_import.update_latest_listened_at(1, ExternalServiceType.SPOTIFY, t + 10)
-        users = db_spotify.get_active_users_to_process()
+        users = db_spotify.get_active_users_to_process(self.conn)
         self.assertEqual(len(users), 3)
         self.assertEqual(users[0]['user_id'], 2)
         self.assertEqual(users[1]['user_id'], 1)
@@ -65,12 +68,12 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
 
         db_import.update_import_status(2, ExternalServiceType.SPOTIFY, 'something broke')
         db_import.update_import_status(3, ExternalServiceType.SPOTIFY, 'oops.')
-        users = db_spotify.get_active_users_to_process()
+        users = db_spotify.get_active_users_to_process(self.conn)
         self.assertEqual(len(users), 1)
         self.assertEqual(users[0]['user_id'], 1)
 
     def test_get_user_import_details(self):
-        user = db_spotify.get_user_import_details(self.user['id'])
+        user = db_spotify.get_user_import_details(self.conn, self.user['id'])
         self.assertEqual(user['user_id'], self.user['id'])
         self.assertIn('last_updated', user)
         self.assertIn('latest_listened_at', user)

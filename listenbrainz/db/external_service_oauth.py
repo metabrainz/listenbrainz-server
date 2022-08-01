@@ -5,8 +5,8 @@ from listenbrainz import db, utils
 import sqlalchemy
 
 
-def save_token(user_id: int, service: ExternalServiceType, access_token: str, refresh_token: str,
-               token_expires_ts: int, record_listens: bool, scopes: List[str]):
+def save_token(connection, user_id: int, service: ExternalServiceType, access_token: str,
+               refresh_token: str, token_expires_ts: int, record_listens: bool, scopes: List[str]):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
     Args:
@@ -26,53 +26,52 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
     # be explicitly set to the default value (which would have been used if the row was
     # inserted instead).
     token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            INSERT INTO external_service_oauth
-            (user_id, service, access_token, refresh_token, token_expires, scopes)
+    result = connection.execute(sqlalchemy.text("""
+        INSERT INTO external_service_oauth
+        (user_id, service, access_token, refresh_token, token_expires, scopes)
+        VALUES
+        (:user_id, :service, :access_token, :refresh_token, :token_expires, :scopes)
+        ON CONFLICT (user_id, service)
+        DO UPDATE SET
+            user_id = EXCLUDED.user_id,
+            service = EXCLUDED.service,
+            access_token = EXCLUDED.access_token,
+            refresh_token = EXCLUDED.refresh_token,
+            token_expires = EXCLUDED.token_expires,
+            scopes = EXCLUDED.scopes,
+            last_updated = NOW()
+        RETURNING id
+        """), {
+            "user_id": user_id,
+            "service": service.value,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_expires": token_expires,
+            "scopes": scopes,
+        })
+
+    if record_listens:
+        external_service_oauth_id = result.fetchone()['id']
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO listens_importer
+            (external_service_oauth_id, user_id, service)
             VALUES
-            (:user_id, :service, :access_token, :refresh_token, :token_expires, :scopes)
-            ON CONFLICT (user_id, service)
-            DO UPDATE SET
+            (:external_service_oauth_id, :user_id, :service)
+            ON CONFLICT (user_id, service) DO UPDATE SET
+                external_service_oauth_id = EXCLUDED.external_service_oauth_id,
                 user_id = EXCLUDED.user_id,
                 service = EXCLUDED.service,
-                access_token = EXCLUDED.access_token,
-                refresh_token = EXCLUDED.refresh_token,
-                token_expires = EXCLUDED.token_expires,
-                scopes = EXCLUDED.scopes,
-                last_updated = NOW()
-            RETURNING id
+                last_updated = NULL,
+                latest_listened_at = NULL,
+                error_message = NULL
             """), {
-                "user_id": user_id,
-                "service": service.value,
-                "access_token": access_token,
-                "refresh_token": refresh_token,
-                "token_expires": token_expires,
-                "scopes": scopes,
-            })
-
-        if record_listens:
-            external_service_oauth_id = result.fetchone()['id']
-            connection.execute(sqlalchemy.text("""
-                INSERT INTO listens_importer
-                (external_service_oauth_id, user_id, service)
-                VALUES
-                (:external_service_oauth_id, :user_id, :service)
-                ON CONFLICT (user_id, service) DO UPDATE SET
-                    external_service_oauth_id = EXCLUDED.external_service_oauth_id,
-                    user_id = EXCLUDED.user_id,
-                    service = EXCLUDED.service,
-                    last_updated = NULL,
-                    latest_listened_at = NULL,
-                    error_message = NULL
-                """), {
-                "external_service_oauth_id": external_service_oauth_id,
-                "user_id": user_id,
-                "service": service.value
-            })
+            "external_service_oauth_id": external_service_oauth_id,
+            "user_id": user_id,
+            "service": service.value
+        })
 
 
-def delete_token(user_id: int, service: ExternalServiceType, remove_import_log: bool):
+def delete_token(connection, user_id: int, service: ExternalServiceType, remove_import_log: bool):
     """ Delete a user from the external service table.
 
     Args:
@@ -80,26 +79,25 @@ def delete_token(user_id: int, service: ExternalServiceType, remove_import_log: 
         service: the service for which the token should be deleted
         remove_import_log: whether the (user, service) combination should be removed from the listens_importer table also
     """
-    with db.engine.connect() as connection:
+    connection.execute(sqlalchemy.text("""
+        DELETE FROM external_service_oauth
+              WHERE user_id = :user_id AND service = :service
+    """), {
+        "user_id": user_id,
+        "service": service.value
+    })
+    if remove_import_log:
         connection.execute(sqlalchemy.text("""
-            DELETE FROM external_service_oauth
-                  WHERE user_id = :user_id AND service = :service
+            DELETE FROM listens_importer
+                WHERE user_id = :user_id AND service = :service
         """), {
             "user_id": user_id,
             "service": service.value
         })
-        if remove_import_log:
-            connection.execute(sqlalchemy.text("""
-                DELETE FROM listens_importer
-                    WHERE user_id = :user_id AND service = :service
-            """), {
-                "user_id": user_id,
-                "service": service.value
-            })
 
 
-def update_token(user_id: int, service: ExternalServiceType, access_token: str,
-                 refresh_token: str, expires_at: int):
+def update_token(connection, user_id: int, service: ExternalServiceType,
+                 access_token: str, refresh_token: str, expires_at: int):
     """ Update the token for user with specified LB user ID and external service.
 
     Args:
@@ -110,49 +108,47 @@ def update_token(user_id: int, service: ExternalServiceType, access_token: str,
         expires_at: the unix timestamp at which the access token expires
     """
     token_expires = utils.unix_timestamp_to_datetime(expires_at)
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            UPDATE external_service_oauth
-               SET access_token = :access_token
-                 , refresh_token = :refresh_token
-                 , token_expires = :token_expires
-                 , last_updated = now()
-             WHERE user_id = :user_id AND service = :service
-        """), {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_expires": token_expires,
-            "user_id": user_id,
-            "service": service.value
-        })
+    connection.execute(sqlalchemy.text("""
+        UPDATE external_service_oauth
+           SET access_token = :access_token
+             , refresh_token = :refresh_token
+             , token_expires = :token_expires
+             , last_updated = now()
+         WHERE user_id = :user_id AND service = :service
+    """), {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_expires": token_expires,
+        "user_id": user_id,
+        "service": service.value
+    })
 
 
-def get_token(user_id: int, service: ExternalServiceType) -> Union[dict, None]:
+def get_token(connection, user_id: int, service: ExternalServiceType) -> Union[dict, None]:
     """ Get details for user with specified user ID and service.
 
     Args:
         user_id: the ListenBrainz row ID of the user
         service: the service for which the token should be fetched
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id
-                 , "user".musicbrainz_id
-                 , "user".musicbrainz_row_id
-                 , service
-                 , access_token
-                 , refresh_token
-                 , last_updated
-                 , token_expires
-                 , scopes
-              FROM external_service_oauth
-              JOIN "user"
-                ON "user".id = external_service_oauth.user_id
-             WHERE user_id = :user_id AND service = :service
-            """), {
-                'user_id': user_id,
-                'service': service.value
-            })
-        if result.rowcount > 0:
-            return dict(result.fetchone())
-        return None
+    result = connection.execute(sqlalchemy.text("""
+        SELECT user_id
+             , "user".musicbrainz_id
+             , "user".musicbrainz_row_id
+             , service
+             , access_token
+             , refresh_token
+             , last_updated
+             , token_expires
+             , scopes
+          FROM external_service_oauth
+          JOIN "user"
+            ON "user".id = external_service_oauth.user_id
+         WHERE user_id = :user_id AND service = :service
+        """), {
+            'user_id': user_id,
+            'service': service.value
+        })
+    if result.rowcount > 0:
+        return dict(result.fetchone())
+    return None
