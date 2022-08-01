@@ -54,7 +54,7 @@ class TimescaleTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
+        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
 
     def setUp(self):
         self.ts_conn = ts.engine.connect()

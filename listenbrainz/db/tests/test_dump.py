@@ -80,7 +80,7 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase):
 
         # create a user
         with self.app.app_context():
-            one_id = db_user.create(1, 'test_user')
+            one_id = db_user.create(self.conn, 1, 'test_user')
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
 
