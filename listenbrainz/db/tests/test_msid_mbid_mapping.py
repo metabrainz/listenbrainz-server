@@ -24,24 +24,23 @@ class MappingTestCase(TimescaleTestCase):
         model = MsidMbidModel(recording_msid=str(uuid.uuid4()), recording_mbid=str(uuid.uuid4()))
 
     def insert_recording_in_mapping(self, recording, match_type):
-        with ts.engine.connect() as connection:
-            if match_type == "exact_match":
-                connection.execute(text("""
-                    INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
-                                                       artist_mbids, artist_credit_name, recording_name)
-                     VALUES (:artist_credit_id, :recording_mbid ::UUID, :release_mbid ::UUID, :release,
-                             :artist_mbids ::UUID[], :artist, :title)
-                """), **recording)
+        if match_type == "exact_match":
+            self.ts_conn.execute(text("""
+                INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
+                                                   artist_mbids, artist_credit_name, recording_name)
+                 VALUES (:artist_credit_id, :recording_mbid ::UUID, :release_mbid ::UUID, :release,
+                         :artist_mbids ::UUID[], :artist, :title)
+            """), **recording)
 
-            connection.execute(
-                text("""
-                INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
-                                  VALUES (:recording_msid, :recording_mbid, :match_type)
-            """),
-                recording_msid=recording["recording_msid"],
-                recording_mbid=recording["recording_mbid"],
-                match_type=match_type
-            )
+        self.ts_conn.execute(
+            text("""
+            INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+                              VALUES (:recording_msid, :recording_mbid, :match_type)
+        """),
+            recording_msid=recording["recording_msid"],
+            recording_mbid=recording["recording_mbid"],
+            match_type=match_type
+        )
 
     def insert_recordings(self):
         recordings = [
@@ -118,6 +117,7 @@ class MappingTestCase(TimescaleTestCase):
             recordings[3]["recording_msid"]: recordings[3]
         }
         mbid_map, msid_map = load_recordings_from_mapping(
+            self.ts_conn,
             mbids=[recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]],
             msids=[recordings[2]["recording_msid"], recordings[3]["recording_msid"]]
         )
@@ -139,7 +139,7 @@ class MappingTestCase(TimescaleTestCase):
             MsidMbidModel(recording_msid=recordings[4]["recording_msid"], recording_mbid="0f53fa2f-f015-40c6-a5cd-f17af596764c")
 
         ]
-        models = fetch_track_metadata_for_items(models)
+        models = fetch_track_metadata_for_items(self.ts_conn, models)
 
         for idx in range(5):
             metadata = models[idx].track_metadata
@@ -162,7 +162,7 @@ class MappingTestCase(TimescaleTestCase):
             MsidMbidModel(recording_msid=recording["recording_msid"], recording_mbid=recording["recording_mbid"]),
             MsidMbidModel(recording_msid=recording["recording_msid"], recording_mbid=recording["recording_mbid"]),
         ]
-        models = fetch_track_metadata_for_items(models)
+        models = fetch_track_metadata_for_items(self.ts_conn, models)
         for model in models:
             metadata = model.track_metadata
             self.assertEqual(metadata["track_name"], recording["title"])

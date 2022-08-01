@@ -95,7 +95,8 @@ def delete(connection, feedback: Feedback):
 
 
 def get_feedback_for_user(
-    connection,
+    lb_conn,
+    ts_conn,
     user_id: int,
     limit: int,
     offset: int,
@@ -136,11 +137,11 @@ def get_feedback_for_user(
     query += """ ORDER BY recording_feedback.created DESC
                  LIMIT :limit OFFSET :offset """
 
-    result = connection.execute(sqlalchemy.text(query), args)
+    result = lb_conn.execute(sqlalchemy.text(query), args)
     feedback = [Feedback(**dict(row)) for row in result.fetchall()]
 
     if metadata and len(feedback) > 0:
-        feedback = fetch_track_metadata_for_items(feedback)
+        feedback = fetch_track_metadata_for_items(ts_conn, feedback)
 
     return feedback
 

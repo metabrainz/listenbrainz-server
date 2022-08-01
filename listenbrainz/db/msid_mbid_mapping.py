@@ -7,7 +7,6 @@ from pydantic import BaseModel, validator, root_validator
 from sqlalchemy import text
 
 from data.model.validators import check_valid_uuid
-from listenbrainz.db import timescale
 from listenbrainz.messybrainz import load_recordings_from_msids
 
 
@@ -36,7 +35,7 @@ class MsidMbidModel(BaseModel):
         return values
 
 
-def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]) -> Tuple[Dict, Dict]:
+def load_recordings_from_mapping(ts_conn, mbids: Iterable[str], msids: Iterable[str]) -> Tuple[Dict, Dict]:
     """ Given a list of mbids and msids, returns two maps - one having mbid as key and the recording
     info as value and the other having the msid as key and recording info as value.
     """
@@ -67,20 +66,19 @@ def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]) -> 
          WHERE {full_where_clause}
     """
 
-    with timescale.engine.connect() as connection:
-        result = connection.execute(text(query), mbids=tuple(mbids), msids=tuple(msids))
-        rows = result.fetchall()
+    result = ts_conn.execute(text(query), mbids=tuple(mbids), msids=tuple(msids))
+    rows = result.fetchall()
 
-        mbid_rows = {row["recording_mbid"]: dict(row) for row in rows if row["recording_mbid"] in mbids}
-        msid_rows = {row["recording_msid"]: dict(row) for row in rows if row["recording_msid"] in msids}
+    mbid_rows = {row["recording_mbid"]: dict(row) for row in rows if row["recording_mbid"] in mbids}
+    msid_rows = {row["recording_msid"]: dict(row) for row in rows if row["recording_msid"] in msids}
 
-        return mbid_rows, msid_rows
+    return mbid_rows, msid_rows
 
 
 ModelT = TypeVar('ModelT', bound=MsidMbidModel)
 
 
-def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
+def fetch_track_metadata_for_items(ts_conn, items: List[ModelT]) -> List[ModelT]:
     """ Fetches track_metadata for every object in a list of MsidMbidModel items.
 
         Args:
@@ -102,7 +100,11 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
     # first we try to load data from mapping using mbids and msids. however, some items may
     # not have metadata in mapping. such items will be added to remaining items, and we'll
     # later lookup data for these items from messybrainz.
-    mapping_mbid_metadata, mapping_msid_metadata = load_recordings_from_mapping(mbid_item_map.keys(), msid_item_map.keys())
+    mapping_mbid_metadata, mapping_msid_metadata = load_recordings_from_mapping(
+        ts_conn,
+        mbid_item_map.keys(),
+        msid_item_map.keys()
+    )
     _update_items_from_map(mbid_item_map, mapping_mbid_metadata, remaining_item_map)
     _update_items_from_map(msid_item_map, mapping_msid_metadata, remaining_item_map)
 
