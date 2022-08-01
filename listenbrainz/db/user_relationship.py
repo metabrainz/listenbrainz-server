@@ -34,8 +34,12 @@ def insert(connection, user_0: int, user_1: int, relationship_type: str) -> None
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
     connection.execute(sqlalchemy.text("""
-        INSERT INTO user_relationship (user_0, user_1, relationship_type)
-             VALUES (:user_0, :user_1, :relationship_type)
+        INSERT INTO user_relationship (user_0, user_1, relationship_type, created)
+        -- using clock_timestamp because value returned by now() is always fixed during a transaction
+        -- this creates issues during tests where we want to insert multiple events and test that the
+        -- min_ts and max_ts params are working fine. use clock_timestamp() instead which returns
+        -- actual current time
+             VALUES (:user_0, :user_1, :relationship_type, clock_timestamp())
     """), {
         "user_0": user_0,
         "user_1": user_1,
