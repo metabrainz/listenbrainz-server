@@ -14,11 +14,13 @@ def insert(connection, feedback_submit: RecommendationFeedbackSubmit):
             feedback_submit: An object of class RecommendationFeedbackSubmit
     """
     connection.execute(sqlalchemy.text("""
-        INSERT INTO recommendation_feedback (user_id, recording_mbid, rating)
-             VALUES (:user_id, :recording_mbid, :rating)
+        INSERT INTO recommendation_feedback (user_id, recording_mbid, rating, created)
+        -- using clock_timestamp because value returned by now() is always fixed during a transaction
+        -- this creates issues during tests where we want to depend on events being returned in descending order
+             VALUES (:user_id, :recording_mbid, :rating, clock_timestamp())
         ON CONFLICT (user_id, recording_mbid)
       DO UPDATE SET rating = :rating,
-                    created = NOW()
+                    created = clock_timestamp()
         """), {
             'user_id': feedback_submit.user_id,
             'recording_mbid': feedback_submit.recording_mbid,
