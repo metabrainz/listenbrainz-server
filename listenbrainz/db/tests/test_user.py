@@ -188,11 +188,11 @@ class UserTestCase(DatabaseTestCase):
         self.conn.execute(query, user_id=user_id_23, similar_users=json.dumps(similar_users_23))
 
         self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
-                             db_user.get_similar_users(user_id_21).similar_users)
+                             db_user.get_similar_users(self.conn, user_id_21).similar_users)
         self.assertDictEqual({"twenty_one": 0.4},
-                             db_user.get_similar_users(user_id_22).similar_users)
+                             db_user.get_similar_users(self.conn, user_id_22).similar_users)
         self.assertDictEqual({"twenty_one": 0.7},
-                             db_user.get_similar_users(user_id_23).similar_users)
+                             db_user.get_similar_users(self.conn, user_id_23).similar_users)
 
     def test_get_user_by_id(self):
         user_id_24 = db_user.create(self.conn, 24, "twenty_four")

@@ -429,23 +429,21 @@ def get_users_in_order(connection, user_ids):
     return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
 
 
-def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
+def get_similar_users(connection, user_id: int) -> Optional[SimilarUsers]:
     """ Given a user_id, fetch the similar users for that given user.
         Returns a dict { "user_x" : .453, "user_y": .123 } """
-
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT musicbrainz_id AS user_name
-                 , value->0 AS similarity -- first element of array is local similarity, second is global_similarity
-              FROM recommendation.similar_user r 
-              JOIN jsonb_each(r.similar_users) j
-                ON TRUE
-              JOIN "user" u
-                ON j.key::int = u.id 
-             WHERE user_id = :user_id
-        """), user_id=user_id)
-        users = {row["user_name"]: row["similarity"] for row in result.fetchall()}
-        return SimilarUsers(user_id=user_id, similar_users=users)
+    result = connection.execute(sqlalchemy.text("""
+        SELECT musicbrainz_id AS user_name
+             , value->0 AS similarity -- first element of array is local similarity, second is global_similarity
+          FROM recommendation.similar_user r 
+          JOIN jsonb_each(r.similar_users) j
+            ON TRUE
+          JOIN "user" u
+            ON j.key::int = u.id 
+         WHERE user_id = :user_id
+    """), user_id=user_id)
+    users = {row["user_name"]: row["similarity"] for row in result.fetchall()}
+    return SimilarUsers(user_id=user_id, similar_users=users)
 
 
 def get_users_by_id(connection, user_ids: List[int]):
@@ -547,7 +545,7 @@ def search(connection, search_term: str, limit: int, searcher_id: int = None) ->
     rows = result.fetchall()
     if not rows:
         return []
-    similar_users = get_similar_users(searcher_id) if searcher_id else None
+    similar_users = get_similar_users(connection, searcher_id) if searcher_id else None
 
     search_results = []
     if similar_users:
