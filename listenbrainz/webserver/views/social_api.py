@@ -2,6 +2,7 @@ from flask import Blueprint, current_app, jsonify
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
+from listenbrainz import db
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIInternalServerError, APIBadRequest
@@ -33,13 +34,10 @@ def get_followers(user_name: str):
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    try:
-        followers = db_user_relationship.get_followers_of_user(user["id"])
-        followers = [user["musicbrainz_id"] for user in followers]
-    except Exception as e:
-        current_app.logger.error("Error while trying to fetch followers: %s", str(e))
-        raise APIInternalServerError("Something went wrong, please try again later")
+    with db.engine.connect() as connection:
+        followers = db_user_relationship.get_followers_of_user(connection, user["id"])
 
+    followers = [user["musicbrainz_id"] for user in followers]
     return jsonify({"followers": followers, "user": user["musicbrainz_id"]})
 
 
@@ -65,13 +63,10 @@ def get_following(user_name: str):
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    try:
-        following = db_user_relationship.get_following_for_user(user["id"])
-        following = [user["musicbrainz_id"] for user in following]
-    except Exception as e:
-        current_app.logger.error("Error while trying to fetch following: %s", str(e))
-        raise APIInternalServerError("Something went wrong, please try again later")
+    with db.engine.connect() as connection:
+        following = db_user_relationship.get_following_for_user(connection, user["id"])
 
+    following = [user["musicbrainz_id"] for user in following]
     return jsonify({"following": following, "user": user["musicbrainz_id"]})
 
 
@@ -101,14 +96,11 @@ def follow_user(user_name: str):
     if user["musicbrainz_id"] == current_user["musicbrainz_id"]:
         raise APIBadRequest("Whoops, cannot follow yourself.")
 
-    if db_user_relationship.is_following_user(current_user["id"], user["id"]):
-        raise APIBadRequest("%s is already following user %s" % (current_user["musicbrainz_id"], user["musicbrainz_id"]))
+    with db.engine.connect() as connection:
+        if db_user_relationship.is_following_user(connection, current_user["id"], user["id"]):
+            raise APIBadRequest(f'{current_user["musicbrainz_id"]} is already following user {user["musicbrainz_id"]}')
 
-    try:
-        db_user_relationship.insert(current_user["id"], user["id"], "follow")
-    except Exception as e:
-        current_app.logger.error("Error while trying to insert a relationship: %s", str(e))
-        raise APIInternalServerError("Something went wrong, please try again later")
+        db_user_relationship.insert(connection, current_user["id"], user["id"], "follow")
 
     return jsonify({"status": "ok"})
 
@@ -133,10 +125,7 @@ def unfollow_user(user_name: str):
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    try:
-        db_user_relationship.delete(current_user["id"], user["id"], "follow")
-    except Exception as e:
-        current_app.logger.error("Error while trying to delete a relationship: %s", str(e))
-        raise APIInternalServerError("Something went wrong, please try again later")
+    with db.engine.connect() as connection:
+        db_user_relationship.delete(connection, current_user["id"], user["id"], "follow")
 
     return jsonify({"status": "ok"})

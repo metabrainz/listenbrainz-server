@@ -29,59 +29,55 @@ VALID_RELATIONSHIP_TYPES = (
 )
 
 
-def insert(user_0: int, user_1: int, relationship_type: str) -> None:
+def insert(connection, user_0: int, user_1: int, relationship_type: str) -> None:
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO user_relationship (user_0, user_1, relationship_type)
-                 VALUES (:user_0, :user_1, :relationship_type)
-        """), {
-            "user_0": user_0,
-            "user_1": user_1,
-            "relationship_type": relationship_type,
-        })
+    connection.execute(sqlalchemy.text("""
+        INSERT INTO user_relationship (user_0, user_1, relationship_type)
+             VALUES (:user_0, :user_1, :relationship_type)
+    """), {
+        "user_0": user_0,
+        "user_1": user_1,
+        "relationship_type": relationship_type,
+    })
 
 
-def is_following_user(follower: int, followed: int) -> bool:
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT COUNT(*) as cnt
-              FROM user_relationship
-             WHERE user_0 = :follower
-               AND user_1 = :followed
-               AND relationship_type = 'follow'
-        """), {
-            "follower": follower,
-            "followed": followed,
-        })
-        return result.fetchone()['cnt'] > 0
+def is_following_user(connection, follower: int, followed: int) -> bool:
+    result = connection.execute(sqlalchemy.text("""
+        SELECT COUNT(*) as cnt
+          FROM user_relationship
+         WHERE user_0 = :follower
+           AND user_1 = :followed
+           AND relationship_type = 'follow'
+    """), {
+        "follower": follower,
+        "followed": followed,
+    })
+    return result.fetchone()['cnt'] > 0
 
 
-def delete(user_0: int, user_1: int, relationship_type: str) -> None:
+def delete(connection, user_0: int, user_1: int, relationship_type: str) -> None:
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            DELETE
-              FROM user_relationship
-            WHERE user_0 = :user_0
-              AND user_1 = :user_1
-              AND relationship_type = :relationship_type
-        """), {
-            "user_0": user_0,
-            "user_1": user_1,
-            "relationship_type": relationship_type,
-        })
+    connection.execute(sqlalchemy.text("""
+        DELETE
+          FROM user_relationship
+        WHERE user_0 = :user_0
+          AND user_1 = :user_1
+          AND relationship_type = :relationship_type
+    """), {
+        "user_0": user_0,
+        "user_1": user_1,
+        "relationship_type": relationship_type,
+    })
 
 
-def get_followers_of_user(user: int) -> List[dict]:
+def get_followers_of_user(connection, user: int) -> List[dict]:
     """ Returns a list of users who follow the specified user.
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
+    result = connection.execute(sqlalchemy.text("""
             SELECT "user".musicbrainz_id AS musicbrainz_id
               FROM user_relationship
               JOIN "user"
@@ -92,27 +88,27 @@ def get_followers_of_user(user: int) -> List[dict]:
         """), {
             "followed": user,
         })
-        return [dict(row) for row in result.fetchall()]
+    return [dict(row) for row in result.fetchall()]
 
 
-def get_following_for_user(user: int) -> List[dict]:
+def get_following_for_user(connection, user: int) -> List[dict]:
     """ Returns a list of users who the specified user follows.
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT "user".musicbrainz_id AS musicbrainz_id, "user".id as id
-              FROM user_relationship
-              JOIN "user"
-                ON "user".id = user_1
-             WHERE user_0 = :user
-               AND relationship_type = 'follow'
+    result = connection.execute(sqlalchemy.text("""
+        SELECT "user".musicbrainz_id AS musicbrainz_id, "user".id as id
+          FROM user_relationship
+          JOIN "user"
+            ON "user".id = user_1
+         WHERE user_0 = :user
+           AND relationship_type = 'follow'
 
-        """), {
-            "user": user,
-        })
-        return [dict(row) for row in result.fetchall()]
+    """), {
+        "user": user,
+    })
+    return [dict(row) for row in result.fetchall()]
 
-def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[dict]:
+
+def get_follow_events(connection, user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[dict]:
     """ Gets a list of follow events for specified users.
 
     user_ids is a tuple of user row IDs.
@@ -124,22 +120,20 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
             created: datetime,
         }
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT follower.musicbrainz_id as user_name_0, followed.musicbrainz_id as user_name_1, ur.created
-              FROM user_relationship ur
-              JOIN "user" follower ON ur.user_0 = follower.id
-              JOIN "user" followed ON ur.user_1 = followed.id
-             WHERE ur.user_0 IN :user_ids
-               AND ur.created > :min_ts
-               AND ur.created < :max_ts
-          ORDER BY created DESC
-             LIMIT :count
-        """), {
-            "user_ids": tuple(user_ids),
-            "min_ts": datetime.utcfromtimestamp(min_ts),
-            "max_ts": datetime.utcfromtimestamp(max_ts),
-            "count": count
-        })
-
-        return [dict(row) for row in result.fetchall()]
+    result = connection.execute(sqlalchemy.text("""
+        SELECT follower.musicbrainz_id as user_name_0, followed.musicbrainz_id as user_name_1, ur.created
+          FROM user_relationship ur
+          JOIN "user" follower ON ur.user_0 = follower.id
+          JOIN "user" followed ON ur.user_1 = followed.id
+         WHERE ur.user_0 IN :user_ids
+           AND ur.created > :min_ts
+           AND ur.created < :max_ts
+      ORDER BY created DESC
+         LIMIT :count
+    """), {
+        "user_ids": tuple(user_ids),
+        "min_ts": datetime.utcfromtimestamp(min_ts),
+        "max_ts": datetime.utcfromtimestamp(max_ts),
+        "count": count
+    })
+    return [dict(row) for row in result.fetchall()]

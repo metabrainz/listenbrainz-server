@@ -16,12 +16,17 @@ TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.
 
 class DatabaseTestCase(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-        self.reset_db()
+
+    def setUp(self) -> None:
+        self.conn = db.engine.connect()
+        self.trans = self.conn.begin()
 
     def tearDown(self):
-        self.drop_tables()
+        self.trans.rollback()
+        self.conn.close()
 
     def reset_db(self):
         self.drop_tables()

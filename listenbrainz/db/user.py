@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def create(musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> int:
+def create(connection, musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> int:
     """Create a new user.
 
     Args:
@@ -27,19 +27,18 @@ def create(musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> i
     Returns:
         ID of newly created user.
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token, email)
-                 VALUES (:mb_id, :mb_row_id, :token, :email)
-              RETURNING id
-        """), {
-            "mb_id": musicbrainz_id,
-            "token": str(uuid.uuid4()),
-            "mb_row_id": musicbrainz_row_id,
-            "email": email,
-        })
+    result = connection.execute(sqlalchemy.text("""
+        INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token, email)
+             VALUES (:mb_id, :mb_row_id, :token, :email)
+          RETURNING id
+    """), {
+        "mb_id": musicbrainz_id,
+        "token": str(uuid.uuid4()),
+        "mb_row_id": musicbrainz_row_id,
+        "email": email,
+    })
 
-        return result.fetchone()["id"]
+    return result.fetchone()["id"]
 
 
 def update_token(id):
@@ -227,7 +226,7 @@ def get_user_count():
             raise
 
 
-def get_or_create(musicbrainz_row_id: int, musicbrainz_id: str) -> dict:
+def get_or_create(connection, musicbrainz_row_id: int, musicbrainz_id: str) -> dict:
     """Get user with a specified MusicBrainz ID, or create if there's no account.
 
     Args:
@@ -243,10 +242,10 @@ def get_or_create(musicbrainz_row_id: int, musicbrainz_id: str) -> dict:
             "auth_token": <authentication token>,
         }
     """
-    user = get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=musicbrainz_id)
+    user = get_by_mb_row_id(connection, musicbrainz_row_id, musicbrainz_id=musicbrainz_id)
     if not user:
-        create(musicbrainz_row_id, musicbrainz_id)
-        user = get_by_mb_row_id(musicbrainz_row_id)
+        create(connection, musicbrainz_row_id, musicbrainz_id)
+        user = get_by_mb_row_id(connection, musicbrainz_row_id)
     return user
 
 
@@ -377,7 +376,7 @@ def update_musicbrainz_row_id(musicbrainz_id, musicbrainz_row_id):
                 "Couldn't update musicbrainz row id for user: %s" % str(err))
 
 
-def get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=None):
+def get_by_mb_row_id(connection, musicbrainz_row_id, musicbrainz_id=None):
     """ Get user with specified MusicBrainz row id.
 
     Note: this function also optionally takes a MusicBrainz username to fall back on
@@ -396,17 +395,16 @@ def get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=None):
         filter_data['musicbrainz_id'] = musicbrainz_id
 
     filter_data['musicbrainz_row_id'] = musicbrainz_row_id
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT {columns}
-              FROM "user"
-             WHERE musicbrainz_row_id = :musicbrainz_row_id
-             {optional_filter}
-        """.format(columns=','.join(USER_GET_COLUMNS), optional_filter=filter_str)), filter_data)
+    result = connection.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE musicbrainz_row_id = :musicbrainz_row_id
+         {optional_filter}
+    """.format(columns=','.join(USER_GET_COLUMNS), optional_filter=filter_str)), filter_data)
 
-        if result.rowcount:
-            return result.fetchone()
-        return None
+    if result.rowcount:
+        return result.fetchone()
+    return None
 
 
 def validate_usernames(musicbrainz_ids):
