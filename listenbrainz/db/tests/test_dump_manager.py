@@ -50,8 +50,8 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.tempdir = tempfile.mkdtemp()
         self.runner = CliRunner()
         self.listenstore = timescale_connection._ts
-        self.user_id = db_user.create(1, 'iliekcomputers')
-        self.user_name = db_user.get(self.user_id)['musicbrainz_id']
+        self.user_id = db_user.create(self.conn, 1, 'iliekcomputers')
+        self.user_name = db_user.get(self.conn, self.user_id)['musicbrainz_id']
 
     def tearDown(self):
         super().tearDown()

@@ -58,4 +58,8 @@ class TimescaleTestCase(unittest.TestCase):
 
     def setUp(self):
         self.ts_conn = ts.engine.connect()
-        self.trans = self.ts_conn.begin()
+        self.ts_trans = self.ts_conn.begin()
+
+    def tearDown(self):
+        self.ts_trans.rollback()
+        self.ts_conn.close()

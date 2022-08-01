@@ -57,8 +57,8 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             scopes=['user-read-recently-played']
         )
         t = int(time.time())
-        db_import.update_latest_listened_at(user2['id'], ExternalServiceType.SPOTIFY, t + 20)
-        db_import.update_latest_listened_at(self.user['id'], ExternalServiceType.SPOTIFY, t + 10)
+        db_import.update_latest_listened_at(self.conn, user2['id'], ExternalServiceType.SPOTIFY, t + 20)
+        db_import.update_latest_listened_at(self.conn, self.user['id'], ExternalServiceType.SPOTIFY, t + 10)
         users = db_spotify.get_active_users_to_process(self.conn)
         self.assertEqual(len(users), 3)
         self.assertEqual(users[0]['user_id'], user2['id'])
