@@ -119,13 +119,13 @@ class UserTestCase(DatabaseTestCase):
         user_id = db_user.create(self.conn, 11, 'kishore')
         user = db_user.get(self.conn, user_id)
         self.assertIsNotNone(user)
-        db_oauth.save_token(user_id, ExternalServiceType.SPOTIFY, 'user token',
+        db_oauth.save_token(self.conn, user_id, ExternalServiceType.SPOTIFY, 'user token',
                             'refresh token', 0, True, ['user-read-recently-played'])
 
         db_user.delete(self.conn, user_id)
         user = db_user.get(self.conn, user_id)
         self.assertIsNone(user)
-        token = db_oauth.get_token(user_id, ExternalServiceType.SPOTIFY)
+        token = db_oauth.get_token(self.conn, user_id, ExternalServiceType.SPOTIFY)
         self.assertIsNone(token)
 
     def test_validate_usernames(self):
