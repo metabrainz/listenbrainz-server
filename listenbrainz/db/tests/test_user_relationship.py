@@ -133,6 +133,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
             max_ts=int(time.time()) + 10,
             count=50
         )
+        print(events)
         self.assertEqual(3, len(events))
         self.assertEqual('followed_user_1', events[0]['user_name_0'])
         self.assertEqual('new_user', events[0]['user_name_1'])
@@ -149,10 +150,10 @@ class UserRelationshipTestCase(DatabaseTestCase):
         db_user_relationship.insert(self.conn, self.main_user['id'], self.followed_user_1['id'], 'follow')
         db_user_relationship.insert(self.conn, self.main_user['id'], self.followed_user_2['id'], 'follow')
 
-        time.sleep(3)
+        ts2 = time.time()
+
         new_user = db_user.get_or_create(self.conn, 4, 'new_user')
         db_user_relationship.insert(self.conn, self.followed_user_1['id'], new_user['id'], 'follow')
-
 
         # max_ts is too low, won't return anything
         events = db_user_relationship.get_follow_events(
@@ -168,7 +169,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
         events = db_user_relationship.get_follow_events(
             self.conn,
             user_ids=(self.main_user['id'], self.followed_user_1['id']),
-            min_ts=ts + 1,
+            min_ts=ts2,
             max_ts=ts + 10,
             count=50
         )
