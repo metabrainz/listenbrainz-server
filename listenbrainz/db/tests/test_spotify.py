@@ -16,7 +16,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.user = db_user.get_or_create(self.conn, 1, 'testspotifyuser')
         db_oauth.save_token(
             self.conn,
-            user_id=1,
+            user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
             access_token='token',
             refresh_token='refresh_token',
