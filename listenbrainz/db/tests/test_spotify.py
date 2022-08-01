@@ -13,8 +13,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(SpotifyDatabaseTestCase, self).setUp()
-        db_user.create(self.conn, 1, 'testspotifyuser')
-        self.user = db_user.get(self.conn, 1)
+        self.user = db_user.get_or_create(self.conn, 1, 'testspotifyuser')
         db_oauth.save_token(
             self.conn,
             user_id=1,
