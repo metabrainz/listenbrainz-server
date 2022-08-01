@@ -11,7 +11,7 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, 'vansika')
+        self.user = db_user.get_or_create(self.conn, 1, 'vansika')
 
     def test_insert_user_recommendation(self):
         top_artist_recording_mbids = [
@@ -41,6 +41,7 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
         ]
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.conn,
             self.user['id'],
             UserRecommendationsJson(**{
                 'top_artist': top_artist_recording_mbids,
@@ -48,7 +49,7 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
             })
         )
 
-        result = db_recommendations_cf_recording.get_user_recommendation(self.user['id'])
+        result = db_recommendations_cf_recording.get_user_recommendation(self.conn, self.user['id'])
         self.assertEqual(getattr(result, 'recording_mbid').dict()['top_artist'], top_artist_recording_mbids)
         self.assertEqual(getattr(result, 'recording_mbid').dict()['similar_artist'], similar_artist_recording_mbids)
         self.assertGreater(int(getattr(result, 'created').strftime('%s')), 0)
@@ -81,6 +82,7 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
         ]
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.conn,
             self.user['id'],
             UserRecommendationsJson(**{
                 'top_artist': top_artist_recording_mbids,
@@ -96,7 +98,7 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
     def test_get_user_recommendation(self):
         data_inserted = self.insert_test_data()
 
-        data_received = db_recommendations_cf_recording.get_user_recommendation(self.user['id'])
+        data_received = db_recommendations_cf_recording.get_user_recommendation(self.conn, self.user['id'])
         self.assertEqual(
             getattr(data_received, 'recording_mbid').dict()['top_artist'],
             data_inserted['top_artist_recording_mbids']
@@ -105,9 +107,3 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
             getattr(data_received, 'recording_mbid').dict()['similar_artist'],
             data_inserted['similar_artist_recording_mbids']
         )
-
-    def test_get_timestamp_for_last_recording_recommended(self):
-        ts = datetime.now(timezone.utc)
-        self.insert_test_data()
-        received_ts = db_recommendations_cf_recording.get_timestamp_for_last_recording_recommended()
-        self.assertGreaterEqual(received_ts, ts)

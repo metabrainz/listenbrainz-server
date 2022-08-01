@@ -31,42 +31,29 @@ from pydantic import ValidationError
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsData,
                                                                   UserRecommendationsJson)
 
-def get_timestamp_for_last_recording_recommended():
-    """ Get the time when recommendation_cf_recording table was last updated
-    """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT MAX(created) as created_ts
-              FROM recommendation.cf_recording
-            """)
-        )
-        row = result.fetchone()
-        return row['created_ts'] if row else None
 
-
-def insert_user_recommendation(user_id: int, recommendations: UserRecommendationsJson):
+def insert_user_recommendation(connection, user_id: int, recommendations: UserRecommendationsJson):
     """ Insert recommended recording for a user in the db.
 
         Args:
             user_id (int): row id of the user.
             recommendations (dict): User recommendations.
     """
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO recommendation.cf_recording (user_id, recording_mbid)
-                 VALUES (:user_id, :recommendation)
-            ON CONFLICT (user_id)
-          DO UPDATE SET user_id = :user_id,
-                        recording_mbid = :recommendation,
-                        created = NOW()
-            """), {
-                'user_id': user_id,
-                'recommendation': ujson.dumps(recommendations.dict()),
-            }
-        )
+    connection.execute(sqlalchemy.text("""
+        INSERT INTO recommendation.cf_recording (user_id, recording_mbid)
+             VALUES (:user_id, :recommendation)
+        ON CONFLICT (user_id)
+      DO UPDATE SET user_id = :user_id,
+                    recording_mbid = :recommendation,
+                    created = NOW()
+        """), {
+            'user_id': user_id,
+            'recommendation': ujson.dumps(recommendations.dict()),
+        }
+    )
 
 
-def get_user_recommendation(user_id):
+def get_user_recommendation(connection, user_id):
     """ Get recommendations for a user with the given row ID.
 
         Args:
@@ -86,16 +73,15 @@ def get_user_recommendation(user_id):
                 'similar_artist_recording': []
             }
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, recording_mbid, created
-              FROM recommendation.cf_recording
-             WHERE user_id = :user_id
-            """), {
-                    'user_id': user_id
-                }
-        )
-        row = result.fetchone()
+    result = connection.execute(sqlalchemy.text("""
+        SELECT user_id, recording_mbid, created
+          FROM recommendation.cf_recording
+         WHERE user_id = :user_id
+        """), {
+                'user_id': user_id
+            }
+    )
+    row = result.fetchone()
 
     try:
         return UserRecommendationsData(**dict(row)) if row else None
