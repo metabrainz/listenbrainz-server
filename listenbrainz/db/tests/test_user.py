@@ -28,7 +28,7 @@ class UserTestCase(DatabaseTestCase):
     def test_update_token(self):
         user = db_user.get_or_create(self.conn, 1, 'testuserplsignore')
         old_token = user['auth_token']
-        db_user.update_token(user['id'])
+        db_user.update_token(self.conn, user['id'])
         user = db_user.get_by_mb_id(self.conn, 'testuserplsignore')
         self.assertNotEqual(old_token, user['auth_token'])
 

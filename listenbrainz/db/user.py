@@ -41,25 +41,24 @@ def create(connection, musicbrainz_row_id: int, musicbrainz_id: str, email: str 
     return result.fetchone()["id"]
 
 
-def update_token(id):
+def update_token(connection, id):
     """Update a user's token to a new UUID
 
     Args:
         id (int) - the row id of the user to update
     """
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET auth_token = :token
-                 WHERE id = :id
-            """), {
-                "token": str(uuid.uuid4()),
-                "id": id
-            })
-        except DatabaseException as e:
-            logger.error(e)
-            raise
+    try:
+        connection.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET auth_token = :token
+             WHERE id = :id
+        """), {
+            "token": str(uuid.uuid4()),
+            "id": id
+        })
+    except DatabaseException as e:
+        logger.error(e)
+        raise
 
 
 USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
