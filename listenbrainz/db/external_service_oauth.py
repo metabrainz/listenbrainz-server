@@ -39,7 +39,9 @@ def save_token(connection, user_id: int, service: ExternalServiceType, access_to
             refresh_token = EXCLUDED.refresh_token,
             token_expires = EXCLUDED.token_expires,
             scopes = EXCLUDED.scopes,
-            last_updated = NOW()
+        -- using clock_timestamp because value returned by now() is always fixed during a transaction
+        -- this creates issues during tests where we want to test that the last_updated field was updated
+             last_updated = clock_timestamp()
         RETURNING id
         """), {
             "user_id": user_id,
