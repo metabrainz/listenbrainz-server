@@ -45,8 +45,12 @@ def create_user_timeline_event(
     """ Creates a user timeline event in the database and returns the event.
     """
     result = connection.execute(sqlalchemy.text("""
-        INSERT INTO user_timeline_event (user_id, event_type, metadata)
-            VALUES (:user_id, :event_type, :metadata)
+        INSERT INTO user_timeline_event (user_id, event_type, metadata, created)
+        -- using clock_timestamp because value returned by now() is always fixed during a transaction
+        -- this creates issues during tests where we want to insert multiple events and test that the
+        -- min_ts and max_ts params are working fine. use clock_timestamp() instead which returns
+        -- actual current time
+            VALUES (:user_id, :event_type, :metadata, clock_timestamp())
         RETURNING id, user_id, event_type, metadata, created
         """), {
             'user_id': user_id,
@@ -120,7 +124,6 @@ def create_user_cb_review_event(
     )
 
 
-
 def get_user_timeline_events(
     connection,
     user_id: int,
@@ -167,8 +170,8 @@ def get_user_track_recommendation_events(
 def get_recording_recommendation_events_for_feed(
     connection,
     user_ids: List[int],
-    min_ts: int,
-    max_ts: int,
+    min_ts: float,
+    max_ts: float,
     count: int
 ) -> List[UserTimelineEvent]:
     """ Gets a list of recording_recommendation events for specified users.
@@ -198,8 +201,8 @@ def get_recording_recommendation_events_for_feed(
 def get_cb_review_events(
     connection,
     user_ids: List[int],
-    min_ts: int,
-    max_ts: int,
+    min_ts: float,
+    max_ts: float,
     count: int
 ) -> List[UserTimelineEvent]:
     """ Gets a list of CritiqueBrainz review events for specified users.
