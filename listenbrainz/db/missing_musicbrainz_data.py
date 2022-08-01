@@ -39,7 +39,7 @@ def insert_user_missing_musicbrainz_data(connection, user_id: int, data: UserMis
     """
     connection.execute(sqlalchemy.text("""
         INSERT INTO missing_musicbrainz_data (user_id, data, source)
-             VALUES (:user_id, :missing_musicbrainz_data, :source)
+             VALUES (:user_id, :data, :source)
         ON CONFLICT (user_id)
       DO UPDATE SET user_id = :user_id,
                     data = :data,
