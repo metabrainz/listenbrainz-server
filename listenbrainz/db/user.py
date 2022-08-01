@@ -66,7 +66,7 @@ USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
                     'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
 
 
-def get(id: int, *, fetch_email: bool = False):
+def get(connection, id: int, *, fetch_email: bool = False):
     """Get user with a specified ID.
 
     Args:
@@ -88,17 +88,16 @@ def get(id: int, *, fetch_email: bool = False):
         }
     """
     columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT {columns}
-              FROM "user"
-             WHERE id = :id
-        """.format(columns=','.join(columns))), {"id": id})
-        row = result.fetchone()
-        return dict(row) if row else None
+    result = connection.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE id = :id
+    """.format(columns=','.join(columns))), {"id": id})
+    row = result.fetchone()
+    return dict(row) if row else None
 
 
-def get_by_login_id(login_id):
+def get_by_login_id(connection, login_id):
     """Get user with a specified login ID.
 
     Args:
@@ -118,17 +117,16 @@ def get_by_login_id(login_id):
             "login_id": <token used for login sessions>
         }
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT {columns}
-              FROM "user"
-             WHERE login_id = :user_login_id
-        """.format(columns=','.join(USER_GET_COLUMNS))), {"user_login_id": login_id})
-        row = result.fetchone()
-        return dict(row) if row else None
+    result = connection.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE login_id = :user_login_id
+    """.format(columns=','.join(USER_GET_COLUMNS))), {"user_login_id": login_id})
+    row = result.fetchone()
+    return dict(row) if row else None
 
 
-def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
+def get_many_users_by_mb_id(connection, musicbrainz_ids: List[str]):
     """Load a list of users given their musicbrainz login name
 
     Args:
@@ -139,16 +137,15 @@ def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
         following the same format as `get_by_mb_id`.
         If a provided username doesn't exist, it won't be returned.
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT {columns}
-              FROM "user"
-             WHERE LOWER(musicbrainz_id) in :mb_ids
-        """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
-        return {row['musicbrainz_id'].lower(): dict(row) for row in result.fetchall()}
+    result = connection.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE LOWER(musicbrainz_id) in :mb_ids
+    """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
+    return {row['musicbrainz_id'].lower(): dict(row) for row in result.fetchall()}
 
 
-def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
+def get_by_mb_id(connection, musicbrainz_id, *, fetch_email: bool = False):
     """Get user with a specified MusicBrainz ID.
 
     Args:
@@ -170,17 +167,16 @@ def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
         }
     """
     columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT {columns}
-              FROM "user"
-             WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
-        """.format(columns=','.join(columns))), {"mb_id": musicbrainz_id})
-        row = result.fetchone()
-        return dict(row) if row else None
+    result = connection.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
+    """.format(columns=','.join(columns))), {"mb_id": musicbrainz_id})
+    row = result.fetchone()
+    return dict(row) if row else None
 
 
-def get_by_token(token: str, *, fetch_email: bool = False):
+def get_by_token(connection, token: str, *, fetch_email: bool = False):
     """Get user with a specified authentication token.
 
     Args:
@@ -196,14 +192,13 @@ def get_by_token(token: str, *, fetch_email: bool = False):
         }
     """
     columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT {columns}
-              FROM "user"
-             WHERE auth_token = :auth_token
-        """.format(columns=','.join(columns))), {"auth_token": token})
-        row = result.fetchone()
-        return dict(row) if row else None
+    result = connection.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE auth_token = :auth_token
+    """.format(columns=','.join(columns))), {"auth_token": token})
+    row = result.fetchone()
+    return dict(row) if row else None
 
 
 def get_user_count():
@@ -249,29 +244,27 @@ def get_or_create(connection, musicbrainz_row_id: int, musicbrainz_id: str) -> d
     return user
 
 
-def update_last_login(musicbrainz_id):
+def update_last_login(connection, musicbrainz_id):
     """ Update the value of last_login field for user with specified MusicBrainz ID
 
     Args:
         musicbrainz_id (str): MusicBrainz username of a user
     """
-
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET last_login = NOW()
-                 WHERE musicbrainz_id = :musicbrainz_id
-                """), {
-                "musicbrainz_id": musicbrainz_id,
-            })
-        except sqlalchemy.exc.ProgrammingError as err:
-            logger.error(err)
-            raise DatabaseException(
-                "Couldn't update last_login: %s" % str(err))
+    try:
+        connection.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET last_login = NOW()
+             WHERE musicbrainz_id = :musicbrainz_id
+            """), {
+            "musicbrainz_id": musicbrainz_id,
+        })
+    except sqlalchemy.exc.ProgrammingError as err:
+        logger.error(err)
+        raise DatabaseException(
+            "Couldn't update last_login: %s" % str(err))
 
 
-def get_all_users(created_before=None, columns=None):
+def get_all_users(connection, created_before=None, columns=None):
     """ Returns a list of all users in the database
 
         Args:
@@ -297,20 +290,19 @@ def get_all_users(created_before=None, columns=None):
     if created_before is None:
         created_before = datetime.now()
 
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-                SELECT {columns}
-                  FROM "user"
-                 WHERE created <= :created
-              ORDER BY id
-            """.format(columns=', '.join(columns))), {
-            "created": created_before,
-        })
+    result = connection.execute(sqlalchemy.text("""
+            SELECT {columns}
+              FROM "user"
+             WHERE created <= :created
+          ORDER BY id
+        """.format(columns=', '.join(columns))), {
+        "created": created_before,
+    })
 
-        return [dict(row) for row in result]
+    return [dict(row) for row in result]
 
 
-def delete(id):
+def delete(connection, id):
     """ Delete the user with specified row ID from the database.
 
     Note: this deletes all statistics and api_compat sessions and tokens
@@ -319,61 +311,58 @@ def delete(id):
     Args:
         id (int): the row ID of the listenbrainz user
     """
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                DELETE FROM "user"
-                      WHERE id = :id
-                """), {
-                'id': id,
-            })
-        except sqlalchemy.exc.ProgrammingError as err:
-            logger.error(err)
-            raise DatabaseException("Couldn't delete user: %s" % str(err))
+    try:
+        connection.execute(sqlalchemy.text("""
+            DELETE FROM "user"
+                  WHERE id = :id
+            """), {
+            'id': id,
+        })
+    except sqlalchemy.exc.ProgrammingError as err:
+        logger.error(err)
+        raise DatabaseException("Couldn't delete user: %s" % str(err))
 
 
-def agree_to_gdpr(musicbrainz_id):
+def agree_to_gdpr(connection, musicbrainz_id):
     """ Update the gdpr_agreed column for user with specified MusicBrainz ID with current time.
 
     Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
     """
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET gdpr_agreed = NOW()
-                 WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
-                """), {
-                'mb_id': musicbrainz_id,
-            })
-        except sqlalchemy.exc.ProgrammingError as err:
-            logger.error(err)
-            raise DatabaseException(
-                "Couldn't update gdpr agreement for user: %s" % str(err))
+    try:
+        connection.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET gdpr_agreed = NOW()
+             WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
+            """), {
+            'mb_id': musicbrainz_id,
+        })
+    except sqlalchemy.exc.ProgrammingError as err:
+        logger.error(err)
+        raise DatabaseException(
+            "Couldn't update gdpr agreement for user: %s" % str(err))
 
 
-def update_musicbrainz_row_id(musicbrainz_id, musicbrainz_row_id):
+def update_musicbrainz_row_id(connection, musicbrainz_id, musicbrainz_row_id):
     """ Update the musicbrainz_row_id column for user with specified MusicBrainz username.
 
     Args:
         musicbrainz_id (str): the MusicBrainz ID (username) of the user
         musicbrainz_row_id (int): the MusicBrainz row ID of the user
     """
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET musicbrainz_row_id = :musicbrainz_row_id
-                 WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
-                """), {
-                'musicbrainz_row_id': musicbrainz_row_id,
-                'mb_id': musicbrainz_id,
-            })
-        except sqlalchemy.exc.ProgrammingError as err:
-            logger.error(err)
-            raise DatabaseException(
-                "Couldn't update musicbrainz row id for user: %s" % str(err))
+    try:
+        connection.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET musicbrainz_row_id = :musicbrainz_row_id
+             WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
+            """), {
+            'musicbrainz_row_id': musicbrainz_row_id,
+            'mb_id': musicbrainz_id,
+        })
+    except sqlalchemy.exc.ProgrammingError as err:
+        logger.error(err)
+        raise DatabaseException(
+            "Couldn't update musicbrainz row id for user: %s" % str(err))
 
 
 def get_by_mb_row_id(connection, musicbrainz_row_id, musicbrainz_id=None):
@@ -407,7 +396,7 @@ def get_by_mb_row_id(connection, musicbrainz_row_id, musicbrainz_id=None):
     return None
 
 
-def validate_usernames(musicbrainz_ids):
+def validate_usernames(connection, musicbrainz_ids):
     """ Check existence of users in the database and return those users which exist in order.
 
     Args:
@@ -415,31 +404,29 @@ def validate_usernames(musicbrainz_ids):
 
     Returns: list of users who exist in the database
     """
-    with db.engine.connect() as connection:
-        r = connection.execute(sqlalchemy.text("""
-            SELECT t.musicbrainz_id as musicbrainz_id, id
-              FROM "user" u
-        RIGHT JOIN unnest(:musicbrainz_ids ::text[]) WITH ORDINALITY t(musicbrainz_id, ord)
-                ON LOWER(u.musicbrainz_id) = t.musicbrainz_id
-          ORDER BY t.ord
-        """), {
-            'musicbrainz_ids': [musicbrainz_id.lower() for musicbrainz_id in musicbrainz_ids],
-        })
-        return [dict(row) for row in r.fetchall() if row['id'] is not None]
+    r = connection.execute(sqlalchemy.text("""
+        SELECT t.musicbrainz_id as musicbrainz_id, id
+          FROM "user" u
+    RIGHT JOIN unnest(:musicbrainz_ids ::text[]) WITH ORDINALITY t(musicbrainz_id, ord)
+            ON LOWER(u.musicbrainz_id) = t.musicbrainz_id
+      ORDER BY t.ord
+    """), {
+        'musicbrainz_ids': [musicbrainz_id.lower() for musicbrainz_id in musicbrainz_ids],
+    })
+    return [dict(row) for row in r.fetchall() if row['id'] is not None]
 
 
-def get_users_in_order(user_ids):
-    with db.engine.connect() as connection:
-        r = connection.execute(sqlalchemy.text("""
-            SELECT t.user_id as id, musicbrainz_id
-              FROM "user" u
-        RIGHT JOIN unnest(:user_ids ::int[]) WITH ORDINALITY t(user_id, ord)
-                ON u.id = t.user_id
-          ORDER BY t.ord
-        """), {
-            'user_ids': user_ids,
-        })
-        return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
+def get_users_in_order(connection, user_ids):
+    r = connection.execute(sqlalchemy.text("""
+        SELECT t.user_id as id, musicbrainz_id
+          FROM "user" u
+    RIGHT JOIN unnest(:user_ids ::int[]) WITH ORDINALITY t(user_id, ord)
+            ON u.id = t.user_id
+      ORDER BY t.ord
+    """), {
+        'user_ids': user_ids,
+    })
+    return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
 
 
 def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
@@ -461,56 +448,52 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
         return SimilarUsers(user_id=user_id, similar_users=users)
 
 
-def get_users_by_id(user_ids: List[int]):
+def get_users_by_id(connection, user_ids: List[int]):
     """ Given a list of user ids, fetch one ore more users at the same time.
         Returns a dict mapping user_ids to user_names. """
-
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT id, musicbrainz_id
-              FROM "user"
-             WHERE id IN :user_ids
-        """), {
-            'user_ids': tuple(user_ids)
-        })
-        row_id_username_map = {}
-        for row in result.fetchall():
-            row_id_username_map[row['id']] = row['musicbrainz_id']
-        return row_id_username_map
+    result = connection.execute(sqlalchemy.text("""
+        SELECT id, musicbrainz_id
+          FROM "user"
+         WHERE id IN :user_ids
+    """), {
+        'user_ids': tuple(user_ids)
+    })
+    row_id_username_map = {}
+    for row in result.fetchall():
+        row_id_username_map[row['id']] = row['musicbrainz_id']
+    return row_id_username_map
 
 
-def is_user_reported(reporter_id: int, reported_id: int):
+def is_user_reported(connection, reporter_id: int, reported_id: int):
     """ Check whether the user identified by reporter_id has reported the
     user identified by reported_id"""
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT *
-              FROM reported_users
-             WHERE reporter_user_id = :reporter_id
-               AND reported_user_id = :reported_id
-        """), {
-            "reporter_id": reporter_id,
-            "reported_id": reported_id
-        })
-        return True if result.fetchone() else False
+    result = connection.execute(sqlalchemy.text("""
+        SELECT *
+          FROM reported_users
+         WHERE reporter_user_id = :reporter_id
+           AND reported_user_id = :reported_id
+    """), {
+        "reporter_id": reporter_id,
+        "reported_id": reported_id
+    })
+    return True if result.fetchone() else False
 
 
-def report_user(reporter_id: int, reported_id: int, reason: str = None):
+def report_user(connection, reporter_id: int, reported_id: int, reason: str = None):
     """ Create a report from user with reporter_id against user with
      reported_id"""
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO reported_users (reporter_user_id, reported_user_id, reason)
-                 VALUES (:reporter_id, :reported_id, :reason)
-                 ON CONFLICT DO NOTHING
-                """), {
-            "reporter_id": reporter_id,
-            "reported_id": reported_id,
-            "reason": reason,
-        })
+    connection.execute(sqlalchemy.text("""
+        INSERT INTO reported_users (reporter_user_id, reported_user_id, reason)
+             VALUES (:reporter_id, :reported_id, :reason)
+             ON CONFLICT DO NOTHING
+            """), {
+        "reporter_id": reporter_id,
+        "reported_id": reported_id,
+        "reason": reason,
+    })
 
 
-def update_user_details(lb_id: int, musicbrainz_id: str, email: str):
+def update_user_details(connection, lb_id: int, musicbrainz_id: str, email: str):
     """ Update the email field and MusicBrainz ID of the user specified by the lb_id
 
     Args:
@@ -518,26 +501,24 @@ def update_user_details(lb_id: int, musicbrainz_id: str, email: str):
         musicbrainz_id: MusicBrainz username of a user
         email: email of a user
     """
-
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET email = :email
-                     , musicbrainz_id = :musicbrainz_id
-                 WHERE id = :lb_id
-                """), {
-                "lb_id": lb_id,
-                "musicbrainz_id": musicbrainz_id,
-                "email": email
-            })
-        except sqlalchemy.exc.ProgrammingError as err:
-            logger.error(err)
-            raise DatabaseException(
-                "Couldn't update user's email: %s" % str(err))
+    try:
+        connection.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET email = :email
+                 , musicbrainz_id = :musicbrainz_id
+             WHERE id = :lb_id
+            """), {
+            "lb_id": lb_id,
+            "musicbrainz_id": musicbrainz_id,
+            "email": email
+        })
+    except sqlalchemy.exc.ProgrammingError as err:
+        logger.error(err)
+        raise DatabaseException(
+            "Couldn't update user's email: %s" % str(err))
 
 
-def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[str, float, float]]:
+def search(connection, search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[str, float, float]]:
     """ Searches for the input term in the database and returns list of potential user matches along with
     their similarity to the searcher if available.
 
@@ -552,28 +533,27 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
           user_similarity: the similarity between the user and the searcher as in similar users
           calculated by spark
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
-              FROM "user"
-             WHERE musicbrainz_id <% :search_term
-          ORDER BY query_similarity DESC
-             LIMIT :limit
-            """), {
-            "search_term": search_term,
-            "limit": limit
-        })
+    result = connection.execute(sqlalchemy.text("""
+        SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
+          FROM "user"
+         WHERE musicbrainz_id <% :search_term
+      ORDER BY query_similarity DESC
+         LIMIT :limit
+        """), {
+        "search_term": search_term,
+        "limit": limit
+    })
 
-        rows = result.fetchall()
-        if not rows:
-            return []
-        similar_users = get_similar_users(searcher_id) if searcher_id else None
+    rows = result.fetchall()
+    if not rows:
+        return []
+    similar_users = get_similar_users(searcher_id) if searcher_id else None
 
-        search_results = []
-        if similar_users:
-            for row in rows:
-                similarity = similar_users.similar_users.get(row['musicbrainz_id'], None)
-                search_results.append((row['musicbrainz_id'], row['query_similarity'], similarity))
-        else:
-            search_results = [(row['musicbrainz_id'], row['query_similarity'], None) for row in rows]
-        return search_results
+    search_results = []
+    if similar_users:
+        for row in rows:
+            similarity = similar_users.similar_users.get(row['musicbrainz_id'], None)
+            search_results.append((row['musicbrainz_id'], row['query_similarity'], similarity))
+    else:
+        search_results = [(row['musicbrainz_id'], row['query_similarity'], None) for row in rows]
+    return search_results
