@@ -8,16 +8,16 @@ from typing import List
 
 INSERT_QUERIES = {
     "msid": """
-        INSERT INTO recording_feedback (user_id, recording_msid, score)
-             VALUES (:user_id, :recording_msid, :score)
+        INSERT INTO recording_feedback (user_id, recording_msid, score, created)
+             VALUES (:user_id, :recording_msid, :score, clock_timestamp())
     """,
     "mbid": """
-        INSERT INTO recording_feedback (user_id, recording_mbid, score)
-             VALUES (:user_id, :recording_mbid, :score)
+        INSERT INTO recording_feedback (user_id, recording_mbid, score, created)
+             VALUES (:user_id, :recording_mbid, :score, clock_timestamp())
     """,
     "both": """
-        INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score)
-             VALUES (:user_id, :recording_mbid, :recording_msid, :score)
+        INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score, created)
+             VALUES (:user_id, :recording_mbid, :recording_msid, :score, clock_timestamp())
     """
 }
 
