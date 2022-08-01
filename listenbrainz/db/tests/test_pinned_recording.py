@@ -20,6 +20,12 @@ from listenbrainz import messybrainz as msb_db
 
 class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        DatabaseTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
+        MessyBrainzTestCase.setUpClass()
+
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
