@@ -285,7 +285,7 @@ def _register_blueprints(app):
     app.register_blueprint(api_bp_compat)
 
     from listenbrainz.webserver.views.explore import explore_bp
-    app.register_blueprint(explore_bp, url_prefix='/explore')
+    _register_blueprint_with_context(app, explore_bp, url_prefix='/explore')
 
     from listenbrainz.webserver.views.api import api_bp
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
