@@ -4,6 +4,7 @@ from pydantic import ValidationError
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
+from listenbrainz import db
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound
@@ -59,10 +60,11 @@ def recording_feedback():
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       data)
 
-    if feedback.score == FEEDBACK_DEFAULT_SCORE:
-        db_feedback.delete(feedback)
-    else:
-        db_feedback.insert(feedback)
+    with db.engine.connect() as connection, connection.begin():
+        if feedback.score == FEEDBACK_DEFAULT_SCORE:
+            db_feedback.delete(connection, feedback)
+        else:
+            db_feedback.insert(connection, feedback)
 
     return jsonify({'status': 'ok'})
 
@@ -107,8 +109,16 @@ def get_feedback_for_user(user_name):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, score=score, metadata=metadata)
-    total_count = db_feedback.get_feedback_count_for_user(user["id"])
+    with db.engine.connect() as connection:
+        feedback = db_feedback.get_feedback_for_user(
+            connection,
+            user_id=user["id"],
+            limit=count,
+            offset=offset,
+            score=score,
+            metadata=metadata
+        )
+        total_count = db_feedback.get_feedback_count_for_user(connection, user["id"])
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -118,6 +128,7 @@ def get_feedback_for_user(user_name):
         "total_count": total_count,
         "offset": offset
     })
+
 
 @feedback_api_bp.route("/recording/<recording_mbid>/get-feedback-mbid", methods=["GET"])
 @crossdomain
@@ -179,8 +190,16 @@ def _get_feedback_for_recording(recording_type, recording):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_recording(recording_type, recording, limit=count, offset=offset, score=score)
-    total_count = db_feedback.get_feedback_count_for_recording(recording_type, recording)
+    with db.engine.connect() as connection:
+        feedback = db_feedback.get_feedback_for_recording(
+            connection,
+            recording_type,
+            recording,
+            limit=count,
+            offset=offset,
+            score=score
+        )
+        total_count = db_feedback.get_feedback_count_for_recording(connection, recording_type, recording)
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -241,12 +260,14 @@ def get_feedback_for_recordings_for_user(user_name):
         raise APINotFound("Cannot find user: %s" % user_name)
 
     try:
-        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(
-            user_id=user["id"],
-            user_name=user_name,
-            recording_msids=recording_msids,
-            recording_mbids=recording_mbids
-        )
+        with db.engine.connect() as connection:
+            feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(
+                connection,
+                user_id=user["id"],
+                user_name=user_name,
+                recording_msids=recording_msids,
+                recording_mbids=recording_mbids
+            )
     except ValidationError as e:
         # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
         # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line error message.

@@ -3,6 +3,7 @@ import listenbrainz.db.pinned_recording as db_pinned_rec
 
 from flask import Blueprint, current_app, jsonify, request
 
+from listenbrainz import db
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APINoContent
@@ -63,11 +64,8 @@ def pin_recording_for_user():
     except ValidationError as e:
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
-    try:
-        recording_to_pin_with_id = db_pinned_rec.pin(recording_to_pin)
-    except Exception as e:
-        current_app.logger.error("Error while inserting pinned track record: {}".format(e))
-        raise APIInternalServerError("Something went wrong. Please try again.")
+    with db.engine.connect() as connection:
+        recording_to_pin_with_id = db_pinned_rec.pin(connection, recording_to_pin)
 
     return jsonify({"pinned_recording": recording_to_pin_with_id.to_api()})
 
@@ -88,11 +86,8 @@ def unpin_recording_for_user():
     """
     user = validate_auth_header()
 
-    try:
-        recording_unpinned = db_pinned_rec.unpin(user["id"])
-    except Exception as e:
-        current_app.logger.error("Error while unpinning recording for user: {}".format(e))
-        raise APIInternalServerError("Something went wrong. Please try again.")
+    with db.engine.connect() as connection:
+        recording_unpinned = db_pinned_rec.unpin(connection, user["id"])
 
     if recording_unpinned is False:
         raise APINotFound("Cannot find an active pinned recording for user '%s' to unpin" % (user["musicbrainz_id"]))
@@ -118,11 +113,8 @@ def delete_pin_for_user(row_id):
     """
     user = validate_auth_header()
 
-    try:
-        recording_deleted = db_pinned_rec.delete(row_id, user["id"])
-    except Exception as e:
-        current_app.logger.error("Error while unpinning recording for user: {}".format(e))
-        raise APIInternalServerError("Something went wrong. Please try again.")
+    with db.engine.connect() as connection:
+        recording_deleted = db_pinned_rec.delete(connection, row_id, user["id"])
 
     if recording_deleted is False:
         raise APINotFound("Cannot find pin with row_id '%s' for user '%s'" % (row_id, user["musicbrainz_id"]))
@@ -185,15 +177,17 @@ def get_pins_for_user(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    try:
-        pinned_recordings = db_pinned_rec.get_pin_history_for_user(user_id=user["id"], count=count, offset=offset)
-    except Exception as e:
-        current_app.logger.error("Error while retrieving pins for user: {}".format(e))
-        raise APIInternalServerError("Something went wrong. Please try again.")
+    with db.engine.connect() as connection:
+        pinned_recordings = db_pinned_rec.get_pin_history_for_user(
+            connection,
+            user_id=user["id"],
+            count=count,
+            offset=offset
+        )
+        total_count = db_pinned_rec.get_pin_count_for_user(connection, user_id=user["id"])
 
     pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
-    total_count = db_pinned_rec.get_pin_count_for_user(user_id=user["id"])
 
     return jsonify(
         {
@@ -263,9 +257,15 @@ def get_pins_for_user_following(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    pinned_recordings = db_pinned_rec.get_pins_for_user_following(user_id=user["id"], count=count, offset=offset)
-    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
-    pinned_recordings = [pin.to_api() for pin in pinned_recordings]
+    with db.engine.connect() as connection:
+        pinned_recordings = db_pinned_rec.get_pins_for_user_following(
+            connection,
+            user_id=user["id"],
+            count=count,
+            offset=offset
+            )
+        pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
+        pinned_recordings = [pin.to_api() for pin in pinned_recordings]
 
     return jsonify(
         {
