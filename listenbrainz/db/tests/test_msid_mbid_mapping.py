@@ -5,10 +5,23 @@ from sqlalchemy import text
 from listenbrainz import messybrainz
 from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping, fetch_track_metadata_for_items, MsidMbidModel
 from listenbrainz.db.testing import TimescaleTestCase
-from listenbrainz.db import timescale as ts
+from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 
 
-class MappingTestCase(TimescaleTestCase):
+class MappingTestCase(TimescaleTestCase, MessyBrainzTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        TimescaleTestCase.setUpClass()
+        MessyBrainzTestCase.setUpClass()
+
+    def setUp(self):
+        TimescaleTestCase.setUp(self)
+        MessyBrainzTestCase.setUp(self)
+
+    def tearDown(self):
+        TimescaleTestCase.tearDown(self)
+        MessyBrainzTestCase.tearDown(self)
 
     def test_msid_mbid_model(self):
         with self.assertRaisesRegex(ValueError, 'at least one of recording_msid or recording_mbid should be specified'):
