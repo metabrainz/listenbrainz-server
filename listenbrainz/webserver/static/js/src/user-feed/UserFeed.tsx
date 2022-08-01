@@ -766,8 +766,7 @@ export default class UserFeedPage extends React.Component<
           </a>
         </div>
         <div role="main">
-          {/* display:flex to allow right-column to take all available height, for sticky player */}
-          <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
+          <div className="row">
             <div className="col-md-7 col-xs-12">
               <div
                 style={{

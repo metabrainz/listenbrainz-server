@@ -171,7 +171,7 @@ class Listen(object):
             'listened_at': self.ts_since_epoch,
             'recording_msid': self.recording_msid,
             'user_name': self.user_name,
-            'inserted_at' : self.inserted_timestamp or 0
+            'inserted_at': int(self.inserted_timestamp.timestamp()) if self.inserted_timestamp else 0
         }
 
         return data
@@ -180,7 +180,7 @@ class Listen(object):
         return {
             'user_id': self.user_id,
             'user_name': self.user_name,
-            'timestamp': self.timestamp,
+            'timestamp': int(self.timestamp.timestamp()) if self.timestamp else None,
             'track_metadata': self.data,
             'recording_msid': self.recording_msid
         }
