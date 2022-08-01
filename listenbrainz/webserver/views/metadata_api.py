@@ -93,7 +93,7 @@ def process_results(match, metadata, incs):
     result = {
         "recording_mbid": recording_mbid,
         "release_mbid": match["release_mbid"],
-        "artist_mbids": [str(x) for x in match["artist_mbids"]],
+        "artist_mbids": match["artist_mbids"],
         "recording_name": match["recording_name"],
         "release_name": match["release_name"],
         "artist_credit_name": match["artist_credit_name"]
