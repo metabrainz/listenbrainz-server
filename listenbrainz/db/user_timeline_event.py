@@ -261,8 +261,12 @@ def get_user_notification_events(connection, user_id: int, count: int = 50) -> L
 def hide_user_timeline_event(connection, user_id: int, event_type: UserTimelineEventType, event_id: int) -> bool:
     """ Adds events that are to be hidden """
     result = connection.execute(sqlalchemy.text('''
-        INSERT INTO hide_user_timeline_event (user_id, event_type, event_id)
-            VALUES (:user_id, :event_type, :event_id)
+        INSERT INTO hide_user_timeline_event (user_id, event_type, event_id, created)
+        -- using clock_timestamp because value returned by now() is always fixed during a transaction
+        -- this creates issues during tests where we want to insert multiple events and test that the
+        -- min_ts and max_ts params are working fine. use clock_timestamp() instead which returns
+        -- actual current time
+            VALUES (:user_id, :event_type, :event_id, clock_timestamp())
         ON CONFLICT (user_id, event_type, event_id)
         DO NOTHING
     '''), {
