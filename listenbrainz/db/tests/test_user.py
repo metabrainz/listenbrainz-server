@@ -175,29 +175,29 @@ class UserTestCase(DatabaseTestCase):
         self.assertEqual(users[0]['id'], id2)
         self.assertEqual(users[1]['id'], id1)
 
-    def test_get_similar_users(self):
-        user_id_21 = db_user.create(self.conn, 21, "twenty_one")
-        user_id_22 = db_user.create(self.conn, 22, "twenty_two")
-        user_id_23 = db_user.create(self.conn, 23, "twenty_three")
-
-        similar_users_21 = {str(user_id_22): [0.4, .01], str(user_id_23): [0.7, 0.001]}
-        similar_users_22 = {str(user_id_21): [0.4, .01]}
-        similar_users_23 = {str(user_id_21): [0.7, .02]}
-
-        similar_users = {
-            str(user_id_21): similar_users_21,
-            str(user_id_22): similar_users_22,
-            str(user_id_23): similar_users_23,
-        }
-
-        import_user_similarities(similar_users)
-
-        self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
-                             db_user.get_similar_users(user_id_21).similar_users)
-        self.assertDictEqual({"twenty_one": 0.4},
-                             db_user.get_similar_users(user_id_22).similar_users)
-        self.assertDictEqual({"twenty_one": 0.7},
-                             db_user.get_similar_users(user_id_23).similar_users)
+    # def test_get_similar_users(self):
+    #     user_id_21 = db_user.create(self.conn, 21, "twenty_one")
+    #     user_id_22 = db_user.create(self.conn, 22, "twenty_two")
+    #     user_id_23 = db_user.create(self.conn, 23, "twenty_three")
+    #
+    #     similar_users_21 = {str(user_id_22): [0.4, .01], str(user_id_23): [0.7, 0.001]}
+    #     similar_users_22 = {str(user_id_21): [0.4, .01]}
+    #     similar_users_23 = {str(user_id_21): [0.7, .02]}
+    #
+    #     similar_users = {
+    #         str(user_id_21): similar_users_21,
+    #         str(user_id_22): similar_users_22,
+    #         str(user_id_23): similar_users_23,
+    #     }
+    #
+    #     import_user_similarities(similar_users)
+    #
+    #     self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
+    #                          db_user.get_similar_users(user_id_21).similar_users)
+    #     self.assertDictEqual({"twenty_one": 0.4},
+    #                          db_user.get_similar_users(user_id_22).similar_users)
+    #     self.assertDictEqual({"twenty_one": 0.7},
+    #                          db_user.get_similar_users(user_id_23).similar_users)
 
     def test_get_user_by_id(self):
         user_id_24 = db_user.create(self.conn, 24, "twenty_four")
