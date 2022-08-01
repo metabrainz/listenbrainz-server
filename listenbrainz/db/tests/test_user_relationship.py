@@ -120,8 +120,14 @@ class UserRelationshipTestCase(DatabaseTestCase):
         self.assertEqual(2, len(following))
 
     def test_get_follow_events_returns_correct_events(self):
+        # We need a very small time.sleep here so that the created timestamp of these events is different
+        # so that we can test the retrieval method retrieves them is descending order of creation. without
+        # a sleep, the timestamps come to be same preventing us from testing the sort order.
         db_user_relationship.insert(self.conn, self.main_user['id'], self.followed_user_1['id'], 'follow')
+        time.sleep(0.05)
+
         db_user_relationship.insert(self.conn, self.main_user['id'], self.followed_user_2['id'], 'follow')
+        time.sleep(0.05)
 
         new_user = db_user.get_or_create(self.conn, 4, 'new_user')
         db_user_relationship.insert(self.conn, self.followed_user_1['id'], new_user['id'], 'follow')
@@ -133,7 +139,6 @@ class UserRelationshipTestCase(DatabaseTestCase):
             max_ts=int(time.time()) + 10,
             count=50
         )
-        print(events)
         self.assertEqual(3, len(events))
         self.assertEqual('followed_user_1', events[0]['user_name_0'])
         self.assertEqual('new_user', events[0]['user_name_1'])
@@ -151,6 +156,9 @@ class UserRelationshipTestCase(DatabaseTestCase):
         db_user_relationship.insert(self.conn, self.main_user['id'], self.followed_user_2['id'], 'follow')
 
         ts2 = time.time()
+        # a small sleep to ensure that the event insert happens later than the current timestamp,
+        # thus allowing us to test min_ts parameter
+        time.sleep(0.05)
 
         new_user = db_user.get_or_create(self.conn, 4, 'new_user')
         db_user_relationship.insert(self.conn, self.followed_user_1['id'], new_user['id'], 'follow')
