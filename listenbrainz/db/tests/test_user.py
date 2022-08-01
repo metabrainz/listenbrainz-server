@@ -10,8 +10,6 @@ import ujson
 from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
 from data.model.user_entity import EntityRecord
-from listenbrainz import db
-from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
 
 
@@ -40,14 +38,13 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get_or_create(self.conn, 2, 'testlastloginuser')
 
         # set the last login value of the user to 0
-        with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET last_login = to_timestamp(0)
-                 WHERE id = :id
-            """), {
-                'id': user['id']
-            })
+        self.conn.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET last_login = to_timestamp(0)
+             WHERE id = :id
+        """), {
+            'id': user['id']
+        })
 
         user = db_user.get(self.conn, user['id'])
         self.assertEqual(int(user['last_login'].strftime('%s')), 0)
@@ -175,29 +172,27 @@ class UserTestCase(DatabaseTestCase):
         self.assertEqual(users[0]['id'], id2)
         self.assertEqual(users[1]['id'], id1)
 
-    # def test_get_similar_users(self):
-    #     user_id_21 = db_user.create(self.conn, 21, "twenty_one")
-    #     user_id_22 = db_user.create(self.conn, 22, "twenty_two")
-    #     user_id_23 = db_user.create(self.conn, 23, "twenty_three")
-    #
-    #     similar_users_21 = {str(user_id_22): [0.4, .01], str(user_id_23): [0.7, 0.001]}
-    #     similar_users_22 = {str(user_id_21): [0.4, .01]}
-    #     similar_users_23 = {str(user_id_21): [0.7, .02]}
-    #
-    #     similar_users = {
-    #         str(user_id_21): similar_users_21,
-    #         str(user_id_22): similar_users_22,
-    #         str(user_id_23): similar_users_23,
-    #     }
-    #
-    #     import_user_similarities(similar_users)
-    #
-    #     self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
-    #                          db_user.get_similar_users(user_id_21).similar_users)
-    #     self.assertDictEqual({"twenty_one": 0.4},
-    #                          db_user.get_similar_users(user_id_22).similar_users)
-    #     self.assertDictEqual({"twenty_one": 0.7},
-    #                          db_user.get_similar_users(user_id_23).similar_users)
+    def test_get_similar_users(self):
+        user_id_21 = db_user.create(self.conn, 21, "twenty_one")
+        user_id_22 = db_user.create(self.conn, 22, "twenty_two")
+        user_id_23 = db_user.create(self.conn, 23, "twenty_three")
+
+        similar_users_21 = {str(user_id_22): [0.4, .01], str(user_id_23): [0.7, 0.001]}
+        similar_users_22 = {str(user_id_21): [0.4, .01]}
+        similar_users_23 = {str(user_id_21): [0.7, .02]}
+
+        query = sqlalchemy.text("INSERT INTO recommendation.similar_user (user_id, similar_users)"
+                                "     VALUES (:user_id, :similar_users)")
+        self.conn.execute(query, user_id=user_id_21, similar_users=json.dumps(similar_users_21))
+        self.conn.execute(query, user_id=user_id_22, similar_users=json.dumps(similar_users_22))
+        self.conn.execute(query, user_id=user_id_23, similar_users=json.dumps(similar_users_23))
+
+        self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
+                             db_user.get_similar_users(user_id_21).similar_users)
+        self.assertDictEqual({"twenty_one": 0.4},
+                             db_user.get_similar_users(user_id_22).similar_users)
+        self.assertDictEqual({"twenty_one": 0.7},
+                             db_user.get_similar_users(user_id_23).similar_users)
 
     def test_get_user_by_id(self):
         user_id_24 = db_user.create(self.conn, 24, "twenty_four")
@@ -230,16 +225,15 @@ class UserTestCase(DatabaseTestCase):
         user_id_l = db_user.create(self.conn, 2, "lucifer")
         user_id_r = db_user.create(self.conn, 3, "rob")
 
-        with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text(
-                "INSERT INTO recommendation.similar_user (user_id, similar_users) VALUES (:user_id, :similar_users)"),
-                user_id=searcher_id,
-                similar_users=json.dumps({
-                    str(user_id_c): [0.42, 0.20],
-                    str(user_id_l): [0.61, 0.25],
-                    str(user_id_r): [0.87, 0.43]
-                })
-            )
+        self.conn.execute(sqlalchemy.text(
+            "INSERT INTO recommendation.similar_user (user_id, similar_users) VALUES (:user_id, :similar_users)"),
+            user_id=searcher_id,
+            similar_users=json.dumps({
+                str(user_id_c): [0.42, 0.20],
+                str(user_id_l): [0.61, 0.25],
+                str(user_id_r): [0.87, 0.43]
+            })
+        )
 
         results = db_user.search(self.conn, "cif", 10, searcher_id)
         self.assertEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.0909091, 0.61)])
