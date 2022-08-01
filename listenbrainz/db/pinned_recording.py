@@ -40,8 +40,8 @@ def pin(connection, pinned_recording: WritablePinnedRecording):
 
     connection.execute(sqlalchemy.text("""
         UPDATE pinned_recording
-           SET pinned_until = NOW()
-         WHERE (user_id = :user_id AND pinned_until >= NOW())
+           SET pinned_until = clock_timestamp()
+         WHERE (user_id = :user_id AND pinned_until >= clock_timestamp())
     """), {"user_id": pinned_recording.user_id})
 
     result = connection.execute(sqlalchemy.text("""
@@ -67,8 +67,8 @@ def unpin(connection, user_id: int):
     """
     result = connection.execute(sqlalchemy.text("""
         UPDATE pinned_recording
-           SET pinned_until = NOW()
-         WHERE (user_id = :user_id AND pinned_until >= NOW())
+           SET pinned_until = clock_timestamp()
+         WHERE (user_id = :user_id AND pinned_until >= clock_timestamp())
         """), {
         'user_id': user_id,
         }
@@ -111,7 +111,7 @@ def get_current_pin_for_user(connection, user_id: int) -> PinnedRecording:
         SELECT {columns}
           FROM pinned_recording as pin
          WHERE (user_id = :user_id
-           AND pinned_until >= NOW())
+           AND pinned_until >= clock_timestamp())
         """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {'user_id': user_id})
     row = result.fetchone()
     return PinnedRecording(**dict(row)) if row else None
@@ -166,7 +166,7 @@ def get_pins_for_user_following(connection, user_id: int, count: int, offset: in
             ON user_1 = pin.user_id
          WHERE user_0 = :user_id
            AND relationship_type = 'follow'
-           AND pinned_until >= NOW()
+           AND pinned_until >= clock_timestamp()
          ORDER BY created DESC
          LIMIT :count
         OFFSET :offset
