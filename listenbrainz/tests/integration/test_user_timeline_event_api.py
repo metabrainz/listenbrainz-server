@@ -38,7 +38,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(UserTimelineAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(199, 'friendly neighborhood spider-man')
+        self.user = db_user.get_or_create(self.conn, 199, 'friendly neighborhood spider-man')
         CritiqueBrainzService().add_new_user(self.user['id'], {
             "access_token": "foobar",
             "refresh_token": "foobar",
@@ -176,7 +176,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_post_notification_success(self):
         metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.conn, 11, "troi-bot")
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
@@ -186,7 +186,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_get_notification_event(self):
         metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.conn, 11, "troi-bot")
         self.client.post(
             url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
@@ -210,7 +210,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_delete_feed_events(self):
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.conn, 11, "troi-bot")
         self.client.post(
             url_for('user_timeline_event_api_bp.create_user_notification_event',
             user_name=self.user['musicbrainz_id']),
@@ -218,7 +218,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
         # Adding recording recommendation to db
-        new_user = db_user.get_or_create(2, "riksucks")
+        new_user = db_user.get_or_create(self.conn, 2, "riksucks")
         metadata_rec = {
             'artist_name': 'Nujabes',
             'track_name': 'Aruarian Dance',
@@ -272,7 +272,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_delete_feed_events_token_for_authorization(self):
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.conn, 11, "troi-bot")
         self.client.post(
             url_for('user_timeline_event_api_bp.create_user_notification_event',
             user_name=self.user['musicbrainz_id']),
@@ -287,7 +287,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(r_not)
         # Adding recording recommendation to db
-        new_user = db_user.get_or_create(2, "riksucks")
+        new_user = db_user.get_or_create(self.conn, 2, "riksucks")
         metadata_rec = {
             'artist_name': 'Nujabes',
             'track_name': 'Aruarian Dance',
@@ -316,7 +316,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.conn, 11, "troi-bot")
         self.client.post(
             url_for('user_timeline_event_api_bp.create_user_notification_event',
             user_name=self.user['musicbrainz_id']),
@@ -337,7 +337,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_delete_feed_events_for_bad_request(self):
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.conn, 11, "troi-bot")
         self.client.post(
             url_for('user_timeline_event_api_bp.create_user_notification_event',
             user_name=self.user['musicbrainz_id']),
@@ -355,7 +355,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_hide_events(self):
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
@@ -386,7 +386,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_hide_events_tokens_for_authorization(self):
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
@@ -416,7 +416,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_hide_events_for_non_followed_users(self):
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
@@ -451,7 +451,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.app.config["TESTING"] = False
 
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
@@ -482,7 +482,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_hide_events_for_bad_request(self):
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
@@ -701,7 +701,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_get_cb_review_events(self, mock_requests):
         self.maxDiff = None
 
-        user_2 = db_user.get_or_create(201, 'not your friendly neighborhood spider-man')
+        user_2 = db_user.get_or_create(self.conn, 201, 'not your friendly neighborhood spider-man')
         CritiqueBrainzService().add_new_user(user_2['id'], {
             "access_token": "bazbar",
             "refresh_token": "bazfoo",

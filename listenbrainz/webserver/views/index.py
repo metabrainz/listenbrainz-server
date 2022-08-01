@@ -163,7 +163,7 @@ def gdpr_notice():
     elif request.method == 'POST':
         if request.form.get('gdpr-options') == 'agree':
             try:
-                db_user.agree_to_gdpr(current_user.musicbrainz_id)
+                db_user.agree_to_gdpr(self.conn, current_user.musicbrainz_id)
             except DatabaseException as e:
                 flash.error('Could not store agreement to GDPR terms')
             next = request.form.get('next')

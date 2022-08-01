@@ -31,7 +31,7 @@ import uuid
 class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:
-        following_user = db_user.get_or_create(mb_row_id, name)
+        following_user = db_user.get_or_create(self.conn, mb_row_id, name)
         db_user_relationship.insert(user, following_user['id'], 'follow')
         return following_user
 
@@ -47,7 +47,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(FeedAPITestCase, self).setUp()
-        self.main_user = db_user.get_or_create(100, 'param')
+        self.main_user = db_user.get_or_create(self.conn, 100, 'param')
         self.following_user_1 = self.create_and_follow_user(self.main_user['id'], 102, 'following_1')
         self.following_user_2 = self.create_and_follow_user(self.main_user['id'], 103, 'following_2')
 
@@ -189,7 +189,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_it_returns_follow_events(self):
         # make a user you're following follow a new user
-        new_user_1 = db_user.get_or_create(104, 'new_user_1')
+        new_user_1 = db_user.get_or_create(self.conn, 104, 'new_user_1')
         db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
 
 
@@ -272,7 +272,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('Daft Punk', payload['events'][1]['metadata']['track_metadata']['artist_name'])
 
     def test_it_returns_empty_list_if_user_does_not_follow_anyone(self):
-        new_user = db_user.get_or_create(111, 'totally_new_user_with_no_friends')
+        new_user = db_user.get_or_create(self.conn, 111, 'totally_new_user_with_no_friends')
         r = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
             headers={'Authorization': f"Token {new_user['auth_token']}"},
@@ -292,7 +292,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['status'], 'ok')
 
         # make a user you're following follow a new user
-        new_user_1 = db_user.get_or_create(104, 'new_user_1')
+        new_user_1 = db_user.get_or_create(self.conn, 104, 'new_user_1')
         db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
 
         time.sleep(1.5) # sleep a bit to avoid ordering conflicts, cannot mock this time as it comes from postgres

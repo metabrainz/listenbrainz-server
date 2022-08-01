@@ -19,10 +19,10 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     def setUp(self):
         self.server_url = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
         super(CFRecommendationsViewsTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'vansika')
-        db_user.agree_to_gdpr(self.user['musicbrainz_id'])
-        self.user2 = db_user.get_or_create(2, 'vansika_1')
-        self.user3 = db_user.get_or_create(3, 'vansika_2')
+        self.user = db_user.get_or_create(self.conn, 1, 'vansika')
+        db_user.agree_to_gdpr(self.conn, self.user['musicbrainz_id'])
+        self.user2 = db_user.get_or_create(self.conn, 2, 'vansika_1')
+        self.user3 = db_user.get_or_create(self.conn, 3, 'vansika_2')
 
         # generate test data
         data = {"recording_mbid": []}

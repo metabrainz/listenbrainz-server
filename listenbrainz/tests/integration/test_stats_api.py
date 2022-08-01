@@ -30,7 +30,7 @@ class MockDate(datetime):
 class StatsAPITestCase(IntegrationTestCase):
     def setUp(self):
         super(StatsAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
+        self.user = db_user.get_or_create(self.conn, 1, 'testuserpleaseignore')
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
 
         # Insert user top artists

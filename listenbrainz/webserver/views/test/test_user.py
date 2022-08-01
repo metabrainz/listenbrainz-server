@@ -24,14 +24,14 @@ class UserViewsTestCase(IntegrationTestCase):
         self.log = logging.getLogger(__name__)
         self.logstore = timescale_connection._ts
 
-        user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create(self.conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.conn, user['musicbrainz_id'])
         self.user = User.from_dbrow(user)
 
-        weirduser = db_user.get_or_create(2, 'weird\\user name')
+        weirduser = db_user.get_or_create(self.conn, 2, 'weird\\user name')
         self.weirduser = User.from_dbrow(weirduser)
 
-        abuser = db_user.get_or_create(3, 'abuser')
+        abuser = db_user.get_or_create(self.conn, 3, 'abuser')
         self.abuser = User.from_dbrow(abuser)
 
     def tearDown(self):

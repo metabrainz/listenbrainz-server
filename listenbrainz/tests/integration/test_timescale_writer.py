@@ -41,7 +41,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
     def test_dedup(self):
 
-        user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1,50000))
+        user = db_user.get_or_create(self.conn, 1, 'testtimescaleuser %d' % randint(1,50000))
 
         # send the same listen twice
         r = self.send_listen(user, 'valid_single.json')
@@ -62,7 +62,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         day in redis for each successful batch written and to see if the user
         timestamps via the timescale listen store are updated in redis.
         """
-        user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1, 50000))
+        user = db_user.get_or_create(self.conn, 1, 'testtimescaleuser %d' % randint(1, 50000))
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
 
@@ -75,7 +75,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
     def test_dedup_user_special_characters(self):
 
-        user = db_user.get_or_create(2, 'i have a\\weird\\user, name"\n')
+        user = db_user.get_or_create(self.conn, 2, 'i have a\\weird\\user, name"\n')
 
         # send the same listen twice
         r = self.send_listen(user, 'valid_single.json')
@@ -89,7 +89,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
     def test_dedup_same_batch(self):
 
-        user = db_user.get_or_create(3, 'phifedawg')
+        user = db_user.get_or_create(self.conn, 3, 'phifedawg')
         r = self.send_listen(user, 'same_batch_duplicates.json')
         self.assert200(r)
 
@@ -104,8 +104,8 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         but different users to be duplicates
         """
 
-        user1 = db_user.get_or_create(1, 'testuser1')
-        user2 = db_user.get_or_create(2, 'testuser2')
+        user1 = db_user.get_or_create(self.conn, 1, 'testuser1')
+        user2 = db_user.get_or_create(self.conn, 2, 'testuser2')
 
         r = self.send_listen(user1, 'valid_single.json')
         self.assert200(r)
@@ -125,7 +125,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
             they don't get considered as duplicates
         """
 
-        user = db_user.get_or_create(1, 'difftracksametsuser')
+        user = db_user.get_or_create(self.conn, 1, 'difftracksametsuser')
 
         # send four different tracks with the same timestamp
         r = self.send_listen(user, 'valid_single.json')

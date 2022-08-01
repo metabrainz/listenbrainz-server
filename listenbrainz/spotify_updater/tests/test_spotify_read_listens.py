@@ -21,7 +21,7 @@ class ConvertListensTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(ConvertListensTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
+        self.user = db_user.get_or_create(self.conn, 1, 'testuserpleaseignore')
 
         self.DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
         db_oauth.save_token(user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
