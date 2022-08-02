@@ -31,21 +31,30 @@ import listenbrainz.db.feedback as db_feedback
 
 from datetime import datetime
 from listenbrainz.db.testing import TimescaleTestCase, ResetDatabaseTestCase
+from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 from listenbrainz.webserver import create_app
 from listenbrainz.db.model.feedback import Feedback
 
 
-class DumpTestCase(ResetDatabaseTestCase, TimescaleTestCase):
+class DumpTestCase(ResetDatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
+    
+    @classmethod
+    def setUpClass(cls) -> None:
+        ResetDatabaseTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
+        MessyBrainzTestCase.setUpClass()
 
     def setUp(self):
         ResetDatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
+        MessyBrainzTestCase.setUp(self)
         self.tempdir = tempfile.mkdtemp()
         self.app = create_app()
 
     def tearDown(self):
         ResetDatabaseTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
+        MessyBrainzTestCase.tearDown(self)
         shutil.rmtree(self.tempdir)
 
     def test_create_private_dump(self):
@@ -135,7 +144,7 @@ class DumpTestCase(ResetDatabaseTestCase, TimescaleTestCase):
             user_count = db_user.get_user_count(self.conn)
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, one_id, 1, 0)
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
@@ -151,7 +160,7 @@ class DumpTestCase(ResetDatabaseTestCase, TimescaleTestCase):
             user_count = db_user.get_user_count(self.conn)
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, one_id, 1, 0)
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
