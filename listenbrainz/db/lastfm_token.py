@@ -53,7 +53,7 @@ class Token(object):
         result = connection.execute(text(query), params)
         row = result.fetchone()
         if row:
-            return Token(row['id'], row['user_id'], row['token'], row['api_key'], row['ts'])
+            return Token(connection, row['id'], row['user_id'], row['token'], row['api_key'], row['ts'])
         return None
 
     @staticmethod
