@@ -3,13 +3,9 @@ import json
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
-import listenbrainz.db.stats as db_stats
 import sqlalchemy
-import ujson
 
-from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
-from data.model.user_entity import EntityRecord
 from listenbrainz.db.testing import DatabaseTestCase
 
 
@@ -99,21 +95,21 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get(self.conn, user_id)
         self.assertIsNotNone(user)
 
-        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
-            artists_data = ujson.load(f)
-        db_stats.insert_user_jsonb_data(
-            user_id=user_id,
-            stats_type='artists',
-            stats=StatRange[EntityRecord](**artists_data),
-        )
-        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
-        self.assertIsNotNone(user_stats)
+        # with open(self.path_to_data_file('user_top_artists_db.json')) as f:
+        #     artists_data = ujson.load(f)
+        # db_stats.insert_user_jsonb_data(
+        #     user_id=user_id,
+        #     stats_type='artists',
+        #     stats=StatRange[EntityRecord](**artists_data),
+        # )
+        # user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
+        # self.assertIsNotNone(user_stats)
 
         db_user.delete(self.conn, user_id)
         user = db_user.get(self.conn, user_id)
         self.assertIsNone(user)
-        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
-        self.assertIsNone(user_stats)
+        # user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
+        # self.assertIsNone(user_stats)
 
     def test_delete_when_spotify_import_activated(self):
         user_id = db_user.create(self.conn, 11, 'kishore')

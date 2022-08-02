@@ -18,24 +18,24 @@ class TestAPICompatSessionClass(DatabaseTestCase):
         super(TestAPICompatSessionClass, self).tearDown()
 
     def test_session_create(self):
-        user = User.load_by_id(db_user.create(self.conn, 1, "test"))
-        token = Token.generate(user.api_key)
-        token.approve(user.name)
-        session = Session.create(token)
+        user = User.load_by_id(self.conn, db_user.create(self.conn, 1, "test"))
+        token = Token.generate(self.conn, user.api_key)
+        token.approve(self.conn, user.name)
+        session = Session.create(self.conn, token)
         self.assertIsInstance(session, Session)
         self.assertDictEqual(user.__dict__, session.user.__dict__)
 
     def test_session_load(self):
-        user = User.load_by_id(db_user.create(self.conn, 1, "test"))
-        token = Token.generate(user.api_key)
-        token.approve(user.name)
-        session = Session.create(token)
+        user = User.load_by_id(self.conn, db_user.create(self.conn, 1, "test"))
+        token = Token.generate(self.conn, user.api_key)
+        token.approve(self.conn, user.name)
+        session = Session.create(self.conn, token)
         self.assertIsInstance(session, Session)
         self.assertDictEqual(user.__dict__, session.user.__dict__)
         session.user = None
 
         # Load with session_key + api_key
-        session2 = Session.load(session.sid)
+        session2 = Session.load(self.conn, session.sid)
         self.assertDictEqual(user.__dict__, session2.__dict__['user'].__dict__)
         session2.user = None
         self.assertDictEqual(session.__dict__, session2.__dict__)
