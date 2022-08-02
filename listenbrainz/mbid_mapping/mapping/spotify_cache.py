@@ -3,6 +3,7 @@ from datetime import datetime
 import json
 from queue import Queue
 
+import couchdb
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
@@ -31,11 +32,22 @@ class UniqueQueue(object):
 
 class SpotifyMetadataCache():
 
+    COUCHDB_NAME = "spotify-metadata-cache"
+
     def __init__(self):
         self.id_queue = UniqueQueue()
         self.seen_ids = {}
         self.sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=config.SPOTIFY_APP_CLIENT_ID,
                                                                         client_secret=config.SPOTIFY_APP_CLIENT_SECRET))
+        self.couch = couchdb.Server('http://listenbrainz:listenbrainz@localhost:5984/')
+        try:
+            self.db = self.couch[self.COUCHDB_NAME]
+        except couchdb.http.ResourceNotFound:
+            self.create_db()
+            self.db = self.couch[self.COUCHDB_NAME]
+
+    def create_db(self):
+        self.couch.create(self.COUCHDB_NAME)
 
     def queue_id(self, spotify_id):
         self.id_queue.put(spotify_id)
@@ -57,9 +69,9 @@ class SpotifyMetadataCache():
                 tracks.extend(results["items"])
 
             for track in tracks:
-                for artist in track["artists"]:
-                    if artist["id"] != artist_id and artist["id"] not in self.seen_ids:
-                        self.id_queue.put("artist:%s" % artist["id"])
+                for track_artist in track["artists"]:
+                    if track_artist["id"] != artist_id and track_artist["id"] not in self.seen_ids:
+                        self.id_queue.put("artist:%s" % track_artist["id"])
 
             album["tracks"] = tracks
 
@@ -71,8 +83,9 @@ class SpotifyMetadataCache():
         return [ a["id"] for a in self.sp.track(track_id)["artists"] ]
 
     def insert_artist(self, artist):
-        print("Insert artist '%s' %s" % (artist["name"], artist["id"]))
         artist["_id"] = artist["id"]
+        self.db.save(artist)
+        print("Inserted artist '%s' %s" % (artist["name"], artist["id"]))
 
     def start(self):
         """ Main loop of the application """
@@ -102,21 +115,8 @@ class SpotifyMetadataCache():
             print("%d items in queue." % self.id_queue.size())
 
 
-
-smc = SpotifyMetadataCache()
-smc.queue_id("artist:6liAMWkVf5LH7YR9yfFy1Y")
-smc.queue_id("track:6ALWsAWq3bZmKBNnVKcMJG")
-#smc.queue_id("track:1eGS5RmdaGchUUoXSU5YyI")
-#smc.queue_id("track:0WIbzDVEpmOyBnqqdtqIL9")
-#smc.queue_id("track:0h2UMi51QXuJkwbPmXCRwK")
-#smc.queue_id("track:0DBIL8arX0Zo6eAuxNIpik")
-#smc.queue_id("track:4kiauw5SBqEsu5GuGD09aM")
-#smc.queue_id("track:6zEoAdcJHyx58lOGMeFcjw")
-#smc.queue_id("track:0NP7R5r4WMTWu5V3DcKHuf")
-#smc.queue_id("track:2uZtETOMzzREDMkvkHnaVn")
-#smc.queue_id("track:75AKiSgU8tTI2z8J1Qf1IT")
-#smc.queue_id("track:5wdub8zu2WLds6uRN0jUsV")
-#smc.queue_id("track:4AICh68Ef6M0Y50vf5RSeK")
-#smc.queue_id("track:4oxPEiseuJYdZ6yx0vKPiQ")
-#smc.queue_id("track:2Mor7Tp1w61mPKozLewqey")
-smc.start()
+def run_spotify_metadata_cache():
+    smc = SpotifyMetadataCache()
+    smc.queue_id("artist:6liAMWkVf5LH7YR9yfFy1Y")
+    smc.queue_id("track:6ALWsAWq3bZmKBNnVKcMJG")
+    smc.start()
