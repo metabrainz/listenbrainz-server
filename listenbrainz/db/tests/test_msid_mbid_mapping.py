@@ -152,7 +152,7 @@ class MappingTestCase(TimescaleTestCase, MessyBrainzTestCase):
             MsidMbidModel(recording_msid=recordings[4]["recording_msid"], recording_mbid="0f53fa2f-f015-40c6-a5cd-f17af596764c")
 
         ]
-        models = fetch_track_metadata_for_items(self.ts_conn, models)
+        models = fetch_track_metadata_for_items(self.ts_conn, self.msb_conn, models)
 
         for idx in range(5):
             metadata = models[idx].track_metadata
@@ -175,7 +175,7 @@ class MappingTestCase(TimescaleTestCase, MessyBrainzTestCase):
             MsidMbidModel(recording_msid=recording["recording_msid"], recording_mbid=recording["recording_mbid"]),
             MsidMbidModel(recording_msid=recording["recording_msid"], recording_mbid=recording["recording_mbid"]),
         ]
-        models = fetch_track_metadata_for_items(self.ts_conn, models)
+        models = fetch_track_metadata_for_items(self.ts_conn, self.msb_conn, models)
         for model in models:
             metadata = model.track_metadata
             self.assertEqual(metadata["track_name"], recording["title"])

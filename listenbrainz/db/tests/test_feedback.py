@@ -119,14 +119,16 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
     def test_insert(self):
         count = self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=25, offset=0)
         self.assertEqual(len(result), count)
 
     def test_update_score_when_feedback_already_exist(self):
         update_fb = self.sample_feedback[0]
 
         count = self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=25, offset=0)
         self.assertEqual(len(result), count)
 
         self.assertEqual(result[3].recording_msid, update_fb["recording_msid"])
@@ -144,7 +146,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
             )
         )
 
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=25, offset=0)
         self.assertEqual(len(result), count)
 
         self.assertEqual(result[0].recording_msid, update_fb["recording_msid"])
@@ -154,7 +157,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         del_fb = self.sample_feedback[0]
 
         count = self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=25, offset=0)
         self.assertEqual(len(result), count)
         self.assertEqual(result[3].recording_msid, del_fb["recording_msid"])
 
@@ -168,7 +172,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
             )
         )
 
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=25, offset=0)
         self.assertEqual(len(result), 3)
         self.assertNotIn(del_fb["recording_msid"], [x.recording_msid for x in result])
 
@@ -181,7 +186,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
                 score=self.sample_feedback[2]["score"]
             )
         )
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=25, offset=0)
         self.assertEqual(len(result), 2)
         self.assertNotIn(self.sample_feedback[2]["recording_mbid"], [x.recording_mbid for x in result])
 
@@ -195,13 +201,15 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
                 score=self.sample_feedback[2]["score"]
             )
         )
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertNotIn(self.sample_feedback[3]["recording_mbid"], [x.recording_mbid for x in result])
 
     def test_get_feedback_for_user(self):
         count = self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=25, offset=0)
         self.assertEqual(len(result), count)
 
         self.assertEqual(result[0].user_id, self.user["id"])
@@ -229,29 +237,31 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.assertEqual(result[3].score, self.sample_feedback[0]["score"])
 
         # test the score argument
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"],
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
                                                    limit=25, offset=0, score=1)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].score, 1)
         self.assertEqual(result[1].score, 1)
 
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"],
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
                                                    limit=25, offset=0, score=-1)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].score, -1)
         self.assertEqual(result[1].score, -1)
 
         # test the limit argument
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=1, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=1, offset=0)
         self.assertEqual(len(result), 1)
 
         # test the offset argument
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"], limit=25, offset=1)
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
+                                                   limit=25, offset=1)
         self.assertEqual(len(result), 3)
 
     def test_get_feedback_for_user_with_metadata(self):
         count = self.insert_test_data_with_metadata(self.user["id"])
-        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, user_id=self.user["id"],
+        result = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, self.msb_conn, user_id=self.user["id"],
                                                    limit=25, offset=0, score=1, metadata=True)
         self.assertEqual(len(result), 1)
 

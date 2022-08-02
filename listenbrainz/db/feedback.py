@@ -97,6 +97,7 @@ def delete(connection, feedback: Feedback):
 def get_feedback_for_user(
     lb_conn,
     ts_conn,
+    msb_conn,
     user_id: int,
     limit: int,
     offset: int,
@@ -141,7 +142,7 @@ def get_feedback_for_user(
     feedback = [Feedback(**dict(row)) for row in result.fetchall()]
 
     if metadata and len(feedback) > 0:
-        feedback = fetch_track_metadata_for_items(ts_conn, feedback)
+        feedback = fetch_track_metadata_for_items(ts_conn, msb_conn, feedback)
 
     return feedback
 
