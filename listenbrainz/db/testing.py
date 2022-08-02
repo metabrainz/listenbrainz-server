@@ -64,10 +64,10 @@ class ResetDatabaseTestCase(unittest.TestCase):
         self.conn = db.engine.connect()
 
     def tearDown(self):
-        self.conn.close()
         self.drop_tables()
 
     def reset_db(self):
+        self.conn.close()
         self.drop_tables()
         self.init_db()
 
