@@ -17,6 +17,7 @@ from data.model.user_cf_recommendations_recording_message import UserRecommendat
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
+from listenbrainz import db
 from listenbrainz.db import year_in_music
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
@@ -136,8 +137,9 @@ def handle_dataframes(data):
     to_date = data['to_date']
     send_mail(
         subject='Dataframes have been uploaded to HDFS',
-        text=render_template('emails/cf_recording_dataframes_upload_notification.txt', time_to_upload=dataframe_upload_time,
-                             from_date=from_date, to_date=to_date, total_time=dataframe_creation_time),
+        text=render_template('emails/cf_recording_dataframes_upload_notification.txt',
+                             time_to_upload=dataframe_upload_time, from_date=from_date,
+                             to_date=to_date, total_time=dataframe_creation_time),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -148,28 +150,30 @@ def handle_missing_musicbrainz_data(data):
     """ Insert user missing musicbrainz data i.e data submitted to ListenBrainz but not MusicBrainz.
     """
     user_id = data['user_id']
-    user = db_user.get(user_id)
+    with db.engine.connect() as conn:
+        user = db_user.get(conn, user_id)
 
-    if not user:
-        return
+        if not user:
+            return
 
-    current_app.logger.debug(f"Inserting missing musicbrainz data for {user['musicbrainz_id']}")
+        current_app.logger.debug(f"Inserting missing musicbrainz data for {user['musicbrainz_id']}")
 
-    missing_musicbrainz_data = data['missing_musicbrainz_data']
-    source = data['source']
+        missing_musicbrainz_data = data['missing_musicbrainz_data']
+        source = data['source']
 
-    try:
-        db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
-            user['id'],
-            UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
-            source
-        )
-    except ValidationError:
-        current_app.logger.error(f"""
-        ValidationError while inserting missing MusicBrainz data from source "{source}" for user with musicbrainz_id:
-         {user["musicbrainz_id"]}. Data: {json.dumps(data, indent=3)}""", exc_info=True)
+        try:
+            db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+                conn,
+                user['id'],
+                UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
+                source
+            )
+        except ValidationError:
+            current_app.logger.error(f"""
+            ValidationError while inserting missing MusicBrainz data from source "{source}" for user with
+            musicbrainz_id: {user["musicbrainz_id"]}. Data: {json.dumps(data, indent=3)}""", exc_info=True)
 
-    current_app.logger.debug(f"Missing musicbrainz data for {user['musicbrainz_id']} inserted")
+        current_app.logger.debug(f"Missing musicbrainz data for {user['musicbrainz_id']} inserted")
 
 
 def handle_model(data):
@@ -202,8 +206,9 @@ def handle_candidate_sets(data):
     to_date = data['to_date']
     send_mail(
         subject='Candidate sets created and successfully uploaded to HDFS',
-        text=render_template('emails/cf_candidate_sets_upload_notification.txt', time_to_upload=candidate_sets_upload_time,
-                             from_date=from_date, to_date=to_date, total_time=candidate_set_creation_time),
+        text=render_template('emails/cf_candidate_sets_upload_notification.txt',
+                             time_to_upload=candidate_sets_upload_time, from_date=from_date,
+                             to_date=to_date, total_time=candidate_set_creation_time),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -214,28 +219,22 @@ def handle_recommendations(data):
     """ Take recommended recordings for a user and save it in the db.
     """
     user_id = data['user_id']
-    user = db_user.get(user_id)
-    if not user:
-        current_app.logger.info(f"Generated recommendations for a user that doesn't exist in the Postgres database: {user_id}")
-        return
+    with db.engine.connect() as conn:
+        user = db_user.get(conn, user_id)
+        if not user:
+            current_app.logger.info(f"Generated recommendations for a user that doesn't exist in database: {user_id}")
+            return
 
-    current_app.logger.debug("inserting recommendation for {}".format(user["musicbrainz_id"]))
-    recommendations = data['recommendations']
-
-    try:
-        db_recommendations_cf_recording.insert_user_recommendation(
-            user_id,
-            UserRecommendationsJson(**recommendations)
-        )
-    except ValidationError:
-        current_app.logger.error(f"""ValidationError while inserting recommendations for user with musicbrainz_id:
-                                 {user["musicbrainz_id"]}. \nData: {json.dumps(data, indent=3)}""")
-
-    current_app.logger.debug("recommendation for {} inserted".format(user["musicbrainz_id"]))
-
-    current_app.logger.debug("Running post recommendation steps for user {}".format(user["musicbrainz_id"]))
-
-
+        recommendations = data['recommendations']
+        try:
+            db_recommendations_cf_recording.insert_user_recommendation(
+                conn,
+                user_id,
+                UserRecommendationsJson(**recommendations)
+            )
+        except ValidationError:
+            current_app.logger.error(f"""ValidationError while inserting recommendations for user with musicbrainz_id:
+                                     {user["musicbrainz_id"]}. \nData: {json.dumps(data, indent=3)}""")
 
 
 def notify_mapping_import(data):
@@ -250,8 +249,8 @@ def notify_mapping_import(data):
 
     send_mail(
         subject='MSID MBID mapping has been imported into the Spark cluster',
-        text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name, import_time=import_time,
-                             time_taken_to_import=time_taken_to_import),
+        text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name,
+                             import_time=import_time, time_taken_to_import=time_taken_to_import),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -298,7 +297,8 @@ def cf_recording_recommendations_complete(data):
         subject='Recommendations have been generated and pushed to the queue.',
         text=render_template('emails/cf_recording_recommendation_notification.txt',
                              active_user_count=active_user_count, total_time=total_time,
-                             top_artist_user_count=top_artist_user_count, similar_artist_user_count=similar_artist_user_count),
+                             top_artist_user_count=top_artist_user_count,
+                             similar_artist_user_count=similar_artist_user_count),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -324,7 +324,8 @@ def handle_similar_users(message):
     else:
         send_mail(
             subject='Similar User data has been calculated',
-            text=render_template('emails/similar_users_updated_notification.txt', user_count=str(user_count), avg_similar_users="%.1f" % avg_similar_users),
+            text=render_template('emails/similar_users_updated_notification.txt', user_count=str(user_count),
+                                 avg_similar_users="%.1f" % avg_similar_users),
             recipients=['listenbrainz-observability@metabrainz.org'],
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -338,10 +339,11 @@ def handle_similar_users_year_end(message):
 def handle_new_releases_of_top_artists(message):
     user_id = message["user_id"]
     # need to check whether user exists before inserting otherwise possible FK error.
-    user = db_user.get(user_id)
-    if not user:
-        return
-    year_in_music.insert_new_releases_of_top_artists(user_id, message["data"])
+    with db.engine.connect() as conn:
+        user = db_user.get(conn, user_id)
+        if not user:
+            return
+        year_in_music.insert_new_releases_of_top_artists(user_id, message["data"])
 
 
 def handle_most_prominent_color(message):
@@ -358,25 +360,26 @@ def handle_most_listened_year(message):
 
 def handle_top_stats(message):
     year_in_music.handle_top_stats(message["entity"], message["data"])
-
-    # for top_releases, look up cover art
-    if message["entity"] == "releases":
-        data = message["data"]
-        for user_data in data:
-            user = db_user.get(user_data["user_id"])
-            if not user:
-                return
-            release_mbids = [rel["release_mbid"] for rel in user_data["data"] if "release_mbid" in rel]
-            coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
-            year_in_music.handle_coverart(user_data["user_id"], "top_releases_coverart", coverart)
+    with db.engine.connect() as conn:
+        # for top_releases, look up cover art
+        if message["entity"] == "releases":
+            data = message["data"]
+            for user_data in data:
+                user = db_user.get(conn, user_data["user_id"])
+                if not user:
+                    return
+                release_mbids = [rel["release_mbid"] for rel in user_data["data"] if "release_mbid" in rel]
+                coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
+                year_in_music.handle_coverart(user_data["user_id"], "top_releases_coverart", coverart)
 
 
 def handle_listens_per_day(message):
     user_id = message["user_id"]
-    user = db_user.get(user_id)
-    if not user:
-        return
-    year_in_music.handle_listens_per_day(user_id, message["data"])
+    with db.engine.connect() as conn:
+        user = db_user.get(conn, user_id)
+        if not user:
+            return
+        year_in_music.handle_listens_per_day(user_id, message["data"])
 
 
 def handle_yearly_listen_counts(message):
