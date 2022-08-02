@@ -38,12 +38,14 @@ from listenbrainz.db.model.feedback import Feedback
 class DumpTestCase(ResetDatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):
-        super().setUp()
+        ResetDatabaseTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
         self.tempdir = tempfile.mkdtemp()
         self.app = create_app()
 
     def tearDown(self):
-        super().tearDown()
+        ResetDatabaseTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
         shutil.rmtree(self.tempdir)
 
     def test_create_private_dump(self):
