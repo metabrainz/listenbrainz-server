@@ -20,6 +20,9 @@ REDIS_HOST = "redis"
 REDIS_PORT = 6379
 REDIS_NAMESPACE = "listenbrainz"
 
+# Spotify Metadata cache keys
+SPOTIFY_APP_CLIENT_ID = ""
+SPOTIFY_APP_CLIENT_SECRET = ""
 
 # For debugging, only fetches a tiny portion of the data if True
 USE_MINIMAL_DATASET = True 

@@ -63,3 +63,12 @@ To test searching the index:
 To run the mapping tests:
 
 ```manage.py test-mapping```
+
+Running the Spotify Metadata Cache
+----------------------------------
+
+If you plan to work with the metadata cache, start a couchdb instance like this:
+
+```
+docker run -p 127.0.0.1:5984:5984 -d -v listenbrainz-spotify-couchdb:/opt/couchdb/data --name=listenbrainz-spotify-couchdb couchdb:3.2.2
+```
