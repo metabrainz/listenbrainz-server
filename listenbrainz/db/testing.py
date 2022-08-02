@@ -60,15 +60,14 @@ class ResetDatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
         db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-        self.reset_db()
         self.conn = db.engine.connect()
+        self.reset_db()
 
     def tearDown(self):
         self.conn.close()
 
     def reset_db(self):
-        if self.conn:
-            self.conn.close()
+        self.conn.close()
         self.drop_tables()
         self.init_db()
 
