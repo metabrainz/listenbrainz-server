@@ -200,24 +200,22 @@ def get_by_token(connection, token: str, *, fetch_email: bool = False):
     return dict(row) if row else None
 
 
-def get_user_count():
+def get_user_count(connection):
     """ Get total number of users in database.
 
     Returns:
         int: user count
     """
-
-    with db.engine.connect() as connection:
-        try:
-            result = connection.execute(sqlalchemy.text("""
-                SELECT count(*) AS user_count
-                  FROM "user"
-            """))
-            row = result.fetchone()
-            return row['user_count']
-        except DatabaseException as e:
-            logger.error(e)
-            raise
+    try:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT count(*) AS user_count
+              FROM "user"
+        """))
+        row = result.fetchone()
+        return row['user_count']
+    except DatabaseException as e:
+        logger.error(e)
+        raise
 
 
 def get_or_create(connection, musicbrainz_row_id: int, musicbrainz_id: str) -> dict:

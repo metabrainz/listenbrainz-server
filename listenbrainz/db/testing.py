@@ -5,6 +5,8 @@ import unittest
 import sqlalchemy
 import uuid
 
+from sqlalchemy import event
+
 from listenbrainz import config
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
@@ -23,6 +25,14 @@ class DatabaseTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.conn = db.engine.connect()
         self.trans = self.conn.begin()
+
+        self.nested = self.conn.begin_nested()
+
+        @event.listens_for(self.conn, "rollback_savepoint")
+        def receive_rollback_savepoint(conn, name, context):
+            print("Intercepted savepoint rollback!")
+            if not self.nested.is_active:
+                self.nested = self.conn.begin_nested()
 
     def tearDown(self):
         self.trans.rollback()
