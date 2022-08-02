@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from queue import Queue
 
 import couchdb
 import spotipy
+import dateutil.parser
 from spotipy.oauth2 import SpotifyClientCredentials
 
 import config
@@ -33,6 +34,7 @@ class UniqueQueue(object):
 class SpotifyMetadataCache():
 
     COUCHDB_NAME = "spotify-metadata-cache"
+    CACHE_TIME = 180  # days
 
     def __init__(self):
         self.id_queue = UniqueQueue()
@@ -82,10 +84,38 @@ class SpotifyMetadataCache():
     def fetch_artist_ids_from_track_id(self, track_id):
         return [ a["id"] for a in self.sp.track(track_id)["artists"] ]
 
-    def insert_artist(self, artist):
+    def insert_artist(self, artist, exists=False):
         artist["_id"] = artist["id"]
-        self.db.save(artist)
+        artist["fetched"] = datetime.utcnow().isoformat()
+        artist["expires"] = (datetime.utcnow() + timedelta(days=self.CACHE_TIME)).isoformat()
+        if exists:
+            self.db.update([artist])
+        else:
+            self.db.save(artist)
         print("Inserted artist '%s' %s" % (artist["name"], artist["id"]))
+
+    def process_artist(self, artist_id):
+
+        # Check our internal cache if we've seen it recently
+        if artist_id in self.seen_ids:
+            return
+
+        # Mark this ID as recently seen
+        self.seen_ids[artist_id] = datetime.now()
+
+        # Fetch an existing doc and if found, see if it has expired
+        existing_doc = self.db.get(artist_id)
+        if existing_doc is not None:
+            expires = dateutil.parser.isoparse(existing_doc["expires"])
+            if dateutil.parser.isoparse(existing_doc["expires"]) > datetime.utcnow():
+                print("Artist '%s' in db, not stale. Skipping." % artist_id)
+                return
+            else:
+                print("Artist '%s' in db, stale. Fetch new." % artist_id)
+
+        artist_data = self.fetch_artist(artist_id)
+
+        self.insert_artist(artist_data, existing_doc is not None)
 
     def start(self):
         """ Main loop of the application """
@@ -105,12 +135,7 @@ class SpotifyMetadataCache():
                 raise ValueError("Unknown ID type", spotify_id)
 
             for artist_id in artist_ids:
-                if artist_id in self.seen_ids:
-                    continue
-
-                artist_data = self.fetch_artist(artist_id)
-                self.insert_artist(artist_data)
-                self.seen_ids[artist_id] = datetime.now()
+                self.process_artist(artist_id)
 
             print("%d items in queue." % self.id_queue.size())
 
@@ -118,5 +143,5 @@ class SpotifyMetadataCache():
 def run_spotify_metadata_cache():
     smc = SpotifyMetadataCache()
     smc.queue_id("artist:6liAMWkVf5LH7YR9yfFy1Y")
-    smc.queue_id("track:6ALWsAWq3bZmKBNnVKcMJG")
+    smc.queue_id("track:5wdub8zu2WLds6uRN0jUsV")
     smc.start()
