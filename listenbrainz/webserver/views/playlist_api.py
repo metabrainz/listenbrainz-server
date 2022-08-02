@@ -9,6 +9,7 @@ from flask import Blueprint, current_app, jsonify, request
 import requests
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
+from listenbrainz import db
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
@@ -247,40 +248,40 @@ def create_playlist():
     :statuscode 403: forbidden. The submitting user is not allowed to create playlists for other users.
     :resheader Content-Type: *application/json*
     """
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
 
-    user = validate_auth_header()
+        data = request.json
+        validate_create_playlist_required_items(data)
+        validate_playlist(data)
 
-    data = request.json
-    validate_create_playlist_required_items(data)
-    validate_playlist(data)
+        public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
+        collaborators = data.get("playlist", {}).\
+            get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
+            get("collaborators", [])
 
-    public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
-    collaborators = data.get("playlist", {}).\
-        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
-        get("collaborators", [])
+        if type(collaborators) not in (list, tuple):
+            log_raise_400("Collaborators must be a list.")
 
-    if type(collaborators) not in (list, tuple):
-        log_raise_400("Collaborators must be a list.")
+        for collaborator in collaborators:
+            if type(collaborator) != str:
+                log_raise_400("Collaborator names must be strings.")
 
-    for collaborator in collaborators:
-        if type(collaborator) != str:
-            log_raise_400("Collaborator names must be strings.")
+        # Uniquify collaborators list
+        collaborators = list(set(collaborators))
 
-    # Uniquify collaborators list
-    collaborators = list(set(collaborators))
+        # Don't allow creator to also be a collaborator
+        if user["musicbrainz_id"] in collaborators:
+            collaborators.remove(user["musicbrainz_id"])
 
-    # Don't allow creator to also be a collaborator
-    if user["musicbrainz_id"] in collaborators:
-        collaborators.remove(user["musicbrainz_id"])
+        username_lookup = collaborators
+        created_for = data["playlist"].get("created_for", None)
+        if created_for:
+            username_lookup.append(created_for)
 
-    username_lookup = collaborators
-    created_for = data["playlist"].get("created_for", None)
-    if created_for:
-        username_lookup.append(created_for)
-
-    users = {}
-    if username_lookup:
-        users = db_user.get_many_users_by_mb_id(username_lookup)
+        users = {}
+        if username_lookup:
+            users = db_user.get_many_users_by_mb_id(conn, username_lookup)
 
     collaborator_ids = []
     for collaborator in collaborators:
@@ -352,54 +353,54 @@ def edit_playlist(playlist_mbid):
     :statuscode 403: forbidden. The subitting user is not allowed to edit playlists for other users.
     :resheader Content-Type: *application/json*
     """
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
 
-    user = validate_auth_header()
+        data = request.json
+        validate_playlist(data)
 
-    data = request.json
-    validate_playlist(data)
+        if not is_valid_uuid(playlist_mbid):
+            log_raise_400("Provided playlist ID is invalid.")
 
-    if not is_valid_uuid(playlist_mbid):
-        log_raise_400("Provided playlist ID is invalid.")
+        playlist = db_playlist.get_by_mbid(playlist_mbid, False)
+        if playlist is None or not playlist.is_visible_by(user["id"]):
+            raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, False)
-    if playlist is None or not playlist.is_visible_by(user["id"]):
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+        if playlist.creator_id != user["id"]:
+            raise APIForbidden("You are not allowed to edit this playlist.")
 
-    if playlist.creator_id != user["id"]:
-        raise APIForbidden("You are not allowed to edit this playlist.")
+        try:
+            playlist.public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
+        except KeyError:
+            pass
 
-    try:
-        playlist.public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
-    except KeyError:
-        pass
+        if "annotation" in data["playlist"]:
+            # If the annotation key exists but the value is empty ("" or None),
+            # unset the description
+            description = data["playlist"]["annotation"]
+            if description:
+                description = _filter_description_html(description)
+            else:
+                description = None
+            playlist.description = description
 
-    if "annotation" in data["playlist"]:
-        # If the annotation key exists but the value is empty ("" or None),
-        # unset the description
-        description = data["playlist"]["annotation"]
-        if description:
-            description = _filter_description_html(description)
-        else:
-            description = None
-        playlist.description = description
+        if data["playlist"].get("title"):
+            playlist.name = data["playlist"]["title"]
 
-    if data["playlist"].get("title"):
-        playlist.name = data["playlist"]["title"]
+        collaborators = data.get("playlist", {}).\
+            get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
+            get("collaborators", [])
+        users = {}
 
-    collaborators = data.get("playlist", {}).\
-        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
-        get("collaborators", [])
-    users = {}
+        # Uniquify collaborators list
+        collaborators = list(set(collaborators))
 
-    # Uniquify collaborators list
-    collaborators = list(set(collaborators))
+        # Don't allow creator to also be a collaborator
+        if user["musicbrainz_id"] in collaborators:
+            collaborators.remove(user["musicbrainz_id"])
 
-    # Don't allow creator to also be a collaborator
-    if user["musicbrainz_id"] in collaborators:
-        collaborators.remove(user["musicbrainz_id"])
-
-    if collaborators:
-        users = db_user.get_many_users_by_mb_id(collaborators)
+        if collaborators:
+            users = db_user.get_many_users_by_mb_id(conn, collaborators)
 
     collaborator_ids = []
     for collaborator in collaborators:
@@ -442,7 +443,8 @@ def get_playlist(playlist_mbid):
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    user = validate_auth_header(optional=True)
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn, optional=True)
     user_id = None
     if user:
         user_id = user["id"]
@@ -479,8 +481,8 @@ def add_playlist_item(playlist_mbid, offset):
     :statuscode 403: forbidden. the requesting user was not allowed to carry out this operation.
     :resheader Content-Type: *application/json*
     """
-
-    user = validate_auth_header()
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
     if offset is not None and offset < 0:
         log_raise_400("Offset must be a positive integer.")
 
@@ -545,8 +547,8 @@ def move_playlist_item(playlist_mbid):
     :statuscode 403: forbidden. the requesting user was not allowed to carry out this operation.
     :resheader Content-Type: *application/json*
     """
-
-    user = validate_auth_header()
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -595,8 +597,8 @@ def delete_playlist_item(playlist_mbid):
     :statuscode 403: forbidden. the requesting user was not allowed to carry out this operation.
     :resheader Content-Type: *application/json*
     """
-
-    user = validate_auth_header()
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -636,8 +638,8 @@ def delete_playlist(playlist_mbid):
     :statuscode 404: Playlist not found
     :resheader Content-Type: *application/json*
     """
-
-    user = validate_auth_header()
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -674,8 +676,8 @@ def copy_playlist(playlist_mbid):
     :statuscode 404: Playlist not found
     :resheader Content-Type: *application/json*
     """
-
-    user = validate_auth_header()
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")

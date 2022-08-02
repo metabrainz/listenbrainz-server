@@ -1,26 +1,23 @@
-from datetime import datetime
+from typing import Dict, Tuple
+import time
+import uuid
 from typing import Dict, Tuple
 from urllib.parse import urlparse
 
 import bleach
-
-import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
-import listenbrainz.webserver.redis_connection as redis_connection
-import listenbrainz.db.user as db_user
 import pika
 import pika.exceptions
-import time
-import ujson
-import uuid
 import sentry_sdk
-
+import ujson
 from flask import current_app, request
 
+import listenbrainz.db.user as db_user
+import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
-
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
@@ -456,7 +453,7 @@ def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     return min_ts, max_ts, count
 
 
-def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
+def validate_auth_header(connection, *, optional: bool = False, fetch_email: bool = False):
     """ Examine the current request headers for an Authorization: Token <uuid>
         header that identifies a LB user and then load the corresponding user
         object from the database and return it, if succesful. Otherwise raise
@@ -478,7 +475,7 @@ def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
     except IndexError:
         raise APIUnauthorized("Provided Authorization header is invalid.")
 
-    user = db_user.get_by_token(auth_token, fetch_email=fetch_email)
+    user = db_user.get_by_token(connection, auth_token, fetch_email=fetch_email)
     if user is None:
         raise APIUnauthorized("Invalid authorization token.")
 

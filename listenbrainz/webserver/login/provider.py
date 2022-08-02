@@ -1,9 +1,8 @@
-from markupsafe import Markup
 from rauth import OAuth2Service
 from flask import request, session, url_for, current_app
 from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.musicbrainz_db import editor as mb_editor
-from listenbrainz.webserver.login import User
+
 from listenbrainz.webserver.utils import generate_string
 from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
@@ -44,7 +43,7 @@ def musicbrainz_auth_session_decoder(message):
         return {}
 
 
-def get_user():
+def get_user(connection):
     """Function should fetch user data from database, or, if necessary, create it, and return it."""
     try:
         s = _musicbrainz.get_auth_session(data={
@@ -68,8 +67,8 @@ def get_user():
         if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and user_email is None:
             # if flag is set to True and the user does not have an email do not allow to sign up
             raise MusicBrainzAuthNoEmailError()
-        db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
-        user = db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)
+        db_user.create(connection, musicbrainz_row_id, musicbrainz_id, email=user_email)
+        user = db_user.get_by_mb_id(connection, musicbrainz_id, fetch_email=True)
         ts.set_empty_values_for_user(user["id"])
     else:  # an existing user is trying to log in
         # Other option is to change the return type of get_by_mb_row_id to a dict
@@ -77,7 +76,7 @@ def get_user():
         user = dict(user)
         user["email"] = user_email
         # every time a user logs in, update the email in LB.
-        db_user.update_user_details(user["id"], musicbrainz_id, user_email)
+        db_user.update_user_details(connection, user["id"], musicbrainz_id, user_email)
 
     return user
 

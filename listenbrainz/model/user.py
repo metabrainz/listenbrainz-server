@@ -55,7 +55,8 @@ class UserAdminView(AdminModelView):
 
     def delete_model(self, model):
         try:
-            delete_user(model.id)
+            with db.engine.connect() as conn:
+                delete_user(conn, model.id)
             return True
         except OperationalError or DatabaseError as err:
             current_app.logger.error(err, exc_info=True)

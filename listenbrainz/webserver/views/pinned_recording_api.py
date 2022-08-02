@@ -1,13 +1,15 @@
-import listenbrainz.db.user as db_user
+from brainzutils.ratelimit import ratelimit
+from flask import Blueprint, jsonify, request
+from pydantic import ValidationError
+
 import listenbrainz.db.pinned_recording as db_pinned_rec
-
-from flask import Blueprint, current_app, jsonify, request
-
-from listenbrainz import db
+import listenbrainz.db.user as db_user
+from listenbrainz import db, messybrainz
+from listenbrainz.db import timescale
+from listenbrainz.db.model.pinned_recording import WritablePinnedRecording
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APINoContent
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.errors import APINotFound
 from listenbrainz.webserver.views.api_tools import (
     log_raise_400,
     DEFAULT_ITEMS_PER_GET,
@@ -15,8 +17,6 @@ from listenbrainz.webserver.views.api_tools import (
     get_non_negative_param,
     validate_auth_header,
 )
-from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
-from pydantic import ValidationError
 
 pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 
@@ -46,26 +46,26 @@ def pin_recording_for_user():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header()
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
 
-    data = request.json
+        data = request.json
 
-    if "recording_msid" not in data and "recording_mbid" not in data:
-        log_raise_400("JSON document must contain either recording_msid or recording_mbid", data)
+        if "recording_msid" not in data and "recording_mbid" not in data:
+            log_raise_400("JSON document must contain either recording_msid or recording_mbid", data)
 
-    try:
-        recording_to_pin = WritablePinnedRecording(
-            user_id=user["id"],
-            recording_msid=data["recording_msid"] if "recording_msid" in data else None,
-            recording_mbid=data["recording_mbid"] if "recording_mbid" in data else None,
-            blurb_content=data["blurb_content"] if "blurb_content" in data else None,
-            pinned_until=data["pinned_until"] if "pinned_until" in data else None,
-        )
-    except ValidationError as e:
-        log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
+        try:
+            recording_to_pin = WritablePinnedRecording(
+                user_id=user["id"],
+                recording_msid=data["recording_msid"] if "recording_msid" in data else None,
+                recording_mbid=data["recording_mbid"] if "recording_mbid" in data else None,
+                blurb_content=data["blurb_content"] if "blurb_content" in data else None,
+                pinned_until=data["pinned_until"] if "pinned_until" in data else None,
+            )
+        except ValidationError as e:
+            log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
-    with db.engine.connect() as connection:
-        recording_to_pin_with_id = db_pinned_rec.pin(connection, recording_to_pin)
+        recording_to_pin_with_id = db_pinned_rec.pin(conn, recording_to_pin)
 
     return jsonify({"pinned_recording": recording_to_pin_with_id.to_api()})
 
@@ -84,10 +84,9 @@ def unpin_recording_for_user():
     :statuscode 404: could not find the active recording to unpin for the user. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header()
-
-    with db.engine.connect() as connection:
-        recording_unpinned = db_pinned_rec.unpin(connection, user["id"])
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
+        recording_unpinned = db_pinned_rec.unpin(conn, user["id"])
 
     if recording_unpinned is False:
         raise APINotFound("Cannot find an active pinned recording for user '%s' to unpin" % (user["musicbrainz_id"]))
@@ -111,10 +110,9 @@ def delete_pin_for_user(row_id):
     :statuscode 404: the requested row_id for the user was not found.
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header()
-
-    with db.engine.connect() as connection:
-        recording_deleted = db_pinned_rec.delete(connection, row_id, user["id"])
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
+        recording_deleted = db_pinned_rec.delete(conn, row_id, user["id"])
 
     if recording_deleted is False:
         raise APINotFound("Cannot find pin with row_id '%s' for user '%s'" % (row_id, user["musicbrainz_id"]))
@@ -170,23 +168,23 @@ def get_pins_for_user(user_name):
     """
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
-
     count = min(count, MAX_ITEMS_PER_GET)
 
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
+    with db.engine.connect() as conn:
+        user = db_user.get_by_mb_id(conn, user_name)
+        if user is None:
+            raise APINotFound("Cannot find user: %s" % user_name)
 
-    with db.engine.connect() as connection:
         pinned_recordings = db_pinned_rec.get_pin_history_for_user(
-            connection,
+            conn,
             user_id=user["id"],
             count=count,
             offset=offset
         )
-        total_count = db_pinned_rec.get_pin_count_for_user(connection, user_id=user["id"])
+        total_count = db_pinned_rec.get_pin_count_for_user(conn, user_id=user["id"])
 
-    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
+    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
+        pinned_recordings = fetch_track_metadata_for_items(ts_conn, msb_conn, pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
 
     return jsonify(
@@ -247,24 +245,24 @@ def get_pins_for_user_following(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
     offset = get_non_negative_param("offset", default=0)
-
     count = min(count, MAX_ITEMS_PER_GET)
 
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
+    with db.engine.connect() as conn:
+        user = db_user.get_by_mb_id(conn, user_name)
+        if user is None:
+            raise APINotFound("Cannot find user: %s" % user_name)
 
-    with db.engine.connect() as connection:
         pinned_recordings = db_pinned_rec.get_pins_for_user_following(
-            connection,
+            conn,
             user_id=user["id"],
             count=count,
             offset=offset
-            )
-        pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
+        )
+
+        with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
+            pinned_recordings = fetch_track_metadata_for_items(ts_conn, msb_conn, pinned_recordings)
         pinned_recordings = [pin.to_api() for pin in pinned_recordings]
 
     return jsonify(

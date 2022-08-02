@@ -1,10 +1,10 @@
 import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
+from listenbrainz import db
 
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
-                                                    get_non_negative_param,
-                                                    MAX_ITEMS_PER_GET)
+                                                    get_non_negative_param)
 
 from enum import Enum
 
@@ -80,10 +80,6 @@ def get_recommendations(user_name):
         :statuscode 404: User not found.
         :statuscode 204: Recommendations for the user haven't been generated, empty response will be returned
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
-
     artist_type = request.args.get('artist_type')
     if not _is_valid_artist_type(artist_type):
         raise APIBadRequest("Invalid artist type: {}".format(artist_type))
@@ -91,7 +87,12 @@ def get_recommendations(user_name):
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    recommendations = db_recommendations_cf_recording.get_user_recommendation(user['id'])
+    with db.engine.connect() as conn:
+        user = db_user.get_by_mb_id(conn, user_name)
+        if user is None:
+            raise APINotFound("Cannot find user: {}".format(user_name))
+
+        recommendations = db_recommendations_cf_recording.get_user_recommendation(conn, user['id'])
 
     if recommendations is None:
         err_msg = 'No recommendations due to absence of recent listening history for user {}'.format(user_name)

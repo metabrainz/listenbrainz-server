@@ -17,17 +17,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-import listenbrainz.db.user as db_user
-import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
+from brainzutils.ratelimit import ratelimit
+from flask import Blueprint, jsonify
 
-from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
+import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
+import listenbrainz.db.user as db_user
+from listenbrainz import db
+from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.errors import APINotFound, APINoContent
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     get_non_negative_param,
                                                     MAX_ITEMS_PER_GET)
-
-from flask import Blueprint, jsonify, request
-from listenbrainz.webserver.decorators import crossdomain
-from brainzutils.ratelimit import ratelimit
 
 missing_musicbrainz_data_api_bp = Blueprint('missing_musicbrainz_data_v1', __name__)
 
@@ -91,16 +91,16 @@ def get_missing_musicbrainz_data(user_name):
     # The source may change in future
     source = 'cf'
 
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
-
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
-
     count = min(count, MAX_ITEMS_PER_GET)
 
-    data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user['id'], source)
+    with db.engine.connect() as conn:
+        user = db_user.get_by_mb_id(conn, user_name)
+        if user is None:
+            raise APINotFound("Cannot find user: {}".format(user_name))
+
+        data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(conn, user['id'], source)
 
     if data is None:
         err_msg = 'Missing MusicBrainz data for {} not calculated'.format(user_name)

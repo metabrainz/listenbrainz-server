@@ -2,6 +2,8 @@ import ujson
 from flask import Blueprint, render_template, current_app
 
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
+from listenbrainz import db
+from listenbrainz.db import timescale
 from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping
 from listenbrainz.webserver.views.user import _get_user
 
@@ -14,8 +16,8 @@ SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 def info(user_name):
     """ Show info about the recommended tracks
     """
-
-    user = _get_user(user_name)
+    with db.engine.connect() as conn:
+        user = _get_user(conn, user_name)
 
     return render_template(
         "recommendations_cf_recording/info.html",
@@ -27,45 +29,35 @@ def info(user_name):
 @recommendations_cf_recording_bp.route("/<user_name>/top_artist/")
 def top_artist(user_name: str):
     """ Show top artist user recommendations """
-    user = _get_user(user_name)
-
-    template = _get_template(active_section='top_artist', user=user)
-
-    return template
+    return _get_template('top_artist', user_name)
 
 
 @recommendations_cf_recording_bp.route("/<user_name>/similar_artist/")
 def similar_artist(user_name: str):
     """ Show similar artist user recommendations """
-    user = _get_user(user_name)
-
-    template = _get_template(active_section='similar_artist', user=user)
-
-    return template
+    return _get_template('similar_artist', user_name)
 
 
 @recommendations_cf_recording_bp.route("/<user_name>/raw/")
 def raw(user_name: str):
     """ Show raw track recommendations """
-    user = _get_user(user_name)
-
-    template = _get_template(active_section='raw', user=user)
-
-    return template
+    return _get_template('raw', user_name)
 
 
-def _get_template(active_section, user):
+def _get_template(active_section, user_name):
     """ Get template to render based on active section.
 
         Args:
             active_section (str): Type of recommendation playlist to render i.e top_artist, similar_artist
-            user: Database user object.
+            user_name: musicbrainz id of the user.
 
         Returns:
             Template to render.
     """
+    with db.engine.connect() as conn:
+        user = _get_user(conn, user_name)
+        data = db_recommendations_cf_recording.get_user_recommendation(conn, user.id)
 
-    data = db_recommendations_cf_recording.get_user_recommendation(user.id)
     if active_section == 'top_artist':
         tracks_type = "Top Artist"
     elif active_section == 'similar_artist':
@@ -149,7 +141,8 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                 }
     """
     mbids = [r['recording_mbid'] for r in mbids_and_ratings_list]
-    data, _ = load_recordings_from_mapping(mbids=mbids, msids=[])
+    with timescale.engine.connect() as ts_conn:
+        data, _ = load_recordings_from_mapping(ts_conn, mbids=mbids, msids=[])
 
     recommendations = []
 

@@ -1,5 +1,7 @@
 from flask import Blueprint, request, redirect, render_template, url_for, session, current_app, Markup
 from flask_login import login_user, logout_user, login_required
+
+from listenbrainz import db
 from listenbrainz.webserver.decorators import web_listenstore_needed, web_musicbrainz_needed
 from listenbrainz.webserver.login import login_forbidden, provider, User
 from listenbrainz.webserver import flash
@@ -42,12 +44,13 @@ def musicbrainz_post():
 
     if provider.validate_post_login():
         try:
-            user = provider.get_user()
+            with db.engine.connect() as connection:
+                user = provider.get_user(connection)
+                db_user.update_last_login(connection, user["musicbrainz_id"])
+
             if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and not user["email"]:
                 # existing user without email, show a warning
                 flash.warning(no_email_warning + 'to submit listens. ' + blog_link)
-
-            db_user.update_last_login(user["musicbrainz_id"])
             login_user(User.from_dbrow(user),
                        remember=True,
                        duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))

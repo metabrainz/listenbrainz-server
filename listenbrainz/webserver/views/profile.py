@@ -12,6 +12,7 @@ import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
+from listenbrainz import db
 from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
@@ -38,7 +39,8 @@ def reset_token():
     form = FlaskForm()
     if form.validate_on_submit():
         try:
-            db_user.update_token(current_user.id)
+            with db.engine.connect() as conn:
+                db_user.update_token(conn, current_user.id)
             flash.info("Access token reset")
         except DatabaseException:
             flash.error("Something went wrong! Unable to reset token right now.")
@@ -57,19 +59,20 @@ def reset_token():
 @profile_bp.route("/select_timezone/", methods=["GET", "POST"])
 @login_required
 def select_timezone():
-    pg_timezones = db_usersetting.get_pg_timezone()
-    form = TimezoneForm()
-    form.timezone.choices = [(zone_name, zone_name) for (zone_name, offset) in pg_timezones]
-    user_settings = db_usersetting.get(current_user.id)
-    user_timezone = user_settings['timezone_name']
-    if form.validate_on_submit():
-        try:
-            update_timezone = str(form.timezone.data)
-            db_usersetting.set_timezone(current_user.id, update_timezone)
-            flash.info("Your timezone has been saved.")
-        except DatabaseException:
-            flash.error("Something went wrong! Unable to update timezone right now.")
-        return redirect(url_for("profile.info"))
+    with db.engine.connect() as conn:
+        pg_timezones = db_usersetting.get_pg_timezone(conn)
+        form = TimezoneForm()
+        form.timezone.choices = [(zone_name, zone_name) for (zone_name, offset) in pg_timezones]
+        user_settings = db_usersetting.get(conn, current_user.id)
+        user_timezone = user_settings['timezone_name']
+        if form.validate_on_submit():
+            try:
+                update_timezone = str(form.timezone.data)
+                db_usersetting.set_timezone(conn, current_user.id, update_timezone)
+                flash.info("Your timezone has been saved.")
+            except DatabaseException:
+                flash.error("Something went wrong! Unable to update timezone right now.")
+            return redirect(url_for("profile.info"))
 
     if form.errors:
         flash.error('Unable to update timezone.')
@@ -89,7 +92,8 @@ def reset_latest_import_timestamp():
     form = FlaskForm()
     if form.validate_on_submit():
         try:
-            listens_importer.update_latest_listened_at(current_user.id, ExternalServiceType.LASTFM, 0)
+            with db.engine.connect() as conn:
+                listens_importer.update_latest_listened_at(conn, current_user.id, ExternalServiceType.LASTFM, 0)
             flash.info("Latest import time reset, we'll now import all your data instead of stopping at your last imported listen.")
         except DatabaseException:
             flash.error("Something went wrong! Unable to reset latest import timestamp right now.")
@@ -108,8 +112,8 @@ def reset_latest_import_timestamp():
 @profile_bp.route("/")
 @login_required
 def info():
-
-    user_setting = db_usersetting.get(current_user.id)
+    with db.engine.connect() as conn:
+        user_setting = db_usersetting.get(conn, current_user.id)
     return render_template(
         "profile/info.html",
         user=current_user,
@@ -121,7 +125,8 @@ def info():
 @login_required
 def import_data():
     """ Displays the import page to user, giving various options """
-    user = db_user.get(current_user.id, fetch_email=True)
+    with db.engine.connect() as conn:
+        user = db_user.get(conn, current_user.id, fetch_email=True)
     # if the flag is turned off (local development) then do not perform email check
     if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
         user_has_email = user["email"] is not None
@@ -251,7 +256,8 @@ def delete():
     form = FlaskForm()
     if form.validate_on_submit():
         try:
-            delete_user(current_user.id)
+            with db.engine.connect() as conn:
+                delete_user(conn, current_user.id)
             flash.success("Successfully deleted account for %s." % current_user.musicbrainz_id)
             return redirect(url_for('index.index'))
         except Exception:
@@ -305,7 +311,7 @@ def delete_listens():
     )
 
 
-def _get_service_or_raise_404(name: str) -> ExternalService:
+def _get_service_or_raise_404(conn, name: str) -> ExternalService:
     """Returns the music service for the given name and raise 404 if
     service is not found
 
@@ -315,11 +321,11 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
     try:
         service = ExternalServiceType[name.upper()]
         if service == ExternalServiceType.YOUTUBE:
-            return YoutubeService()
+            return YoutubeService(conn)
         elif service == ExternalServiceType.SPOTIFY:
-            return SpotifyService()
+            return SpotifyService(conn)
         elif service == ExternalServiceType.CRITIQUEBRAINZ:
-            return CritiqueBrainzService()
+            return CritiqueBrainzService(conn)
     except KeyError:
         raise NotFound("Service %s is invalid." % name)
 
@@ -327,27 +333,28 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
 @profile_bp.route('/music-services/details/', methods=['GET'])
 @login_required
 def music_services_details():
-    spotify_service = SpotifyService()
-    spotify_user = spotify_service.get_user(current_user.id)
+    with db.engine.connect() as conn:
+        spotify_service = SpotifyService(conn)
+        spotify_user = spotify_service.get_user(current_user.id)
 
-    if spotify_user:
-        permissions = set(spotify_user["scopes"])
-        if permissions == SPOTIFY_IMPORT_PERMISSIONS:
-            current_spotify_permissions = "import"
-        elif permissions == SPOTIFY_LISTEN_PERMISSIONS:
-            current_spotify_permissions = "listen"
+        if spotify_user:
+            permissions = set(spotify_user["scopes"])
+            if permissions == SPOTIFY_IMPORT_PERMISSIONS:
+                current_spotify_permissions = "import"
+            elif permissions == SPOTIFY_LISTEN_PERMISSIONS:
+                current_spotify_permissions = "listen"
+            else:
+                current_spotify_permissions = "both"
         else:
-            current_spotify_permissions = "both"
-    else:
-        current_spotify_permissions = "disable"
+            current_spotify_permissions = "disable"
 
-    youtube_service = YoutubeService()
-    youtube_user = youtube_service.get_user(current_user.id)
-    current_youtube_permissions = "listen" if youtube_user else "disable"
+        youtube_service = YoutubeService(conn)
+        youtube_user = youtube_service.get_user(current_user.id)
+        current_youtube_permissions = "listen" if youtube_user else "disable"
 
-    critiquebrainz_service = CritiqueBrainzService()
-    critiquebrainz_user = critiquebrainz_service.get_user(current_user.id)
-    current_critiquebrainz_permissions = "review" if critiquebrainz_user else "disable"
+        critiquebrainz_service = CritiqueBrainzService(conn)
+        critiquebrainz_user = critiquebrainz_service.get_user(current_user.id)
+        current_critiquebrainz_permissions = "review" if critiquebrainz_user else "disable"
 
     return render_template(
         'user/music_services.html',
@@ -363,33 +370,35 @@ def music_services_details():
 @profile_bp.route('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
-    service = _get_service_or_raise_404(service_name)
-    code = request.args.get('code')
-    if not code:
-        raise BadRequest('missing code')
-    token = service.fetch_access_token(code)
-    if service.add_new_user(current_user.id, token):
-        flash.success('Successfully authenticated with %s!' % service_name.capitalize())
-    else:
-        flash.error('Unable to connect to %s! Please try again.' % service_name.capitalize())
-    return redirect(url_for('profile.music_services_details'))
+    with db.engine.connect() as conn:
+        service = _get_service_or_raise_404(conn, service_name)
+        code = request.args.get('code')
+        if not code:
+            raise BadRequest('missing code')
+        token = service.fetch_access_token(code)
+        if service.add_new_user(current_user.id, token):
+            flash.success('Successfully authenticated with %s!' % service_name.capitalize())
+        else:
+            flash.error('Unable to connect to %s! Please try again.' % service_name.capitalize())
+        return redirect(url_for('profile.music_services_details'))
 
 
 @profile_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
 @api_login_required
 def refresh_service_token(service_name: str):
-    service = _get_service_or_raise_404(service_name)
-    user = service.get_user(current_user.id)
-    if not user:
-        raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
+    with db.engine.connect() as conn:
+        service = _get_service_or_raise_404(conn, service_name)
+        user = service.get_user(current_user.id)
+        if not user:
+            raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
 
-    if service.user_oauth_token_has_expired(user):
-        try:
-            user = service.refresh_access_token(current_user.id, user["refresh_token"])
-        except ExternalServiceInvalidGrantError:
-            raise APINotFound("User has revoked authorization to %s" % service_name.capitalize())
-        except Exception:
-            raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
+        if service.user_oauth_token_has_expired(user):
+            try:
+                user = service.refresh_access_token(current_user.id, user["refresh_token"])
+            except ExternalServiceInvalidGrantError:
+                raise APINotFound("User has revoked authorization to %s" % service_name.capitalize())
+            except Exception:
+                raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
     return jsonify({"access_token": user["access_token"]})
 
@@ -397,36 +406,37 @@ def refresh_service_token(service_name: str):
 @profile_bp.route('/music-services/<service_name>/disconnect/', methods=['POST'])
 @api_login_required
 def music_services_disconnect(service_name: str):
-    service = _get_service_or_raise_404(service_name)
-    user = service.get_user(current_user.id)
-    # this is to support the workflow of changing permissions in a single step
-    # we delete the current permissions and then try to authenticate with new ones
-    # we should try to delete the current permissions only if the user has connected previously
-    if user:
-        service.remove_user(current_user.id)
+    with db.engine.connect() as conn:
+        service = _get_service_or_raise_404(conn, service_name)
+        user = service.get_user(current_user.id)
+        # this is to support the workflow of changing permissions in a single step
+        # we delete the current permissions and then try to authenticate with new ones
+        # we should try to delete the current permissions only if the user has connected previously
+        if user:
+            service.remove_user(current_user.id)
 
-    action = request.form.get(service_name)
-    if not action or action == 'disable':
-        flash.success('Your %s account has been unlinked.' % service_name.capitalize())
+        action = request.form.get(service_name)
+        if not action or action == 'disable':
+            flash.success('Your %s account has been unlinked.' % service_name.capitalize())
+            return redirect(url_for('profile.music_services_details'))
+        else:
+            if service_name == 'spotify':
+                permissions = None
+                if action == 'both':
+                    permissions = SPOTIFY_LISTEN_PERMISSIONS | SPOTIFY_IMPORT_PERMISSIONS
+                elif action == 'import':
+                    permissions = SPOTIFY_IMPORT_PERMISSIONS
+                elif action == 'listen':
+                    permissions = SPOTIFY_LISTEN_PERMISSIONS
+                if permissions:
+                    return redirect(service.get_authorize_url(permissions))
+            elif service_name == 'youtube':
+                action = request.form.get('youtube')
+                if action:
+                    return redirect(service.get_authorize_url(YOUTUBE_SCOPES))
+            elif service_name == 'critiquebrainz':
+                action = request.form.get('critiquebrainz')
+                if action:
+                    return redirect(service.get_authorize_url(CRITIQUEBRAINZ_SCOPES))
+
         return redirect(url_for('profile.music_services_details'))
-    else:
-        if service_name == 'spotify':
-            permissions = None
-            if action == 'both':
-                permissions = SPOTIFY_LISTEN_PERMISSIONS | SPOTIFY_IMPORT_PERMISSIONS
-            elif action == 'import':
-                permissions = SPOTIFY_IMPORT_PERMISSIONS
-            elif action == 'listen':
-                permissions = SPOTIFY_LISTEN_PERMISSIONS
-            if permissions:
-                return redirect(service.get_authorize_url(permissions))
-        elif service_name == 'youtube':
-            action = request.form.get('youtube')
-            if action:
-                return redirect(service.get_authorize_url(YOUTUBE_SCOPES))
-        elif service_name == 'critiquebrainz':
-            action = request.form.get('critiquebrainz')
-            if action:
-                return redirect(service.get_authorize_url(CRITIQUEBRAINZ_SCOPES))
-
-    return redirect(url_for('profile.music_services_details'))

@@ -3,6 +3,8 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording_feedback as db_feedback
 
 from flask import Blueprint, current_app, jsonify, request
+
+from listenbrainz import db
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIInternalServerError,
                                            APINotFound,
@@ -48,28 +50,29 @@ def submit_recommendation_feedback():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header()
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
 
-    data = request.json
+        data = request.json
 
-    if 'recording_mbid' not in data or 'rating' not in data:
-        log_raise_400("JSON document must contain recording_mbid and rating", data)
+        if 'recording_mbid' not in data or 'rating' not in data:
+            log_raise_400("JSON document must contain recording_mbid and rating", data)
 
-    if 'recording_mbid' in data and 'rating' in data and len(data) > 2:
-        log_raise_400("JSON document must only contain recording_mbid and rating", data)
+        if 'recording_mbid' in data and 'rating' in data and len(data) > 2:
+            log_raise_400("JSON document must only contain recording_mbid and rating", data)
 
-    try:
-        feedback_submit = RecommendationFeedbackSubmit(user_id=user["id"],
-                                                       recording_mbid=data["recording_mbid"],
-                                                       rating=data["rating"])
-    except ValidationError as e:
-        log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
+        try:
+            feedback_submit = RecommendationFeedbackSubmit(user_id=user["id"],
+                                                           recording_mbid=data["recording_mbid"],
+                                                           rating=data["rating"])
+        except ValidationError as e:
+            log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
-    try:
-        db_feedback.insert(feedback_submit)
-    except Exception as e:
-        current_app.logger.error("Error while inserting recommendation feedback: {}".format(e))
-        raise APIInternalServerError("Something went wrong. Please try again.")
+        try:
+            db_feedback.insert(conn, feedback_submit)
+        except Exception as e:
+            current_app.logger.error("Error while inserting recommendation feedback: {}".format(e))
+            raise APIInternalServerError("Something went wrong. Please try again.")
 
     return jsonify({'status': 'ok'})
 
@@ -95,26 +98,26 @@ def delete_recommendation_feedback():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header()
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
+        data = request.json
 
-    data = request.json
+        if 'recording_mbid' not in data:
+            log_raise_400("JSON document must contain recording_mbid", data)
 
-    if 'recording_mbid' not in data:
-        log_raise_400("JSON document must contain recording_mbid", data)
+        if 'recording_mbid' in data and len(data) > 1:
+            log_raise_400("JSON document must only contain recording_mbid", data)
 
-    if 'recording_mbid' in data and len(data) > 1:
-        log_raise_400("JSON document must only contain recording_mbid", data)
+        try:
+            feedback_delete = RecommendationFeedbackDelete(user_id=user["id"], recording_mbid=data["recording_mbid"])
+        except ValidationError as e:
+            log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
-    try:
-        feedback_delete = RecommendationFeedbackDelete(user_id=user["id"], recording_mbid=data["recording_mbid"])
-    except ValidationError as e:
-        log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
-
-    try:
-        db_feedback.delete(feedback_delete)
-    except Exception as e:
-        current_app.logger.error("Error while deleting recommendation feedback: {}".format(e))
-        raise APIInternalServerError("Something went wrong. Please try again.")
+        try:
+            db_feedback.delete(conn, feedback_delete)
+        except Exception as e:
+            current_app.logger.error("Error while deleting recommendation feedback: {}".format(e))
+            raise APIInternalServerError("Something went wrong. Please try again.")
 
     return jsonify({'status': 'ok'})
 
@@ -161,26 +164,26 @@ def get_feedback_for_user(user_name):
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
+    with db.engine.connect() as conn:
+        user = db_user.get_by_mb_id(conn, user_name)
+        if user is None:
+            raise APINotFound("Cannot find user: {}".format(user_name))
 
-    rating = request.args.get('rating')
+        rating = request.args.get('rating')
 
-    if rating:
-        expected_rating = get_allowed_ratings()
-        if rating not in expected_rating:
-            log_raise_400("Rating must be in {}".format(expected_rating), request.args)
+        if rating:
+            expected_rating = get_allowed_ratings()
+            if rating not in expected_rating:
+                log_raise_400("Rating must be in {}".format(expected_rating), request.args)
 
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+        offset = get_non_negative_param('offset', default=0)
+        count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+        count = min(count, MAX_ITEMS_PER_GET)
 
-    count = min(count, MAX_ITEMS_PER_GET)
+        feedback = db_feedback.get_feedback_for_user(conn, user_id=user["id"], limit=count, offset=offset, rating=rating)
+        total_count = db_feedback.get_feedback_count_for_user(conn, user["id"])
 
-    feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, rating=rating)
-    total_count = db_feedback.get_feedback_count_for_user(user["id"])
-
-    feedback = [_format_feedback(fb) for fb in feedback]
+        feedback = [_format_feedback(fb) for fb in feedback]
 
     return jsonify({
         "feedback": feedback,
@@ -227,26 +230,31 @@ def get_feedback_for_recordings_for_user(user_name):
     :statuscode 404: User not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
+    with db.engine.connect() as conn:
+        user = db_user.get_by_mb_id(conn, user_name)
+        if user is None:
+            raise APINotFound("Cannot find user: %s" % user_name)
 
-    mbids = request.args.get('mbids')
-    if not mbids:
-        raise APIBadRequest("Please provide comma separated recording 'mbids'!")
+        mbids = request.args.get('mbids')
+        if not mbids:
+            raise APIBadRequest("Please provide comma separated recording 'mbids'!")
 
-    recording_list = parse_recording_mbid_list(mbids)
+        recording_list = parse_recording_mbid_list(mbids)
 
-    if not len(recording_list):
-        raise APIBadRequest("Please provide comma separated recording mbids!")
+        if not len(recording_list):
+            raise APIBadRequest("Please provide comma separated recording mbids!")
 
-    try:
-        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
-    except ValidationError as e:
-        log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
-                      request.args)
+        try:
+            feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(
+                conn,
+                user_id=user["id"],
+                recording_list=recording_list
+            )
+        except ValidationError as e:
+            log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
+                          request.args)
 
-    recommendation_feedback = [_format_feedback(fb) for fb in feedback]
+        recommendation_feedback = [_format_feedback(fb) for fb in feedback]
 
     return jsonify({
         "feedback": recommendation_feedback,

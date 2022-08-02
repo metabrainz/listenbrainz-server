@@ -1,24 +1,24 @@
 import locale
 import os
-import requests
-import subprocess
-
-from brainzutils import cache
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 from typing import List
+
+import requests
+import ujson
+from brainzutils import cache
+from dateutil.relativedelta import relativedelta
 from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
-import ujson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
+from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash
-from listenbrainz.webserver.timescale_connection import _ts
+from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.redis_connection import _redis
+from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.views.user import delete_user
 
 index_bp = Blueprint('index', __name__)
@@ -111,8 +111,9 @@ def current_status():
         try:
             day = datetime.utcnow() - relativedelta(days=delta)
             day_listen_count = _redis.get_listen_count_for_day(day)
-        except:
-            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
+        except Exception:
+            current_app.logger.error("Could not get %s listen count from redis",
+                                     day.strftime('%Y-%m-%d'), exc_info=True)
             day_listen_count = None
         listen_counts_per_day.append({
             "date": day.strftime('%Y-%m-%d'),
@@ -131,7 +132,6 @@ def current_status():
 
 @index_bp.route("/recent/")
 def recent_listens():
-
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
         recent.append({
@@ -163,7 +163,8 @@ def gdpr_notice():
     elif request.method == 'POST':
         if request.form.get('gdpr-options') == 'agree':
             try:
-                db_user.agree_to_gdpr(self.conn, current_user.musicbrainz_id)
+                with db.engine.connect() as conn:
+                    db_user.agree_to_gdpr(conn, current_user.musicbrainz_id)
             except DatabaseException as e:
                 flash.error('Could not store agreement to GDPR terms')
             next = request.form.get('next')
@@ -182,7 +183,8 @@ def search():
     search_term = request.args.get("search_term")
     user_id = current_user.id if current_user.is_authenticated else None
     if search_term:
-        users = db_user.search(search_term, SEARCH_USER_LIMIT, user_id)
+        with db.engine.connect() as conn:
+            users = db_user.search(conn, search_term, SEARCH_USER_LIMIT, user_id)
     else:
         users = []
     return render_template("index/search-users.html", search_term=search_term, users=users)
@@ -209,10 +211,11 @@ def mb_user_deleter(musicbrainz_row_id):
         Unauthorized if the MusicBrainz access token provided with the query is invalid
     """
     _authorize_mb_user_deleter(request.args.get('access_token', ''))
-    user = db_user.get_by_mb_row_id(musicbrainz_row_id)
-    if user is None:
-        raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
-    delete_user(user['id'])
+    with db.engine.connect() as conn:
+        user = db_user.get_by_mb_row_id(conn, musicbrainz_row_id)
+        if user is None:
+            raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
+        delete_user(conn, user['id'])
     return jsonify({'status': 'ok'}), 200
 
 

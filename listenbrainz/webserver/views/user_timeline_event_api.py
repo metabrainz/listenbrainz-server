@@ -31,7 +31,8 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
-from listenbrainz import db
+from listenbrainz import db, messybrainz
+from listenbrainz.db import timescale
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
     CBReviewTimelineMetadata
@@ -83,22 +84,22 @@ def create_user_recording_recommendation_event(user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header()
-    if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
+        if user_name != user['musicbrainz_id']:
+            raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
-    try:
-        data = ujson.loads(request.get_data())
-    except ValueError as e:
-        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+        try:
+            data = ujson.loads(request.get_data())
+        except ValueError as e:
+            raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
-    try:
-        metadata = RecordingRecommendationMetadata(**data['metadata'])
-    except pydantic.ValidationError as e:
-        raise APIBadRequest(f"Invalid metadata: {str(e)}")
+        try:
+            metadata = RecordingRecommendationMetadata(**data['metadata'])
+        except pydantic.ValidationError as e:
+            raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
-    with db.engine.connect() as connection:
-        event = db_user_timeline_event.create_user_track_recommendation_event(connection, user['id'], metadata)
+        event = db_user_timeline_event.create_user_track_recommendation_event(conn, user['id'], metadata)
 
     event_data = event.dict()
     event_data['created'] = event_data['created'].timestamp()
@@ -131,29 +132,29 @@ def create_user_notification_event(user_name):
     :resheader Content-Type: *application/json*
 
     """
-    creator = validate_auth_header()
-    if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
-        raise APIForbidden("Only approved users are allowed to post a message on a user's timeline.")
+    with db.engine.connect() as conn:
+        creator = validate_auth_header(conn)
+        if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
+            raise APIForbidden("Only approved users are allowed to post a message on a user's timeline.")
 
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound(f"Cannot find user: {user_name}")
+        user = db_user.get_by_mb_id(conn, user_name)
+        if user is None:
+            raise APINotFound(f"Cannot find user: {user_name}")
 
-    try:
-        data = ujson.loads(request.get_data())['metadata']
-    except (ValueError, KeyError) as e:
-        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+        try:
+            data = ujson.loads(request.get_data())['metadata']
+        except (ValueError, KeyError) as e:
+            raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
-    if "message" not in data:
-        raise APIBadRequest("Invalid metadata: message is missing")
+        if "message" not in data:
+            raise APIBadRequest("Invalid metadata: message is missing")
 
-    # Not filtering html in the message because only approved users can use this endpoint.
-    # if this changes in the future, add back html cleanup here.
-    message = data["message"]
-    metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
+        # Not filtering html in the message because only approved users can use this endpoint.
+        # if this changes in the future, add back html cleanup here.
+        message = data["message"]
+        metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
 
-    with db.engine.connect() as connection:
-        db_user_timeline_event.create_user_notification_event(connection, user['id'], metadata)
+        db_user_timeline_event.create_user_notification_event(conn, user['id'], metadata)
 
     return jsonify({'status': 'ok'})
 
@@ -184,36 +185,36 @@ def create_user_cb_review_event(user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header()
-    if user_name != user["musicbrainz_id"]:
-        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+    with db.engine.connect() as conn:
+        user = validate_auth_header(conn)
+        if user_name != user["musicbrainz_id"]:
+            raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
-    try:
-        data = ujson.loads(request.get_data())
-    except ValueError as e:
-        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+        try:
+            data = ujson.loads(request.get_data())
+        except ValueError as e:
+            raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
-    try:
-        metadata = data["metadata"]
-        review = CBReviewMetadata(
-            name=metadata["entity_name"],
-            entity_id=metadata["entity_id"],
-            entity_type=metadata["entity_type"],
-            text=metadata["text"],
-            language=metadata["language"],
-            rating=metadata.get("rating", 0)
+        try:
+            metadata = data["metadata"]
+            review = CBReviewMetadata(
+                name=metadata["entity_name"],
+                entity_id=metadata["entity_id"],
+                entity_type=metadata["entity_type"],
+                text=metadata["text"],
+                language=metadata["language"],
+                rating=metadata.get("rating", 0)
+            )
+        except (pydantic.ValidationError, KeyError):
+            raise APIBadRequest(f"Invalid metadata: {str(data)}")
+
+        review_id = CritiqueBrainzService(conn).submit_review(user["id"], review)
+        metadata = CBReviewTimelineMetadata(
+            review_id=review_id,
+            entity_id=review.entity_id,
+            entity_name=review.name
         )
-    except (pydantic.ValidationError, KeyError):
-        raise APIBadRequest(f"Invalid metadata: {str(data)}")
-
-    review_id = CritiqueBrainzService().submit_review(user["id"], review)
-    metadata = CBReviewTimelineMetadata(
-        review_id=review_id,
-        entity_id=review.entity_id,
-        entity_name=review.name
-    )
-    with db.engine.connect() as connection:
-        event = db_user_timeline_event.create_user_cb_review_event(connection, user["id"], metadata)
+        event = db_user_timeline_event.create_user_cb_review_event(conn, user["id"], metadata)
 
     event_data = event.dict()
     event_data["created"] = event_data["created"].timestamp()
@@ -240,16 +241,15 @@ def user_feed(user_name: str):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-
-    user = validate_auth_header()
-    if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to view this user's timeline.")
-
-    min_ts, max_ts, count = _validate_get_endpoint_params()
-    if min_ts is None and max_ts is None:
-        max_ts = int(time.time())
-
     with db.engine.connect() as connection:
+        user = validate_auth_header(connection)
+        if user_name != user['musicbrainz_id']:
+            raise APIUnauthorized("You don't have permissions to view this user's timeline.")
+
+        min_ts, max_ts, count = _validate_get_endpoint_params()
+        if min_ts is None and max_ts is None:
+            max_ts = int(time.time())
+
         users_following = db_user_relationship.get_following_for_user(connection, user['id'])
 
         # for events like "follow" and "recording recommendations", we want to show the user
@@ -365,29 +365,29 @@ def delete_feed_events(user_name):
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
     '''
-    user = validate_auth_header()
-    if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
+    with db.engine.connect() as connection:
+        user = validate_auth_header(connection)
+        if user_name != user['musicbrainz_id']:
+            raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
 
-    try:
-        event = ujson.loads(request.get_data())
+        try:
+            event = ujson.loads(request.get_data())
 
-        if event["event_type"] in [
-            UserTimelineEventType.RECORDING_RECOMMENDATION.value,
-            UserTimelineEventType.NOTIFICATION.value
-        ]:
-            with db.engine.connect() as connection:
+            if event["event_type"] in [
+                UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                UserTimelineEventType.NOTIFICATION.value
+            ]:
                 event_deleted = db_user_timeline_event.delete_user_timeline_event(connection, event["id"], user["id"])
 
-            if not event_deleted:
-                raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" %
-                                  (event["event_type"], event["id"], user["id"]))
-            return jsonify({"status": "ok"})
+                if not event_deleted:
+                    raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" %
+                                      (event["event_type"], event["id"], user["id"]))
+                return jsonify({"status": "ok"})
 
-        raise APIBadRequest("This event type is not supported for deletion via this method")
+            raise APIBadRequest("This event type is not supported for deletion via this method")
 
-    except (ValueError, KeyError) as e:
-        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+        except (ValueError, KeyError) as e:
+            raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
 
 @user_timeline_event_api_bp.route("/user/<user_name>/feed/events/hide", methods=['OPTIONS', 'POST'])
@@ -422,20 +422,19 @@ def hide_user_timeline_event(user_name):
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
     '''
-
-    user = validate_auth_header()
-    if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to hide events from this user's timeline.")
-
-    try:
-        data = ujson.loads(request.get_data())
-    except (ValueError, KeyError) as e:
-        raise APIBadRequest(f"Invalid JSON: {str(e)}")
-
-    if 'event_type' not in data or 'event_id' not in data:
-        raise APIBadRequest("JSON document must contain both event_type and event_id", data)
-
     with db.engine.connect() as connection:
+        user = validate_auth_header(connection)
+        if user_name != user['musicbrainz_id']:
+            raise APIUnauthorized("You don't have permissions to hide events from this user's timeline.")
+
+        try:
+            data = ujson.loads(request.get_data())
+        except (ValueError, KeyError) as e:
+            raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+        if 'event_type' not in data or 'event_id' not in data:
+            raise APIBadRequest("JSON document must contain both event_type and event_id", data)
+
         row_id = data["event_id"]
         if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
             result = db_user_timeline_event.get_user_timeline_event_by_id(connection, row_id)
@@ -482,19 +481,20 @@ def unhide_user_timeline_event(user_name):
     :resheader Content-Type: *application/json*
 
     '''
-    user = validate_auth_header()
-    if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
+    with db.engine.connect() as connection:
+        user = validate_auth_header(connection)
+        if user_name != user['musicbrainz_id']:
+            raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
 
-    try:
-        data = ujson.loads(request.get_data())
-    except (ValueError, KeyError) as e:
-        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+        try:
+            data = ujson.loads(request.get_data())
+        except (ValueError, KeyError) as e:
+            raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
-    if 'event_type' not in data or 'event_id' not in data:
-        raise APIBadRequest("JSON document must contain both event_type and event_id", data)
+        if 'event_type' not in data or 'event_id' not in data:
+            raise APIBadRequest("JSON document must contain both event_type and event_id", data)
 
-    db_user_timeline_event.unhide_timeline_event(user['id'], data['event_type'], data['event_id'])
+        db_user_timeline_event.unhide_timeline_event(connection, user['id'], data['event_type'], data['event_id'])
     return jsonify({"status": "ok"})
 
 
@@ -670,7 +670,7 @@ def get_cb_review_events(
         review_ids.append(review_id)
         review_id_event_map[review_id] = event
 
-    reviews = CritiqueBrainzService().fetch_reviews(review_ids)
+    reviews = CritiqueBrainzService(connection).fetch_reviews(review_ids)
     if reviews is None:
         return []
 
@@ -720,7 +720,8 @@ def get_recording_pin_events(
         max_ts=max_ts,
         count=count,
     )
-    recording_pin_events_db = fetch_track_metadata_for_items(recording_pin_events_db)
+    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
+        recording_pin_events_db = fetch_track_metadata_for_items(ts_conn, msb_conn, recording_pin_events_db)
 
     events = []
     for pin in recording_pin_events_db:

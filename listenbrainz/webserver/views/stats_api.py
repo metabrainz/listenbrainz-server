@@ -13,6 +13,7 @@ from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import EntityRecord
+from listenbrainz import db
 from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
@@ -937,9 +938,10 @@ def _process_user_entity(stats: StatApi[EntityRecord], offset, count) -> Tuple[l
 
 def _validate_stats_user_params(user_name) -> Tuple[Dict, str]:
     """ Validate and return the user and common stats params """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound(f"Cannot find user: {user_name}")
+    with db.engine.connect() as conn:
+        user = db_user.get_by_mb_id(conn, user_name)
+        if user is None:
+            raise APINotFound(f"Cannot find user: {user_name}")
 
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
