@@ -115,6 +115,8 @@ def create_user_cb_review_event(user_id: int, metadata: CBReviewTimelineMetadata
 def create_personal_recommendation_event(user_id: int, metadata:
     PersonalRecordingRecommendationMetadata) -> UserTimelineEvent:
     """ Creates a personal recommendation event in the database and returns it.
+        The User ID in the table is the recommender, meanwhile the users in the
+        metadata key are the recommendee
     """
     try:
         with db.engine.connect() as connection:
