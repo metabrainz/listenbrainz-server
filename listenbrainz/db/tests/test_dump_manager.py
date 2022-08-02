@@ -36,13 +36,13 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db import dump_manager
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.testing import ResetDatabaseTestCase
 from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app, timescale_connection
 
 
-class DumpManagerTestCase(DatabaseTestCase):
+class DumpManagerTestCase(ResetDatabaseTestCase):
 
     def setUp(self):
         super().setUp()

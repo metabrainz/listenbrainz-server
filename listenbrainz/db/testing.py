@@ -42,7 +42,7 @@ class DatabaseTestCase(unittest.TestCase):
         """
         return os.path.join(TEST_DATA_PATH, file_name)
 
-    def create_user_with_id(self, lb_id:int, musicbrainz_row_id: int, musicbrainz_id: str):
+    def create_user_with_id(self, lb_id: int, musicbrainz_row_id: int, musicbrainz_id: str):
         """ Create a new user with the specified LB id. """
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text("""
@@ -54,6 +54,36 @@ class DatabaseTestCase(unittest.TestCase):
                 "token": str(uuid.uuid4()),
                 "mb_row_id": musicbrainz_row_id,
             })
+
+
+class ResetDatabaseTestCase(unittest.TestCase):
+
+    def setUp(self):
+        db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
+        self.reset_db()
+        self.conn = db.engine.connect()
+
+    def tearDown(self):
+        self.conn.close()
+        self.drop_tables()
+
+    def reset_db(self):
+        self.drop_tables()
+        self.init_db()
+
+    def init_db(self):
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
+
+    def drop_tables(self):
+        self.drop_schema()
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
+
+    def drop_schema(self):
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_schema.sql'))
 
 
 class TimescaleTestCase(unittest.TestCase):
