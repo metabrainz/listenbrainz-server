@@ -14,6 +14,8 @@ from mapping.release_colors import sync_release_color_table, incremental_update_
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache
+from mapping.spotify_cache import run_spotify_metadata_cache as action_run_spotify_metadata_cache
+import config
 
 
 @click.group()
@@ -111,6 +113,14 @@ def build_mb_metadata_cache(use_lb_conn):
         Build the MB metadata cache that LB uses
     """
     create_mb_metadata_cache(use_lb_conn)
+
+
+@cli.command()
+def run_spotify_metadata_cache():
+    """
+        Run the spotify mapping cache process
+    """
+    action_run_spotify_metadata_cache()
 
 
 def usage(command):
