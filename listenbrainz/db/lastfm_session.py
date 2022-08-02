@@ -41,7 +41,7 @@ class Session(object):
         })
         row = result.fetchone()
         if row:
-            return Session(row["id"], row["user_id"], row["sid"], row["api_key"], row["ts"])
+            return Session(connection, row["id"], row["user_id"], row["sid"], row["api_key"], row["ts"])
         return None
 
 
