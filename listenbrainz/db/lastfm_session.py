@@ -66,7 +66,7 @@ class Session(object):
         """
         sid = os.urandom(20).hex()
         session = Session.generate(connection, token.user.id, sid, token.api_key)
-        token.consume()
+        token.consume(connection)
         return session
 
 
