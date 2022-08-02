@@ -964,7 +964,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert400(r)
         data = json.loads(r.data)
-        self.assertEqual("These people don't follow you ['hrik2001']", data['error'])
+        self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['hrik2001']", data['error'])
 
     def test_personal_recommendation_stays_after_unfollowing(self):
         user_one = db_user.get_or_create(2, "riksucks")
