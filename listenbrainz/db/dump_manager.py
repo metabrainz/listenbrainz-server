@@ -168,6 +168,7 @@ def create_incremental(location, threads, dump_id):
             end_time = dump_entry['created']
 
         prev_dump_entry = db_dump.get_dump_entry(dump_id - 1)
+        print(prev_dump_entry)
         if prev_dump_entry is None:  # incremental dumps must have a previous dump in the series
             current_app.logger.error(
                 "Invalid dump ID %d, could not find previous dump", dump_id)

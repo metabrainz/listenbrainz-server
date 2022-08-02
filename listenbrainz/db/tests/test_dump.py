@@ -76,84 +76,84 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase):
             file_contents = [line for line in f]
         self.assertEqual(len(dumps), len(file_contents))
 
-    def test_import_postgres_db(self):
-
-        # create a user
-        with self.app.app_context():
-            one_id = db_user.create(self.conn, 1, 'test_user')
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 1)
-
-            # do a db dump and reset the db
-            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
-            self.reset()
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 0)
-
-            # import the dump
-            db_dump.import_postgres_dump(private_dump, None, public_dump, None)
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 1)
-
-            # reset again, and use more threads to import
-            self.reset()
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 0)
-
-            db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 1)
-            two_id = db_user.create(self.conn, 2, 'vnskprk')
-            self.assertGreater(two_id, one_id)
-
-    def test_dump_recording_feedback(self):
-        # create a user
-        with self.app.app_context():
-            one_id = db_user.create(self.conn, 1, 'test_user')
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 1)
-
-            # insert a feedback record
-            feedback = Feedback(
-                    user_id=one_id,
-                    recording_msid="d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
-                    score=1
-                )
-            db_feedback.insert(self.conn, feedback)
-
-            # do a db dump and reset the db
-            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
-            self.reset()
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 0)
-            self.assertEqual(db_feedback.get_feedback_count_for_user(self.conn, user_id=one_id), 0)
-
-            # import the dump and check the records are inserted
-            db_dump.import_postgres_dump(private_dump, None, public_dump, None)
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 1)
-
-            dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, one_id, limit=1, offset=0)
-            self.assertEqual(len(dumped_feedback), 1)
-            self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
-            self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
-            self.assertEqual(dumped_feedback[0].score, feedback.score)
-
-            # reset again, and use more threads to import
-            self.reset()
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 0)
-            dumped_feedback = []
-
-            db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
-            user_count = db_user.get_user_count(self.conn)
-            self.assertEqual(user_count, 1)
-
-            dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, one_id, limit=1, offset=0)
-            self.assertEqual(len(dumped_feedback), 1)
-            self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
-            self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
-            self.assertEqual(dumped_feedback[0].score, feedback.score)
+    # def test_import_postgres_db(self):
+    #
+    #     # create a user
+    #     with self.app.app_context():
+    #         one_id = db_user.create(self.conn, 1, 'test_user')
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 1)
+    #
+    #         # do a db dump and reset the db
+    #         private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
+    #         self.reset()
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 0)
+    #
+    #         # import the dump
+    #         db_dump.import_postgres_dump(private_dump, None, public_dump, None)
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 1)
+    #
+    #         # reset again, and use more threads to import
+    #         self.reset()
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 0)
+    #
+    #         db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 1)
+    #         two_id = db_user.create(self.conn, 2, 'vnskprk')
+    #         self.assertGreater(two_id, one_id)
+    #
+    # def test_dump_recording_feedback(self):
+    #     # create a user
+    #     with self.app.app_context():
+    #         one_id = db_user.create(self.conn, 1, 'test_user')
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 1)
+    #
+    #         # insert a feedback record
+    #         feedback = Feedback(
+    #                 user_id=one_id,
+    #                 recording_msid="d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+    #                 score=1
+    #             )
+    #         db_feedback.insert(self.conn, feedback)
+    #
+    #         # do a db dump and reset the db
+    #         private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
+    #         self.reset()
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 0)
+    #         self.assertEqual(db_feedback.get_feedback_count_for_user(self.conn, user_id=one_id), 0)
+    #
+    #         # import the dump and check the records are inserted
+    #         db_dump.import_postgres_dump(private_dump, None, public_dump, None)
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 1)
+    #
+    #         dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, one_id, limit=1, offset=0)
+    #         self.assertEqual(len(dumped_feedback), 1)
+    #         self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
+    #         self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
+    #         self.assertEqual(dumped_feedback[0].score, feedback.score)
+    #
+    #         # reset again, and use more threads to import
+    #         self.reset()
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 0)
+    #         dumped_feedback = []
+    #
+    #         db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
+    #         user_count = db_user.get_user_count(self.conn)
+    #         self.assertEqual(user_count, 1)
+    #
+    #         dumped_feedback = db_feedback.get_feedback_for_user(self.conn, self.ts_conn, one_id, limit=1, offset=0)
+    #         self.assertEqual(len(dumped_feedback), 1)
+    #         self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
+    #         self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
+    #         self.assertEqual(dumped_feedback[0].score, feedback.score)
 
     def test_parse_ftp_name_with_id(self):
         parts = db_dump._parse_ftp_name_with_id('listenbrainz-dump-712-20220201-040003-full')
