@@ -546,14 +546,12 @@ def create_personal_recommendation_event(user_name):
     try:
         metadata = PersonalRecordingRecommendationMetadata(**metadata)
         follower_results = db_user_relationship.multiple_users_by_username_following_user(user['id'], metadata.users)
-        current_app.logger.error(follower_results)
         non_followers = []
         for follower in metadata.users:
-            current_app.logger.error(follower_results[follower])
             if not follower_results[follower]:
                 non_followers.append(follower)
         if non_followers:
-            raise APIBadRequest(f"These people don't follow you {str(non_followers)}")
+            raise APIBadRequest(f"You cannot recommend tracks to non-followers! These people don't follow you {str(non_followers)}")
         event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata)
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
