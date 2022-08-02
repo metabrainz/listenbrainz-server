@@ -12,13 +12,12 @@ class SimilarUserTestCase(DatabaseTestCase):
         user_id = db_user.create(self.conn, 1, "tom")
         user_id2 = db_user.create(self.conn, 2, "jerry")
 
-        with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("""
-                INSERT INTO recommendation.similar_user (user_id, similar_users)
-                     VALUES (1, '{ "2" : [0.42, 0.01] }'), (2, '{ "1" : [0.42, 0.02] }')
-            """))
+        self.conn.execute(sqlalchemy.text("""
+            INSERT INTO recommendation.similar_user (user_id, similar_users)
+                 VALUES (1, '{ "2" : [0.42, 0.01] }'), (2, '{ "1" : [0.42, 0.02] }')
+        """))
 
-        similar_users = get_top_similar_users()
+        similar_users = get_top_similar_users(self.conn)
         assert len(similar_users) == 1
         assert similar_users[0][0] == 'jerry'
         assert similar_users[0][1] == 'tom'

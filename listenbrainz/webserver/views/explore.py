@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, current_app
 import ujson
 
+from listenbrainz import db
 from listenbrainz.db.similar_users import get_top_similar_users
 
 explore_bp = Blueprint('explore', __name__)
@@ -22,8 +23,8 @@ def similar_users():
         them visible to all of our users. This view can show bugs in the algorithm
         and spammers as well.
     """
-
-    similar_users = get_top_similar_users()
+    with db.engine.connect() as connection:
+        similar_users = get_top_similar_users(connection)
     return render_template(
         "explore/similar-users.html",
         similar_users=similar_users

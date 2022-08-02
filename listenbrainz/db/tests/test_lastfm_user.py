@@ -52,7 +52,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
 
     def test_user_get_play_count(self):
         date = datetime(2015, 9, 3, 0, 0, 0)
-        test_data = generate_data(date, 5, self.user.name)
+        test_data = generate_data(self.conn, date, 5, self.user.name)
         self.assertEqual(len(test_data), 5)
         self.logstore.insert(test_data)
         count = User.get_play_count(self.conn, self.user.id, self.logstore)
