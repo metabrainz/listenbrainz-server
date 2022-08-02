@@ -3,7 +3,6 @@ from copy import deepcopy
 from datetime import datetime, timezone
 
 import listenbrainz.db.stats as db_stats
-import listenbrainz.db.user as db_user
 from data.model.common_stat import StatRange
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
@@ -16,8 +15,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
-        self.user = self.create_user_with_id(1000, 1, 'stats_user')
-        self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
+        self.user = self.create_user_with_id(1000, 1999, 'stats_user')
+        self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2000, "listenbrainz-stats-user")
         self.maxDiff = None
 
     def test_insert_user_artists(self):

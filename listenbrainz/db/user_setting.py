@@ -1,3 +1,5 @@
+from typing import Optional
+
 import sqlalchemy
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
@@ -49,7 +51,7 @@ def get(connection, user_id: int):
             "Couldn't get user's setting: %s" % str(err))
 
 
-def set_timezone(connection, user_id: int, timezone_name: str):
+def set_timezone(connection, user_id: int, timezone_name: Optional[str]):
     """ Set user's timezone. Update user timezone if the row exists. Otherwise insert a new row.
     Args:
         user_id (int): the row ID of the user in the DB
