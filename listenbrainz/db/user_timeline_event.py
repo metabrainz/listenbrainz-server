@@ -129,9 +129,9 @@ def create_personal_recommendation_event(user_id: int, metadata:
                             'release_name', :release_name,
                             'recording_mbid', :recording_mbid,
                             'recording_msid', :recording_msid,
-                            'followers', (
-                                SELECT jsonb_agg("user".id) as followers_username
-                                  FROM unnest(:followers_username) as arr
+                            'users', (
+                                SELECT jsonb_agg("user".id) as users
+                                  FROM unnest(:users) as arr
                                   INNER JOIN "user"
                                   ON "user".musicbrainz_id = arr
                             ),
@@ -146,7 +146,7 @@ def create_personal_recommendation_event(user_id: int, metadata:
                     'release_name': metadata.release_name,
                     'recording_mbid': metadata.recording_mbid,
                     'recording_msid': metadata.recording_msid,
-                    'followers_username': metadata.followers_username,
+                    'users': metadata.users,
                     'blurb_content': metadata.blurb_content
                 }
             )
@@ -235,10 +235,10 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
                         'release_name', user_timeline_event.metadata -> 'release_name',
                         'recording_mbid', user_timeline_event.metadata -> 'recording_mbid',
                         'recording_msid', user_timeline_event.metadata -> 'recording_msid',
-                        'followers_username', jsonb_agg("user".musicbrainz_id),
+                        'users', jsonb_agg("user".musicbrainz_id),
                         'blurb_content', user_timeline_event.metadata -> 'blurb_content'
                     ) AS metadata
-                    FROM jsonb_array_elements_text(user_timeline_event.metadata -> 'followers') AS arr
+                    FROM jsonb_array_elements_text(user_timeline_event.metadata -> 'users') AS arr
                    INNER JOIN "user" ON arr.value::int = "user".id
                  )
                  , user_timeline_event.created
@@ -246,7 +246,7 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
               FROM user_timeline_event
               JOIN "user"
                 ON user_timeline_event.user_id = "user".id
-             WHERE (user_timeline_event.metadata -> 'followers') @> (:user_id)::text::jsonb
+             WHERE (user_timeline_event.metadata -> 'users') @> (:user_id)::text::jsonb
                 OR user_timeline_event.user_id = :user_id
                AND user_timeline_event.created > :min_ts
                AND user_timeline_event.created < :max_ts

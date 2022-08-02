@@ -829,7 +829,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
@@ -863,7 +863,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
@@ -902,7 +902,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
@@ -927,7 +927,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
@@ -953,7 +953,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
@@ -979,7 +979,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
-            "followers_username": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
