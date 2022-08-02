@@ -34,5 +34,6 @@ RSYNC_INCREMENTAL_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-du
 RSYNC_SPARK_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-spark'
 
 # Check to make sure that this container is the prod cron container, otherwise never rsync anything!
-PROD="{{ (env "DEPLOY_ENV") }}"
-CONTAINER_NAME="{{ (env "CONTAINER_NAME") }}"
+# these variables may also be read by the dump command in python so export to ensure availability
+export PROD="{{ (env "DEPLOY_ENV") }}"
+export CONTAINER_NAME="{{ (env "CONTAINER_NAME") }}"
