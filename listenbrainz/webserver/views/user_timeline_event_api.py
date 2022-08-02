@@ -545,9 +545,11 @@ def create_personal_recommendation_event(user_name):
 
     try:
         metadata = PersonalRecordingRecommendationMetadata(**metadata)
-        follower_results = db_user_relationship.multiple_users_by_username_following_user(user['id'], metadata.followers_username)
+        follower_results = db_user_relationship.multiple_users_by_username_following_user(user['id'], metadata.users)
+        current_app.logger.error(follower_results)
         non_followers = []
-        for follower in metadata.followers_username:
+        for follower in metadata.users:
+            current_app.logger.error(follower_results[follower])
             if not follower_results[follower]:
                 non_followers.append(follower)
         if non_followers:
@@ -817,7 +819,6 @@ def get_personal_recording_recommendation_events(
         count=count,
     )
 
-
     events = []
     for event in personal_recording_recommendation_events_db:
         try:
@@ -827,7 +828,7 @@ def get_personal_recording_recommendation_events(
                 release_name=event.metadata.release_name,
                 recording_mbid=event.metadata.recording_mbid,
                 recording_msid=event.metadata.recording_msid,
-                followers_username=event.metadata.followers_username,
+                users=event.metadata.users,
                 blurb_content=event.metadata.blurb_content
             )
 
