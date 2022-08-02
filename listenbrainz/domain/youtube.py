@@ -25,8 +25,8 @@ OAUTH_REVOKE_URL = "https://oauth2.googleapis.com/revoke"
 
 class YoutubeService(ExternalService):
 
-    def __init__(self):
-        super(YoutubeService, self).__init__(ExternalServiceType.YOUTUBE)
+    def __init__(self, connection):
+        super(YoutubeService, self).__init__(connection, ExternalServiceType.YOUTUBE)
         self.client_config = current_app.config["YOUTUBE_CONFIG"]
         self.redirect_uri = current_app.config["YOUTUBE_REDIRECT_URI"]
 
@@ -39,7 +39,7 @@ class YoutubeService(ExternalService):
             self._revoke_token(user_id, token["access_token"])
             return False
         else:
-            external_service_oauth.save_token(user_id=user_id,
+            external_service_oauth.save_token(self.conn, user_id=user_id,
                                               service=self.service,
                                               access_token=token["access_token"],
                                               refresh_token=token["refresh_token"],
@@ -81,7 +81,7 @@ class YoutubeService(ExternalService):
                 raise ExternalServiceInvalidGrantError(error_body)
 
             raise ExternalServiceAPIError("Could not refresh API Token for Youtube user")
-        external_service_oauth.update_token(user_id=user_id,
+        external_service_oauth.update_token(self.conn, user_id=user_id,
                                             service=self.service,
                                             access_token=credentials.token,
                                             refresh_token=credentials.refresh_token,

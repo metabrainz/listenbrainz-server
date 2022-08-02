@@ -15,8 +15,8 @@ class YoutubeServiceTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(YoutubeServiceTestCase, self).setUp()
-        self.user_id = db_user.create(211, 'youtube_user')
-        self.service = YoutubeService()
+        self.user_id = db_user.create(self.conn, 211, 'youtube_user')
+        self.service = YoutubeService(self.conn)
         self.service.add_new_user(self.user_id, {
             'access_token': 'access-token',
             'expires_at': time.time() + 3599,

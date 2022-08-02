@@ -10,7 +10,7 @@ class ExternalServiceTestCase(ServerTestCase):
 
     @freeze_time("2021-05-12 03:21:34", tz_offset=0)
     def test_user_oauth_token_has_expired(self):
-        service = SpotifyService()
+        service = SpotifyService(None)
 
         # has expired
         user = {'token_expires': datetime.datetime(2021, 5, 12, 3, 0, 40, tzinfo=datetime.timezone.utc)}

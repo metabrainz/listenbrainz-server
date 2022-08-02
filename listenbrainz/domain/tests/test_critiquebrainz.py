@@ -14,7 +14,7 @@ class CritiqueBrainzTestCase(IntegrationTestCase):
     def setUp(self):
         super(CritiqueBrainzTestCase, self).setUp()
         self.user_id = db_user.create(self.conn, 211, 'critiquebrainz_user')
-        self.service = CritiqueBrainzService()
+        self.service = CritiqueBrainzService(self.conn)
         self.service.add_new_user(self.user_id, {
             'access_token': 'access-token',
             'expires_in': 3599,

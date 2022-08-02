@@ -15,8 +15,8 @@ class SpotifyServiceTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(SpotifyServiceTestCase, self).setUp()
-        self.user_id = db_user.create(312, 'spotify_user')
-        self.service = SpotifyService()
+        self.user_id = db_user.create(self.conn, 312, 'spotify_user')
+        self.service = SpotifyService(self.conn)
         self.service.add_new_user(self.user_id, {
             'access_token': 'old-token',
             'refresh_token': 'old-refresh-token',
@@ -26,9 +26,9 @@ class SpotifyServiceTestCase(IntegrationTestCase):
         self.spotify_user = self.service.get_user(self.user_id)
 
     def test_get_active_users(self):
-        user_id_1 = db_user.create(333, 'user-1')
-        user_id_2 = db_user.create(666, 'user-2')
-        user_id_3 = db_user.create(999, 'user-3')
+        user_id_1 = db_user.create(self.conn, 333, 'user-1')
+        user_id_2 = db_user.create(self.conn, 666, 'user-2')
+        user_id_3 = db_user.create(self.conn, 999, 'user-3')
 
         self.service.add_new_user(user_id_2, {
             'access_token': 'access-token',

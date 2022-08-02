@@ -27,8 +27,8 @@ CRITIQUEBRAINZ_REVIEW_LICENSE = "CC BY-SA 3.0"
 
 class CritiqueBrainzService(ExternalService):
 
-    def __init__(self):
-        super(CritiqueBrainzService, self).__init__(ExternalServiceType.CRITIQUEBRAINZ)
+    def __init__(self, connection):
+        super(CritiqueBrainzService, self).__init__(connection, ExternalServiceType.CRITIQUEBRAINZ)
         self.client_id = current_app.config["CRITIQUEBRAINZ_CLIENT_ID"]
         self.client_secret = current_app.config["CRITIQUEBRAINZ_CLIENT_SECRET"]
         self.redirect_uri = current_app.config["CRITIQUEBRAINZ_REDIRECT_URI"]
@@ -36,6 +36,7 @@ class CritiqueBrainzService(ExternalService):
     def add_new_user(self, user_id: int, token: dict) -> bool:
         expires_at = int(time.time()) + token['expires_in']
         external_service_oauth.save_token(
+            self.conn,
             user_id=user_id,
             service=self.service,
             access_token=token["access_token"],
@@ -85,6 +86,7 @@ class CritiqueBrainzService(ExternalService):
 
         expires_at = int(time.time()) + token['expires_in']
         external_service_oauth.update_token(
+            self.conn,
             user_id=user_id,
             service=self.service,
             access_token=token["access_token"],

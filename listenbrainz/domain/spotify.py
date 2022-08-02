@@ -61,14 +61,14 @@ def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
 
 class SpotifyService(ImporterService):
 
-    def __init__(self):
-        super(SpotifyService, self).__init__(ExternalServiceType.SPOTIFY)
+    def __init__(self, connection):
+        super(SpotifyService, self).__init__(connection, ExternalServiceType.SPOTIFY)
         self.client_id = current_app.config['SPOTIFY_CLIENT_ID']
         self.client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
         self.redirect_url = current_app.config['SPOTIFY_CALLBACK_URL']
 
     def get_user(self, user_id: int) -> Optional[dict]:
-        return spotify.get_user(user_id)
+        return spotify.get_user(self.conn, user_id)
 
     def add_new_user(self, user_id: int, token: dict) -> bool:
         """Create a spotify row for a user based on OAuth access tokens
@@ -83,9 +83,9 @@ class SpotifyService(ImporterService):
         scopes = token['scope'].split()
         active = set(scopes).issuperset(SPOTIFY_IMPORT_PERMISSIONS)
 
-        external_service_oauth.save_token(user_id=user_id, service=self.service, access_token=access_token,
-                                          refresh_token=refresh_token, token_expires_ts=expires_at,
-                                          record_listens=active, scopes=scopes)
+        external_service_oauth.save_token(self.conn, user_id=user_id, service=self.service,
+                                          access_token=access_token, refresh_token=refresh_token,
+                                          token_expires_ts=expires_at, record_listens=active, scopes=scopes)
         return True
 
     def get_authorize_url(self, permissions: Sequence[str]):
@@ -155,7 +155,7 @@ class SpotifyService(ImporterService):
         if "refresh_token" in response:
             refresh_token = response['refresh_token']
         expires_at = int(time.time()) + response['expires_in']
-        external_service_oauth.update_token(user_id=user_id, service=self.service,
+        external_service_oauth.update_token(self.conn, user_id=user_id, service=self.service,
                                             access_token=access_token, refresh_token=refresh_token,
                                             expires_at=expires_at)
         return self.get_user(user_id)
@@ -167,10 +167,10 @@ class SpotifyService(ImporterService):
         Args:
             user_id (int): the ListenBrainz row ID of the user
         """
-        external_service_oauth.delete_token(user_id, self.service, remove_import_log=False)
+        external_service_oauth.delete_token(self.conn, user_id, self.service, remove_import_log=False)
 
     def get_user_connection_details(self, user_id: int):
-        user = spotify.get_user_import_details(user_id)
+        user = spotify.get_user_import_details(self.conn, user_id)
         if user:
             def date_to_iso(date):
                 return date.isoformat() + "Z" if date else None
@@ -182,4 +182,4 @@ class SpotifyService(ImporterService):
     def get_active_users_to_process(self):
         """ Returns a list of Spotify user instances that need their Spotify listens imported.
         """
-        return spotify.get_active_users_to_process()
+        return spotify.get_active_users_to_process(self.conn)

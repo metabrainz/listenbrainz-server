@@ -11,11 +11,12 @@ class ExternalService(ABC):
     """ Base class that external music services only allowing streaming should
     implement to integrate with ListenBrainz. """
 
-    def __init__(self, service: ExternalServiceType):
+    def __init__(self, connection, service: ExternalServiceType):
         """
         Args:
             service (data.model.external_service.ExternalServiceType): unique name identifying the service
         """
+        self.conn = connection
         self.service = service
 
     def add_new_user(self, user_id: int, token: dict) -> bool:
@@ -37,7 +38,7 @@ class ExternalService(ABC):
         external_service_oauth.delete_token(user_id=user_id, service=self.service, remove_import_log=True)
 
     def get_user(self, user_id: int) -> Union[dict, None]:
-        return external_service_oauth.get_token(user_id=user_id, service=self.service)
+        return external_service_oauth.get_token(self.conn, user_id=user_id, service=self.service)
 
     def user_oauth_token_has_expired(self, user: dict, within_minutes: int = 5) -> bool:
         """Check if a user's oauth token has expired (within a threshold)
