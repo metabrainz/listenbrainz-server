@@ -112,7 +112,7 @@ class ConvertListensTestCase(DatabaseTestCase):
         app.config['TESTING'] = False
         with app.app_context():
             spotify_read_listens.process_all_spotify_users(self.conn)
-            mock_notify_error.assert_called_once_with(self.user['musicbrainz_id'], 'api borked')
+            mock_notify_error.assert_called_once_with(self.conn, self.user['musicbrainz_id'], 'api borked')
             mock_update.assert_called_once()
 
     @patch('spotipy.Spotify')

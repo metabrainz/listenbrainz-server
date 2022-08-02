@@ -350,6 +350,7 @@ class HandlersTestCase(ResetDatabaseTestCase):
             handle_recommendations(data)
 
         mock_db_insert.assert_called_with(
+            mock.ANY,
             1,
             UserRecommendationsJson(
                 top_artist=[
@@ -580,6 +581,7 @@ class HandlersTestCase(ResetDatabaseTestCase):
             handle_missing_musicbrainz_data(data)
 
         mock_db_insert.assert_called_with(
+            mock.ANY,
             1,
             UserMissingMusicBrainzDataJson(
                 missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
