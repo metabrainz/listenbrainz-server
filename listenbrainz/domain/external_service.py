@@ -35,7 +35,7 @@ class ExternalService(ABC):
         Args:
             user_id (int): the ListenBrainz row ID of the user
         """
-        external_service_oauth.delete_token(user_id=user_id, service=self.service, remove_import_log=True)
+        external_service_oauth.delete_token(self.conn, user_id=user_id, service=self.service, remove_import_log=True)
 
     def get_user(self, user_id: int) -> Union[dict, None]:
         return external_service_oauth.get_token(self.conn, user_id=user_id, service=self.service)
