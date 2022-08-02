@@ -20,8 +20,8 @@ class MappingTestCase(TimescaleTestCase, MessyBrainzTestCase):
         MessyBrainzTestCase.setUp(self)
 
     def tearDown(self):
-        TimescaleTestCase.tearDown(self)
         MessyBrainzTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
 
     def test_msid_mbid_model(self):
         with self.assertRaisesRegex(ValueError, 'at least one of recording_msid or recording_mbid should be specified'):
@@ -93,7 +93,7 @@ class MappingTestCase(TimescaleTestCase, MessyBrainzTestCase):
                 "title": "Repairs"
             }
         ]
-        submitted = messybrainz.insert_all_in_transaction(recordings)
+        submitted = messybrainz.insert_all_in_transaction(self.msb_conn, recordings)
         # data sent to msb cannot contain nulls but we want it when inserting in mapping
         recordings[2].update(**{
             "artist_credit_id": None,

@@ -18,7 +18,7 @@
 
 import os
 import unittest
-from listenbrainz.messybrainz import init_db_connection, run_sql_script
+from listenbrainz import messybrainz as msb
 from listenbrainz import config
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'messybrainz', 'sql')
@@ -26,19 +26,14 @@ ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 
 
 class MessyBrainzTestCase(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls) -> None:
+        msb.init_db_connection(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
+
     def setUp(self):
-        init_db_connection(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
-        self.drop_tables()
-        self.init_db()
+        self.msb_conn = msb.engine.connect()
+        self.msb_trans = self.msb_conn.begin()
 
     def tearDown(self):
-        self.drop_tables()
-
-    def init_db(self):
-        run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
-        run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-        run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
-        run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
-
-    def drop_tables(self):
-        run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
+        self.msb_trans.rollback()
+        self.msb_conn.close()

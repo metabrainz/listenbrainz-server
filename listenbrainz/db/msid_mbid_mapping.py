@@ -7,7 +7,7 @@ from pydantic import BaseModel, validator, root_validator
 from sqlalchemy import text
 
 from data.model.validators import check_valid_uuid
-from listenbrainz.messybrainz import load_recordings_from_msids
+from listenbrainz.messybrainz.data import load_recordings_from_msids
 
 
 class MsidMbidModel(BaseModel):
@@ -78,7 +78,7 @@ def load_recordings_from_mapping(ts_conn, mbids: Iterable[str], msids: Iterable[
 ModelT = TypeVar('ModelT', bound=MsidMbidModel)
 
 
-def fetch_track_metadata_for_items(ts_conn, items: List[ModelT]) -> List[ModelT]:
+def fetch_track_metadata_for_items(ts_conn, msb_conn, items: List[ModelT]) -> List[ModelT]:
     """ Fetches track_metadata for every object in a list of MsidMbidModel items.
 
         Args:
@@ -108,7 +108,7 @@ def fetch_track_metadata_for_items(ts_conn, items: List[ModelT]) -> List[ModelT]
     _update_items_from_map(mbid_item_map, mapping_mbid_metadata, remaining_item_map)
     _update_items_from_map(msid_item_map, mapping_msid_metadata, remaining_item_map)
 
-    msid_metadatas = load_recordings_from_msids(remaining_item_map.keys())
+    msid_metadatas = load_recordings_from_msids(msb_conn, remaining_item_map.keys())
     for metadata in msid_metadatas:
         msid = metadata["ids"]["recording_msid"]
         if msid not in remaining_item_map:

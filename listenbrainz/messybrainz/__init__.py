@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 
 import sqlalchemy.exc
 
@@ -12,7 +13,7 @@ from listenbrainz.messybrainz import exceptions, data
 # This value must be incremented after schema changes on replicated tables!
 SCHEMA_VERSION = 1
 
-engine = None
+engine: Optional[sqlalchemy.engine.Engine] = None
 
 
 def init_db_connection(connect_str):
@@ -54,7 +55,7 @@ def run_sql_script_without_transaction(sql_file_path):
         return True
 
 
-def submit_listens_and_sing_me_a_sweet_song(recordings):
+def submit_listens_and_sing_me_a_sweet_song(msb_conn, recordings):
     """ Inserts a list of recordings into MessyBrainz.
 
     Args:
@@ -71,7 +72,7 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
     success = False
     while not success and attempts < 3:
         try:
-            data = insert_all_in_transaction(recordings)
+            data = insert_all_in_transaction(msb_conn, recordings)
             success = True
         except sqlalchemy.exc.IntegrityError as e:
             # If we get an IntegrityError then our transaction failed.
@@ -84,19 +85,6 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
         return {"payload": data}
     else:
         raise exceptions.ErrorAddingException("Failed to add data")
-
-
-def load_recordings_from_msids(msids):
-    """ Returns data for a recording with specified MessyBrainz ID.
-
-    Args:
-        msid (uuid): the MessyBrainz ID of the recording
-    Returns:
-        A dict containing the recording data for the recording with specified MessyBrainz ID
-    """
-
-    with engine.begin() as connection:
-        return data.load_recordings_from_msids(connection, msids)
 
 
 def insert_single(connection, recording):
@@ -116,7 +104,7 @@ def insert_single(connection, recording):
     return loaded
 
 
-def insert_all_in_transaction(recordings):
+def insert_all_in_transaction(msb_conn, recordings):
     """ Inserts a list of recordings into MessyBrainz.
 
     Args:
@@ -126,8 +114,7 @@ def insert_all_in_transaction(recordings):
     """
 
     ret = []
-    with engine.begin() as connection:
-        for recording in recordings:
-            result = insert_single(connection, recording)
-            ret.append(result)
+    for recording in recordings:
+        result = insert_single(msb_conn, recording)
+        ret.append(result)
     return ret

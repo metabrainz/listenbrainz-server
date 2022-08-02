@@ -1153,7 +1153,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
                 "release": "Lucifer"
             }
         ]
-        submitted_data = messybrainz.insert_all_in_transaction(recordings)
+        submitted_data = messybrainz.insert_all_in_transaction(self.msb_conn, recordings)
 
         sample_feedback = [
             {

@@ -56,6 +56,11 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
             }
         ]
 
+    def tearDown(self):
+        MessyBrainzTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
+        DatabaseTestCase.tearDown(self)
+
     def insert_test_data(self, user_id):
         """ Insert test data into the database """
 

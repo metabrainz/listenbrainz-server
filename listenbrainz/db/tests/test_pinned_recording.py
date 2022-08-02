@@ -57,6 +57,11 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             },
         ]
 
+    def tearDown(self):
+        MessyBrainzTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
+        DatabaseTestCase.tearDown(self)
+
     def insert_test_data(self, user_id: int, limit: int = 4):
         """Inserts test data into the database.
 
@@ -114,7 +119,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             }
         ]
 
-        submitted_data = msb_db.insert_all_in_transaction(recordings)
+        submitted_data = msb_db.insert_all_in_transaction(self.msb_conn, recordings)
         msids = [x["ids"]["recording_msid"] for x in submitted_data]
 
         query = """

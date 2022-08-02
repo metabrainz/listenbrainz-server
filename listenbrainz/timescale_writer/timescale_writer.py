@@ -124,7 +124,8 @@ class TimescaleWriterSubscriber:
             msb_listens.append(messy_dict)
 
         try:
-            msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
+            with messybrainz.engine.connect() as msb_conn:
+                msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_conn, msb_listens)
         except (messybrainz.exceptions.BadDataException, messybrainz.exceptions.ErrorAddingException):
             current_app.logger.error("MessyBrainz lookup for listens failed: ", exc_info=True)
             return []
