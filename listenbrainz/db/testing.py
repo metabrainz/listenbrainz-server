@@ -70,6 +70,7 @@ class ResetDatabaseTestCase(unittest.TestCase):
         self.conn.close()
         self.drop_tables()
         self.init_db()
+        self.conn = db.engine.connect()
 
     def init_db(self):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
