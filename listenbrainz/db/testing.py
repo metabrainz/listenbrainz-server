@@ -64,10 +64,11 @@ class ResetDatabaseTestCase(unittest.TestCase):
         self.conn = db.engine.connect()
 
     def tearDown(self):
-        self.drop_tables()
+        self.conn.close()
 
     def reset_db(self):
-        self.conn.close()
+        if self.conn:
+            self.conn.close()
         self.drop_tables()
         self.init_db()
 
@@ -79,11 +80,8 @@ class ResetDatabaseTestCase(unittest.TestCase):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     def drop_tables(self):
-        self.drop_schema()
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
-
-    def drop_schema(self):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_schema.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
 
 
 class TimescaleTestCase(unittest.TestCase):
