@@ -86,7 +86,7 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase):
 
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
-            self.conn.rollback()
+            self.reset()
             user_count = db_user.get_user_count(self.conn)
             self.assertEqual(user_count, 0)
 
@@ -96,7 +96,7 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase):
             self.assertEqual(user_count, 1)
 
             # reset again, and use more threads to import
-            self.conn.rollback()
+            self.reset()
             user_count = db_user.get_user_count(self.conn)
             self.assertEqual(user_count, 0)
 
@@ -123,7 +123,7 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase):
 
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
-            self.conn.rollback()
+            self.reset()
             user_count = db_user.get_user_count(self.conn)
             self.assertEqual(user_count, 0)
             self.assertEqual(db_feedback.get_feedback_count_for_user(self.conn, user_id=one_id), 0)
@@ -140,7 +140,7 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase):
             self.assertEqual(dumped_feedback[0].score, feedback.score)
 
             # reset again, and use more threads to import
-            self.conn.rollback()
+            self.reset()
             user_count = db_user.get_user_count(self.conn)
             self.assertEqual(user_count, 0)
             dumped_feedback = []

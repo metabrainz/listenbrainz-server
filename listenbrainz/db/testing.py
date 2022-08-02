@@ -26,13 +26,9 @@ class DatabaseTestCase(unittest.TestCase):
         self.conn = db.engine.connect()
         self.trans = self.conn.begin()
 
-        self.nested = self.conn.begin_nested()
-
-        @event.listens_for(self.conn, "rollback_savepoint")
-        def receive_rollback_savepoint(conn, name, context):
-            print("Intercepted savepoint rollback!")
-            if not self.nested.is_active:
-                self.nested = self.conn.begin_nested()
+    def reset(self):
+        self.trans.rollback()
+        self.trans = self.conn.begin()
 
     def tearDown(self):
         self.trans.rollback()

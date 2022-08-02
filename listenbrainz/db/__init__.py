@@ -1,3 +1,4 @@
+from typing import Optional
 
 import sqlalchemy
 from sqlalchemy import create_engine
@@ -13,7 +14,7 @@ import psycopg2.extras
 # public dump
 SCHEMA_VERSION_CORE = 8
 
-engine = None
+engine: Optional[sqlalchemy.engine.Engine] = None
 
 DUMP_DEFAULT_THREAD_COUNT = 4
 
