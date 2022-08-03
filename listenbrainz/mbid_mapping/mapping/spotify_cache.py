@@ -42,9 +42,12 @@ class SpotifyMetadataCache():
 
     COUCHDB_NAME = "spotify-metadata-cache"
     CACHE_TIME = 180  # days
+    MAX_CACHED_PENDING_IDS = 1000
 
     def __init__(self):
         self.id_queue = UniqueQueue()
+        self.pending_ids = []
+        self.recent_ids = {}
         self.sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=config.SPOTIFY_APP_CLIENT_ID,
                                                                         client_secret=config.SPOTIFY_APP_CLIENT_SECRET))
         self.couch = couchdb.init(config.COUCHDB_USER, config.COUCHDB_PASSWORD, config.COUCHDB_HOST, config.COUCHDB_PORT)
@@ -82,7 +85,7 @@ class SpotifyMetadataCache():
                 for track in tracks:
                     for track_artist in track["artists"]:
                         if track_artist["id"] != artist_id and track_artist["id"]:
-                            self.id_queue.put("artist:%s" % track_artist["id"])
+                            self.add_pending_spotify_ids(["artist:%s" % track_artist["id"]])
 
             album["tracks"] = tracks
 
@@ -105,17 +108,42 @@ class SpotifyMetadataCache():
         artist["status"] = "fetched"
         couchdb.insert_data(self.COUCHDB_NAME, [artist])
 
+    def add_recent_id(self, spotify_id):
+        """ Add a recent id and return true if it was added """
+        if spotify_id not in self.recent_ids:
+            self.recent_ids[spotify_id] = datetime.now()
+            return True
+
+        return False
+
     def add_pending_spotify_ids(self, spotify_ids):
+        try:
+            iter(spotify_ids)
+        except TypeException:
+            raise ValueError("Must pass an iterable.")
+
+        to_add = []
         for spotify_id in spotify_ids:
             if not spotify_id.startswith("artist:") and not spotify_id.startswith("track:"):
-                print("Invalid ID submitted -- all IDs must start with artist: or track:")
-                return
+                raise ValueError("Invalid ID submitted -- all IDs must start with artist: or track:")
+
+            if self.add_recent_id(spotify_id):
+                to_add.append(spotify_id)
+                
+        self.pending_ids.extend(to_add)
+        if len(self.pending_ids) > self.MAX_CACHED_PENDING_IDS:
+            self.flush_pending_ids()
+
+    def flush_pending_ids(self):
+        if len(self.pending_ids) == 0:
+            return
 
         data = {"status": "pending",
                           "_id": str(uuid.uuid4()),
-                          "spotify_ids": spotify_ids,
+                          "spotify_ids": self.pending_ids,
                           "queued": datetime.utcnow().isoformat()}
         couchdb.insert_data(self.COUCHDB_NAME, [data])
+        self.pending_ids = []
 
     def load_ids_to_process(self):
         mango = {"selector": {"status": "pending"},
@@ -132,25 +160,35 @@ class SpotifyMetadataCache():
 
         return ret
 
+    def print_stats(self):
+        print(" queued %d, pending %d" % (self.id_queue.size(), len(self.pending_ids)))
+
     def process_artist(self, artist_id):
 
-        print(f"Process {artist_id}")
+        print(f"{artist_id}: ", end="")
 
         # Fetch an existing doc and if found, see if it has expired
         existing_doc = couchdb.get(self.COUCHDB_NAME, artist_id)
         if existing_doc is not None:
             expires = dateutil.parser.isoparse(existing_doc["expires"])
             if dateutil.parser.isoparse(existing_doc["expires"]) > datetime.utcnow():
+                print("fresh. ", end="")
+                self.print_stats()
                 return
+            print("stale", end="")
             rev = int(existing_doc["_rev"]) + 1
         else:
             rev = None
 
-        artist_data = self.fetch_artist(artist_id)
+        artist_data = self.fetch_artist(artist_id, add_discovered_artists=True)
         if rev is not None:
             artist_data["_rev"] = str(rev)
 
         self.insert_artist(artist_data)
+        self.add_recent_id(artist_id)
+
+        print("fetched: %-30s " % (artist_data["name"][:29]), end="")
+        self.print_stats()
 
     def start(self):
         """ Main loop of the application """
@@ -158,6 +196,7 @@ class SpotifyMetadataCache():
         while True:
             # If we have no more artists in the queue, fetch from the DB. If there are none, sleep, try again.
             if self.id_queue.empty():
+                self.flush_pending_ids()
                 if not self.load_ids_to_process():
                     sleep(60)
                     continue
@@ -177,7 +216,6 @@ class SpotifyMetadataCache():
             for artist_id in artist_ids:
                 self.process_artist(artist_id)
 
-            print("%d items in queue." % self.id_queue.size())
 
 
 def run_spotify_metadata_cache():
@@ -188,3 +226,4 @@ def run_spotify_metadata_cache():
 def queue_spotify_ids(spotify_ids):
     smc = SpotifyMetadataCache()
     smc.add_pending_spotify_ids(spotify_ids)
+    smc.flush_pending_ids()
