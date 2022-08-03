@@ -129,6 +129,39 @@ def fetch_data(prefix: str, user_id: int):
 
     return None
 
+def get(database: str, document_id: str):
+    base_url = get_base_url()
+    document_url = f"{base_url}/{database}/{document_id}"
+    response = requests.get(document_url)
+    if response.status_code == 404:
+        return None
+
+    response.raise_for_status()
+
+    return response.json()
+
+
+def find_data(database: str, query: dict):
+    base_url = get_base_url()
+    document_url = f"{base_url}/{database}/_find"
+    response = requests.post(document_url, json=query)
+    if response.status_code == 404:
+        return None
+
+    response.raise_for_status()
+
+    return response.json()["docs"]
+
+def create_index(database: str, index_data: dict):
+    with start_span(op="serializing", description="serialize data to json"):
+        data = ujson.dumps(index_data)
+
+    with start_span(op="http", description="create couchdb index"):
+        couchdb_url = f"{get_base_url()}/{database}/_index"
+        response = requests.post(couchdb_url, data=data, headers={"Content-Type": "application/json"})
+        if response.status_code != 200:
+            print(response.text)
+        response.raise_for_status()
 
 def insert_data(database: str, data: list[dict]):
     """ Insert the given data into the specified database. """
