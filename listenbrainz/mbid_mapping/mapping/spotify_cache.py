@@ -91,7 +91,12 @@ class SpotifyMetadataCache():
         return artist
 
     def fetch_artist_ids_from_track_id(self, track_id):
-        return [a["id"] for a in self.sp.track(track_id)["artists"]]
+        try:
+            track = self.sp.track(track_id)
+        except spotipy.exceptions.SpotifyException:
+            return None
+
+        return [a["id"] for a in track["artists"]]
 
     def insert_artist(self, artist):
         artist["_id"] = artist["id"]
@@ -114,14 +119,16 @@ class SpotifyMetadataCache():
 
     def load_ids_to_process(self):
         mango = {"selector": {"status": "pending"},
-                 "fields": ["queued", "spotify_ids"],
+                 "fields": ["queued", "spotify_ids", "_id"],
                  "sort": [{"queued": "asc"}]}
         ret = False
         for row in couchdb.find_data(self.COUCHDB_NAME, mango):
             for spotify_id in row["spotify_ids"]:
-                print("Add spotify id %s to queue" % spotify_id)
                 self.id_queue.put(spotify_id)
                 ret = True
+            couchdb.delete_data(self.COUCHDB_NAME, row["_id"])
+            break
+
 
         return ret
 
@@ -134,14 +141,14 @@ class SpotifyMetadataCache():
         if existing_doc is not None:
             expires = dateutil.parser.isoparse(existing_doc["expires"])
             if dateutil.parser.isoparse(existing_doc["expires"]) > datetime.utcnow():
-                print("Find existing doc!")
                 return
             rev = int(existing_doc["_rev"]) + 1
         else:
-            rev = 1
+            rev = None
 
         artist_data = self.fetch_artist(artist_id)
-        artist_data["_rev"] = str(rev)
+        if rev is not None:
+            artist_data["_rev"] = str(rev)
 
         self.insert_artist(artist_data)
 
@@ -156,10 +163,12 @@ class SpotifyMetadataCache():
                     continue
 
             spotify_id = self.id_queue.get()
-            print(f"got {spotify_id}")
 
             if spotify_id.startswith("track:"):
                 artist_ids = self.fetch_artist_ids_from_track_id(spotify_id[6:])
+                if artist_ids is None:
+                    continue
+
             elif spotify_id.startswith("artist:"):
                 artist_ids = [spotify_id[7:]]
             else:
