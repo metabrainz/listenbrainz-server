@@ -227,3 +227,19 @@ def queue_spotify_ids(spotify_ids):
     smc = SpotifyMetadataCache()
     smc.add_pending_spotify_ids(spotify_ids)
     smc.flush_pending_ids()
+
+def load_spotify_ids_from_file(filename):
+    smc = SpotifyMetadataCache()
+    count = 0
+    with open(filename, "r") as f:
+        while True:
+            spotify_id = f.readline()
+            if not spotify_id:
+                break
+
+            spotify_id = spotify_id.strip()
+            smc.add_pending_spotify_ids([spotify_id])
+            count += 1
+
+    smc.flush_pending_ids()
+    print("%d ids inserted" % count)
