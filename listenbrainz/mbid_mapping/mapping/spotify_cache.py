@@ -129,7 +129,7 @@ class SpotifyMetadataCache():
 
             if self.add_recent_id(spotify_id):
                 to_add.append(spotify_id)
-                
+
         self.pending_ids.extend(to_add)
         if len(self.pending_ids) > self.MAX_CACHED_PENDING_IDS:
             self.flush_pending_ids()
@@ -156,7 +156,6 @@ class SpotifyMetadataCache():
                 ret = True
             couchdb.delete_data(self.COUCHDB_NAME, row["_id"])
             break
-
 
         return ret
 
@@ -217,7 +216,6 @@ class SpotifyMetadataCache():
                 self.process_artist(artist_id)
 
 
-
 def run_spotify_metadata_cache():
     smc = SpotifyMetadataCache()
     smc.start()
@@ -227,6 +225,7 @@ def queue_spotify_ids(spotify_ids):
     smc = SpotifyMetadataCache()
     smc.add_pending_spotify_ids(spotify_ids)
     smc.flush_pending_ids()
+
 
 def load_spotify_ids_from_file(filename):
     smc = SpotifyMetadataCache()
