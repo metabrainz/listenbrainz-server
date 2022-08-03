@@ -24,5 +24,11 @@ REDIS_NAMESPACE = "listenbrainz"
 SPOTIFY_APP_CLIENT_ID = ""
 SPOTIFY_APP_CLIENT_SECRET = ""
 
+# CouchDB config
+COUCHDB_HOST = "localhost"
+COUCHDB_PORT = 5984
+COUCHDB_USER = "listenbrainz"
+COUCHDB_PASSWORD = "listenbrainz"
+
 # For debugging, only fetches a tiny portion of the data if True
 USE_MINIMAL_DATASET = True 
