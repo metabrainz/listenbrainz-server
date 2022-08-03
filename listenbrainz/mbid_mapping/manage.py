@@ -15,8 +15,8 @@ from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache
 from mapping.spotify_cache import run_spotify_metadata_cache as action_run_spotify_metadata_cache, \
-                                  queue_spotify_ids as action_queue_spotify_ids, \
-                                  load_spotify_ids_from_file as action_load_spotify_ids_from_file
+    queue_spotify_ids as action_queue_spotify_ids, \
+    load_spotify_ids_from_file as action_load_spotify_ids_from_file
 import config
 
 
@@ -133,6 +133,7 @@ def queue_spotify_ids(spotify_ids):
     """
     action_queue_spotify_ids(spotify_ids)
 
+
 @cli.command()
 @click.argument('filename')
 def load_spotify_ids(filename):
@@ -140,6 +141,7 @@ def load_spotify_ids(filename):
         Load spotify ids from a file, one per line.
     """
     action_load_spotify_ids_from_file(filename)
+
 
 def usage(command):
     with click.Context(command) as ctx:
