@@ -171,6 +171,8 @@ def insert_data(database: str, data: list[dict]):
     with start_span(op="http", description="insert docs in couchdb using api"):
         couchdb_url = f"{get_base_url()}/{database}/_bulk_docs"
         response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
+        if response.status_code != 200:
+            print(response.text)
         response.raise_for_status()
 
 
