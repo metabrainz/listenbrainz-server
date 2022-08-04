@@ -9,7 +9,7 @@ import spotipy
 import dateutil.parser
 from spotipy.oauth2 import SpotifyClientCredentials
 
-from listenbrainz.db import couchdb
+import couchdb
 import config
 
 
