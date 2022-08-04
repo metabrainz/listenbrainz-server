@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+import urllib3
 from datetime import datetime, timedelta
 from time import sleep
-import json
 from queue import Queue
 import uuid
 
@@ -11,7 +11,6 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 from listenbrainz.db import couchdb
 import config
-from icecream import ic
 
 
 class UniqueQueue(object):
@@ -20,7 +19,7 @@ class UniqueQueue(object):
         self.set = set()
 
     def put(self, d):
-        if not d in self.set:
+        if d not in self.set:
             self.queue.put(d)
             self.set.add(d)
             return True
@@ -38,7 +37,7 @@ class UniqueQueue(object):
         return self.queue.empty()
 
 
-class SpotifyMetadataCache():
+class SpotifyMetadataCache:
 
     COUCHDB_NAME = "spotify-metadata-cache"
     CACHE_TIME = 180  # days
@@ -48,6 +47,12 @@ class SpotifyMetadataCache():
         self.id_queue = UniqueQueue()
         self.pending_ids = []
         self.recent_ids = {}
+        self.retry = urllib3.Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=(429, 500, 502, 503, 504),
+            respect_retry_after_header=False
+        )
         self.sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=config.SPOTIFY_APP_CLIENT_ID,
                                                                         client_secret=config.SPOTIFY_APP_CLIENT_SECRET))
         self.couch = couchdb.init(config.COUCHDB_USER, config.COUCHDB_PASSWORD, config.COUCHDB_HOST, config.COUCHDB_PORT)
