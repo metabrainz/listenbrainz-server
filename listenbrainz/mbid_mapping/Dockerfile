@@ -1,4 +1,4 @@
-FROM metabrainz/python:3.8-20210115 as mbid-mapping-base
+FROM metabrainz/python:3.10-20220315 as mbid-mapping-base
 
 RUN apt-get update && apt-get install -y ca-certificates python3-pip netpbm git && \
         pip install --upgrade pip
