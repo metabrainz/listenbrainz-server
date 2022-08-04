@@ -54,26 +54,29 @@ class SpotifyMetadataCache():
         dbs = couchdb.list_databases("")
         if self.COUCHDB_NAME not in dbs:
             couchdb.create_database(self.COUCHDB_NAME)
-        couchdb.create_index(self.COUCHDB_NAME, {
-            "index": {
-                "fields": ["status", "queued"]
-            },
-            "name": "status-index",
-            "type": "json"
-        })
+            couchdb.create_index(self.COUCHDB_NAME, {
+                "index": {
+                    "fields": ["status", "queued"]
+                },
+                "name": "status-index",
+                "type": "json"
+            })
 
     def queue_id(self, spotify_id):
         self.id_queue.put(spotify_id)
 
     def fetch_artist(self, artist_id, add_discovered_artists=False):
+        print("Fetch artist")
         artist = self.sp.artist(artist_id)
 
+        print("Fetch albums")
         results = self.sp.artist_albums(artist_id, album_type='album,single,compilation')
         albums = results['items']
         while results['next']:
             results = self.sp.next(results)
             albums.extend(results['items'])
 
+        print("Fetch tracks")
         for album in albums:
             results = self.sp.album_tracks(album["id"], limit=50)
             tracks = results["items"]
@@ -90,6 +93,7 @@ class SpotifyMetadataCache():
             album["tracks"] = tracks
 
         artist["albums"] = albums
+        print("Fetch artist complete")
 
         return artist
 
@@ -119,7 +123,7 @@ class SpotifyMetadataCache():
     def add_pending_spotify_ids(self, spotify_ids):
         try:
             iter(spotify_ids)
-        except TypeException:
+        except TypeError:
             raise ValueError("Must pass an iterable.")
 
         to_add = []
