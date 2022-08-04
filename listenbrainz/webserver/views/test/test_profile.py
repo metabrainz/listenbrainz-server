@@ -24,7 +24,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         db_user.agree_to_gdpr(self.conn, self.user['musicbrainz_id'])
         self.weirduser = db_user.get_or_create(self.conn, 2, 'weird\\user name')
         db_user.agree_to_gdpr(self.conn, self.weirduser['musicbrainz_id'])
-        self.service = SpotifyService()
+        self.service = SpotifyService(self.conn)
 
     def test_profile_view(self):
         """Tests the user info view and makes sure auth token is present there"""
@@ -182,7 +182,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def _create_spotify_user(self, expired):
         offset = -1000 if expired else 1000
         expires = int(time.time()) + offset
-        db_oauth.save_token(user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
+        db_oauth.save_token(self.conn, user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
                             access_token='old-token', refresh_token='old-refresh-token',
                             token_expires_ts=expires, record_listens=False,
                             scopes=['user-read-recently-played', 'some-other-permission'])
