@@ -246,7 +246,7 @@ def load_spotify_ids_from_file(filename):
                 break
 
             spotify_id = spotify_id.strip()
-            smc.add_pending_spotify_ids([spotify_id])
+            smc.add_pending_spotify_ids(["artist:" + spotify_id])
             count += 1
 
     smc.flush_pending_ids()
