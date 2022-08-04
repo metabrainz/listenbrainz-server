@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import traceback
+
 import urllib3
 from datetime import datetime, timedelta
 from time import sleep
@@ -81,22 +83,29 @@ class SpotifyMetadataCache:
 
         print("Fetch albums")
         results = self.sp.artist_albums(artist_id, album_type='album,single,compilation')
-        albums = results['items']
-        while results['next']:
+        albums = results.get('items')
+        if not albums:
+            return artist
+
+        while results.get('next'):
             results = self.sp.next(results)
-            albums.extend(results['items'])
+            if results.get('items'):
+                albums.extend(results.get('items'))
 
         print("Fetch tracks")
         for album in albums:
             results = self.sp.album_tracks(album["id"], limit=50)
-            tracks = results["items"]
-            while results["next"]:
+            tracks = results.get("items")
+            if not tracks:
+                return artist
+            while results.get("next"):
                 results = self.sp.next(results)
-                tracks.extend(results["items"])
+                if results.get("items"):
+                    tracks.extend(results.get("items"))
 
             if add_discovered_artists:
                 for track in tracks:
-                    for track_artist in track["artists"]:
+                    for track_artist in track.get("artists"):
                         if track_artist["id"] != artist_id and track_artist["id"]:
                             self.add_pending_spotify_ids(["artist:%s" % track_artist["id"]])
 
@@ -227,7 +236,10 @@ class SpotifyMetadataCache:
                 raise ValueError("Unknown ID type", spotify_id)
 
             for artist_id in artist_ids:
-                self.process_artist(artist_id)
+                try:
+                    self.process_artist(artist_id)
+                except Exception:
+                    print(traceback.format_exc())
 
 
 def run_spotify_metadata_cache():
