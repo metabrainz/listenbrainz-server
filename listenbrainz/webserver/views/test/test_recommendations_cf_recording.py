@@ -71,41 +71,23 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('recommendations_cf_recording.top_artist', user_name="invalid"))
         self.assert404(response)
 
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_template')
-    def test_top_artist_valid_user(self, mock_template, mock_user):
-        # Flask essentially needs render_template to generate a response
-        # this is a fake repsonse to check _get_template wa called with desired params.
-        mock_template.return_value = render_template(
-            "recommendations_cf_recording/base.html",
-            active_section='top_artist',
-            user=self.user,
-            error_msg="test"
-        )
-        response = self.client.get(url_for('recommendations_cf_recording.top_artist', user_name="vansika"))
+    def test_top_artist_valid_user(self):
+        response = self.client.get(url_for('recommendations_cf_recording.similar_artist', user_name="vansika"))
         self.assert200(response)
-        mock_user.assert_called_with("vansika")
-        mock_template.assert_called_with(active_section='top_artist', user=mock_user.return_value)
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
+        self.assert_context('active_section', 'top_artist')
+        self.assert_context('user', self.user)
 
     def test_similar_artist_invalid_user(self):
         response = self.client.get(url_for('recommendations_cf_recording.top_artist', user_name="invalid"))
         self.assert404(response)
 
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_template')
-    def test_similar_artist_valid_user(self, mock_template, mock_user):
-        # Flask essentially needs render_template to generate a response
-        # this is a fake repsonse to check _get_template wa called with desired params.
-        mock_template.return_value = render_template(
-            "recommendations_cf_recording/base.html",
-            active_section='similar_artist',
-            user=self.user,
-            error_msg="test"
-        )
+    def test_similar_artist_valid_user(self):
         response = self.client.get(url_for('recommendations_cf_recording.similar_artist', user_name="vansika"))
         self.assert200(response)
-        mock_user.assert_called_with("vansika")
-        mock_template.assert_called_with(active_section='similar_artist', user=mock_user.return_value)
+        self.assertTemplateUsed('recommendations_cf_recording/base.html')
+        self.assert_context('active_section', 'similar_artist')
+        self.assert_context('user', self.user)
 
     def test_get_template_missing_user_from_rec_db(self):
         user = _get_user('vansika')
@@ -185,7 +167,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
     def test_get_template(self, mock_get_recommendations, mock_get_rec):
-        user = _get_user('vansika')
+        user = _get_user('vansika_1')
         created = datetime.utcnow()
 
         mock_get_rec.return_value = UserRecommendationsData(**{
@@ -196,7 +178,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 }]
             },
             'created': datetime.utcnow(),
-            'user_id': self.user['id']
+            'user_id': self.user2['id']
         })
 
         recommendations = [{

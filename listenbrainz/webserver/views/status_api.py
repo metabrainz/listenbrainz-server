@@ -1,4 +1,6 @@
 from flask import Blueprint, request, jsonify
+
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 from brainzutils.ratelimit import ratelimit
 
@@ -34,7 +36,7 @@ def get_dump_info():
     dump_id = request.args.get("id")
     if dump_id is None:
         try:
-            dump = db_dump.get_dump_entries()[0]  # return the latest dump
+            dump = db_dump.get_dump_entries(db_conn)[0]  # return the latest dump
         except IndexError:
             raise APINotFound("No dump entry exists.")
     else:
@@ -42,7 +44,7 @@ def get_dump_info():
             dump_id = int(dump_id)
         except ValueError:
             raise APIBadRequest("The `id` parameter needs to be an integer.")
-        dump = db_dump.get_dump_entry(dump_id)
+        dump = db_dump.get_dump_entry(db_conn, dump_id)
         if dump is None:
             raise APINotFound("No dump exists with ID: %d" % dump_id)
 
