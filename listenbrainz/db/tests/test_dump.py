@@ -68,21 +68,20 @@ class DumpTestCase(ResetDatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase
         self.assertTrue(os.path.isfile(dump_location))
 
     def test_add_dump_entry(self):
-        prev_dumps = db_dump.get_dump_entries()
-        db_dump.add_dump_entry(datetime.today().strftime('%s'))
-        now_dumps = db_dump.get_dump_entries()
+        prev_dumps = db_dump.get_dump_entries(self.conn)
+        db_dump.add_dump_entry(self.conn, datetime.today().strftime('%s'))
+        now_dumps = db_dump.get_dump_entries(self.conn)
         self.assertEqual(len(now_dumps), len(prev_dumps) + 1)
 
     def test_copy_table(self):
-        db_dump.add_dump_entry(datetime.today().strftime('%s'))
-        with db.engine.connect() as connection:
-            db_dump.copy_table(
-                cursor=connection.connection.cursor(),
-                location=self.tempdir,
-                columns=['id', 'created'],
-                table_name='data_dump',
-            )
-        dumps = db_dump.get_dump_entries()
+        db_dump.add_dump_entry(self.conn, datetime.today().strftime('%s'))
+        db_dump.copy_table(
+            cursor=self.conn.connection.cursor(),
+            location=self.tempdir,
+            columns=['id', 'created'],
+            table_name='data_dump',
+        )
+        dumps = db_dump.get_dump_entries(self.conn)
         with open(os.path.join(self.tempdir, 'data_dump'), 'r') as f:
             file_contents = [line for line in f]
         self.assertEqual(len(dumps), len(file_contents))

@@ -12,7 +12,7 @@ class StatusViewsTestCase(IntegrationTestCase):
 
     def test_dump_get_200(self):
         t0 = datetime.now()
-        dump_id = db_dump.add_dump_entry(int(t0.strftime("%s")))
+        dump_id = db_dump.add_dump_entry(self.conn, int(t0.strftime("%s")))
         r = self.client.get("/1/status/get-dump-info", query_string={"id": dump_id})
         self.assert200(r)
         self.assertDictEqual(r.json, {
@@ -22,7 +22,7 @@ class StatusViewsTestCase(IntegrationTestCase):
 
         # should return the latest dump if no dump ID passed
         t1 = t0 + timedelta(seconds=1)
-        dump_id_1 = db_dump.add_dump_entry(int(t1.strftime("%s")))
+        dump_id_1 = db_dump.add_dump_entry(self.conn, int(t1.strftime("%s")))
         r = self.client.get("/1/status/get-dump-info")
         self.assert200(r)
         self.assertDictEqual(r.json, {

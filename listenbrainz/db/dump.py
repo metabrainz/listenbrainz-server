@@ -639,7 +639,7 @@ def copy_table(cursor, location, columns, table_name):
         cursor.copy_expert(query, f)
 
 
-def add_dump_entry(timestamp):
+def add_dump_entry(connection, timestamp):
     """ Adds an entry to the data_dump table with specified time.
 
         Args:
@@ -648,44 +648,39 @@ def add_dump_entry(timestamp):
         Returns:
             id (int): the id of the new entry added
     """
-
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-                INSERT INTO data_dump (created)
-                     VALUES (TO_TIMESTAMP(:ts))
-                  RETURNING id
-            """), {
-            'ts': timestamp,
-        })
-        return result.fetchone()['id']
+    result = connection.execute(sqlalchemy.text("""
+            INSERT INTO data_dump (created)
+                 VALUES (TO_TIMESTAMP(:ts))
+              RETURNING id
+        """), {
+        'ts': timestamp,
+    })
+    return result.fetchone()['id']
 
 
-def get_dump_entries():
+def get_dump_entries(connection):
     """ Returns a list of all dump entries in the data_dump table
     """
-
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-                SELECT id, created
-                  FROM data_dump
-              ORDER BY created DESC
-            """))
-
-        return [dict(row) for row in result]
-
-
-def get_dump_entry(dump_id):
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
+    result = connection.execute(sqlalchemy.text("""
             SELECT id, created
               FROM data_dump
-             WHERE id = :dump_id
-        """), {
-            'dump_id': dump_id,
-        })
-        if result.rowcount > 0:
-            return dict(result.fetchone())
-        return None
+          ORDER BY created DESC
+        """))
+
+    return [dict(row) for row in result]
+
+
+def get_dump_entry(connection, dump_id):
+    result = connection.execute(sqlalchemy.text("""
+        SELECT id, created
+          FROM data_dump
+         WHERE id = :dump_id
+    """), {
+        'dump_id': dump_id,
+    })
+    if result.rowcount > 0:
+        return dict(result.fetchone())
+    return None
 
 
 def import_postgres_dump(private_dump_archive_path=None,

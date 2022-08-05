@@ -217,7 +217,7 @@ class DumpManagerTestCase(ResetDatabaseTestCase):
         self.assertEqual(len(os.listdir(self.tempdir)), 0)
 
         # now, add a dump entry to the database and create a dump with that specific dump id
-        dump_id = db_dump.add_dump_entry(int(time.time()))
+        dump_id = db_dump.add_dump_entry(self.conn, int(time.time()))
         result = self.runner.invoke(dump_manager.create_full, [
                                     '--location', self.tempdir, '--dump-id', dump_id])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
@@ -242,7 +242,7 @@ class DumpManagerTestCase(ResetDatabaseTestCase):
         self.assertEqual(len(os.listdir(self.tempdir)), 0)
 
         base = int(time.time())
-        dump_id = db_dump.add_dump_entry(base - 60)
+        dump_id = db_dump.add_dump_entry(self.conn, base - 60)
         print("%d dump id" % dump_id)
         sleep(1)
         self.listenstore.insert(generate_data(1, self.user_name, base - 30, 5))
@@ -273,14 +273,14 @@ class DumpManagerTestCase(ResetDatabaseTestCase):
 
         # create a base dump entry
         t = int(time.time())
-        db_dump.add_dump_entry(t)
+        db_dump.add_dump_entry(self.conn, t)
         sleep(1)
         self.listenstore.insert(generate_data(
             1, self.user_name, 1500000000, 5))
         sleep(1)
 
         # create a new dump ID to recreate later
-        dump_id = db_dump.add_dump_entry(int(time.time()))
+        dump_id = db_dump.add_dump_entry(self.conn, int(time.time()))
         # now, create a dump with that specific dump id
         result = self.runner.invoke(dump_manager.create_incremental, [
                                     '--location', self.tempdir, '--dump-id', dump_id])

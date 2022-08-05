@@ -214,7 +214,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_get_recommendations.return_value = recommendations
 
         recommendations_cf_recording._get_template(active_section='top_artist', user_name='vansika_1')
-        mock_get_rec.assert_called_with(user.id)
+        mock_get_rec.assert_called_with(mock.ANY, user.id)
         mock_get_recommendations.assert_called_once()
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')

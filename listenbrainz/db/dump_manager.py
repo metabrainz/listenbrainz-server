@@ -36,7 +36,7 @@ from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.year_in_music import insert_playlists
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
-from listenbrainz.webserver import create_app
+from listenbrainz.webserver import create_app, db_conn
 from listenbrainz.db.dump import check_ftp_dump_ages
 
 
@@ -92,9 +92,9 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
         ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now()
-            dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
+            dump_id = db_dump.add_dump_entry(db_conn, int(end_time.strftime('%s')))
         else:
-            dump_entry = db_dump.get_dump_entry(dump_id)
+            dump_entry = db_dump.get_dump_entry(db_conn, dump_id)
             if dump_entry is None:
                 current_app.logger.error("No dump with ID %d found", dump_id)
                 sys.exit(-1)
