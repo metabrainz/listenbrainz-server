@@ -36,6 +36,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
     def tearDown(self):
         self.logstore = None
+        super().tearDown()
 
     def test_redirects(self):
         """Test the /my/[something]/ endponts which redirect to the /user/ namespace"""
@@ -96,7 +97,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assertContext('active_section', 'listens')
 
     def test_spotify_token_access_no_login(self):
-        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+        db_oauth.save_token(self.conn, user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
                             access_token='token', refresh_token='refresh',
                             token_expires_ts=int(time.time()) + 1000, record_listens=True,
                             scopes=['user-read-recently-played', 'streaming'])
@@ -115,7 +116,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access(self):
-        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+        db_oauth.save_token(self.conn, user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
                             access_token='token', refresh_token='refresh',
                             token_expires_ts=int(time.time()) + 1000, record_listens=True,
                             scopes=['user-read-recently-played', 'streaming'])
@@ -181,7 +182,7 @@ class UserViewsTestCase(IntegrationTestCase):
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
-        user = User.from_dbrow(db_user.get(1)).to_dict()
+        user = User.from_dbrow(db_user.get(self.conn, 1)).to_dict()
         timescale.return_value = ([], 0, 0)
 
         # If no parameter is given, use current time as the to_ts
@@ -227,7 +228,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
     def test_report_abuse(self):
         # Assert user is not already reported by current user
-        already_reported_user = db_user.is_user_reported(self.user.id, self.abuser.id)
+        already_reported_user = db_user.is_user_reported(self.conn, self.user.id, self.abuser.id)
         self.assertFalse(already_reported_user)
 
         self.temporary_login(self.user.login_id)

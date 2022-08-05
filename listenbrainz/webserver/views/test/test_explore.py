@@ -1,18 +1,12 @@
 import datetime
-from unittest import mock
 from unittest.mock import patch
 
 from flask import url_for
 
-from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.webserver.testing import ServerTestCase
+from listenbrainz.tests.integration import IntegrationTestCase
 
 
-class ExploreViewsTestCase(ServerTestCase, DatabaseTestCase):
-
-    def setUp(self):
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+class ExploreViewsTestCase(IntegrationTestCase):
 
     def test_hue_sound(self):
         resp = self.client.get(url_for('explore.huesound', color="FF00FF"))

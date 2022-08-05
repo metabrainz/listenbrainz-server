@@ -8,7 +8,6 @@ from unittest.mock import patch
 from flask import render_template, current_app
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver.views.user import _get_user
-from werkzeug.exceptions import BadRequest, InternalServerError
 from listenbrainz.webserver.views import recommendations_cf_recording
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
@@ -36,6 +35,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             )
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.conn,
             2,
             UserRecommendationsJson(**{
                 'top_artist': data['recording_mbid'],
@@ -44,6 +44,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         )
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.conn,
             3,
             UserRecommendationsJson(**{
                 'top_artist': [],
@@ -105,28 +106,28 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_template.assert_called_with(active_section='similar_artist', user=mock_user.return_value)
 
     def test_get_template_missing_user_from_rec_db(self):
-        user = _get_user('vansika')
-        recommendations_cf_recording._get_template(active_section='top_artist', user=user)
+        user = _get_user(self.conn, 'vansika')
+        recommendations_cf_recording._get_template(active_section='top_artist', user_name='vansika')
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
 
-        user = _get_user('vansika')
-        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
+        user = _get_user(self.conn, 'vansika')
+        recommendations_cf_recording._get_template(active_section='similar_artist', user_name='vansika')
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
 
     def test_get_template_missing_rec_top_artist(self):
-        user = _get_user('vansika_2')
-        recommendations_cf_recording._get_template(active_section='top_artist', user=user)
+        user = _get_user(self.conn, 'vansika_2')
+        recommendations_cf_recording._get_template(active_section='top_artist', user_name='vansika_2')
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
 
     def test_get_template_missing_rec_similar_artist(self):
-        user = _get_user('vansika_1')
-        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
+        user = _get_user(self.conn, 'vansika_1')
+        recommendations_cf_recording._get_template(active_section='similar_artist', user_name='vansika_1')
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
@@ -134,7 +135,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
     def test_get_template_empty_repsonce_top_artist(self, mock_get_recommendations, mock_get_rec):
-        user = _get_user('vansika_1')
+        user = _get_user(self.conn, 'vansika_1')
 
         mock_get_rec.return_value = UserRecommendationsData(**{
             'recording_mbid': {
@@ -148,7 +149,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         })
         mock_get_recommendations.return_value = []
 
-        recommendations_cf_recording._get_template(active_section='top_artist', user=user)
+        recommendations_cf_recording._get_template(active_section='top_artist', user_name='vansika_1')
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
@@ -158,7 +159,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
     def test_get_template_empty_repsonce_similar_artist(self, mock_get_recommendations, mock_get_rec):
-        user = _get_user('vansika_1')
+        user = _get_user(self.conn, 'vansika_1')
 
         mock_get_rec.return_value = UserRecommendationsData(**{
             'recording_mbid': {
@@ -172,7 +173,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         })
         mock_get_recommendations.return_value = []
 
-        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
+        recommendations_cf_recording._get_template(active_section='similar_artist', user_name='vansika_1')
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
@@ -182,8 +183,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
     def test_get_template(self, mock_get_recommendations, mock_get_rec):
-        # active_section = 'top_artist'
-        user = _get_user('vansika_1')
+        user = _get_user(self.conn, '')
         created = datetime.utcnow()
 
         mock_get_rec.return_value = UserRecommendationsData(**{
@@ -211,7 +211,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         }]
         mock_get_recommendations.return_value = recommendations
 
-        recommendations_cf_recording._get_template(active_section='top_artist', user=user)
+        recommendations_cf_recording._get_template(active_section='top_artist', user_name='vansika_1')
         mock_get_rec.assert_called_with(user.id)
         mock_get_recommendations.assert_called_once()
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
@@ -243,12 +243,11 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             'user_id': 1
         })
 
-        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
+        recommendations_cf_recording._get_template(active_section='similar_artist', user_name='vansika_1')
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
         received_props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(expected_props, received_props)
-
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.load_recordings_from_mapping')
     def test_get_playable_recommendations_list(self, mock_load):
