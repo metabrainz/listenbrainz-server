@@ -1,4 +1,6 @@
 import uuid
+from unittest import mock
+
 import ujson
 import listenbrainz.db.user as db_user
 from datetime import datetime
@@ -183,7 +185,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
     def test_get_template(self, mock_get_recommendations, mock_get_rec):
-        user = _get_user('')
+        user = _get_user('vansika')
         created = datetime.utcnow()
 
         mock_get_rec.return_value = UserRecommendationsData(**{
@@ -286,10 +288,11 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         }, {}
 
         received_recommendations = recommendations_cf_recording._get_playable_recommendations_list(mbids_and_ratings)
-        mock_load.assert_called_with(mbids=[
-            "03f1b16a-af43-4cd7-b22c-d2991bf011a3",
-            "2c8412f0-9353-48a2-aedb-1ad8dac9498f"
-        ], msids=[])
+        mock_load.assert_called_with(
+            mock.ANY,
+            mbids=["03f1b16a-af43-4cd7-b22c-d2991bf011a3", "2c8412f0-9353-48a2-aedb-1ad8dac9498f"],
+            msids=[]
+        )
 
         expected_recommendations = [
             {

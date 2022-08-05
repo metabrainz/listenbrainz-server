@@ -73,7 +73,7 @@ redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
-    db_conn = webserver.timescale_connection._ts
+    ts_conn = webserver.timescale_connection._ts
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
 
@@ -103,7 +103,7 @@ def profile(user_name):
         args['to_ts'] = max_ts
     else:
         args['from_ts'] = min_ts
-    data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
+    data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
 
     listens = []
