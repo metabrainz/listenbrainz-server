@@ -13,7 +13,6 @@ from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import EntityRecord
-from listenbrainz import db
 from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain

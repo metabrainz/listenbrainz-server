@@ -11,7 +11,6 @@ from flask_login import current_user
 from werkzeug.local import LocalProxy
 
 from listenbrainz import db
-from listenbrainz.webserver.utils import get_global_props
 
 API_PREFIX = '/1'
 
@@ -268,6 +267,8 @@ def create_app_rtfd():
 def _register_blueprint_with_context(app, blueprint, **kwargs):
     """Add some global props to a blueprint context and then register it with the app.
     This should only be used for blueprints which render html."""
+    from listenbrainz.webserver.utils import get_global_props
+
     @blueprint.context_processor
     def inject_context_processor():
         return {"global_props": get_global_props()}
