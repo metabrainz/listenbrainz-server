@@ -10,11 +10,10 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.redis_connection as redis_connection
 from data.model.external_service import ExternalServiceType
-from listenbrainz import db
 from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
@@ -54,8 +53,7 @@ def submit_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    with db.engine.connect() as connection:
-        user = validate_auth_header(connection, fetch_email=True)
+    user = validate_auth_header(fetch_email=True)
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
@@ -136,8 +134,7 @@ def get_listens(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    with db.engine.connect() as connection:
-        user = db_user.get_by_mb_id(connection, user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -178,8 +175,7 @@ def get_listen_count(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    with db.engine.connect() as connection:
-        user = db_user.get_by_mb_id(connection, user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -211,8 +207,7 @@ def get_playing_now(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    with db.engine.connect() as connection:
-        user = db_user.get_by_mb_id(connection, user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -253,13 +248,12 @@ def get_similar_users(user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-    with db.engine.connect() as connection:
-        user = db_user.get_by_mb_id(connection, user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
 
-        if not user:
-            raise APINotFound("User %s not found" % user_name)
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
 
-        similar_users = db_user.get_similar_users(connection, user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user['id'])
     response = []
     for user_name in similar_users.similar_users:
         response.append({
@@ -290,12 +284,11 @@ def get_similar_to_user(user_name, other_user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-    with db.engine.connect() as connection:
-        user = db_user.get_by_mb_id(connection, user_name)
-        if not user:
-            raise APINotFound("User %s not found" % user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
 
-        similar_users = db_user.get_similar_users(connection, user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user['id'])
     try:
         return jsonify({'payload': {"user_name": other_user_name, "similarity": similar_users.similar_users[other_user_name]}})
     except (KeyError, AttributeError):
@@ -336,43 +329,42 @@ def latest_import():
     :statuscode 401: invalid authorization. See error message for details.
     :statuscode 404: user or service not found. See error message for details.
     """
-    with db.engine.connect() as connection:
-        if request.method == 'GET':
-            user_name = request.args.get('user_name', '')
-            service_name = request.args.get('service', 'lastfm')
-            try:
-                service = ExternalServiceType[service_name.upper()]
-            except KeyError:
-                raise APINotFound("Service does not exist: {}".format(service_name))
-            user = db_user.get_by_mb_id(connection, user_name)
-            if user is None:
-                raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
-            latest_import_ts = listens_importer.get_latest_listened_at(connection, user["id"], service)
-            return jsonify({
-                'musicbrainz_id': user['musicbrainz_id'],
-                'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
-            })
-        elif request.method == 'POST':
-            user = validate_auth_header(connection)
+    if request.method == 'GET':
+        user_name = request.args.get('user_name', '')
+        service_name = request.args.get('service', 'lastfm')
+        try:
+            service = ExternalServiceType[service_name.upper()]
+        except KeyError:
+            raise APINotFound("Service does not exist: {}".format(service_name))
+        user = db_user.get_by_mb_id(db_conn, user_name)
+        if user is None:
+            raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
+        latest_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
+        return jsonify({
+            'musicbrainz_id': user['musicbrainz_id'],
+            'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
+        })
+    elif request.method == 'POST':
+        user = validate_auth_header()
 
-            try:
-                data = ujson.loads(request.get_data())
-                ts = int(data.get('ts', 0))
-                service_name = data.get('service', 'lastfm')
-                service = ExternalServiceType[service_name.upper()]
-            except (ValueError, KeyError):
-                raise APIBadRequest('Invalid data sent')
+        try:
+            data = ujson.loads(request.get_data())
+            ts = int(data.get('ts', 0))
+            service_name = data.get('service', 'lastfm')
+            service = ExternalServiceType[service_name.upper()]
+        except (ValueError, KeyError):
+            raise APIBadRequest('Invalid data sent')
 
-            try:
-                last_import_ts = listens_importer.get_latest_listened_at(connection, user["id"], service)
-                last_import_ts = 0 if not last_import_ts else int(last_import_ts.strftime('%s'))
-                if ts > last_import_ts:
-                    listens_importer.update_latest_listened_at(connection, user["id"], service, ts)
-            except DatabaseException:
-                current_app.logger.error("Error while updating latest import: ", exc_info=True)
-                raise APIInternalServerError('Could not update latest_import, try again')
+        try:
+            last_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
+            last_import_ts = 0 if not last_import_ts else int(last_import_ts.strftime('%s'))
+            if ts > last_import_ts:
+                listens_importer.update_latest_listened_at(db_conn, user["id"], service, ts)
+        except DatabaseException:
+            current_app.logger.error("Error while updating latest import: ", exc_info=True)
+            raise APIInternalServerError('Could not update latest_import, try again')
 
-            return jsonify({'status': 'ok'})
+        return jsonify({'status': 'ok'})
 
 
 @api_bp.route('/validate-token', methods=['GET', 'OPTIONS'])
@@ -426,8 +418,8 @@ def validate_token():
 
     if not auth_token:
         raise APIBadRequest("You need to provide an Authorization token.")
-    with db.engine.connect() as connection:
-        user = db_user.get_by_token(connection, auth_token)
+
+    user = db_user.get_by_token(db_conn, auth_token)
     if user is None:
         return jsonify({
             'code': 200,
@@ -473,8 +465,7 @@ def delete_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    with db.engine.connect() as connection:
-        user = validate_auth_header(connection)
+    user = validate_auth_header()
 
     data = request.json
 
@@ -541,15 +532,14 @@ def get_playlists_for_user(playlist_user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    with db.engine.connect() as connection:
-        user = validate_auth_header(connection, optional=True)
+    user = validate_auth_header(optional=True)
 
-        count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-        offset = get_non_negative_param('offset', 0)
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
 
-        playlist_user = db_user.get_by_mb_id(connection, playlist_user_name)
-        if playlist_user is None:
-            raise APINotFound("Cannot find user: %s" % playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     include_private = True if user and user["id"] == playlist_user["id"] else False
     playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"],
@@ -579,10 +569,9 @@ def get_playlists_created_for_user(playlist_user_name):
     count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
 
-    with db.engine.connect() as connection:
-        playlist_user = db_user.get_by_mb_id(connection, playlist_user_name)
-        if playlist_user is None:
-            raise APINotFound("Cannot find user: %s" % playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"], load_recordings=False,
                                                                            count=count, offset=offset)
@@ -607,15 +596,14 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    with db.engine.connect() as connection:
-        user = validate_auth_header(connection, optional=True)
+    user = validate_auth_header(optional=True)
 
-        count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-        offset = get_non_negative_param('offset', 0)
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
 
-        playlist_user = db_user.get_by_mb_id(connection, playlist_user_name)
-        if playlist_user is None:
-            raise APINotFound("Cannot find user: %s" % playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     # TODO: This needs to be passed to the DB layer
     include_private = True if user and user["id"] == playlist_user["id"] else False

@@ -22,7 +22,7 @@ from flask import Blueprint, jsonify
 
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.user as db_user
-from listenbrainz import db
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APINoContent
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
@@ -95,12 +95,11 @@ def get_missing_musicbrainz_data(user_name):
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
     count = min(count, MAX_ITEMS_PER_GET)
 
-    with db.engine.connect() as conn:
-        user = db_user.get_by_mb_id(conn, user_name)
-        if user is None:
-            raise APINotFound("Cannot find user: {}".format(user_name))
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: {}".format(user_name))
 
-        data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(conn, user['id'], source)
+    data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(db_conn, user['id'], source)
 
     if data is None:
         err_msg = 'Missing MusicBrainz data for {} not calculated'.format(user_name)

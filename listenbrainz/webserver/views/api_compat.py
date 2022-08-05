@@ -9,7 +9,6 @@ from flask_login import login_required, current_user
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
 
-from listenbrainz import db
 from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenValidationError, LastFMError
 import xmltodict
 
@@ -20,7 +19,7 @@ from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 import calendar
 from datetime import datetime
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn
 
 api_bp = Blueprint('api_compat', __name__)
 
@@ -45,39 +44,38 @@ def api_auth():
 def api_auth_approve():
     """ Authenticate the user token provided.
     """
-    with db.engine.connect() as connection:
-        user = User.load_by_name(connection, current_user.musicbrainz_id)
-        if "token" not in request.form:
-            return render_template(
-                "user/auth.html",
-                user_id=current_user.musicbrainz_id,
-                msg="Missing required parameters. Please provide correct parameters and try again."
-            )
-        token = Token.load(connection, request.form['token'])
-        if not token:
-            return render_template(
-                "user/auth.html",
-                user_id=current_user.musicbrainz_id,
-                msg="Either this token is already used or invalid. Please try again."
-            )
-        if token.user:
-            return render_template(
-                "user/auth.html",
-                user_id=current_user.musicbrainz_id,
-                msg="This token is already approved. Please check the token and try again."
-            )
-        if token.has_expired():
-            return render_template(
-                "user/auth.html",
-                user_id=current_user.musicbrainz_id,
-                msg="This token has expired. Please create a new token and try again."
-            )
-        token.approve(user.name)
+    user = User.load_by_name(db_conn, current_user.musicbrainz_id)
+    if "token" not in request.form:
         return render_template(
             "user/auth.html",
             user_id=current_user.musicbrainz_id,
-            msg="Token %s approved for user %s, press continue in client." % (token.token, current_user.musicbrainz_id)
+            msg="Missing required parameters. Please provide correct parameters and try again."
         )
+    token = Token.load(db_conn, request.form['token'])
+    if not token:
+        return render_template(
+            "user/auth.html",
+            user_id=current_user.musicbrainz_id,
+            msg="Either this token is already used or invalid. Please try again."
+        )
+    if token.user:
+        return render_template(
+            "user/auth.html",
+            user_id=current_user.musicbrainz_id,
+            msg="This token is already approved. Please check the token and try again."
+        )
+    if token.has_expired():
+        return render_template(
+            "user/auth.html",
+            user_id=current_user.musicbrainz_id,
+            msg="This token has expired. Please create a new token and try again."
+        )
+    token.approve(user.name)
+    return render_template(
+        "user/auth.html",
+        user_id=current_user.musicbrainz_id,
+        msg="Token %s approved for user %s, press continue in client." % (token.token, current_user.musicbrainz_id)
+    )
 
 
 @api_bp.route('/2.0/', methods=['POST', 'GET'])
@@ -97,21 +95,20 @@ def api_methods():
             raise InvalidAPIUsage(CompatError.SERVICE_UNAVAILABLE, output_format=data.get('format', "xml"))
         return record_listens(data)
 
-    with db.engine.connect() as connection:
-        if method == 'auth.getsession':
-            return get_session(connection, data)
-        elif method == 'auth.gettoken':
-            return get_token(connection, data)
-        elif method == 'user.getinfo':
-            return user_info(connection, data)
-        elif method == 'auth.getsessioninfo':
-            return session_info(connection, data)
-        else:
-            # Invalid Method
-            raise InvalidAPIUsage(CompatError.INVALID_METHOD, output_format=data.get('format', "xml"))
+    if method == 'auth.getsession':
+        return get_session(data)
+    elif method == 'auth.gettoken':
+        return get_token(data)
+    elif method == 'user.getinfo':
+        return user_info(data)
+    elif method == 'auth.getsessioninfo':
+        return session_info(data)
+    else:
+        # Invalid Method
+        raise InvalidAPIUsage(CompatError.INVALID_METHOD, output_format=data.get('format', "xml"))
 
 
-def session_info(connection, data):
+def session_info(data):
     try:
         sk = data['sk']
         api_key = data['api_key']
@@ -120,8 +117,8 @@ def session_info(connection, data):
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)  # Missing Required Params
 
-    session = Session.load(connection, sk)
-    if (not session) or User.load_by_name(connection, username).id != session.user.id:
+    session = Session.load(db_conn, sk)
+    if (not session) or User.load_by_name(db_conn, username).id != session.user.id:
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)  # Invalid Session KEY
 
     print("SESSION INFO for session %s, user %s" % (session.id, session.user.name))
@@ -143,7 +140,7 @@ def session_info(connection, data):
                            output_format)
 
 
-def get_token(connection, data):
+def get_token(data):
     """ Issue a token to user after verying his API_KEY
     """
     output_format = data.get('format', 'xml')
@@ -154,7 +151,7 @@ def get_token(connection, data):
     if not Token.is_valid_api_key(api_key):
         raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)      # Invalid API_KEY
 
-    token = Token.generate(connection, api_key)
+    token = Token.generate(db_conn, api_key)
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
@@ -164,7 +161,7 @@ def get_token(connection, data):
                            output_format)
 
 
-def get_session(connection, data):
+def get_session(data):
     """ Create new session after validating the API_key and token.
     """
     output_format = data.get('format', 'xml')
@@ -183,7 +180,7 @@ def get_session(connection, data):
     if not token.user:
         raise InvalidAPIUsage(CompatError.UNAUTHORIZED_TOKEN, output_format=output_format)   # Unauthorized token
 
-    session = Session.create(connection, token)
+    session = Session.create(db_conn, token)
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
@@ -242,7 +239,7 @@ def _to_native_api(lookup, method, output_format="xml"):
     return listen_type, listens
 
 
-def record_listens(connection, data):
+def record_listens(data):
     """ Submit the listen in the lastfm format to be inserted in db.
         Accepts listens for both track.updateNowPlaying and track.scrobble methods.
     """
@@ -252,13 +249,13 @@ def record_listens(connection, data):
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)    # Invalid parameters
 
-    session = Session.load(connection, sk)
+    session = Session.load(db_conn, sk)
     if not session:
         if not Token.is_valid_api_key(api_key):
             raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)   # Invalid API_KEY
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)   # Invalid Session KEY
 
-    user = db_user.get(connection, session.user_id, fetch_email=True)
+    user = db_user.get(db_conn, session.user_id, fetch_email=True)
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
         raise InvalidAPIUsage(CompatError.NO_EMAIL, output_format=output_format)  # No email available for user in LB
 
@@ -413,7 +410,7 @@ def format_response(data, format="xml"):
     return response
 
 
-def user_info(connection, data):
+def user_info(data):
     """ Gives information about the user specified in the parameters.
     """
     try:
@@ -427,11 +424,11 @@ def user_info(connection, data):
         if not Token.is_valid_api_key(api_key):
             raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)  # Invalid API key
 
-        user = User.load_by_sessionkey(connection, sk, api_key)
+        user = User.load_by_sessionkey(db_conn, sk, api_key)
         if not user:
             raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)  # Invalid Session key
 
-        query_user = User.load_by_name(connection, username) if (username and username != user.name) else user
+        query_user = User.load_by_name(db_conn, username) if (username and username != user.name) else user
         if not query_user:
             raise InvalidAPIUsage(CompatError.INVALID_RESOURCE, output_format=output_format)  # Invalid resource specified
 
@@ -448,7 +445,7 @@ def user_info(connection, data):
             with tag('url'):
                 text('http://listenbrainz.org/user/' + query_user.name)
             with tag('playcount'):
-                text(User.get_play_count(connection, query_user.id, timescale_connection._ts))
+                text(User.get_play_count(db_conn, query_user.id, timescale_connection._ts))
             with tag('registered', unixtime=str(query_user.created.strftime("%s"))):
                 text(str(query_user.created))
 

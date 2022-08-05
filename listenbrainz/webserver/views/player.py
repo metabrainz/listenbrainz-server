@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required
-from werkzeug.exceptions import BadRequest, ServiceUnavailable, NotFound
+from werkzeug.exceptions import BadRequest, NotFound
 import ujson
 
 from brainzutils.musicbrainz_db import engine as mb_engine

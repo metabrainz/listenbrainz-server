@@ -34,7 +34,7 @@ def get_dump_info():
     dump_id = request.args.get("id")
     if dump_id is None:
         try:
-            dump = db_dump.get_dump_entries()[0] # return the latest dump
+            dump = db_dump.get_dump_entries()[0]  # return the latest dump
         except IndexError:
             raise APINotFound("No dump entry exists.")
     else:

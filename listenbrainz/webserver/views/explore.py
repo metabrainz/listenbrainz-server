@@ -3,6 +3,7 @@ import ujson
 
 from listenbrainz import db
 from listenbrainz.db.similar_users import get_top_similar_users
+from listenbrainz.webserver import db_conn
 
 explore_bp = Blueprint('explore', __name__)
 
@@ -23,8 +24,7 @@ def similar_users():
         them visible to all of our users. This view can show bugs in the algorithm
         and spammers as well.
     """
-    with db.engine.connect() as connection:
-        similar_users = get_top_similar_users(connection)
+    similar_users = get_top_similar_users(db_conn)
     return render_template(
         "explore/similar-users.html",
         similar_users=similar_users

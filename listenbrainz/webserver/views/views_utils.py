@@ -1,9 +1,9 @@
 from flask import current_app
 from flask_login import current_user
 
-from listenbrainz import db
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
+from listenbrainz.webserver import db_conn
 
 
 def get_current_spotify_user():
@@ -12,8 +12,7 @@ def get_current_spotify_user():
     linked to a Spotify account, returns empty dict."""
     if not current_user.is_authenticated:
         return {}
-    with db.engine.connect() as connection:
-        user = SpotifyService(connection).get_user(current_user.id)
+    user = SpotifyService(db_conn).get_user(current_user.id)
     if user is None:
         return {}
     return {
@@ -37,8 +36,7 @@ def get_current_critiquebrainz_user():
     linked their critiquebrainz account, returns empty dict."""
     if not current_user.is_authenticated:
         return {}
-    with db.engine.connect() as connection:
-        user = CritiqueBrainzService(connection).get_user(current_user.id)
+    user = CritiqueBrainzService(db_conn).get_user(current_user.id)
     if user is None:
         return {}
     return {

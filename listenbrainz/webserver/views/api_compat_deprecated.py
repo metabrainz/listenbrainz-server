@@ -31,6 +31,7 @@ from werkzeug.exceptions import BadRequest
 import listenbrainz.db.user as db_user
 from listenbrainz import db
 from listenbrainz.db.lastfm_session import Session
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.errors import ListenValidationError
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
@@ -53,50 +54,48 @@ def handshake():
     if request.args.get('hs', '') != 'true':
         return redirect('https://listenbrainz.org/lastfm-proxy')
 
-    with db.engine.connect() as connection:
-        user = db_user.get_by_mb_id(connection, request.args.get('u'), fetch_email=True)
-        if user is None:
-            return 'BADAUTH\n', 401
+    user = db_user.get_by_mb_id(db_conn, request.args.get('u'), fetch_email=True)
+    if user is None:
+        return 'BADAUTH\n', 401
 
-        if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
-            return 'BADAUTH ' + REJECT_LISTENS_WITHOUT_EMAIL_ERROR + '\n', 401
+    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
+        return 'BADAUTH ' + REJECT_LISTENS_WITHOUT_EMAIL_ERROR + '\n', 401
 
-        auth_token = request.args.get('a', '')
-        timestamp = request.args.get('t', 0)
+    auth_token = request.args.get('a', '')
+    timestamp = request.args.get('t', 0)
 
-        correct = _get_audioscrobbler_auth_token(user['auth_token'], timestamp)
+    correct = _get_audioscrobbler_auth_token(user['auth_token'], timestamp)
 
-        if auth_token != _get_audioscrobbler_auth_token(user['auth_token'], timestamp):
-            return 'BADAUTH\n', 401
+    if auth_token != _get_audioscrobbler_auth_token(user['auth_token'], timestamp):
+        return 'BADAUTH\n', 401
 
-        session = Session.create_by_user_id(connection, user['id'])
-        current_app.logger.info('New session created with id: {}'.format(session.sid))
+    session = Session.create_by_user_id(db_conn, user['id'])
+    current_app.logger.info('New session created with id: {}'.format(session.sid))
 
-        return '\n'.join([
-            'OK',
-            session.sid,
-            '{}/np_1.2'.format(current_app.config['LASTFM_PROXY_URL']),
-            '{}/protocol_1.2\n'.format(current_app.config['LASTFM_PROXY_URL'])
-        ])
+    return '\n'.join([
+        'OK',
+        session.sid,
+        '{}/np_1.2'.format(current_app.config['LASTFM_PROXY_URL']),
+        '{}/protocol_1.2\n'.format(current_app.config['LASTFM_PROXY_URL'])
+    ])
 
 
 @api_compat_old_bp.route('/np_1.2', methods=['POST', 'OPTIONS'])
 def submit_now_playing():
     """ Handle now playing notifications sent by clients """
-    with db.engine.connect() as connection:
-        try:
-            session = _get_session(connection, request.form.get('s', ''))
-        except BadRequest:
-            return 'BADSESSION\n', 401
+    try:
+        session = _get_session(db_conn, request.form.get('s', ''))
+    except BadRequest:
+        return 'BADSESSION\n', 401
 
-        listen = _to_native_api(request.form, append_key='')
-        if listen is None:
-            return 'FAILED Invalid data submitted!\n', 400
+    listen = _to_native_api(request.form, append_key='')
+    if listen is None:
+        return 'FAILED Invalid data submitted!\n', 400
 
-        listens = [listen]
-        user = db_user.get(connection, session.user_id)
-        user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
-        insert_payload(listens, user_metadata, LISTEN_TYPE_PLAYING_NOW)
+    listens = [listen]
+    user = db_user.get(db_conn, session.user_id)
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+    insert_payload(listens, user_metadata, LISTEN_TYPE_PLAYING_NOW)
 
     return 'OK\n'
 
@@ -104,29 +103,27 @@ def submit_now_playing():
 @api_compat_old_bp.route('/protocol_1.2', methods=['POST', 'OPTIONS'])
 def submit_listens():
     """ Submit listens received from clients into the listenstore after validating them. """
-    with db.engine.connect() as connection:
+    try:
+        session = _get_session(db_conn, request.form.get('s', ''))
+    except BadRequest:
+        return 'BADSESSION\n', 401
 
-        try:
-            session = _get_session(connection, request.form.get('s', ''))
-        except BadRequest:
-            return 'BADSESSION\n', 401
+    listens = []
+    index = 0
+    while True:
+        listen = _to_native_api(request.form, append_key='[{}]'.format(index))
+        if listen is None:
+            break
+        else:
+            listens.append(listen)
+            index += 1
 
-        listens = []
-        index = 0
-        while True:
-            listen = _to_native_api(request.form, append_key='[{}]'.format(index))
-            if listen is None:
-                break
-            else:
-                listens.append(listen)
-                index += 1
+    if not listens:
+        return 'FAILED Invalid data submitted!\n', 400
 
-        if not listens:
-            return 'FAILED Invalid data submitted!\n', 400
-
-        user = db_user.get(connection, session.user_id)
-        user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
-        insert_payload(listens, user_metadata)
+    user = db_user.get(db_conn, session.user_id)
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+    insert_payload(listens, user_metadata)
 
     return 'OK\n'
 

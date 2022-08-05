@@ -4,9 +4,10 @@ from pydantic import ValidationError
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
-from listenbrainz import db, messybrainz
+from listenbrainz import messybrainz
 from listenbrainz.db import timescale
 from listenbrainz.db.model.feedback import Feedback
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -36,37 +37,37 @@ def recording_feedback():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    with db.engine.connect() as connection, connection.begin():
-        user = validate_auth_header(connection)
+    user = validate_auth_header()
 
-        data = request.json
+    data = request.json
 
-        if ('recording_msid' not in data and 'recording_mbid' not in data) or 'score' not in data:
-            log_raise_400("JSON document must contain either recording_msid or recording_mbid, and "
-                          "score top level keys", data)
+    if ('recording_msid' not in data and 'recording_mbid' not in data) or 'score' not in data:
+        log_raise_400("JSON document must contain either recording_msid or recording_mbid, and "
+                      "score top level keys", data)
 
-        if set(data) - {"recording_msid", "recording_mbid", "score"}:
-            log_raise_400("JSON document may only contain recording_msid, recording_mbid and "
-                          "score top level keys", data)
+    if set(data) - {"recording_msid", "recording_mbid", "score"}:
+        log_raise_400("JSON document may only contain recording_msid, recording_mbid and "
+                      "score top level keys", data)
 
-        try:
-            feedback = Feedback(
-                user_id=user["id"],
-                recording_msid=data.get("recording_msid", None),
-                recording_mbid=data.get("recording_mbid", None),
-                score=data["score"]
-            )
-        except ValidationError as e:
-            # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
-            # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line
-            # error message.
-            log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
-                          data)
+    try:
+        feedback = Feedback(
+            user_id=user["id"],
+            recording_msid=data.get("recording_msid", None),
+            recording_mbid=data.get("recording_mbid", None),
+            score=data["score"]
+        )
+    except ValidationError as e:
+        # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
+        # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line
+        # error message.
+        log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
+                      data)
 
+    with db_conn.begin():
         if feedback.score == FEEDBACK_DEFAULT_SCORE:
-            db_feedback.delete(connection, feedback)
+            db_feedback.delete(db_conn, feedback)
         else:
-            db_feedback.insert(connection, feedback)
+            db_feedback.insert(db_conn, feedback)
 
     return jsonify({'status': 'ok'})
 
@@ -103,26 +104,25 @@ def get_feedback_for_user(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    with db.engine.connect() as connection:
-        user = db_user.get_by_mb_id(connection, user_name)
-        if user is None:
-            raise APINotFound("Cannot find user: %s" % user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
 
-        if score and score not in [-1, 1]:
-            log_raise_400("Score can have a value of 1 or -1.", request.args)
+    if score and score not in [-1, 1]:
+        log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-        with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-            feedback = db_feedback.get_feedback_for_user(
-                connection,
-                ts_conn,
-                msb_conn,
-                user_id=user["id"],
-                limit=count,
-                offset=offset,
-                score=score,
-                metadata=metadata
-            )
-        total_count = db_feedback.get_feedback_count_for_user(connection, user["id"])
+    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
+        feedback = db_feedback.get_feedback_for_user(
+            db_conn,
+            ts_conn,
+            msb_conn,
+            user_id=user["id"],
+            limit=count,
+            offset=offset,
+            score=score,
+            metadata=metadata
+        )
+    total_count = db_feedback.get_feedback_count_for_user(db_conn, user["id"])
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -194,16 +194,15 @@ def _get_feedback_for_recording(recording_type, recording):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    with db.engine.connect() as connection:
-        feedback = db_feedback.get_feedback_for_recording(
-            connection,
-            recording_type,
-            recording,
-            limit=count,
-            offset=offset,
-            score=score
-        )
-        total_count = db_feedback.get_feedback_count_for_recording(connection, recording_type, recording)
+    feedback = db_feedback.get_feedback_for_recording(
+        db_conn,
+        recording_type,
+        recording,
+        limit=count,
+        offset=offset,
+        score=score
+    )
+    total_count = db_feedback.get_feedback_count_for_recording(db_conn, recording_type, recording)
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -259,25 +258,24 @@ def get_feedback_for_recordings_for_user(user_name):
     if not recording_msids and not recording_mbids:
         log_raise_400("No valid recording msid or recording mbid found.")
 
-    with db.engine.connect() as connection:
-        user = db_user.get_by_mb_id(connection, user_name)
-        if user is None:
-            raise APINotFound("Cannot find user: %s" % user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
 
-        try:
-            feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(
-                connection,
-                user_id=user["id"],
-                user_name=user_name,
-                recording_msids=recording_msids,
-                recording_mbids=recording_mbids
-            )
-        except ValidationError as e:
-            # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
-            # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line
-            # error message.
-            log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
-                          request.args)
+    try:
+        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            db_conn,
+            user_id=user["id"],
+            user_name=user_name,
+            recording_msids=recording_msids,
+            recording_mbids=recording_mbids
+        )
+    except ValidationError as e:
+        # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
+        # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line
+        # error message.
+        log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
+                      request.args)
 
     feedback = [fb.to_api() for fb in feedback]
 
