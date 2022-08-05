@@ -124,7 +124,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         # item in user menu
 
         self.assertIn('Home', data)
-        mock_user_get.assert_called_with(user['login_id'])
+        mock_user_get.assert_called_with(self.conn, user['login_id'])
 
         resp = self.client.get('/page_that_returns_404')
         data = resp.data.decode('utf-8')
@@ -190,7 +190,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_authorize_mb_user_deleter.assert_called_once_with('132')
-        mock_delete_user.assert_called_once_with(self.conn, user_id)
+        mock_delete_user.assert_called_once_with(user_id)
 
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
@@ -216,7 +216,7 @@ class IndexViewsTestCase(IntegrationTestCase):
             'https://musicbrainz.org/oauth2/userinfo',
             headers={'Authorization': 'Bearer 132'},
         )
-        mock_delete_user.assert_called_with(self.conn, user_id)
+        mock_delete_user.assert_called_with(user_id)
 
     @mock.patch('listenbrainz.webserver.views.index.requests.get')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')

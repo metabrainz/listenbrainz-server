@@ -94,52 +94,51 @@ def profile(user_name):
             raise BadRequest("Incorrect timestamp argument min_ts: %s" %
                              request.args.get("min_ts"))
 
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
-        # User name used to get user may not have the same case as original user name.
-        user_name = user.musicbrainz_id
-    
-        args = {}
-        if max_ts:
-            args['to_ts'] = max_ts
-        else:
-            args['from_ts'] = min_ts
-        data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
-            user.to_dict(), limit=LISTENS_PER_PAGE, **args)
+    user = _get_user(user_name)
+    # User name used to get user may not have the same case as original user name.
+    user_name = user.musicbrainz_id
 
-        listens = []
-        for listen in data:
-            listens.append(listen.to_api())
-    
-        # If there are no previous listens then display now_playing
-        if not listens or listens[0]['listened_at'] >= max_ts_per_user:
-            playing_now = playing_now_conn.get_playing_now(user.id)
-            if playing_now:
-                listens.insert(0, playing_now.to_api())
+    args = {}
+    if max_ts:
+        args['to_ts'] = max_ts
+    else:
+        args['from_ts'] = min_ts
+    data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
+        user.to_dict(), limit=LISTENS_PER_PAGE, **args)
 
-        already_reported_user = False
-        if current_user.is_authenticated:
-            already_reported_user = db_user.is_user_reported(conn, current_user.id, user.id)
+    listens = []
+    for listen in data:
+        listens.append(listen.to_api())
 
-        pin = get_current_pin_for_user(conn, user.id)
-        if pin:
-            with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-                pin = fetch_track_metadata_for_items(ts_conn, msb_conn, [pin])[0].to_api()
-    
-        props = {
-            "user": {
-                "id": user.id,
-                "name": user.musicbrainz_id,
-            },
-            "listens": listens,
-            "latest_listen_ts": max_ts_per_user,
-            "oldest_listen_ts": min_ts_per_user,
-            "profile_url": url_for('user.profile', user_name=user_name),
-            "userPinnedRecording": pin,
-            "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
-            "logged_in_user_follows_user": logged_in_user_follows_user(conn, user),
-            "already_reported_user": already_reported_user,
-        }
+    # If there are no previous listens then display now_playing
+    if not listens or listens[0]['listened_at'] >= max_ts_per_user:
+        playing_now = playing_now_conn.get_playing_now(user.id)
+        if playing_now:
+            listens.insert(0, playing_now.to_api())
+
+    already_reported_user = False
+    if current_user.is_authenticated:
+        already_reported_user = db_user.is_user_reported(db_conn, current_user.id, user.id)
+
+    pin = get_current_pin_for_user(db_conn, user.id)
+    if pin:
+        with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
+            pin = fetch_track_metadata_for_items(ts_conn, msb_conn, [pin])[0].to_api()
+
+    props = {
+        "user": {
+            "id": user.id,
+            "name": user.musicbrainz_id,
+        },
+        "listens": listens,
+        "latest_listen_ts": max_ts_per_user,
+        "oldest_listen_ts": min_ts_per_user,
+        "profile_url": url_for('user.profile', user_name=user_name),
+        "userPinnedRecording": pin,
+        "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
+        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+        "already_reported_user": already_reported_user,
+    }
 
     return render_template("user/profile.html",
                            props=ujson.dumps(props),
@@ -168,18 +167,17 @@ def history(user_name):
 @user_bp.route("/<user_name>/charts/")
 def charts(user_name):
     """ Show the top entitys for the user. """
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
+    user = _get_user(user_name)
 
-        user_data = {
-            "name": user.musicbrainz_id,
-            "id": user.id,
-        }
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
 
-        props = {
-            "user": user_data,
-            "logged_in_user_follows_user": logged_in_user_follows_user(conn, user),
-        }
+    props = {
+        "user": user_data,
+        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+    }
 
     return render_template(
         "user/charts.html",
@@ -192,18 +190,17 @@ def charts(user_name):
 @user_bp.route("/<user_name>/reports/")
 def reports(user_name: str):
     """ Show user reports """
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
+    user = _get_user(user_name)
 
-        user_data = {
-            "name": user.musicbrainz_id,
-            "id": user.id,
-        }
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
 
-        props = {
-            "user": user_data,
-            "logged_in_user_follows_user": logged_in_user_follows_user(conn, user),
-        }
+    props = {
+        "user": user_data,
+        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+    }
 
     return render_template(
         "user/reports.html",
@@ -232,33 +229,32 @@ def playlists(user_name: str):
         raise BadRequest("Incorrect int argument count: %s" %
                          request.args.get("count"))
 
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
-        user_data = {
-            "name": user.musicbrainz_id,
-            "id": user.id,
-        }
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
 
-        include_private = current_user.is_authenticated and current_user.id == user.id
+    include_private = current_user.is_authenticated and current_user.id == user.id
 
-        playlists = []
-        user_playlists, playlist_count = get_playlists_for_user(user.id,
-                                                                include_private=include_private,
-                                                                load_recordings=False,
-                                                                count=count,
-                                                                offset=offset)
-        for playlist in user_playlists:
-            playlists.append(serialize_jspf(playlist))
+    playlists = []
+    user_playlists, playlist_count = get_playlists_for_user(user.id,
+                                                            include_private=include_private,
+                                                            load_recordings=False,
+                                                            count=count,
+                                                            offset=offset)
+    for playlist in user_playlists:
+        playlists.append(serialize_jspf(playlist))
 
-        props = {
-            "playlists": playlists,
-            "user": user_data,
-            "active_section": "playlists",
-            "playlist_count": playlist_count,
-            "pagination_offset": offset,
-            "playlists_per_page": count,
-            "logged_in_user_follows_user": logged_in_user_follows_user(conn, user),
-        }
+    props = {
+        "playlists": playlists,
+        "user": user_data,
+        "active_section": "playlists",
+        "playlist_count": playlist_count,
+        "pagination_offset": offset,
+        "playlists_per_page": count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+    }
 
     return render_template(
         "playlists/playlists.html",
@@ -287,26 +283,25 @@ def recommendation_playlists(user_name: str):
         raise BadRequest("Incorrect int argument count: %s" %
                          request.args.get("count"))
 
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
-        user_data = {
-            "name": user.musicbrainz_id,
-            "id": user.id,
-        }
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
 
-        playlists = []
-        user_playlists, playlist_count = get_playlists_created_for_user(
-            user.id, False, count, offset)
-        for playlist in user_playlists:
-            playlists.append(serialize_jspf(playlist))
+    playlists = []
+    user_playlists, playlist_count = get_playlists_created_for_user(
+        user.id, False, count, offset)
+    for playlist in user_playlists:
+        playlists.append(serialize_jspf(playlist))
 
-        props = {
-            "playlists": playlists,
-            "user": user_data,
-            "active_section": "recommendations",
-            "playlist_count": playlist_count,
-            "logged_in_user_follows_user": logged_in_user_follows_user(conn, user),
-        }
+    props = {
+        "playlists": playlists,
+        "user": user_data,
+        "active_section": "recommendations",
+        "playlist_count": playlist_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+    }
 
     return render_template(
         "playlists/playlists.html",
@@ -335,31 +330,30 @@ def collaborations(user_name: str):
         raise BadRequest("Incorrect int argument count: %s" %
                          request.args.get("count"))
 
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
-        user_data = {
-            "name": user.musicbrainz_id,
-            "id": user.id,
-        }
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
 
-        include_private = current_user.is_authenticated and current_user.id == user.id
+    include_private = current_user.is_authenticated and current_user.id == user.id
 
-        playlists = []
-        colalborative_playlists, playlist_count = get_playlists_collaborated_on(user.id,
-                                                                                include_private=include_private,
-                                                                                load_recordings=False,
-                                                                                count=count,
-                                                                                offset=offset)
-        for playlist in colalborative_playlists:
-            playlists.append(serialize_jspf(playlist))
+    playlists = []
+    colalborative_playlists, playlist_count = get_playlists_collaborated_on(user.id,
+                                                                            include_private=include_private,
+                                                                            load_recordings=False,
+                                                                            count=count,
+                                                                            offset=offset)
+    for playlist in colalborative_playlists:
+        playlists.append(serialize_jspf(playlist))
 
-        props = {
-            "playlists": playlists,
-            "user": user_data,
-            "active_section": "collaborations",
-            "playlist_count": playlist_count,
-            "logged_in_user_follows_user": logged_in_user_follows_user(conn, user),
-        }
+    props = {
+        "playlists": playlists,
+        "user": user_data,
+        "active_section": "collaborations",
+        "playlist_count": playlist_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+    }
 
     return render_template(
         "playlists/playlists.html",
@@ -372,25 +366,24 @@ def collaborations(user_name: str):
 @user_bp.route("/<user_name>/pins/")
 def pins(user_name: str):
     """ Show user pin history """
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
-        user_data = {
-            "name": user.musicbrainz_id,
-            "id": user.id,
-        }
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
 
-        pins = get_pin_history_for_user(conn, user_id=user.id, count=25, offset=0)
-        with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-            pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, msb_conn, pins)]
+    pins = get_pin_history_for_user(db_conn, user_id=user.id, count=25, offset=0)
+    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
+        pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, msb_conn, pins)]
 
-        total_count = get_pin_count_for_user(conn, user_id=user.id)
-        props = {
-            "user": user_data,
-            "pins": pins,
-            "profile_url": url_for('user.profile', user_name=user_name),
-            "total_count": total_count,
-            "logged_in_user_follows_user": logged_in_user_follows_user(conn, user),
-        }
+    total_count = get_pin_count_for_user(db_conn, user_id=user.id)
+    props = {
+        "user": user_data,
+        "pins": pins,
+        "profile_url": url_for('user.profile', user_name=user_name),
+        "total_count": total_count,
+        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+    }
 
     return render_template(
         "user/pins.html",
@@ -409,28 +402,27 @@ def report_abuse(user_name):
         reason = data.get("reason")
         if not isinstance(reason, str):
             raise APIBadRequest("Reason must be a string.")
-    with db.engine.connect() as conn:
-        user_to_report = db_user.get_by_mb_id(conn, user_name)
-        if current_user.id != user_to_report["id"]:
-            db_user.report_user(conn, current_user.id, user_to_report["id"], reason)
-            return jsonify({"status": "%s has been reported successfully." % user_name})
-        else:
-            raise APIBadRequest("You cannot report yourself.")
+    user_to_report = db_user.get_by_mb_id(db_conn, user_name)
+    if current_user.id != user_to_report["id"]:
+        db_user.report_user(db_conn, current_user.id, user_to_report["id"], reason)
+        return jsonify({"status": "%s has been reported successfully." % user_name})
+    else:
+        raise APIBadRequest("You cannot report yourself.")
 
 
-def _get_user(conn, user_name):
+def _get_user(user_name):
     """ Get current username """
     if current_user.is_authenticated and \
             current_user.musicbrainz_id == user_name:
         return current_user
     else:
-        user = db_user.get_by_mb_id(conn, user_name)
+        user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise NotFound("Cannot find user: %s" % user_name)
         return User.from_dbrow(user)
 
 
-def delete_user(conn, user_id: int):
+def delete_user(user_id: int):
     """ Delete a user from ListenBrainz completely. First, drops
      the user's listens and then deletes the user from the database.
 
@@ -438,7 +430,7 @@ def delete_user(conn, user_id: int):
         user_id: the LB row ID of the user
     """
     timescale_connection._ts.delete(user_id)
-    db_user.delete(conn, user_id)
+    db_user.delete(db_conn, user_id)
 
 
 def delete_listens_history(user_id: int):
@@ -452,7 +444,7 @@ def delete_listens_history(user_id: int):
     db_stats.delete_user_stats(user_id)
 
 
-def logged_in_user_follows_user(conn, user):
+def logged_in_user_follows_user(db_conn, user):
     """ Check if user is being followed by the current user.
     Args:
         user : User object
@@ -461,7 +453,7 @@ def logged_in_user_follows_user(conn, user):
     """
 
     if current_user.is_authenticated:
-        return db_user_relationship.is_following_user(conn, current_user.id, user.id)
+        return db_user_relationship.is_following_user(db_conn, current_user.id, user.id)
     return None
 
 
@@ -498,24 +490,23 @@ def feedback(user_name: str):
         raise BadRequest("Incorrect int argument count: %s" %
                          request.args.get("count"))
 
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
-        user_data = {
-            "name": user.musicbrainz_id,
-            "id": user.id,
-        }
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
 
-        feedback_count = get_feedback_count_for_user(user.id, score)
-        with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-            feedback = get_feedback_for_user(ts_conn, msb_conn, user.id, count, offset, score, True)
+    feedback_count = get_feedback_count_for_user(user.id, score)
+    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
+        feedback = get_feedback_for_user(ts_conn, msb_conn, user.id, count, offset, score, True)
 
-        props = {
-            "feedback": [f.to_api() for f in feedback],
-            "feedback_count": feedback_count,
-            "user": user_data,
-            "active_section": "feedback",
-            "logged_in_user_follows_user": logged_in_user_follows_user(conn, user),
-        }
+    props = {
+        "feedback": [f.to_api() for f in feedback],
+        "feedback_count": feedback_count,
+        "user": user_data,
+        "active_section": "feedback",
+        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+    }
 
     return render_template(
         "user/feedback.html",
@@ -528,8 +519,7 @@ def feedback(user_name: str):
 @user_bp.route("/<user_name>/year-in-music/")
 def year_in_music(user_name):
     """ Year in Music """
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
+    user = _get_user(user_name)
     return render_template(
         "user/year-in-music.html",
         user_name=user_name,
@@ -546,9 +536,8 @@ def year_in_music(user_name):
 @user_bp.route("/<user_name>/missing-data/")
 def missing_mb_data(user_name: str):
     """ Shows missing musicbrainz data """
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
-        missing_data = get_user_missing_musicbrainz_data(conn, user.id, "cf")
+    user = _get_user(user_name)
+    missing_data = get_user_missing_musicbrainz_data(db_conn, user.id, "cf")
     if missing_data is None:
         missing_data_list = []
     else:

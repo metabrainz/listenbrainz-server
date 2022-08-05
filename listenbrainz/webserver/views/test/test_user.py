@@ -241,7 +241,7 @@ class UserViewsTestCase(IntegrationTestCase):
             json=data,
         )
         self.assert200(response, "%s has been reported successfully." % self.abuser.musicbrainz_id)
-        already_reported_user = db_user.is_user_reported(self.user.id, self.abuser.id)
+        already_reported_user = db_user.is_user_reported(self.conn, self.user.id, self.abuser.id)
         self.assertTrue(already_reported_user)
 
         # Assert a user cannot report themselves
@@ -250,7 +250,7 @@ class UserViewsTestCase(IntegrationTestCase):
             json=data,
         )
         self.assert400(response, "You cannot report yourself.")
-        already_reported_user = db_user.is_user_reported(self.user.id, self.user.id)
+        already_reported_user = db_user.is_user_reported(self.conn, self.user.id, self.user.id)
         self.assertFalse(already_reported_user)
 
         # Assert reason must be of type string

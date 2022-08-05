@@ -250,7 +250,7 @@ def delete():
     form = FlaskForm()
     if form.validate_on_submit():
         try:
-            delete_user(db_conn, current_user.id)
+            delete_user(current_user.id)
             flash.success("Successfully deleted account for %s." % current_user.musicbrainz_id)
             return redirect(url_for('index.index'))
         except Exception:

@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import current_app
 from psycopg2 import OperationalError, DatabaseError
 from listenbrainz.model import db
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.admin import AdminModelView
 from listenbrainz.webserver.views.user import delete_user
 
@@ -55,8 +56,7 @@ class UserAdminView(AdminModelView):
 
     def delete_model(self, model):
         try:
-            with db.engine.connect() as conn:
-                delete_user(conn, model.id)
+            delete_user(model.id)
             return True
         except OperationalError or DatabaseError as err:
             current_app.logger.error(err, exc_info=True)
