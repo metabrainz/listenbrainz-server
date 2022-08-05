@@ -1,8 +1,9 @@
-from flask import redirect, url_for, current_app, request
+from flask import redirect, url_for, current_app
 from flask_login import LoginManager, UserMixin, current_user
 from functools import wraps
 import listenbrainz.db.user as db_user
-from werkzeug.exceptions import Unauthorized
+
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.errors import APIUnauthorized
 
 login_manager = LoginManager()
@@ -45,7 +46,7 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(user_login_id):
     try:
-        user = db_user.get_by_login_id(user_login_id)
+        user = db_user.get_by_login_id(db_conn, user_login_id)
     except Exception as e:
         current_app.logger.error("Error while getting user by login ID: %s", str(e), exc_info=True)
         return None

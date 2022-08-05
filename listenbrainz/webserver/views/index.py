@@ -15,7 +15,7 @@ from werkzeug.exceptions import Unauthorized, NotFound
 import listenbrainz.db.user as db_user
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.webserver import flash
+from listenbrainz.webserver import flash, db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.timescale_connection import _ts
@@ -163,8 +163,7 @@ def gdpr_notice():
     elif request.method == 'POST':
         if request.form.get('gdpr-options') == 'agree':
             try:
-                with db.engine.connect() as conn:
-                    db_user.agree_to_gdpr(conn, current_user.musicbrainz_id)
+                db_user.agree_to_gdpr(db_conn, current_user.musicbrainz_id)
             except DatabaseException as e:
                 flash.error('Could not store agreement to GDPR terms')
             next = request.form.get('next')
@@ -183,8 +182,7 @@ def search():
     search_term = request.args.get("search_term")
     user_id = current_user.id if current_user.is_authenticated else None
     if search_term:
-        with db.engine.connect() as conn:
-            users = db_user.search(conn, search_term, SEARCH_USER_LIMIT, user_id)
+        users = db_user.search(db_conn, search_term, SEARCH_USER_LIMIT, user_id)
     else:
         users = []
     return render_template("index/search-users.html", search_term=search_term, users=users)
@@ -211,11 +209,10 @@ def mb_user_deleter(musicbrainz_row_id):
         Unauthorized if the MusicBrainz access token provided with the query is invalid
     """
     _authorize_mb_user_deleter(request.args.get('access_token', ''))
-    with db.engine.connect() as conn:
-        user = db_user.get_by_mb_row_id(conn, musicbrainz_row_id)
-        if user is None:
-            raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
-        delete_user(conn, user['id'])
+    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id)
+    if user is None:
+        raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
+    delete_user(db_conn, user['id'])
     return jsonify({'status': 'ok'}), 200
 
 
@@ -253,7 +250,7 @@ def _get_user_count():
         return user_count
     else:
         try:
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(db_conn)
         except DatabaseException as e:
             raise
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)

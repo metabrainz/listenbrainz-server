@@ -6,9 +6,11 @@ from time import sleep
 
 from brainzutils import cache, metrics, sentry
 from brainzutils.flask import CustomFlask
-from flask import request, url_for, redirect
+from flask import request, url_for, redirect, g, current_app
 from flask_login import current_user
+from werkzeug.local import LocalProxy
 
+from listenbrainz import db
 from listenbrainz.webserver.utils import get_global_props
 
 API_PREFIX = '/1'
@@ -18,7 +20,16 @@ API_PREFIX = '/1'
 deploy_env = os.environ.get('DEPLOY_ENV', '')
 
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
-API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
+API_LISTENED_AT_ALLOWED_SKEW = 60 * 60  # allow a skew of 1 hour in listened_at submissions
+
+
+def _get_db_conn():
+    if "db_conn" not in g:
+        g.db_conn = db.engine.connect()
+    return g.db_conn
+
+
+db_conn = LocalProxy(lambda: _get_db_conn())
 
 
 def load_config(app):
@@ -129,9 +140,20 @@ def create_app(debug=None):
 
     from brainzutils.ratelimit import inject_x_rate_headers, set_user_validation_function
     set_user_validation_function(check_ratelimit_token_whitelist)
+
     @app.after_request
     def after_request_callbacks(response):
         return inject_x_rate_headers(response)
+
+    @app.teardown_appcontext
+    def close_db_conn(response_or_exc):
+        _db_conn = g.pop("db_conn", None)
+        # in tests we want to reuse the same connection across requests
+        # so that we can reset the database after the test by rolling
+        # back the transaction
+        if _db_conn is not None and not current_app.config["TESTING"]:
+            _db_conn.close()
+        return response_or_exc
 
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')
