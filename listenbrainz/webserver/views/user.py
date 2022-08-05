@@ -1,28 +1,27 @@
+import ujson
+from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
+from flask_login import current_user
+from werkzeug.exceptions import NotFound, BadRequest
+
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
-import ujson
-
-from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
-from flask_login import current_user, login_required
-
 from data.model.external_service import ExternalServiceType
-from listenbrainz import webserver, db, messybrainz
+from listenbrainz import webserver, messybrainz
 from listenbrainz.db import listens_importer, timescale
+from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
+from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, \
     get_playlists_collaborated_on
-from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
-from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db.year_in_music import get_year_in_music
+from listenbrainz.webserver import db_conn, msb_conn, ts_conn
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import timescale_connection, db_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
-from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
-from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 
 LISTENS_PER_PAGE = 25
@@ -72,8 +71,6 @@ redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
 @user_bp.route("/<user_name>/")
 @web_listenstore_needed
 def profile(user_name):
-    # Which database to use to showing user listens.
-    ts_conn = webserver.timescale_connection._ts
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
 
@@ -103,8 +100,11 @@ def profile(user_name):
         args['to_ts'] = max_ts
     else:
         args['from_ts'] = min_ts
-    data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
-        user.to_dict(), limit=LISTENS_PER_PAGE, **args)
+    data, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
+        user.to_dict(),
+        limit=LISTENS_PER_PAGE,
+        **args
+    )
 
     listens = []
     for listen in data:
@@ -122,8 +122,7 @@ def profile(user_name):
 
     pin = get_current_pin_for_user(db_conn, user.id)
     if pin:
-        with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-            pin = fetch_track_metadata_for_items(ts_conn, msb_conn, [pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(ts_conn, msb_conn, [pin])[0].to_api()
 
     props = {
         "user": {
@@ -136,7 +135,7 @@ def profile(user_name):
         "profile_url": url_for('user.profile', user_name=user_name),
         "userPinnedRecording": pin,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
-        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
     }
 
@@ -176,7 +175,7 @@ def charts(user_name):
 
     props = {
         "user": user_data,
-        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -199,7 +198,7 @@ def reports(user_name: str):
 
     props = {
         "user": user_data,
-        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -253,7 +252,7 @@ def playlists(user_name: str):
         "playlist_count": playlist_count,
         "pagination_offset": offset,
         "playlists_per_page": count,
-        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -300,7 +299,7 @@ def recommendation_playlists(user_name: str):
         "user": user_data,
         "active_section": "recommendations",
         "playlist_count": playlist_count,
-        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -352,7 +351,7 @@ def collaborations(user_name: str):
         "user": user_data,
         "active_section": "collaborations",
         "playlist_count": playlist_count,
-        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -373,8 +372,7 @@ def pins(user_name: str):
     }
 
     pins = get_pin_history_for_user(db_conn, user_id=user.id, count=25, offset=0)
-    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-        pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, msb_conn, pins)]
+    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, msb_conn, pins)]
 
     total_count = get_pin_count_for_user(db_conn, user_id=user.id)
     props = {
@@ -382,7 +380,7 @@ def pins(user_name: str):
         "pins": pins,
         "profile_url": url_for('user.profile', user_name=user_name),
         "total_count": total_count,
-        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
@@ -444,7 +442,7 @@ def delete_listens_history(user_id: int):
     db_stats.delete_user_stats(user_id)
 
 
-def logged_in_user_follows_user(db_conn, user):
+def logged_in_user_follows_user(user):
     """ Check if user is being followed by the current user.
     Args:
         user : User object
@@ -497,15 +495,14 @@ def feedback(user_name: str):
     }
 
     feedback_count = get_feedback_count_for_user(user.id, score)
-    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-        feedback = get_feedback_for_user(ts_conn, msb_conn, user.id, count, offset, score, True)
+    feedback = get_feedback_for_user(ts_conn, msb_conn, user.id, count, offset, score, True)
 
     props = {
         "feedback": [f.to_api() for f in feedback],
         "feedback_count": feedback_count,
         "user": user_data,
         "active_section": "feedback",
-        "logged_in_user_follows_user": logged_in_user_follows_user(db_conn, user),
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(

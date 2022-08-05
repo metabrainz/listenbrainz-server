@@ -7,7 +7,7 @@ from datetime import datetime
 
 from flask import url_for
 from unittest.mock import patch
-from flask import render_template, current_app
+from flask import current_app
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver.views.user import _get_user
 from listenbrainz.webserver.views import recommendations_cf_recording

@@ -10,7 +10,8 @@ from flask import request, url_for, redirect, g, current_app
 from flask_login import current_user
 from werkzeug.local import LocalProxy
 
-from listenbrainz import db
+from listenbrainz import db, messybrainz
+from listenbrainz.db import timescale
 
 API_PREFIX = '/1'
 
@@ -28,7 +29,21 @@ def _get_db_conn():
     return g.db_conn
 
 
-db_conn = LocalProxy(lambda: _get_db_conn())
+def _get_ts_conn():
+    if "ts_conn" not in g:
+        g.ts_conn = timescale.engine.connect()
+    return g.ts_conn
+
+
+def _get_msb_conn():
+    if "msb_conn" not in g:
+        g.msb_conn = messybrainz.engine.connect()
+    return g.msb_conn
+
+
+db_conn = LocalProxy(_get_db_conn)
+ts_conn = LocalProxy(_get_ts_conn)
+msb_conn = LocalProxy(_get_msb_conn)
 
 
 def load_config(app):
@@ -146,12 +161,21 @@ def create_app(debug=None):
 
     @app.teardown_appcontext
     def close_db_conn(response_or_exc):
-        _db_conn = g.pop("db_conn", None)
         # in tests we want to reuse the same connection across requests
         # so that we can reset the database after the test by rolling
         # back the transaction
-        if _db_conn is not None and not current_app.config["TESTING"]:
+        if current_app.config["TESTING"]:
+            return response_or_exc
+
+        _db_conn = g.pop("db_conn", None)
+        if _db_conn is not None:
             _db_conn.close()
+        _ts_conn = g.pop("ts_conn", None)
+        if _ts_conn is not None:
+            _ts_conn.close()
+        _msb_conn = g.pop("msb_conn", None)
+        if _msb_conn is not None:
+            _msb_conn.close()
         return response_or_exc
 
     # Template utilities

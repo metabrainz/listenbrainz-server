@@ -13,7 +13,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth as db_oauth, timescale
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, ts_conn
 from listenbrainz.webserver.login import User
 
 
@@ -264,26 +264,25 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assert400(response, "Reason must be a string.")
 
     def test_user_pins(self):
-        with timescale.engine.connect() as connection:
-            connection.execute(text("""
-                INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
-                                                   artist_mbids, artist_credit_name, recording_name)
-                 VALUES (
-                      204
-                    , '00000737-3a59-4499-b30a-31fe2464555d'
-                    , '5b24fbab-c58f-4c37-a59d-ab232e2d98c4'
-                    , 'Batman Returns'
-                    , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'
-                    , 'Danny Elfman'
-                    , 'The Final Confrontation, Part 1'
-                );
-                INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
-                 VALUES (
-                    'b7ffd2af-418f-4be2-bdd1-22f8b48613da'
-                  , '00000737-3a59-4499-b30a-31fe2464555d'
-                  , 'exact_match'
-                );
-            """))
+        ts_conn.execute(text("""
+            INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
+                                               artist_mbids, artist_credit_name, recording_name)
+             VALUES (
+                  204
+                , '00000737-3a59-4499-b30a-31fe2464555d'
+                , '5b24fbab-c58f-4c37-a59d-ab232e2d98c4'
+                , 'Batman Returns'
+                , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'
+                , 'Danny Elfman'
+                , 'The Final Confrontation, Part 1'
+            );
+            INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+             VALUES (
+                'b7ffd2af-418f-4be2-bdd1-22f8b48613da'
+              , '00000737-3a59-4499-b30a-31fe2464555d'
+              , 'exact_match'
+            );
+        """))
 
         pinned_rec = {
             "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",

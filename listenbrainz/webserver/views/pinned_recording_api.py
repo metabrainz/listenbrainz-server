@@ -8,7 +8,7 @@ from listenbrainz import messybrainz
 from listenbrainz.db import timescale
 from listenbrainz.db.model.pinned_recording import WritablePinnedRecording
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, ts_conn, msb_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound
 from listenbrainz.webserver.views.api_tools import (
@@ -180,8 +180,7 @@ def get_pins_for_user(user_name):
     )
     total_count = db_pinned_rec.get_pin_count_for_user(db_conn, user_id=user["id"])
 
-    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-        pinned_recordings = fetch_track_metadata_for_items(ts_conn, msb_conn, pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(ts_conn, msb_conn, pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
 
     return jsonify(
@@ -257,8 +256,7 @@ def get_pins_for_user_following(user_name):
         offset=offset
     )
 
-    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-        pinned_recordings = fetch_track_metadata_for_items(ts_conn, msb_conn, pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(ts_conn, msb_conn, pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
 
     return jsonify(

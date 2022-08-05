@@ -7,7 +7,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz import messybrainz
 from listenbrainz.db import timescale
 from listenbrainz.db.model.feedback import Feedback
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, ts_conn, msb_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -111,17 +111,16 @@ def get_feedback_for_user(user_name):
     if score and score not in [-1, 1]:
         log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-        feedback = db_feedback.get_feedback_for_user(
-            db_conn,
-            ts_conn,
-            msb_conn,
-            user_id=user["id"],
-            limit=count,
-            offset=offset,
-            score=score,
-            metadata=metadata
-        )
+    feedback = db_feedback.get_feedback_for_user(
+        db_conn,
+        ts_conn,
+        msb_conn,
+        user_id=user["id"],
+        limit=count,
+        offset=offset,
+        score=score,
+        metadata=metadata
+    )
     total_count = db_feedback.get_feedback_count_for_user(db_conn, user["id"])
 
     feedback = [fb.to_api() for fb in feedback]

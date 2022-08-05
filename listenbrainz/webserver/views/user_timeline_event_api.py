@@ -39,7 +39,7 @@ from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMet
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
-from listenbrainz.webserver import timescale_connection, db_conn
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn, msb_conn
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIUnauthorized, APINotFound, \
     APIForbidden
@@ -703,8 +703,7 @@ def get_recording_pin_events(
         max_ts=max_ts,
         count=count,
     )
-    with timescale.engine.connect() as ts_conn, messybrainz.engine.connect() as msb_conn:
-        recording_pin_events_db = fetch_track_metadata_for_items(ts_conn, msb_conn, recording_pin_events_db)
+    recording_pin_events_db = fetch_track_metadata_for_items(ts_conn, msb_conn, recording_pin_events_db)
 
     events = []
     for pin in recording_pin_events_db:
