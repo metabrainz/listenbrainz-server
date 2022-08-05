@@ -183,7 +183,7 @@ class UserViewsTestCase(IntegrationTestCase):
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
-        user = _get_user('iliekcomputers')
+        user = _get_user('iliekcomputers').to_dict()
         timescale.return_value = ([], 0, 0)
 
         # If no parameter is given, use current time as the to_ts
