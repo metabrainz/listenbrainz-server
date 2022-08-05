@@ -5,7 +5,7 @@ from brainzutils.musicbrainz_db import editor as mb_editor
 
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.utils import generate_string
-from listenbrainz.webserver.timescale_db_conn import _ts as ts
+from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
 import ujson
 
