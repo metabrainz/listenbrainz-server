@@ -17,7 +17,7 @@ from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_c
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver import timescale_connection
@@ -448,8 +448,7 @@ def delete_listens_history(user_id: int):
         user_id: the LB row ID of the user
     """
     timescale_connection._ts.delete(user_id)
-    with db.engine.connect() as conn:
-        listens_importer.update_latest_listened_at(conn, user_id, ExternalServiceType.LASTFM, 0)
+    listens_importer.update_latest_listened_at(db_conn, user_id, ExternalServiceType.LASTFM, 0)
     db_stats.delete_user_stats(user_id)
 
 
