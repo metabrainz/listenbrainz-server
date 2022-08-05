@@ -3,7 +3,7 @@ import os
 import time
 
 import listenbrainz.db.user as db_user
-from flask import current_app, url_for
+from flask import current_app, url_for, g
 
 from redis import Redis
 
@@ -24,8 +24,12 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
     def setUp(self):
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+        g.db_conn = self.conn
 
     def tearDown(self):
+        self.ctx.pop()
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
