@@ -72,11 +72,11 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assert404(response)
 
     def test_top_artist_valid_user(self):
-        response = self.client.get(url_for('recommendations_cf_recording.similar_artist', user_name="vansika"))
+        response = self.client.get(url_for('recommendations_cf_recording.top_artist', user_name="vansika"))
         self.assert200(response)
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
-        self.assert_context('user', self.user)
+        self.assert_context('user', _get_user('vansika'))
 
     def test_similar_artist_invalid_user(self):
         response = self.client.get(url_for('recommendations_cf_recording.top_artist', user_name="invalid"))
@@ -87,7 +87,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
-        self.assert_context('user', self.user)
+        self.assert_context('user', _get_user('vansika'))
 
     def test_get_template_missing_user_from_rec_db(self):
         user = _get_user('vansika')
