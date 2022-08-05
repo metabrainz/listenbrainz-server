@@ -5,6 +5,7 @@ import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_rec
 from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.views.user import _get_user
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
@@ -16,8 +17,7 @@ SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 def info(user_name):
     """ Show info about the recommended tracks
     """
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
+    user = _get_user(user_name)
 
     return render_template(
         "recommendations_cf_recording/info.html",
@@ -54,9 +54,8 @@ def _get_template(active_section, user_name):
         Returns:
             Template to render.
     """
-    with db.engine.connect() as conn:
-        user = _get_user(conn, user_name)
-        data = db_recommendations_cf_recording.get_user_recommendation(conn, user.id)
+    user = _get_user(user_name)
+    data = db_recommendations_cf_recording.get_user_recommendation(db_conn, user.id)
 
     if active_section == 'top_artist':
         tracks_type = "Top Artist"

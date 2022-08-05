@@ -47,7 +47,7 @@ def pin_recording_for_user():
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
 
         data = request.json
 
@@ -85,7 +85,7 @@ def unpin_recording_for_user():
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
         recording_unpinned = db_pinned_rec.unpin(conn, user["id"])
 
     if recording_unpinned is False:
@@ -111,7 +111,7 @@ def delete_pin_for_user(row_id):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
         recording_deleted = db_pinned_rec.delete(conn, row_id, user["id"])
 
     if recording_deleted is False:

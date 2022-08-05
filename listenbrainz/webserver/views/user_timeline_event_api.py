@@ -85,7 +85,7 @@ def create_user_recording_recommendation_event(user_name):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
         if user_name != user['musicbrainz_id']:
             raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
@@ -133,7 +133,7 @@ def create_user_notification_event(user_name):
 
     """
     with db.engine.connect() as conn:
-        creator = validate_auth_header(conn)
+        creator = validate_auth_header()
         if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
             raise APIForbidden("Only approved users are allowed to post a message on a user's timeline.")
 
@@ -186,7 +186,7 @@ def create_user_cb_review_event(user_name):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
         if user_name != user["musicbrainz_id"]:
             raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 

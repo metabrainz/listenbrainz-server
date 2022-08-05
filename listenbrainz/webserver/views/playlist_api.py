@@ -249,7 +249,7 @@ def create_playlist():
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
 
         data = request.json
         validate_create_playlist_required_items(data)
@@ -354,7 +354,7 @@ def edit_playlist(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
 
         data = request.json
         validate_playlist(data)
@@ -482,7 +482,7 @@ def add_playlist_item(playlist_mbid, offset):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
     if offset is not None and offset < 0:
         log_raise_400("Offset must be a positive integer.")
 
@@ -548,7 +548,7 @@ def move_playlist_item(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -598,7 +598,7 @@ def delete_playlist_item(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -639,7 +639,7 @@ def delete_playlist(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -677,7 +677,7 @@ def copy_playlist(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        user = validate_auth_header(conn)
+        user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")

@@ -1,6 +1,6 @@
 import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
-from listenbrainz import db
+from listenbrainz.webserver import db_conn
 
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
@@ -87,12 +87,11 @@ def get_recommendations(user_name):
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    with db.engine.connect() as conn:
-        user = db_user.get_by_mb_id(conn, user_name)
-        if user is None:
-            raise APINotFound("Cannot find user: {}".format(user_name))
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: {}".format(user_name))
 
-        recommendations = db_recommendations_cf_recording.get_user_recommendation(conn, user['id'])
+    recommendations = db_recommendations_cf_recording.get_user_recommendation(db_conn, user['id'])
 
     if recommendations is None:
         err_msg = 'No recommendations due to absence of recent listening history for user {}'.format(user_name)

@@ -85,7 +85,7 @@ def follow_user(user_name: str):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        current_user = validate_auth_header(conn)
+        current_user = validate_auth_header()
         user = db_user.get_by_mb_id(conn, user_name)
 
         if not user:
@@ -117,7 +117,7 @@ def unfollow_user(user_name: str):
     :resheader Content-Type: *application/json*
     """
     with db.engine.connect() as conn:
-        current_user = validate_auth_header(conn)
+        current_user = validate_auth_header()
         user = db_user.get_by_mb_id(conn, user_name)
 
         if not user:
