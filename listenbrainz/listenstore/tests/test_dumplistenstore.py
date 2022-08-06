@@ -36,12 +36,14 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
     def tearDown(self):
         self.logstore = None
         self.dumpstore = None
+        self.reset_listens()
         DatabaseTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
 
     def _create_test_data(self, user_name, user_id, test_data_file_name=None):
         test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
         self.logstore.insert(self.ts_conn, test_data)
+        self.ts_conn.commit()
         return len(test_data)
 
     def _insert_with_created(self, listens):
