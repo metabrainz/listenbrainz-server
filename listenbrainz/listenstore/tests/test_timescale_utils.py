@@ -4,7 +4,6 @@ from brainzutils import cache
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db import timescale
 
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore import TimescaleListenStore
@@ -35,23 +34,22 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
         return len(test_data)
 
     def _get_count_and_timestamp(self, user):
-        with timescale.engine.connect() as connection:
-            result = connection.execute(
-                text("""
-                    SELECT count, min_listened_at, max_listened_at
-                      FROM listen_user_metadata
-                     WHERE user_id = :user_id
-                """), user_id=user["id"])
-            return dict(**result.fetchone())
+        result = self.ts_conn.execute(
+            text("""
+                SELECT count, min_listened_at, max_listened_at
+                  FROM listen_user_metadata
+                 WHERE user_id = :user_id
+            """), user_id=user["id"])
+        return dict(**result.fetchone())
 
     def test_delete_listens_update_metadata(self):
         user_1 = db_user.get_or_create(self.conn, 1, "user_1")
         user_2 = db_user.get_or_create(self.conn, 2, "user_2")
-        recalculate_all_user_data()
+        recalculate_all_user_data(self.conn, self.ts_conn)
 
         self._create_test_data(user_1)
         self._create_test_data(user_2)
-        update_user_listen_data()
+        update_user_listen_data(self.ts_conn)
 
         metadata_1 = self._get_count_and_timestamp(user_1)
         self.assertEqual(metadata_1["min_listened_at"], 1400000000)
@@ -66,16 +64,16 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
         # to test the case when the update script has not run since delete, so metadata in listen_user_metadata does
         # account for this listen and deleting should not affect it either.
         self._create_test_data(user_1, "timescale_listenstore_test_listens_2.json")
-        self.logstore.delete_listen(1400000500, user_1["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
+        self.logstore.delete_listen(self.ts_conn, 1400000500, user_1["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
 
         # test min_listened_at is updated if that listen is deleted for a user
-        self.logstore.delete_listen(1400000000, user_1["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
+        self.logstore.delete_listen(self.ts_conn, 1400000000, user_1["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
         # test max_listened_at is updated if that listen is deleted for a user
-        self.logstore.delete_listen(1400000200, user_1["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
+        self.logstore.delete_listen(self.ts_conn, 1400000200, user_1["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
         # test normal listen delete updates correctly
-        self.logstore.delete_listen(1400000100, user_2["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
+        self.logstore.delete_listen(self.ts_conn, 1400000100, user_2["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
 
-        delete_listens()
+        delete_listens(self.ts_conn)
 
         metadata_1 = self._get_count_and_timestamp(user_1)
         self.assertEqual(metadata_1["min_listened_at"], 1400000050)

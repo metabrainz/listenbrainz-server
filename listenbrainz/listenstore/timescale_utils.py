@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 SECONDS_IN_A_YEAR = 31536000
 
 
-def delete_listens():
+def delete_listens(conn):
     """ Delete listens and update counts, listen min/max timestamps """
     # Implementation Notes:
     #
@@ -192,8 +192,8 @@ def delete_listens():
     """
     delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE id <= :max_id"
 
-    with timescale.engine.begin() as connection:
-        result = connection.execute(select_max_id)
+    with conn.begin():
+        result = conn.execute(select_max_id)
         row = result.fetchone()
 
         if not row:
@@ -204,21 +204,21 @@ def delete_listens():
         logger.info("Found max id in listen_delete_metadata table: %s", max_id)
 
         logger.info("Deleting Listens and updating affected listens counts")
-        connection.execute(text(delete_listens_and_update_listen_counts), max_id=max_id)
+        conn.execute(text(delete_listens_and_update_listen_counts), max_id=max_id)
 
         logger.info("Update minimum listen timestamp affected by deleted listens")
-        connection.execute(text(update_listen_min_ts), max_id=max_id)
+        conn.execute(text(update_listen_min_ts), max_id=max_id)
 
         logger.info("Update maximum listen timestamp affected by deleted listens")
-        connection.execute(text(update_listen_max_ts), max_id=max_id)
+        conn.execute(text(update_listen_max_ts), max_id=max_id)
 
         logger.info("Clean up listen delete metadata table")
-        connection.execute(text(delete_user_metadata), max_id=max_id)
+        conn.execute(text(delete_user_metadata), max_id=max_id)
 
         logger.info("Completed deleting listens and updating affected metadata")
 
 
-def update_user_listen_data():
+def update_user_listen_data(conn):
     """ Scan listens created since last run and update metadata in listen_user_metadata accordingly """
     query = """
         WITH new AS (
@@ -245,16 +245,16 @@ def update_user_listen_data():
     # of engine.begin causes the changes to not be persisted. Reading up on sqlalchemy transaction handling etc.
     # it makes sense that we need begin for an explicit transaction but how CRUD statements work fine with connect
     # in remaining LB is beyond me then.
-    with timescale.engine.begin() as connection:
+    with conn.begin():
         logger.info("Starting to update listen counts")
-        connection.execute(text(query), until=datetime.now())
+        conn.execute(text(query), until=datetime.now())
         logger.info("Completed updating listen counts")
 
 
-def delete_listens_and_update_user_listen_data():
+def delete_listens_and_update_user_listen_data(conn):
     """ Delete listens and update user metadata to reflect deleted listens and listens created since last run """
-    delete_listens()
-    update_user_listen_data()
+    delete_listens(conn)
+    update_user_listen_data(conn)
 
 
 def add_missing_to_listen_users_metadata():
@@ -294,13 +294,12 @@ def add_missing_to_listen_users_metadata():
         raise
 
 
-def recalculate_all_user_data():
+def recalculate_all_user_data(db_conn, ts_conn):
     """ Recalculate entire listen user metadata from scratch """
     query = 'SELECT id FROM "user"'
     try:
-        with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query))
-            user_list = [row["id"] for row in result]
+        result = db_conn.execute(sqlalchemy.text(query))
+        user_list = [row["id"] for row in result]
     except psycopg2.OperationalError:
         logger.error("Cannot query db to fetch user list", exc_info=True)
         raise
@@ -319,7 +318,7 @@ def recalculate_all_user_data():
     """
     values = [(user_id,) for user_id in user_list]
     template = "(%s, 0, NULL, NULL, 'epoch')"
-    connection = timescale.engine.raw_connection()
+    connection = ts_conn.raw_connection()
     try:
         with connection.cursor() as cursor:
             execute_values(cursor, query, values, template=template)
@@ -330,8 +329,8 @@ def recalculate_all_user_data():
         raise
 
     try:
-        update_user_listen_data()
-    except psycopg2.OperationalError as e:
+        update_user_listen_data(ts_conn)
+    except psycopg2.OperationalError:
         logger.error("Cannot update user data:", exc_info=True)
         raise
 

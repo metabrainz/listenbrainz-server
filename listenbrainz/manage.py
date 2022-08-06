@@ -13,7 +13,7 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
     delete_listens as ts_delete_listens, \
     delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data
-from listenbrainz.webserver import create_app
+from listenbrainz.webserver import create_app, ts_conn
 
 
 @click.group()
@@ -275,7 +275,7 @@ def delete_pending_listens():
     """ Complete all pending listen deletes since last cron run """
     application = webserver.create_app()
     with application.app_context():
-        ts_delete_listens()
+        ts_delete_listens(ts_conn)
 
 
 @cli.command(name="delete_listens_and_update_metadata")
@@ -284,7 +284,7 @@ def delete_listens_and_update_metadata():
     updating listen metadata since last cron run """
     application = webserver.create_app()
     with application.app_context():
-        ts_delete_listens_and_update_user_listen_data()
+        ts_delete_listens_and_update_user_listen_data(ts_conn)
 
 
 @cli.command(name="add_missing_to_listen_users_metadata")

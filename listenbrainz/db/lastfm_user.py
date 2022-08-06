@@ -3,6 +3,7 @@
 from sqlalchemy import text
 
 from listenbrainz import db
+from listenbrainz.webserver import ts_conn
 
 
 class User(object):
@@ -66,4 +67,4 @@ class User(object):
         """ Get playcount from the given user name.
         """
         user = User.load_by_id(connection, user_id)
-        return listenstore.get_listen_count_for_user(user.id)
+        return listenstore.get_listen_count_for_user(ts_conn, user.id)

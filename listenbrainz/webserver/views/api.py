@@ -13,7 +13,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
-from listenbrainz.webserver import timescale_connection, db_conn
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
@@ -143,6 +143,7 @@ def get_listens(user_name):
         raise APIBadRequest("min_ts should be less than max_ts")
 
     listens, _, max_ts_per_user = timescale_connection._ts.fetch_listens(
+        ts_conn,
         user,
         limit=count,
         from_ts=min_ts,
@@ -180,7 +181,7 @@ def get_listen_count(user_name):
         raise APINotFound("Cannot find user: %s" % user_name)
 
     try:
-        listen_count = timescale_connection._ts.get_listen_count_for_user(user["id"])
+        listen_count = timescale_connection._ts.get_listen_count_for_user(ts_conn, user["id"])
     except psycopg2.OperationalError as err:
         current_app.logger.error("cannot fetch user listen count: ", str(err))
         raise APIServiceUnavailable(
@@ -485,7 +486,7 @@ def delete_listen():
         log_raise_400("%s: Recording MSID format invalid." % recording_msid)
 
     try:
-        timescale_connection._ts.delete_listen(listened_at=listened_at,
+        timescale_connection._ts.delete_listen(ts_conn, listened_at=listened_at,
                                                recording_msid=recording_msid, user_id=user["id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))

@@ -18,7 +18,7 @@ from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBR
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
 from listenbrainz.domain.youtube import YoutubeService, YOUTUBE_SCOPES
-from listenbrainz.webserver import flash, db_conn
+from listenbrainz.webserver import flash, db_conn, ts_conn
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
@@ -161,7 +161,12 @@ def fetch_listens(musicbrainz_id, to_ts):
     the results.
     """
     while True:
-        batch, _, _ = timescale_connection._ts.fetch_listens(current_user.to_dict(), to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        batch, _, _ = timescale_connection._ts.fetch_listens(
+            ts_conn,
+            current_user.to_dict(),
+            to_ts=to_ts,
+            limit=EXPORT_FETCH_COUNT
+        )
         if not batch:
             break
         yield from batch

@@ -3,7 +3,7 @@ from flask import request, session, url_for, current_app
 from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.musicbrainz_db import editor as mb_editor
 
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.utils import generate_string
 from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
@@ -70,7 +70,7 @@ def get_user():
             raise MusicBrainzAuthNoEmailError()
         db_user.create(db_conn, musicbrainz_row_id, musicbrainz_id, email=user_email)
         user = db_user.get_by_mb_id(db_conn, musicbrainz_id, fetch_email=True)
-        ts.set_empty_values_for_user(user["id"])
+        ts.set_empty_values_for_user(ts_conn, user["id"])
     else:  # an existing user is trying to log in
         # Other option is to change the return type of get_by_mb_row_id to a dict
         # but its used so widely that we would modifying huge number of tests

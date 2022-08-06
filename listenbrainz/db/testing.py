@@ -5,7 +5,7 @@ import unittest
 import sqlalchemy
 import uuid
 
-from sqlalchemy import event
+from sqlalchemy import event, text
 
 from listenbrainz import config
 from listenbrainz import db
@@ -104,3 +104,6 @@ class TimescaleTestCase(unittest.TestCase):
     def tearDown(self):
         self.ts_trans.rollback()
         self.ts_conn.close()
+
+    def reset_listens(self):
+        self.ts_conn.execute(text("TRUNCATE listen"))

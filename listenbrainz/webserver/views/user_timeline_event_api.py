@@ -505,6 +505,7 @@ def get_listen_events(
         min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
 
     listens = timescale_connection._ts.fetch_recent_listens_for_users(
+        ts_conn,
         users,
         min_ts=min_ts,
         max_ts=max_ts,

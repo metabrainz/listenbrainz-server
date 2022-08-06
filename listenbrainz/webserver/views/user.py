@@ -101,6 +101,7 @@ def profile(user_name):
     else:
         args['from_ts'] = min_ts
     data, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
+        ts_conn,
         user.to_dict(),
         limit=LISTENS_PER_PAGE,
         **args
@@ -427,7 +428,7 @@ def delete_user(user_id: int):
     Args:
         user_id: the LB row ID of the user
     """
-    timescale_connection._ts.delete(user_id)
+    timescale_connection._ts.delete(ts_conn, user_id)
     db_user.delete(db_conn, user_id)
 
 
@@ -437,7 +438,7 @@ def delete_listens_history(user_id: int):
     Args:
         user_id: the LB row ID of the user
     """
-    timescale_connection._ts.delete(user_id)
+    timescale_connection._ts.delete(ts_conn, user_id)
     listens_importer.update_latest_listened_at(db_conn, user_id, ExternalServiceType.LASTFM, 0)
     db_stats.delete_user_stats(user_id)
 
