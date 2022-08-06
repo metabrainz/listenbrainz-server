@@ -19,7 +19,7 @@ from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 import calendar
 from datetime import datetime
-from listenbrainz.webserver import timescale_connection, db_conn
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 
 api_bp = Blueprint('api_compat', __name__)
 
@@ -445,7 +445,7 @@ def user_info(data):
             with tag('url'):
                 text('http://listenbrainz.org/user/' + query_user.name)
             with tag('playcount'):
-                text(User.get_play_count(db_conn, query_user.id, timescale_connection._ts))
+                text(User.get_play_count(db_conn, ts_conn, query_user.id, timescale_connection._ts))
             with tag('registered', unixtime=str(query_user.created.strftime("%s"))):
                 text(str(query_user.created))
 

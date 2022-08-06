@@ -9,20 +9,16 @@ from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
-from listenbrainz import db
-from listenbrainz.db.testing import ADMIN_SQL_DIR, ResetDatabaseTestCase
+from listenbrainz.db import user as db_user
+from listenbrainz.db.testing import ResetDatabaseTestCase
 
 
 class StatsDatabaseTestCase(ResetDatabaseTestCase):
 
     def setUp(self):
-        ResetDatabaseTestCase.setUp(self)
-        self.user = self.create_user_with_id(2000, 1, 'stats_user')
+        super(StatsDatabaseTestCase, self).setUp()
+        self.user = db_user.get_or_create(self.conn, 1, 'stats_user')
         self.sitewide_user = self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
-
-    def tearDown(self):
-        ResetDatabaseTestCase.tearDown(self)
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'truncate_tables.sql'))
 
     def test_insert_user_artists(self):
         """ Test if artist stats are inserted correctly """

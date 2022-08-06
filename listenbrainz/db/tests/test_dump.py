@@ -39,6 +39,10 @@ from listenbrainz.db.model.feedback import Feedback
 
 class DumpTestCase(DatabaseTestCase):
 
+    def setUp(self):
+        super(DumpTestCase, self).setUp(self)
+        self.tempdir = tempfile.mkdtemp()
+
     def test_create_private_dump(self):
         time_now = datetime.today()
         dump_location = db_dump.create_private_dump(self.tempdir, time_now)

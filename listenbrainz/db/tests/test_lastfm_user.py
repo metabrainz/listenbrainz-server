@@ -7,15 +7,21 @@ from sqlalchemy import text
 import listenbrainz.db.user as db_user
 from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.tests.utils import generate_data
 from listenbrainz.webserver import timescale_connection
 
 
-class TestAPICompatUserClass(DatabaseTestCase):
+class TestAPICompatUserClass(DatabaseTestCase, TimescaleTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        DatabaseTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
 
     def setUp(self):
-        super(TestAPICompatUserClass, self).setUp()
+        DatabaseTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
         self.log = logging.getLogger(__name__)
         self.logstore = timescale_connection._ts
 
@@ -34,7 +40,8 @@ class TestAPICompatUserClass(DatabaseTestCase):
         self.user = User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
 
     def tearDown(self):
-        super(TestAPICompatUserClass, self).tearDown()
+        DatabaseTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
 
     def test_user_get_id(self):
         uid = User.get_id(self.conn, self.user.name)
@@ -54,6 +61,6 @@ class TestAPICompatUserClass(DatabaseTestCase):
         date = datetime(2015, 9, 3, 0, 0, 0)
         test_data = generate_data(self.conn, date, 5, self.user.name)
         self.assertEqual(len(test_data), 5)
-        self.logstore.insert(test_data)
-        count = User.get_play_count(self.conn, self.user.id, self.logstore)
+        self.logstore.insert(self.ts_conn, test_data)
+        count = User.get_play_count(self.conn, self.ts_conn, self.user.id, self.logstore)
         self.assertIsInstance(count, int)

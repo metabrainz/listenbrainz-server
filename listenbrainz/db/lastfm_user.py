@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 from sqlalchemy import text
 
-from listenbrainz.webserver import ts_conn
 
-
-class User(object):
+class User:
     """ User class required by the api-compat """
 
     def __init__(self, id, created, name, api_key):
@@ -62,8 +58,8 @@ class User(object):
         return None
 
     @staticmethod
-    def get_play_count(connection, user_id, listenstore):
+    def get_play_count(conn, ts_conn, user_id, listenstore):
         """ Get playcount from the given user name.
         """
-        user = User.load_by_id(connection, user_id)
+        user = User.load_by_id(conn, user_id)
         return listenstore.get_listen_count_for_user(ts_conn, user.id)
