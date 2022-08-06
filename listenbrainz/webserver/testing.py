@@ -34,21 +34,22 @@ class ServerTestCase(unittest.TestCase):
         self._ctx = self.app.test_request_context()
         self._ctx.push()
 
-        self.templates = []
-        self.flashed_messages = []
+        type(self).templates = []
+        type(self).flashed_messages = []
 
     @classmethod
     def _add_flash_message(cls, app, message, category):
         cls.flashed_messages.append((message, category))
+        print(message, category)
 
     @classmethod
     def _add_template(cls, app, template, context):
         cls.templates.append((template, context))
+        print(template, context)
 
     def tearDown(self):
         self._ctx.pop()
         del self._ctx
-
         del self.templates
         del self.flashed_messages
 

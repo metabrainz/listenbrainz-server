@@ -163,15 +163,15 @@ class IndexViewsTestCase(IntegrationTestCase):
 
         mock_user_get.return_value = user
 
-        @self.app.route('/page_that_returns_500')
+        @self.app.route('/page_that_returns_500_2')
         @login_required
-        def view500():
+        def view500_2():
             # flask-login user is loaded during @login_required, so check that the db has been queried
             mock_user_get.assert_called_with(self.conn, user['login_id'])
             raise InternalServerError('error')
 
         self.temporary_login(user['login_id'])
-        resp = self.client.get('/page_that_returns_500')
+        resp = self.client.get('/page_that_returns_500_2')
         data = resp.data.decode('utf-8')
         self.assertIn('Import', data)
         # item not in user menu
