@@ -40,10 +40,12 @@ class ServerTestCase(unittest.TestCase):
     @classmethod
     def _add_flash_message(cls, app, message, category):
         cls.flashed_messages.append((message, category))
+        print(message, category)
 
     @classmethod
     def _add_template(cls, app, template, context):
         cls.templates.append((template, context))
+        print(template.name, template, context)
 
     def tearDown(self):
         self._ctx.pop()
@@ -67,6 +69,7 @@ class ServerTestCase(unittest.TestCase):
         :param message: expected message
         :param category: expected message category
         """
+        print(type(self).flashed_messages)
         for _message, _category in type(self).flashed_messages:
             if _message == message and _category == category:
                 return True
@@ -85,6 +88,7 @@ class ServerTestCase(unittest.TestCase):
         :versionadded: 0.2
         :param name: template name
         """
+        print(type(self).templates)
         used_templates = []
 
         for template, context in type(self).templates:
