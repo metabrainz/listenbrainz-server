@@ -31,39 +31,13 @@ import listenbrainz.db.feedback as db_feedback
 from datetime import datetime
 
 from listenbrainz import db
-from listenbrainz.db.testing import TimescaleTestCase, DatabaseTestCase, ADMIN_SQL_DIR
+from listenbrainz.db.testing import TimescaleTestCase, DatabaseTestCase, ADMIN_SQL_DIR, ResetDatabaseTestCase
 from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 from listenbrainz.webserver import create_app
 from listenbrainz.db.model.feedback import Feedback
 
 
-class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
-    
-    @classmethod
-    def setUpClass(cls) -> None:
-        DatabaseTestCase.setUpClass()
-        TimescaleTestCase.setUpClass()
-        MessyBrainzTestCase.setUpClass()
-
-    def setUp(self):
-        DatabaseTestCase.setUp(self)
-        TimescaleTestCase.setUp(self)
-        MessyBrainzTestCase.setUp(self)
-        self.tempdir = tempfile.mkdtemp()
-        self.app = create_app()
-
-    def tearDown(self):
-        self.trans.rollback()
-        self.conn.close()
-        with db.engine.connect() as conn:
-            conn.execute('TRUNCATE "user" CASCADE')
-        TimescaleTestCase.tearDown(self)
-        MessyBrainzTestCase.tearDown(self)
-        shutil.rmtree(self.tempdir)
-
-    def commit(self):
-        self.trans.commit()
-        self.trans = self.conn.begin()
+class DumpTestCase(DatabaseTestCase):
 
     def test_create_private_dump(self):
         time_now = datetime.today()
@@ -94,16 +68,69 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
             file_contents = [line for line in f]
         self.assertEqual(len(dumps), len(file_contents))
 
+    def test_parse_ftp_name_with_id(self):
+        parts = db_dump._parse_ftp_name_with_id('listenbrainz-dump-712-20220201-040003-full')
+        self.assertEqual(parts[0], 712)
+        self.assertEqual(parts[1], datetime(2022, 2, 1, 4, 0, 3))
+
+        # Not enough parts
+        with self.assertRaises(ValueError) as ex:
+            db_dump._parse_ftp_name_with_id('listenbrainz-feedback-20220207-060003-full')
+        self.assertIn("expected to have", str(ex.exception))
+
+        # Invalid date
+        with self.assertRaises(ValueError) as ex:
+            db_dump._parse_ftp_name_with_id('listenbrainz-dump-712-20220201-xxxxxx-full')
+        self.assertIn("does not match format", str(ex.exception))
+
+    def test_parse_ftp_name_without_id(self):
+        parts = db_dump._parse_ftp_name_without_id('listenbrainz-feedback-20220207-060003-full')
+        self.assertEqual(parts[0], '20220207-060003')
+        self.assertEqual(parts[1], datetime(2022, 2, 7, 6, 0, 3))
+
+        # Not enough parts
+        with self.assertRaises(ValueError) as ex:
+            db_dump._parse_ftp_name_without_id('listenbrainz-dump-712-20220201-040003-full')
+        self.assertIn("expected to have", str(ex.exception))
+
+        # Invalid date
+        with self.assertRaises(ValueError) as ex:
+            db_dump._parse_ftp_name_without_id('listenbrainz-feedback-20220207-xxxxxx-full')
+        self.assertIn("does not match format", str(ex.exception))
+
+
+class DumpTestCaseSlow(ResetDatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
+    """
+    These tests need resetting the database afterwards so are slower. We do not want to reset the db
+    unless necessary so separate out such tests.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        ResetDatabaseTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
+        MessyBrainzTestCase.setUpClass()
+
+    def setUp(self):
+        ResetDatabaseTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
+        MessyBrainzTestCase.setUp(self)
+        self.tempdir = tempfile.mkdtemp()
+        self.app = create_app()
+
+    def tearDown(self):
+        ResetDatabaseTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
+        MessyBrainzTestCase.tearDown(self)
+        shutil.rmtree(self.tempdir)
+
     def test_import_postgres_db(self):
 
         # create a user
         with self.app.app_context():
-            print(self.conn.execute('SELECT * FROM "user"').fetchall())
             one_id = db_user.create(self.conn, 1, 'test_user')
             user_count = db_user.get_user_count(self.conn)
             self.assertEqual(user_count, 1)
-            # commit the change so that the user data is dumped.
-            self.commit()
 
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
@@ -141,8 +168,6 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
                     score=1
                 )
             db_feedback.insert(self.conn, feedback)
-            # commit otherwise the data will not be dumped.
-            self.commit()
 
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
@@ -177,33 +202,3 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
             self.assertEqual(dumped_feedback[0].score, feedback.score)
-
-    def test_parse_ftp_name_with_id(self):
-        parts = db_dump._parse_ftp_name_with_id('listenbrainz-dump-712-20220201-040003-full')
-        self.assertEqual(parts[0], 712)
-        self.assertEqual(parts[1], datetime(2022, 2, 1, 4, 0, 3))
-
-        # Not enough parts
-        with self.assertRaises(ValueError) as ex:
-            db_dump._parse_ftp_name_with_id('listenbrainz-feedback-20220207-060003-full')
-        self.assertIn("expected to have", str(ex.exception))
-
-        # Invalid date
-        with self.assertRaises(ValueError) as ex:
-            db_dump._parse_ftp_name_with_id('listenbrainz-dump-712-20220201-xxxxxx-full')
-        self.assertIn("does not match format", str(ex.exception))
-
-    def test_parse_ftp_name_without_id(self):
-        parts = db_dump._parse_ftp_name_without_id('listenbrainz-feedback-20220207-060003-full')
-        self.assertEqual(parts[0], '20220207-060003')
-        self.assertEqual(parts[1], datetime(2022, 2, 7, 6, 0, 3))
-
-        # Not enough parts
-        with self.assertRaises(ValueError) as ex:
-            db_dump._parse_ftp_name_without_id('listenbrainz-dump-712-20220201-040003-full')
-        self.assertIn("expected to have", str(ex.exception))
-
-        # Invalid date
-        with self.assertRaises(ValueError) as ex:
-            db_dump._parse_ftp_name_without_id('listenbrainz-feedback-20220207-xxxxxx-full')
-        self.assertIn("does not match format", str(ex.exception))

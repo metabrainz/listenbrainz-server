@@ -24,7 +24,8 @@ class DatabaseTestCase(unittest.TestCase):
         db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
 
     def setUp(self) -> None:
-        self.init_conn()
+        self.conn = db.engine.connect()
+        self.trans = self.conn.begin()
 
     def tearDown(self):
         self.trans.rollback()
@@ -38,14 +39,32 @@ class DatabaseTestCase(unittest.TestCase):
         """
         return os.path.join(TEST_DATA_PATH, file_name)
 
+
+class ResetDatabaseTestCase(unittest.TestCase):
+
+    def setUp(self):
+        db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
+        self.conn = db.engine.connect()
+
+    def tearDown(self):
+        self.reset_db()
+
     def reset_db(self):
         self.conn.close()
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'truncate_tables.sql'))
-        self.init_conn()
-
-    def init_conn(self):
+        self.drop_tables()
+        self.init_db()
         self.conn = db.engine.connect()
-        self.trans = self.conn.begin()
+
+    def init_db(self):
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
+
+    def drop_tables(self):
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_schema.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
 
     def create_user_with_id(self, lb_id: int, musicbrainz_row_id: int, musicbrainz_id: str):
         """ Create a new user with the specified LB id. """
@@ -60,6 +79,14 @@ class DatabaseTestCase(unittest.TestCase):
                 "mb_row_id": musicbrainz_row_id,
             })
             return db_user.get(connection, lb_id)
+
+    def path_to_data_file(self, file_name):
+        """ Returns the path of the test data file relative to listenbrainz/db/testing.py.
+
+            Args:
+                file_name: the name of the data file
+        """
+        return os.path.join(TEST_DATA_PATH, file_name)
 
 
 class TimescaleTestCase(unittest.TestCase):
