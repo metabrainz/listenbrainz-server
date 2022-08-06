@@ -89,7 +89,7 @@ class TestDumpListenStore(ResetDatabaseTestCase, ResetTimescaleTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_listens()
+        self.reset_db()
         self.logstore.import_listens_dump(self.ts_conn, dump_location)
         recalculate_all_user_data(self.conn, self.ts_conn)
 
@@ -116,7 +116,7 @@ class TestDumpListenStore(ResetDatabaseTestCase, ResetTimescaleTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_listens()
+        self.reset_db()
         self.logstore.import_listens_dump(self.ts_conn, dump_location)
         recalculate_all_user_data(self.conn, self.ts_conn)
 
@@ -144,7 +144,7 @@ class TestDumpListenStore(ResetDatabaseTestCase, ResetTimescaleTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_listens()
+        self.reset_db()
         self.logstore.import_listens_dump(self.ts_conn, dump_location)
         recalculate_all_user_data(self.conn, self.ts_conn)
 
@@ -171,7 +171,7 @@ class TestDumpListenStore(ResetDatabaseTestCase, ResetTimescaleTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_listens()
+        self.reset_db()
         self.logstore.import_listens_dump(self.ts_conn, dump_location)
         recalculate_all_user_data(self.conn, self.ts_conn)
 

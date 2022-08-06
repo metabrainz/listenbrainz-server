@@ -114,10 +114,24 @@ class ResetTimescaleTestCase(unittest.TestCase):
         self.ts_conn = ts.engine.connect()
 
     def tearDown(self):
-        self.reset_listens()
         self.ts_conn.close()
+        self.reset_db()
 
-    def reset_listens(self):
-        self.ts_conn.execute(text("TRUNCATE listen"))
-        self.ts_conn.execute(text("TRUNCATE listen_user_metadata"))
-        self.ts_conn.execute(text("TRUNCATE listen_delete_metadata"))
+    def reset_db(self):
+        ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
+        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
+        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+        ts.engine.dispose()
+
+        ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
+        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
+        ts.engine.dispose()
+
+        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_types.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
