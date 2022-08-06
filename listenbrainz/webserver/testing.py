@@ -24,38 +24,36 @@ class ServerTestCase(unittest.TestCase):
         cls.app = cls.create_app()
         cls.client = cls.app.test_client()
 
-        template_rendered.connect(cls._add_template)
+        template_rendered.connect(cls._set_template)
         message_flashed.connect(cls._add_flash_message)
 
-        cls.templates = []
+        cls.template = None
         cls.flashed_messages = []
 
     def setUp(self) -> None:
         self._ctx = self.app.test_request_context()
         self._ctx.push()
 
-        ServerTestCase.templates = []
+        ServerTestCase.template = None
         ServerTestCase.flashed_messages = []
 
     @classmethod
     def _add_flash_message(cls, app, message, category):
         cls.flashed_messages.append((message, category))
-        print(message, category)
 
     @classmethod
-    def _add_template(cls, app, template, context):
-        cls.templates.append((template, context))
-        print(template.name, template, context)
+    def _set_template(cls, app, template, context):
+        cls.template = (template, context)
 
     def tearDown(self):
         self._ctx.pop()
         del self._ctx
-        del ServerTestCase.templates
+        del ServerTestCase.template
         del ServerTestCase.flashed_messages
 
     @classmethod
     def tearDownClass(cls):
-        template_rendered.disconnect(cls._add_template)
+        template_rendered.disconnect(cls._set_template)
         message_flashed.disconnect(cls._add_flash_message)
         del cls.client
         del cls.app
@@ -87,20 +85,13 @@ class ServerTestCase(unittest.TestCase):
         :versionadded: 0.2
         :param name: template name
         """
-        used_templates = []
-
-        for template, context in ServerTestCase.templates:
-            if template.name == name:
-                return True
-
-            used_templates.append(template)
-
-        raise AssertionError("Template %s not used. Templates were used: %s" % (name, ' '.join(repr(used_templates))))
+        used_template = ServerTestCase.template.name
+        self.assertEqual(used_template, name, f"Template {name} not used. Template used: {used_template}")
 
     def get_context_variable(self, name):
-        for template, context in ServerTestCase.templates:
-            if name in context:
-                return context[name]
+        context = ServerTestCase.template.context
+        if name in context:
+            return context[name]
         raise ValueError()
 
     def assertContext(self, name, value, message=None):
