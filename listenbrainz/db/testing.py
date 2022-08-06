@@ -115,9 +115,9 @@ class ResetTimescaleTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.ts_conn.close()
-        self.reset_db()
+        self.reset_ts_db()
 
-    def reset_db(self):
+    def reset_ts_db(self):
         ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
         ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
         ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
