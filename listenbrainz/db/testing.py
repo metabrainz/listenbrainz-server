@@ -37,11 +37,10 @@ class DatabaseTestCase(unittest.TestCase):
         """
         return os.path.join(TEST_DATA_PATH, file_name)
 
-    def reset_db(self, init=True):
+    def reset_db(self):
         self.conn.close()
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'truncate_tables.sql'))
-        if init:
-            self.init_conn()
+        self.init_conn()
 
     def init_conn(self):
         self.conn = db.engine.connect()
