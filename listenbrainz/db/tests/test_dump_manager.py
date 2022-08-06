@@ -36,21 +36,21 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db import dump_manager
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
-from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
+from listenbrainz.db.testing import TimescaleTestCase, ResetDatabaseTestCase
 from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app, timescale_connection
 
 
-class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
+class DumpManagerTestCase(ResetDatabaseTestCase, TimescaleTestCase):
 
     @classmethod
     def setUpClass(cls):
-        DatabaseTestCase.setUpClass()
+        ResetDatabaseTestCase.setUpClass()
         TimescaleTestCase.setUpClass()
 
     def setUp(self):
-        DatabaseTestCase.setUp(self)
+        ResetDatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
         self.app = create_app()
         self.tempdir = tempfile.mkdtemp()
@@ -60,7 +60,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         self.user_name = db_user.get(self.conn, self.user_id)['musicbrainz_id']
 
     def tearDown(self):
-        DatabaseTestCase.tearDown(self)
+        ResetDatabaseTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
         shutil.rmtree(self.tempdir)
 
@@ -195,7 +195,6 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
 
         listens = generate_data(1, self.user_name, 1500000000, 5)
         self.listenstore.insert(self.ts_conn, listens)
-        sleep(1)
 
         # create a full dump
         self.runner.invoke(dump_manager.create_full, [
