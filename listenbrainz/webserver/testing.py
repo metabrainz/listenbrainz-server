@@ -34,8 +34,8 @@ class ServerTestCase(unittest.TestCase):
         self._ctx = self.app.test_request_context()
         self._ctx.push()
 
-        type(self).templates = []
-        type(self).flashed_messages = []
+        ServerTestCase.templates = []
+        ServerTestCase.flashed_messages = []
 
     @classmethod
     def _add_flash_message(cls, app, message, category):
@@ -50,8 +50,8 @@ class ServerTestCase(unittest.TestCase):
     def tearDown(self):
         self._ctx.pop()
         del self._ctx
-        del type(self).templates
-        del type(self).flashed_messages
+        del ServerTestCase.templates
+        del ServerTestCase.flashed_messages
 
     @classmethod
     def tearDownClass(cls):
@@ -69,8 +69,7 @@ class ServerTestCase(unittest.TestCase):
         :param message: expected message
         :param category: expected message category
         """
-        print(type(self).flashed_messages)
-        for _message, _category in type(self).flashed_messages:
+        for _message, _category in ServerTestCase.flashed_messages:
             if _message == message and _category == category:
                 return True
 
@@ -88,10 +87,9 @@ class ServerTestCase(unittest.TestCase):
         :versionadded: 0.2
         :param name: template name
         """
-        print(type(self).templates)
         used_templates = []
 
-        for template, context in type(self).templates:
+        for template, context in ServerTestCase.templates:
             if template.name == name:
                 return True
 
@@ -100,7 +98,7 @@ class ServerTestCase(unittest.TestCase):
         raise AssertionError("Template %s not used. Templates were used: %s" % (name, ' '.join(repr(used_templates))))
 
     def get_context_variable(self, name):
-        for template, context in type(self).templates:
+        for template, context in ServerTestCase.templates:
             if name in context:
                 return context[name]
         raise ValueError()
