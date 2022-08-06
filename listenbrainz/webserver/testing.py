@@ -85,11 +85,11 @@ class ServerTestCase(unittest.TestCase):
         :versionadded: 0.2
         :param name: template name
         """
-        used_template = ServerTestCase.template.name
+        used_template = ServerTestCase.template[0].name
         self.assertEqual(used_template, name, f"Template {name} not used. Template used: {used_template}")
 
     def get_context_variable(self, name):
-        context = ServerTestCase.template.context
+        context = ServerTestCase.template[1]
         if name in context:
             return context[name]
         raise ValueError()
