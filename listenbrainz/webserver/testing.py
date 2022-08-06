@@ -43,8 +43,6 @@ class ServerTestCase(unittest.TestCase):
 
     @classmethod
     def _add_template(cls, app, template, context):
-        if len(cls.templates) > 0:
-            cls.templates = []
         cls.templates.append((template, context))
 
     def tearDown(self):
@@ -53,13 +51,13 @@ class ServerTestCase(unittest.TestCase):
 
         del self.templates
         del self.flashed_messages
-        template_rendered.disconnect(self._add_template)
-        message_flashed.disconnect(self._add_flash_message)
 
     @classmethod
-    def tearDownClass(cls) -> None:
-        del cls.app
+    def tearDownClass(cls):
+        template_rendered.disconnect(cls._add_template)
+        message_flashed.disconnect(cls._add_flash_message)
         del cls.client
+        del cls.app
 
     def assertMessageFlashed(self, message, category='message'):
         """

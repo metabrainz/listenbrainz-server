@@ -25,14 +25,19 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
     def setUp(self):
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
-        self.ctx = self.app.app_context()
-        self.ctx.push()
+        self._app_ctx = self.app.app_context()
+        self._app_ctx.push()
         g.db_conn = self.conn
 
     def tearDown(self):
-        self.ctx.pop()
+        self._app_ctx.pop()
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
+
+    @classmethod
+    def tearDownClass(cls):
+        ServerTestCase.tearDownClass()
+        DatabaseTestCase.tearDownClass()
 
 
 class ListenIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
