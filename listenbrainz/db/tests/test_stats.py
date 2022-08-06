@@ -22,7 +22,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
     def tearDown(self):
         DatabaseTestCase.tearDown(self)
-        self.reset_db()
+        self.reset_db(False)
 
     def test_insert_user_artists(self):
         """ Test if artist stats are inserted correctly """
