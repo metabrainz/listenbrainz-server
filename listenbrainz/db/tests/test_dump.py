@@ -20,7 +20,6 @@ in listenbrainz.db.dump
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import listenbrainz.db as db
 import listenbrainz.db.dump as db_dump
 import listenbrainz.db.user as db_user
 import os
@@ -30,29 +29,29 @@ import tempfile
 import listenbrainz.db.feedback as db_feedback
 
 from datetime import datetime
-from listenbrainz.db.testing import TimescaleTestCase, ResetDatabaseTestCase
+from listenbrainz.db.testing import TimescaleTestCase, DatabaseTestCase
 from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 from listenbrainz.webserver import create_app
 from listenbrainz.db.model.feedback import Feedback
 
 
-class DumpTestCase(ResetDatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
+class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
     
     @classmethod
     def setUpClass(cls) -> None:
-        ResetDatabaseTestCase.setUpClass()
+        DatabaseTestCase.setUpClass()
         TimescaleTestCase.setUpClass()
         MessyBrainzTestCase.setUpClass()
 
     def setUp(self):
-        ResetDatabaseTestCase.setUp(self)
+        DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
         MessyBrainzTestCase.setUp(self)
         self.tempdir = tempfile.mkdtemp()
         self.app = create_app()
 
     def tearDown(self):
-        ResetDatabaseTestCase.tearDown(self)
+        DatabaseTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
         MessyBrainzTestCase.tearDown(self)
         shutil.rmtree(self.tempdir)
