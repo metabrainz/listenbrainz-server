@@ -106,18 +106,16 @@ class TimescaleTestCase(unittest.TestCase):
 
 class ResetTimescaleTestCase(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
-
     def setUp(self):
+        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
         self.ts_conn = ts.engine.connect()
 
     def tearDown(self):
-        self.ts_conn.close()
-        self.reset_ts_db()
+        self.reset_ts_db(reconnect=False)
 
-    def reset_ts_db(self):
+    def reset_ts_db(self, reconnect=True):
+        self.ts_conn.close()
+
         ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
         ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
         ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
@@ -135,3 +133,7 @@ class ResetTimescaleTestCase(unittest.TestCase):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
+        ts.engine.dispose()
+
+        if reconnect:
+            self.ts_conn = ts.engine.connect()
