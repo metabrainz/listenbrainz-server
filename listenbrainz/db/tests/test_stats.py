@@ -20,6 +20,10 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
         self.maxDiff = None
 
+    def tearDown(self):
+        DatabaseTestCase.tearDown(self)
+        self.reset_db()
+
     def test_insert_user_artists(self):
         """ Test if artist stats are inserted correctly """
         with open(self.path_to_data_file('user_top_artists_db.json')) as f:

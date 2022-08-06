@@ -23,12 +23,7 @@ class DatabaseTestCase(unittest.TestCase):
         db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
 
     def setUp(self) -> None:
-        self.conn = db.engine.connect()
-        self.trans = self.conn.begin()
-
-    def reset(self):
-        self.trans.rollback()
-        self.trans = self.conn.begin()
+        self.init_conn()
 
     def tearDown(self):
         self.trans.rollback()
@@ -43,8 +38,9 @@ class DatabaseTestCase(unittest.TestCase):
         return os.path.join(TEST_DATA_PATH, file_name)
 
     def reset_db(self):
-        self.conn.close()
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'truncate_tables.sql'))
+
+    def init_conn(self):
         self.conn = db.engine.connect()
         self.trans = self.conn.begin()
 
