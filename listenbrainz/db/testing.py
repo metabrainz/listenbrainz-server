@@ -103,6 +103,20 @@ class TimescaleTestCase(unittest.TestCase):
         self.ts_trans.rollback()
         self.ts_conn.close()
 
+
+class ResetTimescaleTestCase(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
+
+    def setUp(self):
+        self.ts_conn = ts.engine.connect()
+
+    def tearDown(self):
+        self.reset_listens()
+        self.ts_conn.close()
+
     def reset_listens(self):
         self.ts_conn.execute(text("TRUNCATE listen"))
         self.ts_conn.execute(text("TRUNCATE listen_user_metadata"))

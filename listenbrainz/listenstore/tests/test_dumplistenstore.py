@@ -8,7 +8,7 @@ from psycopg2.extras import execute_values
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.db.testing import TimescaleTestCase, DatabaseTestCase
+from listenbrainz.db.testing import DatabaseTestCase, ResetTimescaleTestCase
 from listenbrainz.listenstore import TimescaleListenStore, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
@@ -16,16 +16,16 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.webserver import create_app
 
 
-class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
+class TestDumpListenStore(DatabaseTestCase, ResetTimescaleTestCase):
 
     @classmethod
     def setUpClass(cls):
         DatabaseTestCase.setUpClass()
-        TimescaleTestCase.setUpClass()
+        ResetTimescaleTestCase.setUpClass()
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
-        TimescaleTestCase.setUp(self)
+        ResetTimescaleTestCase.setUp(self)
         self.app = create_app()
         self.logstore = TimescaleListenStore(self.app.logger)
         self.dumpstore = DumpListenStore(self.app)
@@ -38,12 +38,11 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.dumpstore = None
         self.reset_listens()
         DatabaseTestCase.tearDown(self)
-        TimescaleTestCase.tearDown(self)
+        ResetTimescaleTestCase.tearDown(self)
 
     def _create_test_data(self, user_name, user_id, test_data_file_name=None):
         test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
         self.logstore.insert(self.ts_conn, test_data)
-        self.ts_conn.commit()
         return len(test_data)
 
     def _insert_with_created(self, listens):
