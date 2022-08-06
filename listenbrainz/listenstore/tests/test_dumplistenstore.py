@@ -18,6 +18,11 @@ from listenbrainz.webserver import create_app
 
 class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        DatabaseTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
+
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
