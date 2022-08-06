@@ -29,7 +29,9 @@ import tempfile
 import listenbrainz.db.feedback as db_feedback
 
 from datetime import datetime
-from listenbrainz.db.testing import TimescaleTestCase, DatabaseTestCase
+
+from listenbrainz import db
+from listenbrainz.db.testing import TimescaleTestCase, DatabaseTestCase, ADMIN_SQL_DIR
 from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 from listenbrainz.webserver import create_app
 from listenbrainz.db.model.feedback import Feedback
@@ -51,6 +53,7 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
         self.app = create_app()
 
     def tearDown(self):
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'truncate_tables.sql'))
         DatabaseTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
         MessyBrainzTestCase.tearDown(self)
