@@ -15,7 +15,7 @@ from werkzeug.exceptions import Unauthorized, NotFound
 import listenbrainz.db.user as db_user
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.webserver import flash, db_conn
+from listenbrainz.webserver import flash, db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.timescale_connection import _ts
@@ -30,11 +30,12 @@ NUMBER_OF_RECENT_LISTENS = 50
 
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
+
 @index_bp.route("/")
 def index():
     if _ts:
         try:
-            listen_count = _ts.get_total_listen_count()
+            listen_count = _ts.get_total_listen_count(ts_conn)
             user_count = format(int(_get_user_count()), ',d')
         except Exception as e:
             current_app.logger.error('Error while trying to get total listen count: %s', str(e))
@@ -100,7 +101,7 @@ def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
 
-    listen_count = _ts.get_total_listen_count()
+    listen_count = _ts.get_total_listen_count(ts_conn)
     try:
         user_count = format(int(_get_user_count()), ',d')
     except DatabaseException as e:

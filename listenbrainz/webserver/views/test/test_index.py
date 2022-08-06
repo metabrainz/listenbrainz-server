@@ -1,17 +1,15 @@
 from unittest import mock
 from unittest.mock import MagicMock
 
-from flask import url_for, g
+from flask import url_for
 from flask_login import login_required
 from requests.exceptions import HTTPError
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.login
-from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import create_web_app
-from listenbrainz.webserver.testing import ServerTestCase
 
 
 class IndexViewsTestCase(IntegrationTestCase):

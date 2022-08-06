@@ -2,7 +2,6 @@
 
 from sqlalchemy import text
 
-from listenbrainz import db
 from listenbrainz.webserver import ts_conn
 
 

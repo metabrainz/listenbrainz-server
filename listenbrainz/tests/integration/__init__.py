@@ -8,6 +8,7 @@ from flask import current_app, url_for, g
 from redis import Redis
 
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
+from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.testing import ServerTestCase, APICompatServerTestCase
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
@@ -32,6 +33,23 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
         self.ctx.pop()
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
+
+
+class ListenIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        IntegrationTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
+
+    def setUp(self):
+        IntegrationTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
+        g.ts_conn = ts_conn
+
+    def tearDown(self):
+        IntegrationTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
 
 
 class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
@@ -88,8 +106,9 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
             # submissions or where we don't fetch listens. in those cases, this
             # sleep will add unnecessary slowness.
             time.sleep(1)  # wait for listens to be picked up by timescale writer
-            recalculate_all_user_data()
+            recalculate_all_user_data(self.conn, self.ts_conn)
         return response
+
 
 class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase, TimescaleTestCase):
 

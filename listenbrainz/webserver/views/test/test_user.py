@@ -10,15 +10,15 @@ from sqlalchemy import text
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
 
-from listenbrainz.db import external_service_oauth as db_oauth, timescale
+from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
-from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.webserver import timescale_connection, ts_conn
+from listenbrainz.tests.integration import ListenIntegrationTestCase
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.views.user import _get_user
 
 
-class UserViewsTestCase(IntegrationTestCase):
+class UserViewsTestCase(ListenIntegrationTestCase):
     def setUp(self):
         super(UserViewsTestCase, self).setUp()
 
@@ -166,7 +166,7 @@ class UserViewsTestCase(IntegrationTestCase):
             if max_ts < 0 or listen.ts_since_epoch > max_ts:
                 max_ts = listen.ts_since_epoch
 
-        self.logstore.insert(self.test_data)
+        self.logstore.insert(self.ts_conn, self.test_data)
         return (min_ts, max_ts)
 
     def test_username_case(self):
@@ -265,7 +265,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assert400(response, "Reason must be a string.")
 
     def test_user_pins(self):
-        ts_conn.execute(text("""
+        self.ts_conn.execute(text("""
             INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
                                                artist_mbids, artist_credit_name, recording_name)
              VALUES (

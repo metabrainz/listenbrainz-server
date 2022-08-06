@@ -36,16 +36,22 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db import dump_manager
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
-from listenbrainz.db.testing import ResetDatabaseTestCase
+from listenbrainz.db.testing import ResetDatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app, timescale_connection
 
 
-class DumpManagerTestCase(ResetDatabaseTestCase):
+class DumpManagerTestCase(ResetDatabaseTestCase, TimescaleTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        ResetDatabaseTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
 
     def setUp(self):
-        super().setUp()
+        ResetDatabaseTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
         self.app = create_app()
         self.tempdir = tempfile.mkdtemp()
         self.runner = CliRunner()
@@ -54,7 +60,8 @@ class DumpManagerTestCase(ResetDatabaseTestCase):
         self.user_name = db_user.get(self.conn, self.user_id)['musicbrainz_id']
 
     def tearDown(self):
-        super().tearDown()
+        ResetDatabaseTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
         shutil.rmtree(self.tempdir)
 
     @patch('listenbrainz.db.dump_manager.send_mail')
