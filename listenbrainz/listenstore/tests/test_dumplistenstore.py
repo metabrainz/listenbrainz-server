@@ -52,7 +52,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
                     DO NOTHING
                 """
 
-        conn = self.ts_conn.raw_connection()
+        conn = self.ts_conn.connection
         with conn.cursor() as curs:
             execute_values(curs, query, submit, template=None)
 

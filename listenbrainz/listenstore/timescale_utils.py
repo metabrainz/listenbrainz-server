@@ -318,7 +318,7 @@ def recalculate_all_user_data(db_conn, ts_conn):
     """
     values = [(user_id,) for user_id in user_list]
     template = "(%s, 0, NULL, NULL, 'epoch')"
-    connection = ts_conn.raw_connection()
+    connection = ts_conn.connection
     try:
         with connection.cursor() as cursor:
             execute_values(cursor, query, values, template=template)
