@@ -18,6 +18,7 @@ from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_u
 
 class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
+    @classmethod
     def setUpClass(cls):
         DatabaseTestCase.setUpClass()
         TimescaleTestCase.setUpClass()
