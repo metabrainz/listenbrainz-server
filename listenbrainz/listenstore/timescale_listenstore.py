@@ -164,7 +164,7 @@ class TimescaleListenStore:
         cache.set(REDIS_TOTAL_LISTEN_COUNT, count, expirein=REDIS_USER_LISTEN_COUNT_EXPIRY)
         return count
 
-    def insert(self, listens):
+    def insert(self, conn, listens):
         """
             Insert a batch of listens. Returns a list of (listened_at, track_name, user_name, user_id) that indicates
             which rows were inserted into the DB. If the row is not listed in the return values, it was a duplicate.
@@ -181,8 +181,8 @@ class TimescaleListenStore:
                      RETURNING listened_at, track_name, user_name, user_id"""
 
         inserted_rows = []
-        conn = timescale.engine.raw_connection()
-        with conn.cursor() as curs:
+        raw_conn = conn.connection
+        with raw_conn.cursor() as curs:
             try:
                 execute_values(curs, query, submit, template=None)
                 while True:
@@ -191,10 +191,10 @@ class TimescaleListenStore:
                         break
                     inserted_rows.append((result[0], result[1], result[2], result[3]))
             except UntranslatableCharacter:
-                conn.rollback()
+                raw_conn.rollback()
                 return
 
-        conn.commit()
+        raw_conn.commit()
 
         return inserted_rows
 
@@ -379,7 +379,7 @@ class TimescaleListenStore:
             ))
         return listens
 
-    def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):
+    def import_listens_dump(self, conn, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):
         """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
 
         Args:
@@ -433,12 +433,12 @@ class TimescaleListenStore:
 
                             if len(listens) > DUMP_CHUNK_SIZE:
                                 total_imported += len(listens)
-                                self.insert(listens)
+                                self.insert(conn, listens)
                                 listens = []
 
-            if len(listens) > 0:
-                total_imported += len(listens)
-                self.insert(listens)
+                        if len(listens) > 0:
+                            total_imported += len(listens)
+                            self.insert(conn, listens)
 
         if not schema_checked:
             raise SchemaMismatchException(

@@ -187,7 +187,7 @@ class DumpManagerTestCase(ResetDatabaseTestCase):
     def test_create_full_db(self, mock_notify):
 
         listens = generate_data(1, self.user_name, 1500000000, 5)
-        self.listenstore.insert(listens)
+        self.listenstore.insert(self.ts_conn, listens)
         sleep(1)
 
         # create a full dump
@@ -207,8 +207,7 @@ class DumpManagerTestCase(ResetDatabaseTestCase):
 
     def test_create_full_dump_with_id(self):
 
-        self.listenstore.insert(generate_data(
-            1, self.user_name, 1500000000, 5))
+        self.listenstore.insert(self.ts_conn, generate_data(1, self.user_name, 1500000000, 5))
         # if the dump ID does not exist, it should exit with a -1
         result = self.runner.invoke(dump_manager.create_full, [
                                     '--location', self.tempdir, '--dump-id', 1000])
@@ -245,7 +244,7 @@ class DumpManagerTestCase(ResetDatabaseTestCase):
         dump_id = db_dump.add_dump_entry(self.conn, base - 60)
         print("%d dump id" % dump_id)
         sleep(1)
-        self.listenstore.insert(generate_data(1, self.user_name, base - 30, 5))
+        self.listenstore.insert(self.ts_conn, generate_data(1, self.user_name, base - 30, 5))
         result = self.runner.invoke(dump_manager.create_incremental, [
                                     '--location', self.tempdir])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
@@ -274,10 +273,7 @@ class DumpManagerTestCase(ResetDatabaseTestCase):
         # create a base dump entry
         t = int(time.time())
         db_dump.add_dump_entry(self.conn, t)
-        sleep(1)
-        self.listenstore.insert(generate_data(
-            1, self.user_name, 1500000000, 5))
-        sleep(1)
+        self.listenstore.insert(self.ts_conn, generate_data(1, self.user_name, 1500000000, 5))
 
         # create a new dump ID to recreate later
         dump_id = db_dump.add_dump_entry(self.conn, int(time.time()))

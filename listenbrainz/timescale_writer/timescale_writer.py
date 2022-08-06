@@ -13,7 +13,7 @@ from more_itertools import chunked
 
 from listenbrainz import messybrainz, utils
 from listenbrainz.listen import Listen
-from listenbrainz.webserver import create_app, redis_connection, timescale_connection
+from listenbrainz.webserver import create_app, redis_connection, timescale_connection, ts_conn
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
@@ -171,7 +171,7 @@ class TimescaleWriterSubscriber:
 
         self.incoming_listens += len(data)
         try:
-            rows_inserted = self.ls.insert(data)
+            rows_inserted = self.ls.insert(ts_conn, data)
         except psycopg2.OperationalError as err:
             current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(err), exc_info=True)
             time.sleep(self.ERROR_RETRY_DELAY)

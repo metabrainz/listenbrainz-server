@@ -36,7 +36,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def _create_test_data(self, user_name, user_id, test_data_file_name=None):
         test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
-        self.logstore.insert(test_data)
+        self.logstore.insert(self.ts_conn, test_data)
         return len(test_data)
 
     def _insert_with_created(self, listens):
@@ -85,7 +85,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertTrue(os.path.isfile(dump_location))
 
         self.reset_listens()
-        self.logstore.import_listens_dump(dump_location)
+        self.logstore.import_listens_dump(self.ts_conn, dump_location)
         recalculate_all_user_data(self.conn, self.ts_conn)
 
         listens, min_ts, max_ts = self.logstore.fetch_listens(self.ts_conn, user=self.testuser, to_ts=base + 11)
@@ -100,9 +100,9 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
     def test_time_range_full_dumps(self):
         base = 1500000000
         listens = generate_data(1, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
-        self.logstore.insert(listens)
+        self.logstore.insert(self.ts_conn, listens)
         listens = generate_data(1, self.testuser_name, base + 6, 5)  # generate 5 listens with ts 6-10
-        self.logstore.insert(listens)
+        self.logstore.insert(self.ts_conn, listens)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.dumpstore.dump_listens(
             location=temp_dir,
@@ -112,7 +112,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertTrue(os.path.isfile(dump_location))
 
         self.reset_listens()
-        self.logstore.import_listens_dump(dump_location)
+        self.logstore.import_listens_dump(self.ts_conn, dump_location)
         recalculate_all_user_data(self.conn, self.ts_conn)
 
         listens, min_ts, max_ts = self.logstore.fetch_listens(self.ts_conn, user=self.testuser, to_ts=base + 11)
@@ -140,7 +140,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertTrue(os.path.isfile(dump_location))
 
         self.reset_listens()
-        self.logstore.import_listens_dump(dump_location)
+        self.logstore.import_listens_dump(self.ts_conn, dump_location)
         recalculate_all_user_data(self.conn, self.ts_conn)
 
         listens, min_ts, max_ts = self.logstore.fetch_listens(self.ts_conn, user=self.testuser, to_ts=1400000300)
@@ -167,7 +167,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertTrue(os.path.isfile(dump_location))
 
         self.reset_listens()
-        self.logstore.import_listens_dump(dump_location)
+        self.logstore.import_listens_dump(self.ts_conn, dump_location)
         recalculate_all_user_data(self.conn, self.ts_conn)
 
         listens, min_ts, max_ts = self.logstore.fetch_listens(self.ts_conn, user=user, to_ts=1400000300)
@@ -223,7 +223,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
             schema_version=LISTENS_DUMP_SCHEMA_VERSION - 1
         )
         with self.assertRaises(SchemaMismatchException):
-            self.logstore.import_listens_dump(archive_path)
+            self.logstore.import_listens_dump(self.ts_conn, archive_path)
 
     def test_schema_mismatch_exception_for_dump_no_schema(self):
         """ Tests that SchemaMismatchException is raised when there is no schema version in the archive """
@@ -235,4 +235,4 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         archive_path = self.create_test_dump(archive_name=archive_name, archive_path=archive_path)
 
         with self.assertRaises(SchemaMismatchException):
-            self.logstore.import_listens_dump(archive_path)
+            self.logstore.import_listens_dump(self.ts_conn, archive_path)

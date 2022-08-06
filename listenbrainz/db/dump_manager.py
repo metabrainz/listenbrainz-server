@@ -36,7 +36,7 @@ from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.year_in_music import insert_playlists
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
-from listenbrainz.webserver import create_app, db_conn
+from listenbrainz.webserver import create_app, db_conn, ts_conn
 from listenbrainz.db.dump import check_ftp_dump_ages
 
 
@@ -292,7 +292,7 @@ def import_dump(private_archive, private_timescale_archive,
                                      threads)
         if listen_archive:
             from listenbrainz.webserver.timescale_connection import _ts as ls
-            ls.import_listens_dump(listen_archive, threads)
+            ls.import_listens_dump(ts_conn, listen_archive, threads)
 
     sys.exit(0)
 

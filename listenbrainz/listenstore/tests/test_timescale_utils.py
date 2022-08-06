@@ -30,7 +30,7 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
 
     def _create_test_data(self, user, file=None):
         test_data = create_test_data_for_timescalelistenstore(user["musicbrainz_id"], user["id"], file)
-        self.logstore.insert(test_data)
+        self.logstore.insert(self.ts_conn, test_data)
         return len(test_data)
 
     def _get_count_and_timestamp(self, user):

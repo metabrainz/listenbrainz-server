@@ -42,7 +42,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def _create_test_data(self, user_name, user_id, test_data_file_name=None, recalculate=True):
         test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)
-        self.logstore.insert(test_data)
+        self.logstore.insert(self.ts_conn, test_data)
         if recalculate:
             recalculate_all_user_data(self.conn, self.ts_conn)
         return len(test_data)
