@@ -1,5 +1,4 @@
 import logging
-import os
 import random
 from time import time
 
@@ -8,6 +7,7 @@ from brainzutils import cache
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
+from listenbrainz import config
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, \
@@ -22,6 +22,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
     def setUpClass(cls):
         DatabaseTestCase.setUpClass()
         TimescaleTestCase.setUpClass()
+        cache.init(host=config.REDIS_HOST, port=config.REDIS_PORT, namespace=config.REDIS_NAMESPACE)
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
