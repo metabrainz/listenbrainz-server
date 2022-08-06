@@ -1,11 +1,15 @@
+import unittest
+
 import flask_testing
+from flask import template_rendered, message_flashed
 
 from listenbrainz.webserver import create_api_compat_app, create_web_app
 
 
-class ServerTestCase(flask_testing.TestCase):
+class ServerTestCase(unittest.TestCase):
 
-    def create_app(self):
+    @classmethod
+    def create_app(cls):
         app = create_web_app(debug=False)
         app.config['TESTING'] = True
         return app
@@ -14,6 +18,98 @@ class ServerTestCase(flask_testing.TestCase):
         with self.client.session_transaction() as session:
             session['_user_id'] = user_login_id
             session['_fresh'] = True
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = cls.create_app()
+        cls.client = cls.app.test_client()
+
+        template_rendered.connect(cls._add_template)
+        message_flashed.connect(cls._add_flash_message)
+
+        cls.templates = []
+        cls.flashed_messages = []
+
+    def setUp(self) -> None:
+        self._ctx = self.app.test_request_context()
+        self._ctx.push()
+
+        self.templates = []
+        self.flashed_messages = []
+
+    @classmethod
+    def _add_flash_message(cls, app, message, category):
+        cls.flashed_messages.append((message, category))
+
+    @classmethod
+    def _add_template(cls, app, template, context):
+        if len(cls.templates) > 0:
+            cls.templates = []
+        cls.templates.append((template, context))
+
+    def tearDown(self):
+        self._ctx.pop()
+        del self._ctx
+
+        del self.templates
+        del self.flashed_messages
+        template_rendered.disconnect(self._add_template)
+        message_flashed.disconnect(self._add_flash_message)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        del cls.app
+        del cls.client
+
+    def assertMessageFlashed(self, message, category='message'):
+        """
+        Checks if a given message was flashed.
+        Only works if your version of Flask has message_flashed
+        signal support (0.10+) and blinker is installed.
+
+        :param message: expected message
+        :param category: expected message category
+        """
+        for _message, _category in self.flashed_messages:
+            if _message == message and _category == category:
+                return True
+
+        raise AssertionError("Message '%s' in category '%s' wasn't flashed" % (message, category))
+
+    def assertTemplateUsed(self, name, tmpl_name_attribute='name'):
+        """
+        Checks if a given template is used in the request.
+        Only works if your version of Flask has signals
+        support (0.6+) and blinker is installed.
+        If the template engine used is not Jinja2, provide
+        ``tmpl_name_attribute`` with a value of its `Template`
+        class attribute name which contains the provided ``name`` value.
+
+        :versionadded: 0.2
+        :param name: template name
+        :param tmpl_name_attribute: template engine specific attribute name
+        """
+        used_templates = []
+
+        for template, context in self.templates:
+            if getattr(template, tmpl_name_attribute) == name:
+                return True
+
+            used_templates.append(template)
+
+        raise AssertionError("Template %s not used. Templates were used: %s" % (name, ' '.join(repr(used_templates))))
+
+    def get_context_variable(self, name):
+        for template, context in self.templates:
+            if name in context:
+                return context[name]
+        raise ValueError()
+
+    def assertContext(self, name, value, message=None):
+        try:
+            self.assertEqual(self.get_context_variable(name), value, message)
+        except ValueError:
+            self.fail(message or "Context variable does not exist: %s" % name)
 
     def assertRedirects(self, response, location, message=None, permanent=False):
         if permanent:
@@ -28,7 +124,28 @@ class ServerTestCase(flask_testing.TestCase):
         location_mismatch = "Expected redirect location %s but got %s" % (response.location, location)
         self.assertTrue(response.location.endswith(location), message or location_mismatch)
 
-    assert_redirects = assertRedirects
+    def assertStatus(self, response, status_code, message=None):
+        message = message or 'HTTP Status %s expected but got %s' \
+                             % (status_code, response.status_code)
+        self.assertEqual(response.status_code, status_code, message)
+
+    def assert200(self, response, message=None):
+        self.assertStatus(response, 200, message)
+
+    def assert400(self, response, message=None):
+        self.assertStatus(response, 400, message)
+
+    def assert401(self, response, message=None):
+        self.assertStatus(response, 401, message)
+
+    def assert403(self, response, message=None):
+        self.assertStatus(response, 403, message)
+
+    def assert404(self, response, message=None):
+        self.assertStatus(response, 404, message)
+
+    def assert500(self, response, message=None):
+        self.assertStatus(response, 500, message)
 
 
 class APICompatServerTestCase(flask_testing.TestCase):
