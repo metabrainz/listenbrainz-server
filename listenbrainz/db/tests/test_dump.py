@@ -53,8 +53,10 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
         self.app = create_app()
 
     def tearDown(self):
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'truncate_tables.sql'))
-        DatabaseTestCase.tearDown(self)
+        self.trans.rollback()
+        self.conn.close()
+        with db.engine.connect() as conn:
+            conn.execute('TRUNCATE "user" CASCADE')
         TimescaleTestCase.tearDown(self)
         MessyBrainzTestCase.tearDown(self)
         shutil.rmtree(self.tempdir)
