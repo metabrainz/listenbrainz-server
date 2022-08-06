@@ -50,8 +50,8 @@ class ServerTestCase(unittest.TestCase):
     def tearDown(self):
         self._ctx.pop()
         del self._ctx
-        del self.templates
-        del self.flashed_messages
+        del type(self).templates
+        del type(self).flashed_messages
 
     @classmethod
     def tearDownClass(cls):
