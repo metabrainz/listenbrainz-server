@@ -107,3 +107,5 @@ class TimescaleTestCase(unittest.TestCase):
 
     def reset_listens(self):
         self.ts_conn.execute(text("TRUNCATE listen"))
+        self.ts_conn.execute(text("TRUNCATE listen_user_metadata"))
+        self.ts_conn.execute(text("TRUNCATE listen_delete_metadata"))

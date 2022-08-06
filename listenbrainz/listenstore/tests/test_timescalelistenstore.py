@@ -235,7 +235,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(pending[0]["user_id"], testuser["id"])
         self.assertEqual(str(pending[0]["recording_msid"]), "c7a41965-9f1e-456c-8b1d-27c0f0dde280")
 
-        delete_listens_and_update_user_listen_data()
+        delete_listens_and_update_user_listen_data(self.ts_conn)
 
         # clear cache entry so that count is fetched from db again
         cache.delete(REDIS_USER_LISTEN_COUNT + str(testuser["id"]))
