@@ -18,6 +18,10 @@ from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_u
 
 class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
+    def setUpClass(cls):
+        DatabaseTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
+
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
@@ -280,7 +284,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
         cache.delete(REDIS_TOTAL_LISTEN_COUNT)
         add_missing_to_listen_users_metadata()
-        update_user_listen_data()
+        update_user_listen_data(self.ts_conn)
 
         total_count = self.logstore.get_total_listen_count(self.ts_conn)
         self.assertEqual(total_count, count_user_1 + count_user_2)
