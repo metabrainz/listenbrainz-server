@@ -158,16 +158,16 @@ def create_incremental(location, threads, dump_id):
         ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now()
-            dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
+            dump_id = db_dump.add_dump_entry(db_conn, int(end_time.strftime('%s')))
         else:
-            dump_entry = db_dump.get_dump_entry(dump_id)
+            dump_entry = db_dump.get_dump_entry(db_conn, dump_id)
             if dump_entry is None:
                 current_app.logger.error(
                     "No dump with ID %d found, exiting!", dump_id)
                 sys.exit(-1)
             end_time = dump_entry['created']
 
-        prev_dump_entry = db_dump.get_dump_entry(dump_id - 1)
+        prev_dump_entry = db_dump.get_dump_entry(db_conn, dump_id - 1)
         if prev_dump_entry is None:  # incremental dumps must have a previous dump in the series
             current_app.logger.error(
                 "Invalid dump ID %d, could not find previous dump", dump_id)
