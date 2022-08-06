@@ -45,7 +45,7 @@ class ServerTestCase(unittest.TestCase):
     @classmethod
     def _add_template(cls, app, template, context):
         cls.templates.append((template, context))
-        print(template, context)
+        print(template.name, template, context)
 
     def tearDown(self):
         self._ctx.pop()
@@ -75,7 +75,7 @@ class ServerTestCase(unittest.TestCase):
 
         raise AssertionError("Message '%s' in category '%s' wasn't flashed" % (message, category))
 
-    def assertTemplateUsed(self, name, tmpl_name_attribute='name'):
+    def assertTemplateUsed(self, name):
         """
         Checks if a given template is used in the request.
         Only works if your version of Flask has signals
@@ -86,12 +86,11 @@ class ServerTestCase(unittest.TestCase):
 
         :versionadded: 0.2
         :param name: template name
-        :param tmpl_name_attribute: template engine specific attribute name
         """
         used_templates = []
 
         for template, context in self.templates:
-            if getattr(template, tmpl_name_attribute) == name:
+            if template.name == name:
                 return True
 
             used_templates.append(template)
