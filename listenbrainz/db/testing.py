@@ -5,11 +5,12 @@ import unittest
 import sqlalchemy
 import uuid
 
-from sqlalchemy import event, text
+from sqlalchemy import text
 
 from listenbrainz import config
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
+import listenbrainz.db.user as db_user
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'sql')
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
@@ -58,6 +59,7 @@ class DatabaseTestCase(unittest.TestCase):
                 "token": str(uuid.uuid4()),
                 "mb_row_id": musicbrainz_row_id,
             })
+            return db_user.get(connection, lb_id)
 
 
 class TimescaleTestCase(unittest.TestCase):
