@@ -21,7 +21,6 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.sitewide_user = self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
 
     def tearDown(self):
-        with db.engine.connect() as conn:
         DatabaseTestCase.tearDown(self)
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'truncate_tables.sql'))
 

@@ -93,6 +93,7 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
 
         # create a user
         with self.app.app_context():
+            print(self.conn.execute('SELECT * FROM "user"').fetchall())
             one_id = db_user.create(self.conn, 1, 'test_user')
             user_count = db_user.get_user_count(self.conn)
             self.assertEqual(user_count, 1)
