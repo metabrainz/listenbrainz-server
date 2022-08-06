@@ -109,6 +109,8 @@ class ServerTestCase(unittest.TestCase):
         except ValueError:
             self.fail(message or "Context variable does not exist: %s" % name)
 
+    assert_context = assertContext
+
     def assertRedirects(self, response, location, message=None, permanent=False):
         if permanent:
             valid_status_codes = (301, 308)
