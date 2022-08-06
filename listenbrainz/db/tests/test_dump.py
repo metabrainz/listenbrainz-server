@@ -56,6 +56,10 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
         MessyBrainzTestCase.tearDown(self)
         shutil.rmtree(self.tempdir)
 
+    def commit(self):
+        self.trans.commit()
+        self.trans = self.conn.begin()
+
     def test_create_private_dump(self):
         time_now = datetime.today()
         dump_location = db_dump.create_private_dump(self.tempdir, time_now)
@@ -92,6 +96,8 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
             one_id = db_user.create(self.conn, 1, 'test_user')
             user_count = db_user.get_user_count(self.conn)
             self.assertEqual(user_count, 1)
+            # commit the change so that the user data is dumped.
+            self.commit()
 
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
@@ -129,6 +135,8 @@ class DumpTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
                     score=1
                 )
             db_feedback.insert(self.conn, feedback)
+            # commit otherwise the data will not be dumped.
+            self.commit()
 
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)

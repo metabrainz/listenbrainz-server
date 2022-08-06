@@ -4,7 +4,6 @@ from copy import deepcopy
 from datetime import datetime, timezone
 
 import listenbrainz.db.stats as db_stats
-import listenbrainz.db.user as db_user
 from data.model.common_stat import StatRange
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
@@ -22,6 +21,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.sitewide_user = self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
 
     def tearDown(self):
+        with db.engine.connect() as conn:
         DatabaseTestCase.tearDown(self)
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'truncate_tables.sql'))
 
