@@ -8,7 +8,7 @@ from psycopg2.extras import execute_values
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.db.testing import DatabaseTestCase, ResetTimescaleTestCase
+from listenbrainz.db.testing import ResetTimescaleTestCase, ResetDatabaseTestCase
 from listenbrainz.listenstore import TimescaleListenStore, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
@@ -16,15 +16,15 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.webserver import create_app
 
 
-class TestDumpListenStore(DatabaseTestCase, ResetTimescaleTestCase):
+class TestDumpListenStore(ResetDatabaseTestCase, ResetTimescaleTestCase):
 
     @classmethod
     def setUpClass(cls):
-        DatabaseTestCase.setUpClass()
+        ResetDatabaseTestCase.setUpClass()
         ResetTimescaleTestCase.setUpClass()
 
     def setUp(self):
-        DatabaseTestCase.setUp(self)
+        ResetDatabaseTestCase.setUp(self)
         ResetTimescaleTestCase.setUp(self)
         self.app = create_app()
         self.logstore = TimescaleListenStore(self.app.logger)
@@ -36,8 +36,7 @@ class TestDumpListenStore(DatabaseTestCase, ResetTimescaleTestCase):
     def tearDown(self):
         self.logstore = None
         self.dumpstore = None
-        self.reset_listens()
-        DatabaseTestCase.tearDown(self)
+        ResetDatabaseTestCase.tearDown(self)
         ResetTimescaleTestCase.tearDown(self)
 
     def _create_test_data(self, user_name, user_id, test_data_file_name=None):
