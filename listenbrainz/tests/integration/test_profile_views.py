@@ -7,10 +7,10 @@ from flask import url_for, g
 import listenbrainz.db.user as db_user
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 
 
-class ProfileViewsTestCase(IntegrationTestCase):
+class ProfileViewsTestCase(ListenAPIIntegrationTestCase):
     def setUp(self):
         super().setUp()
         self.user = db_user.get_or_create(self.conn, 1, 'iliekcomputers')
@@ -31,7 +31,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
             content_type='application/json'
         )
         time.sleep(1)
-        recalculate_all_user_data()
+        recalculate_all_user_data(self.conn, self.ts_conn)
         return response
 
     def test_export(self):

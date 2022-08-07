@@ -136,7 +136,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         """
 
         token = Token.generate(self.conn, self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
+        token.approve(self.conn, self.lfm_user.name)
         session = Session.create(self.conn, token)
 
         data = {
@@ -171,14 +171,14 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
 
-        token = Token.load(response['lfm']['token'], api_key=self.lfm_user.api_key)
+        token = Token.load(self.conn, response['lfm']['token'], api_key=self.lfm_user.api_key)
         self.assertIsNotNone(token)
 
     def test_get_session(self):
         """ Tests if the session key is valid and session is established correctly. """
 
         token = Token.generate(self.conn, self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
+        token.approve(self.conn, self.lfm_user.name)
 
         data = {
             'method': 'auth.getsession',
@@ -193,7 +193,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response['lfm']['@status'], 'ok')
         self.assertEqual(response['lfm']['session']['name'], self.lfm_user.name)
 
-        session_key = Session.load(response['lfm']['session']['key'])
+        session_key = Session.load(self.conn, response['lfm']['session']['key'])
         self.assertIsNotNone(session_key)
 
     def test_get_session_invalid_token(self):
@@ -221,7 +221,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         timescale_connection._ts = None
 
         token = Token.generate(self.conn, self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
+        token.approve(self.conn, self.lfm_user.name)
         session = Session.create(self.conn, token)
 
         data = {
@@ -244,7 +244,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         """ Tests if listen is recorded correctly if valid information is provided. """
 
         token = Token.generate(self.conn, self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
+        token.approve(self.conn, self.lfm_user.name)
         session = Session.create(self.conn, token)
 
         timestamp = int(time.time())
@@ -276,7 +276,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
     def test_record_invalid_listen(self):
         """ Tests that error is raised if submited data contains unicode null """
         token = Token.generate(self.conn, self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
+        token.approve(self.conn, self.lfm_user.name)
         session = Session.create(self.conn, token)
 
         timestamp = int(time.time())
@@ -301,7 +301,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         """
 
         token = Token.generate(self.conn, self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
+        token.approve(self.conn, self.lfm_user.name)
         session = Session.create(self.conn, token)
 
         timestamp = int(time.time())

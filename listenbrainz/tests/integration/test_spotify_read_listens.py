@@ -10,10 +10,11 @@ from listenbrainz.spotify_updater import spotify_read_listens
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.db import external_service_oauth
 
+
 class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(SpotifyReaderTestCase, self).setUp()
-        external_service_oauth.save_token(user_id=self.user['id'],
+        external_service_oauth.save_token(self.conn, user_id=self.user['id'],
                                           service=ExternalServiceType.SPOTIFY,
                                           access_token='token', refresh_token='refresh',
                                           token_expires_ts=int(time.time()) + 3000,
@@ -27,11 +28,11 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
             mock_recently_played.return_value = json.load(f)
         mock_currently_playing.return_value = None
 
-        result = spotify_read_listens.process_all_spotify_users()
+        result = spotify_read_listens.process_all_spotify_users(self.conn)
         self.assertEqual(result, (1, 0))
 
         time.sleep(1)
-        recalculate_all_user_data()
+        recalculate_all_user_data(self.conn, self.ts_conn)
 
         with open(self.path_to_data_file('spotify_recently_played_expected.json')) as f:
             expected_data = json.load(f)

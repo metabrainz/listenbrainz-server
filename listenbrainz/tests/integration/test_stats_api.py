@@ -8,16 +8,19 @@ import listenbrainz.db.user as db_user
 import requests_mock
 
 from data.model.common_stat import StatRange
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecord
-from flask import current_app, url_for
+from data.model.user_artist_map import UserArtistMapRecord
+from flask import url_for
 
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
+from listenbrainz.db.testing import ResetDatabaseTestCase
 from listenbrainz.tests.integration import IntegrationTestCase
 from redis import Redis
 from flask import current_app
+
+from listenbrainz.webserver.testing import ServerTestCase
 
 
 class MockDate(datetime):
@@ -27,9 +30,21 @@ class MockDate(datetime):
         return cls.fromtimestamp(0, tzinfo)
 
 
-class StatsAPITestCase(IntegrationTestCase):
+class StatsAPITestCase(ServerTestCase, ResetDatabaseTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        ServerTestCase.setUpClass()
+        ResetDatabaseTestCase.setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        ServerTestCase.tearDownClass()
+        ResetDatabaseTestCase.tearDownClass()
+
     def setUp(self):
-        super(StatsAPITestCase, self).setUp()
+        ServerTestCase.setUp(self)
+        ResetDatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create(self.conn, 1, 'testuserpleaseignore')
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
 
@@ -77,7 +92,8 @@ class StatsAPITestCase(IntegrationTestCase):
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
         r.flushall()
-        super(StatsAPITestCase, self).tearDown()
+        ServerTestCase.tearDown(self)
+        ResetDatabaseTestCase.tearDown(self)
 
     def test_user_artist_stat(self):
         """ Test to make sure valid response is received """

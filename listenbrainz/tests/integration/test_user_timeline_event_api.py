@@ -39,7 +39,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(UserTimelineAPITestCase, self).setUp()
         self.user = db_user.get_or_create(self.conn, 199, 'friendly neighborhood spider-man')
-        CritiqueBrainzService().add_new_user(self.user['id'], {
+        CritiqueBrainzService(self.conn).add_new_user(self.user['id'], {
             "access_token": "foobar",
             "refresh_token": "foobar",
             "expires_in": 3600
@@ -54,6 +54,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         }
 
         events = db_user_timeline_event.get_user_track_recommendation_events(
+            self.conn,
             user_id=self.user['id'],
             count=1,
         )
@@ -77,6 +78,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
 
         events = db_user_timeline_event.get_user_track_recommendation_events(
+            self.conn,
             user_id=self.user['id'],
             count=1,
         )
@@ -109,6 +111,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # check that no events were created in the database
         events = db_user_timeline_event.get_user_track_recommendation_events(
+            self.conn,
             user_id=self.user['id'],
             count=1,
         )
@@ -358,6 +361,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -367,7 +371,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
@@ -389,6 +393,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -398,7 +403,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
@@ -419,6 +424,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -454,6 +460,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -463,7 +470,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
@@ -485,6 +492,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(self.conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -494,7 +502,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
@@ -510,6 +518,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_unhide_events(self):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -532,6 +541,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_unhide_events_for_authorization(self):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -553,6 +563,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_unhide_events_for_bad_request(self):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -584,6 +595,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -621,6 +633,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(review_id, data["metadata"]["review_id"])
 
         events = db_user_timeline_event.get_cb_review_events(
+            self.conn,
             user_ids=[self.user['id']],
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -648,6 +661,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # check that no events were created in the database
         events = db_user_timeline_event.get_cb_review_events(
+            self.conn,
             user_ids=[self.user['id']],
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -702,7 +716,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.maxDiff = None
 
         user_2 = db_user.get_or_create(self.conn, 201, 'not your friendly neighborhood spider-man')
-        CritiqueBrainzService().add_new_user(user_2['id'], {
+        CritiqueBrainzService(self.conn).add_new_user(user_2['id'], {
             "access_token": "bazbar",
             "refresh_token": "bazfoo",
             "expires_in": 3600
@@ -784,7 +798,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             }
         })
 
-        db_user_relationship.insert(self.user['id'], user_2['id'], 'follow')
+        db_user_relationship.insert(self.conn, self.user['id'], user_2['id'], 'follow')
 
         r = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),

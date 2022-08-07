@@ -36,7 +36,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
             content_type = 'application/json'
         )
         time.sleep(1)  # sleep to allow timescale-writer to do its thing
-        recalculate_all_user_data()
+        recalculate_all_user_data(self.conn, self.ts_conn)
         return response
 
     def test_dedup(self):
@@ -50,7 +50,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assert200(r)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
@@ -68,7 +68,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
         self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
 
-        (min_ts, max_ts) = self.ls.get_timestamps_for_user(user["id"])
+        (min_ts, max_ts) = self.ls.get_timestamps_for_user(self.ts_conn, user["id"])
         self.assertEqual(min_ts, 1486449409)
         self.assertEqual(max_ts, 1486449409)
 
@@ -83,7 +83,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -94,7 +94,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assert200(r)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -113,10 +113,10 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assert200(r)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user1, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, user1, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-        listens, _, _ = self.ls.fetch_listens(user2, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, user2, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -141,5 +141,5 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assert200(r)
 
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, user, to_ts=to_ts)
         self.assertEqual(len(listens), 4)

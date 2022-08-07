@@ -19,12 +19,17 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
             missing_musicbrainz_data = json.load(f)
 
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            self.conn,
             user_id=self.user['id'],
-            missing_musicbrainz_data=UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
+            data=UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
             source='cf'
         )
 
-        self.data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user_id=self.user['id'], source='cf')
+        self.data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
+            self.conn,
+            user_id=self.user['id'],
+            source='cf'
+        )
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])

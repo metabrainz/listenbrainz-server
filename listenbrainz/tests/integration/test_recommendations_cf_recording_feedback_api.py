@@ -5,9 +5,7 @@ import listenbrainz.db.recommendations_cf_recording_feedback as db_feedback
 
 from redis import Redis
 from flask import url_for, current_app
-from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit,
-                                                           RecommendationFeedbackDelete,
-                                                           get_allowed_ratings)
+from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
 from listenbrainz.tests.integration import IntegrationTestCase
 
 
@@ -39,6 +37,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         for fb in sample_feedback:
             db_feedback.insert(
+                self.conn,
                 RecommendationFeedbackSubmit(
                     user_id=fb['user_id'],
                     recording_mbid=fb["recording_mbid"],
@@ -213,7 +212,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, feedback["recording_mbid"])
@@ -235,7 +234,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets updated
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, updated_feedback["recording_mbid"])
@@ -257,7 +256,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, feedback["recording_mbid"])
@@ -275,7 +274,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets deleted
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 0)
 
     def test_recommendation_feedback_delete_unauthorised_submission(self):
@@ -419,6 +418,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         for i in range(110):
             rec_mbid = str(uuid.uuid4())
             db_feedback.insert(
+                self.conn,
                 RecommendationFeedbackSubmit(
                     user_id=self.user2['id'],
                     recording_mbid=rec_mbid,
@@ -536,11 +536,6 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertTrue(feedback[1]["created"])
         self.assertEqual(feedback[1]["recording_mbid"], rec_mbid_1)
         self.assertEqual(feedback[1]["rating"], sample_feedback[0]["rating"])
-
-    def test_get_feedback_for_user_invalid_user(self):
-        """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user", user_name="invalid"))
-        self.assert404(response)
 
     def test_get_feedback_for_recording_invalid_recording_mbid(self):
         """ Test to make sure that the API sends 404 if recording_msid is invalid. """
