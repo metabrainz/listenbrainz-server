@@ -126,8 +126,8 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
         # Check if listen reached the timescale listenstore
         time.sleep(1)
-        recalculate_all_user_data()
-        listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=data["timestamp[0]"]-1)
+        recalculate_all_user_data(self.conn, self.ts_conn)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, self.lb_user, from_ts=data["timestamp[0]"]-1)
         self.assertEqual(len(listens), 1)
 
     def test_record_listen_now_playing(self):
@@ -135,9 +135,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             if valid information is provided.
         """
 
-        token = Token.generate(self.lfm_user.api_key)
+        token = Token.generate(self.conn, self.lfm_user.api_key)
         token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        session = Session.create(self.conn, token)
 
         data = {
             'method': 'track.updateNowPlaying',
@@ -177,7 +177,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
     def test_get_session(self):
         """ Tests if the session key is valid and session is established correctly. """
 
-        token = Token.generate(self.lfm_user.api_key)
+        token = Token.generate(self.conn, self.lfm_user.api_key)
         token.approve(self.lfm_user.name)
 
         data = {
@@ -220,9 +220,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
            requested format"""
         timescale_connection._ts = None
 
-        token = Token.generate(self.lfm_user.api_key)
+        token = Token.generate(self.conn, self.lfm_user.api_key)
         token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        session = Session.create(self.conn, token)
 
         data = {
             'method': 'user.getInfo',
@@ -243,9 +243,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
     def test_record_listen(self):
         """ Tests if listen is recorded correctly if valid information is provided. """
 
-        token = Token.generate(self.lfm_user.api_key)
+        token = Token.generate(self.conn, self.lfm_user.api_key)
         token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        session = Session.create(self.conn, token)
 
         timestamp = int(time.time())
         data = {
@@ -269,15 +269,15 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
         # Check if listen reached the timescale listenstore
         time.sleep(1)
-        recalculate_all_user_data()
-        listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
+        recalculate_all_user_data(self.conn, self.ts_conn)
+        listens, _, _ = self.ls.fetch_listens(self.conn, self.lb_user, from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
 
     def test_record_invalid_listen(self):
         """ Tests that error is raised if submited data contains unicode null """
-        token = Token.generate(self.lfm_user.api_key)
+        token = Token.generate(self.conn, self.lfm_user.api_key)
         token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        session = Session.create(self.conn, token)
 
         timestamp = int(time.time())
         data = {
@@ -300,9 +300,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             is provided.
         """
 
-        token = Token.generate(self.lfm_user.api_key)
+        token = Token.generate(self.conn, self.lfm_user.api_key)
         token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        session = Session.create(self.conn, token)
 
         timestamp = int(time.time())
         data = {
@@ -329,8 +329,8 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
         # Check if listens reached the timescale listenstore
         time.sleep(1)
-        recalculate_all_user_data()
-        listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
+        recalculate_all_user_data(self.conn, self.ts_conn)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, self.lb_user, from_ts=timestamp-1)
         self.assertEqual(len(listens), 2)
 
     def test_create_response_for_single_listen(self):

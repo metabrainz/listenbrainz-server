@@ -6,7 +6,6 @@ from flask import url_for
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
-from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
@@ -622,7 +621,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
         self.assert404(response)
 
-        conn = db.engine.raw_connection()
+        conn = self.conn.connection
         with conn.cursor() as curs:
             data = {self.user2['id']: (.123, 0.01)}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
@@ -944,7 +943,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def test_follow_user(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.conn, self.user.id, self.followed_user['id']))
 
     def test_follow_user_requires_login(self):
         r = self.client.post(self.follow_user_url)
@@ -963,7 +962,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def test_follow_user_twice_leads_to_error(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.conn, self.user.id, self.followed_user['id']))
 
         # now, try to follow again, this time expecting a 400
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
@@ -973,13 +972,13 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # first, follow the user
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.conn, self.user.id, self.followed_user['id']))
 
         # now, unfollow and check the db
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
                              headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertFalse(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+        self.assertFalse(db_user_relationship.is_following_user(self.conn, self.user.id, self.followed_user['id']))
 
     def test_unfollow_not_following_user(self):
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),

@@ -32,7 +32,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:
         following_user = db_user.get_or_create(self.conn, mb_row_id, name)
-        db_user_relationship.insert(user, following_user['id'], 'follow')
+        db_user_relationship.insert(self.conn, user, following_user['id'], 'follow')
         return following_user
 
     def remove_own_follow_events(self, payload: dict) -> dict:
@@ -124,7 +124,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
-        time.sleep(5)
+        time.sleep(2)
 
         # max_ts = 2, should have sent back 2 listens
         r = self.client.get(
@@ -190,7 +190,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
     def test_it_returns_follow_events(self):
         # make a user you're following follow a new user
         new_user_1 = db_user.get_or_create(self.conn, 104, 'new_user_1')
-        db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
+        db_user_relationship.insert(self.conn, self.following_user_1['id'], new_user_1['id'], 'follow')
 
 
         # this should show up in the events
@@ -227,6 +227,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
     def test_it_returns_recording_recommendation_events(self):
         # create a recording recommendation ourselves
         db_user_timeline_event.create_user_track_recommendation_event(
+            self.conn,
             user_id=self.main_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="Lose yourself to dance",
@@ -238,6 +239,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
+            self.conn,
             user_id=self.following_user_1['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="Sunflower",
@@ -246,7 +248,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
                 artist_msid=str(uuid.uuid4()),
             )
         )
-
 
         # this should show up in the events
         r = self.client.get(
@@ -293,12 +294,11 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # make a user you're following follow a new user
         new_user_1 = db_user.get_or_create(self.conn, 104, 'new_user_1')
-        db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
-
-        time.sleep(1.5) # sleep a bit to avoid ordering conflicts, cannot mock this time as it comes from postgres
+        db_user_relationship.insert(self.conn, self.following_user_1['id'], new_user_1['id'], 'follow')
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
+            self.conn,
             user_id=self.following_user_1['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="Sunflower",
@@ -307,9 +307,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
                 artist_msid=str(uuid.uuid4()),
             )
         )
-
-        time.sleep(2)
-
         r = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},

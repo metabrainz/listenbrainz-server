@@ -149,9 +149,9 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.assertEqual(r.data.decode('utf-8'), 'OK\n')
 
         time.sleep(1)
-        recalculate_all_user_data()
+        recalculate_all_user_data(self.conn, self.ts_conn)
         to_ts = int(time.time())
-        listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, self.user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
 
@@ -249,9 +249,9 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
     def test_get_session(self):
         """ Tests _get_session method in api_compat_deprecated """
 
-        s = Session.create_by_user_id(self.user['id'])
+        s = Session.create_by_user_id(self.conn, self.user['id'])
 
-        session = _get_session(s.sid)
+        session = _get_session(self.conn, s.sid)
         self.assertEqual(s.sid, session.sid)
 
 
@@ -259,7 +259,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         """ Make sure BadRequest is raised when we try to get a session that doesn't exists """
 
         with self.assertRaises(BadRequest):
-            session = _get_session('')
+            session = _get_session(self.conn, '')
 
 
     def test_404(self):
