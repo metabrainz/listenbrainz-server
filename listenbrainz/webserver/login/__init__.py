@@ -43,6 +43,7 @@ class User(UserMixin):
             "login_id": self.login_id
         }
 
+
 @login_manager.user_loader
 def load_user(user_login_id):
     try:
