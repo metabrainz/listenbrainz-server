@@ -62,7 +62,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             session['_user_id'] = self.lb_user['login_id']
             session['_fresh'] = True
 
-            print(db_user.get_all_users(db_user))
+            print(db_user.get_all_users(self.conn))
 
             r = self.client.post(
                 url_for('api_compat.api_auth_approve'),
