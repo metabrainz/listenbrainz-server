@@ -45,8 +45,8 @@ class StatsAPITestCase(ServerTestCase, ResetDatabaseTestCase):
     def setUp(self):
         ServerTestCase.setUp(self)
         ResetDatabaseTestCase.setUp(self)
-        self.user = db_user.get_or_create(self.conn, 1, 'testuserpleaseignore')
-        self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 22, "listenbrainz-stats-user")
+        self.user = db_user.get_or_create(self.conn, 22001, 'stats-testuserpleaseignore')
+        self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 22002, "listenbrainz-stats-user")
 
         # Insert user top artists
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:

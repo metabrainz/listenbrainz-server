@@ -13,7 +13,7 @@ from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 class ProfileViewsTestCase(ListenAPIIntegrationTestCase):
     def setUp(self):
         super().setUp()
-        self.user = db_user.get_or_create(self.conn, 1, 'iliekcomputers')
+        self.user = db_user.get_or_create(self.conn, 18001, 'test_profile_iliekcomputers')
         db_user.agree_to_gdpr(self.conn, self.user['musicbrainz_id'])
         self.redis = cache._r
 

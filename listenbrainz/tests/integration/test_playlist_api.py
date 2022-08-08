@@ -41,10 +41,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
     def setUp(self):
         super(PlaylistAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(self.conn, 1, "testuserpleaseignore")
-        self.user2 = db_user.get_or_create(self.conn, 2, "anothertestuserpleaseignore")
-        self.user3 = db_user.get_or_create(self.conn, 3, "troi-bot")
-        self.user4 = db_user.get_or_create(self.conn, 4, "iloveassgaskets")
+        self.user = db_user.get_or_create(self.conn, 17001, "test_playlist_api_testuserpleaseignore")
+        self.user2 = db_user.get_or_create(self.conn, 17002, "test_playlist_apianothertestuserpleaseignore")
+        self.user3 = db_user.get_or_create(self.conn, 17003, "troi-bot")
+        self.user4 = db_user.get_or_create(self.conn, 17004, "iloveassgaskets")
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])

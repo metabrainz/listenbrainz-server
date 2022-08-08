@@ -169,10 +169,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
 
         # Fetch the listens with from_ts and make sure the order is descending
-        url = url_for('api_v1.get_listens',
-                      user_name=self.user['musicbrainz_id'])
-        response = self.client.get(
-            url, query_string={'count': '3', 'from_ts': ts-500})
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'count': '3', 'from_ts': ts-500})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -184,7 +182,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def test_zero_listens_payload(self):
         """ Test that API returns 400 for payloads with no listens
         """
-
         for listen_type in ('single', 'playing_now', 'import'):
             payload = {
                 'listen_type': listen_type,

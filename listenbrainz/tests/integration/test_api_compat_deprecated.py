@@ -38,7 +38,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def setUp(self):
         super(APICompatDeprecatedTestCase, self).setUp()
-        self.user = db_user.get_or_create(self.conn, 1, 'apicompatoldtestuser')
+        self.user = db_user.get_or_create(self.conn, 12001, 'apicompatoldtestuser')
 
         self.log = logging.getLogger(__name__)
         self.ls = timescale_connection._ts
@@ -124,7 +124,6 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         """ Sends a valid listen after handshaking and checks if it is present in the
             listenstore
         """
-
         timestamp = int(time.time())
         audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
 

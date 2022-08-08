@@ -8,12 +8,13 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.spotify_updater import spotify_read_listens
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.db import external_service_oauth
+from listenbrainz.db import external_service_oauth, user as db_user
 
 
 class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(SpotifyReaderTestCase, self).setUp()
+        self.user = db_user.get_or_create(self.conn, 21001, "test_spotify_reader_user")
         external_service_oauth.save_token(self.conn, user_id=self.user['id'],
                                           service=ExternalServiceType.SPOTIFY,
                                           access_token='token', refresh_token='refresh',

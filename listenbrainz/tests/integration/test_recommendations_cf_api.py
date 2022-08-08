@@ -14,9 +14,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     def setUp(self):
         super(CFRecommendationsViewsTestCase, self).setUp()
 
-        self.user = db_user.get_or_create(self.conn, 1001, 'vansika_1')
-        self.user2 = db_user.get_or_create(self.conn, 1002, 'vansika_2')
-        self.user3 = db_user.get_or_create(self.conn, 1003, 'vansika_3')
+        self.user = db_user.get_or_create(self.conn, 19001, 'test_cf_vansika_1')
+        self.user2 = db_user.get_or_create(self.conn, 19002, 'test_cf_vansika_2')
+        self.user3 = db_user.get_or_create(self.conn, 19003, 'test_cf_vansika_3')
 
         # generate test data
         data = {"recording_mbid": []}

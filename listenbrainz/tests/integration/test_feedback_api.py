@@ -14,8 +14,8 @@ from listenbrainz.webserver import ts_conn, msb_conn, db_conn
 class FeedbackAPITestCase(IntegrationTestCase):
     def setUp(self):
         super(FeedbackAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(self.conn, 1, "testuserpleaseignore")
-        self.user2 = db_user.get_or_create(self.conn, 2, "anothertestuserpleaseignore")
+        self.user = db_user.get_or_create(self.conn, 14001, "testuserpleaseignore")
+        self.user2 = db_user.get_or_create(self.conn, 14002, "anothertestuserpleaseignore")
 
     def tearDown(self):
         cache._r.flushall()

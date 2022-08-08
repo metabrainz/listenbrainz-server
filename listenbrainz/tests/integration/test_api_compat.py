@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-import json
 import logging
 import time
 
@@ -37,7 +36,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APICompatTestCase, self).setUp()
-        self.lb_user = db_user.get_or_create(self.conn, 1, 'apicompattestuser')
+        self.lb_user = db_user.get_or_create(self.conn, 11001, 'apicompattestuser')
         self.lfm_user = User(
             self.lb_user['id'],
             self.lb_user['created'],
