@@ -57,15 +57,27 @@ class ListenIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
 
 
 class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        IntegrationTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
+
     def setUp(self):
         IntegrationTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
+        g.ts_conn = ts_conn
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
         r.flushall()
         IntegrationTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
+
+    @classmethod
+    def tearDownClass(cls):
+        IntegrationTestCase.tearDownClass()
+        DatabaseTestCase.tearDownClass()
 
     def wait_for_query_to_have_items(self, url, num_items, **kwargs):
         """Try the provided query in a loop until the required number of returned listens is available.

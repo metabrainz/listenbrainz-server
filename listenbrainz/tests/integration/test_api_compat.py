@@ -22,6 +22,7 @@ import time
 
 import xmltodict
 from flask import url_for
+from flask_login import current_user
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.lastfm_session import Session
@@ -56,11 +57,13 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
         token = r.json['token']
+        print(current_user)
 
         # login as user
         with self.client.session_transaction() as session:
             session['_user_id'] = self.lb_user['login_id']
             session['_fresh'] = True
+            print(current_user)
 
             print(db_user.get_all_users(self.conn))
 
@@ -69,6 +72,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
                 data=f"token={token}",
                 headers={'Content-Type': 'application/x-www-form-urlencoded'}
             )
+            print(current_user)
             print(r.data)
             self.assert200(r)
 
