@@ -190,7 +190,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
                 'listen_type': listen_type,
                 'payload': [],
             }
-            response = self.send_data(payload)
+            response = self.send_data(payload, self.user)
             self.assert400(response)
 
     def test_payload_is_not_list(self):
@@ -201,14 +201,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
                 'listen_type': listen_type,
                 'payload': {},
             }
-            response = self.send_data(data)
+            response = self.send_data(data, self.user)
             self.assert400(response)
             self.assertEqual('The payload in the JSON document should be'
                              ' a list of listens.', response.json['error'])
 
     def test_top_level_json_is_not_dict(self):
         for data in (1, False, None, [2, 3], "foobar"):
-            response = self.send_data(data)
+            response = self.send_data(data, self.user)
             self.assert400(response)
             self.assertEqual("Invalid JSON document submitted. Top level of JSON "
                              "document should be a json object.", response.json["error"])
@@ -242,7 +242,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test for valid submissioon of listen_type listen """
         with open(self.path_to_data_file('valid_single.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -252,7 +252,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('single_more_than_one_listen.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -261,7 +261,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('valid_playing_now.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -275,7 +275,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('playing_now_with_duration.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -297,7 +297,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('playing_now_with_duration_ms.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -320,7 +320,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('playing_now_with_ts.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -330,7 +330,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('playing_now_more_than_one_listen.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -339,7 +339,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('valid_import.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -349,14 +349,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('too_large_listen.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertTrue("JSON document is too large." in response.json['error'])
 
         # This document is 45kb, increase it to over 10k kb
         payload['payload'] = payload['payload'] * 300
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertTrue("Payload too large." in response.json['error'])
@@ -371,7 +371,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         payload['payload'] = payload['payload'] * 500 + payload['payload']
         self.assertEqual(len(payload['payload']), 1002)
 
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertTrue("Too many listens" in response.json['error'])
@@ -383,7 +383,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         del payload["payload"][0]["track_metadata"]["track_name"]
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -392,12 +392,12 @@ class APITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('empty_track_name.json'), 'r') as f:
             payload = json.load(f)
             payload["payload"][0]["track_metadata"]["track_name"] = []
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
         payload["payload"][0]["track_metadata"]["track_name"] = 1
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -406,12 +406,12 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('empty_artist_name.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
         del payload["payload"][0]["track_metadata"]["artist_name"]
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -422,12 +422,12 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
             payload["payload"][0]["track_metadata"]["artist_name"] = None
 
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
         payload["payload"][0]["track_metadata"]["artist_name"] = None
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -437,7 +437,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('too_many_tags.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -446,7 +446,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('too_long_tag.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -454,7 +454,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test for invalid submission in which a listen does not contain track_metadata field """
         with open(self.path_to_data_file('invalid_listen_missing_track_metadata.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -462,7 +462,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test for invalid submission in which a listen has null track_metadata field """
         with open(self.path_to_data_file('invalid_listen_null_track_metadata.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -470,7 +470,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test for invalid submission in which a listen has null listened_at field """
         with open(self.path_to_data_file('invalid_listen_null_listened_at.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -480,7 +480,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('invalid_release_mbid.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -490,7 +490,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('invalid_artist_mbid.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
@@ -500,7 +500,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('invalid_recording_mbid.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
     
@@ -508,7 +508,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test for duration and duration_ms both given """
         with open(self.path_to_data_file('multi_duration.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertEqual('JSON document should not contain both duration and duration_ms.',
@@ -518,7 +518,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test for error on invalid duration """
         with open(self.path_to_data_file('invalid_duration.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertEqual('Value for duration is invalid, should be a positive integer.',
@@ -530,14 +530,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('valid_duration.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
     def test_unicode_null_error(self):
         with open(self.path_to_data_file('listen_having_unicode_null.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertEqual(response.json['error'], '\x00Fade contains a unicode null')
@@ -550,7 +550,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         payload['payload'][0]['listened_at'] = 1280258690
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, self.user, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -600,7 +600,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test mbid fields with [], "", null values are dropped without error """
         with open(self.path_to_data_file('invalid_mbid_listens.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, self.user, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -703,7 +703,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         with open(self.path_to_data_file('artist_name_list.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertEqual('track_metadata.artist_name must be a single string.',
@@ -715,7 +715,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('timestamp_in_ns.json'), 'r') as f:
             payload = json.load(f)
         payload['listened_at'] = int(time.time()) * 10**9
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertEqual(
@@ -725,7 +725,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Tests for timestamps earlier than last.fm founding year """
         with open(self.path_to_data_file('timestamp_before_lfm_founding.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertEqual('Value for key listened_at is too low. listened_at timestamp should be'
@@ -780,7 +780,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         with open(self.path_to_data_file('valid_playing_now.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -807,7 +807,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # send a listen
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload)
+        response = self.send_data(payload, self.user)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
