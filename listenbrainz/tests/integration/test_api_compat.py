@@ -62,12 +62,12 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             session['_user_id'] = self.lb_user['login_id']
             session['_fresh'] = True
 
-        r = self.client.post(
-            url_for('api_compat.api_auth_approve'),
-            data=f"token={token}",
-            headers={'Content-Type': 'application/x-www-form-urlencoded'}
-        )
-        self.assert200(r)
+            r = self.client.post(
+                url_for('api_compat.api_auth_approve'),
+                data=f"token={token}",
+                headers={'Content-Type': 'application/x-www-form-urlencoded'}
+            )
+            self.assert200(r)
 
         data = {
             'method': 'auth.getsession',
