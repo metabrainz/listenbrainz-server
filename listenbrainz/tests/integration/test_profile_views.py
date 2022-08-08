@@ -106,3 +106,13 @@ class ProfileViewsTestCase(ListenAPIIntegrationTestCase):
 
         # listen counts are cached for 5 min, so delete key otherwise cached will be returned
         cache.delete(REDIS_USER_LISTEN_COUNT + str(self.user['id']))
+
+        # check that listens have been successfully deleted
+        resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
+        self.assert200(resp)
+        self.assertEqual(json.loads(resp.data)['payload']['count'], 0)
+
+        # check that the latest_import timestamp has been reset too
+        resp = self.client.get(url_for('api_v1.latest_import', user_name=self.user['musicbrainz_id']))
+        self.assert200(resp)
+        self.assertEqual(resp.json['latest_import'], 0)
