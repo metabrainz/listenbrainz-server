@@ -384,7 +384,7 @@ def _remove_old_collaborative_playlists(connection, creator_id: int, created_for
                                    "source_patch": source_patch})
 
 
-def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
+def create(conn, playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
     """Create a playlist
 
     Arguments:
@@ -399,7 +399,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
 
     """
     # TODO: These two gets should be done in a single query
-    creator = db_user.get(playlist.creator_id)
+    creator = db_user.get(conn, playlist.creator_id)
     if creator is None:
         raise Exception("TODO: Custom exception")
 
@@ -407,7 +407,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
     # and then the name is fetched for verification again. Should we accept created_for here and do
     # lookup only here and not he in the API call validation?
     if playlist.created_for_id:
-        created_for = db_user.get(playlist.created_for_id)
+        created_for = db_user.get(conn, playlist.created_for_id)
         if created_for is None:
             raise Exception("TODO: Custom exception")
 
@@ -432,31 +432,31 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
                                     'copied_from_id', 'created_for_id'})
     fields["algorithm_metadata"] = ujson.dumps(playlist.algorithm_metadata or {})
 
-    with ts.engine.connect() as connection:
-        with connection.begin():
+    with ts.engine.connect() as ts_conn:
+        with ts_conn.begin():
             # This code seems out of place for a create function, but in order to keep the deletion of
             # old collaborative playlists in the same transaction as creating new playlists, it needs to
             # to be here.
             if playlist.creator_id == TROI_BOT_USER_ID and playlist.created_for_id is not None and \
                     playlist.algorithm_metadata is not None and "source_patch" in playlist.algorithm_metadata:
                 _remove_old_collaborative_playlists(
-                    connection,
+                    ts_conn,
                     playlist.creator_id,
                     playlist.created_for_id,
                     playlist.algorithm_metadata["source_patch"]
                 )
 
-            result = connection.execute(query, fields)
+            result = ts_conn.execute(query, fields)
             row = dict(result.fetchone())
             playlist.id = row['id']
             playlist.mbid = row['mbid']
             playlist.created = row['created']
             playlist.creator = creator['musicbrainz_id']
-            playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 0)
+            playlist.recordings = insert_recordings(conn, ts_conn, playlist.id, playlist.recordings, 0)
 
             if playlist.collaborator_ids:
-                add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
-                collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
+                add_playlist_collaborators(ts_conn, playlist.id, playlist.collaborator_ids)
+                collaborator_ids = get_collaborators_for_playlists(ts_conn, [playlist.id])
                 collaborator_ids = collaborator_ids.get(playlist.id, [])
                 playlist.collaborators = get_collaborators_names_from_ids(collaborator_ids)
 
@@ -527,7 +527,7 @@ def set_last_updated(connection, playlist_id):
     return result.fetchone()[0]
 
 
-def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
+def copy_playlist(conn, playlist: model_playlist.Playlist, creator_id: int):
     newplaylist = playlist.copy()
     newplaylist.name = "Copy of " + newplaylist.name
     newplaylist.creator_id = creator_id
@@ -538,7 +538,7 @@ def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
     newplaylist.collaborators = []
     # TODO: We need a copied_from_mbid (calculated) field in the playlist object so we can show the mbid in the ui
 
-    return create(newplaylist)
+    return create(conn, newplaylist)
 
 
 def delete_playlist(playlist: model_playlist.Playlist):
@@ -571,7 +571,7 @@ def delete_playlist_by_mbid(playlist_mbid: str):
         return result.rowcount == 1
 
 
-def insert_recordings(connection, playlist_id: int, recordings: List[model_playlist.WritablePlaylistRecording],
+def insert_recordings(conn, ts_conn, playlist_id: int, recordings: List[model_playlist.WritablePlaylistRecording],
                       starting_position: int):
     """Insert recordings to an existing playlist. The position field will be computed based on the order
     of the provided recordings.
@@ -596,10 +596,10 @@ def insert_recordings(connection, playlist_id: int, recordings: List[model_playl
     for recording in recordings:
         if not recording.created:
             recording.created = insert_ts
-        result = connection.execute(query, recording.dict(include={'playlist_id', 'position', 'mbid', 'added_by_id', 'created'}))
+        result = ts_conn.execute(query, recording.dict(include={'playlist_id', 'position', 'mbid', 'added_by_id', 'created'}))
         if recording.added_by_id not in user_id_map:
             # TODO: Do this lookup in bulk
-            user_id_map[recording.added_by_id] = db_user.get(recording.added_by_id)
+            user_id_map[recording.added_by_id] = db_user.get(conn, recording.added_by_id)
         row = result.fetchone()
         recording.id = row['id']
         recording.created = row['created']
@@ -665,7 +665,7 @@ def delete_recordings_from_playlist(playlist: model_playlist.Playlist, remove_fr
         set_last_updated(connection, playlist.id)
 
 
-def add_recordings_to_playlist(playlist: model_playlist.Playlist,
+def add_recordings_to_playlist(conn, playlist: model_playlist.Playlist,
                                recordings: List[model_playlist.WritablePlaylistRecording],
                                position: int = None):
     """Add some recordings to a playlist at a given position
@@ -695,20 +695,20 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
     """)
     if position is None:
         position = len(playlist.recordings)
-    with ts.engine.connect() as connection:
+    with ts.engine.connect() as ts_conn:
         if position < len(playlist.recordings):
             reorder_params = {"playlist_id": playlist.id,
                               "offset": len(recordings),
                               "position": position}
-            connection.execute(reorder, reorder_params)
-        recordings = insert_recordings(connection, playlist.id, recordings, position)
+            ts_conn.execute(reorder, reorder_params)
+        recordings = insert_recordings(conn, ts_conn, playlist.id, recordings, position)
         playlist.recordings = playlist.recordings[0:position] + recordings + playlist.recordings[position:]
-        set_last_updated(connection, playlist.id)
+        set_last_updated(ts_conn, playlist.id)
         return playlist
 
 
-def move_recordings(playlist: model_playlist.Playlist, position_from: int, position_to: int, count: int):
+def move_recordings(conn, playlist: model_playlist.Playlist, position_from: int, position_to: int, count: int):
     # TODO: This must be done in a single transaction
     removed = playlist.recordings[position_from:position_from+count]
     delete_recordings_from_playlist(playlist, position_from, count)
-    add_recordings_to_playlist(playlist, removed, position_to)
+    add_recordings_to_playlist(conn, playlist, removed, position_to)

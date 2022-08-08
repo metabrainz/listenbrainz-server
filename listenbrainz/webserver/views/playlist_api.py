@@ -325,7 +325,7 @@ def create_playlist():
                 log_raise_400("Invalid recording MBID found in submitted recordings")
 
     try:
-        playlist = db_playlist.create(playlist)
+        playlist = db_playlist.create(db_conn, playlist)
     except Exception as e:
         current_app.logger.error("Error while creating new playlist: {}".format(e))
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
@@ -506,7 +506,7 @@ def add_playlist_item(playlist_mbid, offset):
             precordings.append(WritablePlaylistRecording(mbid=mbid, added_by_id=user["id"]))
 
     try:
-        db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
+        db_playlist.add_recordings_to_playlist(db_conn, playlist, precordings, offset)
     except Exception as e:
         current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
         raise APIInternalServerError("Failed to add recordings to the playlist. Please try again.")
@@ -557,7 +557,7 @@ def move_playlist_item(playlist_mbid):
     validate_move_data(data)
 
     try:
-        db_playlist.move_recordings(playlist, data['from'], data['to'], data['count'])
+        db_playlist.move_recordings(db_conn, playlist, data['from'], data['to'], data['count'])
     except Exception as e:
         current_app.logger.error("Error while moving recordings in the playlist: {}".format(e))
         raise APIInternalServerError("Failed to move recordings in the playlist. Please try again.")
@@ -677,7 +677,7 @@ def copy_playlist(playlist_mbid):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     try:
-        new_playlist = db_playlist.copy_playlist(playlist, user["id"])
+        new_playlist = db_playlist.copy_playlist(db_conn, playlist, user["id"])
     except Exception as e:
         current_app.logger.error("Error copying playlist: {}".format(e))
         raise APIInternalServerError("Failed to copy the playlist. Please try again.")

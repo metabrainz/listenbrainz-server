@@ -14,9 +14,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     def setUp(self):
         super(CFRecommendationsViewsTestCase, self).setUp()
 
-        self.user = db_user.get_or_create(self.conn, 1, 'vansika_1')
-        self.user2 = db_user.get_or_create(self.conn, 2, 'vansika_2')
-        self.user3 = db_user.get_or_create(self.conn, 3, 'vansika_3')
+        self.user = db_user.get_or_create(self.conn, 1001, 'vansika_1')
+        self.user2 = db_user.get_or_create(self.conn, 1002, 'vansika_2')
+        self.user3 = db_user.get_or_create(self.conn, 1003, 'vansika_3')
 
         # generate test data
         data = {"recording_mbid": []}
@@ -31,7 +31,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
 
         db_recommendations_cf_recording.insert_user_recommendation(
             self.conn,
-            1,
+            self.user['id'],
             UserRecommendationsJson(**{
                 'top_artist': data['recording_mbid'],
                 'similar_artist': []
@@ -40,7 +40,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
 
         db_recommendations_cf_recording.insert_user_recommendation(
             self.conn,
-            2,
+            self.user2['id'],
             UserRecommendationsJson(**{
                 'top_artist': [],
                 'similar_artist': data['recording_mbid']
@@ -48,8 +48,8 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         )
 
         # get recommendations
-        self.user_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.conn, 1)
-        self.user2_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.conn, 2)
+        self.user_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.conn, self.user['id'])
+        self.user2_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.conn, self.user2['id'])
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])

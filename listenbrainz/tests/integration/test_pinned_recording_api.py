@@ -15,9 +15,8 @@ from listenbrainz.db.model.pinned_recording import (
 import json
 
 
-def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
+def fetch_track_metadata_for_pins(conn1, conn2, pins: List[PinnedRecording]) -> List[PinnedRecording]:
     return pins
-
 
 
 class PinnedRecAPITestCase(IntegrationTestCase):

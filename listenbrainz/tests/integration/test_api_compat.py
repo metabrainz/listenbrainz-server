@@ -270,7 +270,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         # Check if listen reached the timescale listenstore
         time.sleep(1)
         recalculate_all_user_data(self.conn, self.ts_conn)
-        listens, _, _ = self.ls.fetch_listens(self.conn, self.lb_user, from_ts=timestamp-1)
+        listens, _, _ = self.ls.fetch_listens(self.ts_conn, self.lb_user, from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
 
     def test_record_invalid_listen(self):

@@ -495,7 +495,7 @@ def feedback(user_name: str):
         "id": user.id,
     }
 
-    feedback_count = get_feedback_count_for_user(user.id, score)
+    feedback_count = get_feedback_count_for_user(db_conn, user.id, score)
     feedback = get_feedback_for_user(ts_conn, msb_conn, user.id, count, offset, score, True)
 
     props = {

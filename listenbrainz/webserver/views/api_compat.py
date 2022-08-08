@@ -70,7 +70,7 @@ def api_auth_approve():
             user_id=current_user.musicbrainz_id,
             msg="This token has expired. Please create a new token and try again."
         )
-    token.approve(user.name)
+    token.approve(db_conn, user.name)
     return render_template(
         "user/auth.html",
         user_id=current_user.musicbrainz_id,
@@ -167,7 +167,7 @@ def get_session(data):
     output_format = data.get('format', 'xml')
     try:
         api_key = data['api_key']
-        token = Token.load(data['token'], api_key)
+        token = Token.load(db_conn, data['token'], api_key)
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)   # Missing Required Params
 
