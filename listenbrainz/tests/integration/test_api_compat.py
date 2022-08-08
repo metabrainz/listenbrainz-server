@@ -30,7 +30,7 @@ from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn
 
 
 class APICompatTestCase(ListenAPIIntegrationTestCase):
@@ -63,17 +63,13 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         with self.client.session_transaction() as session:
             session['_user_id'] = self.lb_user['login_id']
             session['_fresh'] = True
-            print(current_user)
-
-            print(db_user.get_all_users(self.conn))
+            print(db_conn.execute('SELECT * FROM "user"').fetchall())
 
             r = self.client.post(
                 url_for('api_compat.api_auth_approve'),
                 data=f"token={token}",
                 headers={'Content-Type': 'application/x-www-form-urlencoded'}
             )
-            print(current_user)
-            print(r.data)
             self.assert200(r)
 
         data = {
