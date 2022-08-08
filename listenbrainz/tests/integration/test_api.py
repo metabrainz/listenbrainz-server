@@ -15,7 +15,10 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APITestCase, self).setUp()
-        self.followed_user = db_user.get_or_create(self.conn, 3, 'followed_user')
+        self.user = db_user.get_or_create(self.conn, 10001, 'test_api_user')
+        db_user.agree_to_gdpr(self.conn, self.user['musicbrainz_id'])
+        
+        self.followed_user = db_user.get_or_create(self.conn, 10002, 'test_api_followed_user')
         self.follow_user_url = url_for("social_api_v1.follow_user", user_name=self.followed_user["musicbrainz_id"])
         self.follow_user_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
 
@@ -616,10 +619,10 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual("2cfad207-3f55-4aec-8120-86cf66e34d59", additional_info["release_group_mbid"])
 
     def test_similar_users(self):
-
-        response = self.client.get(
-            url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
+        response = self.client.get(url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
         self.assert404(response)
+        
+        self.user2 = db_user.get_or_create(self.conn, 10003, 'test_api_all_muppets_all_of_them')
 
         conn = self.conn.connection
         with conn.cursor() as curs:
@@ -930,7 +933,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         r = self.client.get(url_for("social_api_v1.get_followers", user_name=self.followed_user["musicbrainz_id"]))
         self.assert200(r)
-        self.assertListEqual([self.user.musicbrainz_id], r.json['followers'])
+        self.assertListEqual([self.user['musicbrainz_id']], r.json['followers'])
 
     def test_following_returns_the_people_who_follow_the_user(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
@@ -938,12 +941,12 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         r = self.client.get(url_for("social_api_v1.get_following", user_name=self.user["musicbrainz_id"]))
         self.assert200(r)
-        self.assertListEqual(['followed_user'], r.json['following'])
+        self.assertListEqual([self.followed_user['musicbrainz_id']], r.json['following'])
 
     def test_follow_user(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.conn, self.user.id, self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.conn, self.user['id'], self.followed_user['id']))
 
     def test_follow_user_requires_login(self):
         r = self.client.post(self.follow_user_url)
@@ -955,14 +958,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert404(r)
 
     def test_following_yourself_errors_out(self):
-        r = self.client.post(url_for("social_api_v1.follow_user", user_name=self.user.musicbrainz_id),
+        r = self.client.post(url_for("social_api_v1.follow_user", user_name=self.user['musicbrainz_id']),
                              headers=self.follow_user_headers)
         self.assert400(r)
 
     def test_follow_user_twice_leads_to_error(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.conn, self.user.id, self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.conn, self.user['id'], self.followed_user['id']))
 
         # now, try to follow again, this time expecting a 400
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
@@ -972,19 +975,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # first, follow the user
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.conn, self.user.id, self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.conn, self.user['id'], self.followed_user['id']))
 
         # now, unfollow and check the db
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
                              headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertFalse(db_user_relationship.is_following_user(self.conn, self.user.id, self.followed_user['id']))
+        self.assertFalse(db_user_relationship.is_following_user(self.conn, self.user['id'], self.followed_user['id']))
 
     def test_unfollow_not_following_user(self):
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
                              headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertFalse(db_user_relationship.is_following_user(self.conn, self.user.id, self.followed_user['id']))
+        self.assertFalse(db_user_relationship.is_following_user(self.conn, self.user['id'], self.followed_user['id']))
 
     def test_unfollow_user_requires_login(self):
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]))
