@@ -2,7 +2,7 @@ from typing import Optional
 
 import sqlalchemy
 from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import NullPool, AssertionPool
 import time
 import psycopg2
 import psycopg2.extras
@@ -32,7 +32,7 @@ def init_db_connection(connect_str):
     global engine
     while True:
         try:
-            engine = create_engine(connect_str, poolclass=NullPool)
+            engine = create_engine(connect_str, poolclass=AssertionPool)
             break
         except psycopg2.OperationalError as e:
             print("Couldn't establish connection to db: {}".format(str(e)))
