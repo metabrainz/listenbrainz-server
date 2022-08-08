@@ -307,10 +307,12 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
                 artist_msid=str(uuid.uuid4()),
             )
         )
+        time.sleep(1)
         r = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
+        print(r.json)
         self.assert200(r)
         self.assertEqual(5, r.json['payload']['count']) # 3 events we created + 2 own follow events
         self.assertEqual('recording_recommendation', r.json['payload']['events'][0]['event_type'])
