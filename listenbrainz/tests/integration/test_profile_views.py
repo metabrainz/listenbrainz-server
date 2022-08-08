@@ -96,3 +96,13 @@ class ProfileViewsTestCase(ListenAPIIntegrationTestCase):
         self.assert200(resp)
         self.assertEqual(json.loads(resp.data)['payload']['count'], 3)
 
+        # now delete all the listens we just sent
+        # we do a get request first to put the CSRF token in the flask global context
+        # so that we can access it for using in the post request in the next step
+        self.client.get(url_for('profile.delete_listens'))
+        resp = self.client.post(url_for('profile.delete_listens'), data={'csrf_token': g.csrf_token})
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.location, url_for('user.profile', user_name=self.user['musicbrainz_id']))
+
+        # listen counts are cached for 5 min, so delete key otherwise cached will be returned
+        cache.delete(REDIS_USER_LISTEN_COUNT + str(self.user['id']))
