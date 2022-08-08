@@ -55,7 +55,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # send a listen
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, self.user, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -150,7 +150,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         # send three listens
         ts = 1400000000
-        user = db_user.get_or_create(self.conn, 1, 'test_order')
+        user = db_user.get_or_create(self.conn, 10004, 'test_api_order')
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts + (100 * i)
             response = self.send_data(payload, user, recalculate=True)
