@@ -21,7 +21,7 @@ import logging
 import time
 
 import xmltodict
-from flask import url_for
+from flask import url_for, has_request_context
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.lastfm_session import Session
@@ -57,10 +57,13 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
         token = r.json['token']
 
+        print(has_request_context())
         # login as user
         with self.client.session_transaction() as session:
             session['_user_id'] = self.lb_user['login_id']
             session['_fresh'] = True
+
+            print(has_request_context())
             print(db_conn.execute('SELECT * FROM "user"').fetchall())
 
             r = self.client.post(
@@ -69,7 +72,8 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
                 headers={'Content-Type': 'application/x-www-form-urlencoded'}
             )
             print(db_conn.execute('SELECT * FROM "user"').fetchall())
-            self.assert200(r)
+        print(has_request_context())
+        self.assert200(r)
 
         data = {
             'method': 'auth.getsession',
