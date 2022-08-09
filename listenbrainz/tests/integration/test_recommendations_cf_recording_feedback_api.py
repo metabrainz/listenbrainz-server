@@ -358,7 +358,8 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
     def test_get_feedback_for_user(self):
         sample_feedback = self.insert_test_data()
 
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user", user_name=self.user1["musicbrainz_id"]))
+        response = self.client.get(
+            url_for("recommendation_feedback_api_v1.get_feedback_for_user", user_name=self.user1["musicbrainz_id"]))
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -389,7 +390,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         sample_feedback = self.insert_test_data()
 
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user1["musicbrainz_id"]), query_string={"rating": 'hate'})
+                                           user_name=self.user1["musicbrainz_id"]), query_string={"rating": 'hate'})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -409,7 +410,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
     def test_get_feedback_for_user_with_invalid_rating_param(self):
         """ Test to make sure 400 response is received if rating argument is not valid """
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user1["musicbrainz_id"]), query_string={"rating": "invalid"})
+                                           user_name=self.user1["musicbrainz_id"]), query_string={"rating": "invalid"})
         self.assert400(response)
 
     def test_get_feedback_for_user_for_count_and_offset(self):
@@ -437,7 +438,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
             )
         # check for count
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user2["musicbrainz_id"]), query_string={"count": 10})
+                                           user_name=self.user2["musicbrainz_id"]), query_string={"count": 10})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -454,7 +455,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         # check for offset
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user2["musicbrainz_id"]), query_string={"offset": 90})
+                                           user_name=self.user2["musicbrainz_id"]), query_string={"offset": 90})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -466,11 +467,11 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         feedback = data["feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 20)
         for i in range(10):
-            self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i+90]['recording_mbid'])
-            self.assertEqual(feedback[i]['rating'], feedback_love[i+90]['rating'])
+            self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i + 90]['recording_mbid'])
+            self.assertEqual(feedback[i]['rating'], feedback_love[i + 90]['rating'])
         # check for feedback, too many
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user2["musicbrainz_id"]), query_string={"count": 110})
+                                           user_name=self.user2["musicbrainz_id"]), query_string={"count": 110})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -490,12 +491,13 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         # pass non-int value to count
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user["musicbrainz_id"]), query_string={"count": "invalid_count"})
+                                           user_name=self.user["musicbrainz_id"]),
+                                   query_string={"count": "invalid_count"})
         self.assert400(response)
 
         # pass negative int value to count
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user["musicbrainz_id"]), query_string={"count": -1})
+                                           user_name=self.user["musicbrainz_id"]), query_string={"count": -1})
         self.assert400(response)
 
     def test_get_feedback_for_user_with_invalid_offset_param(self):
@@ -503,12 +505,13 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         # pass non-int value to offset
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user["musicbrainz_id"]), query_string={"offset": "invalid_offset"})
+                                           user_name=self.user["musicbrainz_id"]),
+                                   query_string={"offset": "invalid_offset"})
         self.assert400(response)
 
         # pass negative int value to offset
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user["musicbrainz_id"]), query_string={"offset": -1})
+                                           user_name=self.user["musicbrainz_id"]), query_string={"offset": -1})
         self.assert400(response)
 
     def test_get_feedback_for_recordings_for_user(self):
@@ -520,12 +523,12 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
                                            user_name=self.user1["musicbrainz_id"]),
-                                           query_string={"mbids": ""+rec_mbid_1+','+rec_mbid_2})
+                                   query_string={"mbids": "" + rec_mbid_1 + ',' + rec_mbid_2})
 
         self.assert200(response)
         data = json.loads(response.data)
 
-        self.assertEqual(data["user_name"], 'vansika_1')
+        self.assertEqual(data["user_name"], self.user1["musicbrainz_id"])
         feedback = data["feedback"]
         self.assertEqual(len(feedback), 2)
 
@@ -541,12 +544,12 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         """ Test to make sure that the API sends 404 if recording_msid is invalid. """
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
                                            user_name=self.user1["musicbrainz_id"]),
-                                           query_string={"mbids":"invalid_recording_mbid"})
+                                   query_string={"mbids": "invalid_recording_mbid"})
         self.assert400(response)
 
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
                                            user_name=self.user1["musicbrainz_id"]),
-                                           query_string={"mbids":" "})
+                                   query_string={"mbids": " "})
         self.assert400(response)
 
     def test_get_feedback_for_recording_missing_mbid_args(self):
@@ -559,10 +562,10 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         """ Test to make sure that the API return empty list if user hasn't rated a recording """
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
                                            user_name=self.user1["musicbrainz_id"]),
-                                           query_string={"mbids":"222eb00d-9ead-42de-aec9-8f8c15094130"})
+                                   query_string={"mbids": "222eb00d-9ead-42de-aec9-8f8c15094130"})
         self.assert200(response)
         data = json.loads(response.data)
 
-        self.assertEqual(data["user_name"], 'vansika_1')
+        self.assertEqual(data["user_name"], self.user1["musicbrainz_id"])
         feedback = data["feedback"]
         self.assertEqual(len(feedback), 0)

@@ -80,16 +80,16 @@ def get_recommendations(user_name):
         :statuscode 404: User not found.
         :statuscode 204: Recommendations for the user haven't been generated, empty response will be returned
     """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: {}".format(user_name))
+
     artist_type = request.args.get('artist_type')
     if not _is_valid_artist_type(artist_type):
         raise APIBadRequest("Invalid artist type: {}".format(artist_type))
 
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
-
-    user = db_user.get_by_mb_id(db_conn, user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
 
     recommendations = db_recommendations_cf_recording.get_user_recommendation(db_conn, user['id'])
 

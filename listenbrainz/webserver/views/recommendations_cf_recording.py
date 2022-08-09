@@ -2,8 +2,6 @@ import ujson
 from flask import Blueprint, render_template, current_app
 
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
-from listenbrainz import db
-from listenbrainz.db import timescale
 from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.views.user import _get_user

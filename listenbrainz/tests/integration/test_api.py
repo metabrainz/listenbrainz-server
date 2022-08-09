@@ -282,7 +282,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(r.json['payload']['listens'][0]
                          ['track_metadata']['track_name'], 'Fade')
 
-        time.sleep(1.1)
+        time.sleep(1)
 
         # should have expired by now
         r = self.client.get(url_for('api_v1.get_playing_now',
@@ -304,7 +304,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(r.json['payload']['listens'][0]
                          ['track_metadata']['track_name'], 'Fade')
 
-        time.sleep(1.1)
+        time.sleep(1)
 
         # should have expired by now
         r = self.client.get(url_for('api_v1.get_playing_now',

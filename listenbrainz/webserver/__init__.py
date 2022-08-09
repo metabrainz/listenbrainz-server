@@ -80,7 +80,7 @@ def check_ratelimit_token_whitelist(auth_token):
     """
 
     from flask import current_app
-    return auth_token in current_app.config["WHITELISTED_AUTH_TOKENS"]
+    return auth_token in current_app.config["WHITELISTED_AUTH_TOKENS"] or current_app.config["TESTING"]
 
 
 def create_app(debug=None):

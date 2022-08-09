@@ -72,7 +72,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # This sleep allows for the timescale subscriber to take its time in getting
         # the listen submitted from redis and writing it to timescale.
-        time.sleep(2)
+        time.sleep(1)
 
         response = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
@@ -124,7 +124,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
-        time.sleep(2)
+        time.sleep(1)
 
         # max_ts = 2, should have sent back 2 listens
         r = self.client.get(
