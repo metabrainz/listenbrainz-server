@@ -221,7 +221,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(r)
         print(r.json)
-        notification_event_id = r.json["event_id"]
+        notification_event_id = r.json["id"]
         # Adding recording recommendation to db
         new_user = db_user.get_or_create(self.conn, 202, "riksucks")
         metadata_rec = {
@@ -238,7 +238,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(r)
         print(r.json)
-        rec_event_id = r.json["event_id"]
+        rec_event_id = r.json["id"]
         # Deleting notification
         r_del_not = self.client.post(
             url_for('user_timeline_event_api_bp.delete_feed_events', user_name=self.user["musicbrainz_id"]),
