@@ -54,6 +54,7 @@ def load_user(user_login_id):
     if user:
         login_user = User.from_dbrow(user)
         print("Login User:", login_user.to_dict())
+        print("Status: ", login_user.is_authenticated)
         return login_user
     else:
         return None
