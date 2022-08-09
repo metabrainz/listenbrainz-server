@@ -66,7 +66,7 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
     def setUp(self):
         IntegrationTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
-        g.ts_conn = ts_conn
+        g.ts_conn = self.ts_conn
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
@@ -142,7 +142,7 @@ class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase, Ti
         self._app_ctx = self.app.app_context()
         self._app_ctx.push()
         g.db_conn = self.conn
-        g.ts_conn = ts_conn
+        g.ts_conn = self.ts_conn
 
     def tearDown(self):
         self._app_ctx.pop()
