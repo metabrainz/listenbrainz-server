@@ -7,47 +7,46 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_new_dump
 
 
-def get_complete_index_query(table, threshold):
+def build_sessioned_index(listen_table, mbc_table, from_ts, to_ts, threshold):
+    # TODO: Handle case of unmatched recordings breaking sessions!
     return f"""
-        WITH symmetric_index AS (
-            SELECT CASE WHEN mbid0 < mbid1 THEN mbid0 ELSE mbid1 END AS lexical_mbid0
-                 , CASE WHEN mbid0 > mbid1 THEN mbid0 ELSE mbid1 END AS lexical_mbid1
-                 , partial_similarity
-              FROM {table}
-        )
-        SELECT lexical_mbid0 AS mbid0
-             , lexical_mbid1 AS mbid1
-             , INT(SUM(partial_similarity)) AS similarity
-          FROM symmetric_index
-      GROUP BY lexical_mbid0, lexical_mbid1
-        HAVING similarity >= {threshold}
-    """
-
-
-def get_partial_index_query(table, lookahead, session, weight):
-    return f"""
-        WITH mbid_similarity AS (
-            SELECT recording_mbid AS mbid0
-                 , LEAD(recording_mbid, {lookahead}) OVER window AS mbid1
-                 , unix_timestamp(listened_at) AS ts0
-                 , unix_timestamp(LEAD(listened_at, {lookahead}) OVER window) AS ts1
-              FROM {table}
-             WHERE recording_mbid IS NOT NULL
-            WINDOW window AS (PARTITION BY user_id ORDER BY listened_at)
-        ), symmetric_index AS (
-            SELECT CASE WHEN mbid0 < mbid1 THEN mbid0 ELSE mbid1 END AS lexical_mbid0
-                 , CASE WHEN mbid0 > mbid1 THEN mbid0 ELSE mbid1 END AS lexical_mbid1
-              FROM mbid_similarity
-             WHERE mbid0 IS NOT NULL
-               AND mbid1 IS NOT NULL
-               AND mbid0 != mbid1
-               AND ts1 - ts0 <= {session}
-        )
-        SELECT lexical_mbid0 AS mbid0
-             , lexical_mbid1 AS mbid1
-             , COUNT(*) * {weight} AS partial_similarity
-          FROM symmetric_index
-      GROUP BY lexical_mbid0, lexical_mbid1
+        WITH listens AS (
+                 SELECT user_id
+                      , listened_at
+                      , COALESCE((recording_data->>'length')::INT / 1000, 180) AS duration
+                      , recording_mbid
+                   FROM {listen_table} l
+              LEFT JOIN {mbc_table} mbc
+                  USING (recording_mbid)
+                  WHERE l.recording_mbid IS NOT NULL
+                    AND listened_at > {from_ts}
+                    AND listened_at < {to_ts}
+            ), ordered AS (
+                SELECT user_id
+                     , listened_at
+                     , listened_at - LAG(listened_at, 1) OVER w - LAG(duration, 1) OVER w AS difference
+                     , recording_mbid
+                  FROM listens
+                WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
+            ), sessions AS (
+                SELECT user_id
+                     , COUNT(*) FILTER ( WHERE difference > {threshold} ) OVER w AS session_id
+                     , recording_mbid
+                  FROM ordered
+                WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
+            ), grouped_mbids AS (
+                SELECT CASE WHEN s1.recording_mbid < s2.recording_mbid THEN s1.recording_mbid ELSE s2.recording_mbid END AS lexical_mbid0
+                     , CASE WHEN s1.recording_mbid > s2.recording_mbid THEN s1.recording_mbid ELSE s2.recording_mbid END AS lexical_mbid1
+                  FROM sessions s1
+                  JOIN sessions s2
+                 USING (user_id, session_id) 
+                 WHERE s1.recording_mbid != s2.recording_mbid
+            ) SELECT lexical_mbid0 AS mbid0
+                   , lexical_mbid1 AS mbid1
+                   , COUNT(*) AS score
+                FROM grouped_mbids
+            GROUP BY lexical_mbid0
+                   , lexical_mbid1
     """
 
 
@@ -64,7 +63,7 @@ def main(steps, days, session, threshold):
 
     similarity_df = listenbrainz_spark.session.createDataFrame([], schema=recording_similarity_schema)
     for step in range(1, steps + 1, 1):
-        query = get_partial_index_query(table, step, session, weight)
+        query = (table, step, session, weight)
         similarity_df = similarity_df.union(run_query(query))
         weight -= decrement
 
@@ -72,8 +71,8 @@ def main(steps, days, session, threshold):
     similarity_df.createOrReplaceTempView(partial_index_table)
 
     save_path = f"{path.RECORDING_SIMILARITY}/steps_{steps}_days_{days}_session_{session}_threshold_{threshold}"
-    combined_index_query = get_complete_index_query(partial_index_table, threshold)
-    run_query(combined_index_query) \
-        .write \
-        .format('parquet') \
-        .save(config.HDFS_CLUSTER_URI + save_path, mode="overwrite")
+    # combined_index_query = get_complete_index_query(partial_index_table, threshold)
+    # run_query(combined_index_query) \
+    #     .write \
+    #     .format('parquet') \
+    #     .save(config.HDFS_CLUSTER_URI + save_path, mode="overwrite")
