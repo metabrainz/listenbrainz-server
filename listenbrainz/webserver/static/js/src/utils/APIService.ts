@@ -1126,7 +1126,7 @@ export default class APIService {
     userToken: string,
     zonename: string
   ): Promise<any> => {
-    const url = `${this.APIBaseURI}/user-setting/timezone`;
+    const url = `${this.APIBaseURI}/settings/timezone`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
