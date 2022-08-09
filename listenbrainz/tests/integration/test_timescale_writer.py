@@ -40,8 +40,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         return response
 
     def test_dedup(self):
-
-        user = db_user.get_or_create(self.conn, 1, 'testtimescaleuser %d' % randint(1,50000))
+        user = db_user.get_or_create(self.conn, 23000, 'testtimescaleuser_23000')
 
         # send the same listen twice
         r = self.send_listen(user, 'valid_single.json')
@@ -54,6 +53,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
+        print(recent)
         self.assertEqual(len(recent), 1)
         self.assertIsInstance(recent[0], Listen)
 
@@ -62,7 +62,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         day in redis for each successful batch written and to see if the user
         timestamps via the timescale listen store are updated in redis.
         """
-        user = db_user.get_or_create(self.conn, 23001, 'testtimescaleuser %d' % randint(1, 50000))
+        user = db_user.get_or_create(self.conn, 23001, 'testtimescaleuser_23001')
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
 
@@ -72,9 +72,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assertEqual(min_ts, 1486449409)
         self.assertEqual(max_ts, 1486449409)
 
-
     def test_dedup_user_special_characters(self):
-
         user = db_user.get_or_create(self.conn, 23002, 'i have a\\weird\\user, name"\n')
 
         # send the same listen twice
@@ -86,7 +84,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         listens, _, _ = self.ls.fetch_listens(self.ts_conn, user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-
     def test_dedup_same_batch(self):
 
         user = db_user.get_or_create(self.conn, 3, 'phifedawg')
@@ -97,13 +94,11 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         listens, _, _ = self.ls.fetch_listens(self.ts_conn, user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-
     def test_dedup_different_users(self):
         """
         Test to make sure timescale writer doesn't confuse listens with same timestamps
         but different users to be duplicates
         """
-
         user1 = db_user.get_or_create(self.conn, 23003, 'ts_testuser1')
         user2 = db_user.get_or_create(self.conn, 23004, 'ts_testuser2')
 
@@ -118,7 +113,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
         listens, _, _ = self.ls.fetch_listens(self.ts_conn, user2, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
-
 
     def test_dedup_same_timestamp_different_tracks(self):
         """ Test to check that if there are two tracks w/ the same timestamp,

@@ -2,7 +2,7 @@ from typing import Optional
 
 import sqlalchemy
 from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool, AssertionPool
+from sqlalchemy.pool import NullPool
 import time
 import psycopg2
 import psycopg2.extras
