@@ -123,11 +123,29 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
 
 class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase, TimescaleTestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        APICompatServerTestCase.setUpClass()
+        DatabaseTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        APICompatServerTestCase.tearDownClass()
+        DatabaseTestCase.tearDownClass()
+        TimescaleTestCase.tearDownClass()
+
     def setUp(self):
         APICompatServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
+        self._app_ctx = self.app.app_context()
+        self._app_ctx.push()
+        g.db_conn = self.conn
+        g.ts_conn = ts_conn
 
     def tearDown(self):
+        self._app_ctx.pop()
         APICompatServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)

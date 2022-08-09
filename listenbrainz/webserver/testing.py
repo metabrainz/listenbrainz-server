@@ -139,7 +139,7 @@ class ServerTestCase(unittest.TestCase):
         self.assertStatus(response, 500, message)
 
 
-class APICompatServerTestCase(flask_testing.TestCase):
+class APICompatServerTestCase(ServerTestCase):
 
     def create_app(self):
         app = create_api_compat_app()
