@@ -30,6 +30,9 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.log = logging.getLogger(__name__)
         self.logstore = TimescaleListenStore(self.log)
 
+        self.ts_conn.execute("DELETE FROM listen")
+        self.ts_conn.execute("DELETE FROM listen_user_metadata")
+
         self.testuser = db_user.get_or_create(self.conn, 1, "test")
         self.testuser_id = self.testuser["id"]
         self.testuser_name = self.testuser["musicbrainz_id"]
@@ -39,6 +42,11 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         DatabaseTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
         cache._r.flushdb()
+
+    @classmethod
+    def tearDownClass(cls):
+        DatabaseTestCase.tearDownClass()
+        TimescaleTestCase.tearDownClass()
 
     def _create_test_data(self, user_name, user_id, test_data_file_name=None, recalculate=True):
         test_data = create_test_data_for_timescalelistenstore(user_name, user_id, test_data_file_name)

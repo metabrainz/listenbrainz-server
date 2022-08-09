@@ -197,7 +197,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
     r = requests.post(RECORDING_LOOKUP_SERVER_URL, params={"count": len(mbids)}, json=mbids)
     if r.status_code != 200:
-        current_app.logger.error("Error while fetching metadata for a playlist: %d" % r.status_code)
+        current_app.logger.error("Error while fetching metadata for a playlist: %d" % r.json())
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
 
     try:

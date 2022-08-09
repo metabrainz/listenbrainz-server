@@ -1,15 +1,10 @@
-from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.webserver.testing import ServerTestCase
+from listenbrainz.tests.integration import IntegrationTestCase
 
 from unittest import mock
 from werkzeug.exceptions import InternalServerError
 
 
-class APIErrorTestCase(DatabaseTestCase, ServerTestCase):
-
-    def setUp(self):
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+class APIErrorTestCase(IntegrationTestCase):
 
     @mock.patch('listenbrainz.webserver.views.stats_api.db_user.get_by_mb_id')
     def test_api_error_unexpected_error_returns_json(self, mock_db_get):

@@ -1,15 +1,12 @@
 import flask
 
 from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import API_PREFIX
 from listenbrainz.webserver.testing import ServerTestCase
 
 
-class RoutesTestCase(DatabaseTestCase, ServerTestCase):
-
-    def setUp(self):
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+class RoutesTestCase(IntegrationTestCase):
 
     def test_routes_have_trailing_slash(self):
         """Check that all user-facing routes have a trailing /"""
