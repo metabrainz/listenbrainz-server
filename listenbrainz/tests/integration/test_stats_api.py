@@ -16,7 +16,6 @@ from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.db.testing import ResetDatabaseTestCase
-from listenbrainz.tests.integration import IntegrationTestCase
 from redis import Redis
 from flask import current_app
 

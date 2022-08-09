@@ -1,30 +1,22 @@
 import json
 import time
 from datetime import datetime
-from random import randint
 
-from listenbrainz.db.testing import TimescaleTestCase
-from brainzutils import cache
 from flask import url_for
 
 import listenbrainz.db.user as db_user
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver import redis_connection, timescale_connection
 
 
-class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
+class TimescaleWriterTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
-        IntegrationTestCase.setUp(self)
-        TimescaleTestCase.setUp(self)
+        super(TimescaleWriterTestCase, self).setUp()
         self.ls = timescale_connection._ts
         self.rs = redis_connection._redis
-
-    def tearDown(self):
-        super(TimescaleWriterTestCase, self).tearDown()
-        cache._r.flushall()
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
