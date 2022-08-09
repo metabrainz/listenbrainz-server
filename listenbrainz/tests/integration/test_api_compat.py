@@ -21,7 +21,7 @@ import logging
 import time
 
 import xmltodict
-from flask import url_for, has_request_context, _request_ctx_stack
+from flask import url_for
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.lastfm_session import Session
@@ -29,7 +29,7 @@ from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.webserver import timescale_connection, db_conn
+from listenbrainz.webserver import timescale_connection
 
 
 class APICompatTestCase(ListenAPIIntegrationTestCase):
@@ -57,22 +57,16 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
         token = r.json['token']
 
-        print(getattr(_request_ctx_stack.top, "user", None))
         # login as user
         with self.client.session_transaction() as session:
             session['_user_id'] = self.lb_user['login_id']
             session['_fresh'] = True
 
-            print(getattr(_request_ctx_stack.top, "user", None))
-            print(db_conn.execute('SELECT * FROM "user"').fetchall())
-
-            r = self.client.post(
-                url_for('api_compat.api_auth_approve'),
-                data=f"token={token}",
-                headers={'Content-Type': 'application/x-www-form-urlencoded'}
-            )
-            print(db_conn.execute('SELECT * FROM "user"').fetchall())
-        print(getattr(_request_ctx_stack.top, "user", None))
+        r = self.client.post(
+            url_for('api_compat.api_auth_approve'),
+            data=f"token={token}",
+            headers={'Content-Type': 'application/x-www-form-urlencoded'}
+        )
         self.assert200(r)
 
         data = {
