@@ -10,15 +10,20 @@ from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db import user as db_user
-from listenbrainz.db.testing import ResetDatabaseTestCase
+from listenbrainz.db.testing import DatabaseTestCase
 
 
-class StatsDatabaseTestCase(ResetDatabaseTestCase):
+class StatsDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(StatsDatabaseTestCase, self).setUp()
         self.user = db_user.get_or_create(self.conn, 1, 'stats_user')
         self.sitewide_user = self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
+        self.trans.commit()
+        self.conn.execute("DELETE FROM statistics.user")
+
+    def tearDown(self):
+        pass
 
     def test_insert_user_artists(self):
         """ Test if artist stats are inserted correctly """
