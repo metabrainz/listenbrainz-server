@@ -100,7 +100,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
-        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["creator"], self.user["musicbrainz_id"])
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
@@ -475,7 +475,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid, fetch_metadata="false"),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
-        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["creator"], self.user["musicbrainz_id"])
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
@@ -540,7 +540,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid, fetch_metadata="false"),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
-        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["creator"], self.user["musicbrainz_id"])
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][1]["identifier"])
@@ -587,7 +587,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid, fetch_metadata="false"),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
-        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["creator"], self.user["musicbrainz_id"])
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][1]["identifier"])
@@ -670,7 +670,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["public"], True)
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
-        self.assertEqual(response.json["playlist"]["creator"], "anothertestuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["creator"], self.user2["musicbrainz_id"])
         # Ensure original playlist's collaborators have been scrubbed
         # The serialized JSPF playlist leaves out the "collaborators" key if there are none
         self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
@@ -727,7 +727,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"], False)
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
-        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["creator"], self.user["musicbrainz_id"])
 
     def test_playlist_private_access(self):
         """ Test for checking that unauthorized access to private playlists return 404 """
