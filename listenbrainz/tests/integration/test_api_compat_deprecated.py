@@ -39,10 +39,10 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
     def setUp(self):
         super(APICompatDeprecatedTestCase, self).setUp()
         self.user = db_user.get_or_create(self.conn, 12001, 'apicompatoldtestuser')
+        db_user.agree_to_gdpr(self.conn, self.user["musicbrainz_id"])
 
         self.log = logging.getLogger(__name__)
         self.ls = timescale_connection._ts
-
 
     def handshake(self, user_name, auth_token, timestamp):
         """ Makes a request to the handshake endpoint of the AudioScrobbler API and
