@@ -37,6 +37,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(APICompatTestCase, self).setUp()
         self.lb_user = db_user.get_or_create(self.conn, 11001, 'apicompattestuser')
+        db_user.agree_to_gdpr(self.conn, self.lb_user["musicbrainz_id"])
         self.lfm_user = User(
             self.lb_user['id'],
             self.lb_user['created'],

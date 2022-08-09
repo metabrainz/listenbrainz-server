@@ -40,13 +40,10 @@ def api_auth():
 
 @api_bp.route('/api/auth/', methods=['POST'])
 @ratelimit()
+@login_required
 def api_auth_approve():
     """ Authenticate the user token provided.
     """
-    print(current_user.to_dict())
-    print("Status: ", current_user.is_authenticated)
-    if not current_user.is_authenticated:
-        return current_app.login_manager.unauthorized()
     user = User.load_by_name(db_conn, current_user.musicbrainz_id)
     if "token" not in request.form:
         return render_template(
