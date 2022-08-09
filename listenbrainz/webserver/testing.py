@@ -1,6 +1,5 @@
 import unittest
 
-import flask_testing
 from flask import template_rendered, message_flashed
 
 from listenbrainz.webserver import create_api_compat_app, create_web_app
@@ -141,7 +140,8 @@ class ServerTestCase(unittest.TestCase):
 
 class APICompatServerTestCase(ServerTestCase):
 
-    def create_app(self):
+    @classmethod
+    def create_app(cls):
         app = create_api_compat_app()
         app.config['TESTING'] = True
         return app

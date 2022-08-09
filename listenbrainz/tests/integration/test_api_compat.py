@@ -59,16 +59,13 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         token = r.json['token']
 
         # login as user
-        with self.client.session_transaction() as session:
-            session['_user_id'] = self.lb_user['login_id']
-            session['_fresh'] = True
+        self.temporary_login(self.lb_user['login_id'])
 
         r = self.client.post(
             url_for('api_compat.api_auth_approve'),
             data=f"token={token}",
             headers={'Content-Type': 'application/x-www-form-urlencoded'}
         )
-        print(r.data)
         self.assert200(r)
 
         data = {
