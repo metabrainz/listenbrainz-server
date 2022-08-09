@@ -238,7 +238,7 @@ def playlists(user_name: str):
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_for_user(user.id,
+    user_playlists, playlist_count = get_playlists_for_user(db_conn, user.id,
                                                             include_private=include_private,
                                                             load_recordings=False,
                                                             count=count,
@@ -290,8 +290,7 @@ def recommendation_playlists(user_name: str):
     }
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_created_for_user(
-        user.id, False, count, offset)
+    user_playlists, playlist_count = get_playlists_created_for_user(db_conn, user.id, False, count, offset)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
 
@@ -339,7 +338,7 @@ def collaborations(user_name: str):
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
-    colalborative_playlists, playlist_count = get_playlists_collaborated_on(user.id,
+    colalborative_playlists, playlist_count = get_playlists_collaborated_on(db_conn, user.id,
                                                                             include_private=include_private,
                                                                             load_recordings=False,
                                                                             count=count,

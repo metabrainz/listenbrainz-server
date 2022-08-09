@@ -543,7 +543,7 @@ def get_playlists_for_user(playlist_user_name):
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, playlist_user["id"],
                                                                    include_private=include_private,
                                                                    load_recordings=False, count=count, offset=offset)
 
@@ -574,8 +574,9 @@ def get_playlists_created_for_user(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"], load_recordings=False,
-                                                                           count=count, offset=offset)
+    playlists, playlist_count = db_playlist.get_playlists_created_for_user(
+        db_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset
+    )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
@@ -608,7 +609,7 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 
     # TODO: This needs to be passed to the DB layer
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(db_conn, playlist_user["id"],
                                                                           include_private=include_private,
                                                                           load_recordings=False,
                                                                           count=count,

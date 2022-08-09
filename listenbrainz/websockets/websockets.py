@@ -6,7 +6,7 @@ from flask_login import current_user
 from flask_socketio import SocketIO, join_room, emit, disconnect
 from werkzeug.exceptions import BadRequest
 
-from listenbrainz.webserver import create_app
+from listenbrainz.webserver import create_app, db_conn
 from listenbrainz.db import playlist as db_playlist
 from listenbrainz.websockets.listens_dispatcher import ListensDispatcher
 
@@ -42,7 +42,7 @@ def joined(data):
     if 'playlist_id' not in data:
         raise BadRequest("Missing key 'playlist_id'")
     playlist_mbid = data['playlist_id']
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid)
     if current_user.is_authenticated and playlist.is_modifiable_by(current_user.id):
         join_room(playlist_mbid)
         emit('joined', {'status': 'success'}, to=playlist_mbid)

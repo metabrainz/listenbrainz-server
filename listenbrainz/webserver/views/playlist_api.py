@@ -358,7 +358,7 @@ def edit_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, False)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, False)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -407,7 +407,7 @@ def edit_playlist(playlist_mbid):
     playlist.collaborators = collaborators
     playlist.collaborator_ids = collaborator_ids
 
-    db_playlist.update_playlist(playlist)
+    db_playlist.update_playlist(db_conn, playlist)
 
     return jsonify({'status': 'ok'})
 
@@ -435,7 +435,7 @@ def get_playlist(playlist_mbid):
 
     fetch_metadata = parse_boolean_arg("fetch_metadata", True)
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, True)
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -483,7 +483,7 @@ def add_playlist_item(playlist_mbid, offset):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -546,7 +546,7 @@ def move_playlist_item(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -595,7 +595,7 @@ def delete_playlist_item(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -635,7 +635,7 @@ def delete_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -672,7 +672,7 @@ def copy_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
