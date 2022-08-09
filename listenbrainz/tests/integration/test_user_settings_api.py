@@ -14,10 +14,10 @@ from listenbrainz.webserver.views.api_tools import (
 )
 
 
-user_setting_api_bp = Blueprint('user_setting_api_v1', __name__)
+user_settings_api_bp = Blueprint('user_settings_api_v1', __name__)
 
 
-@user_setting_api_bp.route('/timezone', methods=["POST", "OPTIONS"])
+@user_settings_api_bp.route('/timezone', methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
 def reset_timezone():

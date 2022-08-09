@@ -323,8 +323,8 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.metadata_api import metadata_bp
     app.register_blueprint(metadata_bp, url_prefix=API_PREFIX+'/metadata')
 
-    from listenbrainz.webserver.views.user_setting_api import user_setting_api_bp
-    app.register_blueprint(user_setting_api_bp, url_prefix=API_PREFIX+'/user-setting')
+    from listenbrainz.webserver.views.user_settings_api import user_settings_api_bp
+    app.register_blueprint(user_settings_api_bp, url_prefix=API_PREFIX+'/settings')
     
     from listenbrainz.webserver.views.explore_api import explore_api_bp
     app.register_blueprint(explore_api_bp, url_prefix=API_PREFIX+'/explore')
