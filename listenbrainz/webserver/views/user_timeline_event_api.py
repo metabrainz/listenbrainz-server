@@ -149,9 +149,12 @@ def create_user_notification_event(user_name):
     message = data["message"]
     metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
 
-    db_user_timeline_event.create_user_notification_event(db_conn, user['id'], metadata)
+    event = db_user_timeline_event.create_user_notification_event(db_conn, user['id'], metadata)
 
-    return jsonify({'status': 'ok'})
+    event_data = event.dict()
+    event_data['created'] = int(event_data['created'].timestamp())
+    event_data['event_type'] = event_data['event_type'].value
+    return jsonify(event_data)
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/review', methods=['POST', 'OPTIONS'])

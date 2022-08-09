@@ -236,6 +236,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])},
         )
         self.assert200(r)
+        print(r.json)
         rec_event_id = r.json["event_id"]
         # Deleting notification
         r_del_not = self.client.post(
