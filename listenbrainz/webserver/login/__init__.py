@@ -52,10 +52,7 @@ def load_user(user_login_id):
         current_app.logger.error("Error while getting user by login ID: %s", str(e), exc_info=True)
         return None
     if user:
-        login_user = User.from_dbrow(user)
-        print("Login User:", login_user.to_dict())
-        print("Status: ", login_user.is_authenticated)
-        return login_user
+        return User.from_dbrow(user)
     else:
         return None
 
