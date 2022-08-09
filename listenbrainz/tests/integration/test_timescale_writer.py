@@ -50,6 +50,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
         to_ts = int(time.time())
         listens, _, _ = self.ls.fetch_listens(self.ts_conn, user, to_ts=to_ts)
+        print(listens)
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
