@@ -41,16 +41,19 @@ class DatabaseTestCase(unittest.TestCase):
 
     def create_user_with_id(self, lb_id: int, musicbrainz_row_id: int, musicbrainz_id: str):
         """ Create a new user with the specified LB id. """
-        self.conn.execute(sqlalchemy.text("""
-            INSERT INTO "user" (id, musicbrainz_id, musicbrainz_row_id, auth_token)
-                 VALUES (:id, :mb_id, :mb_row_id, :token)
-        """), {
-            "id": lb_id,
-            "mb_id": musicbrainz_id,
-            "token": str(uuid.uuid4()),
-            "mb_row_id": musicbrainz_row_id,
-        })
-        return db_user.get(self.conn, lb_id)
+        user = db_user.get(self.conn, lb_id)
+        if user is None:
+            self.conn.execute(sqlalchemy.text("""
+                INSERT INTO "user" (id, musicbrainz_id, musicbrainz_row_id, auth_token)
+                     VALUES (:id, :mb_id, :mb_row_id, :token)
+            """), {
+                "id": lb_id,
+                "mb_id": musicbrainz_id,
+                "token": str(uuid.uuid4()),
+                "mb_row_id": musicbrainz_row_id,
+            })
+            user = db_user.get(self.conn, lb_id)
+        return user
 
 
 class ResetDatabaseTestCase(unittest.TestCase):
