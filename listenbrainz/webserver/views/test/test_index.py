@@ -1,7 +1,6 @@
 from unittest import mock
 from unittest.mock import MagicMock
 
-import requests_mock
 from flask import url_for
 from flask_login import login_required
 from requests.exceptions import HTTPError
@@ -285,13 +284,3 @@ class IndexViewsTestCase(IntegrationTestCase):
     def test_similar_users(self):
         resp = self.client.get(url_for('index.similar_users'))
         self.assertStatus(resp, 302)
-
-    @requests_mock.Mocker()
-    def test_instant_playlist(self, mock_requests):
-        resp = self.client.get(url_for('player.load_instant', recording_mbids="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
-        self.assert200(resp)
-
-    @requests_mock.Mocker()
-    def test_release_playlist(self, mock_requests):
-        resp = self.client.get(url_for('player.load_release', release_mbid="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
-        self.assert200(resp)
