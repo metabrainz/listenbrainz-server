@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Tuple, Dict
 
 import pydantic
@@ -525,7 +525,7 @@ def get_listen_events(
             events.append(APITimelineEvent(
                 event_type=UserTimelineEventType.LISTEN,
                 user_name=api_listen.user_name,
-                created=datetime.fromtimestamp(api_listen.listened_at),
+                created=datetime.fromtimestamp(api_listen.listened_at, tz=timezone.utc),
                 metadata=api_listen,
                 hidden=False
             ))
