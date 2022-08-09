@@ -53,7 +53,7 @@ def load_user(user_login_id):
         return None
     if user:
         login_user = User.from_dbrow(user)
-        print("Login User:", login_user)
+        print("Login User:", login_user.to_dict())
         return login_user
     else:
         return None

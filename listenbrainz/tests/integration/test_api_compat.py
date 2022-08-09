@@ -67,6 +67,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             data=f"token={token}",
             headers={'Content-Type': 'application/x-www-form-urlencoded'}
         )
+        print(r.data)
         self.assert200(r)
 
         data = {
