@@ -47,15 +47,14 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(user_login_id):
     try:
-        print(user_login_id)
         user = db_user.get_by_login_id(db_conn, user_login_id)
-        print(user)
-        print(db_conn.execute('SELECT * FROM "user"').fetchall())
     except Exception as e:
         current_app.logger.error("Error while getting user by login ID: %s", str(e), exc_info=True)
         return None
     if user:
-        return User.from_dbrow(user)
+        login_user = User.from_dbrow(user)
+        print("Login User:", login_user)
+        return login_user
     else:
         return None
 
