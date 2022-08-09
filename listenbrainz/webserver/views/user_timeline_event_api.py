@@ -310,18 +310,20 @@ def user_feed(user_name: str):
         key=lambda e: e.created,
         reverse=True
     )
-    print(all_events)
-
-    # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
-    for index, event in enumerate(all_events):
-        all_events[index].event_type = event.event_type.value
-
     all_events = all_events[:count]
+
+    serialized_events = []
+    # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
+    for event in all_events:
+        event_dict = event.dict()
+        event_dict["event_type"] = event.event_type.value
+        event_dict["created"] = int(event.created.timestamp())
+        serialized_events.append(event_dict)
 
     return jsonify({'payload': {
         'count': len(all_events),
         'user_id': user_name,
-        'events': [event.dict() for event in all_events],
+        'events': serialized_events,
     }})
 
 
@@ -523,7 +525,7 @@ def get_listen_events(
             events.append(APITimelineEvent(
                 event_type=UserTimelineEventType.LISTEN,
                 user_name=api_listen.user_name,
-                created=api_listen.listened_at,
+                created=datetime.fromtimestamp(api_listen.listened_at),
                 metadata=api_listen,
                 hidden=False
             ))
@@ -551,7 +553,7 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
                 user_name_0=event['user_name_0'],
                 user_name_1=event['user_name_1'],
                 relationship_type='follow',
-                created=event['created'].timestamp(),
+                created=event['created'],
             )
             events.append(APITimelineEvent(
                 event_type=UserTimelineEventType.FOLLOW,
@@ -579,7 +581,7 @@ def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
             id=event.id,
             event_type=UserTimelineEventType.NOTIFICATION,
             user_name=event.metadata.creator,
-            created=event.created.timestamp(),
+            created=event.created,
             metadata=APINotificationEvent(message=event.metadata.message),
             hidden=False
         ))
@@ -624,7 +626,7 @@ def get_recording_recommendation_events(
                 id=event.id,
                 event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
                 user_name=listen.user_name,
-                created=event.created.timestamp(),
+                created=event.created,
                 metadata=listen,
                 hidden=False,
             ))
@@ -680,7 +682,7 @@ def get_cb_review_events(
                 id=event.id,
                 event_type=UserTimelineEventType.CRITIQUEBRAINZ_REVIEW,
                 user_name=review_event.user_name,
-                created=event.created.timestamp(),
+                created=event.created,
                 metadata=review_event,
                 hidden=False
             ))
@@ -729,7 +731,7 @@ def get_recording_pin_events(
                 id=pin.row_id,
                 event_type=UserTimelineEventType.RECORDING_PIN,
                 user_name=pinEvent.user_name,
-                created=pin.created.timestamp(),
+                created=pin.created,
                 metadata=pinEvent,
                 hidden=False,
             ))

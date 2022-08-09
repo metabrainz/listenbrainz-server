@@ -74,7 +74,7 @@ class APIFollowEvent(BaseModel):
     user_name_0: constr(min_length=1)
     user_name_1: constr(min_length=1)
     relationship_type: constr(min_length=1)
-    created: NonNegativeInt
+    created: datetime
 
 
 class APIPinEvent(APIListen):
@@ -98,7 +98,7 @@ class APITimelineEvent(BaseModel):
     id: Optional[int]
     event_type: UserTimelineEventType
     user_name: constr(min_length=1)
-    created: NonNegativeInt
+    created: datetime
     metadata: APIEventMetadata
     hidden: bool
 
