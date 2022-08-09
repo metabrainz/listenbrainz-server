@@ -626,7 +626,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
             data = {self.user2['id']: (.123, 0.01)}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
                          (self.user['id'], json.dumps(data)))
-        conn.commit()
 
         response = self.client.get(
             url_for('api_v1.get_similar_users', user_name=self.user['musicbrainz_id']))

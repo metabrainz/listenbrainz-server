@@ -307,8 +307,10 @@ def user_feed(user_name: str):
     all_events = sorted(
         listen_events + follow_events + recording_recommendation_events + recording_pin_events
         + cb_review_events + notification_events,
-        key=lambda event: -event.created,
+        key=lambda e: e.created,
+        reverse=True
     )
+    print(all_events)
 
     # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
     for index, event in enumerate(all_events):
