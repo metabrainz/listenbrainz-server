@@ -682,7 +682,9 @@ export default class Listens extends React.Component<
     const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
     const releaseGroupMBID = getReleaseGroupMBID(listen);
     const canDelete =
-      isCurrentUser && Boolean(listenedAt) && Boolean(recordingMSID);
+      isCurrentUser &&
+      (Boolean(listenedAt) || listenedAt === 0) &&
+      Boolean(recordingMSID);
 
     const isListenReviewable =
       Boolean(recordingMBID) ||
