@@ -15,6 +15,8 @@ class TimescaleWriterTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(TimescaleWriterTestCase, self).setUp()
+        self.ts_conn.execute("DELETE FROM listen")
+        self.ts_conn.execute("DELETE FROM listen_user_metadata")
         self.ls = timescale_connection._ts
         self.rs = redis_connection._redis
 

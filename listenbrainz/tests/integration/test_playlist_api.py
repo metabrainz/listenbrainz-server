@@ -1,4 +1,3 @@
-from unittest import mock
 from uuid import UUID
 
 import dateutil.parser
