@@ -220,7 +220,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
         self.assert200(r)
-        print(r.json)
         notification_event_id = r.json["id"]
         # Adding recording recommendation to db
         new_user = db_user.get_or_create(self.conn, 202, "riksucks")
@@ -237,7 +236,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])},
         )
         self.assert200(r)
-        print(r.json)
         rec_event_id = r.json["id"]
         # Deleting notification
         r_del_not = self.client.post(
