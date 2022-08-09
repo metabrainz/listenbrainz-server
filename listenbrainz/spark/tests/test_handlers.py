@@ -15,7 +15,7 @@ from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData
                                                       UserMissingMusicBrainzDataJson)
 from listenbrainz.db import stats as db_stats
 from listenbrainz.db import user as db_user
-from listenbrainz.db.testing import ResetDatabaseTestCase
+from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
@@ -28,14 +28,19 @@ from listenbrainz.spark.handlers import (
 from listenbrainz.webserver import create_app
 
 
-class HandlersTestCase(ResetDatabaseTestCase):
+class HandlersTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(HandlersTestCase, self).setUp()
         self.app = create_app()
-        self.user1 = db_user.create(self.conn, 1, 'iliekcomputers')
-        self.user2 = db_user.create(self.conn, 2, 'lucifer')
+        self.user1 = db_user.get_or_create(self.conn, 1, 'iliekcomputers')
+        self.user2 = db_user.get_or_create(self.conn, 2, 'lucifer')
         self.maxDiff = None
+        self.trans.commit()
+        self.conn.execute("DELETE FROM statistics.user")
+
+    def tearDown(self):
+        pass
 
     def test_handle_user_entity(self):
         data = {
