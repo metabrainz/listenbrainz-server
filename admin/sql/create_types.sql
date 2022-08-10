@@ -6,7 +6,7 @@ CREATE TYPE user_relationship_enum AS ENUM('follow');
 
 CREATE TYPE recommendation_feedback_type_enum AS ENUM('like', 'love', 'dislike', 'hate', 'bad_recommendation');
 
-CREATE TYPE user_timeline_event_type_enum AS ENUM('recording_recommendation', 'notification', 'critiquebrainz_review');
+CREATE TYPE user_timeline_event_type_enum AS ENUM('recording_recommendation', 'notification', 'critiquebrainz_review', 'personal_recording_recommendation');
 
 CREATE TYPE hide_user_timeline_event_type_enum AS ENUM('recording_recommendation', 'recording_pin');
 

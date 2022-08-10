@@ -815,3 +815,190 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata_3["rating"], review_event_3["metadata"]["rating"])
         self.assertEqual(metadata_3["text"], review_event_3["metadata"]["text"])
         self.assertEqual(review_mbid_3, review_event_3["metadata"]["review_mbid"])
+
+    def test_personal_recommendation_writes_to_db(self):
+        # Let's create 2 users, who follow the request sender
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        metadata = {
+            "track_name": "Natkhat",
+            "artist_name": "Seedhe Maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert200(r)
+
+        events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            user_id=self.user['id'],
+            min_ts=0,
+            max_ts=int(time.time())+10,
+            count=50
+        )
+
+        self.assertEqual(1, len(events))
+
+        self.assertEqual(metadata, events[0].metadata.dict())
+
+    def test_personal_recommendation_checks_auth_token(self):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        metadata = {
+            "track_name": "Natkhat",
+            "artist_name": "Seedhe Maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+        )
+        self.assert401(r)
+
+
+    def test_personal_recommendation_checks_json_metadata(self):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        metadata = {}
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+
+    @mock.patch('listenbrainz.db.user_timeline_event.create_personal_recommendation_event', side_effect=DatabaseException)
+    def test_personal_recommendation_handles_db_exceptions(self, mock_create_event):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        metadata = {
+            "track_name": "Natkhat",
+            "artist_name": "Seedhe Maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert500(r)
+        data = json.loads(r.data)
+        self.assertEqual('Something went wrong, please try again.', data['error'])
+
+    def test_personal_recommendation_errors_when_different_token_used(self):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        metadata = {
+            "track_name": "Natkhat",
+            "artist_name": "Seedhe Maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(user_one['auth_token'])},
+        )
+        self.assert401(r)
+        data = json.loads(r.data)
+        self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
+
+    def test_personal_recommendation_not_for_non_followers(self):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        # Only riksucks is following
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+
+        metadata = {
+            "track_name": "Natkhat",
+            "artist_name": "Seedhe Maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+        data = json.loads(r.data)
+        self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['hrik2001']", data['error'])
+
+    def test_personal_recommendation_stays_after_unfollowing(self):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+
+        metadata = {
+            "track_name": "Natkhat",
+            "artist_name": "Seedhe Maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+
+        self.assert200(r)
+        db_user_relationship.delete(user_two['id'], self.user['id'], 'follow')
+
+        events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            user_id=self.user['id'],
+            min_ts=0,
+            max_ts=int(time.time())+10,
+            count=50
+        )
+
+        self.assertEqual(1, len(events))
+
+        self.assertEqual(metadata, events[0].metadata.dict())
