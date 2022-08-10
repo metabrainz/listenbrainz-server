@@ -99,4 +99,15 @@ ALTER TABLE mbid_mapping
         )
     );
 
+
+CREATE TABLE messybrainz.submissions (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    gid             UUID NOT NULL,
+    recording       TEXT NOT NULL,
+    artist_credit   TEXT NOT NULL,
+    release         TEXT,
+    hash            TEXT NOT NULL,
+    submitted       TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 COMMIT;
