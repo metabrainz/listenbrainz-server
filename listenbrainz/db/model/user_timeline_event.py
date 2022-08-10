@@ -21,7 +21,7 @@ from data.model.validators import check_valid_uuid
 
 from datetime import datetime
 from enum import Enum
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 from data.model.listen import APIListen
 from listenbrainz.db.model.review import CBReviewTimelineMetadata
@@ -34,6 +34,7 @@ class UserTimelineEventType(Enum):
     NOTIFICATION = 'notification'
     RECORDING_PIN = 'recording_pin'
     CRITIQUEBRAINZ_REVIEW = 'critiquebrainz_review'
+    PERSONAL_RECORDING_RECOMMENDATION = 'personal_recording_recommendation'
 
 
 class RecordingRecommendationMetadata(BaseModel):
@@ -50,12 +51,18 @@ class RecordingRecommendationMetadata(BaseModel):
     )(check_valid_uuid)
 
 
+class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata):
+    users: List[str]
+    blurb_content: Optional[str]
+
+
 class NotificationMetadata(BaseModel):
     creator: constr(min_length=1)
     message: constr(min_length=1)
 
 
-UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, RecordingRecommendationMetadata, NotificationMetadata]
+UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata,
+    RecordingRecommendationMetadata, NotificationMetadata]
 
 
 class UserTimelineEvent(BaseModel):
@@ -64,6 +71,7 @@ class UserTimelineEvent(BaseModel):
     metadata: UserTimelineEventMetadata
     event_type: UserTimelineEventType
     created: Optional[datetime]
+    user_name: Optional[str]
 
 
 class APINotificationEvent(BaseModel):
@@ -91,7 +99,17 @@ class APICBReviewEvent(BaseModel):
     review_mbid: str
 
 
-APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent]
+class APIPersonalRecommendationEvent(BaseModel):
+    artist_name: constr(min_length=1)
+    track_name: constr(min_length=1)
+    release_name: Optional[str]
+    recording_mbid: Optional[str]
+    recording_msid: constr(min_length=1)
+    users: List[str]
+    blurb_content: Optional[str]
+
+
+APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent, APIPersonalRecommendationEvent]
 
 
 class APITimelineEvent(BaseModel):
