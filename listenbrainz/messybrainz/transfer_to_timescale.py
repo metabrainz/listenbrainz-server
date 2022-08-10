@@ -9,11 +9,9 @@ Steps to move MsB to TS database.
     5. Switch MsB submission to new tables.
     6. Profit!
 """
-import json
 
 from flask import current_app
 from psycopg2.extras import execute_values
-from xxhash import xxh3_128_hexdigest
 from sqlalchemy import text
 
 from listenbrainz import messybrainz
@@ -39,23 +37,10 @@ def retrieve_data(last_row_id):
         results = msb_conn.execute(text(query), last_row_id=last_row_id)
         return results.fetchall()
 
-
-def calculate_new_hash(recording, artist, release):
-    data = {
-        "artist": artist,
-        "recording": recording,
-        "release": release
-    }
-    # convert the data dict to a json string, sort keys and
-    # lowercase to ensure consistent hash for same data and seed
-    serialized = json.dumps(data, sort_keys=True, separators=(',', ':')).lower()
-    return xxh3_128_hexdigest(serialized.encode())
-
-
 def insert_data(values):
     raw_conn = timescale.engine.raw_connection()
     query = """
-        INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, hash, submitted)
+        INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, submitted)
              VALUES %s
         ON CONFLICT (gid, recording, artist_credit, release)
          DO NOTHING
@@ -94,19 +79,16 @@ def run():
 
     while True:
         results = retrieve_data(last_row_id)
-        processed = []
-
         if not results:
             break
 
+        processed = []
         for row in results:
-            new_hash = calculate_new_hash(row["recording"], row["artist"], row["release"])
             processed.append((
                 row["recording_msid"],
                 row["recording"],
                 row["artist"],
                 row["release"],
-                new_hash,
                 row["submitted"]
             ))
             last_row_id = row["id"]

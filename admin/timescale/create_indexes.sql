@@ -36,6 +36,6 @@ CREATE INDEX last_updated_ndx_mbid_mapping ON mbid_mapping (last_updated);
 
 -- messybrainz
 
-CREATE UNIQUE INDEX messybrainz_transfer_unique_idx ON messybrainz.submissions (gid, recording, artist, release);
+CREATE UNIQUE INDEX messybrainz_transfer_unique_idx ON messybrainz.submissions (lower(recording), lower(artist_credit), lower(release));
 
 COMMIT;
