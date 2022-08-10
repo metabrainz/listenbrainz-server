@@ -37,6 +37,7 @@ def retrieve_data(last_row_id):
         results = msb_conn.execute(text(query), last_row_id=last_row_id)
         return results.fetchall()
 
+
 def insert_data(values):
     raw_conn = timescale.engine.raw_connection()
     query = """
@@ -53,18 +54,20 @@ def insert_data(values):
 def retrieve_last_transferred_row_id():
     with timescale.engine.connect() as ts_conn:
         result = ts_conn.execute(text("SELECT max(submitted) AS latest FROM messybrainz.submissions"))
-        latest = result.fetchone()["latest"]
+        row = result.fetchone()
 
-    current_app.logger.info("Latest submission row found: %s", latest.isoformat())
-
-    if not latest:
+    if not row:
         return 0
+    latest = row["latest"]
+    current_app.logger.info("Latest submission row found: %s", latest.isoformat())
 
     with messybrainz.engine.connect() as msb_conn:
         result = msb_conn.execute(text("SELECT max(id) AS last_row_id FROM recording WHERE submitted < :until"), until=latest)
-        row_id = result["last_row_id"] or 0
-        current_app.logger.info("Latest transferred row id: %d", row_id)
-        return row_id
+        row = result.fetchone()
+
+    row_id = row["last_row_id"] if row else 0
+    current_app.logger.info("Latest transferred row id: %d", row_id)
+    return row_id
 
 
 def run():
