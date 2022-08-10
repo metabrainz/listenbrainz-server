@@ -517,7 +517,7 @@ def create_personal_recommendation_event(user_name):
             "recording_msid": "<The MessyBrainz ID of the recording, required>",
             "release_name": "<The name of the release, optional>",
             "recording_mbid": "<The MusicBrainz ID of the recording, optional>",
-            "followers": [<Row IDs (integer) of the follower, required>]
+            "users": [<usernames of the persons you want to recommend to, required>]
             "blurb_content": "<String containing personalized recommendation>"
         }
     }
