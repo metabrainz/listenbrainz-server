@@ -106,7 +106,6 @@ CREATE TABLE messybrainz.submissions (
     recording       TEXT NOT NULL,
     artist_credit   TEXT NOT NULL,
     release         TEXT,
-    hash            TEXT NOT NULL,
     submitted       TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
