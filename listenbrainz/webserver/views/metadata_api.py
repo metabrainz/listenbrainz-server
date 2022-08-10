@@ -1,9 +1,8 @@
 from brainzutils.ratelimit import ratelimit
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 
 from listenbrainz.db.metadata import get_metadata_for_recording
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
-from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
 from listenbrainz.mbid_mapping_writer.mbid_mapper_metadata_api import MBIDMapperMetadataAPI
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest
@@ -56,9 +55,10 @@ def metadata_recording():
     a recording and the artist. Using the inc parameter, you can control which portions of metadata
     to fetch.
 
-    The data returned by this endpoint can be seen here: (TODO: Changes this to a fancy link)
+    The data returned by this endpoint can be seen here:
 
-       listenbrainz-server/listenbrainz/testdata/mb_metadata_cache_example.json
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_metadata_cache_example.json
+       :language: json
 
     :param recording_mbids: A comma separated list of recording_mbids
     :type recording_mbids: ``str``
@@ -88,18 +88,12 @@ def metadata_recording():
     return jsonify(result)
 
 
-def parse_artist_mbids(artist_mbids):
-    """ Convert postgres array representation to python list """
-    # remove starting and ending braces then split on , to separate each element
-    return artist_mbids[1:-1].split(",")
-
-
 def process_results(match, metadata, incs):
     recording_mbid = match["recording_mbid"]
     result = {
         "recording_mbid": recording_mbid,
         "release_mbid": match["release_mbid"],
-        "artist_mbids": parse_artist_mbids(match["artist_mbids"]),
+        "artist_mbids": match["artist_mbids"],
         "recording_name": match["recording_name"],
         "release_name": match["release_name"],
         "artist_credit_name": match["artist_credit_name"]

@@ -99,7 +99,7 @@ A complete submit listen JSON document may look like:
                 "db92a151-1ac2-438b-bc43-b82e149ddd50"
               ],
               "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
-              "tags": [ "you", "just", "got", "rick rolled!"]
+              "tags": [ "you", "just", "got", "rick rolled!"],
               "duration_ms": 222000
             },
             "artist_name": "Rick Astley",
