@@ -50,7 +50,7 @@ class ArtistCreditRecordingLookupQuery(Query):
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute("""SELECT artist_credit_name,
                                        artist_credit_id,
-                                       artist_mbids,
+                                       artist_mbids::TEXT[],
                                        release_name,
                                        release_mbid,
                                        recording_name,

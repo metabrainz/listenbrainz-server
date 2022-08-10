@@ -3,13 +3,13 @@ Miscellaneous
 
 Various ListenBrainz API endpoints that are not documented elsewhere.
 
-Color API
-^^^^^^^^^
+Explore API
+^^^^^^^^^^^
 
-These API endpoints allow fetching releases with recordings and cover art details for a given color.
+These API endpoints allow fetching fresh releases and cover art details for a given color.
 
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
-   :blueprints: color_api_v1
+   :blueprints: explore_api_v1
    :include-empty-docstring:
    :undoc-static:
 

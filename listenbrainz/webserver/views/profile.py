@@ -122,7 +122,11 @@ def info():
 def import_data():
     """ Displays the import page to user, giving various options """
     user = db_user.get(current_user.id, fetch_email=True)
-    user_has_email = user["email"] is not None
+    # if the flag is turned off (local development) then do not perform email check
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
+        user_has_email = user["email"] is not None
+    else:
+        user_has_email = True
 
     # Return error if LASTFM_API_KEY is not given in config.py
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
