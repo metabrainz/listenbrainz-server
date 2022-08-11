@@ -17,7 +17,6 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.domain.youtube import YoutubeService, YOUTUBE_SCOPES
 from listenbrainz.webserver import flash
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
@@ -314,9 +313,7 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
     """
     try:
         service = ExternalServiceType[name.upper()]
-        if service == ExternalServiceType.YOUTUBE:
-            return YoutubeService()
-        elif service == ExternalServiceType.SPOTIFY:
+        if service == ExternalServiceType.SPOTIFY:
             return SpotifyService()
         elif service == ExternalServiceType.CRITIQUEBRAINZ:
             return CritiqueBrainzService()
@@ -341,10 +338,6 @@ def music_services_details():
     else:
         current_spotify_permissions = "disable"
 
-    youtube_service = YoutubeService()
-    youtube_user = youtube_service.get_user(current_user.id)
-    current_youtube_permissions = "listen" if youtube_user else "disable"
-
     critiquebrainz_service = CritiqueBrainzService()
     critiquebrainz_user = critiquebrainz_service.get_user(current_user.id)
     current_critiquebrainz_permissions = "review" if critiquebrainz_user else "disable"
@@ -353,8 +346,6 @@ def music_services_details():
         'user/music_services.html',
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
-        youtube_user=youtube_user,
-        current_youtube_permissions=current_youtube_permissions,
         critiquebrainz_user=critiquebrainz_user,
         current_critiquebrainz_permissions=current_critiquebrainz_permissions
     )
@@ -420,10 +411,6 @@ def music_services_disconnect(service_name: str):
                 permissions = SPOTIFY_LISTEN_PERMISSIONS
             if permissions:
                 return redirect(service.get_authorize_url(permissions))
-        elif service_name == 'youtube':
-            action = request.form.get('youtube')
-            if action:
-                return redirect(service.get_authorize_url(YOUTUBE_SCOPES))
         elif service_name == 'critiquebrainz':
             action = request.form.get('critiquebrainz')
             if action:
