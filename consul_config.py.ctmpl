@@ -223,12 +223,8 @@ CRITIQUEBRAINZ_CLIENT_ID = '''{{template "KEY" "critiquebrainz/client_id"}}'''
 CRITIQUEBRAINZ_CLIENT_SECRET = '''{{template "KEY" "critiquebrainz/client_secret"}}'''
 CRITIQUEBRAINZ_REDIRECT_URI = '''{{template "KEY" "critiquebrainz/redirect_uri"}}'''
 
-
 # YOUTUBE
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
-YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
-YOUTUBE_CONFIG = {{template "KEY_JSON" "youtube/credentials"}}
-
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
