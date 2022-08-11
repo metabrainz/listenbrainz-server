@@ -1,13 +1,28 @@
-import sqlalchemy.exc
+import time
+import uuid
 
+import psycopg2
 import sqlalchemy
+import sqlalchemy.exc
+from sqlalchemy import text, create_engine
+from sqlalchemy.pool import NullPool
 
 from listenbrainz.db import timescale
 from listenbrainz.messybrainz import exceptions
 
-import uuid
+engine = None
 
-from sqlalchemy import text
+
+def init_db_connection(connect_str):
+    global engine
+    while True:
+        try:
+            engine = create_engine(connect_str, poolclass=NullPool)
+            break
+        except psycopg2.OperationalError as e:
+            print("Couldn't establish connection to db: {}".format(str(e)))
+            print("Sleeping for 2 seconds and trying again...")
+            time.sleep(2)
 
 
 def submit_listens_and_sing_me_a_sweet_song(recordings):
