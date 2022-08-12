@@ -25,10 +25,10 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 
 WORKDIR /usr/local
 
-ENV JAVA_VERSION 11.0.11
-ENV JAVA_BUILD_VERSION 9
-RUN wget https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-${JAVA_VERSION}%2B${JAVA_BUILD_VERSION}/OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
-    && tar xzf OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
+ENV JAVA_VERSION 17.0.4
+ENV JAVA_BUILD_VERSION 8
+RUN wget https://github.com/adoptium/temurin17-binaries/releases/download/jdk-${JAVA_VERSION}%2B${JAVA_BUILD_VERSION}/OpenJDK17U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
+    && tar xzf OpenJDK17U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
     && mv jdk-${JAVA_VERSION}+${JAVA_BUILD_VERSION} /usr/local/jdk \
     && rm OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz
 ENV JAVA_HOME /usr/local/jdk
@@ -36,7 +36,7 @@ ENV PATH $JAVA_HOME/bin:$PATH
 
 COPY apache-download.sh /apache-download.sh
 
-ENV HADOOP_VERSION 3.2.2
+ENV HADOOP_VERSION 3.3.4
 RUN /apache-download.sh hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz \
     && tar xzf hadoop-${HADOOP_VERSION}.tar.gz \
     && mv hadoop-${HADOOP_VERSION} /usr/local/hadoop \
@@ -46,11 +46,11 @@ ENV PATH $HADOOP_HOME/bin:$PATH
 
 RUN mkdir /hdfs
 
-ENV SPARK_VERSION 3.1.1
+ENV SPARK_VERSION 3.3.0
 RUN /apache-download.sh spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
     && tar xzf spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
     && mv spark-${SPARK_VERSION}-bin-without-hadoop /usr/local/spark \
     && rm spark-${SPARK_VERSION}-bin-without-hadoop.tgz
 ENV SPARK_HOME /usr/local/spark
 ENV PATH $SPARK_HOME/bin:$PATH
-ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.9-src.zip:$SPARK_HOME/python:$PYTHONPATH
+ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.9.5-src.zip:$SPARK_HOME/python:$PYTHONPATH
