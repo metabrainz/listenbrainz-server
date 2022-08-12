@@ -44,7 +44,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         self.metric_submission_time = monotonic() + METRIC_UPDATE_INTERVAL
 
     def get_consumers(self, _, channel):
-        return [Consumer(channel, queues=[self.incoming_queue], on_message=self.callback)]
+        return [Consumer(channel, queues=[self.incoming_queue], on_message=lambda body, msg: self.callback(body, msg))]
 
     def callback(self, body, message: Message):
 
