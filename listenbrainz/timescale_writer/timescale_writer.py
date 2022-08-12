@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-import sys
 import time
 from datetime import datetime
 from time import monotonic
 
-import pika
 import psycopg2
 import ujson
-from brainzutils import metrics, cache
+from brainzutils import metrics
 from flask import current_app
+from kombu import Exchange, Queue, Consumer, Message, Connection
+from kombu.entity import PERSISTENT_DELIVERY_MODE
+from kombu.mixins import ConsumerProducerMixin
 from more_itertools import chunked
 
-from listenbrainz import messybrainz, utils
+from listenbrainz import messybrainz
 from listenbrainz.listen import Listen
+from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app, redis_connection, timescale_connection
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
@@ -20,55 +22,27 @@ METRIC_UPDATE_INTERVAL = 60  # seconds
 LISTEN_INSERT_ERROR_SENTINEL = -1  #
 
 
-class TimescaleWriterSubscriber:
+class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
     def __init__(self):
-        self.redis = None
         self.connection = None
 
-        self.REPORT_FREQUENCY = 5000
-        self.DUMP_JSON_WITH_ERRORS = False
-        self.ERROR_RETRY_DELAY = 3  # number of seconds to wait until retrying an operation
+        self.incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=True)
+        self.incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=self.incoming_exchange, durable=True)
+        self.unique_exchange = Exchange(current_app.config["UNIQUE_EXCHANGE"], "fanout", durable=True)
+        self.unique_queue = Queue(current_app.config["UNIQUE_QUEUE"], exchange=self.unique_exchange, durable=True)
 
-        self.ls = None
-        self.incoming_ch = None
-        self.unique_ch = None
-        self.redis_listenstore = None
+        self.ERROR_RETRY_DELAY = 3  # number of seconds to wait until retrying an operation
 
         # these are counts since the last metric update was submitted
         self.incoming_listens = 0
         self.unique_listens = 0
         self.metric_submission_time = monotonic() + METRIC_UPDATE_INTERVAL
 
-    def connect_to_rabbitmq(self):
-        connection_config = {
-            'username': current_app.config['RABBITMQ_USERNAME'],
-            'password': current_app.config['RABBITMQ_PASSWORD'],
-            'host': current_app.config['RABBITMQ_HOST'],
-            'port': current_app.config['RABBITMQ_PORT'],
-            'virtual_host': current_app.config['RABBITMQ_VHOST'],
-        }
-        self.connection = utils.connect_to_rabbitmq(**connection_config,
-                                                    error_logger=current_app.logger.error,
-                                                    error_retry_delay=self.ERROR_RETRY_DELAY)
+    def get_consumers(self, _, channel):
+        return [Consumer(channel, queues=[self.incoming_queue], on_message=self.callback)]
 
-    def _verify_hosts_in_config(self):
-        if "REDIS_HOST" not in current_app.config:
-            current_app.logger.critical(f"Redis service not defined. Sleeping {self.ERROR_RETRY_DELAY} seconds and exiting.")
-            time.sleep(self.ERROR_RETRY_DELAY)
-            sys.exit(-1)
-
-        if "RABBITMQ_HOST" not in current_app.config:
-            current_app.logger.critical(f"RabbitMQ service not defined. Sleeping {self.ERROR_RETRY_DELAY} seconds and exiting.")
-            time.sleep(self.ERROR_RETRY_DELAY)
-            sys.exit(-1)
-
-        if "SQLALCHEMY_TIMESCALE_URI" not in current_app.config:
-            current_app.logger.critical(f"Timescale service not defined. Sleeping {self.ERROR_RETRY_DELAY} seconds and exiting.")
-            time.sleep(self.ERROR_RETRY_DELAY)
-            sys.exit(-1)
-
-    def callback(self, ch, method, properties, body):
+    def callback(self, body, message: Message):
 
         listens = ujson.loads(body)
 
@@ -89,12 +63,7 @@ class TimescaleWriterSubscriber:
         if ret == LISTEN_INSERT_ERROR_SENTINEL:
             return ret
 
-        while True:
-            try:
-                self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
-                break
-            except pika.exceptions.ConnectionClosed:
-                self.connect_to_rabbitmq()
+        message.ack()
 
         return ret
 
@@ -159,7 +128,6 @@ class TimescaleWriterSubscriber:
 
         Args:
             data: the data to be inserted into the ListenStore
-            retries: the number of retries to make before deciding that we've failed
 
         Returns: number of listens successfully sent or LISTEN_INSERT_ERROR_SENTINEL
         if there was an error in inserting listens
@@ -170,7 +138,7 @@ class TimescaleWriterSubscriber:
 
         self.incoming_listens += len(data)
         try:
-            rows_inserted = self.ls.insert(data)
+            rows_inserted = timescale_connection._ts.insert(data)
         except psycopg2.OperationalError as err:
             current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(err), exc_info=True)
             time.sleep(self.ERROR_RETRY_DELAY)
@@ -180,7 +148,7 @@ class TimescaleWriterSubscriber:
             return len(data)
 
         try:
-            self.redis_listenstore.increment_listen_count_for_day(day=datetime.utcnow(), count=len(rows_inserted))
+            redis_connection._redis.increment_listen_count_for_day(day=datetime.utcnow(), count=len(rows_inserted))
         except Exception:
             # Not critical, so if this errors out, just log it to Sentry and move forward
             current_app.logger.error("Could not update listen count per day in redis", exc_info=True)
@@ -198,20 +166,15 @@ class TimescaleWriterSubscriber:
         if not unique:
             return len(data)
 
-        self.redis_listenstore.update_recent_listens(unique)
+        redis_connection._redis.update_recent_listens(unique)
         self.unique_listens += len(unique)
 
-        while True:
-            try:
-                self.unique_ch.basic_publish(
-                    exchange=current_app.config['UNIQUE_EXCHANGE'],
-                    routing_key='',
-                    body=ujson.dumps([listen.to_json() for listen in unique]),
-                    properties=pika.BasicProperties(delivery_mode=2,),
-                )
-                break
-            except pika.exceptions.ConnectionClosed:
-                self.connect_to_rabbitmq()
+        self.producer.publish(
+            exchange=self.unique_exchange,
+            routing_key="",
+            body=ujson.dumps([listen.to_json() for listen in unique]),
+            delivery_mode=PERSISTENT_DELIVERY_MODE,
+        )
 
         if monotonic() > self.metric_submission_time:
             self.metric_submission_time += METRIC_UPDATE_INTERVAL
@@ -221,60 +184,23 @@ class TimescaleWriterSubscriber:
 
         return len(data)
 
+    def init_rabbitmq_connection(self):
+        self.connection = Connection(
+            hostname=current_app.config["RABBITMQ_HOST"],
+            userid=current_app.config["RABBITMQ_USERNAME"],
+            port=current_app.config["RABBITMQ_PORT"],
+            password=current_app.config["RABBITMQ_PASSWORD"],
+            virtual_host=current_app.config["RABBITMQ_VHOST"],
+            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
+        )
+
     def start(self):
-        app = create_app()
-        with app.app_context():
-            current_app.logger.info("timescale-writer init")
-            self._verify_hosts_in_config()
-
-            try:
-                while True:
-                    try:
-                        self.ls = timescale_connection._ts
-                        break
-                    except Exception as err:
-                        current_app.logger.error("Cannot connect to timescale: %s. Retrying in 2 seconds and trying again." %
-                                                 str(err), exc_info=True)
-                        time.sleep(self.ERROR_RETRY_DELAY)
-
-                while True:
-                    try:
-                        cache._r.ping()
-                        self.redis_listenstore = redis_connection._redis
-                        break
-                    except Exception as err:
-                        current_app.logger.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." %
-                                                 str(err), exc_info=True)
-                        time.sleep(self.ERROR_RETRY_DELAY)
-
-                while True:
-                    self.connect_to_rabbitmq()
-                    self.incoming_ch = self.connection.channel()
-                    self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
-                    self.incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
-                    self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'],
-                                                queue=current_app.config['INCOMING_QUEUE'])
-                    self.incoming_ch.basic_consume(
-                        queue=current_app.config['INCOMING_QUEUE'],
-                        on_message_callback=lambda ch, method, properties, body: self.callback(ch, method, properties, body)
-                    )
-
-                    self.unique_ch = self.connection.channel()
-                    self.unique_ch.exchange_declare(exchange=current_app.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
-
-                    try:
-                        self.incoming_ch.start_consuming()
-                    except pika.exceptions.ConnectionClosed:
-                        current_app.logger.warn("Connection to rabbitmq closed. Re-opening.", exc_info=True)
-                        self.connection = None
-                        continue
-
-                    self.connection.close()
-
-            except Exception:
-                current_app.logger.error("failed to start timescale loop:", exc_info=True)
+        current_app.logger.info("timescale-writer init")
+        self.run()
 
 
 if __name__ == "__main__":
-    rc = TimescaleWriterSubscriber()
-    rc.start()
+    app = create_app()
+    with app.app_context():
+        rc = TimescaleWriterSubscriber()
+        rc.start()
