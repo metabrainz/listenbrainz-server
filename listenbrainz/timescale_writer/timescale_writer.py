@@ -9,7 +9,7 @@ from brainzutils import metrics
 from flask import current_app
 from kombu import Exchange, Queue, Consumer, Message, Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE
-from kombu.log import setup_logging
+from kombu.utils.debug import setup_logging
 from kombu.mixins import ConsumerProducerMixin
 from more_itertools import chunked
 
@@ -202,7 +202,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
 
 if __name__ == "__main__":
-    setup_logging('DEBUG')
+    setup_logging()
     app = create_app()
     with app.app_context():
         rc = TimescaleWriterSubscriber()
