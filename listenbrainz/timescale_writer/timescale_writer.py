@@ -31,9 +31,9 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
     def __init__(self):
         self.connection = None
 
-        self.incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=True)
+        self.incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
         self.incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=self.incoming_exchange, durable=True)
-        self.unique_exchange = Exchange(current_app.config["UNIQUE_EXCHANGE"], "fanout", durable=True)
+        self.unique_exchange = Exchange(current_app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
         self.unique_queue = Queue(current_app.config["UNIQUE_QUEUE"], exchange=self.unique_exchange, durable=True)
 
         self.ERROR_RETRY_DELAY = 3  # number of seconds to wait until retrying an operation
