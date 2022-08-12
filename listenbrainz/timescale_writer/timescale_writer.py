@@ -44,11 +44,12 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         self.metric_submission_time = monotonic() + METRIC_UPDATE_INTERVAL
 
     def get_consumers(self, _, channel):
-        return [Consumer(channel, queues=[self.incoming_queue], on_message=lambda body, msg: self.callback(body, msg))]
+        return [Consumer(channel, queues=[self.incoming_queue], on_message=self.callback)]
 
-    def callback(self, body, message: Message):
+    def callback(self, message: Message):
+        print(message)
 
-        listens = ujson.loads(body)
+        listens = ujson.loads(message.body)
 
         msb_listens = []
         for chunk in chunked(listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
