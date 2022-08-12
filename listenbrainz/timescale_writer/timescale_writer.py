@@ -200,9 +200,17 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         )
 
     def start(self):
-        current_app.logger.info("timescale-writer init")
-        self.init_rabbitmq_connection()
-        self.run()
+        while True:
+            try:
+                current_app.logger.info("Timescale Writer started.")
+                self.init_rabbitmq_connection()
+                self.run()
+            except KeyboardInterrupt:
+                current_app.logger.error("Keyboard interrupt!")
+                break
+            except Exception:
+                current_app.logger.error("Error in Timescale Writer:", exc_info=True)
+                time.sleep(3)
 
 
 if __name__ == "__main__":
