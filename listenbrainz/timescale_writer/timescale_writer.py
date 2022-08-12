@@ -196,6 +196,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
     def start(self):
         current_app.logger.info("timescale-writer init")
+        self.init_rabbitmq_connection()
         self.run()
 
 
