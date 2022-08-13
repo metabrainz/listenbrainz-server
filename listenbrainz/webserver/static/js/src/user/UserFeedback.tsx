@@ -511,19 +511,17 @@ export default class UserFeedback extends React.Component<
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
                   {listensFromFeedback.map((listen) => {
-                    const additionalMenuItems = (
-                      <>
-                        <ListenControl
-                          title="Pin this recording"
-                          text="Pin this recording"
-                          icon={faThumbtack}
-                          // eslint-disable-next-line react/jsx-no-bind
-                          action={this.updateRecordingToPin.bind(this, listen)}
-                          dataToggle="modal"
-                          dataTarget="#PinRecordingModal"
-                        />
-                      </>
-                    );
+                    const additionalMenuItems = [
+                      <ListenControl
+                        title="Pin this recording"
+                        text="Pin this recording"
+                        icon={faThumbtack}
+                        // eslint-disable-next-line react/jsx-no-bind
+                        action={this.updateRecordingToPin.bind(this, listen)}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
+                      />,
+                    ];
                     return (
                       <ListenCard
                         showUsername={false}
