@@ -142,9 +142,7 @@ def _update_items_from_map(models: Dict[str, List[ModelT]], metadatas: Dict, rem
                     # in messybrainz either. note that we always submit the msid from website if available so this
                     # case shouldn't occur unless some now playing case is mishandled or someone else uses the api
                     # to submit say a pinned recording with a mbid for which LB has never seen a listen.
-                    # this is difficult to handle and rare, not worth to handle this until it affects someone IMO.
-                    current_app.logger.critical("Couldn't find data for item in mapping and item doesn't have"
-                                                f" msid: {item}")
+                    current_app.logger.info("Couldn't find data for item in mapping and item doesn't have msid: %s", item)
                 continue
 
             metadata = metadatas[_id]
