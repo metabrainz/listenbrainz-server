@@ -3,15 +3,17 @@ import sys
 from datetime import date
 
 import click
-import pika
 import ujson
-from flask import current_app
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
 from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
+
+import eventlet
+eventlet.monkey_patch()
+
 
 QUERIES_JSON_PATH = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), 'request_queries.json')
