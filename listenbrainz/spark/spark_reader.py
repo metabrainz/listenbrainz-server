@@ -30,6 +30,10 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
+import eventlet
+eventlet.monkey_patch()
+
+
 response_handler_map = {
     'user_entity': handle_user_entity,
     'user_listening_activity': handle_user_listening_activity,
