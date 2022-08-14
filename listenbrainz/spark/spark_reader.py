@@ -71,7 +71,7 @@ class SparkReader(ConsumerMixin):
     def __init__(self, app):
         self.app = app
         self.connection = None
-        self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=True)
+        self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=False)
         self.spark_result_queue = Queue(app.config["SPARK_RESULT_QUEUE"], exchange=self.spark_result_exchange,
                                         durable=True)
 
@@ -132,7 +132,7 @@ class SparkReader(ConsumerMixin):
                     self.app.logger.error("Keyboard interrupt!")
                     break
                 except Exception:
-                    self.app.logger.error("Error in PlayerWriter:", exc_info=True)
+                    self.app.logger.error("Error in SparkReader:", exc_info=True)
                     time.sleep(3)
 
 
