@@ -79,7 +79,7 @@ def send_request_to_spark_cluster(query, **params):
             transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
         )
         producer = connection.Producer()
-        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=True)
+        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
         producer.publish(
             message,
             routing_key="",
