@@ -33,6 +33,8 @@ from listenbrainz.webserver import create_app
 import eventlet
 eventlet.monkey_patch()
 
+from kombu.utils.debug import setup_logging
+setup_logging()
 
 response_handler_map = {
     'user_entity': handle_user_entity,
@@ -72,22 +74,6 @@ class SparkReader(ConsumerMixin):
         self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=True)
         self.spark_result_queue = Queue(app.config["SPARK_RESULT_QUEUE"], exchange=self.spark_result_exchange,
                                         durable=True)
-        
-    def get_consumers(self, _, channel):
-        return [Consumer(channel, queues=[self.spark_result_queue], on_message=lambda msg: self.callback(msg))]
-
-    def get_response_handler(self, response_type):
-        return response_handler_map[response_type]
-
-    def init_rabbitmq_connection(self):
-        self.connection = Connection(
-            hostname=self.app.config["RABBITMQ_HOST"],
-            userid=self.app.config["RABBITMQ_USERNAME"],
-            port=self.app.config["RABBITMQ_PORT"],
-            password=self.app.config["RABBITMQ_PASSWORD"],
-            virtual_host=self.app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
 
     def process_response(self, response):
         try:
@@ -98,7 +84,7 @@ class SparkReader(ConsumerMixin):
             return
         self.app.logger.info("Received message for %s", response_type)
         try:
-            response_handler = self.get_response_handler(response_type)
+            response_handler = response_handler_map[response_type]
         except Exception:
             self.app.logger.error("Unknown response type: %s, doing nothing.", response_type, exc_info=True)
             return
@@ -119,6 +105,19 @@ class SparkReader(ConsumerMixin):
         self.process_response(response)
         message.ack()
         self.app.logger.debug("Done!")
+
+    def get_consumers(self, _, channel):
+        return [Consumer(channel, queues=[self.spark_result_queue], on_message=lambda msg: self.callback(msg))]
+
+    def init_rabbitmq_connection(self):
+        self.connection = Connection(
+            hostname=self.app.config["RABBITMQ_HOST"],
+            userid=self.app.config["RABBITMQ_USERNAME"],
+            port=self.app.config["RABBITMQ_PORT"],
+            password=self.app.config["RABBITMQ_PASSWORD"],
+            virtual_host=self.app.config["RABBITMQ_VHOST"],
+            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
+        )
 
     def start(self):
         """ initiates RabbitMQ connection and starts consuming from the queue
