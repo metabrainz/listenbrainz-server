@@ -139,7 +139,7 @@ class RequestConsumer(ConsumerProducerMixin):
 
 def main(app_name):
     rc = RequestConsumer()
-    rc.run(app_name)
+    rc.start(app_name)
 
 
 if __name__ == '__main__':
