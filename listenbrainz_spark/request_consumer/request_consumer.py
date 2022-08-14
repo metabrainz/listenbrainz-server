@@ -16,25 +16,34 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import pika
 import json
 import time
 import logging
 
+from kombu import Exchange, Queue, Message, Connection, Consumer
+from kombu.entity import PERSISTENT_DELIVERY_MODE
+from kombu.mixins import ConsumerProducerMixin
+
 import listenbrainz_spark
 import listenbrainz_spark.query_map
+from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz_spark import config, hdfs_connection
-from listenbrainz_spark.utils import init_rabbitmq
 
-from py4j.protocol import Py4JJavaError
 
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
-rc = None
 logger = logging.getLogger(__name__)
 
 
-class RequestConsumer:
+class RequestConsumer(ConsumerProducerMixin):
+
+    def __init__(self):
+        self.connection = None
+
+        self.spark_result_exchange = Exchange(config.SPARK_RESULT_EXCHANGE, "fanout", durable=False)
+        self.spark_result_queue = Queue(config.SPARK_REQUEST_QUEUE, exchange=self.spark_result_exchange, durable=True)
+        self.spark_request_exchange = Exchange(config.SPARK_REQUEST_EXCHANGE, "fanout", durable=False)
+        self.spark_request_queue = Queue(config.SPARK_REQUEST_QUEUE, exchange=self.spark_request_exchange, durable=True)
 
     def get_result(self, request):
         try:
@@ -78,110 +87,58 @@ class RequestConsumer:
             num_of_messages += 1
             body = json.dumps(message)
             avg_size_of_message += len(body)
-            while message is not None:
-                try:
-                    self.result_channel.basic_publish(
-                        exchange=config.SPARK_RESULT_EXCHANGE,
-                        routing_key='',
-                        body=body,
-                        properties=pika.BasicProperties(delivery_mode=2,),
-                    )
-                    break
-                except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-                    logger.error('RabbitMQ Connection error while publishing results: %s', str(e), exc_info=True)
-                    time.sleep(1)
-                    self.rabbitmq.close()
-                    self.connect_to_rabbitmq()
-                    self.init_rabbitmq_channels()
+            self.producer.publish(
+                exchange=self.spark_result_exchange,
+                routing_key='',
+                body=body,
+                properties=PERSISTENT_DELIVERY_MODE,
+            )
 
-        try:
+        if num_of_messages:
             avg_size_of_message //= num_of_messages
-        except ZeroDivisionError:
-            avg_size_of_message = 0
-            logger.warning("No messages calculated", exc_info=True)
+            logger.info(f"Number of messages sent: {num_of_messages}")
+            logger.info(f"Average size of message: {avg_size_of_message} bytes")
+        else:
+            logger.info("No messages calculated")
 
-        logger.info("Number of messages sent: {}".format(num_of_messages))
-        logger.info("Average size of message: {} bytes".format(avg_size_of_message))
-
-    def callback(self, channel, method, properties, body):
-        request = json.loads(body.decode('utf-8'))
+    def callback(self, message: Message):
+        request = json.loads(message.body)
         logger.info('Received a request!')
-        while True:
-            try:
-                self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
-                break
-            except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-                if str(e).find("is larger than configured max size") >= 0:
-                    logger.error("Spark attempted to send a message larger than the allowed maximum message size.")
-                else:
-                    logger.error('RabbitMQ Connection error when acknowledging request: %s', str(e), exc_info=True)
-                time.sleep(1)
-                self.rabbitmq.close()
-                self.connect_to_rabbitmq()
-                self.init_rabbitmq_channels()
-
         messages = self.get_result(request)
         if messages:
             self.push_to_result_queue(messages)
-
         logger.info('Request done!')
 
-    def connect_to_rabbitmq(self):
-        self.rabbitmq = init_rabbitmq(
-            username=config.RABBITMQ_USERNAME,
-            password=config.RABBITMQ_PASSWORD,
-            host=config.RABBITMQ_HOST,
+    def get_consumers(self, _, channel):
+        return [
+            Consumer(channel, queues=[self.spark_request_queue], no_ack=True, on_message=lambda x: self.callback(x))
+        ]
+
+    def init_rabbitmq_connection(self):
+        self.connection = Connection(
+            hostname=config.RABBITMQ_HOST,
+            userid=config.RABBITMQ_USERNAME,
             port=config.RABBITMQ_PORT,
-            vhost=config.RABBITMQ_VHOST,
-            log=logger.critical,
-            heartbeat=RABBITMQ_HEARTBEAT_TIME,
+            password=config.RABBITMQ_PASSWORD,
+            virtual_host=config.RABBITMQ_VHOST,
+            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
         )
 
-    def init_rabbitmq_channels(self):
-        self.request_channel = self.rabbitmq.channel()
-        self.request_channel.exchange_declare(exchange=config.SPARK_REQUEST_EXCHANGE, exchange_type='fanout')
-        self.request_channel.queue_declare(config.SPARK_REQUEST_QUEUE, durable=True)
-        self.request_channel.queue_bind(
-            exchange=config.SPARK_REQUEST_EXCHANGE,
-            queue=config.SPARK_REQUEST_QUEUE
-        )
-        self.request_channel.basic_consume(queue=config.SPARK_REQUEST_QUEUE, on_message_callback=self.callback)
-
-        self.result_channel = self.rabbitmq.channel()
-        self.result_channel.exchange_declare(exchange=config.SPARK_RESULT_EXCHANGE, exchange_type='fanout')
-
-    def run(self):
+    def start(self, app_name):
         while True:
             try:
-                self.connect_to_rabbitmq()
-                self.init_rabbitmq_channels()
                 logger.info('Request consumer started!')
-
-                try:
-                    self.request_channel.start_consuming()
-                except pika.exceptions.ConnectionClosed as e:
-                    logger.error('connection to rabbitmq closed: %s', str(e), exc_info=True)
-                    self.rabbitmq.close()
-                    continue
-                self.rabbitmq.close()
-            except Py4JJavaError as e:
-                logger.critical("Critical: JAVA error in spark-request consumer: %s, message: %s",
-                                            str(e), str(e.java_exception), exc_info=True)
-                time.sleep(2)
+                listenbrainz_spark.init_spark_session(app_name)
+                self.init_rabbitmq_connection()
+                self.run()
             except Exception as e:
                 logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)
                 time.sleep(2)
 
-    def ping(self):
-        """ Sends a heartbeat to rabbitmq to avoid closing the connection during long processes """
-        self.rabbitmq.process_data_events(0)
-
 
 def main(app_name):
-    listenbrainz_spark.init_spark_session(app_name)
-    global rc
     rc = RequestConsumer()
-    rc.run()
+    rc.run(app_name)
 
 
 if __name__ == '__main__':

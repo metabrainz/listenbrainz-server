@@ -131,7 +131,6 @@ def import_newest_incremental_dump_handler():
                     logger.error(error_msg, exc_info=True)
                     continue
             dump_id += 1
-            request_consumer.rc.ping()
     return [{
         'type': 'import_incremental_dump',
         'imported_dump': imported_dumps,
