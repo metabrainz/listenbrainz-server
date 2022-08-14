@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import json
+import socket
 import time
 import logging
 
@@ -26,7 +27,6 @@ from kombu.mixins import ConsumerProducerMixin
 
 import listenbrainz_spark
 import listenbrainz_spark.query_map
-from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz_spark import config, hdfs_connection
 
 
@@ -115,13 +115,14 @@ class RequestConsumer(ConsumerProducerMixin):
         ]
 
     def init_rabbitmq_connection(self):
+        connection_name = "spark-request-consumer-" + socket.gethostname()
         self.connection = Connection(
             hostname=config.RABBITMQ_HOST,
             userid=config.RABBITMQ_USERNAME,
             port=config.RABBITMQ_PORT,
             password=config.RABBITMQ_PASSWORD,
             virtual_host=config.RABBITMQ_VHOST,
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
+            transport_options={"client_properties": {"connection_name": connection_name}}
         )
 
     def start(self, app_name):
