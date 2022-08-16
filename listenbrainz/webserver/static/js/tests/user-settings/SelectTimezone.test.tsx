@@ -3,7 +3,7 @@ import { mount, ReactWrapper } from "enzyme";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
 
-import SelectTimezones from "../../src/user-setting/SelectTimezone";
+import SelectTimezone from "../../src/user-settings/SelectTimezone";
 
 const user_timezone = 'America/New_York'
 const pg_timezones:Array<[string, string]> = [['Africa/Adnodjan', '+3:00:00 GMT'],['America/Adak', '-9:00:00 GMT']]
@@ -26,21 +26,12 @@ const props = {
 };
 
 describe("submitTimezonePage", () => {
-  // const clickButton = (wrapper: ReactWrapper) => {
-  //   wrapper.find(".follow-button").at(0).simulate("click");
-  // };
-
-  // const mockResetAPICall = (instance: any, status: number) => {
-  //   const spy = jest.spyOn(instance.context.APIService, "resetUserTimezone");
-  //   spy.mockImplementation(() => Promise.resolve({ status }));
-  //   return spy;
-  // };
 
   it("renders correctly", () => {
     const extraProps = { ...props, newAlert: jest.fn() };
-    const wrapper = mount<SelectTimezones>(
+    const wrapper = mount<SelectTimezone>(
       <GlobalAppContext.Provider value={globalProps}>
-        <SelectTimezones {...extraProps} />
+        <SelectTimezone {...extraProps} />
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
@@ -49,37 +40,29 @@ describe("submitTimezonePage", () => {
 
 describe("resetTimezone", () => {
   it("calls API, and sets state + creates a new alert on success", async () => {
-    const extraProps = { ...props, newAlert: jest.fn() };
+    const extraProps = { ...props};
 
-    const wrapper = mount<SelectTimezones>(
+    const wrapper = mount<SelectTimezone>(
       <GlobalAppContext.Provider value={globalProps}>
-        <SelectTimezones {...extraProps} />
+        <SelectTimezone {...extraProps} />
       </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
 
-    // set valid selectZone state so submit function doesn't fail
+    // set valid selectZone state 
     instance.setState({
       selectZone: 'America/Denver',
     });
 
-    // const spy = mockResetAPICall(instance, 200);
-    //   clickButton(wrapper);
-    //   expect(spy).toHaveBeenCalledTimes(1);
     const spy = jest.fn();
     instance.context.APIService.resetUserTimezone = spy;
 
     await instance.submitTimezone();
 
-    expect(spy).toHaveBeenCalledWith("testuser", "auth_token", {
-      zonename: 'America/Denver'
-    });
-
-    expect(instance.props.newAlert).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith( "auth_token",  "America/Denver");
 
     // test that state was updated
-    expect(wrapper.state("success")).toEqual(true);
     expect(wrapper.state("userTimezone")).toEqual(
       'America/Denver'
     );

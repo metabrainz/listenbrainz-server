@@ -21,7 +21,7 @@ export interface SelectTimezoneState {
   selectZone: string;
   userTimezone: string;
 }
-export default class SelectTimezones extends React.Component<
+export default class SelectTimezone extends React.Component<
   SelectTimezoneProps,
   SelectTimezoneState
 > {
@@ -152,8 +152,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const SelectTimezonesWithAlertNotifications = withAlertNotifications(
-    SelectTimezones
+  const SelectTimezoneWithAlertNotifications = withAlertNotifications(
+    SelectTimezone
   );
 
   const apiService = new APIServiceClass(
@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <SelectTimezonesWithAlertNotifications
+        <SelectTimezoneWithAlertNotifications
           initialAlerts={optionalAlerts}
           pg_timezones={pg_timezones}
           user_timezone={user_timezone}
