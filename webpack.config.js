@@ -88,7 +88,7 @@ module.exports = function (env, argv) {
       ),
       selectTimezone: path.resolve(
         jsDir,
-        "src/user-setting/SelectTimezone.tsx"
+        "src/user-settings/SelectTimezone.tsx"
       ),
     },
     output: {
