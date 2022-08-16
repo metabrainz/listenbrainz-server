@@ -179,6 +179,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
             routing_key="",
             body=ujson.dumps([listen.to_json() for listen in unique]),
             delivery_mode=PERSISTENT_DELIVERY_MODE,
+            content_encoding="binary"
         )
 
         if monotonic() > self.metric_submission_time:
