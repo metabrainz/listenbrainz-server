@@ -177,8 +177,9 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         self.producer.publish(
             exchange=self.unique_exchange,
             routing_key="",
-            body=ujson.dumps([listen.to_json() for listen in unique]),
+            body=ujson.dumps([listen.to_json() for listen in unique]).encode("utf-8"),
             delivery_mode=PERSISTENT_DELIVERY_MODE,
+            content_type="application/octet-stream",
             content_encoding="binary"
         )
 
