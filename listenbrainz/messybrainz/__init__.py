@@ -77,7 +77,7 @@ def insert_all_in_transaction(submissions):
 def get_msid(connection, recording, artist, release):
     """ Retrieve the msid for a (recording, artist, release) triplet if present in the db """
     query = text("""
-        SELECT gid
+        SELECT gid::TEXT
           FROM messybrainz.submissions
          WHERE recording = lower(:recording)
            AND artist_credit = lower(:artist_credit)
@@ -109,7 +109,7 @@ def submit_recording(connection, recording, artist, release):
     query = text("""
         INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release)
              VALUES (gen_random_uuid(), :recording, :artist_credit, :release)
-          RETURNING gid
+          RETURNING gid::TEXT
     """)
     result = connection.execute(query, recording=recording, artist_credit=artist, release=release)
     return result.fetchone()["gid"]
