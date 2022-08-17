@@ -463,20 +463,23 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         log("mb metadata update: Done!")
 
 
-def create_mb_metadata_cache():
+def create_mb_metadata_cache(use_lb_conn: bool):
     """
         Main function for creating the MB metadata cache and its related tables.
+
+        Arguments:
+            use_lb_conn: whether to use LB conn or not
     """
 
     psycopg2.extras.register_uuid()
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         lb_conn = None
-        if config.SQLALCHEMY_TIMESCALE_URI:
+        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
         can_rel = CanonicalReleaseRedirect(mb_conn)
         if not can_rel.table_exists():
-            log("mb metadata cache: canonical_release_redirect table doesn't exist, run `canonical-data` manage command first")
+            log("mb metadata cache: canonical_release_redirect table doesn't exist, run `canonical-data` manage command first with --use-mb-conn option")
             return
 
         cache = MusicBrainzMetadataCache(mb_conn, lb_conn)
