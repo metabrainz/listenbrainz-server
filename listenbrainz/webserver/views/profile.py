@@ -60,9 +60,9 @@ def select_timezone():
     pg_timezones = db_usersetting.get_pg_timezone()
     user_settings = db_usersetting.get(current_user.id)
     user_timezone = user_settings['timezone_name']
-    props={
-        "pg_timezones":pg_timezones,
-        "user_timezone":user_timezone,
+    props = {
+        "pg_timezones": pg_timezones,
+        "user_timezone": user_timezone,
     }
     return render_template(
         "profile/selecttimezone.html",
