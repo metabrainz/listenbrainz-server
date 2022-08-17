@@ -691,17 +691,20 @@ export default class Listens extends React.Component<
       artistMBIDs?.length ||
       Boolean(trackMBID) ||
       Boolean(releaseGroupMBID);
+    const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
 
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = (
       <>
-        <ListenControl
-          text="Pin this recording"
-          icon={faThumbtack}
-          action={this.updateRecordingToPin.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#PinRecordingModal"
-        />
+        {canPin && (
+          <ListenControl
+            text="Pin this recording"
+            icon={faThumbtack}
+            action={this.updateRecordingToPin.bind(this, listen)}
+            dataToggle="modal"
+            dataTarget="#PinRecordingModal"
+          />
+        )}
         {isListenReviewable && (
           <ListenControl
             text="Write a review"
