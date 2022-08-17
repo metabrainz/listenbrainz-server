@@ -78,7 +78,6 @@ function unit_setup {
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                   -wait tcp://couchdb:5984 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
-                         python3 manage.py init_msb_db --create-db && \
                          python3 manage.py init_ts_db --create-db"
 }
 
