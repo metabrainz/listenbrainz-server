@@ -615,6 +615,22 @@ export default class UserFeedPage extends React.Component<
         listen = metadata as Listen;
         additionalContent = getAdditionalContent(metadata);
       }
+      let additionalMenuItems;
+      if (
+        (event.event_type === EventType.RECORDING_RECOMMENDATION ||
+          event.event_type === EventType.RECORDING_PIN) &&
+        event.user_name === currentUser.name
+      ) {
+        additionalMenuItems = [
+          <ListenControl
+            icon={faTrash}
+            title="Delete Event"
+            text="Delete Event"
+            // eslint-disable-next-line react/jsx-no-bind
+            action={this.deleteFeedEvent.bind(this, event)}
+          />,
+        ];
+      }
       return (
         <div className="event-content">
           <ListenCard
@@ -625,19 +641,7 @@ export default class UserFeedPage extends React.Component<
             listen={listen}
             additionalContent={additionalContent}
             newAlert={newAlert}
-            additionalMenuItems={
-              (event.event_type === EventType.RECORDING_RECOMMENDATION ||
-                event.event_type === EventType.RECORDING_PIN) &&
-              event.user_name === currentUser.name ? (
-                <ListenControl
-                  icon={faTrash}
-                  title="Delete Event"
-                  text="Delete Event"
-                  // eslint-disable-next-line react/jsx-no-bind
-                  action={this.deleteFeedEvent.bind(this, event)}
-                />
-              ) : undefined
-            }
+            additionalMenuItems={additionalMenuItems}
           />
         </div>
       );

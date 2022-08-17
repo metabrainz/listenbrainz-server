@@ -694,35 +694,38 @@ export default class Listens extends React.Component<
     const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
 
     /* eslint-disable react/jsx-no-bind */
-    const additionalMenuItems = (
-      <>
-        {canPin && (
-          <ListenControl
-            text="Pin this recording"
-            icon={faThumbtack}
-            action={this.updateRecordingToPin.bind(this, listen)}
-            dataToggle="modal"
-            dataTarget="#PinRecordingModal"
-          />
-        )}
-        {isListenReviewable && (
-          <ListenControl
-            text="Write a review"
-            icon={faPencilAlt}
-            action={this.updateRecordingToReview.bind(this, listen)}
-            dataToggle="modal"
-            dataTarget="#CBReviewModal"
-          />
-        )}
-        {canDelete && (
-          <ListenControl
-            text="Delete Listen"
-            icon={faTrashAlt}
-            action={this.deleteListen.bind(this, listen)}
-          />
-        )}
-      </>
-    );
+    const additionalMenuItems = [];
+    if (canPin) {
+      additionalMenuItems.push(
+        <ListenControl
+          text="Pin this recording"
+          icon={faThumbtack}
+          action={this.updateRecordingToPin.bind(this, listen)}
+          dataToggle="modal"
+          dataTarget="#PinRecordingModal"
+        />
+      );
+    }
+    if (isListenReviewable) {
+      additionalMenuItems.push(
+        <ListenControl
+          text="Write a review"
+          icon={faPencilAlt}
+          action={this.updateRecordingToReview.bind(this, listen)}
+          dataToggle="modal"
+          dataTarget="#CBReviewModal"
+        />
+      );
+    }
+    if (canDelete) {
+      additionalMenuItems.push(
+        <ListenControl
+          text="Delete Listen"
+          icon={faTrashAlt}
+          action={this.deleteListen.bind(this, listen)}
+        />
+      );
+    }
     const shouldBeDeleted = isEqual(deletedListen, listen);
     /* eslint-enable react/jsx-no-bind */
     return (
