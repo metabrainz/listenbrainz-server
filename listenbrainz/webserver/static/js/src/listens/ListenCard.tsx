@@ -245,7 +245,7 @@ export default class ListenCard extends React.Component<
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
-      (additionalMenuItems && additionalMenuItems.length) ||
+      additionalMenuItems?.length ||
       enableRecommendButton ||
       recordingMBID ||
       spotifyURL ||
