@@ -110,7 +110,6 @@ class MappingTestCase(TimescaleTestCase):
             self.insert_recording_in_mapping(recordings[idx], match_type)
             # artist_credit_id is not retrieved, remove from dict after submitting
             del recordings[idx]["artist_credit_id"]
-        print(recordings)
         return recordings
 
     def test_load_recordings_from_mapping(self):
