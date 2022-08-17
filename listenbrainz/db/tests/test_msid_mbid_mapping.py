@@ -67,7 +67,8 @@ class MappingTestCase(TimescaleTestCase):
             },
             {
                 "artist": "James S.A. Corey",
-                "title": "The Churn"
+                "title": "The Churn",
+                "release": None
             },
             {
                 "artist_credit_id": 347,
@@ -80,7 +81,8 @@ class MappingTestCase(TimescaleTestCase):
             },
             {
                 "artist": "Thanks for the Advice",
-                "title": "Repairs"
+                "title": "Repairs",
+                "release": None
             }
         ]
         submitted = messybrainz.insert_all_in_transaction(recordings)
@@ -100,7 +102,7 @@ class MappingTestCase(TimescaleTestCase):
             "artist_mbids": None,
         })
         for idx in range(5):
-            recordings[idx]["recording_msid"] = submitted[idx]["ids"]["recording_msid"]
+            recordings[idx]["recording_msid"] = submitted[idx]["msid"]
             if idx == 2 or idx == 4:
                 match_type = "no_match"
             else:

@@ -1177,11 +1177,11 @@ class FeedbackAPITestCase(IntegrationTestCase):
 
         sample_feedback = [
             {
-                "recording_msid": submitted_data[0]["ids"]["recording_msid"],
+                "recording_msid": submitted_data[0]["msid"],
                 "score": 1
             },
             {
-                "recording_msid": submitted_data[1]["ids"]["recording_msid"],
+                "recording_msid": submitted_data[1]["msid"],
                 "score": -1
             }
         ]
