@@ -101,10 +101,8 @@ class MappingTestCase(TimescaleTestCase):
             "release": None,
             "artist_mbids": None,
         })
-        print(recordings)
-        print(submitted)
         for idx in range(5):
-            recordings[idx]["recording_msid"] = submitted[idx]["msid"]
+            recordings[idx]["recording_msid"] = submitted[idx]
             if idx == 2 or idx == 4:
                 match_type = "no_match"
             else:

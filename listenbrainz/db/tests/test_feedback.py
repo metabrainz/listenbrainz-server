@@ -66,8 +66,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def insert_test_data_with_metadata(self, user_id):
         """ Insert test data with metadata into the database """
-        submitted = msb_db.insert_all_in_transaction([self.sample_recording])
-        msid = str(submitted["msid"])
+        msid = str(msb_db.insert_all_in_transaction([self.sample_recording])[0])
 
         self.sample_feedback_with_metadata[0]["recording_msid"] = msid
 
