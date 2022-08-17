@@ -69,7 +69,7 @@ def insert_all_in_transaction(submissions):
     ret = []
     with timescale.engine.begin() as ts_conn:
         for submission in submissions:
-            result = submit_recording(ts_conn, submission["title"], submission["artist"], submission["release"])
+            result = submit_recording(ts_conn, submission["title"], submission["artist"], submission.get("release"))
             ret.append(result)
     return ret
 
