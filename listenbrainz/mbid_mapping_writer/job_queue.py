@@ -113,11 +113,9 @@ class MappingJobQueue(threading.Thread):
         """ Fetch and queue legacy and recheck listens """
 
         msb_query = """SELECT gid AS recording_msid
-                            , rj.data->>'title' AS track_name
-                            , rj.data->>'artist' AS artist_name
-                         FROM recording r
-                         JOIN recording_json rj
-                           ON r.data = rj.id
+                            , recording AS track_name
+                            , artist_credit AS artist_name
+                         FROM messybrainz.submissions
                        WHERE gid in :msids"""
 
         count = 0
@@ -130,7 +128,7 @@ class MappingJobQueue(threading.Thread):
         if len(msids) == 0:
             return 0
 
-        with msb_db.engine.connect() as connection:
+        with timescale.engine.connect() as connection:
             curs = connection.execute(sqlalchemy.text(msb_query), msids=tuple(msids))
             while True:
                 result = curs.fetchone()

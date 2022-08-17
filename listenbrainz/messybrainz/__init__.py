@@ -1,5 +1,6 @@
 import time
 import uuid
+from typing import Iterable
 
 import psycopg2
 import sqlalchemy
@@ -68,9 +69,23 @@ def insert_all_in_transaction(submissions):
     ret = []
     with timescale.engine.begin() as ts_conn:
         for submission in submissions:
-            result = submit_recording(ts_conn, submission["recording"], submission["artist"], submission["release"])
+            result = submit_recording(ts_conn, submission["title"], submission["artist"], submission["release"])
             ret.append(result)
     return ret
+
+
+def get_msid(connection, recording, artist, release):
+    """ Retrieve the msid for a (recording, artist, release) triplet if present in the db """
+    query = """
+        SELECT gid
+          FROM messybrainz.submissions
+         WHERE recording = lower(:recording)
+           AND artist_credit = lower(:artist_credit)
+           AND release = lower(:release)
+    """
+    result = connection.execute(query, recording=recording, artist_credit=artist, release=release)
+    row = result.fetchone()
+    return row["gid"] if row else None
 
 
 def submit_recording(connection, recording, artist, release):
@@ -85,31 +100,22 @@ def submit_recording(connection, recording, artist, release):
     Returns:
         the Recording MessyBrainz ID of the data
     """
+    msid = get_msid(connection, recording, artist, release)
+    if msid:
+        # msid already exists in db
+        return msid
+
+    # new msid
     query = text("""
         INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release)
              VALUES (gen_random_uuid(), :recording, :artist_credit, :release)
-        ON CONFLICT (lower(recording), lower(artist_credit), lower(release))
-         DO NOTHING
           RETURNING gid
     """)
-    result = connection.execute(query, recording=recording, artist_credit=artist, release=release)
-    row = result.fetchone()
-    if row:
-        return row["gid"]  # new msid
-
-    # msid already exists in db
-    query = """
-        SELECT gid
-          FROM messybrainz.submissions
-         WHERE recording = lower(:recording)
-           AND artist_credit = lower(:artist_credit)
-           AND release = lower(:release)
-    """
     result = connection.execute(query, recording=recording, artist_credit=artist, release=release)
     return result.fetchone()["gid"]
 
 
-def load_recordings_from_msids(messybrainz_ids: list[uuid.UUID]):
+def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str | uuid.UUID]):
     """ Returns data for a recordings corresponding to a given list of MessyBrainz IDs.
     msids not found in the database are omitted from the returned dict (usually indicates the msid
     is wrong because data is not deleted from MsB).
@@ -125,13 +131,12 @@ def load_recordings_from_msids(messybrainz_ids: list[uuid.UUID]):
 
     messybrainz_ids = [str(msid) for msid in messybrainz_ids]
 
-    with timescale.engine.begin() as connection:
-        query = text("""
-            SELECT DISTINCT gid, recording, artist_credit, release
-                       FROM messybrainz.submissions
-        """)
-        result = connection.execute(query, msids=tuple(messybrainz_ids))
-        rows = result.fetchall()
+    query = text("""
+        SELECT DISTINCT gid, recording, artist_credit, release
+                   FROM messybrainz.submissions
+    """)
+    result = connection.execute(query, msids=tuple(messybrainz_ids))
+    rows = result.fetchall()
 
     if not rows:
         return []
@@ -145,8 +150,8 @@ def load_recordings_from_msids(messybrainz_ids: list[uuid.UUID]):
             continue
         row = msid_recording_map[msid]
         results.append({
-            "recording_msid": msid,
-            "recording": row["recording"],
+            "msid": msid,
+            "title": row["recording"],
             "artist": row["artist_credit"],
             "release": row["release"]
         })
