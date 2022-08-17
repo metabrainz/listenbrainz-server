@@ -79,9 +79,9 @@ def get_msid(connection, recording, artist, release):
     query = text("""
         SELECT gid::TEXT
           FROM messybrainz.submissions
-         WHERE recording = lower(:recording)
-           AND artist_credit = lower(:artist_credit)
-           AND release = lower(:release)
+         WHERE lower(recording) = lower(:recording)
+           AND lower(artist_credit) = lower(:artist_credit)
+           AND lower(release) = lower(:release)
     """)
     result = connection.execute(query, recording=recording, artist_credit=artist, release=release)
     row = result.fetchone()
@@ -132,8 +132,9 @@ def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str | uuid.
     messybrainz_ids = [str(msid) for msid in messybrainz_ids]
 
     query = text("""
-        SELECT DISTINCT gid, recording, artist_credit, release
+        SELECT DISTINCT gid::TEXT, recording, artist_credit, release
                    FROM messybrainz.submissions
+                  WHERE gid IN :msids 
     """)
     result = connection.execute(query, msids=tuple(messybrainz_ids))
     rows = result.fetchall()
@@ -141,7 +142,7 @@ def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str | uuid.
     if not rows:
         return []
 
-    msid_recording_map = {str(x["gid"]): x for x in rows}
+    msid_recording_map = {x["gid"]: x for x in rows}
 
     # match results to every given mbid so list is returned in the same order
     results = []
