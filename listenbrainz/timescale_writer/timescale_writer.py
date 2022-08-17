@@ -70,7 +70,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         msb_listens = [
             {
                 'artist': listen['track_metadata']['artist_name'],
-                'recording': listen['track_metadata']['track_name'],
+                'title': listen['track_metadata']['track_name'],
                 'release': listen['track_metadata'].get('release_name')
             }
             for listen in listens
