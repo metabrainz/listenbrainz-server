@@ -19,7 +19,7 @@ services:
       - redis:/data:z
 
   lb_db:
-    image: timescale/timescaledb:2.2.0-pg11
+    image: timescale/timescaledb:2.6.0-pg12
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
     ports:
