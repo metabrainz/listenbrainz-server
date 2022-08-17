@@ -107,7 +107,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             artists_rels.append(data)
             artist_mbids.append(uuid.UUID(mbid))
 
-        artist["rels"] = artists_rels
+        artist["artists"] = artists_rels
 
         recording_rels = []
         for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
