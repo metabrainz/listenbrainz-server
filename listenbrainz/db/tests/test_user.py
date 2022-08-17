@@ -243,4 +243,4 @@ class UserTestCase(DatabaseTestCase):
             )
 
         results = db_user.search("cif", 10, searcher_id)
-        self.assertEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.0909091, 0.61)])
+        self.assertEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.09090909, 0.61)])
