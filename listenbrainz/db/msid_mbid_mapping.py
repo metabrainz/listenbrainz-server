@@ -110,7 +110,7 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
         msid_metadatas = load_recordings_from_msids(connection, remaining_item_map.keys())
 
     for metadata in msid_metadatas:
-        msid = metadata["msid"]
+        msid = str(metadata["msid"])
         if msid not in remaining_item_map:
             continue
 
