@@ -70,17 +70,20 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             recording_data, artist_data, tag_data JSON strings as a tuple.
         """
 
-        artists = []
-        artist_mbids = []
         release = {}
-
         if row["release_mbid"] is not None:
             release["mbid"] = row["release_mbid"]
             release["release_group_mbid"] = row["release_group_mbid"]
             release["caa_id"] = row["caa_id"]
+            release["name"] = row["release_name"]
             if row["year"] is not None:
                 release["year"] = row["year"]
 
+        artist = {
+            "name": row["artist_credit_name"],
+        }
+        artists_rels = []
+        artist_mbids = []
         for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
             data = {}
             if begin_year is not None:
@@ -101,8 +104,10 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     data["rels"] = filtered
             if artist_type == "Person":
                 data["gender"] = gender
-            artists.append(data)
+            artists_rels.append(data)
             artist_mbids.append(uuid.UUID(mbid))
+
+        artist["rels"] = artists_rels
 
         recording_rels = []
         for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
@@ -139,17 +144,18 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 tag["genre_mbid"] = genre_mbid
             release_group_tags.append(tag)
 
-        recording_data = {
+        recording = {
+            "name": row["recording_name"],
             "rels": recording_rels
         }
         if row["length"]:
-            recording_data["length"] = row["length"]
+            recording["length"] = row["length"]
 
         return (row["recording_mbid"],
                 list(set(artist_mbids)),
                 row["release_mbid"],
-                ujson.dumps(recording_data),
-                ujson.dumps(artists),
+                ujson.dumps(recording),
+                ujson.dumps(artist),
                 ujson.dumps({"recording": recording_tags, "artist": artist_tags, "release_group": release_group_tags}),
                 ujson.dumps(release))
 
@@ -303,6 +309,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                    ), release_data AS (
                             SELECT * FROM (
                                     SELECT r.gid AS recording_mbid
+                                         , rel.name
                                          , rel.release_group
                                          , crr.release_mbid::TEXT
                                          , caa.id AS caa_id
@@ -322,9 +329,12 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                             ) temp where rownum=1
                    )
                             SELECT recording_links
+                                 , r.name AS recording_name
+                                 , ac.name AS artist_credit_name
                                  , artist_data
                                  , artist_tags
                                  , recording_tags
+                                 , rd.name AS release_name
                                  , release_group_tags
                                  , release_group_mbid::TEXT
                                  , r.length
@@ -359,6 +369,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 ON cmb.recording_mbid = r.gid
                               {values_join}
                           GROUP BY r.gid
+                                 , r.name
+                                 , ac.name
+                                 , rd.name
                                  , r.length
                                  , recording_links
                                  , recording_tags
