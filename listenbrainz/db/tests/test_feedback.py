@@ -3,7 +3,7 @@ import sqlalchemy
 from listenbrainz.db.model.feedback import Feedback
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
-from listenbrainz.db import timescale as ts, timescale
+from listenbrainz.db import timescale as ts
 from listenbrainz import messybrainz as msb_db
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
