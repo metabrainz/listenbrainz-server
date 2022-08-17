@@ -113,7 +113,6 @@ class MappingTestCase(TimescaleTestCase):
         return recordings
 
     def test_load_recordings_from_mapping(self):
-        self.maxDiff = None
         recordings = self.insert_recordings()
         expected_mbid_map = {
             recordings[0]["recording_mbid"]: recordings[0],
