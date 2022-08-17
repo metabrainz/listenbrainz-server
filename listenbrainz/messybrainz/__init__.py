@@ -105,14 +105,13 @@ def submit_recording(connection, recording, artist, release):
         # msid already exists in db
         return msid
 
-    # new msid
+    msid = uuid.uuid4()  # new msid
     query = text("""
         INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release)
-             VALUES (gen_random_uuid(), :recording, :artist_credit, :release)
-          RETURNING gid::TEXT
+             VALUES (:msid, :recording, :artist_credit, :release)
     """)
-    result = connection.execute(query, recording=recording, artist_credit=artist, release=release)
-    return result.fetchone()["gid"]
+    connection.execute(query, msid=msid, recording=recording, artist_credit=artist, release=release)
+    return str(msid)
 
 
 def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str | uuid.UUID]):
