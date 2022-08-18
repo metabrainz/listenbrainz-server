@@ -148,15 +148,18 @@ class CanonicalMusicBrainzData(BulkInsertTable):
             return None
 
 
-def create_canonical_musicbrainz_data():
+def create_canonical_musicbrainz_data(use_lb_conn: bool):
     """
         Main function for creating the MBID mapping and its related tables.
+
+        Arguments:
+            use_lb_conn: whether to use LB conn or not
     """
 
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
 
         lb_conn = None
-        if config.SQLALCHEMY_TIMESCALE_URI:
+        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
         # Setup all the needed objects
