@@ -102,8 +102,11 @@ class CanonicalMusicBrainzData(BulkInsertTable):
         """]
 
     def get_index_names(self):
-        return [("canonical_musicbrainz_data_idx_combined_lookup",              "combined_lookup", False),
-                ("canonical_musicbrainz_data_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False)]
+        return [
+            ("canonical_musicbrainz_data_idx_combined_lookup",              "combined_lookup", False),
+            ("canonical_musicbrainz_data_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False),
+            ("canonical_musicbrainz_data_idx_recording_mbid", "recording_mbid", True)
+        ]
 
     def process_row(self, row):
 
