@@ -82,6 +82,7 @@ def run():
 
     while True:
         results = retrieve_data(last_row_id)
+        print(results)
         if not results:
             break
 
