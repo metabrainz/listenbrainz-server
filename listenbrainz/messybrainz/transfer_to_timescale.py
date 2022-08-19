@@ -62,11 +62,15 @@ def retrieve_last_transferred_row_id():
     current_app.logger.info("Latest submission row found: %s", latest.isoformat())
 
     with messybrainz.engine.connect() as msb_conn:
-        result = msb_conn.execute(text("SELECT max(id) AS last_row_id FROM recording WHERE submitted < :until"), until=latest)
+        result = msb_conn.execute(text("""
+            SELECT COALESCE(max(id), 0) AS last_row_id
+              FROM recording
+             WHERE submitted < :until
+        """), until=latest)
         row = result.fetchone()
 
-    row_id = row["last_row_id"] if row else 0
-    current_app.logger.info("Latest transferred row id: %s", row_id)
+    row_id = row["last_row_id"]
+    current_app.logger.info("Latest transferred row id: %d", row_id)
     return row_id
 
 
@@ -97,6 +101,6 @@ def run():
             last_row_id = row["id"]
 
         insert_data(processed)
-        current_app.logger.info("Latest transferred row id: %s", last_row_id)
+        current_app.logger.info("Latest transferred row id: %d", last_row_id)
 
     current_app.logger.info("MsB Transfer Ended.")
