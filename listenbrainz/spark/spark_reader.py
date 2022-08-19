@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+import eventlet
+eventlet.monkey_patch()
+
 import json
 import time
 
@@ -29,9 +33,6 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_yearly_listen_counts)
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
-
-import eventlet
-eventlet.monkey_patch()
 
 from kombu.utils.debug import setup_logging
 setup_logging()
