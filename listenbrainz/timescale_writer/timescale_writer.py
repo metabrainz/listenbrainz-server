@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import eventlet
+eventlet.monkey_patch()
+
 import time
 from datetime import datetime
 from time import monotonic
@@ -18,9 +21,6 @@ from listenbrainz.listen import Listen
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app, redis_connection, timescale_connection
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
-
-import eventlet
-eventlet.monkey_patch()
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
 LISTEN_INSERT_ERROR_SENTINEL = -1  #
