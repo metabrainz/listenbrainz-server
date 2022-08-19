@@ -43,8 +43,6 @@ def insert_data(values):
     query = """
         INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, submitted)
              VALUES %s
-        ON CONFLICT (gid, recording, artist_credit, release)
-         DO NOTHING
     """
     with raw_conn.cursor() as curs:
         execute_values(curs, query, values)
