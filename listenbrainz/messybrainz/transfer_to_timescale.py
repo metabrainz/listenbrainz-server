@@ -53,11 +53,11 @@ def insert_data(values):
 
 def retrieve_last_transferred_row_id():
     with timescale.engine.connect() as ts_conn:
-        result = ts_conn.execute(text("SELECT max(submitted) AS latest FROM messybrainz.submissions"))
+        result = ts_conn.execute(text("""
+            SELECT COALESCE(max(submitted), 'epoch'::timestamptz) AS latest
+              FROM messybrainz.submissions
+        """))
         row = result.fetchone()
-
-    if not row:
-        return 0
     latest = row["latest"]
     current_app.logger.info("Latest submission row found: %s", latest.isoformat())
 
