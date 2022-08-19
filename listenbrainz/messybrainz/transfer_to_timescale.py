@@ -66,7 +66,7 @@ def retrieve_last_transferred_row_id():
         row = result.fetchone()
 
     row_id = row["last_row_id"] if row else 0
-    current_app.logger.info("Latest transferred row id: %d", row_id)
+    current_app.logger.info("Latest transferred row id: %s", row_id)
     return row_id
 
 
@@ -82,7 +82,6 @@ def run():
 
     while True:
         results = retrieve_data(last_row_id)
-        print(results)
         if not results:
             break
 
@@ -98,6 +97,6 @@ def run():
             last_row_id = row["id"]
 
         insert_data(processed)
-        current_app.logger.info("Last transferred row id: %d", last_row_id)
+        current_app.logger.info("Latest transferred row id: %s", last_row_id)
 
     current_app.logger.info("MsB Transfer Ended.")
