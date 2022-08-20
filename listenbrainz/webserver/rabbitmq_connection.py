@@ -31,11 +31,11 @@ def init_rabbitmq_connection(app):
         raise ConnectionError("RabbitMQ service is not up!")
 
     connection = Connection(
-        hostname=current_app.config["RABBITMQ_HOST"],
-        userid=current_app.config["RABBITMQ_USERNAME"],
-        port=current_app.config["RABBITMQ_PORT"],
-        password=current_app.config["RABBITMQ_PASSWORD"],
-        virtual_host=current_app.config["RABBITMQ_VHOST"],
+        hostname=app.config["RABBITMQ_HOST"],
+        userid=app.config["RABBITMQ_USERNAME"],
+        port=app.config["RABBITMQ_PORT"],
+        password=app.config["RABBITMQ_PASSWORD"],
+        virtual_host=app.config["RABBITMQ_VHOST"],
         transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}},
     ).ensure_connection(max_retries=CONNECTION_RETRIES)
     rabbitmq = connection.ChannelPool(CONNECTION_LIMIT)
