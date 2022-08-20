@@ -2,12 +2,12 @@ from typing import Dict, Tuple
 from urllib.parse import urlparse
 
 import bleach
+from kombu import Producer
+from kombu.entity import PERSISTENT_DELIVERY_MODE
 
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
 import listenbrainz.db.user as db_user
-import pika
-import pika.exceptions
 import time
 import ujson
 import uuid
@@ -104,27 +104,12 @@ def _send_listens_to_queue(listen_type, listens):
             submit.append(listen)
 
     if submit:
-        # check if rabbitmq connection exists or not
-        # and if not then try to connect
-        try:
-            rabbitmq_connection.init_rabbitmq_connection(current_app)
-        except ConnectionError as e:
-            current_app.logger.error('Cannot connect to RabbitMQ: %s' % str(e))
-            raise APIServiceUnavailable('Cannot submit listens to queue, please try again later.')
-
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
-           exchange = current_app.config['PLAYING_NOW_EXCHANGE']
-           queue = current_app.config['PLAYING_NOW_QUEUE']
+            exchange = current_app.config['PLAYING_NOW_EXCHANGE']
         else:
             exchange = current_app.config['INCOMING_EXCHANGE']
-            queue = current_app.config['INCOMING_QUEUE']
 
-        publish_data_to_queue(
-            data=submit,
-            exchange=exchange,
-            queue=queue,
-            error_msg='Cannot submit listens to queue, please try again later.',
-        )
+        publish_data_to_queue(submit, exchange)
 
 
 def _raise_error_if_has_unicode_null(value, listen):
@@ -363,32 +348,28 @@ def validate_listened_at(listen):
                                     "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
 
-def publish_data_to_queue(data, exchange, queue, error_msg):
+def publish_data_to_queue(data, exchange):
     """ Publish specified data to the specified queue.
 
     Args:
         data: the data to be published
         exchange (str): the name of the exchange
         queue (str): the name of the queue
-        error_msg (str): the error message to be returned in case of an error
     """
     try:
-        with rabbitmq_connection._rabbitmq.get() as connection:
-            channel = connection.channel
-            channel.exchange_declare(exchange=exchange, exchange_type='fanout')
-            channel.queue_declare(queue, durable=True)
-            channel.basic_publish(
+        with rabbitmq_connection.rabbitmq.acquire(block=True, timeout=60) as channel:
+            producer = Producer(channel)
+            producer.publish(
                 exchange=exchange,
                 routing_key='',
                 body=ujson.dumps(data),
-                properties=pika.BasicProperties(delivery_mode=2, ),
+                delivery_mode=PERSISTENT_DELIVERY_MODE,
+                retry=True,
+                retry_policy={"max_retries": 5}
             )
-    except pika.exceptions.ConnectionClosed as e:
-        current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e), exc_info=True)
-        raise APIServiceUnavailable(error_msg)
-    except Exception as e:
-        current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)), exc_info=True)
-        raise APIServiceUnavailable(error_msg)
+    except Exception:
+        current_app.logger.error("Cannot publish to rabbitmq channel:", exc_info=True)
+        raise APIServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
 
 def get_non_negative_param(param, default=None):
