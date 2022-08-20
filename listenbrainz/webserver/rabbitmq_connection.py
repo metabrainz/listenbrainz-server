@@ -1,11 +1,13 @@
 from typing import Optional
 
-from kombu import Connection, pools, producers
+from kombu import Connection, pools, producers, Exchange
 from kombu.pools import ProducerPool
 
 from listenbrainz.utils import get_fallback_connection_name
 
 rabbitmq: Optional[ProducerPool] = None
+INCOMING_EXCHANGE: Optional[Exchange] = None
+PLAYING_NOW_EXCHANGE: Optional[Exchange] = None
 
 CONNECTION_RETRIES = 10
 CONNECTION_LIMIT = 25
@@ -17,7 +19,7 @@ def init_rabbitmq_connection(app):
     This initializes _rabbitmq as a connection pool from which new RabbitMQ
     connections can be acquired.
     """
-    global rabbitmq
+    global rabbitmq, INCOMING_EXCHANGE, PLAYING_NOW_EXCHANGE
 
     if rabbitmq is not None:
         return
@@ -38,4 +40,10 @@ def init_rabbitmq_connection(app):
         transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}},
     ).ensure_connection(max_retries=CONNECTION_RETRIES)
     pools.set_limit(CONNECTION_LIMIT)
+
+    INCOMING_EXCHANGE = Exchange(app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
+    PLAYING_NOW_EXCHANGE = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
+    INCOMING_EXCHANGE.declare(connection)
+    PLAYING_NOW_EXCHANGE.declare(connection)
+
     rabbitmq = producers[connection]
