@@ -353,8 +353,7 @@ def publish_data_to_queue(data, exchange):
 
     Args:
         data: the data to be published
-        exchange (str): the name of the exchange
-        queue (str): the name of the queue
+        exchange: the name of the exchange
     """
     try:
         with rabbitmq_connection.rabbitmq.acquire(block=True, timeout=60) as producer:
@@ -364,7 +363,8 @@ def publish_data_to_queue(data, exchange):
                 body=ujson.dumps(data),
                 delivery_mode=PERSISTENT_DELIVERY_MODE,
                 retry=True,
-                retry_policy={"max_retries": 5}
+                retry_policy={"max_retries": 5},
+                declare=[exchange]
             )
     except Exception:
         current_app.logger.error("Cannot publish to rabbitmq channel:", exc_info=True)

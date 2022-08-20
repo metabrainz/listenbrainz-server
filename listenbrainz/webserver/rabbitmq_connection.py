@@ -43,7 +43,4 @@ def init_rabbitmq_connection(app):
 
     INCOMING_EXCHANGE = Exchange(app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
     PLAYING_NOW_EXCHANGE = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
-    INCOMING_EXCHANGE.declare(connection)
-    PLAYING_NOW_EXCHANGE.declare(connection)
-
     rabbitmq = producers[connection]
