@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-import eventlet
-eventlet.monkey_patch()
-
 import time
 from datetime import datetime
 from time import monotonic
@@ -12,7 +9,6 @@ from brainzutils import metrics
 from flask import current_app
 from kombu import Exchange, Queue, Consumer, Message, Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE
-from kombu.utils.debug import setup_logging
 from kombu.mixins import ConsumerProducerMixin
 from more_itertools import chunked
 
@@ -177,10 +173,8 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         self.producer.publish(
             exchange=self.unique_exchange,
             routing_key="",
-            body=ujson.dumps([listen.to_json() for listen in unique]).encode("utf-8"),
-            delivery_mode=PERSISTENT_DELIVERY_MODE,
-            content_type="application/octet-stream",
-            content_encoding="binary"
+            body=ujson.dumps([listen.to_json() for listen in unique]),
+            delivery_mode=PERSISTENT_DELIVERY_MODE
         )
 
         if monotonic() > self.metric_submission_time:
@@ -216,7 +210,6 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
 
 if __name__ == "__main__":
-    setup_logging()
     app = create_app()
     with app.app_context():
         rc = TimescaleWriterSubscriber()
