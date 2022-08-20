@@ -1,12 +1,11 @@
 from typing import Optional
 
-from flask import current_app
-from kombu import Connection
-from kombu.connection import ChannelPool
+from kombu import Connection, pools, producers
+from kombu.pools import ProducerPool
 
 from listenbrainz.utils import get_fallback_connection_name
 
-rabbitmq: Optional[ChannelPool] = None
+rabbitmq: Optional[ProducerPool] = None
 
 CONNECTION_RETRIES = 10
 CONNECTION_LIMIT = 25
@@ -38,4 +37,5 @@ def init_rabbitmq_connection(app):
         virtual_host=app.config["RABBITMQ_VHOST"],
         transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}},
     ).ensure_connection(max_retries=CONNECTION_RETRIES)
-    rabbitmq = connection.ChannelPool(CONNECTION_LIMIT)
+    pools.set_limit(CONNECTION_LIMIT)
+    rabbitmq = producers[connection]

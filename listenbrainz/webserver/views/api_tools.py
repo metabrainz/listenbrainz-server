@@ -357,8 +357,7 @@ def publish_data_to_queue(data, exchange):
         queue (str): the name of the queue
     """
     try:
-        with rabbitmq_connection.rabbitmq.acquire(block=True, timeout=60) as channel:
-            producer = Producer(channel)
+        with rabbitmq_connection.rabbitmq.acquire(block=True, timeout=60) as producer:
             producer.publish(
                 exchange=exchange,
                 routing_key='',
