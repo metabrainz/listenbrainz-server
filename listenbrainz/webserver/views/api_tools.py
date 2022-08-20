@@ -105,9 +105,9 @@ def _send_listens_to_queue(listen_type, listens):
 
     if submit:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
-            exchange = current_app.config['PLAYING_NOW_EXCHANGE']
+            exchange = rabbitmq_connection.PLAYING_NOW_EXCHANGE
         else:
-            exchange = current_app.config['INCOMING_EXCHANGE']
+            exchange = rabbitmq_connection.INCOMING_EXCHANGE
 
         publish_data_to_queue(submit, exchange)
 
