@@ -43,8 +43,6 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         return [Consumer(channel, queues=[self.incoming_queue], on_message=lambda x: self.callback(x))]
 
     def callback(self, message: Message):
-        print(message)
-
         listens = ujson.loads(message.body)
 
         msb_listens = []
