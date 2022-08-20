@@ -49,7 +49,7 @@ google-auth==1.30.0
 pandas==1.5.2
 pyarrow==10.0.1
 more-itertools==8.13.0
-kombu==5.1.0
+kombu==5.2.4
 itsdangerous==2.1.2
 countryinfo==0.1.2
 urllib3==1.26.9
