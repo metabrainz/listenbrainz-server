@@ -31,9 +31,6 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
-from kombu.utils.debug import setup_logging
-setup_logging()
-
 response_handler_map = {
     'user_entity': handle_user_entity,
     'user_listening_activity': handle_user_listening_activity,
