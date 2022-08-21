@@ -37,7 +37,7 @@ class DatabaseTestCase(unittest.TestCase):
     @classmethod
     def create_user_with_id(cls, lb_id: int, musicbrainz_row_id: int, musicbrainz_id: str):
         """ Create a new user with the specified LB id. """
-        with db.engine.connect() as connection:
+        with db.engine.connect() as connection, connection.begin():
             connection.execute(sqlalchemy.text("""
                 INSERT INTO "user" (id, musicbrainz_id, musicbrainz_row_id, auth_token)
                      VALUES (:id, :mb_id, :mb_row_id, :token)

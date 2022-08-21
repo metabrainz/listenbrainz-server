@@ -26,7 +26,7 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
     # be explicitly set to the default value (which would have been used if the row was
     # inserted instead).
     token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         result = connection.execute(sqlalchemy.text("""
             INSERT INTO external_service_oauth
             (user_id, service, access_token, refresh_token, token_expires, scopes)
@@ -80,7 +80,7 @@ def delete_token(user_id: int, service: ExternalServiceType, remove_import_log: 
         service: the service for which the token should be deleted
         remove_import_log: whether the (user, service) combination should be removed from the listens_importer table also
     """
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         connection.execute(sqlalchemy.text("""
             DELETE FROM external_service_oauth
                   WHERE user_id = :user_id AND service = :service
@@ -110,7 +110,7 @@ def update_token(user_id: int, service: ExternalServiceType, access_token: str,
         expires_at: the unix timestamp at which the access token expires
     """
     token_expires = utils.unix_timestamp_to_datetime(expires_at)
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         connection.execute(sqlalchemy.text("""
             UPDATE external_service_oauth
                SET access_token = :access_token

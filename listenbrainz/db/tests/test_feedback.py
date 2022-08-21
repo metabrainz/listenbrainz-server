@@ -68,7 +68,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
     def insert_test_data_with_metadata(self, user_id):
         """ Insert test data with metadata into the database """
 
-        with msb_db.engine.connect() as connection:
+        with msb_db.engine.connect() as connection, connection.begin():
             submitted = msb_db.insert_single(connection, self.sample_recording)
             msid = str(submitted["ids"]["recording_msid"])
 
@@ -84,14 +84,14 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
                                 '{6a221fda-2200-11ec-ac7d-dfa16a57158f}'::UUID[],
                                 'Portishead', 'Strangers')"""
 
-        with ts.engine.connect() as connection:
+        with ts.engine.connect() as connection, connection.begin():
             connection.execute(sqlalchemy.text(query))
 
         query = """INSERT INTO mbid_mapping
                                (recording_msid, recording_mbid, match_type, last_updated)
                         VALUES (:msid, :mbid, :match_type, now())"""
 
-        with ts.engine.connect() as connection:
+        with ts.engine.connect() as connection, connection.begin():
             connection.execute(sqlalchemy.text(query),
                                {"msid": msid, "mbid": "076255b4-1575-11ec-ac84-135bf6a670e3", "match_type": "exact_match"})
 
