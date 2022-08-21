@@ -35,6 +35,7 @@ services:
       - ..:/code/listenbrainz:z
     environment:
       PYTHONDONTWRITEBYTECODE: 1
+      SQLALCHEMY_WARN_20: 1
     depends_on:
       - redis
       - lb_db
