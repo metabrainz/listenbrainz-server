@@ -12,7 +12,7 @@ class SimilarUserTestCase(DatabaseTestCase):
         user_id = db_user.create(1, "tom")
         user_id2 = db_user.create(2, "jerry")
 
-        with db.engine.connect() as connection:
+        with db.engine.connect() as connection, connection.begin():
             connection.execute(sqlalchemy.text("""
                 INSERT INTO recommendation.similar_user (user_id, similar_users)
                      VALUES (1, '{ "2" : [0.42, 0.01] }'), (2, '{ "1" : [0.42, 0.02] }')

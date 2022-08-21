@@ -92,7 +92,7 @@ def delete(feedback: Feedback):
         params['recording_msid'] = feedback.recording_msid
         query = DELETE_QUERIES["msid"]
 
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         connection.execute(text(query), params)
 
 

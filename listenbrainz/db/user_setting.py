@@ -1,5 +1,4 @@
 import sqlalchemy
-from datetime import datetime, timedelta
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 
@@ -59,7 +58,7 @@ def set_timezone(user_id: int, timezone_name: str):
         timezone_name (str): the user selected timezone name
 
     """
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         try:
             connection.execute(sqlalchemy.text("""
                 INSERT INTO user_setting (user_id, timezone_name)
