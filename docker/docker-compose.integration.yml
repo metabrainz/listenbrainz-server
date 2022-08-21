@@ -20,7 +20,7 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
-    command: py.test listenbrainz/tests/integration
+    command: pytest listenbrainz/tests/integration
     image: listenbrainz
     volumes:
       - ..:/code/listenbrainz:z
@@ -41,3 +41,9 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.8.16
+
+  musicbrainz_db:
+    image: metabrainz/brainzutils-mb-sample-database:schema-27-2022-05-20.0
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    command: -F

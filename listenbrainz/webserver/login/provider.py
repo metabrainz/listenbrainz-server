@@ -1,9 +1,7 @@
-from markupsafe import Markup
 from rauth import OAuth2Service
 from flask import request, session, url_for, current_app
 from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.musicbrainz_db import editor as mb_editor
-from listenbrainz.webserver.login import User
 from listenbrainz.webserver.utils import generate_string
 from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
