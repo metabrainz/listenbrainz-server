@@ -6,9 +6,11 @@ from time import sleep
 
 from brainzutils import cache, metrics, sentry
 from brainzutils.flask import CustomFlask
-from flask import request, url_for, redirect
+from flask import request, url_for, redirect, g
 from flask_login import current_user
+from werkzeug.local import LocalProxy
 
+from listenbrainz.webserver import rabbitmq_connection
 from listenbrainz.webserver.utils import get_global_props
 
 API_PREFIX = '/1'
@@ -19,6 +21,15 @@ deploy_env = os.environ.get('DEPLOY_ENV', '')
 
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60  # allow a skew of 1 hour in listened_at submissions
+
+
+def _get_rmq_conn():
+    if "rmq_conn" not in g:
+        g.rmq_conn = rabbitmq_connection.rabbitmq_producers.acquire(block=True, timeout=60)
+    return g.rmq_conn
+
+
+rmq_conn = LocalProxy(_get_rmq_conn)
 
 
 def load_config(app):
@@ -138,6 +149,12 @@ def create_app(debug=None):
     @app.after_request
     def after_request_callbacks(response):
         return inject_x_rate_headers(response)
+
+    @app.teardown_appcontext
+    def cleanup(response_or_exc):
+        if "rmq_conn" in g:
+            g.rmq_conn.release()
+        return response_or_exc
 
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')
