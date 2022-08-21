@@ -200,7 +200,7 @@ def delete_listens():
             logger.info("No pending deletes")
             return
 
-        max_id = row["max_id"]
+        max_id = row.max_id
         logger.info("Found max id in listen_delete_metadata table: %s", max_id)
 
         logger.info("Deleting Listens and updating affected listens counts")
@@ -300,7 +300,7 @@ def recalculate_all_user_data():
     try:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(query))
-            user_list = [row["id"] for row in result]
+            user_list = [row.id for row in result]
     except psycopg2.OperationalError:
         logger.error("Cannot query db to fetch user list", exc_info=True)
         raise

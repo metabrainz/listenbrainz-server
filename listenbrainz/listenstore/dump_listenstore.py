@@ -139,7 +139,7 @@ class DumpListenStore:
         with db.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(query))
             for row in result:
-                user_id_map[row['id']] = row['musicbrainz_id']
+                user_id_map[row.id] = row.musicbrainz_id
 
         t0 = time.monotonic()
         listen_count = 0
@@ -199,15 +199,15 @@ class DumpListenStore:
                                 break
                             # some listens have user id which is absent from user table
                             # ignore those listens for now
-                            user_name = user_id_map.get(result["user_id"])
+                            user_name = user_id_map.get(result.user_id)
                             if not user_name:
                                 continue
                             listen = Listen.from_timescale(
-                                listened_at=result["listened_at"],
-                                track_name=result["track_name"],
-                                user_id=result["user_id"],
-                                created=result["created"],
-                                data=result["data"],
+                                listened_at=result.listened_at,
+                                track_name=result.track_name,
+                                user_id=result.user_id,
+                                created=result.created,
+                                data=result.data,
                                 user_name=user_name
                             ).to_json()
                             out_file.write(ujson.dumps(listen) + "\n")

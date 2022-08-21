@@ -2,7 +2,6 @@ import json
 import uuid
 
 from hashlib import sha256
-from listenbrainz.messybrainz import exceptions
 from sqlalchemy import text
 
 
@@ -29,7 +28,7 @@ def get_id_from_meta_hash(connection, data):
 
     result = connection.execute(query, {"meta_sha256": meta_sha256})
     if result.rowcount:
-        return result.fetchone()["gid"]
+        return result.fetchone().gid
     else:
         return None
 
@@ -50,7 +49,7 @@ def get_artist_credit(connection, artist_credit):
     result = connection.execute(query, {"name": artist_credit})
     row = result.fetchone()
     if row:
-        return str(row["gid"])
+        return str(row.gid)
     return None
 
 
@@ -71,7 +70,7 @@ def get_release(connection, release):
     result = connection.execute(query, {"title": release})
     row = result.fetchone()
     if row:
-        return str(row["gid"])
+        return str(row.gid)
     return None
 
 
@@ -129,7 +128,7 @@ def get_id_from_recording(connection, data):
                      WHERE sj.data_sha256 = :data_sha256""")
     result = connection.execute(query, data_sha256=data_sha256)
     if result.rowcount:
-        return result.fetchone()["gid"]
+        return result.fetchone().gid
     else:
         return None
 
@@ -168,7 +167,7 @@ def submit_recording(connection, data):
         "data_sha256": data_sha256,
         "meta_sha256": meta_sha256,
     })
-    id = result.fetchone()["id"]
+    id = result.fetchone().id
     gid = str(uuid.uuid4())
     query = text("""INSERT INTO recording (gid, data, artist, release, submitted)
                          VALUES (:gid, :data, :artist, :release, now())""")
@@ -214,7 +213,7 @@ def load_recordings_from_msids(connection, messybrainz_ids):
     if not rows:
         return []
 
-    msid_recording_map = {str(x["gid"]): x for x in rows}
+    msid_recording_map = {str(x.gid): x for x in rows}
 
     # match results to every given mbid so list is returned in the same order
     results = []
@@ -223,11 +222,11 @@ def load_recordings_from_msids(connection, messybrainz_ids):
             continue
         row = msid_recording_map[msid]
         results.append({
-            "payload": row["data"],
+            "payload": row.data,
             "ids": {
-                "artist_msid": str(row["artist"]),
-                "release_msid": str(row["release"]) if row["release"] else None,
-                "recording_msid": str(row["gid"])
+                "artist_msid": str(row.artist),
+                "release_msid": str(row.release) if row.release else None,
+                "recording_msid": str(row.gid)
             }
         })
 

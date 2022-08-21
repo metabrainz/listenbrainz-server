@@ -39,7 +39,7 @@ def create(musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> i
             "email": email,
         })
 
-        return result.fetchone()["id"]
+        return result.fetchone().id
 
 
 def update_token(id):
@@ -96,7 +96,7 @@ def get(id: int, *, fetch_email: bool = False):
              WHERE id = :id
         """.format(columns=','.join(columns))), {"id": id})
         row = result.fetchone()
-        return dict(row) if row else None
+        return row._asdict() if row else None
 
 
 def get_by_login_id(login_id):
@@ -126,7 +126,7 @@ def get_by_login_id(login_id):
              WHERE login_id = :user_login_id
         """.format(columns=','.join(USER_GET_COLUMNS))), {"user_login_id": login_id})
         row = result.fetchone()
-        return dict(row) if row else None
+        return row._asdict() if row else None
 
 
 def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
@@ -146,7 +146,7 @@ def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
               FROM "user"
              WHERE LOWER(musicbrainz_id) in :mb_ids
         """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
-        return {row['musicbrainz_id'].lower(): dict(row) for row in result.fetchall()}
+        return {row.musicbrainz_id.lower(): row._asdict() for row in result.fetchall()}
 
 
 def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
@@ -178,7 +178,7 @@ def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
              WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
         """.format(columns=','.join(columns))), {"mb_id": musicbrainz_id})
         row = result.fetchone()
-        return dict(row) if row else None
+        return row._asdict() if row else None
 
 
 def get_by_token(token: str, *, fetch_email: bool = False):
@@ -204,7 +204,7 @@ def get_by_token(token: str, *, fetch_email: bool = False):
              WHERE auth_token = :auth_token
         """.format(columns=','.join(columns))), {"auth_token": token})
         row = result.fetchone()
-        return dict(row) if row else None
+        return row._asdict() if row else None
 
 
 def get_user_count():
@@ -221,7 +221,7 @@ def get_user_count():
                   FROM "user"
             """))
             row = result.fetchone()
-            return row['user_count']
+            return row.user_count
         except DatabaseException as e:
             logger.error(e)
             raise
@@ -308,7 +308,7 @@ def get_all_users(created_before=None, columns=None):
             "created": created_before,
         })
 
-        return [dict(row) for row in result]
+        return [row._asdict() for row in result]
 
 
 def delete(id):
@@ -404,9 +404,8 @@ def get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=None):
              {optional_filter}
         """.format(columns=','.join(USER_GET_COLUMNS), optional_filter=filter_str)), filter_data)
 
-        if result.rowcount:
-            return result.fetchone()
-        return None
+        row = result.fetchone()
+        return row._asdict() if row else None
 
 
 def validate_usernames(musicbrainz_ids):
@@ -427,7 +426,7 @@ def validate_usernames(musicbrainz_ids):
         """), {
             'musicbrainz_ids': [musicbrainz_id.lower() for musicbrainz_id in musicbrainz_ids],
         })
-        return [dict(row) for row in r.fetchall() if row['id'] is not None]
+        return [row._asdict() for row in r.fetchall() if row.id is not None]
 
 
 def get_users_in_order(user_ids):
@@ -441,7 +440,7 @@ def get_users_in_order(user_ids):
         """), {
             'user_ids': user_ids,
         })
-        return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
+        return [row._asdict() for row in r.fetchall() if row.musicbrainz_id is not None]
 
 
 def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
@@ -459,7 +458,7 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
                 ON j.key::int = u.id 
              WHERE user_id = :user_id
         """), user_id=user_id)
-        users = {row["user_name"]: row["similarity"] for row in result.fetchall()}
+        users = {row.user_name: row.similarity for row in result.fetchall()}
         return SimilarUsers(user_id=user_id, similar_users=users)
 
 
@@ -477,7 +476,7 @@ def get_users_by_id(user_ids: List[int]):
         })
         row_id_username_map = {}
         for row in result.fetchall():
-            row_id_username_map[row['id']] = row['musicbrainz_id']
+            row_id_username_map[row.id] = row.musicbrainz_id
         return row_id_username_map
 
 
@@ -574,8 +573,8 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
         search_results = []
         if similar_users:
             for row in rows:
-                similarity = similar_users.similar_users.get(row['musicbrainz_id'], None)
-                search_results.append((row['musicbrainz_id'], row['query_similarity'], similarity))
+                similarity = similar_users.similar_users.get(row.musicbrainz_id, None)
+                search_results.append((row.musicbrainz_id, row.query_similarity, similarity))
         else:
-            search_results = [(row['musicbrainz_id'], row['query_similarity'], None) for row in rows]
+            search_results = [(row.musicbrainz_id, row.query_similarity, None) for row in rows]
         return search_results

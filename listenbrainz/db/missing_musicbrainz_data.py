@@ -114,9 +114,9 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
         row = result.fetchone()
 
     try:
-        return UserMissingMusicBrainzData(**dict(row)) if row else None
+        return UserMissingMusicBrainzData(**row._asdict()) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting missing musicbrainz data for source "{source}"
                                  for user with user_id: {user_id}. Data: {data}""".format(source=source, user_id=user_id,
-                                 data=ujson.dumps(dict(row)['data'], indent=4)), exc_info=True)
+                                 data=ujson.dumps(row._asdict()['data'], indent=4)), exc_info=True)
         return None
