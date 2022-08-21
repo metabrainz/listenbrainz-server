@@ -32,7 +32,7 @@ class User(object):
                                                   WHERE musicbrainz_id = :mb_id """), {"mb_id": mb_id})
             row = result.fetchone()
             if row:
-                return User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
+                return User(row.id, row.created, row.musicbrainz_id, row.auth_token)
             return None
 
     @staticmethod
@@ -43,7 +43,7 @@ class User(object):
                                                   WHERE id=:id """), {"id": serial})
             row = result.fetchone()
             if row:
-                return User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
+                return User(row.id, row.created, row.musicbrainz_id, row.auth_token)
             return None
 
     @staticmethod
@@ -62,7 +62,7 @@ class User(object):
             })
             row = result.fetchone()
             if row:
-                return User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
+                return User(row.id, row.created, row.musicbrainz_id, row.auth_token)
             return None
 
     @staticmethod

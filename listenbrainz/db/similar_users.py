@@ -143,9 +143,9 @@ def get_top_similar_users(count: int = 200):
                 row = result.fetchone()
                 if not row:
                     break
-                user = row["user_name"]
-                other_user = row["other_user_name"]
-                similarity = "%.3f" % row["similarity"]
+                user = row.user_name
+                other_user = row.other_user_name
+                similarity = "%.3f" % row.similarity
                 if user < other_user:
                     similar_users[user + other_user] = (user, other_user, similarity)
                 else:

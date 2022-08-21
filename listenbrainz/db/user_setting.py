@@ -17,7 +17,7 @@ def get_pg_timezone():
             SELECT * FROM pg_timezone_names
             ORDER BY name
         """))
-        timezones = [(row["name"], row["utc_offset"]) for row in result.fetchall()]
+        timezones = [(row.name, row.utc_offset) for row in result.fetchall()]
         timezones = standardize_timezone(timezones)
         return timezones
 
@@ -41,7 +41,7 @@ def get(user_id: int):
             })
 
             if result.rowcount:
-                user_setting = dict(result.fetchone())
+                user_setting = result.fetchone()._asdict()
                 if not user_setting["timezone_name"]:
                     user_setting["timezone_name"] = DEFAULT_TIMEZONE
                 return user_setting

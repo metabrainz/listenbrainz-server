@@ -56,7 +56,7 @@ def get_timestamp_for_last_user_stats_update():
               FROM statistics.user
             """))
         row = result.fetchone()
-        return row['last_update_ts'] if row else None
+        return row.last_update_ts if row else None
 
 
 def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
@@ -159,12 +159,11 @@ def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[
         row = result.fetchone()
 
     try:
-        return StatApi[EntityRecord](**dict(row)) if row else None
+        return StatApi[EntityRecord](**row._asdict()) if row else None
     except ValidationError:
-        current_app.logger.error("""ValidationError when getting {stats_range} top artists for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
-                                                        data=json.dumps(dict(row)[stats_range], indent=3)),
-                                 exc_info=True)
+        current_app.logger.error("""ValidationError when getting {stats_range} top artists for user with user_id: 
+        {user_id}. Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                          data=json.dumps(row._asdict()[stats_range], indent=3)), exc_info=True)
         return None
 
 
@@ -192,7 +191,7 @@ def get_user_activity_stats(user_id: int, stats_range: str, stats_type: str, sta
         row = result.fetchone()
 
     try:
-        return stats_model(**dict(row)) if row else None
+        return stats_model(**row._asdict()) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} listening_activity for user with user_id:
                                     {user_id}. Data: {data}""".format(stats_range=stats_range, user_id=user_id,

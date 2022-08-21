@@ -657,7 +657,7 @@ def add_dump_entry(timestamp):
             """), {
             'ts': timestamp,
         })
-        return result.fetchone()['id']
+        return result.fetchone().id
 
 
 def get_dump_entries():
@@ -671,7 +671,7 @@ def get_dump_entries():
               ORDER BY created DESC
             """))
 
-        return [dict(row) for row in result]
+        return [row._asdict() for row in result]
 
 
 def get_dump_entry(dump_id):
@@ -684,7 +684,7 @@ def get_dump_entry(dump_id):
             'dump_id': dump_id,
         })
         if result.rowcount > 0:
-            return dict(result.fetchone())
+            return result.fetchone()._asdict()
         return None
 
 

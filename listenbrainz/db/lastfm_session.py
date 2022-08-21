@@ -42,7 +42,7 @@ class Session(object):
             })
             row = result.fetchone()
             if row:
-                return Session(row["id"], row["user_id"], row["sid"], row["api_key"], row["ts"])
+                return Session(row.id, row.user_id, row.sid, row.api_key, row.ts)
             return None
 
 
@@ -59,7 +59,7 @@ class Session(object):
                 'api_key': api_key
             })
             row = result.fetchone()
-            return Session(row["id"], row["user_id"], row["sid"], row["api_key"], row["ts"])
+            return Session(row.id, row.user_id, row.sid, row.api_key, row.ts)
 
     @staticmethod
     def create(token):
