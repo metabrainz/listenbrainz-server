@@ -71,8 +71,8 @@ def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]) -> 
         result = connection.execute(text(query), mbids=tuple(mbids), msids=tuple(msids))
         rows = result.fetchall()
 
-        mbid_rows = {row["recording_mbid"]: dict(row) for row in rows if row["recording_mbid"] in mbids}
-        msid_rows = {row["recording_msid"]: dict(row) for row in rows if row["recording_msid"] in msids}
+        mbid_rows = {row.recording_mbid: row._asdict() for row in rows if row.recording_mbid in mbids}
+        msid_rows = {row.recording_msid: row._asdict() for row in rows if row.recording_msid in msids}
 
         return mbid_rows, msid_rows
 

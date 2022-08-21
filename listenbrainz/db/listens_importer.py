@@ -73,4 +73,4 @@ def get_latest_listened_at(user_id: int, service: ExternalServiceType) -> Option
                 'service': service.value,
             })
         row = result.fetchone()
-        return row["latest_listened_at"] if row else None
+        return row.latest_listened_at if row else None

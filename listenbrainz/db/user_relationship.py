@@ -56,7 +56,8 @@ def is_following_user(follower: int, followed: int) -> bool:
             "follower": follower,
             "followed": followed,
         })
-        return result.fetchone()['cnt'] > 0
+        return result.fetchone().cnt > 0
+
 
 def multiple_users_by_username_following_user(followed: int, followers: List[str]):
     '''
@@ -83,7 +84,7 @@ def multiple_users_by_username_following_user(followed: int, followers: List[str
             "followers": followers,
             "followed": followed,
         })
-        return dict(result.fetchall())
+        return {row.musicbrainz_id: row.result for row in result.fetchall()}
 
 
 def delete(user_0: int, user_1: int, relationship_type: str) -> None:
@@ -119,7 +120,7 @@ def get_followers_of_user(user: int) -> List[dict]:
         """), {
             "followed": user,
         })
-        return [dict(row) for row in result.fetchall()]
+        return [row._asdict() for row in result.fetchall()]
 
 
 def get_following_for_user(user: int) -> List[dict]:
@@ -137,7 +138,7 @@ def get_following_for_user(user: int) -> List[dict]:
         """), {
             "user": user,
         })
-        return [dict(row) for row in result.fetchall()]
+        return [row._asdict() for row in result.fetchall()]
 
 def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[dict]:
     """ Gets a list of follow events for specified users.
@@ -169,4 +170,4 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
             "count": count
         })
 
-        return [dict(row) for row in result.fetchall()]
+        return [row._asdict() for row in result.fetchall()]
