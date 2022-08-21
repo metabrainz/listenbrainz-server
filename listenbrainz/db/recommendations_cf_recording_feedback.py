@@ -4,7 +4,6 @@ from listenbrainz import db
 from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit,
                                                            RecommendationFeedbackDelete)
 from typing import List
-from flask import current_app
 
 
 def insert(feedback_submit: RecommendationFeedbackSubmit):
@@ -82,7 +81,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, rating: str = N
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
-        return [RecommendationFeedbackSubmit(**dict(row)) for row in result.fetchall()]
+        return [RecommendationFeedbackSubmit(**row._asdict()) for row in result.fetchall()]
 
 
 def get_feedback_count_for_user(user_id: int) -> int:
@@ -103,7 +102,7 @@ def get_feedback_count_for_user(user_id: int) -> int:
                 'user_id': user_id,
             }
         )
-        count = int(result.fetchone()["count"])
+        count = int(result.fetchone().count)
 
     return count
 
@@ -135,4 +134,4 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: 
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
-        return [RecommendationFeedbackSubmit(**dict(row)) for row in result.fetchall()]
+        return [RecommendationFeedbackSubmit(**row._asdict()) for row in result.fetchall()]

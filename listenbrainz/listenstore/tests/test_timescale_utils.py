@@ -42,7 +42,7 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
                       FROM listen_user_metadata
                      WHERE user_id = :user_id
                 """), user_id=user["id"])
-            return dict(**result.fetchone())
+            return result.fetchone()._asdict()
 
     def test_delete_listens_update_metadata(self):
         user_1 = db_user.get_or_create(1, "user_1")

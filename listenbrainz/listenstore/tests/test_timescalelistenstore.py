@@ -244,7 +244,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
     def _get_pending_deletes(self):
         with timescale.engine.connect() as connection:
             result = connection.execute(text("SELECT * FROM listen_delete_metadata"))
-            return result.fetchall()
+            return [row._asdict() for row in result.fetchall()]
 
     def _get_count_and_timestamps(self, user_id):
         with timescale.engine.connect() as connection:
@@ -254,7 +254,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                       FROM listen_user_metadata
                      WHERE user_id = :user_id
                 """), user_id=user_id)
-            return dict(**result.fetchone())
+            return result.fetchone()._asdict()
 
     def test_for_empty_timestamps(self):
         """Test newly created user has empty timestamps and count stored in the database."""
