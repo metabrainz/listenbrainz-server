@@ -1,3 +1,4 @@
+from typing import Optional
 
 import sqlalchemy
 from sqlalchemy import create_engine
@@ -15,7 +16,7 @@ from listenbrainz import config
 # public dump
 SCHEMA_VERSION_TIMESCALE = 7
 
-engine = None
+engine: Optional[sqlalchemy.engine.Engine] = None
 
 DUMP_DEFAULT_THREAD_COUNT = 4
 
@@ -43,7 +44,7 @@ def init_db_connection(connect_str):
 
 def run_sql_script(sql_file_path):
     with open(sql_file_path) as sql:
-        with engine.connect() as connection:
+        with engine.connect() as connection, connection.begin():
             connection.execute(sql.read())
 
 
@@ -55,11 +56,13 @@ def run_sql_script_without_transaction(sql_file_path):
         retries = 0
         while True:
             try:
-                for line in lines:
-                    # TODO: Not a great way of removing comments. The alternative is to catch
-                    # the exception sqlalchemy.exc.ProgrammingError "can't execute an empty query"
-                    if line and not line.startswith("--"):
-                        connection.execute(line)
+                # no-op because of isolation level setup above but adding to suppress SQLAlchemy autocommit warnings
+                with connection.begin():
+                    for line in lines:
+                        # TODO: Not a great way of removing comments. The alternative is to catch
+                        # the exception sqlalchemy.exc.ProgrammingError "can't execute an empty query"
+                        if line and not line.startswith("--"):
+                            connection.execute(line)
                 break
             except sqlalchemy.exc.ProgrammingError as e:
                 print("Error: {}".format(e))

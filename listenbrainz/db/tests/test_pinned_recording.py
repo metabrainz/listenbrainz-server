@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 
 import sqlalchemy
@@ -112,7 +111,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
         submitted_data = msb_db.insert_all_in_transaction(recordings)
         msids = [x["ids"]["recording_msid"] for x in submitted_data]
 
-        with ts.engine.connect() as connection:
+        with ts.engine.connect() as connection, connection.begin():
             query = """
                 INSERT INTO mbid_mapping_metadata
                             (recording_mbid, release_mbid, release_name, artist_credit_id,

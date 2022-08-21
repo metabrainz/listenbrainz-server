@@ -685,7 +685,7 @@ def add_dump_entry(timestamp):
             id (int): the id of the new entry added
     """
 
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         result = connection.execute(sqlalchemy.text("""
                 INSERT INTO data_dump (created)
                      VALUES (TO_TIMESTAMP(:ts))
