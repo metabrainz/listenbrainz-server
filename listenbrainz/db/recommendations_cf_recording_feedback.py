@@ -16,7 +16,7 @@ def insert(feedback_submit: RecommendationFeedbackSubmit):
             feedback_submit: An object of class RecommendationFeedbackSubmit
     """
 
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         connection.execute(sqlalchemy.text("""
             INSERT INTO recommendation_feedback (user_id, recording_mbid, rating)
                  VALUES (:user_id, :recording_mbid, :rating)
@@ -38,7 +38,7 @@ def delete(feedback_delete: RecommendationFeedbackDelete):
             feedback_delete: An object of class RecommendationFeedbackDelete
     """
 
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         connection.execute(sqlalchemy.text("""
             DELETE FROM recommendation_feedback
              WHERE user_id = :user_id

@@ -27,7 +27,7 @@ def create(musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> i
     Returns:
         ID of newly created user.
     """
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         result = connection.execute(sqlalchemy.text("""
             INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token, email)
                  VALUES (:mb_id, :mb_row_id, :token, :email)
@@ -48,7 +48,7 @@ def update_token(id):
     Args:
         id (int) - the row id of the user to update
     """
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         try:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
@@ -257,7 +257,7 @@ def update_last_login(musicbrainz_id):
         musicbrainz_id (str): MusicBrainz username of a user
     """
 
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         try:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
@@ -320,7 +320,7 @@ def delete(id):
     Args:
         id (int): the row ID of the listenbrainz user
     """
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         try:
             connection.execute(sqlalchemy.text("""
                 DELETE FROM "user"
@@ -339,7 +339,7 @@ def agree_to_gdpr(musicbrainz_id):
     Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
     """
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         try:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
@@ -361,7 +361,7 @@ def update_musicbrainz_row_id(musicbrainz_id, musicbrainz_row_id):
         musicbrainz_id (str): the MusicBrainz ID (username) of the user
         musicbrainz_row_id (int): the MusicBrainz row ID of the user
     """
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         try:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
@@ -500,7 +500,7 @@ def is_user_reported(reporter_id: int, reported_id: int):
 def report_user(reporter_id: int, reported_id: int, reason: str = None):
     """ Create a report from user with reporter_id against user with
      reported_id"""
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         connection.execute(sqlalchemy.text("""
             INSERT INTO reported_users (reporter_user_id, reported_user_id, reason)
                  VALUES (:reporter_id, :reported_id, :reason)
@@ -521,7 +521,7 @@ def update_user_details(lb_id: int, musicbrainz_id: str, email: str):
         email: email of a user
     """
 
-    with db.engine.connect() as connection:
+    with db.engine.connect() as connection, connection.begin():
         try:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
