@@ -136,7 +136,7 @@ export default class LastFmImporter extends React.Component<
       );
       const error = new Error();
       if (wrong_username) {
-        error.message = "Nonexistent username";
+        error.message = "User not found";
       } else {
         error.message = "Something went wrong";
       }
