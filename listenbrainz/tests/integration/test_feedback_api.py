@@ -1027,6 +1027,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self._test_get_feedback_for_recordings_for_user_valid(False)
 
     def test_get_feedback_for_recordings_for_user_valid_mbids(self):
+        self.maxDiff = None
         inserted_rows = self.insert_test_data_with_mbid(self.user["id"])
 
         # recording_msids for which feedback records are inserted
