@@ -23,7 +23,6 @@ from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.forms import TimezoneForm
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
 
