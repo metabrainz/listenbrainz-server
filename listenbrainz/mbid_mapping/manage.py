@@ -105,11 +105,12 @@ def top_tracks(year):
 
 
 @cli.command()
-def build_mb_metadata_cache():
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_mb_metadata_cache(use_lb_conn):
     """
         Build the MB metadata cache that LB uses
     """
-    create_mb_metadata_cache(False)
+    create_mb_metadata_cache(use_lb_conn)
 
 
 def usage(command):
