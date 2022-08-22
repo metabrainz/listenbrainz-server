@@ -128,7 +128,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             query = """INSERT INTO mbid_mapping
                                    (recording_msid, recording_mbid, match_type, last_updated)
                             VALUES (:msid, '076255b4-1575-11ec-ac84-135bf6a670e3', 'exact_match', now())"""
-            connection.execute(sqlalchemy.text(query), msid=msids[0])
+            connection.execute(sqlalchemy.text(query), {"msid": msids[0]})
 
         pinned_recs = [
             {

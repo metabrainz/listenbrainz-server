@@ -41,7 +41,7 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
                     SELECT count, min_listened_at, max_listened_at
                       FROM listen_user_metadata
                      WHERE user_id = :user_id
-                """), user_id=user["id"])
+                """), {"user_id": user["id"]})
             return result.fetchone()._asdict()
 
     def test_delete_listens_update_metadata(self):

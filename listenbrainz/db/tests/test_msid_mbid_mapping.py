@@ -31,16 +31,18 @@ class MappingTestCase(TimescaleTestCase):
                                                        artist_mbids, artist_credit_name, recording_name)
                      VALUES (:artist_credit_id, :recording_mbid ::UUID, :release_mbid ::UUID, :release,
                              :artist_mbids ::UUID[], :artist, :title)
-                """), **recording)
+                """), recording)
 
             connection.execute(
                 text("""
                 INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
                                   VALUES (:recording_msid, :recording_mbid, :match_type)
             """),
-                recording_msid=recording["recording_msid"],
-                recording_mbid=recording["recording_mbid"],
-                match_type=match_type
+                {
+                    "recording_msid": recording["recording_msid"],
+                    "recording_mbid": recording["recording_mbid"],
+                    "match_type": match_type
+                }
             )
 
     def insert_recordings(self):
