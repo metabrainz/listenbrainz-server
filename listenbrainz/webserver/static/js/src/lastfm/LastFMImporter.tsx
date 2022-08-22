@@ -121,18 +121,25 @@ export default class LastFmImporter extends React.Component<
     const url = `${this.lastfmURL}?method=user.getinfo&user=${lastfmUsername}&api_key=${this.lastfmKey}&format=json`;
     try {
       const response = await fetch(encodeURI(url));
+      if ((await response.status) === 404) {
+        const wrong_username = true;
+      }
       const data = await response.json();
       if ("playcount" in data.user) {
         return Number(data.user.playcount);
       }
       return -1;
-    } catch {
+    } catch (wrong_username) {
       this.updateModalAction(
         <p>An error occurred, please try again. :(</p>,
         true
       );
       const error = new Error();
-      error.message = "Something went wrong";
+      if (wrong_username) {
+        error.message = "Nonexistent username";
+      } else {
+        error.message = "Something went wrong";
+      }
       throw error;
     }
   }
