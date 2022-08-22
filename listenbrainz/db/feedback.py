@@ -221,7 +221,7 @@ def get_feedback_count_for_recording(recording_type: str, recording: str) -> int
     """
     query = "SELECT count(*) AS value FROM recording_feedback WHERE " + recording_type + " = :recording"
     with db.engine.connect() as connection:
-        result = connection.execute(text(query), recording=recording)
+        result = connection.execute(text(query), {"recording": recording})
         count = int(result.fetchone().value)
     return count
 
