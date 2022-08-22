@@ -193,7 +193,7 @@ def delete_listens():
     delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE id <= :max_id"
 
     with timescale.engine.begin() as connection:
-        result = connection.execute(select_max_id)
+        result = connection.execute(text(select_max_id))
         row = result.fetchone()
 
         if not row:
@@ -264,7 +264,7 @@ def add_missing_to_listen_users_metadata():
     query = 'SELECT id FROM "user"'
     try:
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query))
+            result = connection.execute(text(query))
             for row in result:
                 user_list.append(row[0])
     except psycopg2.OperationalError as e:
@@ -299,7 +299,7 @@ def recalculate_all_user_data():
     query = 'SELECT id FROM "user"'
     try:
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query))
+            result = connection.execute(text(query))
             user_list = [row.id for row in result]
     except psycopg2.OperationalError:
         logger.error("Cannot query db to fetch user list", exc_info=True)
