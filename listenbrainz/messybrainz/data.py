@@ -126,7 +126,7 @@ def get_id_from_recording(connection, data):
                  LEFT JOIN recording_json sj
                         ON sj.id = s.data
                      WHERE sj.data_sha256 = :data_sha256""")
-    result = connection.execute(query, data_sha256=data_sha256)
+    result = connection.execute(query, {"data_sha256": data_sha256})
     if result.rowcount:
         return result.fetchone().gid
     else:
@@ -207,7 +207,7 @@ def load_recordings_from_msids(connection, messybrainz_ids):
                  LEFT JOIN recording AS r
                         ON rj.id = r.data
                      WHERE r.gid IN :msids""")
-    result = connection.execute(query, msids=tuple(messybrainz_ids))
+    result = connection.execute(query, {"msids": tuple(messybrainz_ids)})
 
     rows = result.fetchall()
     if not rows:

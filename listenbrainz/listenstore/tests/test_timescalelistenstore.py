@@ -253,7 +253,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                     SELECT count, min_listened_at, max_listened_at
                       FROM listen_user_metadata
                      WHERE user_id = :user_id
-                """), user_id=user_id)
+                """), {"user_id": user_id})
             return result.fetchone()._asdict()
 
     def test_for_empty_timestamps(self):

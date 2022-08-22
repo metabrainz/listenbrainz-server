@@ -204,16 +204,16 @@ def delete_listens():
         logger.info("Found max id in listen_delete_metadata table: %s", max_id)
 
         logger.info("Deleting Listens and updating affected listens counts")
-        connection.execute(text(delete_listens_and_update_listen_counts), max_id=max_id)
+        connection.execute(text(delete_listens_and_update_listen_counts), {"max_id": max_id})
 
         logger.info("Update minimum listen timestamp affected by deleted listens")
-        connection.execute(text(update_listen_min_ts), max_id=max_id)
+        connection.execute(text(update_listen_min_ts), {"max_id": max_id})
 
         logger.info("Update maximum listen timestamp affected by deleted listens")
-        connection.execute(text(update_listen_max_ts), max_id=max_id)
+        connection.execute(text(update_listen_max_ts), {"max_id": max_id})
 
         logger.info("Clean up listen delete metadata table")
-        connection.execute(text(delete_user_metadata), max_id=max_id)
+        connection.execute(text(delete_user_metadata), {"max_id": max_id})
 
         logger.info("Completed deleting listens and updating affected metadata")
 
@@ -247,7 +247,7 @@ def update_user_listen_data():
     # in remaining LB is beyond me then.
     with timescale.engine.begin() as connection:
         logger.info("Starting to update listen counts")
-        connection.execute(text(query), until=datetime.now())
+        connection.execute(text(query), {"until": datetime.now()})
         logger.info("Completed updating listen counts")
 
 

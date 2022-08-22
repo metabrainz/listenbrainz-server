@@ -451,7 +451,7 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
               JOIN "user" u
                 ON j.key::int = u.id 
              WHERE user_id = :user_id
-        """), user_id=user_id)
+        """), {"user_id": user_id})
         users = {row.user_name: row.similarity for row in result.fetchall()}
         return SimilarUsers(user_id=user_id, similar_users=users)
 

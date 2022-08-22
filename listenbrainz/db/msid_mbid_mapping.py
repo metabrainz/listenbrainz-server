@@ -68,7 +68,7 @@ def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]) -> 
     """
 
     with timescale.engine.connect() as connection:
-        result = connection.execute(text(query), mbids=tuple(mbids), msids=tuple(msids))
+        result = connection.execute(text(query), {"mbids": tuple(mbids), "msids": tuple(msids)})
         rows = result.mappings().all()
 
         mbid_rows = {row["recording_mbid"]: row for row in rows if row["recording_mbid"] in mbids}
