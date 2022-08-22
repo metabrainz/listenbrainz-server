@@ -1027,7 +1027,6 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self._test_get_feedback_for_recordings_for_user_valid(False)
 
     def test_get_feedback_for_recordings_for_user_valid_mbids(self):
-        self.maxDiff = None
         inserted_rows = self.insert_test_data_with_mbid(self.user["id"])
 
         # recording_msids for which feedback records are inserted
@@ -1058,37 +1057,49 @@ class FeedbackAPITestCase(IntegrationTestCase):
                 "user_id": self.user["musicbrainz_id"],
                 "recording_msid": None,
                 "recording_mbid": inserted_rows[3]["recording_mbid"],
-                "score": inserted_rows[3]["score"]
+                "score": inserted_rows[3]["score"],
+                "created": None,
+                "track_metadata": None
             },
             {
                 "user_id": self.user["musicbrainz_id"],
                 "recording_msid": None,
                 "recording_mbid": inserted_rows[2]["recording_mbid"],
-                "score": inserted_rows[2]["score"]
+                "score": inserted_rows[2]["score"],
+                "created": None,
+                "track_metadata": None
             },
             {
                 "user_id": self.user["musicbrainz_id"],
                 "recording_msid": None,
                 "recording_mbid": non_existing_rec_mbid,
-                "score": 0
+                "score": 0,
+                "created": None,
+                "track_metadata": None
             },
             {
                 "user_id": self.user["musicbrainz_id"],
                 "recording_msid": non_existing_rec_msid,
                 "recording_mbid": None,
-                "score": 0
+                "score": 0,
+                "created": None,
+                "track_metadata": None
             },
             {
                 "user_id": self.user["musicbrainz_id"],
                 "recording_msid": inserted_rows[0]["recording_msid"],
                 "recording_mbid": None,
-                "score": inserted_rows[0]["score"]
+                "score": inserted_rows[0]["score"],
+                "created": None,
+                "track_metadata": None
             },
             {
                 "user_id": self.user["musicbrainz_id"],
                 "recording_msid": inserted_rows[1]["recording_msid"],
                 "recording_mbid": None,
-                "score": inserted_rows[1]["score"]
+                "score": inserted_rows[1]["score"],
+                "created": None,
+                "track_metadata": None
             }
         ]
         self.assertCountEqual(feedback, expected)
