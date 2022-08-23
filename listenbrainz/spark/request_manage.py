@@ -11,12 +11,8 @@ from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
 
-import eventlet
-eventlet.monkey_patch()
 
-
-QUERIES_JSON_PATH = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), 'request_queries.json')
+QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
 DATAFRAME_JOB_TYPES = ("recommendation_recording", "similar_users")
 
 cli = click.Group()
