@@ -42,6 +42,18 @@ export default class SelectTimezone extends React.Component<
     });
   };
 
+  handleError = (error: string | Error, title?: string): void => {
+    const { newAlert } = this.props;
+    if (!error) {
+      return;
+    }
+    newAlert(
+      "danger",
+      title || "Error",
+      typeof error === "object" ? error.message : error
+    );
+  };
+
   submitTimezone = async (
     event?: React.FormEvent<HTMLFormElement>
   ): Promise<any> => {
@@ -64,9 +76,8 @@ export default class SelectTimezone extends React.Component<
           newAlert("success", "Your timezone has been saved.", "");
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Error",
+        this.handleError(
+          error,
           "Something went wrong! Unable to update timezone right now."
         );
       }
@@ -106,7 +117,7 @@ export default class SelectTimezone extends React.Component<
                 </option>
                 {pg_timezones.map((zone: [string, string]) => {
                   return (
-                    <option value={zone[0]}>
+                    <option key={zone[0]} value={zone[0]}>
                       {zone[0]} ({zone[1]})
                     </option>
                   );

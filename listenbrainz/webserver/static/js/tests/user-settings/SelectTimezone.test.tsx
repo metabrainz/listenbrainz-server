@@ -40,11 +40,9 @@ describe("submitTimezonePage", () => {
 
 describe("resetTimezone", () => {
   it("calls API, and sets state + creates a new alert on success", async () => {
-    const extraProps = { ...props};
-
     const wrapper = mount<SelectTimezone>(
       <GlobalAppContext.Provider value={globalProps}>
-        <SelectTimezone {...extraProps} />
+        <SelectTimezone {...props} />
       </GlobalAppContext.Provider>
     );
 
@@ -66,5 +64,22 @@ describe("resetTimezone", () => {
     expect(wrapper.state("userTimezone")).toEqual(
       'America/Denver'
     );
+    
   });
+
+  it("calls newAlert", async () => { 
+    const wrapper = mount<SelectTimezone>( 
+      <SelectTimezone {...{ ...props, newAlert: jest.fn() }} /> 
+    ); 
+    const instance = wrapper.instance(); 
+   
+    instance.handleError("error"); 
+   
+    expect(instance.props.newAlert).toHaveBeenCalledTimes(1); 
+    expect(instance.props.newAlert).toHaveBeenCalledWith( 
+      "danger",
+      "Error",
+      "error"
+    ); 
+  }); 
 });
