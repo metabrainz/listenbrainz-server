@@ -3,16 +3,16 @@ import sys
 from datetime import date
 
 import click
-import pika
 import ujson
-from flask import current_app
+from kombu import Connection
+from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
-import listenbrainz.utils as utils
+from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
 
-QUERIES_JSON_PATH = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), 'request_queries.json')
+
+QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
 DATAFRAME_JOB_TYPES = ("recommendation_recording", "similar_users")
 
 cli = click.Group()
@@ -63,32 +63,26 @@ def _prepare_query_message(query, **params):
 
 
 def send_request_to_spark_cluster(query, **params):
-    with create_app().app_context():
+    app = create_app()
+    with app.app_context():
         message = _prepare_query_message(query, **params)
-
-        rabbitmq_connection = utils.connect_to_rabbitmq(
-            username=current_app.config['RABBITMQ_USERNAME'],
-            password=current_app.config['RABBITMQ_PASSWORD'],
-            host=current_app.config['RABBITMQ_HOST'],
-            port=current_app.config['RABBITMQ_PORT'],
-            virtual_host=current_app.config['RABBITMQ_VHOST'],
-            error_logger=current_app.logger,
+        connection = Connection(
+            hostname=app.config["RABBITMQ_HOST"],
+            userid=app.config["RABBITMQ_USERNAME"],
+            port=app.config["RABBITMQ_PORT"],
+            password=app.config["RABBITMQ_PASSWORD"],
+            virtual_host=app.config["RABBITMQ_VHOST"],
+            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
         )
-        try:
-            channel = rabbitmq_connection.channel()
-            channel.exchange_declare(
-                exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
-            channel.basic_publish(
-                exchange=current_app.config['SPARK_REQUEST_EXCHANGE'],
-                routing_key='',
-                body=message,
-                properties=pika.BasicProperties(delivery_mode=2,),
-            )
-        except Exception:
-            # this is a relatively non critical part of LB for now, so just log the error and
-            # move ahead
-            current_app.logger.error(
-                'Could not send message to spark cluster: %s', ujson.dumps(message), exc_info=True)
+        producer = connection.Producer()
+        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
+        producer.publish(
+            message,
+            routing_key="",
+            exchange=spark_request_exchange,
+            delivery_mode=PERSISTENT_DELIVERY_MODE,
+            declare=[spark_request_exchange]
+        )
 
 
 @cli.command(name="request_user_stats")
