@@ -54,7 +54,7 @@ class ArtistCreditRecordingLookupQuery(Query):
                                        release_name,
                                        release_mbid,
                                        recording_name,
-                                       recording_mbid,
+                                       recording_mbid::TEXT,
                                        year,
                                        combined_lookup
                                   FROM mapping.canonical_musicbrainz_data
