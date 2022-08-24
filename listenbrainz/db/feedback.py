@@ -64,7 +64,7 @@ def insert(feedback: Feedback):
         delete_query = DELETE_QUERIES["msid"]
         insert_query = INSERT_QUERIES["msid"]
 
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         # delete the existing feedback and then insert new feedback. we cannot use ON CONFLICT DO UPDATE
         # because it is possible for a user to submit the feedback using recording_msid only and then using
         # both recording_msid and recording_mbid at once in which case the ON CONFLICT doesn't work well.
@@ -92,7 +92,7 @@ def delete(feedback: Feedback):
         params['recording_msid'] = feedback.recording_msid
         query = DELETE_QUERIES["msid"]
 
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         connection.execute(text(query), params)
 
 
