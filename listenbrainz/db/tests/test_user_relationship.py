@@ -165,7 +165,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
         db_user_relationship.insert(self.followed_user_1['id'], self.main_user['id'], 'follow')
 
         follower_results = db_user_relationship.multiple_users_by_username_following_user(
-            followed=1,
+            followed=self.main_user['id'],
             followers=['followed_user_1', 'followed_user_2']
         )
 
