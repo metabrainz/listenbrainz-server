@@ -42,29 +42,34 @@ describe("resetTimezone", () => {
   it("calls API, and sets state + creates a new alert on success", async () => {
     const wrapper = mount<SelectTimezone>(
       <GlobalAppContext.Provider value={globalProps}>
-        <SelectTimezone {...props} />
+        <SelectTimezone {...{ ...props, newAlert: jest.fn() }} /> 
       </GlobalAppContext.Provider>
     );
-
+    
     const instance = wrapper.instance();
+    expect(instance.props.user_timezone).toEqual('America/New_York');
+    expect(instance.context.currentUser.name).toEqual("testuser");
 
     // set valid selectZone state 
     instance.setState({
       selectZone: 'America/Denver',
     });
 
-    const spy = jest.fn();
-    instance.context.APIService.resetUserTimezone = spy;
+    const spy = jest
+      .spyOn(instance.context.APIService, "resetUserTimezone")
+      .mockImplementation(() => Promise.resolve(200));
 
     await instance.submitTimezone();
 
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith( "auth_token",  "America/Denver");
 
-    // test that state was updated
-    expect(wrapper.state("userTimezone")).toEqual(
-      'America/Denver'
-    );
-    
+    // test that state is updated and success alert is displayed
+    expect(wrapper.state("userTimezone")).toEqual('America/Denver');  
+    expect(instance.props.newAlert).toHaveBeenCalledTimes(1); 
+    expect(instance.props.newAlert).toHaveBeenCalledWith( 
+      "success", "Your timezone has been saved.", ""
+    );    
   });
 
   it("calls newAlert", async () => { 

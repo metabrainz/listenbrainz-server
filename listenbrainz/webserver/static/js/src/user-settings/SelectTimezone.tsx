@@ -73,6 +73,9 @@ export default class SelectTimezone extends React.Component<
           selectZone
         );
         if (status === 200) {
+          this.setState({
+            userTimezone: selectZone,
+          });
           newAlert("success", "Your timezone has been saved.", "");
         }
       } catch (error) {
@@ -82,9 +85,6 @@ export default class SelectTimezone extends React.Component<
         );
       }
     }
-    this.setState({
-      userTimezone: selectZone,
-    });
   };
 
   render() {
