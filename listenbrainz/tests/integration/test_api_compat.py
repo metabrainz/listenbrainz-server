@@ -125,7 +125,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(expected, r.json)
 
         # Check if listen reached the timescale listenstore
-        time.sleep(1)
+        time.sleep(0.5)
         recalculate_all_user_data()
         listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=data["timestamp[0]"]-1)
         self.assertEqual(len(listens), 1)
@@ -268,7 +268,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '1')
 
         # Check if listen reached the timescale listenstore
-        time.sleep(1)
+        time.sleep(0.5)
         recalculate_all_user_data()
         listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
@@ -328,7 +328,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '2')
 
         # Check if listens reached the timescale listenstore
-        time.sleep(1)
+        time.sleep(0.5)
         recalculate_all_user_data()
         listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
         self.assertEqual(len(listens), 2)

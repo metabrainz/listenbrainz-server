@@ -23,7 +23,6 @@ import os
 import shutil
 import tempfile
 import time
-from time import sleep
 from unittest.mock import patch
 
 from click.testing import CliRunner
@@ -125,11 +124,9 @@ class DumpManagerTestCase(DatabaseTestCase):
 
         listens = generate_data(1, self.user_name, 1500000000, 5)
         self.listenstore.insert(listens)
-        sleep(1)
 
         # create a full dump
-        self.runner.invoke(dump_manager.create_full, [
-                           '--location', self.tempdir])
+        self.runner.invoke(dump_manager.create_full, ['--location', self.tempdir])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
 
@@ -179,7 +176,6 @@ class DumpManagerTestCase(DatabaseTestCase):
         base = int(time.time())
         dump_id = db_dump.add_dump_entry(base - 60)
         print("%d dump id" % dump_id)
-        sleep(1)
         self.listenstore.insert(generate_data(1, self.user_name, base - 30, 5))
         result = self.runner.invoke(dump_manager.create_incremental, [
                                     '--location', self.tempdir])
@@ -208,10 +204,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # create a base dump entry
         t = int(time.time())
         db_dump.add_dump_entry(t)
-        sleep(1)
-        self.listenstore.insert(generate_data(
-            1, self.user_name, 1500000000, 5))
-        sleep(1)
+        self.listenstore.insert(generate_data(1, self.user_name, 1500000000, 5))
 
         # create a new dump ID to recreate later
         dump_id = db_dump.add_dump_entry(int(time.time()))
