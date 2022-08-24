@@ -154,11 +154,14 @@ def create_user_notification_event(user_name):
     metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
 
     try:
-        db_user_timeline_event.create_user_notification_event(user['id'], metadata)
+        event = db_user_timeline_event.create_user_notification_event(user['id'], metadata)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
-    return jsonify({'status': 'ok'})
+    event_data = event.dict()
+    event_data['created'] = event_data['created'].timestamp()
+    event_data['event_type'] = event_data['event_type'].value
+    return jsonify(event_data)
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/review', methods=['POST', 'OPTIONS'])
