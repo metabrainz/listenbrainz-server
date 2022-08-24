@@ -67,7 +67,7 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
             stats_type: the type of entity for which to insert stats in
             stats: the data to be inserted
     """
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO statistics.user (user_id, stats_type, stats_range, data, count, from_ts, to_ts, last_updated)
                  VALUES (:user_id, :stats_type, :stats_range, :data, :count, :from_ts, :to_ts, NOW())
@@ -283,7 +283,7 @@ def delete_user_stats(user_id):
         Args:
             user_id (int): the row ID of the user in the DB
     """
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             DELETE FROM statistics.user
              WHERE user_id = :user_id

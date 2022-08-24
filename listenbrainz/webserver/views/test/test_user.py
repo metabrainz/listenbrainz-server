@@ -263,7 +263,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assert400(response, "Reason must be a string.")
 
     def test_user_pins(self):
-        with timescale.engine.connect() as connection, connection.begin():
+        with timescale.engine.begin() as connection:
             connection.execute(text("""
                 INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
                                                    artist_mbids, artist_credit_name, recording_name)

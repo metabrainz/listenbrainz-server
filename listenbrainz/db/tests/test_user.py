@@ -41,7 +41,7 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get_or_create(2, 'testlastloginuser')
 
         # set the last login value of the user to 0
-        with db.engine.connect() as connection, connection.begin():
+        with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
                    SET last_login = to_timestamp(0)
@@ -231,7 +231,7 @@ class UserTestCase(DatabaseTestCase):
         user_id_l = db_user.create(2, "lucifer")
         user_id_r = db_user.create(3, "rob")
 
-        with db.engine.connect() as connection, connection.begin():
+        with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(
                 "INSERT INTO recommendation.similar_user (user_id, similar_users) VALUES (:user_id, :similar_users)"),
                 user_id=searcher_id,
