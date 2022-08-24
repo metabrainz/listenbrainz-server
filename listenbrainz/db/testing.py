@@ -18,14 +18,12 @@ class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
         db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-        self.reset_db()
 
     def tearDown(self):
-        self.drop_tables()
+        self.reset_db()
 
     def reset_db(self):
-        self.drop_tables()
-        self.init_db()
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'reset_tables.sql'))
 
     def init_db(self):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
