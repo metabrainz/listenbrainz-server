@@ -43,7 +43,6 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.log = logging.getLogger(__name__)
         self.ls = timescale_connection._ts
 
-
     def handshake(self, user_name, auth_token, timestamp):
         """ Makes a request to the handshake endpoint of the AudioScrobbler API and
             returns the response.
@@ -61,10 +60,8 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         return self.client.get('/', query_string=args)
 
-
     def test_handshake(self):
         """ Tests handshake for a user that exists """
-
         timestamp = int(time.time())
         audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
 
@@ -78,7 +75,6 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def test_handshake_post(self):
         """ Tests POST requests to handshake endpoint """
-
         ts = int(time.time())
         args = {
             'hs': 'true',
@@ -98,13 +94,10 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.assertEqual(response[0], 'OK')
         self.assertEqual(len(response[1]), 32)
 
-
     def test_root_url_when_no_handshake(self):
         """ Tests the root url when there's no handshaking taking place """
-
         r = self.client.get('/')
         self.assertStatus(r, 302)
-
 
     def test_handshake_unknown_user(self):
         """ Tests handshake for user that is not in the db """
@@ -112,19 +105,16 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         r = self.handshake('', '', '')
         self.assert401(r)
 
-
     def test_handshake_invalid_auth(self):
         """ Tests handshake when invalid authorization token is sent """
 
         r = self.handshake(self.user['musicbrainz_id'], '', int(time.time()))
         self.assert401(r)
 
-
     def test_submit_listen(self):
         """ Sends a valid listen after handshaking and checks if it is present in the
             listenstore
         """
-
         timestamp = int(time.time())
         audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
 
@@ -154,7 +144,6 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-
     def test_submit_listen_invalid_sid(self):
         """ Tests endpoint for 400 Bad Request if invalid session id is sent """
 
@@ -173,10 +162,8 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.assert401(r)
         self.assertEqual(r.data.decode('utf-8'), 'BADSESSION\n')
 
-
     def test_submit_listen_invalid_data(self):
         """ Tests endpoint for 400 Bad Request if invalid data is sent """
-
         timestamp = int(time.time())
         audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
 
@@ -221,10 +208,8 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
-
     def test_playing_now(self):
         """ Tests playing now notifications """
-
         timestamp = int(time.time())
         audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
 
@@ -245,7 +230,6 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.assert200(r)
         self.assertEqual(r.data.decode('utf-8'), 'OK\n')
 
-
     def test_get_session(self):
         """ Tests _get_session method in api_compat_deprecated """
 
@@ -254,19 +238,16 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         session = _get_session(s.sid)
         self.assertEqual(s.sid, session.sid)
 
-
     def test_get_session_which_doesnt_exist(self):
         """ Make sure BadRequest is raised when we try to get a session that doesn't exists """
 
         with self.assertRaises(BadRequest):
             session = _get_session('')
 
-
     def test_404(self):
 
         r = self.client.get('/thisurldoesnotexist')
         self.assert404(r)
-
 
     def test_to_native_api_now_playing(self):
         """ Tests _to_native_api when used with data sent to the now_playing endpoint """
@@ -302,10 +283,8 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         native_data = _to_native_api(data, '')
         self.assertIsNone(native_data)
 
-
     def test_to_native_api(self):
         """ Tests _to_native_api with data that is sent to the submission endpoint """
-
         t = int(time.time())
 
         data = {

@@ -155,6 +155,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'min_ts': ts + 1}
         )
         self.assert200(r)
+        print(json.dumps(r.json))
         payload = self.remove_own_follow_events(r.json['payload'])
         self.assertEqual(4, payload['count'])
 
