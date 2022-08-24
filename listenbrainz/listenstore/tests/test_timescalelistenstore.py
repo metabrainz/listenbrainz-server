@@ -58,7 +58,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                                (recording_msid, recording_mbid, match_type)
                         VALUES ('%s', '%s', 'exact_match')""" % (msid, '076255b4-1575-11ec-ac84-135bf6a670e3')
 
-        with ts.engine.connect() as connection, connection.begin():
+        with ts.engine.begin() as connection:
             connection.execute(sqlalchemy.text(query))
             connection.execute(sqlalchemy.text(join_query))
 

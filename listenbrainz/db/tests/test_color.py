@@ -11,7 +11,7 @@ from listenbrainz.db.color import get_releases_for_color
 class HuesoundTestCase(DatabaseTestCase):
 
     def insert_test_data(self):
-        with db.engine.connect() as connection, connection.begin():
+        with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text("""INSERT INTO release_color (caa_id, release_mbid, red, green, blue, color)
                                                        VALUES (1, 'e97f805a-ab48-4c52-855e-07049142113d', 0, 0, 255, '(0, 0, 255)')"""))
             connection.execute(sqlalchemy.text("""INSERT INTO release_color (caa_id, release_mbid, red, green, blue, color)

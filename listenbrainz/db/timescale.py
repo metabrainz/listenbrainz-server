@@ -44,7 +44,7 @@ def init_db_connection(connect_str):
 
 def run_sql_script(sql_file_path):
     with open(sql_file_path) as sql:
-        with engine.connect() as connection, connection.begin():
+        with engine.begin() as connection:
             connection.execute(sql.read())
 
 
