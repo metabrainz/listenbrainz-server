@@ -72,6 +72,7 @@
               {{ current_user.musicbrainz_id }} <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
+              <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Profile</a></li>
               <li><a href="{{ url_for('profile.info') }}">Settings</a></li>
               <li><a href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">Playlists</a></li>
               <li><a href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">Tracks you might like</a></li>
