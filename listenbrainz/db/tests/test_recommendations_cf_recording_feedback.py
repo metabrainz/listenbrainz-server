@@ -1,10 +1,5 @@
-# -*- coding: utf-8 -*-
-import json
-import os
 import uuid
-from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit,
-                                                           RecommendationFeedbackDelete,
-                                                           get_allowed_ratings)
+from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit, RecommendationFeedbackDelete)
 import listenbrainz.db.recommendations_cf_recording_feedback as db_feedback
 import listenbrainz.db.user as db_user
 

@@ -36,7 +36,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             )
 
         db_recommendations_cf_recording.insert_user_recommendation(
-            2,
+            self.user2["id"],
             UserRecommendationsJson(**{
                 'top_artist': data['recording_mbid'],
                 'similar_artist': []
@@ -44,7 +44,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         )
 
         db_recommendations_cf_recording.insert_user_recommendation(
-            3,
+            self.user3["id"],
             UserRecommendationsJson(**{
                 'top_artist': [],
                 'similar_artist': data['recording_mbid']
@@ -144,7 +144,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 }]
             },
             'created': datetime.utcnow(),
-            'user_id': 1
+            'user_id': self.user["id"]
         })
         mock_get_recommendations.return_value = []
 
@@ -168,7 +168,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 }]
             },
             'created': datetime.utcnow(),
-            'user_id': 1
+            'user_id': self.user["id"]
         })
         mock_get_recommendations.return_value = []
 
@@ -194,7 +194,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 }]
             },
             'created': datetime.utcnow(),
-            'user_id': 1
+            'user_id': self.user["id"]
         })
 
         recommendations = [{
@@ -221,7 +221,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
 
         expected_props = {
             "user": {
-                "id": 2,
+                "id": self.user2["id"],
                 "name": 'vansika_1',
             },
             "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
@@ -240,7 +240,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 }]
             },
             'created': datetime.utcnow(),
-            'user_id': 1
+            'user_id': self.user["id"]
         })
 
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
