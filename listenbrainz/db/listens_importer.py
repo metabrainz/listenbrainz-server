@@ -14,7 +14,7 @@ def update_import_status(user_id: int, service: ExternalServiceType, error_messa
         service (data.model.ExternalServiceType): service to add error for the user
         error_message (str): the user-friendly error message to be displayed
     """
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             UPDATE listens_importer
                SET last_updated = now()
@@ -37,7 +37,7 @@ def update_latest_listened_at(user_id: int, service: ExternalServiceType, timest
         service (data.model.ExternalServiceType): service to update latest listen timestamp for
         timestamp (int): the unix timestamp of the latest listen imported for the user
     """
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO listens_importer (user_id, service, last_updated, latest_listened_at)
                  VALUES (:user_id, :service, now(), :timestamp)

@@ -38,7 +38,7 @@ def pin(pinned_recording: WritablePinnedRecording):
         'created': pinned_recording.created
     }
 
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             UPDATE pinned_recording
                SET pinned_until = NOW()
@@ -67,7 +67,7 @@ def unpin(user_id: int):
             False if no pinned recording belonging to the given user_id was currently pinned.
     """
 
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
             UPDATE pinned_recording
                SET pinned_until = NOW()
@@ -90,7 +90,7 @@ def delete(row_id: int, user_id: int):
             False if the pinned recording for the given row_id and user_id did not exist.
     """
 
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
             DELETE FROM pinned_recording
              WHERE id = :row_id

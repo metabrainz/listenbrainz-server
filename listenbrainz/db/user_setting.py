@@ -58,7 +58,7 @@ def set_timezone(user_id: int, timezone_name: str):
         timezone_name (str): the user selected timezone name
 
     """
-    with db.engine.connect() as connection, connection.begin():
+    with db.engine.begin() as connection:
         try:
             connection.execute(sqlalchemy.text("""
                 INSERT INTO user_setting (user_id, timezone_name)
