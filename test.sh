@@ -230,7 +230,7 @@ if [ "$1" == "int" ]; then
     if [ -z "$*" ]; then
         TESTS_TO_RUN="listenbrainz/tests/integration"
     else
-        TESTS_TO_RUN="$*"
+        TESTS_TO_RUN="$@"
     fi
     echo "Running tests $TESTS_TO_RUN"
 
@@ -238,7 +238,7 @@ if [ "$1" == "int" ]; then
                   -wait tcp://lb_db:5432 -timeout 60s \
                   -wait tcp://redis:6379 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
-                bash -c "pytest -W always::DeprecationWarning $TESTS_TO_RUN"
+                bash -c "pytest $TESTS_TO_RUN"
     RET=$?
     echo "Taking containers down"
     int_dcdown
@@ -315,13 +315,13 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     bring_up_unit_db
     unit_setup
     echo "Running tests"
-    docker_compose_run listenbrainz pytest "-W always::DeprecationWarning $*"
+    docker_compose_run listenbrainz pytest "$@"
     RET=$?
     unit_dcdown
     exit $RET
 else
     # Else, we have containers, just run tests
     echo "Running tests"
-    docker_compose_run listenbrainz pytest "-W always::DeprecationWarning $*"
+    docker_compose_run listenbrainz pytest "$@"
     exit $?
 fi
