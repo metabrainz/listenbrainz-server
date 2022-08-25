@@ -1327,3 +1327,46 @@ describe("unhideFeedEvent", () => {
     ).resolves.toEqual(200);
   });
 });
+
+describe("resetUserTimezone", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.resetUserTimezone("foobar", "America/Denver");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/settings/timezone",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          zonename: "America/Denver"
+        }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.resetUserTimezone("foobar", "America/Denver");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the response code if successful", async () => {
+    await expect(
+      apiService.resetUserTimezone("foobar", "America/Denver")
+    ).resolves.toEqual(200);
+  });
+});
