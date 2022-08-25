@@ -1,35 +1,14 @@
-{% extends 'base.html' %}
+{% extends 'base-react.html' %}
 
 {% block title %}Select Timezone- ListenBrainz{% endblock %}
 
-{% block content %}
-  <h3 class="page-title">Select Timezone</h3>
-  <p>
-    Your current timezone setting is <b>{{ user_timezone }}</b>. 
-    <br>By choosing your local time zone, 
-    you will have a local timestamps part of your submitted listens. 
-    This also informs as when to generate daily playlists and other recommendations for you.
-  </p>
+{% block profile_content %}
 
-  <form method="post">
-      {{ form.hidden_tag() }}
-      <p>
-        <form action="">
-            <label for="timezone">Choose you local timezone:</label>
-            
-            <select name="timezone" id="timezone" class="span5">
-              {% for timezone in pg_timezones %}
-                <option value="{{ timezone[0] }}">{{ timezone[0] }} ({{ timezone[1] }})</option>
-                {% endfor %}
-            </select>
-            
-            <br><br>
-            <p>
-                <button type="submit" class="btn btn-info btn-lg" style="width: 240px">Save Timezone</button>
-            <p>
-        </form>
-      <p>
-  </form>
+    <div id="react-container"></div>
 
 {% endblock %}
 
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ get_static_path('selectTimezone.js') }}" type="text/javascript"></script>
+{% endblock %}
