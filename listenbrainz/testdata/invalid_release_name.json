@@ -1,0 +1,17 @@
+{
+    "listen_type": "single",
+    "payload": [
+        {
+            "listened_at": 1486449409,
+            "track_metadata": {
+                "artist_name": "Kanye West",
+                "track_name": "The Life of Pablo",
+                "release_name": 20,
+                "additional_info": {
+                    "listening_from": "spotify",
+                    "recording_msid": "2cfad207-3f55-4aec-8120-86cf66e34d59"
+                }
+            }
+        }
+    ]
+}
