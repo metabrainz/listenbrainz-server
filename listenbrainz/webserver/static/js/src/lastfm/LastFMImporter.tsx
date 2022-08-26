@@ -123,7 +123,7 @@ export default class LastFmImporter extends React.Component<
     try {
       const response = await fetch(encodeURI(url));
       const data = await response.json();
-      if ("message" in data && data.message === "User not found") {
+      if (data?.message === "User not found") {
         wrong_username = true;
         throw new Error();
       }
