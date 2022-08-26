@@ -11,7 +11,7 @@ def build_sessioned_index(listen_table, mbc_table, session):
     return f"""
         WITH listens AS (
                  SELECT user_id
-                      , listened_at
+                      , BIGINT(listened_at)
                       , CAST(COALESCE(recording_data.length / 1000, 180) AS BIGINT) AS duration
                       , recording_mbid
                    FROM {listen_table} l
