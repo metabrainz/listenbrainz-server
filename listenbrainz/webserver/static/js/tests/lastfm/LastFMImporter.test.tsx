@@ -1,7 +1,9 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 import fetchMock from "jest-fetch-mock";
-import LastFmImporter, { LASTFM_RETRIES } from "../../src/lastfm/LastFMImporter";
+import LastFmImporter, {
+  LASTFM_RETRIES,
+} from "../../src/lastfm/LastFMImporter";
 // Mock data to test functions
 import * as page from "../__mocks__/page.json";
 import * as getInfo from "../__mocks__/getInfo.json";
@@ -130,10 +132,18 @@ describe("getTotalNumberOfScrobbles", () => {
     );
   });
   it("should throw user not found", async () => {
+    window.fetch = jest.fn().mockImplementation(() =>
+      Promise.resolve({
+        status: 404,
+        json: () => Promise.resolve({ message: "User not found", error: 6 }),
+      })
+    );
     instance.setState({ lastfmUsername: "nonexistentusernamedonttryathome" });
 
-    await expect(instance.getTotalNumberOfScrobbles()).rejects.toThrowError('User not found');
-  })
+    await expect(instance.getTotalNumberOfScrobbles()).rejects.toThrowError(
+      "User not found"
+    );
+  });
 });
 
 describe("getPage", () => {

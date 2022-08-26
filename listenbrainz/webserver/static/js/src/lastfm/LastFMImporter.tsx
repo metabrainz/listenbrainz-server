@@ -125,6 +125,7 @@ export default class LastFmImporter extends React.Component<
       const data = await response.json();
       if ("message" in data && data.message === "User not found") {
         wrong_username = true;
+        throw new Error();
       }
       if ("playcount" in data.user) {
         return Number(data.user.playcount);
