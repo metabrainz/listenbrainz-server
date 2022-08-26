@@ -66,5 +66,5 @@ def main(days, session):
 
     run_query(query) \
         .write \
-        .format('parquet') \
+        .format('csv') \
         .save(config.HDFS_CLUSTER_URI + save_path, mode="overwrite")
