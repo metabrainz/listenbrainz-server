@@ -6,7 +6,7 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_new_dump
 
 
-def build_sessioned_index(listen_table, mbc_table, from_ts, to_ts, session):
+def build_sessioned_index(listen_table, mbc_table, session):
     # TODO: Handle case of unmatched recordings breaking sessions!
     return f"""
         WITH listens AS (
@@ -18,8 +18,6 @@ def build_sessioned_index(listen_table, mbc_table, from_ts, to_ts, session):
               LEFT JOIN {mbc_table} mbc
                   USING (recording_mbid)
                   WHERE l.recording_mbid IS NOT NULL
-                    AND listened_at > {from_ts}
-                    AND listened_at < {to_ts}
             ), ordered AS (
                 SELECT user_id
                      , listened_at
@@ -63,7 +61,7 @@ def main(days, session):
 
     save_path = f"{path.RECORDING_SIMILARITY}/session_based_days_{days}_session_{session}"
 
-    query = build_sessioned_index(table, metadata_table, int(from_date.timestamp()), int(to_date.timestamp()), session)
+    query = build_sessioned_index(table, metadata_table, session)
 
     run_query(query) \
         .write \
