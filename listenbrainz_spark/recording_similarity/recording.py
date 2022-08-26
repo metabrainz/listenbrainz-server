@@ -2,12 +2,11 @@ from datetime import datetime, date, time, timedelta
 
 import listenbrainz_spark
 from listenbrainz_spark import config, path
-from listenbrainz_spark.schema import recording_similarity_schema
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_new_dump
 
 
-def build_sessioned_index(listen_table, mbc_table, from_ts, to_ts, threshold):
+def build_sessioned_index(listen_table, mbc_table, from_ts, to_ts, session):
     # TODO: Handle case of unmatched recordings breaking sessions!
     return f"""
         WITH listens AS (
@@ -30,7 +29,7 @@ def build_sessioned_index(listen_table, mbc_table, from_ts, to_ts, threshold):
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), sessions AS (
                 SELECT user_id
-                     , COUNT(*) FILTER ( WHERE difference > {threshold} ) OVER w AS session_id
+                     , COUNT(*) FILTER ( WHERE difference > {session} ) OVER w AS session_id
                      , recording_mbid
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
@@ -50,29 +49,23 @@ def build_sessioned_index(listen_table, mbc_table, from_ts, to_ts, threshold):
     """
 
 
-def main(steps, days, session, threshold):
+def main(days, session):
     to_date = datetime.combine(date.today(), time.min)
     from_date = to_date + timedelta(days=-days)
 
     table = "recording_similarity_listens"
+    metadata_table = "mb_metadata_cache"
 
     get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView(table)
 
-    weight = 1.0
-    decrement = 1.0 / steps
+    metadata_df = listenbrainz_spark.sql_context.read.json(config.HDFS_CLUSTER_URI + "/mb_metadata_cache.jsonl")
+    metadata_df.createOrReplaceTempView(metadata_table)
 
-    similarity_df = listenbrainz_spark.session.createDataFrame([], schema=recording_similarity_schema)
-    for step in range(1, steps + 1, 1):
-        query = (table, step, session, weight)
-        similarity_df = similarity_df.union(run_query(query))
-        weight -= decrement
+    save_path = f"{path.RECORDING_SIMILARITY}/session_based_days_{days}_session_{session}"
 
-    partial_index_table = "partial_similarity_index"
-    similarity_df.createOrReplaceTempView(partial_index_table)
+    query = build_sessioned_index(table, metadata_table, int(from_date.timestamp()), int(to_date.timestamp()), session)
 
-    save_path = f"{path.RECORDING_SIMILARITY}/steps_{steps}_days_{days}_session_{session}_threshold_{threshold}"
-    # combined_index_query = get_complete_index_query(partial_index_table, threshold)
-    # run_query(combined_index_query) \
-    #     .write \
-    #     .format('parquet') \
-    #     .save(config.HDFS_CLUSTER_URI + save_path, mode="overwrite")
+    run_query(query) \
+        .write \
+        .format('parquet') \
+        .save(config.HDFS_CLUSTER_URI + save_path, mode="overwrite")
