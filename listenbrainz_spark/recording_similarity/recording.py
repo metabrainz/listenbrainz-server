@@ -27,7 +27,8 @@ def build_sessioned_index(listen_table, mbc_table, session):
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), sessions AS (
                 SELECT user_id
-                     , COUNT(*) FILTER ( WHERE difference > {session} ) OVER w AS session_id
+                     -- spark doesn't support window aggregate functions with FILTER clause
+                     , COUNT_IF(difference > {session}) OVER w AS session_id
                      , recording_mbid
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
