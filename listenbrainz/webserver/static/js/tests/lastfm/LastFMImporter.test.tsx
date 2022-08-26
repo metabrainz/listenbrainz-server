@@ -129,6 +129,11 @@ describe("getTotalNumberOfScrobbles", () => {
       "An error occurred, please try again. :("
     );
   });
+  it("should return user not found", async () => {
+    instance.setState({ lastfmUsername: "nonexistentusernamedonttryathome" });
+
+    await expect(instance.getTotalNumberOfScrobbles()).rejects.toThrowError('User not found');
+  })
 });
 
 describe("getPage", () => {
