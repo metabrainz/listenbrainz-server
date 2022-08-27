@@ -82,7 +82,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['listens'][0]['track_metadata']
                          ['release_name'], 'The Life of Pablo')
         self.assertEqual(data['listens'][0]['track_metadata']
-                         ['additional_info']['listening_from'], 'spotify')
+                         ['additional_info']['music_service'], 'spotify.com')
 
         # make sure that artist msid, release msid and recording msid are present in data
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
