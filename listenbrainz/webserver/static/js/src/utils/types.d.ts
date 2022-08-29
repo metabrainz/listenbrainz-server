@@ -516,6 +516,12 @@ declare type UserTrackRecommendationMetadata = {
   recording_msid: string;
 };
 
+/** For recommending a track personally from the front-end */
+declare type UserTrackPersonalRecommendationMetadata = UserTrackRecommendationMetadata & {
+  blurb_content: string | null;
+  users: Array<string> | null;
+};
+
 declare type PinEventMetadata = Listen & {
   blurb_content?: string;
 };

@@ -29,6 +29,7 @@ import {
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendations";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -39,6 +40,7 @@ export interface RecentListensState {
   listenCount?: number;
   recordingToPin?: Listen;
   recordingToReview?: Listen;
+  recordingToPersonallyRecommend: Listen;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
 }
@@ -56,6 +58,7 @@ export default class RecentListens extends React.Component<
       listens: props.listens || [],
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
+      recordingToPersonallyRecommend: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
     };
@@ -67,6 +70,12 @@ export default class RecentListens extends React.Component<
 
   updateRecordingToPin = (recordingToPin: Listen) => {
     this.setState({ recordingToPin });
+  };
+
+  updateRecordingToPersonallyRecommend = (
+    recordingToPersonallyRecommend: Listen
+  ) => {
+    this.setState({ recordingToPersonallyRecommend });
   };
 
   updateRecordingToReview = (recordingToReview: Listen) => {
@@ -174,7 +183,12 @@ export default class RecentListens extends React.Component<
   };
 
   render() {
-    const { listens, recordingToPin, recordingToReview } = this.state;
+    const {
+      listens,
+      recordingToPin,
+      recordingToReview,
+      recordingToPersonallyRecommend,
+    } = this.state;
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
 
@@ -213,6 +227,16 @@ export default class RecentListens extends React.Component<
                         action={this.updateRecordingToPin.bind(this, listen)}
                         dataToggle="modal"
                         dataTarget="#PinRecordingModal"
+                      />
+                      <ListenControl
+                        text="Personally recommend this recording"
+                        icon={faThumbtack}
+                        action={this.updateRecordingToPersonallyRecommend.bind(
+                          this,
+                          listen
+                        )}
+                        dataToggle="modal"
+                        dataTarget="#PersonalRecommendationModal"
                       />
                       {isListenReviewable && (
                         <ListenControl
@@ -264,6 +288,10 @@ export default class RecentListens extends React.Component<
               <CBReviewModal
                 listen={recordingToReview}
                 isCurrentUser
+                newAlert={newAlert}
+              />
+              <PersonalRecommendationModal
+                recordingToPersonallyRecommend={recordingToPersonallyRecommend}
                 newAlert={newAlert}
               />
             </>
