@@ -29,7 +29,7 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#blogs");
   const { globalReactProps } = getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = globalReactProps;
+  const { api_url, sentry_dsn, sentry_traces_sample_rate } = globalReactProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ReactDOM.render(
     <ErrorBoundary>
-      <Blog />
+      <Blog apiUrl={api_url} />
     </ErrorBoundary>,
     domContainer
   );
