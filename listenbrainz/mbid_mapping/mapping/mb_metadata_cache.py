@@ -349,10 +349,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 ON acn.artist_credit = ac.id
                               JOIN artist a
                                 ON acn.artist = a.id
-                              JOIN artist_type  at
-                                ON a.type = at.id
-                              JOIN gender ag
-                                ON a.type = ag.id
                          LEFT JOIN artist_data ard
                                 ON ard.gid = r.gid
                          LEFT JOIN recording_rels rrl
