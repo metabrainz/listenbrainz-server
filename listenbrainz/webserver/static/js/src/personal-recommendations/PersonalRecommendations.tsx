@@ -1,8 +1,9 @@
 import * as React from "react";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
-import { uniq, includes } from "lodash";
+import { uniq, includes, remove } from "lodash";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "../listens/ListenControl";
+import Pill from "./Pill";
 
 export type PersonalRecommendationModalProps = {
   recordingToPersonallyRecommend?: Listen;
@@ -19,6 +20,7 @@ export interface PersonalRecommendationModalState {
   users: Array<string> | null;
   followers: Array<string> | null;
   searchBoxFocus: Boolean;
+  suggestions: Array<string> | null;
 }
 
 export default class PersonalRecommendationModal extends React.Component<
@@ -36,6 +38,7 @@ export default class PersonalRecommendationModal extends React.Component<
       users: [],
       followers: [],
       searchBoxFocus: false,
+      suggestions: [],
     };
   }
 
@@ -72,12 +75,41 @@ export default class PersonalRecommendationModal extends React.Component<
     this.setState({ users: uniq(users) });
   };
 
+  removeUser = (user: string) => {
+    const { users } = this.state;
+    remove(users!, (element) => {
+      return element === user;
+    });
+    this.setState({ users });
+  };
+
+  searchUsers = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { followers } = this.state;
+    if (event.target.value) {
+      const suggestions = followers!.filter((username) => {
+        if (includes(username, event.target.value)) {
+          return username;
+        }
+        return null;
+      });
+      this.setState({ suggestions });
+    } else {
+      this.setState({ suggestions: [] });
+    }
+  };
+
   render() {
     const { recordingToPersonallyRecommend } = this.props;
     if (!recordingToPersonallyRecommend) {
       return null;
     }
-    const { blurbContent, users, followers, searchBoxFocus } = this.state;
+    const {
+      blurbContent,
+      users,
+      searchBoxFocus,
+      suggestions,
+      followers,
+    } = this.state;
     const { track_name } = recordingToPersonallyRecommend.track_metadata;
     const { artist_name } = recordingToPersonallyRecommend.track_metadata;
     return (
@@ -108,25 +140,28 @@ export default class PersonalRecommendationModal extends React.Component<
               </h4>
             </div>
             <div className="modal-body">
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  onFocus={() => {
-                    this.setState({ searchBoxFocus: true });
-                  }}
-                  onBlur={() => {
-                    this.setState({ searchBoxFocus: false });
-                  }}
-                />
-                <span className="input-group-btn">
-                  <button className="btn btn-default" type="button">
-                    Add
-                  </button>
-                </span>
-              </div>
-              <div className={`searchdropdown ${searchBoxFocus ? "open" : ""}`}>
-                {followers!.map((name) => {
+              {users!.map((user) => {
+                return (
+                  <Pill
+                    title={user}
+                    // eslint-disable-next-line react/jsx-no-bind
+                    closeAction={this.removeUser.bind(this, user)}
+                  />
+                );
+              })}
+              <input
+                type="text"
+                className="form-control"
+                onFocus={() => {
+                  this.setState({ searchBoxFocus: true });
+                }}
+                onBlur={() => {
+                  this.setState({ searchBoxFocus: false });
+                }}
+                onChange={this.searchUsers}
+              />
+              <div className="searchdropdown">
+                {suggestions!.map((name) => {
                   return (
                     <ListenControl
                       text={name}
