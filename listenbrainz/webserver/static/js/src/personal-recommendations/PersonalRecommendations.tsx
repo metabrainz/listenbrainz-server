@@ -19,7 +19,6 @@ export interface PersonalRecommendationModalState {
   blurbContent: string;
   users: Array<string> | null;
   followers: Array<string> | null;
-  searchBoxFocus: Boolean;
   suggestions: Array<string> | null;
 }
 
@@ -37,7 +36,6 @@ export default class PersonalRecommendationModal extends React.Component<
       blurbContent: "",
       users: [],
       followers: [],
-      searchBoxFocus: false,
       suggestions: [],
     };
   }
@@ -98,18 +96,18 @@ export default class PersonalRecommendationModal extends React.Component<
     }
   };
 
+  submitPersonalRecommendation = async () => {
+    const { recordingToPersonallyRecommend, newAlert } = this.props;
+    const { blurbContent, users } = this.state;
+    const { APIService, currentUser } = this.context;
+  };
+
   render() {
     const { recordingToPersonallyRecommend } = this.props;
     if (!recordingToPersonallyRecommend) {
       return null;
     }
-    const {
-      blurbContent,
-      users,
-      searchBoxFocus,
-      suggestions,
-      followers,
-    } = this.state;
+    const { blurbContent, users, suggestions, followers } = this.state;
     const { track_name } = recordingToPersonallyRecommend.track_metadata;
     const { artist_name } = recordingToPersonallyRecommend.track_metadata;
     return (
@@ -152,12 +150,6 @@ export default class PersonalRecommendationModal extends React.Component<
               <input
                 type="text"
                 className="form-control"
-                onFocus={() => {
-                  this.setState({ searchBoxFocus: true });
-                }}
-                onBlur={() => {
-                  this.setState({ searchBoxFocus: false });
-                }}
                 onChange={this.searchUsers}
               />
               <div className="searchdropdown">
