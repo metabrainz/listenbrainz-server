@@ -3,6 +3,4 @@ _build
 build
 # virtualenv for doc stuff
 ve
-_build
-_static
 _templates

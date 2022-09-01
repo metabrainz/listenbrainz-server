@@ -91,12 +91,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         return;
       }
       try {
-        const feedbackArray = await APIService.getFeedbackForUserForMBIDs(
+        const feedbackObject = await APIService.getFeedbackForUserForMBIDs(
           currentUser.name,
           recordingMBID
         );
-        if (feedbackArray.length) {
-          const feedback: any = first(feedbackArray);
+        if (feedbackObject?.feedback?.length) {
+          const feedback: any = first(feedbackObject.feedback);
           setCurrentListenFeedback(feedback.score);
         } else {
           setCurrentListenFeedback(0);
@@ -194,45 +194,239 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     metadata?.recording?.duration ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
 
-  const artist = metadata?.artist?.[0];
+  const artist = metadata?.artist?.artists?.[0];
 
   const supportLinks = pick(artist?.rels, ...supportLinkTypes);
   const lyricsLink = pick(artist?.rels, "lyrics");
 
-  return (
-    <div id="metadata-viewer">
-      {!playingNow && (
-        <div className="no-listen-container">
-          <div className="no-listen">
-            <p>
-              <hr />
-              <div style={{ marginTop: "-2.1em" }}>
-                <FontAwesomeIcon icon={faPauseCircle} size="2x" />
+  let rightSideContent;
+  if (!playingNow) {
+    rightSideContent = (
+      <div className="right-side">
+        <div className="no-listen">
+          <p>
+            <hr />
+            <span className="pause-icon">
+              <FontAwesomeIcon icon={faPauseCircle} size="2x" />
+            </span>
+            <h3>What are you listening to?</h3>
+            We have not received any recent <i>playing-now</i> events for your
+            account.
+            <br />
+            As soon as a <i>playing-now</i> listen comes through, this page will
+            be updated automatically.
+            <br />
+            <br />
+            <small>
+              In order to receive these events, you will need to{" "}
+              <a href="/add-data/">send listens</a> to ListenBrainz.
+              <br />
+              We work hard to make this data available to you as soon as we
+              receive it, but until your music service sends us a{" "}
+              <a href="https://listenbrainz.readthedocs.io/en/production/dev/json/?highlight=playing%20now#submission-json">
+                <i>playing-now</i> event
+              </a>
+              , we cannot display anything here.
+            </small>
+            <hr />
+          </p>
+        </div>
+      </div>
+    );
+  } else {
+    rightSideContent = (
+      <div
+        className="right-side panel-group"
+        id="accordion"
+        role="tablist"
+        aria-multiselectable="false"
+      >
+        <div
+          className={`panel panel-default ${
+            expandedAccordion === 1 ? "expanded" : ""
+          }`}
+        >
+          <div
+            className="panel-heading"
+            role="tab"
+            tabIndex={0}
+            id="headingOne"
+            onKeyDown={() => setExpandedAccordion(1)}
+            onClick={() => setExpandedAccordion(1)}
+            aria-expanded={expandedAccordion === 1}
+            aria-selected={expandedAccordion === 1}
+            aria-controls="collapseOne"
+          >
+            <h4 className="panel-title">
+              <div className="recordingheader">
+                <div className="name strong">{trackName}</div>
+                <div className="date">
+                  {isNumber(duration) && millisecondsToStr(duration)}
+                </div>
+                <div className="caret" />
               </div>
-              Sorry, we do not know what music you are currently listening to,
-              since we have not received any recent <i>Playing Now</i> events
-              for your account.
-              <br />
-              As soon as a <i>Playing Now</i> listen comes through, this page
-              will be updated automatically.
-              <br />
-              <br />
-              <small>
-                In order to receive these events, you will need to{" "}
-                <a href="/add-data/">send listens</a> to ListenBrainz.
-                <br />
-                We work hard to make this data available to you as soon as we
-                receive it, but until your music service sends us a{" "}
-                <a href="https://listenbrainz.readthedocs.io/en/production/dev/json/?highlight=playing%20now#submission-json">
-                  <i>Playing Now</i> event
-                </a>
-                , we cannot display anything here.
-              </small>
-              <hr />
-            </p>
+            </h4>
+          </div>
+          <div
+            id="collapseOne"
+            className={`panel-collapse collapse ${
+              expandedAccordion === 1 ? "in" : ""
+            }`}
+            role="tabpanel"
+            aria-labelledby="headingOne"
+          >
+            <div className="panel-body">
+              <TagsComponent tags={metadata?.tag?.recording} />
+              {/* <div className="ratings content-box" /> */}
+              {Boolean(flattenedRecRels?.length) && (
+                <div className="white content-box">
+                  <table className="table credits-table">
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span className="strong">Credits:</span>
+                        </td>
+                      </tr>
+                      {flattenedRecRels.map((rel) => {
+                        const { artist_name, artist_mbid, instrument } = rel;
+                        return (
+                          <tr key={artist_mbid}>
+                            <td>
+                              <a
+                                href={`${musicBrainzURLRoot}artist/${artist_mbid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {artist_name}
+                              </a>
+                            </td>
+                            <td>{instrument}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div className="flex flex-wrap">
+                {lyricsLink?.lyrics && (
+                  <a
+                    href={lyricsLink.lyrics}
+                    className="btn btn-outline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Lyrics
+                  </a>
+                )}
+                <OpenInMusicBrainzButton
+                  entityType="recording"
+                  entityMBID={recordingData?.recording_mbid}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      )}
+        {Boolean(metadata?.release || recordingData?.release_name) && (
+          <div
+            className={`panel panel-default ${
+              expandedAccordion === 2 ? "expanded" : ""
+            }`}
+          >
+            <div
+              className="panel-heading"
+              role="tab"
+              tabIndex={0}
+              id="headingTwo"
+              onKeyDown={() => setExpandedAccordion(2)}
+              onClick={() => setExpandedAccordion(2)}
+              aria-expanded={expandedAccordion === 2}
+              aria-selected={expandedAccordion === 2}
+              aria-controls="collapseTwo"
+            >
+              <h4 className="panel-title">
+                <div className="releaseheader">
+                  <div className="name strong">
+                    {recordingData?.release_name}
+                  </div>
+                  <div className="date">{metadata?.release?.year}</div>
+                  <div className="caret" />
+                </div>
+              </h4>
+            </div>
+            <div
+              id="collapseTwo"
+              className={`panel-collapse collapse ${
+                expandedAccordion === 2 ? "in" : ""
+              }`}
+              role="tabpanel"
+              aria-labelledby="headingTwo"
+            >
+              <div className="panel-body">
+                <TagsComponent tags={metadata?.tag?.release_group} />
+                <OpenInMusicBrainzButton
+                  entityType="release"
+                  entityMBID={recordingData?.release_mbid}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        <div
+          className={`panel panel-default ${
+            expandedAccordion === 3 ? "expanded" : ""
+          }`}
+        >
+          <div
+            className="panel-heading"
+            role="tab"
+            tabIndex={0}
+            id="headingThree"
+            onKeyDown={() => setExpandedAccordion(3)}
+            onClick={() => setExpandedAccordion(3)}
+            aria-expanded={expandedAccordion === 3}
+            aria-selected={expandedAccordion === 3}
+            aria-controls="collapseThree"
+          >
+            <h4 className="panel-title">
+              <div className="artistheader">
+                <div className="name strong">{artistName}</div>
+                <div className="date">{artist?.begin_year}</div>
+                <div className="caret" />
+              </div>
+            </h4>
+          </div>
+          <div
+            id="collapseThree"
+            className={`panel-collapse collapse ${
+              expandedAccordion === 3 ? "in" : ""
+            }`}
+            role="tabpanel"
+            aria-labelledby="headingThree"
+          >
+            <div className="panel-body">
+              <TagsComponent tags={metadata?.tag?.artist} />
+              {/* <div className="ratings content-box" /> */}
+              {(artist?.begin_year || artist?.area) && (
+                <div>
+                  {artist?.type === "Group" ? "Band founded" : "Artist born"}
+                  {artist?.begin_year && ` in ${artist.begin_year}`}
+                  {artist?.area && ` in ${artist.area}`}
+                </div>
+              )}
+              <OpenInMusicBrainzButton
+                entityType="artist"
+                entityMBID={artistMBID}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div id="metadata-viewer">
       <div
         className="left-side"
         style={{
@@ -385,192 +579,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         </div>
       </div>
 
-      <div
-        className="right-side panel-group"
-        id="accordion"
-        role="tablist"
-        aria-multiselectable="false"
-      >
-        <div
-          className={`panel panel-default ${
-            expandedAccordion === 1 ? "expanded" : ""
-          }`}
-        >
-          <div
-            className="panel-heading"
-            role="tab"
-            tabIndex={0}
-            id="headingOne"
-            onKeyDown={() => setExpandedAccordion(1)}
-            onClick={() => setExpandedAccordion(1)}
-            aria-expanded={expandedAccordion === 1}
-            aria-selected={expandedAccordion === 1}
-            aria-controls="collapseOne"
-          >
-            <h4 className="panel-title">
-              <div className="recordingheader">
-                <div className="name strong">{trackName}</div>
-                <div className="date">
-                  {isNumber(duration) && millisecondsToStr(duration)}
-                </div>
-                <div className="caret" />
-              </div>
-            </h4>
-          </div>
-          <div
-            id="collapseOne"
-            className={`panel-collapse collapse ${
-              expandedAccordion === 1 ? "in" : ""
-            }`}
-            role="tabpanel"
-            aria-labelledby="headingOne"
-          >
-            <div className="panel-body">
-              <TagsComponent tags={metadata?.tag?.recording} />
-              {/* <div className="ratings content-box" /> */}
-              {Boolean(flattenedRecRels?.length) && (
-                <div className="white content-box">
-                  <table className="table credits-table">
-                    <tbody>
-                      <tr>
-                        <td>
-                          <span className="strong">Credits:</span>
-                        </td>
-                      </tr>
-                      {flattenedRecRels.map((rel) => {
-                        const { artist_name, artist_mbid, instrument } = rel;
-                        return (
-                          <tr key={artist_mbid}>
-                            <td>
-                              <a
-                                href={`${musicBrainzURLRoot}artist/${artist_mbid}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {artist_name}
-                              </a>
-                            </td>
-                            <td>{instrument}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              <div className="flex flex-wrap">
-                {lyricsLink?.lyrics && (
-                  <a
-                    href={lyricsLink.lyrics}
-                    className="btn btn-outline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Lyrics
-                  </a>
-                )}
-                <OpenInMusicBrainzButton
-                  entityType="recording"
-                  entityMBID={recordingData?.recording_mbid}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        {Boolean(metadata?.release || recordingData?.release_name) && (
-          <div
-            className={`panel panel-default ${
-              expandedAccordion === 2 ? "expanded" : ""
-            }`}
-          >
-            <div
-              className="panel-heading"
-              role="tab"
-              tabIndex={0}
-              id="headingTwo"
-              onKeyDown={() => setExpandedAccordion(2)}
-              onClick={() => setExpandedAccordion(2)}
-              aria-expanded={expandedAccordion === 2}
-              aria-selected={expandedAccordion === 2}
-              aria-controls="collapseTwo"
-            >
-              <h4 className="panel-title">
-                <div className="releaseheader">
-                  <div className="name strong">
-                    {recordingData?.release_name}
-                  </div>
-                  <div className="date">{metadata?.release?.year}</div>
-                  <div className="caret" />
-                </div>
-              </h4>
-            </div>
-            <div
-              id="collapseTwo"
-              className={`panel-collapse collapse ${
-                expandedAccordion === 2 ? "in" : ""
-              }`}
-              role="tabpanel"
-              aria-labelledby="headingTwo"
-            >
-              <div className="panel-body">
-                <OpenInMusicBrainzButton
-                  entityType="release"
-                  entityMBID={recordingData?.release_mbid}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-        <div
-          className={`panel panel-default ${
-            expandedAccordion === 3 ? "expanded" : ""
-          }`}
-        >
-          <div
-            className="panel-heading"
-            role="tab"
-            tabIndex={0}
-            id="headingThree"
-            onKeyDown={() => setExpandedAccordion(3)}
-            onClick={() => setExpandedAccordion(3)}
-            aria-expanded={expandedAccordion === 3}
-            aria-selected={expandedAccordion === 3}
-            aria-controls="collapseThree"
-          >
-            <h4 className="panel-title">
-              <div className="artistheader">
-                <div className="name strong">{artistName}</div>
-                <div className="date">{artist?.begin_year}</div>
-                <div className="caret" />
-              </div>
-            </h4>
-          </div>
-          <div
-            id="collapseThree"
-            className={`panel-collapse collapse ${
-              expandedAccordion === 3 ? "in" : ""
-            }`}
-            role="tabpanel"
-            aria-labelledby="headingThree"
-          >
-            <div className="panel-body">
-              <TagsComponent tags={metadata?.tag?.artist} />
-              {/* <div className="ratings content-box" /> */}
-              {(artist?.begin_year || artist?.area) && (
-                <div>
-                  {artist?.type === "Group" ? "Band founded" : "Artist born"}
-                  {artist?.begin_year && ` in ${artist.begin_year}`}
-                  {artist?.area && ` in ${artist.area}`}
-                </div>
-              )}
-              <OpenInMusicBrainzButton
-                entityType="artist"
-                entityMBID={artistMBID}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      {rightSideContent}
     </div>
   );
 }

@@ -1,0 +1,11 @@
+{
+  "tracks": {
+    "href": "https://api.spotify.com/v1/search?query=track%3Arunning+up+that+hill+artist%3Akate+bush&type=track&locale=en-US%2Cen%3Bq%3D0.5&offset=0&limit=3",
+    "items": [],
+    "limit": 3,
+    "next": "https://api.spotify.com/v1/search?query=track%3Arunning+up+that+hill+artist%3Akate+bush&type=track&locale=en-US%2Cen%3Bq%3D0.5&offset=3&limit=3",
+    "offset": 0,
+    "previous": null,
+    "total": 0
+  }
+}

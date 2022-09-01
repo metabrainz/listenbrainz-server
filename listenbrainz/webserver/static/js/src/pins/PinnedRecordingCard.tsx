@@ -160,22 +160,24 @@ export default class PinnedRecordingCard extends React.Component<
       </div>
     ) : undefined;
 
-    const additionalMenuItems = (
-      <>
-        {currentlyPinned && (
-          <ListenControl
-            title="Unpin"
-            text="Unpin"
-            action={() => this.unpinRecording()}
-          />
-        )}
+    const additionalMenuItems = [];
+    if (currentlyPinned) {
+      additionalMenuItems.push(
         <ListenControl
-          title="Delete Pin"
-          text="Delete Pin"
-          action={() => this.deletePin(pinnedRecording)}
+          title="Unpin"
+          text="Unpin"
+          action={() => this.unpinRecording()}
         />
-      </>
+      );
+    }
+    additionalMenuItems.push(
+      <ListenControl
+        title="Delete Pin"
+        text="Delete Pin"
+        action={() => this.deletePin(pinnedRecording)}
+      />
     );
+
     const cssClasses = ["pinned-recording-card"];
     if (currentlyPinned) {
       cssClasses.push("currently-pinned");

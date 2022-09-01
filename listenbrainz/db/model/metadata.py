@@ -23,7 +23,7 @@ class RecordingMetadata(BaseModel):
     recording_data: Dict
 
     # JSON which contains metadata about the artist for this recording
-    artist_data: List[Dict]
+    artist_data: Dict
 
     # JSON which contains metadata about the tags for this recording and its artist
     tag_data: Dict

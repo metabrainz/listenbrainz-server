@@ -26,11 +26,11 @@ export default function TagsComponent(props: {
           <span>Be the first to add a tag</span>
         )}
       </div>
-      <div className="add-tag">
+      {/* <div className="add-tag">
         <button className="btn btn-xs btn-outline" type="button">
           + Add tag
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }

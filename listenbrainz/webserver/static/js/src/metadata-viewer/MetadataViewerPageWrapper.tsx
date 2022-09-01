@@ -18,16 +18,13 @@ import MetadataViewer from "./MetadataViewer";
 
 export type PlayingNowPageProps = {
   playingNow?: Listen;
-  initialRecordingData?: MetadataLookup;
 } & WithAlertNotificationsInjectedProps;
 
 export default function PlayingNowPage(props: PlayingNowPageProps) {
-  const { initialRecordingData, playingNow, newAlert } = props;
+  const { playingNow, newAlert } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [currentListen, setCurrentListen] = React.useState(playingNow);
-  const [recordingData, setRecordingData] = React.useState(
-    initialRecordingData
-  );
+  const [recordingData, setRecordingData] = React.useState<MetadataLookup>();
 
   if (!currentUser) {
     return (
@@ -84,16 +81,15 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   /** On page load, hit the API to get the user's most recent playing-now (if any) */
   React.useEffect(() => {
     // Only run this if no playing-now was present in the props on load
-    if (!currentListen) {
+    if (!currentListen || !recordingData) {
       const fetchPlayingNow = async () => {
         if (!recordingData && currentUser) {
           try {
-            // lookup playing_now from API
-            const newPlayingNow = await APIService.getPlayingNowForUser(
-              currentUser.name
-            );
-            if (newPlayingNow) {
-              await onNewPlayingNow(newPlayingNow);
+            const propOrFetchedPlayingNow =
+              currentListen ??
+              (await APIService.getPlayingNowForUser(currentUser.name));
+            if (propOrFetchedPlayingNow) {
+              await onNewPlayingNow(propOrFetchedPlayingNow);
             }
           } catch (error) {
             props.newAlert(
@@ -128,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube,
     sentry_traces_sample_rate,
   } = globalReactProps;
-  const { playing_now, metadata } = reactProps;
+  const { playing_now } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -159,7 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <PlayingNowPageWithAlertNotifications
           initialAlerts={optionalAlerts}
           playingNow={playing_now}
-          // initialRecordingData={fakeData2}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

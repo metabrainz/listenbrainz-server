@@ -14,7 +14,6 @@ from mapping.release_colors import sync_release_color_table, incremental_update_
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache
-import config
 
 
 @click.group()
@@ -27,16 +26,17 @@ def create_all():
     """
         Create all canonical data in one go. First mb canonical data, then its typesense index.
     """
-    create_canonical_musicbrainz_data()
+    create_canonical_musicbrainz_data(True)
     action_build_index()
 
 
 @cli.command()
-def canonical_data():
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def canonical_data(use_lb_conn):
     """
         Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
-    create_canonical_musicbrainz_data()
+    create_canonical_musicbrainz_data(use_lb_conn)
 
 
 @cli.command()
@@ -105,11 +105,12 @@ def top_tracks(year):
 
 
 @cli.command()
-def build_mb_metadata_cache():
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_mb_metadata_cache(use_lb_conn):
     """
         Build the MB metadata cache that LB uses
     """
-    create_mb_metadata_cache()
+    create_mb_metadata_cache(use_lb_conn)
 
 
 def usage(command):

@@ -68,7 +68,7 @@ export type ListenCardProps = {
   // The default Listen fedback (love/hate) can be replaced
   feedbackComponent?: JSX.Element;
   // These go in the dropdown menu
-  additionalMenuItems?: JSX.Element;
+  additionalMenuItems?: JSX.Element[];
   // This optional JSX element is for a custom icon
   additionalActions?: JSX.Element;
 };
@@ -245,7 +245,7 @@ export default class ListenCard extends React.Component<
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
-      additionalMenuItems ||
+      additionalMenuItems?.length ||
       enableRecommendButton ||
       recordingMBID ||
       spotifyURL ||
@@ -257,7 +257,10 @@ export default class ListenCard extends React.Component<
       <>
         {listen.playing_now ? (
           <span className="listen-time">
-            <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now &#8212;
+            <a href="/listening-now/" target="_blank" rel="noopener noreferrer">
+              <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now
+              &#8212;
+            </a>
           </span>
         ) : (
           <span

@@ -99,7 +99,7 @@ A complete submit listen JSON document may look like:
                 "db92a151-1ac2-438b-bc43-b82e149ddd50"
               ],
               "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
-              "tags": [ "you", "just", "got", "rick rolled!"]
+              "tags": [ "you", "just", "got", "rick rolled!"],
               "duration_ms": 222000
             },
             "artist_name": "Rick Astley",
@@ -167,56 +167,78 @@ submit them!
 
 The following optional elements may also be included in the ``track_metadata`` element:
 
-======================= ===========================================================================================================================================================================================================================================================================================================================================================================================================
-element                 description
-======================= ===========================================================================================================================================================================================================================================================================================================================================================================================================
-``release_name``        the name of the release this recording was played from.
-======================= ===========================================================================================================================================================================================================================================================================================================================================================================================================
+======================= ===========  =========================================================
+element                 data type    description
+======================= ===========  =========================================================
+``release_name``        string       the name of the release this recording was played from.
+======================= ===========  =========================================================
 
-The following optional elements may also be included in the ``additional_info`` element. If you do not have
-the data for any of the following fields, omit the key entirely:
+The following optional elements may also be included in the ``additional_info`` element.
 
-.. list-table:: Title
-   :widths: 25 50
+.. note::
+
+  If you do not have the data for any of the following fields, omit the key entirely:
+
+.. list-table:: Additional Info Fields
+   :widths: 25 10 40
    :header-rows: 1
 
    * - element
+     - data type
      - description
    * - ``artist_mbids``
+     - array of strings
      - A list of MusicBrainz Artist IDs, one or more Artist IDs may be included here. If you have a complete MusicBrainz artist credit that contains multiple Artist IDs, include them all in this list.
    * - ``release_group_mbid``
+     - string
      - A MusicBrainz Release Group ID of the release group this recording was played from.
    * - ``release_mbid``
+     - string
      - A MusicBrainz Release ID of the release this recording was played from.
    * - ``recording_mbid``
+     - string
      - A MusicBrainz Recording ID of the recording that was played.
    * - ``track_mbid``
+     - string
      - A MusicBrainz Track ID associated with the recording that was played.
    * - ``work_mbids``
+     - array of strings
      - A list of MusicBrainz Work IDs that may be associated with this recording.
    * - ``tracknumber``
+     - integer
      - The tracknumber of the recording. This first recording on a release is tracknumber 1.
    * - ``isrc``
+     - string
      - The ISRC code associated with the recording.
    * - ``spotify_id``
+     - string
      - The Spotify track URL associated with this recording.  e.g.: http://open.spotify.com/track/1rrgWMXGCGHru5bIRxGFV0
    * - ``tags``
+     - array of string
      - A list of user-defined folksonomy tags to be associated with this recording. For example, you have apply tags such as ``punk``, ``see-live``, ``smelly``. You may submit up to :data:`~listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN` tags and each tag may be up to :data:`~listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE` characters large.
    * - ``media_player``
+     - string
      - The name of the program being used to listen to music. Don't include a version number here.
    * - ``media_player_version``
+     - string
      - The version of the program being used to listen to music.
    * - ``submission_client``
+     - string
      - The name of the client that is being used to submit listens to ListenBrainz. If the media player has the ability to submit listens built-in then this value may be the same as ``media_player``. Don't include a version number here.
    * - ``submission_client_version``
+     - string
      - The version of the submission client.
    * - ``music_service``
+     - string
      - If the song being listened to comes from an online service, the canonical domain of this service (see below for more details).
    * - ``music_service_name``
+     - string
      - If the song being listened to comes from an online service and you don't know the canonical domain, a name that represents the service.
    * - ``origin_url``
+     - string
      - If the song of this listen comes from an online source, the URL to the place where it is available. This could be a spotify url (see ``spotify_id``), a YouTube video URL, a Soundcloud recording page URL, or the full URL to a public MP3 file. If there is a webpage for this song (e.g. Youtube page, Soundcloud page) **do not** try and resolve the URL to an actual audio resource.
    * - ``duration_ms`` and ``duration``
+     - integer or float
      - The duration of the track in milliseconds and seconds respectively. You should only include one of ``duration_ms`` or ``duration``.
 .. note::
 

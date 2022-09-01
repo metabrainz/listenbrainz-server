@@ -1,5 +1,12 @@
 import * as timeago from "time-ago";
-import { formatWSMessageToListen, preciseTimestamp } from "../../src/utils/utils";
+import {
+  formatWSMessageToListen,
+  preciseTimestamp,
+  searchForSpotifyTrack,
+} from "../../src/utils/utils";
+
+const spotifySearchResponse = require("../__mocks__/spotifySearchResponse.json");
+const spotifySearchEmptyResponse = require("../__mocks__/spotifySearchEmptyResponse.json");
 
 describe("formatWSMessageToListen", () => {
   const mockListen: Listen = {
@@ -97,5 +104,76 @@ describe("preciseTimestamp", () => {
   it("returns itself for invalid date inputs", () => {
     const invalidISO: string = "foo-01-01T01:01:bar";
     expect(preciseTimestamp(invalidISO)).toMatch(invalidISO);
+  });
+});
+
+describe("searchForSpotifyTrack", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(spotifySearchResponse),
+      });
+    });
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await searchForSpotifyTrack("foobar", "import", "vs", "star");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "https://api.spotify.com/v1/search?type=track&q=track:import artist:vs album:star",
+      {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer foobar",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  });
+
+  it("returns the first track from the json response", async () => {
+    await expect(
+      searchForSpotifyTrack("foobar", "import", "vs", "star")
+    ).resolves.toEqual(spotifySearchResponse.tracks.items[0]);
+  });
+
+  it("retries if network error / submit fails", async () => {
+    // Overide mock for fetch:
+    window.fetch = jest.fn().mockImplementation(() => {
+      // 1st call will recieve a network error
+      return Promise.reject(new Error("Oh no!"));
+    });
+    await expect(
+      searchForSpotifyTrack("foobar", "import", "vs", "star")
+    ).rejects.toThrow(Error("Oh no!"));
+  });
+
+  it("skips if any other response code is recieved", async () => {
+    // Overide mock for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: "Not found!" }),
+      });
+    });
+    await expect(
+      searchForSpotifyTrack("foobar", "import", "vs", "star")
+    ).rejects.toThrow(Error("Not found!"));
+  });
+  it("returns null if no track found in the json response", async () => {
+    // Overide mock for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(spotifySearchEmptyResponse),
+      });
+    });
+    await expect(
+      searchForSpotifyTrack("foobar", "import", "vs", "star")
+    ).resolves.toEqual(null);
   });
 });

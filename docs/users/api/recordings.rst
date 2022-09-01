@@ -1,6 +1,8 @@
 Recordings
 ==========
 
+.. _feedback-api:
+
 Feedback API
 ^^^^^^^^^^^^
 

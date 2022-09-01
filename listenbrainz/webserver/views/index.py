@@ -14,7 +14,6 @@ import ujson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash
@@ -260,16 +259,7 @@ def _get_user_count():
 
 @index_bp.route("/similar-users/")
 def similar_users():
-    """ Show all of the users with the highest similarity in order to make
-        them visible to all of our users. This view can show bugs in the algorithm
-        and spammers as well.
-    """
-
-    similar_users = get_top_similar_users()
-    return render_template(
-        "index/similar-users.html",
-        similar_users=similar_users
-    )
+    return redirect(url_for("explore.similar_users"))
 
 
 @index_bp.route("/listens-offline/")
@@ -289,13 +279,9 @@ def musicbrainz_offline():
 
 @index_bp.route("/huesound/")
 def huesound():
-    """ Hue Sound browse music by color of cover art """
+    """ Redirect to /explore/huesound """
 
-    return render_template(
-        "index/huesound.html",
-        props=ujson.dumps({})
-    )
-
+    return redirect(url_for("explore.huesound"))
 
 @index_bp.route("/statistics/charts/")
 def charts():
