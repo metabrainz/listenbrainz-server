@@ -682,17 +682,21 @@ export default class Listens extends React.Component<
     const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
     const releaseGroupMBID = getReleaseGroupMBID(listen);
     const canDelete =
-      isCurrentUser && Boolean(listenedAt) && Boolean(recordingMSID);
+      isCurrentUser &&
+      (Boolean(listenedAt) || listenedAt === 0) &&
+      Boolean(recordingMSID);
 
     const isListenReviewable =
       Boolean(recordingMBID) ||
       artistMBIDs?.length ||
       Boolean(trackMBID) ||
       Boolean(releaseGroupMBID);
+    const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
 
     /* eslint-disable react/jsx-no-bind */
-    const additionalMenuItems = (
-      <>
+    const additionalMenuItems = [];
+    if (canPin) {
+      additionalMenuItems.push(
         <ListenControl
           text="Pin this recording"
           icon={faThumbtack}
@@ -700,24 +704,28 @@ export default class Listens extends React.Component<
           dataToggle="modal"
           dataTarget="#PinRecordingModal"
         />
-        {isListenReviewable && (
-          <ListenControl
-            text="Write a review"
-            icon={faPencilAlt}
-            action={this.updateRecordingToReview.bind(this, listen)}
-            dataToggle="modal"
-            dataTarget="#CBReviewModal"
-          />
-        )}
-        {canDelete && (
-          <ListenControl
-            text="Delete Listen"
-            icon={faTrashAlt}
-            action={this.deleteListen.bind(this, listen)}
-          />
-        )}
-      </>
-    );
+      );
+    }
+    if (isListenReviewable) {
+      additionalMenuItems.push(
+        <ListenControl
+          text="Write a review"
+          icon={faPencilAlt}
+          action={this.updateRecordingToReview.bind(this, listen)}
+          dataToggle="modal"
+          dataTarget="#CBReviewModal"
+        />
+      );
+    }
+    if (canDelete) {
+      additionalMenuItems.push(
+        <ListenControl
+          text="Delete Listen"
+          icon={faTrashAlt}
+          action={this.deleteListen.bind(this, listen)}
+        />
+      );
+    }
     const shouldBeDeleted = isEqual(deletedListen, listen);
     /* eslint-enable react/jsx-no-bind */
     return (

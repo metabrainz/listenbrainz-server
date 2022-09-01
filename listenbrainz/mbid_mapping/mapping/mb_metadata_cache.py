@@ -7,7 +7,6 @@ import psycopg2.extras
 import ujson
 
 from mapping.utils import create_schema, insert_rows, log
-from mapping.formats import create_formats_table
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 import config
@@ -71,17 +70,20 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             recording_data, artist_data, tag_data JSON strings as a tuple.
         """
 
-        artists = []
-        artist_mbids = []
         release = {}
-
         if row["release_mbid"] is not None:
             release["mbid"] = row["release_mbid"]
             release["release_group_mbid"] = row["release_group_mbid"]
             release["caa_id"] = row["caa_id"]
+            release["name"] = row["release_name"]
             if row["year"] is not None:
                 release["year"] = row["year"]
 
+        artist = {
+            "name": row["artist_credit_name"],
+        }
+        artists_rels = []
+        artist_mbids = []
         for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
             data = {}
             if begin_year is not None:
@@ -102,8 +104,10 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     data["rels"] = filtered
             if artist_type == "Person":
                 data["gender"] = gender
-            artists.append(data)
+            artists_rels.append(data)
             artist_mbids.append(uuid.UUID(mbid))
+
+        artist["artists"] = artists_rels
 
         recording_rels = []
         for rel_type, artist_name, artist_mbid, instrument in row["recording_links"] or []:
@@ -140,11 +144,18 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 tag["genre_mbid"] = genre_mbid
             release_group_tags.append(tag)
 
+        recording = {
+            "name": row["recording_name"],
+            "rels": recording_rels
+        }
+        if row["length"]:
+            recording["length"] = row["length"]
+
         return (row["recording_mbid"],
                 list(set(artist_mbids)),
                 row["release_mbid"],
-                ujson.dumps({"rels": recording_rels}),
-                ujson.dumps(artists),
+                ujson.dumps(recording),
+                ujson.dumps(artist),
                 ujson.dumps({"recording": recording_tags, "artist": artist_tags, "release_group": release_group_tags}),
                 ujson.dumps(release))
 
@@ -298,6 +309,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                    ), release_data AS (
                             SELECT * FROM (
                                     SELECT r.gid AS recording_mbid
+                                         , rel.name
                                          , rel.release_group
                                          , crr.release_mbid::TEXT
                                          , caa.id AS caa_id
@@ -317,9 +329,12 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                             ) temp where rownum=1
                    )
                             SELECT recording_links
+                                 , r.name AS recording_name
+                                 , ac.name AS artist_credit_name
                                  , artist_data
                                  , artist_tags
                                  , recording_tags
+                                 , rd.name AS release_name
                                  , release_group_tags
                                  , release_group_mbid::TEXT
                                  , r.length
@@ -354,6 +369,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 ON cmb.recording_mbid = r.gid
                               {values_join}
                           GROUP BY r.gid
+                                 , r.name
+                                 , ac.name
+                                 , rd.name
                                  , r.length
                                  , recording_links
                                  , recording_tags
@@ -464,20 +482,23 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         log("mb metadata update: Done!")
 
 
-def create_mb_metadata_cache():
+def create_mb_metadata_cache(use_lb_conn: bool):
     """
         Main function for creating the MB metadata cache and its related tables.
+
+        Arguments:
+            use_lb_conn: whether to use LB conn or not
     """
 
     psycopg2.extras.register_uuid()
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         lb_conn = None
-        if config.SQLALCHEMY_TIMESCALE_URI:
+        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
         can_rel = CanonicalReleaseRedirect(mb_conn)
         if not can_rel.table_exists():
-            log("mb metadata cache: canonical_release_redirect table doesn't exist, run `canonical-data` manage command first")
+            log("mb metadata cache: canonical_release_redirect table doesn't exist, run `canonical-data` manage command first with --use-mb-conn option")
             return
 
         cache = MusicBrainzMetadataCache(mb_conn, lb_conn)

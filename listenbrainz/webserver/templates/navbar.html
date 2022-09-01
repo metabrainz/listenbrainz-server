@@ -39,8 +39,9 @@
              Explore<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('index.huesound') }}">Hue Sound</a></li>
-            <li><a href="{{ url_for('index.similar_users') }}">Top similar users</a></li>
+            <li><a href="{{ url_for('explore.fresh_releases') }}">Fresh Releases</a></li>
+            <li><a href="{{ url_for('explore.huesound') }}">Hue Sound</a></li>
+            <li><a href="{{ url_for('explore.similar_users') }}">Top similar users</a></li>
             <li><a href="{{ url_for('user.year_in_music', user_name=current_user.musicbrainz_id) }}">Your Year In Music</a></li>
           </ul>
         </li>
@@ -71,6 +72,7 @@
               {{ current_user.musicbrainz_id }} <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
+              <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Profile</a></li>
               <li><a href="{{ url_for('profile.info') }}">Settings</a></li>
               <li><a href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">Playlists</a></li>
               <li><a href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">Tracks you might like</a></li>

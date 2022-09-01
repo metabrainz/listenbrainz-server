@@ -1,13 +1,15 @@
 import json
-import pika
 import time
 
-from flask import current_app
+from kombu import Exchange, Queue, Connection, Consumer, Message
+from kombu.mixins import ConsumerMixin
+
+from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 from listenbrainz.mbid_mapping_writer.job_queue import MappingJobQueue
 
 
-class MBIDMappingWriter:
+class MBIDMappingWriter(ConsumerMixin):
     """ Main entry point for the mapping writer. Sets up connections and 
         handles messages from RabbitMQ and stuff them into the queue for the
         job matcher to handle."""
@@ -15,74 +17,53 @@ class MBIDMappingWriter:
     def __init__(self, app):
         self.app = app
         self.queue = None
+        self.connection = None
+        self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
+        self.unique_queue = Queue(self.app.config["UNIQUE_QUEUE"], exchange=self.unique_exchange, durable=True)
 
-    def callback(self, channel, method, properties, body):
-        listens = json.loads(body)
+    def get_consumers(self, _, channel):
+        return [Consumer(channel, queues=[self.unique_queue], on_message=lambda x: self.callback(x))]
+
+    def callback(self, message: Message):
+        listens = json.loads(message.body)
         self.queue.add_new_listens(listens)
-        channel.basic_ack(method.delivery_tag)
-
-    def create_and_bind_exchange_and_queue(self, channel, exchange, queue):
-        channel.exchange_declare(exchange=exchange, exchange_type='fanout')
-        channel.queue_declare(callback=lambda x: None,
-                              queue=queue, durable=True)
-        channel.queue_bind(callback=lambda x: None,
-                           exchange=exchange, queue=queue)
-
-    def on_open_callback(self, channel):
-        self.create_and_bind_exchange_and_queue(
-            channel, current_app.config['UNIQUE_EXCHANGE'], current_app.config['UNIQUE_QUEUE'])
-        channel.basic_consume(
-            queue=current_app.config['UNIQUE_QUEUE'], on_message_callback=self.callback)
-
-    def on_open(self, connection):
-        connection.channel(on_open_callback=self.on_open_callback)
+        message.ack()
 
     def init_rabbitmq_connection(self):
+        self.connection = Connection(
+            hostname=self.app.config["RABBITMQ_HOST"],
+            userid=self.app.config["RABBITMQ_USERNAME"],
+            port=self.app.config["RABBITMQ_PORT"],
+            password=self.app.config["RABBITMQ_PASSWORD"],
+            virtual_host=self.app.config["RABBITMQ_VHOST"],
+            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
+        )
+
+    def start(self):
         while True:
             try:
-                credentials = pika.PlainCredentials(
-                    current_app.config['RABBITMQ_USERNAME'], current_app.config['RABBITMQ_PASSWORD'])
-                connection_parameters = pika.ConnectionParameters(
-                    host=current_app.config['RABBITMQ_HOST'],
-                    port=current_app.config['RABBITMQ_PORT'],
-                    virtual_host=current_app.config['RABBITMQ_VHOST'],
-                    credentials=credentials,
-                )
-                self.connection = pika.SelectConnection(
-                    parameters=connection_parameters, on_open_callback=self.on_open)
-                break
-            except Exception as e:
-                current_app.logger.error(
-                    "Error while connecting to RabbitMQ: %s", str(e), exc_info=True)
-                time.sleep(3)
+                self.app.logger.info("Starting queue stuffer...")
+                self.queue = MappingJobQueue(app)
+                self.queue.start()
 
-    def run(self):
-
-        with self.app.app_context():
-            current_app.logger.info("Starting queue stuffer...")
-            self.queue = MappingJobQueue(app)
-            # start the queue stuffer thread
-            self.queue.start()
-            while True:
-                current_app.logger.info("Starting MBID mapping writer...")
+                self.app.logger.info("Starting MBID mapping writer...")
                 self.init_rabbitmq_connection()
-                try:
-                    self.connection.ioloop.start()
-                except KeyboardInterrupt:
-                    self.queue.terminate()
-                    current_app.logger.error("Keyboard interrupt!")
-                    break
-                except Exception as e:
-                    current_app.logger.error(
-                        "Error in MBID Mapping Writer: %s", str(e), exc_info=True)
-                    time.sleep(3)
-            # the while True loop above makes this line unreachable but adding it anyway
-            # so that we remember that every started thread should also be joined.
-            # (you may also want to read the commit message for the commit that added this)
-            self.queue.terminate()
+                self.run()
+            except KeyboardInterrupt:
+                self.queue.terminate()
+                self.app.logger.error("Keyboard interrupt!")
+                break
+            except Exception:
+                self.app.logger.error("Error in MBID Mapping Writer: ", exc_info=True)
+                time.sleep(3)
+        # the while True loop above makes this line unreachable but adding it anyway
+        # so that we remember that every started thread should also be joined.
+        # (you may also want to read the commit message for the commit that added this)
+        self.queue.terminate()
 
 
 if __name__ == "__main__":
     app = create_app()
-    mw = MBIDMappingWriter(app)
-    mw.run()
+    with app.app_context():
+        mw = MBIDMappingWriter(app)
+        mw.run()

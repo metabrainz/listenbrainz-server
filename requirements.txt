@@ -22,7 +22,7 @@ pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v2.6.1
 spotipy == 2.19.0
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@v-2021-02-10.0
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2022-07-11
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2022-07-15
 PyYAML==6.0
 eventlet == 0.33.1
 uWSGI == 2.0.20
@@ -47,8 +47,6 @@ google-auth==1.30.0
 pandas==1.4.2
 pyarrow==8.0.0
 more-itertools==8.13.0
-librabbitmq-fork==2.0.2.dev1
 kombu==5.1.0
 itsdangerous==2.1.2
-pylistenbrainz==0.5.1
 countryinfo==0.1.2

@@ -33,18 +33,18 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
       </div>
     }
     additionalMenuItems={
-      <React.Fragment>
+      Array [
         <ListenControl
           action={[Function]}
           text="Unpin"
           title="Unpin"
-        />
+        />,
         <ListenControl
           action={[Function]}
           text="Delete Pin"
           title="Delete Pin"
-        />
-      </React.Fragment>
+        />,
+      ]
     }
     className="pinned-recording-card currently-pinned"
     listen={

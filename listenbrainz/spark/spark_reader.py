@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
 import json
+import time
 
-import pika
 import ujson
-from flask import current_app
+from kombu import Connection, Message, Consumer, Exchange, Queue
+from kombu.mixins import ConsumerMixin
 
-from listenbrainz import utils
 from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_dataframes,
                                          handle_dump_imported, handle_model,
@@ -27,6 +28,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_top_stats,
                                          handle_listens_per_day,
                                          handle_yearly_listen_counts)
+from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
 response_handler_map = {
@@ -59,87 +61,76 @@ response_handler_map = {
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds
 
 
-class SparkReader:
-    def __init__(self):
-        self.app = create_app()  # creating a flask app for config values and logging to Sentry
+class SparkReader(ConsumerMixin):
 
-    def get_response_handler(self, response_type):
-        return response_handler_map[response_type]
-
-    def init_rabbitmq_connection(self):
-        """ Initializes the connection to RabbitMQ.
-
-        Note: this is a blocking function which keeps retrying if it fails
-        to connect to RabbitMQ
-        """
-        self.connection = utils.connect_to_rabbitmq(
-            username=current_app.config['RABBITMQ_USERNAME'],
-            password=current_app.config['RABBITMQ_PASSWORD'],
-            host=current_app.config['RABBITMQ_HOST'],
-            port=current_app.config['RABBITMQ_PORT'],
-            virtual_host=current_app.config['RABBITMQ_VHOST'],
-            error_logger=current_app.logger.error,
-            heartbeat=RABBITMQ_HEARTBEAT_TIME,
-        )
+    def __init__(self, app):
+        self.app = app
+        self.connection = None
+        self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=False)
+        self.spark_result_queue = Queue(app.config["SPARK_RESULT_QUEUE"], exchange=self.spark_result_exchange,
+                                        durable=True)
 
     def process_response(self, response):
         try:
             response_type = response['type']
         except KeyError:
-            current_app.logger.error("Bad response sent to spark_reader: %s", json.dumps(response, indent=4),
-                                     exc_info=True)
+            self.app.logger.error("Bad response sent to spark_reader: %s", json.dumps(response, indent=4),
+                                  exc_info=True)
             return
-        current_app.logger.info("Received message for %s", response_type)
+        self.app.logger.info("Received message for %s", response_type)
         try:
-            response_handler = self.get_response_handler(response_type)
+            response_handler = response_handler_map[response_type]
         except Exception:
-            current_app.logger.error("Unknown response type: %s, doing nothing.", response_type,
-                                     exc_info=True)
+            self.app.logger.error("Unknown response type: %s, doing nothing.", response_type, exc_info=True)
             return
 
         try:
             response_handler(response)
         except Exception:
-            current_app.logger.error("Error in the spark reader response handler: data: %s",
-                                     json.dumps(response, indent=4), exc_info=True)
+            self.app.logger.error("Error in the spark reader response handler: data: %s",
+                                  json.dumps(response, indent=4), exc_info=True)
             return
 
-    def callback(self, ch, method, properties, body):
+    def callback(self, message: Message):
         """ Handle the data received from the queue and
             insert into the database accordingly.
         """
-        current_app.logger.debug("Received a message, processing...")
-        response = ujson.loads(body)
+        self.app.logger.debug("Received a message, processing...")
+        response = ujson.loads(message.body)
         self.process_response(response)
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-        current_app.logger.debug("Done!")
+        message.ack()
+        self.app.logger.debug("Done!")
+
+    def get_consumers(self, _, channel):
+        return [Consumer(channel, queues=[self.spark_result_queue], on_message=lambda msg: self.callback(msg))]
+
+    def init_rabbitmq_connection(self):
+        self.connection = Connection(
+            hostname=self.app.config["RABBITMQ_HOST"],
+            userid=self.app.config["RABBITMQ_USERNAME"],
+            port=self.app.config["RABBITMQ_PORT"],
+            password=self.app.config["RABBITMQ_PASSWORD"],
+            virtual_host=self.app.config["RABBITMQ_VHOST"],
+            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
+        )
 
     def start(self):
         """ initiates RabbitMQ connection and starts consuming from the queue
         """
-
         with self.app.app_context():
-            current_app.logger.info('Spark consumer has started!')
             while True:
-                self.init_rabbitmq_connection()
-                self.incoming_ch = utils.create_channel_to_consume(
-                    connection=self.connection,
-                    exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
-                    queue=current_app.config['SPARK_RESULT_QUEUE'],
-                    callback_function=self.callback,
-                    auto_ack=False,
-                )
-                current_app.logger.info('Spark consumer attempt to start consuming!')
                 try:
-                    self.incoming_ch.start_consuming()
-                except pika.exceptions.ConnectionClosed:
-                    current_app.logger.warning('Spark consumer pika connection closed!')
-                    self.connection = None
-                    continue
-
-                self.connection.close()
+                    self.app.logger.info('Spark consumer has started!')
+                    self.init_rabbitmq_connection()
+                    self.run()
+                except KeyboardInterrupt:
+                    self.app.logger.error("Keyboard interrupt!")
+                    break
+                except Exception:
+                    self.app.logger.error("Error in SparkReader:", exc_info=True)
+                    time.sleep(3)
 
 
 if __name__ == '__main__':
-    sr = SparkReader()
+    sr = SparkReader(create_app())
     sr.start()

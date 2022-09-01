@@ -1052,37 +1052,57 @@ class FeedbackAPITestCase(IntegrationTestCase):
         feedback = data["feedback"]
         self.assertEqual(len(feedback), 6)
 
-        self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[0]["recording_msid"], None)
-        self.assertEqual(feedback[0]["recording_mbid"], inserted_rows[3]["recording_mbid"])
-        self.assertEqual(feedback[0]["score"], inserted_rows[3]["score"])
-
-        self.assertEqual(feedback[1]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[1]["recording_msid"], None)
-        self.assertEqual(feedback[1]["recording_mbid"], inserted_rows[2]["recording_mbid"])
-        self.assertEqual(feedback[1]["score"], inserted_rows[2]["score"])
-
-        self.assertEqual(feedback[2]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[2]["recording_msid"], None)
-        self.assertEqual(feedback[2]["recording_mbid"], non_existing_rec_mbid)
-        self.assertEqual(feedback[2]["score"], 0)
-
-        self.assertEqual(feedback[3]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[3]["recording_msid"], non_existing_rec_msid)
-        self.assertEqual(feedback[3]["recording_mbid"], None)
-        self.assertEqual(feedback[3]["score"], 0)
-
-        self.assertEqual(feedback[4]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[4]["recording_msid"], inserted_rows[0]["recording_msid"])
-        self.assertEqual(feedback[4]["recording_mbid"], None)
-        self.assertEqual(feedback[4]["score"], inserted_rows[0]["score"])
-
-        self.assertEqual(feedback[5]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[5]["recording_msid"], inserted_rows[1]["recording_msid"])
-        self.assertEqual(feedback[5]["recording_mbid"], None)
-        self.assertEqual(feedback[5]["score"], inserted_rows[1]["score"])
-
-
+        expected = [
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": None,
+                "recording_mbid": inserted_rows[3]["recording_mbid"],
+                "score": inserted_rows[3]["score"],
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": None,
+                "recording_mbid": inserted_rows[2]["recording_mbid"],
+                "score": inserted_rows[2]["score"],
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": None,
+                "recording_mbid": non_existing_rec_mbid,
+                "score": 0,
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": non_existing_rec_msid,
+                "recording_mbid": None,
+                "score": 0,
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": inserted_rows[0]["recording_msid"],
+                "recording_mbid": None,
+                "score": inserted_rows[0]["score"],
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": inserted_rows[1]["recording_msid"],
+                "recording_mbid": None,
+                "score": inserted_rows[1]["score"],
+                "created": None,
+                "track_metadata": None
+            }
+        ]
+        self.assertCountEqual(feedback, expected)
 
     def test_get_feedback_for_recordings_for_user_invalid_user(self):
         """ Test to make sure that the API sends 404 if user does not exist. """

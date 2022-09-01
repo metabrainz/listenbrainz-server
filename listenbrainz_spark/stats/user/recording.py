@@ -31,7 +31,7 @@ def get_recordings(table: str, number_of_results: int):
         WITH intermediate_table as (
             SELECT user_id
                  , first(recording_name) AS any_recording_name
-                 , recording_mbid
+                 , nullif(recording_mbid, '') AS any_recording_mbid
                  , first(artist_name) AS any_artist_name
                  , artist_credit_mbids
                  , nullif(first(release_name), '') as any_release_name
@@ -48,7 +48,7 @@ def get_recordings(table: str, number_of_results: int):
         ), ranked_stats as (
             SELECT user_id
                  , any_recording_name AS track_name
-                 , recording_mbid
+                 , any_recording_mbid AS recording_mbid
                  , any_release_name AS release_name
                  , release_mbid
                  , any_artist_name AS artist_name

@@ -5,7 +5,7 @@ from psycopg2.errors import OperationalError
 from unidecode import unidecode
 
 from mapping.utils import create_schema, insert_rows, log
-from mapping.formats import create_formats_table
+from mapping.custom_sorts import create_custom_sort_tables
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
 from mapping.canonical_release_redirect import CanonicalReleaseRedirect
@@ -102,8 +102,11 @@ class CanonicalMusicBrainzData(BulkInsertTable):
         """]
 
     def get_index_names(self):
-        return [("canonical_musicbrainz_data_idx_combined_lookup",              "combined_lookup", False),
-                ("canonical_musicbrainz_data_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False)]
+        return [
+            ("canonical_musicbrainz_data_idx_combined_lookup",              "combined_lookup", False),
+            ("canonical_musicbrainz_data_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False),
+            ("canonical_musicbrainz_data_idx_recording_mbid", "recording_mbid", True)
+        ]
 
     def process_row(self, row):
 
@@ -148,15 +151,18 @@ class CanonicalMusicBrainzData(BulkInsertTable):
             return None
 
 
-def create_canonical_musicbrainz_data():
+def create_canonical_musicbrainz_data(use_lb_conn: bool):
     """
         Main function for creating the MBID mapping and its related tables.
+
+        Arguments:
+            use_lb_conn: whether to use LB conn or not
     """
 
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
 
         lb_conn = None
-        if config.SQLALCHEMY_TIMESCALE_URI:
+        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
         # Setup all the needed objects
@@ -167,7 +173,7 @@ def create_canonical_musicbrainz_data():
         mapping.add_additional_bulk_table(can)
 
         # Carry out the bulk of the work
-        create_formats_table(mb_conn)
+        create_custom_sort_tables(mb_conn)
         releases.run(no_swap=True)
         mapping.run(no_swap=True)
         can_rel.run(no_swap=True)

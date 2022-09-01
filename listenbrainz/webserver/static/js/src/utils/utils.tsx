@@ -44,7 +44,7 @@ const searchForSpotifyTrack = async (
   );
   const responseBody = await response.json();
   if (!response.ok) {
-    throw responseBody.error;
+    throw new Error(responseBody.error);
   }
   // Valid response
   const tracks: SpotifyTrack[] = _.get(responseBody, "tracks.items");
