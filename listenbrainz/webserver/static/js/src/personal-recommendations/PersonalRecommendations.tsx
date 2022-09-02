@@ -4,6 +4,12 @@ import { uniq, includes, remove } from "lodash";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "../listens/ListenControl";
 import Pill from "./Pill";
+import {
+  getTrackName,
+  getArtistName,
+  getRecordingMBID,
+  getRecordingMSID,
+} from "../utils/utils";
 
 export type PersonalRecommendationModalProps = {
   recordingToPersonallyRecommend?: Listen;
@@ -100,6 +106,35 @@ export default class PersonalRecommendationModal extends React.Component<
     const { recordingToPersonallyRecommend, newAlert } = this.props;
     const { blurbContent, users } = this.state;
     const { APIService, currentUser } = this.context;
+
+    if (currentUser?.auth_token) {
+      const metadata: UserTrackPersonalRecommendationMetadata = {
+        artist_name: getArtistName(recordingToPersonallyRecommend),
+        track_name: getTrackName(recordingToPersonallyRecommend),
+        release_name: recordingToPersonallyRecommend!.track_metadata
+          .release_name,
+        recording_mbid: getRecordingMBID(recordingToPersonallyRecommend!),
+        recording_msid: getRecordingMSID(recordingToPersonallyRecommend!),
+        users,
+        blurb_content: blurbContent,
+      };
+      try {
+        const status = await APIService.submitPersonalRecommendation(
+          currentUser.auth_token,
+          currentUser.name,
+          metadata
+        );
+        if (status === 200) {
+          newAlert(
+            "success",
+            "You personally recommended a track!",
+            `${metadata.artist_name} - ${metadata.track_name}`
+          );
+        }
+      } catch (error) {
+        this.handleError(error, "Error while personally recommending");
+      }
+    }
   };
 
   render() {
@@ -201,6 +236,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 type="submit"
                 className="btn btn-success"
                 data-dismiss="modal"
+                onClick={this.submitPersonalRecommendation}
               >
                 Personally Recommend
               </button>
