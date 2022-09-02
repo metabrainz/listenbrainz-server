@@ -216,6 +216,10 @@ export default class RecentListens extends React.Component<
                     artistMBIDs?.length ||
                     Boolean(trackMBID) ||
                     Boolean(releaseGroupMBID);
+
+                  const isListenPersonallyRecommendable = Boolean(
+                    getRecordingMSID(listen)
+                  );
                   // On the Recent page listens should have either an MSID or MBID or both,
                   // so we can assume we can pin them
                   /* eslint-disable react/jsx-no-bind */
@@ -227,16 +231,6 @@ export default class RecentListens extends React.Component<
                       dataToggle="modal"
                       dataTarget="#PinRecordingModal"
                     />,
-                    <ListenControl
-                      text="Personally recommend this recording"
-                      icon={faThumbtack}
-                      action={this.updateRecordingToPersonallyRecommend.bind(
-                        this,
-                        listen
-                      )}
-                      dataToggle="modal"
-                      dataTarget="#PersonalRecommendationModal"
-                    />,
                   ];
                   if (isListenReviewable) {
                     additionalMenuItems.push(
@@ -246,6 +240,21 @@ export default class RecentListens extends React.Component<
                         action={this.updateRecordingToReview.bind(this, listen)}
                         dataToggle="modal"
                         dataTarget="#CBReviewModal"
+                      />
+                    );
+                  }
+
+                  if (isListenPersonallyRecommendable) {
+                    additionalMenuItems.push(
+                      <ListenControl
+                        text="Personally recommend this recording"
+                        icon={faThumbtack}
+                        action={this.updateRecordingToPersonallyRecommend.bind(
+                          this,
+                          listen
+                        )}
+                        dataToggle="modal"
+                        dataTarget="#PersonalRecommendationModal"
                       />
                     );
                   }

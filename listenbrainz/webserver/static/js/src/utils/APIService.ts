@@ -1139,4 +1139,23 @@ export default class APIService {
     await this.checkStatus(response);
     return response.status;
   };
+
+  submitPersonalRecommendation = async (
+    userToken: string,
+    userName: string,
+    metadata: UserTrackPersonalRecommendationMetadata
+  ) => {
+    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recommend-personal`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ metadata }),
+    });
+
+    await this.checkStatus(response);
+    return response.status;
+  };
 }

@@ -10,8 +10,8 @@ export type PillProps = {
 const Pill = (props: PillProps) => {
   const { title, closeAction } = props;
   return (
-    <div style={{ display: "inline-block", border: "solid" }}>
-      <div style={{ display: "flex" }}>
+    <div className="pill">
+      <div>
         <p>{title}</p>
         <ListenControl text="" icon={faTimesCircle} action={closeAction} />
       </div>

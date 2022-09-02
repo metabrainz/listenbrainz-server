@@ -30,6 +30,7 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
 import PinRecordingModal from "../pins/PinRecordingModal";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendations";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
@@ -67,6 +68,7 @@ export interface ListensState {
   recordingMbidFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   recordingToReview?: Listen;
+  recordingToPersonallyRecommend?: Listen;
   dateTimePickerValue: Date | Date[];
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
@@ -104,6 +106,7 @@ export default class Listens extends React.Component<
       previousListenTs: props.listens?.[0]?.listened_at,
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
+      recordingToPersonallyRecommend: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
       dateTimePickerValue: nextListenTs
@@ -550,6 +553,12 @@ export default class Listens extends React.Component<
     this.setState({ recordingToReview });
   };
 
+  updateRecordingToPersonallyRecommend = (
+    recordingToPersonallyRecommend: Listen
+  ) => {
+    this.setState({ recordingToPersonallyRecommend });
+  };
+
   deleteListen = async (listen: Listen) => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -692,9 +701,21 @@ export default class Listens extends React.Component<
       Boolean(trackMBID) ||
       Boolean(releaseGroupMBID);
     const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
+    const canPersonallyRecommend = Boolean(recordingMSID);
 
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
+    if (canPersonallyRecommend) {
+      additionalMenuItems.push(
+        <ListenControl
+          text="Personally recommend this recording"
+          icon={faThumbtack}
+          action={this.updateRecordingToPersonallyRecommend.bind(this, listen)}
+          dataToggle="modal"
+          dataTarget="#PersonalRecommendationModal"
+        />
+      );
+    }
     if (canPin) {
       additionalMenuItems.push(
         <ListenControl
@@ -771,6 +792,7 @@ export default class Listens extends React.Component<
       dateTimePickerValue,
       recordingToPin,
       recordingToReview,
+      recordingToPersonallyRecommend,
       userPinnedRecording,
       playingNowListen,
     } = this.state;
@@ -974,6 +996,12 @@ export default class Listens extends React.Component<
                     <CBReviewModal
                       listen={recordingToReview}
                       isCurrentUser={currentUser?.name === user?.name}
+                      newAlert={newAlert}
+                    />
+                    <PersonalRecommendationModal
+                      recordingToPersonallyRecommend={
+                        recordingToPersonallyRecommend
+                      }
                       newAlert={newAlert}
                     />
                   </>
