@@ -48,9 +48,13 @@ export default class PersonalRecommendationModal extends React.Component<
 
   componentDidMount(): void {
     const { APIService, currentUser } = this.context;
-    APIService.getFollowersOfUser(currentUser.name).then((respose) => {
-      this.setState({ followers: respose.followers });
-    });
+    APIService.getFollowersOfUser(currentUser.name)
+      .then((response) => {
+        this.setState({ followers: response.followers });
+      })
+      .catch((error) => {
+        this.handleError(error, "Error while fetching followers");
+      });
   }
 
   handleBlurbInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -76,7 +80,7 @@ export default class PersonalRecommendationModal extends React.Component<
   addUser = (user: string) => {
     const { users } = this.state;
     users!.push(user);
-    this.setState({ users: uniq(users) });
+    this.setState({ users: uniq(users), suggestions: [] });
   };
 
   removeUser = (user: string) => {
@@ -142,9 +146,10 @@ export default class PersonalRecommendationModal extends React.Component<
     if (!recordingToPersonallyRecommend) {
       return null;
     }
-    const { blurbContent, users, suggestions, followers } = this.state;
+    const { blurbContent, users, suggestions } = this.state;
     const { track_name } = recordingToPersonallyRecommend.track_metadata;
     const { artist_name } = recordingToPersonallyRecommend.track_metadata;
+    const { APIService, currentUser } = this.context;
     return (
       <div
         className="modal fade"
@@ -163,7 +168,19 @@ export default class PersonalRecommendationModal extends React.Component<
                 data-dismiss="modal"
                 aria-label="Close"
                 onClick={() => {
-                  this.setState({ users: [], blurbContent: "" });
+                  this.setState({
+                    users: [],
+                    blurbContent: "",
+                    suggestions: [],
+                  });
+                  // update the followers list
+                  APIService.getFollowersOfUser(currentUser.name)
+                    .then((response) => {
+                      this.setState({ followers: response.followers });
+                    })
+                    .catch((error) => {
+                      this.handleError(error, "Error while fetching followers");
+                    });
                 }}
               >
                 <span aria-hidden="true">&times;</span>
