@@ -1,7 +1,21 @@
 .pill {
   display: inline-block;
   border: solid;
-  div {
+  background-color: @blue;
+  border-radius: 100px;
+  margin: 2px 2px 5px 2px;
+  > div {
     display: flex;
+    margin: 5px;
+    span {
+      color: @white;
+      vertical-align: center;
+    }
+    button {
+      background-color: @blue;
+      color: @white;
+      border: none;
+      border-radius: 100px;
+    }
   }
 }

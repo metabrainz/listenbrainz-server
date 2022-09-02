@@ -12,7 +12,7 @@ const Pill = (props: PillProps) => {
   return (
     <div className="pill">
       <div>
-        <p>{title}</p>
+        <span>{title}</span>
         <ListenControl text="" icon={faTimesCircle} action={closeAction} />
       </div>
     </div>
