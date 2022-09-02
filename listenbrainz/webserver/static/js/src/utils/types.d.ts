@@ -539,6 +539,7 @@ type EventTypeT =
   | "stop_follow"
   | "block_follow"
   | "notification"
+  | "personal_recording_recommendation"
   | "critiquebrainz_review";
 
 type UserRelationshipEventMetadata = {
@@ -557,6 +558,7 @@ type EventMetadata =
   | UserRelationshipEventMetadata
   | PinEventMetadata
   | NotificationEventMetadata
+  | UserTrackPersonalRecommendationMetadata
   | CritiqueBrainzReview;
 
 type TimelineEvent = {

@@ -19,6 +19,7 @@ import {
   faEye,
   faEyeSlash,
   faComments,
+  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -45,12 +46,14 @@ import {
   getReviewEventContent,
   getRecordingMBID,
   getRecordingMSID,
+  personalRecommendationEventToListen,
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
+  PERSONAL_RECORDING_RECOMMENDATION = "personal_recording_recommendation",
   RECORDING_PIN = "recording_pin",
   LIKE = "like",
   LISTEN = "listen",
@@ -88,7 +91,8 @@ export default class UserFeedPage extends React.Component<
       event_type === EventType.RECORDING_PIN ||
       event_type === EventType.LIKE ||
       event_type === EventType.LISTEN ||
-      event_type === EventType.REVIEW
+      event_type === EventType.REVIEW ||
+      event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION
     );
   }
 
@@ -114,6 +118,8 @@ export default class UserFeedPage extends React.Component<
         return faThumbtack;
       case EventType.REVIEW:
         return faComments;
+      case EventType.PERSONAL_RECORDING_RECOMMENDATION:
+        return faPaperPlane;
       default:
         return faQuestion;
     }
@@ -150,6 +156,8 @@ export default class UserFeedPage extends React.Component<
           review.entity_type
         )}`;
       }
+      case EventType.PERSONAL_RECORDING_RECOMMENDATION:
+        return "Personally recommended a track";
       default:
         return "";
     }
@@ -611,6 +619,10 @@ export default class UserFeedPage extends React.Component<
         // Users can review various entity types, and we need to format the review as a Listen accordingly
         listen = feedReviewEventToListen(typedMetadata);
         additionalContent = getReviewEventContent(typedMetadata);
+      } else if (event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION) {
+        const typedMetadata = metadata as UserTrackPersonalRecommendationMetadata;
+        listen = personalRecommendationEventToListen(typedMetadata);
+        additionalContent = getAdditionalContent(typedMetadata);
       } else {
         listen = metadata as Listen;
         additionalContent = getAdditionalContent(metadata);
