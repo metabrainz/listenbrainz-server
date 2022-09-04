@@ -6,7 +6,11 @@ import * as Sentry from "@sentry/react";
 import { get } from "lodash";
 
 import { Integrations } from "@sentry/tracing";
-import { faPencilAlt, faThumbtack } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPencilAlt,
+  faThumbtack,
+  faPaperPlane,
+} from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -247,8 +251,8 @@ export default class RecentListens extends React.Component<
                   if (isListenPersonallyRecommendable) {
                     additionalMenuItems.push(
                       <ListenControl
-                        text="Personally recommend this recording"
-                        icon={faThumbtack}
+                        text="Personally recommend"
+                        icon={faPaperPlane}
                         action={this.updateRecordingToPersonallyRecommend.bind(
                           this,
                           listen

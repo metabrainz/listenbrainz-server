@@ -5,15 +5,18 @@ import ListenControl from "../listens/ListenControl";
 export type PillProps = {
   title: string;
   closeAction?: (event: React.MouseEvent) => void;
+  closeButton?: Boolean;
 };
 
 const Pill = (props: PillProps) => {
-  const { title, closeAction } = props;
+  const { title, closeAction, closeButton } = props;
   return (
     <div className="pill">
       <div>
         <span>{title}</span>
-        <ListenControl text="" icon={faTimesCircle} action={closeAction} />
+        {closeButton && (
+          <ListenControl text="" icon={faTimesCircle} action={closeAction} />
+        )}
       </div>
     </div>
   );
