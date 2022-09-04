@@ -196,6 +196,7 @@ export default class PersonalRecommendationModal extends React.Component<
                     title={user}
                     // eslint-disable-next-line react/jsx-no-bind
                     closeAction={this.removeUser.bind(this, user)}
+                    closeButton
                   />
                 );
               })}
@@ -203,6 +204,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 type="text"
                 className="form-control"
                 onChange={this.searchUsers}
+                placeholder="Search and add users"
               />
               <div className="searchdropdown">
                 {suggestions!.map((name) => {
@@ -216,7 +218,7 @@ export default class PersonalRecommendationModal extends React.Component<
                   );
                 })}
               </div>
-              <p>
+              <p style={{ marginTop: "10px" }}>
                 Why will you recommend personally{" "}
                 <b>
                   {" "}

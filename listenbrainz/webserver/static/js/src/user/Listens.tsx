@@ -17,6 +17,7 @@ import {
   faPencilAlt,
   faThumbtack,
   faTrashAlt,
+  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
@@ -708,8 +709,8 @@ export default class Listens extends React.Component<
     if (canPersonallyRecommend) {
       additionalMenuItems.push(
         <ListenControl
-          text="Personally recommend this recording"
-          icon={faThumbtack}
+          text="Personally recommend"
+          icon={faPaperPlane}
           action={this.updateRecordingToPersonallyRecommend.bind(this, listen)}
           dataToggle="modal"
           dataTarget="#PersonalRecommendationModal"

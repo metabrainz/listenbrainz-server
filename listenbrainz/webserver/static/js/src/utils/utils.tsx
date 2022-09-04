@@ -6,6 +6,7 @@ import { Rating } from "react-simple-star-rating";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
+import Pill from "../personal-recommendations/Pill";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -641,6 +642,25 @@ export function getReviewEventContent(
             size={20}
             iconsCount={5}
           />
+        </div>
+      )}
+      {additionalContent}
+    </>
+  );
+}
+
+export function getPersonalRecommendationEventContent(
+  eventMetadata: UserTrackPersonalRecommendationMetadata,
+  isCreator: Boolean
+): JSX.Element {
+  const additionalContent = getAdditionalContent(eventMetadata);
+  return (
+    <>
+      {isCreator && (
+        <div style={{ paddingBottom: "10px" }}>
+          {eventMetadata.users!.map((userName) => {
+            return <Pill title={userName} />;
+          })}
         </div>
       )}
       {additionalContent}

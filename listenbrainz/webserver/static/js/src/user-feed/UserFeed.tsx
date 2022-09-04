@@ -47,6 +47,7 @@ import {
   getRecordingMBID,
   getRecordingMSID,
   personalRecommendationEventToListen,
+  getPersonalRecommendationEventContent,
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
@@ -157,7 +158,7 @@ export default class UserFeedPage extends React.Component<
         )}`;
       }
       case EventType.PERSONAL_RECORDING_RECOMMENDATION:
-        return "Personally recommended a track";
+        return "personally recommended a track";
       default:
         return "";
     }
@@ -622,7 +623,10 @@ export default class UserFeedPage extends React.Component<
       } else if (event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION) {
         const typedMetadata = metadata as UserTrackPersonalRecommendationMetadata;
         listen = personalRecommendationEventToListen(typedMetadata);
-        additionalContent = getAdditionalContent(typedMetadata);
+        additionalContent = getPersonalRecommendationEventContent(
+          typedMetadata,
+          currentUser.name === event.user_name
+        );
       } else {
         listen = metadata as Listen;
         additionalContent = getAdditionalContent(metadata);
