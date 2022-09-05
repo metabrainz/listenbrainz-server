@@ -897,25 +897,34 @@ def _update_sequences():
     _update_sequence(timescale.engine, 'playlist.playlist_recording_id_seq', 'playlist.playlist_recording')
 
 
-def _fetch_latest_file_info_from_ftp_dir(server, dir):
+def _fetch_latest_file_info_from_ftp_dir(directory: str, has_id: bool):
     """
-        Given a FTP server and dir, fetch the latest dump directory name and return it
+        Given a base FTP dir and whether the dump name contains an id, browses the MB FTP server to fetch
+        the latest dump directory name and return it
     """
 
-    line = ""
+    latest_dump_id: Optional[int] = None
+    latest_dt: Optional[datetime] = None
 
-    def add_line(l):
-        nonlocal line
-        l = l.strip()
-        if l:
-            line = l
+    def process_line(file):
+        nonlocal latest_dump_id, latest_dt
+        file = file[56:].strip()
+        if file:
+            if has_id:
+                dump_id, dt = _parse_ftp_name_with_id(file)
+            else:
+                dump_id, dt = _parse_ftp_name_without_id(file)
 
-    ftp = FTP(server)
+            if latest_dt is None or dt > latest_dt:
+                latest_dt = dt
+                latest_dump_id = dump_id
+
+    ftp = FTP(MAIN_FTP_SERVER_URL)
     ftp.login()
-    ftp.cwd(dir)
-    ftp.retrlines('LIST', add_line)
+    ftp.cwd(directory)
+    ftp.retrlines('LIST', process_line)
 
-    return line[56:].strip()
+    return latest_dump_id, latest_dt
 
 
 def _parse_ftp_name_with_id(name):
@@ -956,44 +965,35 @@ def check_ftp_dump_ages():
 
     msg = ""
     try:
-        latest_file = _fetch_latest_file_info_from_ftp_dir(
-            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/fullexport')
-        id, dt = _parse_ftp_name_with_id(latest_file)
+        dump_id, dt = _fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/fullexport', True)
         age = datetime.now() - dt
         if age > timedelta(days=FULLEXPORT_MAX_AGE):
-            msg = "Full dump %d is more than %d days old: %s\n" % (
-                id, FULLEXPORT_MAX_AGE, str(age))
+            msg = "Full dump %d is more than %d days old: %s\n" % (dump_id, FULLEXPORT_MAX_AGE, str(age))
             print(msg, end="")
         else:
-            print("Full dump %s is %s old, good!" % (id, str(age)))
+            print("Full dump %s is %s old, good!" % (dump_id, str(age)))
     except Exception as err:
         msg = "Cannot fetch full dump age: %s\n\n%s" % (str(err), traceback.format_exc())
 
     try:
-        latest_file = _fetch_latest_file_info_from_ftp_dir(
-            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/incremental')
-        id, dt = _parse_ftp_name_with_id(latest_file)
+        dump_id, dt = _fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/incremental', True)
         age = datetime.now() - dt
         if age > timedelta(hours=INCREMENTAL_MAX_AGE):
-            msg = "Incremental dump %s is more than %s hours old: %s\n" % (
-                id, INCREMENTAL_MAX_AGE, str(age))
+            msg = "Incremental dump %s is more than %s hours old: %s\n" % (dump_id, INCREMENTAL_MAX_AGE, str(age))
             print(msg, end="")
         else:
-            print("Incremental dump %s is %s old, good!" % (id, str(age)))
+            print("Incremental dump %s is %s old, good!" % (dump_id, str(age)))
     except Exception as err:
         msg = "Cannot fetch incremental dump age: %s\n\n%s" % (str(err), traceback.format_exc())
 
     try:
-        latest_file = _fetch_latest_file_info_from_ftp_dir(
-            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/spark')
-        id, dt = _parse_ftp_name_without_id(latest_file)
+        dump_id, dt = _fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/spark', False)
         age = datetime.now() - dt
         if age > timedelta(days=FEEDBACK_MAX_AGE):
-            msg = "Feedback dump %s is more than %s days old: %s\n" % (
-                id, FEEDBACK_MAX_AGE, str(age))
+            msg = "Feedback dump %s is more than %s days old: %s\n" % (dump_id, FEEDBACK_MAX_AGE, str(age))
             print(msg, end="")
         else:
-            print("Feedback dump %s is %s old, good!" % (id, str(age)))
+            print("Feedback dump %s is %s old, good!" % (dump_id, str(age)))
     except Exception as err:
         msg = "Cannot fetch feedback dump age: %s\n\n%s" % (str(err), traceback.format_exc())
 
