@@ -218,6 +218,8 @@ the data for any of the following fields, omit the key entirely:
      - If the song of this listen comes from an online source, the URL to the place where it is available. This could be a spotify url (see ``spotify_id``), a YouTube video URL, a Soundcloud recording page URL, or the full URL to a public MP3 file. If there is a webpage for this song (e.g. Youtube page, Soundcloud page) **do not** try and resolve the URL to an actual audio resource.
    * - ``duration_ms`` and ``duration``
      - The duration of the track in milliseconds and seconds respectively. You should only include one of ``duration_ms`` or ``duration``.
+   * - ``listened_at_local``
+     - The local timestamp when the track was listened to. The timestamp should be in ISO8601 format: ``YYYY-MM-DDThh:mm:ss+hh:mm`` or ``YYYY-MM-DDThh:mm:ss-hh:mm``. e.g., 1994-11-05T08:15:30-05:00 corresponds to November 5, 1994, 8:15:30 am, US Eastern Standard Time.
 .. note::
 
   **Music service names**

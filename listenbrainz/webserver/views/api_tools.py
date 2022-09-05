@@ -238,6 +238,16 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         for key in multiple_mbid_keys:
             validate_multiple_mbids_field(listen, key)
 
+        # check listened_at_local validity. listened_at_local should be an ISO8601 string which follows the format:
+        # YYYY-MM-DDThh:mm:ss+hh:mm or YYYY-MM-DDThh:mm:ss-hh:m
+
+        if 'listened_at_local' in listen['track_metadata']['additional_info']:
+            listened_at_local = listen['track_metadata']['additional_info']['listened_at_local']
+            try:
+                iso_time = datetime.fromisoformat(listened_at_local)
+            except:
+                raise ListenValidationError("listened_at_local is not in valid ISO8601 format.", listen)
+            
     # monitor performance of unicode null check because it might be a potential bottleneck
     with sentry_sdk.start_span(op="null check", description="check for unicode null in submitted listen json"):
         # If unicode null is present in the listen, postgres will raise an
