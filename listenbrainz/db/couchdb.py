@@ -95,7 +95,7 @@ def delete_database(prefix: str):
     deleted, retained = [], []
 
     for database in databases:
-        if check_lock(database):
+        if check_database_lock(database):
             retained.append(database)
         else:
             response = requests.delete(f"{get_base_url()}/{database}")
@@ -161,7 +161,7 @@ def delete_data(database: str, doc_id: int | str):
     response.raise_for_status()
 
 
-def check_lock(database: str):
+def check_database_lock(database: str):
     """ Checks whether a database is "currently locked" by checking the existence of
      DATABASE_LOCK_FILE. A database is usually locked only during dumps.
     """
