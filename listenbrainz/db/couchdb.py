@@ -95,13 +95,10 @@ def delete_database(prefix: str):
     deleted, retained = [], []
 
     for database in databases:
-        databases_url = f"{get_base_url()}/{database}"
-        response = requests.get(f"{databases_url}/{DATABASE_LOCK_FILE}")
-
-        if response.status_code == 200:
+        if check_lock(database):
             retained.append(database)
         else:
-            response = requests.delete(databases_url)
+            response = requests.delete(f"{get_base_url()}/{database}")
             response.raise_for_status()
             deleted.append(database)
 
@@ -164,6 +161,15 @@ def delete_data(database: str, doc_id: int | str):
     response.raise_for_status()
 
 
+def check_lock(database: str):
+    """ Checks whether a database is "currently locked" by checking the existence of
+     DATABASE_LOCK_FILE. A database is usually locked only during dumps.
+    """
+    url = f"{get_base_url()}/{database}/{DATABASE_LOCK_FILE}"
+    response = requests.get(url)
+    return response.status_code == 200
+
+
 def lock_database(database: str):
     """ 'Lock' the database so that it does not get deleted.
 
@@ -187,6 +193,7 @@ def _assert_status_hook(r, *args, **kwargs):
 
 
 def _get_requests_session():
+    """ Configure a requests session for enforcing common retry strategy and status hooks during dumps. """
     retry_strategy = Retry(
         total=3,
         status_forcelist=[429, 500, 502, 503, 504],
