@@ -26,7 +26,6 @@ class DailyActivityTestCase(StatsTestCase):
         self.assertEqual(messages[0]["database"], "daily_activity_all_time")
 
         self.assertEqual(messages[1]["type"], expected[0]["type"])
-        self.assertEqual(messages[1]["entity"], expected[0]["entity"])
         self.assertEqual(messages[1]["stats_range"], expected[0]["stats_range"])
         self.assertEqual(messages[1]["from_ts"], expected[0]["from_ts"])
         self.assertEqual(messages[1]["to_ts"], expected[0]["to_ts"])
