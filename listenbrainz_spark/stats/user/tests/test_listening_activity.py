@@ -43,7 +43,7 @@ class ListeningActivityTestCase(StatsTestCase):
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='activity_table', stats_range='week',
                                                 from_date=from_date, to_date=to_date,
-                                                message_type='user_listening_activity')
+                                                message_type='user_listening_activity', database=None)
 
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.listening_activity.calculate_listening_activity', return_value='activity_table')
@@ -64,7 +64,7 @@ class ListeningActivityTestCase(StatsTestCase):
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='activity_table', stats_range='month',
                                                 from_date=from_date, to_date=to_date,
-                                                message_type='user_listening_activity')
+                                                message_type='user_listening_activity', database=None)
 
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.listening_activity.calculate_listening_activity', return_value='activity_table')
@@ -85,7 +85,7 @@ class ListeningActivityTestCase(StatsTestCase):
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='activity_table', stats_range='year',
                                                 from_date=from_date, to_date=to_date,
-                                                message_type='user_listening_activity')
+                                                message_type='user_listening_activity', database=None)
 
     @patch("listenbrainz_spark.stats.common.listening_activity.get_latest_listen_ts")
     def test_get_time_range(self, mock_listen_ts):

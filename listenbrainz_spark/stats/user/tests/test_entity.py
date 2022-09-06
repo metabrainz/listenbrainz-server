@@ -24,7 +24,8 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 9)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='week',
-                                                from_date=from_date, to_date=to_date, message_type="user_entity")
+                                                from_date=from_date, to_date=to_date, message_type="user_entity",
+                                                database=None)
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
@@ -35,7 +36,8 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='month',
-                                                from_date=from_date, to_date=to_date, message_type="user_entity")
+                                                from_date=from_date, to_date=to_date, message_type="user_entity",
+                                                database=None)
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
@@ -46,7 +48,8 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 1, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='year',
-                                                from_date=from_date, to_date=to_date, message_type="user_entity")
+                                                from_date=from_date, to_date=to_date, message_type="user_entity",
+                                                database=None)
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
@@ -57,7 +60,8 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 9, 12, 22, 43)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='all_time',
-                                                from_date=from_date, to_date=to_date, message_type="user_entity")
+                                                from_date=from_date, to_date=to_date, message_type="user_entity",
+                                                database=None)
 
     def test_skip_incorrect_artists_stats(self):
         """ Test to check if entries with incorrect data is skipped for top user artists """
