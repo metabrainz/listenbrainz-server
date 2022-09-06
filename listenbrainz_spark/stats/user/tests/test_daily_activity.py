@@ -13,7 +13,7 @@ from listenbrainz_spark.stats.user.tests import StatsTestCase
 class DailyActivityTestCase(StatsTestCase):
 
     def test_get_daily_activity(self):
-        received = list(daily_activity.get_daily_activity('all_time'))
+        messages = list(daily_activity.get_daily_activity('all_time'))
 
         time_range_expected = itertools.product(calendar.day_name, range(0, 24))
         time_range_received = run_query("SELECT * FROM time_range").toLocalIterator()
@@ -22,12 +22,20 @@ class DailyActivityTestCase(StatsTestCase):
         with open(self.path_to_data_file('user_daily_activity.json')) as f:
             expected = json.load(f)
 
-        self.assertEqual(len(received), len(expected))
+        self.assertEqual(messages[0]["type"], "couchdb_data_start")
+        self.assertEqual(messages[0]["database"], "daily_activity_all_time")
+
+        received = messages[1]
         self.assertEqual(received[0]["type"], expected[0]["type"])
+        self.assertEqual(received[0]["entity"], expected[0]["entity"])
         self.assertEqual(received[0]["stats_range"], expected[0]["stats_range"])
         self.assertEqual(received[0]["from_ts"], expected[0]["from_ts"])
         self.assertEqual(received[0]["to_ts"], expected[0]["to_ts"])
         self.assertCountEqual(received[0]["data"], expected[0]["data"])
+        self.assertCountEqual(received[0]["database"], "daily_activity_all_time")
+
+        self.assertEqual(messages[2]["type"], "couchdb_data_end")
+        self.assertEqual(messages[2]["database"], "daily_activity_all_time")
 
     @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')

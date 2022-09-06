@@ -1,5 +1,4 @@
 import json
-import uuid
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -76,6 +75,7 @@ class UserEntityTestCase(StatsTestCase):
 
         messages = entity.create_messages([mock_result], 'artists', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
+        next(messages)  # skip couchdb database create message
         received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
@@ -94,6 +94,7 @@ class UserEntityTestCase(StatsTestCase):
 
         messages = entity.create_messages([mock_result], 'releases', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
+        next(messages)  # skip couchdb database create message
         received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
@@ -112,6 +113,7 @@ class UserEntityTestCase(StatsTestCase):
 
         messages = entity.create_messages([mock_result], 'recordings', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
+        next(messages)  # skip couchdb database create message
         received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped

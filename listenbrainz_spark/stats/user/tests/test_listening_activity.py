@@ -19,7 +19,7 @@ class ListeningActivityTestCase(StatsTestCase):
         messages = list(listening_activity_stats.get_listening_activity('all_time'))
 
         self.assertEqual(messages[0]["type"], "couchdb_data_start")
-        self.assertEqual(messages[0]["database"], "user_releases_all_time")
+        self.assertEqual(messages[0]["database"], "listening_activity_all_time")
 
         received = messages[1]
         self.assertEqual(received[0]["type"], expected[0]["type"])
