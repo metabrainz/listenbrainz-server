@@ -51,7 +51,7 @@ class DailyActivityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='month',
-                                                from_date=from_date, to_date=to_date)
+                                                from_date=from_date, to_date=to_date, database=None)
 
     @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
@@ -63,7 +63,7 @@ class DailyActivityTestCase(StatsTestCase):
         to_date = datetime(2021, 1, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='year',
-                                                from_date=from_date, to_date=to_date)
+                                                from_date=from_date, to_date=to_date, database=None)
 
     @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
@@ -75,4 +75,4 @@ class DailyActivityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 9, 12, 22, 43)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='all_time',
-                                                from_date=from_date, to_date=to_date)
+                                                from_date=from_date, to_date=to_date, database=None)
