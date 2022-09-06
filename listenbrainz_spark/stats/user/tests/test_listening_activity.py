@@ -17,6 +17,7 @@ class ListeningActivityTestCase(StatsTestCase):
         with open(self.path_to_data_file('user_listening_activity.json')) as f:
             expected = json.load(f)
         messages = list(listening_activity_stats.get_listening_activity('all_time'))
+        print(messages)
 
         self.assertEqual(messages[0]["type"], "couchdb_data_start")
         self.assertEqual(messages[0]["database"], "listening_activity_all_time")
