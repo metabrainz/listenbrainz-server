@@ -908,7 +908,6 @@ def _fetch_latest_file_info_from_ftp_dir(directory: str, has_id: bool):
 
     def process_line(file):
         nonlocal latest_dump_id, latest_dt
-        file = file[56:].strip()
         if file:
             if has_id:
                 dump_id, dt = _parse_ftp_name_with_id(file)
@@ -922,7 +921,7 @@ def _fetch_latest_file_info_from_ftp_dir(directory: str, has_id: bool):
     ftp = FTP(MAIN_FTP_SERVER_URL)
     ftp.login()
     ftp.cwd(directory)
-    ftp.retrlines('LIST', process_line)
+    ftp.retrlines('NLST', process_line)
 
     return latest_dump_id, latest_dt
 
