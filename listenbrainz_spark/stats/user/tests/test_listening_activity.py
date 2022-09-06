@@ -17,18 +17,17 @@ class ListeningActivityTestCase(StatsTestCase):
         with open(self.path_to_data_file('user_listening_activity.json')) as f:
             expected = json.load(f)
         messages = list(listening_activity_stats.get_listening_activity('all_time'))
-        print(messages)
 
         self.assertEqual(messages[0]["type"], "couchdb_data_start")
-        self.assertEqual(messages[0]["database"], "listening_activity_all_time")
+        self.assertEqual(messages[0]["database"], "user_releases_all_time")
 
         received = messages[1]
-        self.assertEqual(len(received), len(expected))
         self.assertEqual(received[0]["type"], expected[0]["type"])
         self.assertEqual(received[0]["stats_range"], expected[0]["stats_range"])
         self.assertEqual(received[0]["from_ts"], expected[0]["from_ts"])
         self.assertEqual(received[0]["to_ts"], expected[0]["to_ts"])
         self.assertCountEqual(received[0]["data"], expected[0]["data"])
+        self.assertCountEqual(received[0]["database"], "listening_activity_all_time")
 
         self.assertEqual(messages[2]["type"], "couchdb_data_end")
         self.assertEqual(messages[2]["database"], "listening_activity_all_time")
