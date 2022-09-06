@@ -1,808 +1,808 @@
-{
+[
+  {
     "data": [
-        {
-            "artist_mbids": [
-                "d340853d-7408-4a0d-89c2-6ff13e568815"
-            ],
-            "listen_count": 385,
-            "artist_name": "The Local train",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "ba64b195-01dd-4613-9534-bb87dc44cffb"
-            ],
-            "listen_count": 333,
-            "artist_name": "Lenka",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "6599e41e-390c-4855-a2ac-68ee798538b4"
-            ],
-            "listen_count": 321,
-            "artist_name": "Coldplay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "fecda98e-0533-4b87-a9d1-c89b4521918b"
-            ],
-            "listen_count": 176,
-            "artist_name": "Imagine Dragons",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "9d5adabb-9775-4535-93eb-12b485aed8bf"
-            ],
-            "listen_count": 118,
-            "artist_name": "Maroon 5",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "7addbcac-ae39-4b4c-a956-53da336d68e8"
-            ],
-            "listen_count": 108,
-            "artist_name": "Ellie Goulding",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "67f4ae2e-260e-4020-b957-f2df5b719501"
-            ],
-            "listen_count": 65,
-            "artist_name": "OneRepublic",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "2b0646af-f3f0-4a5b-b629-6c31301c1c29"
-            ],
-            "listen_count": 52,
-            "artist_name": "The Weeknd",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "0daecabb-f76d-4914-8726-82cefbecca52"
-            ],
-            "listen_count": 44,
-            "artist_name": "The Chainsmokers",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "3b155259-b29e-4515-aa62-cb0b917f4cfd"
-            ],
-            "listen_count": 41,
-            "artist_name": "The Fray",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "52f911d4-8f73-4fc9-9145-a99aff057524"
-            ],
-            "listen_count": 35,
-            "artist_name": "George Ezra",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea"
-            ],
-            "listen_count": 34,
-            "artist_name": "Taylor Swift",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c"
-            ],
-            "listen_count": 34,
-            "artist_name": "Train",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "1024e884-3a17-4729-9e59-a026fe8a07ba"
-            ],
-            "listen_count": 33,
-            "artist_name": "M.I.A.",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "0c115c8a-fc71-4649-aa75-aaef5f09d6d1"
-            ],
-            "listen_count": 30,
-            "artist_name": "American Authors",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "4e202a9c-c976-4e9e-8c9f-b0b96916f6a5"
-            ],
-            "listen_count": 30,
-            "artist_name": "Tommee Profitt",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "50751cf3-40c6-454e-99d9-3d5777e4ad4f"
-            ],
-            "listen_count": 30,
-            "artist_name": "Within Temptation",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "1588d970-c277-44bc-8c6d-dc858a82f647"
-            ],
-            "listen_count": 24,
-            "artist_name": "The Lumineers",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "1b173852-64e9-4c7f-8ed7-01ce6158a6fd"
-            ],
-            "listen_count": 24,
-            "artist_name": "Linkin Park",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8cb3fd5a-2194-4c3b-8eb8-3e538d109991"
-            ],
-            "listen_count": 24,
-            "artist_name": "Vance Joy",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "f0ff6fbe-ce2f-45d8-bef5-80725471fe5a"
-            ],
-            "listen_count": 23,
-            "artist_name": "Alan Walker, Noah Cyrus, Digital Farm Animals",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "ac6f4804-6215-4e1b-bb47-3672f085dde6"
-            ],
-            "listen_count": 20,
-            "artist_name": "Sia",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "e17a5ee3-3f96-4307-bacc-9ad50073e0ea"
-            ],
-            "listen_count": 20,
-            "artist_name": "Alan Walker, Alan Walker",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "6817e85a-f5ae-4479-b73d-e8e320e1b927"
-            ],
-            "listen_count": 19,
-            "artist_name": "Ed Sheeran",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8fa7a31e-91ea-44ff-8939-9be736d5838d"
-            ],
-            "listen_count": 12,
-            "artist_name": "Vishal-Shekhar",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "3dc53e0f-7090-44d2-8500-3012102f29a6"
-            ],
-            "listen_count": 11,
-            "artist_name": "Backstreet Boys",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b1e41ca1-529d-4707-8c6a-14c88f052025"
-            ],
-            "listen_count": 11,
-            "artist_name": "The Chainsmokers, Coldplay, The Chainsmokers, The Chainsmokers & Coldplay, Coldplay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "abf274d4-a1f8-4477-b5c6-8c1121a13cf6"
-            ],
-            "listen_count": 11,
-            "artist_name": "Bruno Mars",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b34aa9cf-10ce-4324-9929-edc13a08ea2a"
-            ],
-            "listen_count": 10,
-            "artist_name": "The Chainsmokers, The Chainsmokers, Halsey",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "afbfb7c6-6a50-48d2-a38e-66f595191438"
-            ],
-            "listen_count": 8,
-            "artist_name": "Alan Walker, Gavin James",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "c5fe302b-c44e-48b5-9e37-f5d4d6f97e3e"
-            ],
-            "listen_count": 7,
-            "artist_name": "Jared Moreno Luna",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "29ea9fb1-57da-41af-8296-4708a718147c"
-            ],
-            "listen_count": 7,
-            "artist_name": "Coldplay, Big Sean",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "78ea0d33-cffa-477a-857c-e2981bac9fe4"
-            ],
-            "listen_count": 7,
-            "artist_name": "Charlie Puth, Selena Gomez",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "485029d6-bcdc-44a1-bf9f-8863915e43db"
-            ],
-            "listen_count": 7,
-            "artist_name": "Jasleen Royal",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d8696b51-1a16-4543-b9a2-8e9c6b91b42c"
-            ],
-            "listen_count": 7,
-            "artist_name": "Amit Trivedi",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "fda2dfd0-1886-46c4-8d8a-f441fc14196d"
-            ],
-            "listen_count": 6,
-            "artist_name": "Sonu Nigam",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "209b0f51-78e2-4333-85b0-bfe756723970"
-            ],
-            "listen_count": 5,
-            "artist_name": "Shakira",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "6a585aed-f74e-4343-a45b-632a12d2db01"
-            ],
-            "listen_count": 5,
-            "artist_name": "Clean Bandit, Zara Larsson, MK",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "be453392-5c84-4bc3-9442-48e8a24cff90"
-            ],
-            "listen_count": 5,
-            "artist_name": "Alan Silvestri",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "7bb2fcd0-1edb-4c35-bde2-052f9c8efd2f"
-            ],
-            "listen_count": 5,
-            "artist_name": "Shawn Mendes",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "46c7f28d-240d-46a2-bf7a-44dda741bb19"
-            ],
-            "listen_count": 5,
-            "artist_name": "Pritam",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "5a67966d-d775-48fb-a2fb-359ed4666105"
-            ],
-            "listen_count": 5,
-            "artist_name": "Jason Mraz",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "474b46a9-0c2e-4a27-b1ac-55f3a0b9f6dc"
-            ],
-            "listen_count": 5,
-            "artist_name": "Ajay Gogavale",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "1c498eab-998f-4975-b52b-72243e89c0ba"
-            ],
-            "listen_count": 5,
-            "artist_name": "One Direction",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "25cee6e6-1623-4575-bc9d-cb4f7c35f37f"
-            ],
-            "listen_count": 5,
-            "artist_name": "DJ Snake, Justin Bieber",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "ea508409-1c39-461c-a7ab-2163f89be757"
-            ],
-            "listen_count": 5,
-            "artist_name": "Mohit Chauhan",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d25a82aa-1377-43cd-a447-fb52532e9b85"
-            ],
-            "listen_count": 5,
-            "artist_name": "Clean Bandit [FazMusic.Net]",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "f51e0925-f3a7-4381-bd23-87f6b3468906"
-            ],
-            "listen_count": 4,
-            "artist_name": "Dev Negi",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "19a05a11-e927-4327-be0d-27dc37278de6"
-            ],
-            "listen_count": 4,
-            "artist_name": "Kodaline",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b182f99b-982c-4469-8372-8959affe87e7"
-            ],
-            "listen_count": 4,
-            "artist_name": "Benny Dayal",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "80daf28c-5198-454a-9f74-4a1300f544ac"
-            ],
-            "listen_count": 4,
-            "artist_name": "Anirudh Ravichander",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "a20eb386-b985-432a-8f50-63f854c4640a"
-            ],
-            "listen_count": 4,
-            "artist_name": "Eagles",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "bf85aa32-dc19-483d-95c3-754e2ba18540"
-            ],
-            "listen_count": 4,
-            "artist_name": "The Chainsmokers, The Chainsmokers",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "1871df1a-93b7-4e25-9d60-64102ba89913"
-            ],
-            "listen_count": 4,
-            "artist_name": "The Script",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b982577e-02da-4e04-beb7-3cb4577f4aad"
-            ],
-            "listen_count": 4,
-            "artist_name": "Ayushmann Khurrana",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "0df3a81c-7820-476a-a9d5-b797e92e17c4"
-            ],
-            "listen_count": 4,
-            "artist_name": "Passenger",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "a275d8a0-0535-494c-aa2c-1b8978b75305"
-            ],
-            "listen_count": 4,
-            "artist_name": "Vishal Dadlani",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "6fbc15cf-5845-40e1-9dd8-ea8dbb05d871"
-            ],
-            "listen_count": 4,
-            "artist_name": "Taio Cruz",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "395e3442-5872-4e07-895c-8d8194e4e256"
-            ],
-            "listen_count": 4,
-            "artist_name": "The Chainsmokers, The Chainsmokers, Phoebe Ryan",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "e54b7dc0-69b4-419d-b71b-95db8bd8d3e9"
-            ],
-            "listen_count": 3,
-            "artist_name": "Wiz Khalifa, Charlie Puth",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "291bca64-8c93-4790-85db-cf25baacb49e"
-            ],
-            "listen_count": 3,
-            "artist_name": "James Blunt",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "f0676957-e3d7-4ca6-baf8-ffecaa01f415"
-            ],
-            "listen_count": 3,
-            "artist_name": "Clean Bandit",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "98184d50-f63d-4232-8a81-c06fa53b1082"
-            ],
-            "listen_count": 3,
-            "artist_name": "Carly Rae Jepsen",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "1e6376d9-5112-4398-9283-6a5f23c8d2aa"
-            ],
-            "listen_count": 3,
-            "artist_name": "Calvin Harris",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "fc0a98da-ddb2-4a93-becb-43a90471a7aa"
-            ],
-            "listen_count": 3,
-            "artist_name": "Pharrell Williams, Pharrell Williams",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "bcda4610-9da6-4059-92ee-8c539fb69c19"
-            ],
-            "listen_count": 3,
-            "artist_name": "Maroon 5, Kendrick Lamar",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "2fbb01d7-a799-4a0f-bd14-41c3074a3566"
-            ],
-            "listen_count": 3,
-            "artist_name": "Major Lazer, DJ Snake, M\u00d8",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b09db02b-5438-4360-a73f-7a3a5b88358f"
-            ],
-            "listen_count": 3,
-            "artist_name": "Colbie Caillat",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "6ed637a9-773d-4c14-a673-9e3c1d4f0bd0"
-            ],
-            "listen_count": 3,
-            "artist_name": "5 Seconds of Summer",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "e98b10b6-0208-4157-9544-36041e303f07"
-            ],
-            "listen_count": 3,
-            "artist_name": "Lauv",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "ef3e1c0b-d517-4336-83ab-574f5fb7b90a"
-            ],
-            "listen_count": 3,
-            "artist_name": "Norman D",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "53623447-d254-40b1-99f8-3f7dfaaef5e5"
-            ],
-            "listen_count": 3,
-            "artist_name": "One Direction, One Direction",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d03adfc0-6612-4146-9096-8cc85d3e0554"
-            ],
-            "listen_count": 3,
-            "artist_name": "James Bay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
-            ],
-            "listen_count": 3,
-            "artist_name": "Badshah",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8f119e29-922e-42da-a5bf-b062f5261a3d"
-            ],
-            "listen_count": 3,
-            "artist_name": "Of Monsters and Men",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "53623447-d254-40b1-99f8-3f7dfaaef5e5"
-            ],
-            "listen_count": 3,
-            "artist_name": "One Direction, One Direction",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d03adfc0-6612-4146-9096-8cc85d3e0554"
-            ],
-            "listen_count": 3,
-            "artist_name": "James Bay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
-            ],
-            "listen_count": 3,
-            "artist_name": "Badshah",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8f119e29-922e-42da-a5bf-b062f5261a3d"
-            ],
-            "listen_count": 3,
-            "artist_name": "Of Monsters and Men",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "53623447-d254-40b1-99f8-3f7dfaaef5e5"
-            ],
-            "listen_count": 3,
-            "artist_name": "One Direction, One Direction",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d03adfc0-6612-4146-9096-8cc85d3e0554"
-            ],
-            "listen_count": 3,
-            "artist_name": "James Bay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
-            ],
-            "listen_count": 3,
-            "artist_name": "Badshah",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8f119e29-922e-42da-a5bf-b062f5261a3d"
-            ],
-            "listen_count": 3,
-            "artist_name": "Of Monsters and Men",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "53623447-d254-40b1-99f8-3f7dfaaef5e5"
-            ],
-            "listen_count": 3,
-            "artist_name": "One Direction, One Direction",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d03adfc0-6612-4146-9096-8cc85d3e0554"
-            ],
-            "listen_count": 3,
-            "artist_name": "James Bay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
-            ],
-            "listen_count": 3,
-            "artist_name": "Badshah",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8f119e29-922e-42da-a5bf-b062f5261a3d"
-            ],
-            "listen_count": 3,
-            "artist_name": "Of Monsters and Men",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "53623447-d254-40b1-99f8-3f7dfaaef5e5"
-            ],
-            "listen_count": 3,
-            "artist_name": "One Direction, One Direction",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d03adfc0-6612-4146-9096-8cc85d3e0554"
-            ],
-            "listen_count": 3,
-            "artist_name": "James Bay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
-            ],
-            "listen_count": 3,
-            "artist_name": "Badshah",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8f119e29-922e-42da-a5bf-b062f5261a3d"
-            ],
-            "listen_count": 3,
-            "artist_name": "Of Monsters and Men",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "53623447-d254-40b1-99f8-3f7dfaaef5e5"
-            ],
-            "listen_count": 3,
-            "artist_name": "One Direction, One Direction",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d03adfc0-6612-4146-9096-8cc85d3e0554"
-            ],
-            "listen_count": 3,
-            "artist_name": "James Bay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
-            ],
-            "listen_count": 3,
-            "artist_name": "Badshah",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8f119e29-922e-42da-a5bf-b062f5261a3d"
-            ],
-            "listen_count": 3,
-            "artist_name": "Of Monsters and Men",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "53623447-d254-40b1-99f8-3f7dfaaef5e5"
-            ],
-            "listen_count": 3,
-            "artist_name": "One Direction, One Direction",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d03adfc0-6612-4146-9096-8cc85d3e0554"
-            ],
-            "listen_count": 3,
-            "artist_name": "James Bay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
-            ],
-            "listen_count": 3,
-            "artist_name": "Badshah",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8f119e29-922e-42da-a5bf-b062f5261a3d"
-            ],
-            "listen_count": 3,
-            "artist_name": "Of Monsters and Men",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8f119e29-922e-42da-a5bf-b062f5261a3d"
-            ],
-            "listen_count": 3,
-            "artist_name": "Of Monsters and Men",
-            "artist_msid": null
-        }
+      {
+        "artist_mbids": [
+          "d340853d-7408-4a0d-89c2-6ff13e568815"
+        ],
+        "listen_count": 385,
+        "artist_name": "The Local train",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "ba64b195-01dd-4613-9534-bb87dc44cffb"
+        ],
+        "listen_count": 333,
+        "artist_name": "Lenka",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "6599e41e-390c-4855-a2ac-68ee798538b4"
+        ],
+        "listen_count": 321,
+        "artist_name": "Coldplay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "fecda98e-0533-4b87-a9d1-c89b4521918b"
+        ],
+        "listen_count": 176,
+        "artist_name": "Imagine Dragons",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "9d5adabb-9775-4535-93eb-12b485aed8bf"
+        ],
+        "listen_count": 118,
+        "artist_name": "Maroon 5",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "7addbcac-ae39-4b4c-a956-53da336d68e8"
+        ],
+        "listen_count": 108,
+        "artist_name": "Ellie Goulding",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "67f4ae2e-260e-4020-b957-f2df5b719501"
+        ],
+        "listen_count": 65,
+        "artist_name": "OneRepublic",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "2b0646af-f3f0-4a5b-b629-6c31301c1c29"
+        ],
+        "listen_count": 52,
+        "artist_name": "The Weeknd",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "0daecabb-f76d-4914-8726-82cefbecca52"
+        ],
+        "listen_count": 44,
+        "artist_name": "The Chainsmokers",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "3b155259-b29e-4515-aa62-cb0b917f4cfd"
+        ],
+        "listen_count": 41,
+        "artist_name": "The Fray",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "52f911d4-8f73-4fc9-9145-a99aff057524"
+        ],
+        "listen_count": 35,
+        "artist_name": "George Ezra",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea"
+        ],
+        "listen_count": 34,
+        "artist_name": "Taylor Swift",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c"
+        ],
+        "listen_count": 34,
+        "artist_name": "Train",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "1024e884-3a17-4729-9e59-a026fe8a07ba"
+        ],
+        "listen_count": 33,
+        "artist_name": "M.I.A.",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "0c115c8a-fc71-4649-aa75-aaef5f09d6d1"
+        ],
+        "listen_count": 30,
+        "artist_name": "American Authors",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "4e202a9c-c976-4e9e-8c9f-b0b96916f6a5"
+        ],
+        "listen_count": 30,
+        "artist_name": "Tommee Profitt",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "50751cf3-40c6-454e-99d9-3d5777e4ad4f"
+        ],
+        "listen_count": 30,
+        "artist_name": "Within Temptation",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "1588d970-c277-44bc-8c6d-dc858a82f647"
+        ],
+        "listen_count": 24,
+        "artist_name": "The Lumineers",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "1b173852-64e9-4c7f-8ed7-01ce6158a6fd"
+        ],
+        "listen_count": 24,
+        "artist_name": "Linkin Park",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8cb3fd5a-2194-4c3b-8eb8-3e538d109991"
+        ],
+        "listen_count": 24,
+        "artist_name": "Vance Joy",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "f0ff6fbe-ce2f-45d8-bef5-80725471fe5a"
+        ],
+        "listen_count": 23,
+        "artist_name": "Alan Walker, Noah Cyrus, Digital Farm Animals",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "ac6f4804-6215-4e1b-bb47-3672f085dde6"
+        ],
+        "listen_count": 20,
+        "artist_name": "Sia",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "e17a5ee3-3f96-4307-bacc-9ad50073e0ea"
+        ],
+        "listen_count": 20,
+        "artist_name": "Alan Walker, Alan Walker",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+        ],
+        "listen_count": 19,
+        "artist_name": "Ed Sheeran",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8fa7a31e-91ea-44ff-8939-9be736d5838d"
+        ],
+        "listen_count": 12,
+        "artist_name": "Vishal-Shekhar",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "3dc53e0f-7090-44d2-8500-3012102f29a6"
+        ],
+        "listen_count": 11,
+        "artist_name": "Backstreet Boys",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b1e41ca1-529d-4707-8c6a-14c88f052025"
+        ],
+        "listen_count": 11,
+        "artist_name": "The Chainsmokers, Coldplay, The Chainsmokers, The Chainsmokers & Coldplay, Coldplay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "abf274d4-a1f8-4477-b5c6-8c1121a13cf6"
+        ],
+        "listen_count": 11,
+        "artist_name": "Bruno Mars",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b34aa9cf-10ce-4324-9929-edc13a08ea2a"
+        ],
+        "listen_count": 10,
+        "artist_name": "The Chainsmokers, The Chainsmokers, Halsey",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "afbfb7c6-6a50-48d2-a38e-66f595191438"
+        ],
+        "listen_count": 8,
+        "artist_name": "Alan Walker, Gavin James",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "c5fe302b-c44e-48b5-9e37-f5d4d6f97e3e"
+        ],
+        "listen_count": 7,
+        "artist_name": "Jared Moreno Luna",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "29ea9fb1-57da-41af-8296-4708a718147c"
+        ],
+        "listen_count": 7,
+        "artist_name": "Coldplay, Big Sean",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "78ea0d33-cffa-477a-857c-e2981bac9fe4"
+        ],
+        "listen_count": 7,
+        "artist_name": "Charlie Puth, Selena Gomez",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "485029d6-bcdc-44a1-bf9f-8863915e43db"
+        ],
+        "listen_count": 7,
+        "artist_name": "Jasleen Royal",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "d8696b51-1a16-4543-b9a2-8e9c6b91b42c"
+        ],
+        "listen_count": 7,
+        "artist_name": "Amit Trivedi",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "fda2dfd0-1886-46c4-8d8a-f441fc14196d"
+        ],
+        "listen_count": 6,
+        "artist_name": "Sonu Nigam",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "209b0f51-78e2-4333-85b0-bfe756723970"
+        ],
+        "listen_count": 5,
+        "artist_name": "Shakira",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "6a585aed-f74e-4343-a45b-632a12d2db01"
+        ],
+        "listen_count": 5,
+        "artist_name": "Clean Bandit, Zara Larsson, MK",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "be453392-5c84-4bc3-9442-48e8a24cff90"
+        ],
+        "listen_count": 5,
+        "artist_name": "Alan Silvestri",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "7bb2fcd0-1edb-4c35-bde2-052f9c8efd2f"
+        ],
+        "listen_count": 5,
+        "artist_name": "Shawn Mendes",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "46c7f28d-240d-46a2-bf7a-44dda741bb19"
+        ],
+        "listen_count": 5,
+        "artist_name": "Pritam",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "5a67966d-d775-48fb-a2fb-359ed4666105"
+        ],
+        "listen_count": 5,
+        "artist_name": "Jason Mraz",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "474b46a9-0c2e-4a27-b1ac-55f3a0b9f6dc"
+        ],
+        "listen_count": 5,
+        "artist_name": "Ajay Gogavale",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "1c498eab-998f-4975-b52b-72243e89c0ba"
+        ],
+        "listen_count": 5,
+        "artist_name": "One Direction",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "25cee6e6-1623-4575-bc9d-cb4f7c35f37f"
+        ],
+        "listen_count": 5,
+        "artist_name": "DJ Snake, Justin Bieber",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "ea508409-1c39-461c-a7ab-2163f89be757"
+        ],
+        "listen_count": 5,
+        "artist_name": "Mohit Chauhan",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "d25a82aa-1377-43cd-a447-fb52532e9b85"
+        ],
+        "listen_count": 5,
+        "artist_name": "Clean Bandit [FazMusic.Net]",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "f51e0925-f3a7-4381-bd23-87f6b3468906"
+        ],
+        "listen_count": 4,
+        "artist_name": "Dev Negi",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "19a05a11-e927-4327-be0d-27dc37278de6"
+        ],
+        "listen_count": 4,
+        "artist_name": "Kodaline",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b182f99b-982c-4469-8372-8959affe87e7"
+        ],
+        "listen_count": 4,
+        "artist_name": "Benny Dayal",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "80daf28c-5198-454a-9f74-4a1300f544ac"
+        ],
+        "listen_count": 4,
+        "artist_name": "Anirudh Ravichander",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "a20eb386-b985-432a-8f50-63f854c4640a"
+        ],
+        "listen_count": 4,
+        "artist_name": "Eagles",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "bf85aa32-dc19-483d-95c3-754e2ba18540"
+        ],
+        "listen_count": 4,
+        "artist_name": "The Chainsmokers, The Chainsmokers",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "1871df1a-93b7-4e25-9d60-64102ba89913"
+        ],
+        "listen_count": 4,
+        "artist_name": "The Script",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b982577e-02da-4e04-beb7-3cb4577f4aad"
+        ],
+        "listen_count": 4,
+        "artist_name": "Ayushmann Khurrana",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "0df3a81c-7820-476a-a9d5-b797e92e17c4"
+        ],
+        "listen_count": 4,
+        "artist_name": "Passenger",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "a275d8a0-0535-494c-aa2c-1b8978b75305"
+        ],
+        "listen_count": 4,
+        "artist_name": "Vishal Dadlani",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "6fbc15cf-5845-40e1-9dd8-ea8dbb05d871"
+        ],
+        "listen_count": 4,
+        "artist_name": "Taio Cruz",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "395e3442-5872-4e07-895c-8d8194e4e256"
+        ],
+        "listen_count": 4,
+        "artist_name": "The Chainsmokers, The Chainsmokers, Phoebe Ryan",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "e54b7dc0-69b4-419d-b71b-95db8bd8d3e9"
+        ],
+        "listen_count": 3,
+        "artist_name": "Wiz Khalifa, Charlie Puth",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "291bca64-8c93-4790-85db-cf25baacb49e"
+        ],
+        "listen_count": 3,
+        "artist_name": "James Blunt",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "f0676957-e3d7-4ca6-baf8-ffecaa01f415"
+        ],
+        "listen_count": 3,
+        "artist_name": "Clean Bandit",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "98184d50-f63d-4232-8a81-c06fa53b1082"
+        ],
+        "listen_count": 3,
+        "artist_name": "Carly Rae Jepsen",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "1e6376d9-5112-4398-9283-6a5f23c8d2aa"
+        ],
+        "listen_count": 3,
+        "artist_name": "Calvin Harris",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "fc0a98da-ddb2-4a93-becb-43a90471a7aa"
+        ],
+        "listen_count": 3,
+        "artist_name": "Pharrell Williams, Pharrell Williams",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "bcda4610-9da6-4059-92ee-8c539fb69c19"
+        ],
+        "listen_count": 3,
+        "artist_name": "Maroon 5, Kendrick Lamar",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "2fbb01d7-a799-4a0f-bd14-41c3074a3566"
+        ],
+        "listen_count": 3,
+        "artist_name": "Major Lazer, DJ Snake, M\u00d8",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b09db02b-5438-4360-a73f-7a3a5b88358f"
+        ],
+        "listen_count": 3,
+        "artist_name": "Colbie Caillat",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "6ed637a9-773d-4c14-a673-9e3c1d4f0bd0"
+        ],
+        "listen_count": 3,
+        "artist_name": "5 Seconds of Summer",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "e98b10b6-0208-4157-9544-36041e303f07"
+        ],
+        "listen_count": 3,
+        "artist_name": "Lauv",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "ef3e1c0b-d517-4336-83ab-574f5fb7b90a"
+        ],
+        "listen_count": 3,
+        "artist_name": "Norman D",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "53623447-d254-40b1-99f8-3f7dfaaef5e5"
+        ],
+        "listen_count": 3,
+        "artist_name": "One Direction, One Direction",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "d03adfc0-6612-4146-9096-8cc85d3e0554"
+        ],
+        "listen_count": 3,
+        "artist_name": "James Bay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
+        ],
+        "listen_count": 3,
+        "artist_name": "Badshah",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8f119e29-922e-42da-a5bf-b062f5261a3d"
+        ],
+        "listen_count": 3,
+        "artist_name": "Of Monsters and Men",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "53623447-d254-40b1-99f8-3f7dfaaef5e5"
+        ],
+        "listen_count": 3,
+        "artist_name": "One Direction, One Direction",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "d03adfc0-6612-4146-9096-8cc85d3e0554"
+        ],
+        "listen_count": 3,
+        "artist_name": "James Bay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
+        ],
+        "listen_count": 3,
+        "artist_name": "Badshah",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8f119e29-922e-42da-a5bf-b062f5261a3d"
+        ],
+        "listen_count": 3,
+        "artist_name": "Of Monsters and Men",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "53623447-d254-40b1-99f8-3f7dfaaef5e5"
+        ],
+        "listen_count": 3,
+        "artist_name": "One Direction, One Direction",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "d03adfc0-6612-4146-9096-8cc85d3e0554"
+        ],
+        "listen_count": 3,
+        "artist_name": "James Bay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
+        ],
+        "listen_count": 3,
+        "artist_name": "Badshah",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8f119e29-922e-42da-a5bf-b062f5261a3d"
+        ],
+        "listen_count": 3,
+        "artist_name": "Of Monsters and Men",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "53623447-d254-40b1-99f8-3f7dfaaef5e5"
+        ],
+        "listen_count": 3,
+        "artist_name": "One Direction, One Direction",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "d03adfc0-6612-4146-9096-8cc85d3e0554"
+        ],
+        "listen_count": 3,
+        "artist_name": "James Bay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
+        ],
+        "listen_count": 3,
+        "artist_name": "Badshah",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8f119e29-922e-42da-a5bf-b062f5261a3d"
+        ],
+        "listen_count": 3,
+        "artist_name": "Of Monsters and Men",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "53623447-d254-40b1-99f8-3f7dfaaef5e5"
+        ],
+        "listen_count": 3,
+        "artist_name": "One Direction, One Direction",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "d03adfc0-6612-4146-9096-8cc85d3e0554"
+        ],
+        "listen_count": 3,
+        "artist_name": "James Bay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
+        ],
+        "listen_count": 3,
+        "artist_name": "Badshah",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8f119e29-922e-42da-a5bf-b062f5261a3d"
+        ],
+        "listen_count": 3,
+        "artist_name": "Of Monsters and Men",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "53623447-d254-40b1-99f8-3f7dfaaef5e5"
+        ],
+        "listen_count": 3,
+        "artist_name": "One Direction, One Direction",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "d03adfc0-6612-4146-9096-8cc85d3e0554"
+        ],
+        "listen_count": 3,
+        "artist_name": "James Bay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
+        ],
+        "listen_count": 3,
+        "artist_name": "Badshah",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8f119e29-922e-42da-a5bf-b062f5261a3d"
+        ],
+        "listen_count": 3,
+        "artist_name": "Of Monsters and Men",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "53623447-d254-40b1-99f8-3f7dfaaef5e5"
+        ],
+        "listen_count": 3,
+        "artist_name": "One Direction, One Direction",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "d03adfc0-6612-4146-9096-8cc85d3e0554"
+        ],
+        "listen_count": 3,
+        "artist_name": "James Bay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "b7b65ade-e87d-4b1e-8f52-3159e7d54e4f"
+        ],
+        "listen_count": 3,
+        "artist_name": "Badshah",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8f119e29-922e-42da-a5bf-b062f5261a3d"
+        ],
+        "listen_count": 3,
+        "artist_name": "Of Monsters and Men",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8f119e29-922e-42da-a5bf-b062f5261a3d"
+        ],
+        "listen_count": 3,
+        "artist_name": "Of Monsters and Men",
+        "artist_msid": null
+      }
     ],
-    "from_ts": 0,
-    "to_ts": 5,
     "count": 125,
-    "stats_range": "all_time"
-}
+    "user_id": 1999
+  }
+]

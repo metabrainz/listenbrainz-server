@@ -21,10 +21,10 @@ from listenbrainz.spark.handlers import (
     handle_model, handle_recommendations, handle_sitewide_entity,
     handle_user_daily_activity, handle_user_entity,
     handle_user_listening_activity,
-    is_new_user_stats_batch, notify_artist_relation_import,
+    notify_artist_relation_import,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
-    cf_recording_recommendations_complete)
+    cf_recording_recommendations_complete, handle_couchdb_data_start)
 from listenbrainz.webserver import create_app
 
 
@@ -35,7 +35,6 @@ class HandlersTestCase(DatabaseTestCase):
         self.app = create_app()
         db_user.create(1, 'iliekcomputers')
         db_user.create(2, 'lucifer')
-        self.maxDiff = None
 
     def test_handle_user_entity(self):
         data = {
@@ -67,12 +66,13 @@ class HandlersTestCase(DatabaseTestCase):
                     ],
                     'count': 2,
                 }
-            ]
+            ],
+            'database': 'artists_all_time_20220718'
         }
-
+        handle_couchdb_data_start({"database": "artists_all_time_20220718"})
         handle_user_entity(data)
 
-        received = db_stats.get_user_stats(1, 'all_time', 'artists')
+        received = db_stats.get(1, 'artists', 'all_time', EntityRecord)
         expected = StatApi[EntityRecord](
             user_id=1,
             to_ts=10,
@@ -92,7 +92,7 @@ class HandlersTestCase(DatabaseTestCase):
         )
         self.assertEqual(received, expected)
 
-        received = db_stats.get_user_stats(2, 'all_time', 'artists')
+        received = db_stats.get(2, 'artists', 'all_time', EntityRecord)
         expected = StatApi[EntityRecord](
             user_id=2,
             to_ts=10,
@@ -152,12 +152,13 @@ class HandlersTestCase(DatabaseTestCase):
                         }
                     ]
                 }
-            ]
+            ],
+            'database': 'listening_activity_all_time_20220718'
         }
-
+        handle_couchdb_data_start({"database": "listening_activity_all_time_20220718"})
         handle_user_listening_activity(data)
 
-        received = db_stats.get_user_listening_activity(1, 'all_time')
+        received = db_stats.get(1, 'listening_activity', 'all_time', ListeningActivityRecord)
         self.assertEqual(received, StatApi[ListeningActivityRecord](
             user_id=1,
             to_ts=10,
@@ -182,7 +183,7 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-        received = db_stats.get_user_listening_activity(2, 'all_time')
+        received = db_stats.get(2, 'listening_activity', 'all_time', ListeningActivityRecord)
         self.assertEqual(received, StatApi[ListeningActivityRecord](
             user_id=2,
             to_ts=10,
@@ -234,11 +235,12 @@ class HandlersTestCase(DatabaseTestCase):
                     ]
                 }
             ],
+            'database': 'daily_activity_all_time_20220718'
         }
-
+        handle_couchdb_data_start({"database": "daily_activity_all_time_20220718"})
         handle_user_daily_activity(data)
 
-        received = db_stats.get_user_daily_activity(1, 'all_time')
+        received = db_stats.get(1, 'daily_activity', 'all_time', DailyActivityRecord)
         self.assertEqual(received, StatApi[DailyActivityRecord](
             user_id=1,
             to_ts=10,
@@ -256,7 +258,7 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-        received = db_stats.get_user_daily_activity(2, 'all_time')
+        received = db_stats.get(2, 'daily_activity', 'all_time', DailyActivityRecord)
         self.assertEqual(received, StatApi[DailyActivityRecord](
             user_id=2,
             to_ts=10,
@@ -279,10 +281,7 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_sitewide_jsonb_data')
-    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_daily_activity(self, mock_send_mail, mock_sitewide_stats, mock_db_insert):
+    def test_handle_sitewide_artists(self):
         data = {
             'type': 'sitewide_entity',
             'stats_range': 'all_time',
@@ -298,12 +297,16 @@ class HandlersTestCase(DatabaseTestCase):
             ],
             'count': 1
         }
-
-        with self.app.app_context():
-            current_app.config['TESTING'] = False  # set testing to false to check the notifications
-            handle_sitewide_entity(data)
-
-        mock_db_insert.assert_called_with('artists', StatRange[ArtistRecord](
+        handle_couchdb_data_start({"database": "artists_all_time_20220818"})
+        handle_sitewide_entity(data)
+        stats = db_stats.get(
+            db_stats.SITEWIDE_STATS_USER_ID,
+            "artists",
+            "all_time",
+            ArtistRecord
+        )
+        self.assertEqual(stats, StatApi[ArtistRecord](
+            user_id=db_stats.SITEWIDE_STATS_USER_ID,
             to_ts=10,
             from_ts=1,
             count=1,
@@ -311,18 +314,12 @@ class HandlersTestCase(DatabaseTestCase):
             data=StatRecordList[ArtistRecord](__root__=[
                 ArtistRecord(
                     artist_name='Coldplay',
-                    artist_mbid=[],
+                    artist_mbids=[],
                     listen_count=20,
                 )
-            ])))
-        mock_send_mail.assert_called_once()
-
-    @mock.patch('listenbrainz.spark.handlers.db_stats.get_timestamp_for_last_user_stats_update')
-    def test_is_new_user_stats_batch(self, mock_db_get_timestamp):
-        mock_db_get_timestamp.return_value = datetime.now(timezone.utc)
-        self.assertFalse(is_new_user_stats_batch())
-        mock_db_get_timestamp.return_value = datetime.now(timezone.utc) - timedelta(minutes=21)
-        self.assertTrue(is_new_user_stats_batch())
+            ]),
+            last_updated=stats.last_updated
+        ))
 
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
     @mock.patch('listenbrainz.spark.handlers.db_user.get')

@@ -1,4 +1,3 @@
-import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import ujson
@@ -440,7 +439,6 @@ def delete_listens_history(user_id: int):
     """
     timescale_connection._ts.delete(user_id)
     listens_importer.update_latest_listened_at(user_id, ExternalServiceType.LASTFM, 0)
-    db_stats.delete_user_stats(user_id)
 
 
 def logged_in_user_follows_user(user):

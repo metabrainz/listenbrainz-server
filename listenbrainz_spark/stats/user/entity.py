@@ -35,7 +35,7 @@ NUMBER_OF_TOP_ENTITIES = 1000  # number of top entities to retain for user stats
 NUMBER_OF_YIM_ENTITIES = 50  # number of top entities to retain for Year in Music stats
 
 
-def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
+def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_entity", database: str = None)\
         -> Iterator[Optional[Dict]]:
     """ Get the top entity for all users for specified stats_range """
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
@@ -46,7 +46,7 @@ def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
     listens_df.createOrReplaceTempView(table)
 
     messages = calculate_entity_stats(
-        from_date, to_date, table, entity, stats_range, message_type
+        from_date, to_date, table, entity, stats_range, message_type, database
     )
 
     logger.debug("Done!")
@@ -54,19 +54,19 @@ def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
     return messages
 
 
-def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str,
-                           entity: str, stats_range: str, message_type: str):
+def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, entity: str,
+                           stats_range: str, message_type: str, database: str = None):
     handler = entity_handler_map[entity]
     if message_type == "year_in_music_top_stats":
         number_of_results = NUMBER_OF_YIM_ENTITIES
     else:
         number_of_results = NUMBER_OF_TOP_ENTITIES
     data = handler(table, number_of_results)
-    return create_messages(data=data, entity=entity, stats_range=stats_range,
-                           from_date=from_date, to_date=to_date, message_type=message_type)
+    return create_messages(data=data, entity=entity, stats_range=stats_range, from_date=from_date,
+                           to_date=to_date, message_type=message_type, database=database)
 
 
-def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str) \
+def parse_one_user_stats(entry, entity: str, stats_range: str) \
         -> Optional[UserEntityRecords]:
     _dict = entry.asDict(recursive=True)
     total_entity_count = len(_dict[entity])
@@ -91,7 +91,7 @@ def parse_one_user_stats(entry, entity: str, stats_range: str, message_type: str
 
 
 def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime,
-                    message_type) \
+                    message_type: str, database: str = None) \
         -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to the webserver via RabbitMQ
@@ -105,17 +105,26 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         to_date: The end time of the stats
         message_type: used to decide which handler on LB webserver side should
             handle this message. can be "user_entity" or "year_in_music_top_stats"
+        database: the name of the database in which the webserver should store the data
 
     Returns:
         messages: A list of messages to be sent via RabbitMQ
     """
+    if database is None:
+        database = f"{entity}_{stats_range}"
+
+    yield {
+        "type": "couchdb_data_start",
+        "database": database
+    }
+
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
 
     for entries in chunked(data, USERS_PER_MESSAGE):
         multiple_user_stats = []
         for entry in entries:
-            processed_stat = parse_one_user_stats(entry, entity, stats_range, message_type)
+            processed_stat = parse_one_user_stats(entry, entity, stats_range)
             multiple_user_stats.append(processed_stat)
 
         try:
@@ -126,9 +135,15 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
                 "to_ts": to_ts,
                 "entity": entity,
                 "data": multiple_user_stats,
+                "database": database
             })
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error(f"""ValidationError while calculating {stats_range} top {entity}:""", exc_info=True)
+            logger.error(f"ValidationError while calculating {stats_range} top {entity}:", exc_info=True)
             yield None
+
+    yield {
+        "type": "couchdb_data_end",
+        "database": database
+    }
