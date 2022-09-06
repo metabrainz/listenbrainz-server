@@ -12,6 +12,8 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_recommendations,
                                          handle_user_daily_activity,
                                          handle_user_entity,
+                                         handle_couchdb_data_start,
+                                         handle_couchdb_data_end,
                                          handle_user_listening_activity,
                                          handle_sitewide_entity,
                                          notify_artist_relation_import,
@@ -32,6 +34,8 @@ from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
 response_handler_map = {
+    'couchdb_data_start': handle_couchdb_data_start,
+    'couchdb_data_end': handle_couchdb_data_end,
     'user_entity': handle_user_entity,
     'user_listening_activity': handle_user_listening_activity,
     'user_daily_activity': handle_user_daily_activity,

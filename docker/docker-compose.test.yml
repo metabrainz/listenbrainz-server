@@ -12,6 +12,14 @@ services:
     environment:
       POSTGRES_PASSWORD: 'postgres'
 
+  couchdb:
+    image: couchdb:3.2.2
+    environment:
+      COUCHDB_USER: listenbrainz
+      COUCHDB_PASSWORD: listenbrainz
+    volumes:
+      - ./couchdb_test.ini:/opt/couchdb/etc/local.ini
+
   redis:
     image: redis:6.2.2
 

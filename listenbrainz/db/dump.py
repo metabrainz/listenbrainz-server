@@ -31,7 +31,7 @@ import tempfile
 import traceback
 from datetime import datetime, timedelta
 from ftplib import FTP
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, Iterable
 
 import sqlalchemy
 import ujson
@@ -40,9 +40,10 @@ from flask import current_app, render_template
 from psycopg2.sql import Identifier, SQL, Composable
 
 import listenbrainz.db as db
+from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
-from listenbrainz.db import timescale
+from listenbrainz.db import timescale, couchdb
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 
@@ -362,8 +363,22 @@ def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=DUMP_D
     return feedback_dump
 
 
-def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: str,
-                 tables, schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+def dump_statistics(location: str):
+    stats = [
+        f"{stat_type}_{stat_range}"
+        # not including aritst_map because those databases are always incomplete we only generate it on demand
+        for stat_type in ["artists", "recordings", "releases", "daily_activity", "listening_activity"]
+        for stat_range in ALLOWED_STATISTICS_RANGE
+    ]
+    full_path = os.path.join(location, "statistics")
+    for stat in stats:
+        os.makedirs(full_path, exist_ok=True)
+        with open(os.path.join(full_path, f"{stat}.jsonl"), "w+", encoding="utf-8") as fp:
+            couchdb.dump_database(stat, fp)
+
+
+def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], dump_type: str, tables: Optional[dict],
+                 schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
@@ -424,36 +439,44 @@ def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: 
             archive_tables_dir = os.path.join(temp_dir, 'lbdump', 'lbdump')
             create_path(archive_tables_dir)
 
-            with db_engine.connect() as connection:
-                if dump_type == "feedback":
-                    dump_user_feedback(connection, location=archive_tables_dir)
-                else:
-                    with connection.begin() as transaction:
-                        cursor = connection.connection.cursor()
-                        for table in tables:
-                            try:
-                                copy_table(
-                                    cursor=cursor,
-                                    location=archive_tables_dir,
-                                    columns=tables[table],
-                                    table_name=table,
-                                )
-                            except IOError as e:
-                                current_app.logger.error(
-                                    'IOError while copying table %s', table, exc_info=True)
-                                raise
-                            except Exception as e:
-                                current_app.logger.error(
-                                    'Error while copying table %s: %s', table, str(e), exc_info=True)
-                                raise
-                        transaction.rollback()
+            if dump_type == "statistics":
+                dump_statistics(archive_tables_dir)
+            else:
+                with db_engine.connect() as connection:
+                    if dump_type == "feedback":
+                        dump_user_feedback(connection, location=archive_tables_dir)
+                    else:
+                        with connection.begin() as transaction:
+                            cursor = connection.connection.cursor()
+                            for table in tables:
+                                try:
+                                    copy_table(
+                                        cursor=cursor,
+                                        location=archive_tables_dir,
+                                        columns=tables[table],
+                                        table_name=table,
+                                    )
+                                except IOError as e:
+                                    current_app.logger.error(
+                                        'IOError while copying table %s', table, exc_info=True)
+                                    raise
+                                except Exception as e:
+                                    current_app.logger.error(
+                                        'Error while copying table %s: %s', table, str(e), exc_info=True)
+                                    raise
+                            transaction.rollback()
 
-            # Add the files to the archive in the order that they are defined in the dump definition.
-            # This is so that when imported into a db with FK constraints added, we import dependent
-            # tables first
-            for table in tables:
-                tar.add(os.path.join(archive_tables_dir, table),
-                        arcname=os.path.join(archive_name, 'lbdump', table))
+            if not tables:
+                # order doesn't matter or name of tables can't be determined before dumping so just
+                # add entire directory with all files inside it
+                tar.add(archive_tables_dir, arcname=os.path.join(archive_name, 'lbdump'))
+            else:
+                # Add the files to the archive in the order that they are defined in the dump definition.
+                # This is so that when imported into a db with FK constraints added, we import dependent
+                # tables first
+                for table in tables:
+                    tar.add(os.path.join(archive_tables_dir, table),
+                            arcname=os.path.join(archive_name, 'lbdump', table))
 
             shutil.rmtree(temp_dir)
 
@@ -537,7 +560,20 @@ def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAUL
         location=location,
         db_engine=db.engine,
         dump_type='feedback',
-        tables=[],
+        tables=None,
+        schema_version=db.SCHEMA_VERSION_CORE,
+        dump_time=dump_time,
+        threads=threads,
+    )
+
+
+def create_statistics_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+    """ Create couchdb statistics dump. """
+    return _create_dump(
+        location=location,
+        db_engine=None,
+        dump_type='statistics',
+        tables=None,
         schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
