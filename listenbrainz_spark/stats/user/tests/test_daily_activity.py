@@ -25,14 +25,13 @@ class DailyActivityTestCase(StatsTestCase):
         self.assertEqual(messages[0]["type"], "couchdb_data_start")
         self.assertEqual(messages[0]["database"], "daily_activity_all_time")
 
-        received = messages[1]
-        self.assertEqual(received[0]["type"], expected[0]["type"])
-        self.assertEqual(received[0]["entity"], expected[0]["entity"])
-        self.assertEqual(received[0]["stats_range"], expected[0]["stats_range"])
-        self.assertEqual(received[0]["from_ts"], expected[0]["from_ts"])
-        self.assertEqual(received[0]["to_ts"], expected[0]["to_ts"])
-        self.assertCountEqual(received[0]["data"], expected[0]["data"])
-        self.assertCountEqual(received[0]["database"], "daily_activity_all_time")
+        self.assertEqual(messages[1]["type"], expected[0]["type"])
+        self.assertEqual(messages[1]["entity"], expected[0]["entity"])
+        self.assertEqual(messages[1]["stats_range"], expected[0]["stats_range"])
+        self.assertEqual(messages[1]["from_ts"], expected[0]["from_ts"])
+        self.assertEqual(messages[1]["to_ts"], expected[0]["to_ts"])
+        self.assertCountEqual(messages[1]["data"], expected[0]["data"])
+        self.assertCountEqual(messages[1]["database"], "daily_activity_all_time")
 
         self.assertEqual(messages[2]["type"], "couchdb_data_end")
         self.assertEqual(messages[2]["database"], "daily_activity_all_time")
