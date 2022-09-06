@@ -136,7 +136,6 @@ class DumpManagerTestCase(DatabaseTestCase):
         # make sure that the dump contains a full listens dump, a public and private dump (postgres),
         # a public and private dump (timescale) and a spark dump.
         archive_count = 0
-        print(os.listdir(os.path.join(self.tempdir, dump_name)))
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
