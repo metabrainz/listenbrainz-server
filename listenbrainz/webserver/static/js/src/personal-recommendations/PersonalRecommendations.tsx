@@ -10,6 +10,7 @@ import {
   getRecordingMBID,
   getRecordingMSID,
 } from "../utils/utils";
+import SearchDropDown from "./SearchDropDown";
 
 export type PersonalRecommendationModalProps = {
   recordingToPersonallyRecommend?: Listen;
@@ -206,20 +207,13 @@ export default class PersonalRecommendationModal extends React.Component<
                 onChange={this.searchUsers}
                 placeholder="Search and add users"
               />
-              <div className="searchdropdown">
-                {suggestions!.map((name) => {
-                  return (
-                    <ListenControl
-                      text={name}
-                      // eslint-disable-next-line react/jsx-no-bind
-                      action={this.addUser.bind(this, name)}
-                      icon={faUser}
-                    />
-                  );
-                })}
-              </div>
-              <p style={{ marginTop: "10px" }}>
-                Why will you recommend personally{" "}
+              <SearchDropDown
+                suggestions={suggestions}
+                // eslint-disable-next-line react/jsx-no-bind
+                action={this.addUser}
+              />
+              <p style={{ marginTop: "24px", marginBottom: "24px" }}>
+                Tell the users selected above why are you recommending them{" "}
                 <b>
                   {" "}
                   {track_name} by {artist_name}
