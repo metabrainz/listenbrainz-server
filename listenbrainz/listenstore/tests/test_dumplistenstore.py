@@ -73,9 +73,11 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def test_incremental_dump(self):
         base = 1500000000
-        listens = generate_data(1, self.testuser_name, base-4, 5, base+1)  # generate 5 listens with inserted_ts 1-5
+        # generate 5 listens with inserted_ts 1-5
+        listens = generate_data(self.testuser_id, self.testuser_name, base-4, 5, base+1)
         self._insert_with_created(listens)
-        listens = generate_data(1, self.testuser_name, base+1, 5, base+6)  # generate 5 listens with inserted_ts 6-10
+        # generate 5 listens with inserted_ts 6-10
+        listens = generate_data(self.testuser_id, self.testuser_name, base+1, 5, base+6)
         self._insert_with_created(listens)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.dumpstore.dump_listens(
@@ -101,9 +103,9 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def test_time_range_full_dumps(self):
         base = 1500000000
-        listens = generate_data(1, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
+        listens = generate_data(self.testuser_id, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
         self.logstore.insert(listens)
-        listens = generate_data(1, self.testuser_name, base + 6, 5)  # generate 5 listens with ts 6-10
+        listens = generate_data(self.testuser_id, self.testuser_name, base + 6, 5)  # generate 5 listens with ts 6-10
         self.logstore.insert(listens)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.dumpstore.dump_listens(
