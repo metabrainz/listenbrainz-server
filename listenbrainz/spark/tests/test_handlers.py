@@ -33,8 +33,8 @@ class HandlersTestCase(DatabaseTestCase):
     def setUp(self):
         super(HandlersTestCase, self).setUp()
         self.app = create_app()
-        db_user.create(1, 'iliekcomputers')
-        db_user.create(2, 'lucifer')
+        self.user1 = db_user.get_or_create(1, 'iliekcomputers')
+        self.user2 = db_user.get_or_create(2, 'lucifer')
 
     def test_handle_user_entity(self):
         data = {
@@ -45,7 +45,7 @@ class HandlersTestCase(DatabaseTestCase):
             'to_ts': 10,
             'data': [
                 {
-                    'user_id': 1,
+                    'user_id': self.user1['id'],
                     'data': [{
                         'artist_name': 'Kanye West',
                         'listen_count': 200,
@@ -53,7 +53,7 @@ class HandlersTestCase(DatabaseTestCase):
                     'count': 1,
                 },
                 {
-                    'user_id': 2,
+                    'user_id': self.user2['id'],
                     'data': [
                         {
                             'artist_name': 'Selena Gomez',
@@ -72,9 +72,9 @@ class HandlersTestCase(DatabaseTestCase):
         handle_couchdb_data_start({"database": "artists_all_time_20220718"})
         handle_user_entity(data)
 
-        received = db_stats.get(1, 'artists', 'all_time', EntityRecord)
+        received = db_stats.get(self.user1['id'], 'artists', 'all_time', EntityRecord)
         expected = StatApi[EntityRecord](
-            user_id=1,
+            user_id=self.user1['id'],
             to_ts=10,
             from_ts=1,
             count=1,
@@ -92,9 +92,9 @@ class HandlersTestCase(DatabaseTestCase):
         )
         self.assertEqual(received, expected)
 
-        received = db_stats.get(2, 'artists', 'all_time', EntityRecord)
+        received = db_stats.get(self.user2['id'], 'artists', 'all_time', EntityRecord)
         expected = StatApi[EntityRecord](
-            user_id=2,
+            user_id=self.user2['id'],
             to_ts=10,
             from_ts=1,
             count=2,
@@ -125,7 +125,7 @@ class HandlersTestCase(DatabaseTestCase):
             'to_ts': 10,
             'data': [
                 {
-                    'user_id': 1,
+                    'user_id': self.user1['id'],
                     'data': [
                         {
                             'from_ts': 1,
@@ -142,7 +142,7 @@ class HandlersTestCase(DatabaseTestCase):
                     ]
                 },
                 {
-                    'user_id': 2,
+                    'user_id': self.user2['id'],
                     'data': [
                         {
                             'from_ts': 2,
@@ -158,9 +158,9 @@ class HandlersTestCase(DatabaseTestCase):
         handle_couchdb_data_start({"database": "listening_activity_all_time_20220718"})
         handle_user_listening_activity(data)
 
-        received = db_stats.get(1, 'listening_activity', 'all_time', ListeningActivityRecord)
+        received = db_stats.get(self.user1['id'], 'listening_activity', 'all_time', ListeningActivityRecord)
         self.assertEqual(received, StatApi[ListeningActivityRecord](
-            user_id=1,
+            user_id=self.user1['id'],
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
@@ -183,9 +183,9 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-        received = db_stats.get(2, 'listening_activity', 'all_time', ListeningActivityRecord)
+        received = db_stats.get(self.user2['id'], 'listening_activity', 'all_time', ListeningActivityRecord)
         self.assertEqual(received, StatApi[ListeningActivityRecord](
-            user_id=2,
+            user_id=self.user2['id'],
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
@@ -210,7 +210,7 @@ class HandlersTestCase(DatabaseTestCase):
             'to_ts': 10,
             'data': [
                 {
-                    'user_id': 1,
+                    'user_id': self.user1['id'],
                     'data': [
                         {
                             'day': 'Monday',
@@ -220,7 +220,7 @@ class HandlersTestCase(DatabaseTestCase):
                     ]
                 },
                 {
-                    'user_id': 2,
+                    'user_id': self.user2['id'],
                     'data': [
                         {
                             'day': 'Wednesday',
@@ -240,9 +240,9 @@ class HandlersTestCase(DatabaseTestCase):
         handle_couchdb_data_start({"database": "daily_activity_all_time_20220718"})
         handle_user_daily_activity(data)
 
-        received = db_stats.get(1, 'daily_activity', 'all_time', DailyActivityRecord)
+        received = db_stats.get(self.user1['id'], 'daily_activity', 'all_time', DailyActivityRecord)
         self.assertEqual(received, StatApi[DailyActivityRecord](
-            user_id=1,
+            user_id=self.user1['id'],
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
@@ -258,9 +258,9 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
-        received = db_stats.get(2, 'daily_activity', 'all_time', DailyActivityRecord)
+        received = db_stats.get(self.user2['id'], 'daily_activity', 'all_time', DailyActivityRecord)
         self.assertEqual(received, StatApi[DailyActivityRecord](
-            user_id=2,
+            user_id=self.user2['id'],
             to_ts=10,
             from_ts=1,
             stats_range='all_time',

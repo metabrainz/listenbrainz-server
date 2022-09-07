@@ -45,42 +45,10 @@ class StatsAPITestCase(IntegrationTestCase):
                 else:
                     couchdb.create_database(f"{stat}_{range_}_20220718")
 
-        with open(cls.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
-            cls.user_artist_payload = json.load(f)
-        database = 'artists_all_time_20220718'
-        db_stats.insert(database, 0, 5, cls.user_artist_payload)
-
-        # Insert release data
-        with open(cls.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
-            cls.user_release_payload = json.load(f)
-        database = 'releases_all_time_20220718'
-        db_stats.insert(database, 0, 5, cls.user_release_payload)
-
-        # Insert recording data
-        with open(cls.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
-            cls.recording_payload = json.load(f)
-        database = 'recordings_all_time_20220718'
-        db_stats.insert(database, 0, 5, cls.recording_payload)
-
-        # Insert listening activity data
-        with open(cls.path_to_data_file('user_listening_activity_db_data_for_api_test.json')) as f:
-            cls.listening_activity_payload = json.load(f)
-        database = 'listening_activity_all_time_20220718'
-        db_stats.insert(database, 0, 5, cls.listening_activity_payload)
-
-        # Insert daily activity data
-        with open(cls.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
-            cls.daily_activity_payload = json.load(f)
-        database = 'daily_activity_all_time_20220718'
-        db_stats.insert(database, 0, 5, cls.daily_activity_payload)
-
-        # Insert artist map data
-        with open(cls.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
-            cls.artist_map_payload = json.load(f)
-        database = 'artistmap_all_time'
-        db_stats.insert(database, 0, 5, cls.artist_map_payload)
-
-        # Insert all_time sitewide top artists
+        # we do not clear the couchdb databases after each test. user stats keep working because
+        # the user id changes for each test. for sitewide stats this is not the case as the user id
+        # is always fixed so to ensure the payload is only inserted once, keep it in setUpClass
+        # otherwise we will get an error.
         with open(cls.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
             cls.sitewide_artist_payload = json.load(f)
         db_stats.insert_sitewide_stats('artists_all_time_20220718', 0, 5, cls.sitewide_artist_payload)
@@ -90,10 +58,52 @@ class StatsAPITestCase(IntegrationTestCase):
         super(StatsAPITestCase, self).setUp()
         self.app.config["DEBUG"] = True
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
-        self.create_user_with_id(1999, 1999, 'another_user')
-        self.another_user = db_user.get(1999)
-        self.no_stat_user = db_user.get_or_create(1999, 'nostatuser')
+        self.another_user = db_user.get_or_create(1999, 'another_user')
+        self.no_stat_user = db_user.get_or_create(222222, 'nostatuser')
+        
+        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
+            self.user_artist_payload = json.load(f)
+            self.user_artist_payload[0]["user_id"] = self.user["id"]
+        database = 'artists_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.user_artist_payload)
+
+        # Insert release data
+        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
+            self.user_release_payload = json.load(f)
+            self.user_release_payload[0]["user_id"] = self.user["id"]
+        database = 'releases_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.user_release_payload)
+
+        # Insert recording data
+        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
+            self.recording_payload = json.load(f)
+            self.recording_payload[0]["user_id"] = self.user["id"]
+        database = 'recordings_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.recording_payload)
+
+        # Insert listening activity data
+        with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test.json')) as f:
+            self.listening_activity_payload = json.load(f)
+            self.listening_activity_payload[0]["user_id"] = self.user["id"]
+        database = 'listening_activity_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.listening_activity_payload)
+
+        # Insert daily activity data
+        with open(self.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
+            self.daily_activity_payload = json.load(f)
+            self.daily_activity_payload[0]["user_id"] = self.user["id"]
+        database = 'daily_activity_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.daily_activity_payload)
+
+        # Insert artist map data
+        with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
+            self.artist_map_payload = json.load(f)
+            self.artist_map_payload[0]["user_id"] = self.user["id"]
+        database = 'artistmap_all_time'
+        db_stats.insert(database, 0, 5, self.artist_map_payload)
+
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
+
         self.entity_endpoints = {
             "artists": {
                 "endpoint": "stats_api_v1.get_user_artist",
@@ -289,6 +299,7 @@ class StatsAPITestCase(IntegrationTestCase):
             with self.subTest(f"test api returns at most 100 stats in a response for {entity}", entity=entity):
                 with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_too_many.json'), 'r') as f:
                     payload = json.load(f)
+                    payload[0]["user_id"] = self.another_user["id"]
                 db_stats.insert(f"{entity}_all_time_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.another_user['musicbrainz_id']),
                                            query_string={'count': 200})
@@ -299,6 +310,7 @@ class StatsAPITestCase(IntegrationTestCase):
                 with self.subTest(f"test api returns valid stats response for {range_} {entity}", entity=entity, range_=range_):
                     with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_{range_}.json'), 'r') as f:
                         payload = json.load(f)
+                        payload[0]["user_id"] = self.user["id"]
                     db_stats.insert(f"{entity}_{range_}_20220718", 0, 5, payload)
                     response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                                query_string={'range': range_})
@@ -315,6 +327,7 @@ class StatsAPITestCase(IntegrationTestCase):
             with self.subTest(f"test valid response is received for {range_} listening_activity stats", range_=range_):
                 with open(self.path_to_data_file(f'user_listening_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
+                    payload[0]["user_id"] = self.user["id"]
                 db_stats.insert(f"listening_activity_{range_}_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
@@ -326,17 +339,20 @@ class StatsAPITestCase(IntegrationTestCase):
             response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']))
             with open(self.path_to_data_file('user_daily_activity_api_output.json')) as f:
                 expected = json.load(f)["payload"]
+                expected["user_id"] = self.user["id"]
             self.assertDailyActivityEqual(expected, response)
 
         for range_ in ["week", "month", "year"]:
             with self.subTest(f"test valid response is received for {range_} daily_activity stats", range_=range_):
                 with open(self.path_to_data_file(f'user_daily_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
+                    payload[0]["user_id"] = self.user["id"]
                 db_stats.insert(f"daily_activity_{range_}_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
                 with open(self.path_to_data_file(f'user_daily_activity_api_output_{range_}.json')) as f:
                     expected = json.load(f)["payload"]
+                    expected["user_id"] = self.user["id"]
                 self.assertDailyActivityEqual(expected, response)
 
     @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
@@ -351,6 +367,7 @@ class StatsAPITestCase(IntegrationTestCase):
             with self.subTest(f"test valid response is received for {range_} artist_map stats", range_=range_):
                 with open(self.path_to_data_file(f'user_artist_map_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
+                    payload[0]["user_id"] = self.user["id"]
                 db_stats.insert(f"artistmap_{range_}", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})

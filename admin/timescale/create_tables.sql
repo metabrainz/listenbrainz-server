@@ -52,7 +52,7 @@ CREATE TABLE playlist.playlist_recording (
     created timestamp with time zone default now() not null
 );
 
-CREATE TABLE  playlist.playlist_collaborator (
+CREATE TABLE playlist.playlist_collaborator (
     playlist_id int not null,  -- FK playlist.id
     collaborator_id int not null  -- link to user.id in main database
 );

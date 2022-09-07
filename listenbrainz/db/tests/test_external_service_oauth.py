@@ -13,8 +13,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(OAuthDatabaseTestCase, self).setUp()
-        db_user.create(1, 'testspotifyuser')
-        self.user = db_user.get(1)
+        self.user = db_user.get_or_create(1, 'testspotifyuser')
         db_oauth.save_token(
             user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
@@ -26,9 +25,9 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         )
 
     def test_create_oauth(self):
-        db_user.create(2, 'spotify')
+        user2 = db_user.get_or_create(2, 'spotify')
         db_oauth.save_token(
-            user_id=2,
+            user_id=user2['id'],
             service=ExternalServiceType.SPOTIFY,
             access_token='token',
             refresh_token='refresh_token',
@@ -36,7 +35,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
             record_listens=True,
             scopes=['user-read-recently-played']
         )
-        user = db_oauth.get_token(2, ExternalServiceType.SPOTIFY)
+        user = db_oauth.get_token(user2['id'], ExternalServiceType.SPOTIFY)
         self.assertEqual('token', user['access_token'])
 
     def test_create_oauth_multiple(self):

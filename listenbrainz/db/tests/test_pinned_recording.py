@@ -378,7 +378,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
 
         # test that followed_pins contains followed_user_1's pinned recording
         self.pin_single_sample(self.followed_user_1["id"], 0)
-        followed_pins = db_pinned_rec.get_pins_for_user_following(user_id=1, count=50, offset=0)
+        followed_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=50, offset=0)
         self.assertEqual(len(followed_pins), 1)
         self.assertEqual(followed_pins[0].user_name, "followed_user_1")
 
@@ -388,7 +388,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
 
         # test that followed_user_2's pin is included after user follows
         db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
-        followed_pins = db_pinned_rec.get_pins_for_user_following(user_id=1, count=50, offset=0)
+        followed_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=50, offset=0)
         self.assertEqual(len(followed_pins), 2)
         self.assertEqual(followed_pins[0].user_name, "followed_user_2")
 
