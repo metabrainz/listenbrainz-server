@@ -1000,4 +1000,11 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         self.assertEqual(1, len(events))
 
-        self.assertEqual(metadata, events[0].metadata.dict())
+        received = events[0].metadata.dict()
+        self.assertEqual(metadata["track_name"], received["track_name"])
+        self.assertEqual(metadata["artist_name"], received["artist_name"])
+        self.assertEqual(metadata["release_name"], received["release_name"])
+        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
+        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
+        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
+        self.assertCountEqual(metadata["users"], received["users"])
