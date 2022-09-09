@@ -12,11 +12,6 @@ class RequestConsumerTestCase(SparkNewTestCase):
         self.consumer.request_channel = MagicMock()
         self.consumer.result_channel = MagicMock()
 
-    @patch('listenbrainz_spark.request_consumer.request_consumer.init_rabbitmq')
-    def test_connect_to_rabbitmq(self, mock_init_rabbitmq):
-        self.consumer.connect_to_rabbitmq()
-        mock_init_rabbitmq.assert_called_once()
-
     def test_get_result_if_bad_query(self):
         # should return none if no query
         self.assertIsNone(self.consumer.get_result({}))

@@ -110,7 +110,7 @@ def get_models(als: ALS, params: List[dict], cv_model: CrossValidatorModel) -> T
             lmbda=param[als.regParam],
             iteration=param[als.maxIter],
             alpha=param[als.alpha],
-            validation_rmse=metric,
+            validation_rmse=float(metric),
             model_id=f"{config.MODEL_ID_PREFIX}-{uuid.uuid4()}"
         )
         metadatas.append(model_metadata)

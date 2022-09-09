@@ -18,7 +18,7 @@ API_PREFIX = '/1'
 deploy_env = os.environ.get('DEPLOY_ENV', '')
 
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
-API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
+API_LISTENED_AT_ALLOWED_SKEW = 60 * 60  # allow a skew of 1 hour in listened_at submissions
 
 
 def load_config(app):
@@ -106,6 +106,13 @@ def create_app(debug=None):
     from listenbrainz.webserver.timescale_connection import init_timescale_connection
     init_timescale_connection(app)
 
+    from listenbrainz.db import couchdb
+    couchdb.init(
+        app.config['COUCHDB_USER'],
+        app.config['COUCHDB_ADMIN_KEY'],
+        app.config['COUCHDB_HOST'],
+        app.config['COUCHDB_PORT']
+    )
     # RabbitMQ connection
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
     try:
@@ -129,6 +136,7 @@ def create_app(debug=None):
 
     from brainzutils.ratelimit import inject_x_rate_headers, set_user_validation_function
     set_user_validation_function(check_ratelimit_token_whitelist)
+
     @app.after_request
     def after_request_callbacks(response):
         return inject_x_rate_headers(response)
@@ -187,11 +195,11 @@ def create_web_app(debug=None):
     def before_request_gdpr_check():
         # skip certain pages, static content and the API
         if request.path == url_for('index.gdpr_notice') \
-            or request.path == url_for('profile.delete') \
-            or request.path == url_for('profile.export_data') \
-            or request.path == url_for('login.logout') \
-            or request.path.startswith('/static') \
-            or request.path.startswith('/1'):
+                or request.path == url_for('profile.delete') \
+                or request.path == url_for('profile.export_data') \
+                or request.path == url_for('login.logout') \
+                or request.path.startswith('/static') \
+                or request.path.startswith('/1'):
             return
         # otherwise if user is logged in and hasn't agreed to gdpr,
         # redirect them to agree to terms page.
@@ -285,7 +293,7 @@ def _register_blueprints(app):
     app.register_blueprint(api_bp_compat)
 
     from listenbrainz.webserver.views.explore import explore_bp
-    app.register_blueprint(explore_bp, url_prefix='/explore')
+    _register_blueprint_with_context(app, explore_bp, url_prefix='/explore')
 
     from listenbrainz.webserver.views.api import api_bp
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
@@ -322,6 +330,9 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.metadata_api import metadata_bp
     app.register_blueprint(metadata_bp, url_prefix=API_PREFIX+'/metadata')
+
+    from listenbrainz.webserver.views.user_settings_api import user_settings_api_bp
+    app.register_blueprint(user_settings_api_bp, url_prefix=API_PREFIX+'/settings')
 
     from listenbrainz.webserver.views.explore_api import explore_api_bp
     app.register_blueprint(explore_api_bp, url_prefix=API_PREFIX+'/explore')

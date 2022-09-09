@@ -1,121 +1,121 @@
-{
-  "from_ts": 1009843200,
-  "data": [
-    {
-      "from_ts": 1009843200,
-      "listen_count": 0,
-      "time_range": "2002",
-      "to_ts": 1041379199
-    },
-    {
-      "from_ts": 1041379200,
-      "listen_count": 0,
-      "time_range": "2003",
-      "to_ts": 1072915199
-    },
-    {
-      "from_ts": 1072915200,
-      "listen_count": 0,
-      "time_range": "2004",
-      "to_ts": 1104537599
-    },
-    {
-      "from_ts": 1104537600,
-      "listen_count": 0,
-      "time_range": "2005",
-      "to_ts": 1136073599
-    },
-    {
-      "from_ts": 1136073600,
-      "listen_count": 0,
-      "time_range": "2006",
-      "to_ts": 1167609599
-    },
-    {
-      "from_ts": 1167609600,
-      "listen_count": 0,
-      "time_range": "2007",
-      "to_ts": 1199145599
-    },
-    {
-      "from_ts": 1199145600,
-      "listen_count": 0,
-      "time_range": "2008",
-      "to_ts": 1230767999
-    },
-    {
-      "from_ts": 1230768000,
-      "listen_count": 0,
-      "time_range": "2009",
-      "to_ts": 1262303999
-    },
-    {
-      "from_ts": 1262304000,
-      "listen_count": 0,
-      "time_range": "2010",
-      "to_ts": 1293839999
-    },
-    {
-      "from_ts": 1293840000,
-      "listen_count": 0,
-      "time_range": "2011",
-      "to_ts": 1325375999
-    },
-    {
-      "from_ts": 1325376000,
-      "listen_count": 0,
-      "time_range": "2012",
-      "to_ts": 1356998399
-    },
-    {
-      "from_ts": 1356998400,
-      "listen_count": 0,
-      "time_range": "2013",
-      "to_ts": 1388534399
-    },
-    {
-      "from_ts": 1388534400,
-      "listen_count": 0,
-      "time_range": "2014",
-      "to_ts": 1420070399
-    },
-    {
-      "from_ts": 1420070400,
-      "listen_count": 0,
-      "time_range": "2015",
-      "to_ts": 1451606399
-    },
-    {
-      "from_ts": 1451606400,
-      "listen_count": 0,
-      "time_range": "2016",
-      "to_ts": 1483228799
-    },
-    {
-      "from_ts": 1483228800,
-      "listen_count": 0,
-      "time_range": "2017",
-      "to_ts": 1514764799
-    },
-    {
-      "from_ts": 1514764800,
-      "listen_count": 0,
-      "time_range": "2018",
-      "to_ts": 1546300799
-    },
-    {
-      "from_ts": 1546300800,
-      "listen_count": 0,
-      "time_range": "2019",
-      "to_ts": 1577836799
-    },
-    {
-      "from_ts": 1577836800,
-      "listen_count": 625,
-      "time_range": "2020",
-      "to_ts": 1609459199
-    }
-  ],
-  "to_ts": 1589496658,
-  "stats_range": "all_time"
-}
+[
+  {
+    "data": [
+      {
+        "from_ts": 1009843200,
+        "listen_count": 0,
+        "time_range": "2002",
+        "to_ts": 1041379199
+      },
+      {
+        "from_ts": 1041379200,
+        "listen_count": 0,
+        "time_range": "2003",
+        "to_ts": 1072915199
+      },
+      {
+        "from_ts": 1072915200,
+        "listen_count": 0,
+        "time_range": "2004",
+        "to_ts": 1104537599
+      },
+      {
+        "from_ts": 1104537600,
+        "listen_count": 0,
+        "time_range": "2005",
+        "to_ts": 1136073599
+      },
+      {
+        "from_ts": 1136073600,
+        "listen_count": 0,
+        "time_range": "2006",
+        "to_ts": 1167609599
+      },
+      {
+        "from_ts": 1167609600,
+        "listen_count": 0,
+        "time_range": "2007",
+        "to_ts": 1199145599
+      },
+      {
+        "from_ts": 1199145600,
+        "listen_count": 0,
+        "time_range": "2008",
+        "to_ts": 1230767999
+      },
+      {
+        "from_ts": 1230768000,
+        "listen_count": 0,
+        "time_range": "2009",
+        "to_ts": 1262303999
+      },
+      {
+        "from_ts": 1262304000,
+        "listen_count": 0,
+        "time_range": "2010",
+        "to_ts": 1293839999
+      },
+      {
+        "from_ts": 1293840000,
+        "listen_count": 0,
+        "time_range": "2011",
+        "to_ts": 1325375999
+      },
+      {
+        "from_ts": 1325376000,
+        "listen_count": 0,
+        "time_range": "2012",
+        "to_ts": 1356998399
+      },
+      {
+        "from_ts": 1356998400,
+        "listen_count": 0,
+        "time_range": "2013",
+        "to_ts": 1388534399
+      },
+      {
+        "from_ts": 1388534400,
+        "listen_count": 0,
+        "time_range": "2014",
+        "to_ts": 1420070399
+      },
+      {
+        "from_ts": 1420070400,
+        "listen_count": 0,
+        "time_range": "2015",
+        "to_ts": 1451606399
+      },
+      {
+        "from_ts": 1451606400,
+        "listen_count": 0,
+        "time_range": "2016",
+        "to_ts": 1483228799
+      },
+      {
+        "from_ts": 1483228800,
+        "listen_count": 0,
+        "time_range": "2017",
+        "to_ts": 1514764799
+      },
+      {
+        "from_ts": 1514764800,
+        "listen_count": 0,
+        "time_range": "2018",
+        "to_ts": 1546300799
+      },
+      {
+        "from_ts": 1546300800,
+        "listen_count": 0,
+        "time_range": "2019",
+        "to_ts": 1577836799
+      },
+      {
+        "from_ts": 1577836800,
+        "listen_count": 625,
+        "time_range": "2020",
+        "to_ts": 1609459199
+      }
+    ],
+    "user_id": 1
+  }
+]

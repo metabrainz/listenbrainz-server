@@ -205,29 +205,26 @@ export default class RecentListens extends React.Component<
                   // On the Recent page listens should have either an MSID or MBID or both,
                   // so we can assume we can pin them
                   /* eslint-disable react/jsx-no-bind */
-                  const additionalMenuItems = (
-                    <>
+                  const additionalMenuItems = [
+                    <ListenControl
+                      text="Pin this recording"
+                      icon={faThumbtack}
+                      action={this.updateRecordingToPin.bind(this, listen)}
+                      dataToggle="modal"
+                      dataTarget="#PinRecordingModal"
+                    />,
+                  ];
+                  if (isListenReviewable) {
+                    additionalMenuItems.push(
                       <ListenControl
-                        text="Pin this recording"
-                        icon={faThumbtack}
-                        action={this.updateRecordingToPin.bind(this, listen)}
+                        text="Write a review"
+                        icon={faPencilAlt}
+                        action={this.updateRecordingToReview.bind(this, listen)}
                         dataToggle="modal"
-                        dataTarget="#PinRecordingModal"
+                        dataTarget="#CBReviewModal"
                       />
-                      {isListenReviewable && (
-                        <ListenControl
-                          text="Write a review"
-                          icon={faPencilAlt}
-                          action={this.updateRecordingToReview.bind(
-                            this,
-                            listen
-                          )}
-                          dataToggle="modal"
-                          dataTarget="#CBReviewModal"
-                        />
-                      )}
-                    </>
-                  );
+                    );
+                  }
                   /* eslint-enable react/jsx-no-bind */
                   return (
                     <ListenCard

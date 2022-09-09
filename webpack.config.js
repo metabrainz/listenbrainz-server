@@ -90,6 +90,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/fresh-releases/FreshReleases.tsx"
       ),
+      selectTimezone: path.resolve(
+        jsDir,
+        "src/user-settings/SelectTimezone.tsx"
+      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

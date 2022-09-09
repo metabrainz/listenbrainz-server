@@ -316,7 +316,7 @@ def submit_release(user, token, releasembid):
             token = user_ob["auth_token"]
             print("token is", token)
     import listenbrainz.misc.submit_release
-    listenbrainz.misc.submit_release.submit_release_impl(token, releaseid, "http://web:7000")
+    listenbrainz.misc.submit_release.submit_release_impl(token, releasembid, "http://web:80")
 
 
 @cli.command(name="notify_yim_users")

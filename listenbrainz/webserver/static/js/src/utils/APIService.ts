@@ -1121,4 +1121,22 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  resetUserTimezone = async (
+    userToken: string,
+    zonename: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/timezone`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ zonename }),
+    });
+
+    await this.checkStatus(response);
+    return response.status;
+  };
 }

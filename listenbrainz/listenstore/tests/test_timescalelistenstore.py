@@ -1,9 +1,7 @@
 import logging
-import os
 import random
 from time import time
 
-import psycopg2
 import sqlalchemy
 from brainzutils import cache
 from sqlalchemy import text
@@ -11,9 +9,8 @@ from sqlalchemy import text
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts, timescale
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
-from listenbrainz.listen import Listen
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
-from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, \
+from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, \
     TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
 from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data,\
     recalculate_all_user_data, add_missing_to_listen_users_metadata, update_user_listen_data
@@ -61,7 +58,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                                (recording_msid, recording_mbid, match_type)
                         VALUES ('%s', '%s', 'exact_match')""" % (msid, '076255b4-1575-11ec-ac84-135bf6a670e3')
 
-        with ts.engine.connect() as connection:
+        with ts.engine.begin() as connection:
             connection.execute(sqlalchemy.text(query))
             connection.execute(sqlalchemy.text(join_query))
 

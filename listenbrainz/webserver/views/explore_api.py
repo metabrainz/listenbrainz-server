@@ -63,7 +63,7 @@ def get_fresh_releases():
     return jsonify([r.to_dict() for r in listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days)])
 
 
-@explore_api_bp.route("/<color>", methods=["GET", "OPTIONS"])
+@explore_api_bp.route("/color/<color>", methods=["GET", "OPTIONS"])
 @crossdomain
 @ratelimit()
 def huesound(color):

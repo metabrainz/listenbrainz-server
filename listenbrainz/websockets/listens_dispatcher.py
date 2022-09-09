@@ -1,18 +1,12 @@
 import json
 import time
 
-from flask import current_app
 from kombu.mixins import ConsumerMixin
-
-import ujson
 
 from listenbrainz.listen import Listen, NowPlayingListen
 from listenbrainz.utils import get_fallback_connection_name
 
 from kombu import Connection, Exchange, Queue, Consumer
-from kombu.utils.debug import setup_logging
-
-setup_logging()
 
 
 class ListensDispatcher(ConsumerMixin):
@@ -33,7 +27,7 @@ class ListensDispatcher(ConsumerMixin):
                                        durable=True)
 
     def send_listens(self, event_name, message):
-        listens = json.loads(message.body.decode("utf-8"))
+        listens = json.loads(message.body)
         for data in listens:
             if event_name == "playing_now":
                 listen = NowPlayingListen(user_id=data["user_id"], user_name=data["user_name"], data=data["track_metadata"])

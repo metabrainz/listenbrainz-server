@@ -30,7 +30,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             )
 
         db_recommendations_cf_recording.insert_user_recommendation(
-            1,
+            self.user['id'],
             UserRecommendationsJson(**{
                 'top_artist': data['recording_mbid'],
                 'similar_artist': []
@@ -38,7 +38,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         )
 
         db_recommendations_cf_recording.insert_user_recommendation(
-            2,
+            self.user2['id'],
             UserRecommendationsJson(**{
                 'top_artist': [],
                 'similar_artist': data['recording_mbid']
@@ -46,8 +46,8 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         )
 
         # get recommendations
-        self.user_recommendations = db_recommendations_cf_recording.get_user_recommendation(1)
-        self.user2_recommendations = db_recommendations_cf_recording.get_user_recommendation(2)
+        self.user_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.user['id'])
+        self.user2_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.user2['id'])
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
