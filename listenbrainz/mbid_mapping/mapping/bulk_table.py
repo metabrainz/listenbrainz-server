@@ -132,6 +132,7 @@ class BulkInsertTable:
             This function will be called after the last row has been sent to process_row, so that
             any flushing/cleanup needed can be completed.
         """
+        return []
 
     def table_exists(self):
         """Check if the table for this bulk inserter exists.
