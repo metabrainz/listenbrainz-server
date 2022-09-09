@@ -188,27 +188,9 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         raise ListenValidationError("JSON document may not have track_metadata with null value.", listen)
 
     # Basic metadata
-    if 'track_name' in listen['track_metadata']:
-        if not isinstance(listen['track_metadata']['track_name'], str):
-            raise ListenValidationError("track_metadata.track_name must be a single string.", listen)
-
-        listen['track_metadata']['track_name'] = listen['track_metadata']['track_name'].strip()
-        if len(listen['track_metadata']['track_name']) == 0:
-            raise ListenValidationError("required field track_metadata.track_name is empty.", listen)
-    else:
-        raise ListenValidationError("JSON document does not contain required track_metadata.track_name.", listen)
-
-
-    if 'artist_name' in listen['track_metadata']:
-        if not isinstance(listen['track_metadata']['artist_name'], str):
-            raise ListenValidationError("track_metadata.artist_name must be a single string.", listen)
-
-        listen['track_metadata']['artist_name'] = listen['track_metadata']['artist_name'].strip()
-        if len(listen['track_metadata']['artist_name']) == 0:
-            raise ListenValidationError("required field track_metadata.artist_name is empty.", listen)
-    else:
-        raise ListenValidationError("JSON document does not contain required track_metadata.artist_name.", listen)
-
+    validate_basic_metadata(listen, "track_name")
+    validate_basic_metadata(listen, "artist_name")
+    validate_basic_metadata(listen, "release_name", required=False)
 
     if 'additional_info' in listen['track_metadata']:
         # Tags
@@ -245,6 +227,18 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         check_for_unicode_null_recursively(listen)
 
     return listen
+
+
+def validate_basic_metadata(listen, key, required=True):
+    if key in listen["track_metadata"]:
+        if not isinstance(listen["track_metadata"][key], str):
+            raise ListenValidationError(f"track_metadata.{key} must be a single string.", listen)
+
+        listen['track_metadata'][key] = listen['track_metadata'][key].strip()
+        if len(listen['track_metadata'][key]) == 0:
+            raise ListenValidationError(f"field track_metadata.{key} is empty.", listen)
+    elif required:
+        raise ListenValidationError(f"JSON document does not contain required field track_metadata.{key}.", listen)
 
 
 def is_valid_uuid(u):

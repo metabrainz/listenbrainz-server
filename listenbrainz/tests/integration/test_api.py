@@ -385,6 +385,15 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
+    def test_invalid_release_name(self):
+        with open(self.path_to_data_file('invalid_release_name.json'), 'r') as f:
+            payload = json.load(f)
+
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual(response.json['error'], "track_metadata.release_name must be a single string.")
+
     def test_bad_track_name_format(self):
         """Test for invalid submission in which a listen has a track_name field but it's not a string"""
         with open(self.path_to_data_file('empty_track_name.json'), 'r') as f:

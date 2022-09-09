@@ -45236,7 +45236,7 @@
             "name": "Dem. Rep. Korea"
         },
         "type": "Feature",
-        "id": "KP"
+        "id": "PRK"
     },
     {
         "geometry": {
@@ -45327,7 +45327,7 @@
             "name": "Korea"
         },
         "type": "Feature",
-        "id": "KR"
+        "id": "KOR"
     }
     ]
   }

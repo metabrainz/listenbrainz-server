@@ -1,5 +1,5 @@
 # This file contains models for spark -> db statistics.
-from typing import TypeVar, Generic, List
+from typing import TypeVar, Generic, List, Optional
 
 from pydantic import constr, NonNegativeInt, BaseModel
 from pydantic.generics import GenericModel
@@ -19,3 +19,4 @@ class StatMessage(GenericModel, Generic[SparkT]):
     from_ts: NonNegativeInt
     to_ts: NonNegativeInt
     data: List[SparkT]
+    database: Optional[str]

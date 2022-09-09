@@ -194,7 +194,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     metadata?.recording?.duration ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
 
-  const artist = metadata?.artist?.[0];
+  const artist = metadata?.artist?.artists?.[0];
 
   const supportLinks = pick(artist?.rels, ...supportLinkTypes);
   const lyricsLink = pick(artist?.rels, "lyrics");

@@ -1,3 +1,4 @@
+from typing import Optional
 
 import sqlalchemy
 from sqlalchemy import create_engine
@@ -13,7 +14,7 @@ import psycopg2.extras
 # public dump
 SCHEMA_VERSION_CORE = 8
 
-engine = None
+engine: Optional[sqlalchemy.engine.Engine] = None
 
 DUMP_DEFAULT_THREAD_COUNT = 4
 
@@ -41,7 +42,7 @@ def init_db_connection(connect_str):
 
 def run_sql_script(sql_file_path):
     with open(sql_file_path) as sql:
-        with engine.connect() as connection:
+        with engine.begin() as connection:
             connection.execute(sql.read())
 
 

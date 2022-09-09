@@ -3,14 +3,11 @@ import datetime
 from typing import List, Optional
 
 import sqlalchemy
-from sqlalchemy.orm import Session
 import ujson
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import timescale as ts
 from listenbrainz.db import user as db_user
-
-from flask import current_app
 
 
 TROI_BOT_USER_ID = 12939
@@ -502,7 +499,7 @@ def update_playlist(playlist: model_playlist.Playlist):
              , public = :public
          WHERE id = :id
     """)
-    with ts.engine.connect() as connection:
+    with ts.engine.begin() as connection:
         params = playlist.dict(include={'id', 'name', 'description', 'public'})
         connection.execute(query, params)
         # Unconditionally add collaborators, this allows us to delete all collaborators
@@ -566,7 +563,7 @@ def delete_playlist_by_mbid(playlist_mbid: str):
         DELETE FROM playlist.playlist
               WHERE playlist.mbid = :playlist_mbid
     """)
-    with ts.engine.connect() as connection:
+    with ts.engine.begin() as connection:
         result = connection.execute(query, {"playlist_mbid": playlist_mbid})
         return result.rowcount == 1
 
@@ -651,7 +648,7 @@ def delete_recordings_from_playlist(playlist: model_playlist.Playlist, remove_fr
          WHERE playlist_id = :playlist_id
            AND position >= :position
     """)
-    with ts.engine.connect() as connection:
+    with ts.engine.begin() as connection:
         delete_params = {"playlist_id": playlist.id,
                          "position_start": remove_from,
                          "position_end": remove_from+remove_count}
@@ -695,7 +692,7 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
     """)
     if position is None:
         position = len(playlist.recordings)
-    with ts.engine.connect() as connection:
+    with ts.engine.begin() as connection:
         if position < len(playlist.recordings):
             reorder_params = {"playlist_id": playlist.id,
                               "offset": len(recordings),

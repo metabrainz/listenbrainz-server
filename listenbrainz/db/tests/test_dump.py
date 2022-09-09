@@ -19,6 +19,10 @@ in listenbrainz.db.dump
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+import subprocess
+import tarfile
+
+import ujson
 
 import listenbrainz.db as db
 import listenbrainz.db.dump as db_dump
@@ -30,7 +34,11 @@ import tempfile
 import listenbrainz.db.feedback as db_feedback
 
 from datetime import datetime
+
+from data.model.common_stat import ALLOWED_STATISTICS_RANGE
+from listenbrainz.db import couchdb
 from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.tests.utils import insert_test_stats, delete_all_couch_databases
 from listenbrainz.webserver import create_app
 from listenbrainz.db.model.feedback import Feedback
 
@@ -52,9 +60,41 @@ class DumpTestCase(DatabaseTestCase):
         self.assertTrue(os.path.isfile(dump_location))
 
     def test_create_stats_dump(self):
+        all_stats = {
+            f"{stat_type}_{stat_range}"
+            for stat_type in ["artists", "recordings", "releases", "daily_activity", "listening_activity"]
+            for stat_range in ALLOWED_STATISTICS_RANGE
+        }
+
+        data, from_ts1, to_ts1, from_ts2, to_ts2 = insert_test_stats("artists", "week", "user_top_artists_db_data_for_api_test_week.json")
+        data[0]["from_ts"] = from_ts1
+        data[1]["from_ts"] = from_ts1
+        data[0]["to_ts"] = to_ts1
+        data[1]["to_ts"] = to_ts1
+
         time_now = datetime.today()
-        dump_location = db_dump.create_private_dump(self.tempdir, time_now)
+        dump_location = db_dump.create_statistics_dump(self.tempdir, time_now)
         self.assertTrue(os.path.isfile(dump_location))
+
+        found = set()
+        found_stats = None
+        xz_command = ['xz', '--decompress', '--stdout', dump_location, '-T4']
+        xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
+        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
+            for member in tar:
+                file_name = member.name.split('/')[-1]
+                if file_name.endswith(".jsonl"):
+                    found.add(file_name[:-6])
+                if file_name == "artists_week.jsonl":
+                    f = tar.extractfile(member)
+                    found_stats = [ujson.loads(line) for line in f.read().splitlines()]
+                    for stat in found_stats:
+                        del stat["last_updated"]
+
+        self.assertEqual(all_stats, found)
+        self.assertEqual(data, found_stats)
+
+        delete_all_couch_databases()
 
     def test_add_dump_entry(self):
         prev_dumps = db_dump.get_dump_entries()

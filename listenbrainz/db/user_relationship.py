@@ -33,7 +33,7 @@ def insert(user_0: int, user_1: int, relationship_type: str) -> None:
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO user_relationship (user_0, user_1, relationship_type)
                  VALUES (:user_0, :user_1, :relationship_type)
@@ -58,12 +58,39 @@ def is_following_user(follower: int, followed: int) -> bool:
         })
         return result.fetchone()['cnt'] > 0
 
+def multiple_users_by_username_following_user(followed: int, followers: List[str]):
+    '''
+    returns a dictionary, keys being usernames
+    values being boolean
+    '''
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT "user".musicbrainz_id,
+                   bool(
+                       coalesce((
+                        SELECT 't'
+                          FROM user_relationship
+                         WHERE user_1 = :followed
+                           AND user_0 = "user".id
+                           AND relationship_type = 'follow'
+                       ), 'f')
+                   )
+                AS result
+              FROM unnest(:followers) as arr
+             INNER JOIN "user"
+                ON "user".musicbrainz_id = arr
+        """), {
+            "followers": followers,
+            "followed": followed,
+        })
+        return dict(result.fetchall())
+
 
 def delete(user_0: int, user_1: int, relationship_type: str) -> None:
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             DELETE
               FROM user_relationship
@@ -82,7 +109,7 @@ def get_followers_of_user(user: int) -> List[dict]:
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT "user".musicbrainz_id AS musicbrainz_id
+            SELECT "user".musicbrainz_id AS musicbrainz_id, "user".id as id
               FROM user_relationship
               JOIN "user"
                 ON "user".id = user_0

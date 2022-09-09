@@ -3,16 +3,22 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Dict, List, Tuple, Iterable
 
+import ujson
+from pydantic import ValidationError
+from requests import HTTPError
+
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import pycountry
 import requests
 
-from data.model.common_stat import StatApi, StatisticsRange
+from data.model.common_stat import StatApi, StatisticsRange, StatRecordList
 from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
 from flask import Blueprint, current_app, jsonify, request
 
+from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
+from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
@@ -23,7 +29,6 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param)
 
-STATS_CALCULATION_INTERVAL = 7  # Stats are recalculated every 7 days
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -233,7 +238,7 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_user_stats(user["id"], stats_range, entity)
+    stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
     if stats is None:
         raise APINoContent('')
 
@@ -248,7 +253,7 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
         "range": stats_range,
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
-        "last_updated": int(stats.last_updated.timestamp()),
+        "last_updated": stats.last_updated,
     }})
 
 
@@ -312,7 +317,7 @@ def get_listening_activity(user_name: str):
     """
     user, stats_range = _validate_stats_user_params(user_name)
 
-    stats = db_stats.get_user_listening_activity(user['id'], stats_range)
+    stats = db_stats.get(user["id"], "listening_activity", stats_range, ListeningActivityRecord)
     if stats is None:
         raise APINoContent('')
 
@@ -323,7 +328,7 @@ def get_listening_activity(user_name: str):
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "range": stats_range,
-        "last_updated": int(stats.last_updated.timestamp())
+        "last_updated": stats.last_updated
     }})
 
 
@@ -383,7 +388,7 @@ def get_daily_activity(user_name: str):
     """
     user, stats_range = _validate_stats_user_params(user_name)
 
-    stats = db_stats.get_user_daily_activity(user['id'], stats_range)
+    stats = db_stats.get(user['id'], "daily_activity", stats_range, DailyActivityRecord)
     if stats is None:
         raise APINoContent('')
 
@@ -408,7 +413,7 @@ def get_daily_activity(user_name: str):
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "range": stats_range,
-        "last_updated": int(stats.last_updated.timestamp())
+        "last_updated": stats.last_updated
     }})
 
 
@@ -473,7 +478,7 @@ def get_artist_map(user_name: str):
             "range": stats_range,
             "from_ts": result.from_ts,
             "to_ts": result.to_ts,
-            "last_updated": int(result.last_updated.timestamp()),
+            "last_updated": result.last_updated,
             "artist_map": [x.dict() for x in result.data.__root__]
         }
     })
@@ -679,7 +684,7 @@ def _get_sitewide_stats(entity: str):
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_sitewide_stats(stats_range, entity)
+    stats = db_stats.get(db_stats.SITEWIDE_STATS_USER_ID, entity, stats_range, EntityRecord)
     if stats is None:
         raise APINoContent("")
 
@@ -692,7 +697,7 @@ def _get_sitewide_stats(entity: str):
             "count": total_entity_count,
             "from_ts": stats.from_ts,
             "to_ts": stats.to_ts,
-            "last_updated": int(stats.last_updated.timestamp())
+            "last_updated": stats.last_updated
         }
     })
 
@@ -756,7 +761,12 @@ def get_sitewide_listening_activity():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    stats = db_stats.get_sitewide_listening_activity(stats_range)
+    stats = db_stats.get(
+        db_stats.SITEWIDE_STATS_USER_ID,
+        "listening_activity",
+        stats_range,
+        ListeningActivityRecord
+    )
     if stats is None:
         raise APINoContent('')
 
@@ -766,7 +776,7 @@ def get_sitewide_listening_activity():
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "range": stats_range,
-        "last_updated": int(stats.last_updated.timestamp())
+        "last_updated": stats.last_updated
     }})
 
 
@@ -833,7 +843,7 @@ def get_sitewide_artist_map():
             "range": stats_range,
             "from_ts": result.from_ts,
             "to_ts": result.to_ts,
-            "last_updated": int(result.last_updated.timestamp()),
+            "last_updated": result.last_updated,
             "artist_map": [x.dict() for x in result.data.__root__]
         }
     })
@@ -845,58 +855,38 @@ def _get_artist_map_stats(user_id, stats_range):
         raise APIBadRequest("Invalid value of force_recalculate: {}".format(recalculate_param))
     force_recalculate = recalculate_param.lower() == 'true'
 
-    # Check if stats are present in DB, if not calculate them
-    calculated = not force_recalculate
-    stats = db_stats.get_user_artist_map(user_id, stats_range)
+    stats = None
+    if not force_recalculate:
+        stats = db_stats.get(user_id, "artistmap", stats_range, UserArtistMapRecord)
+
     if stats is None:
-        calculated = False
-
-    # Check if the stats present in DB have been calculated in the past week, if not recalculate them
-    stale = False
-    if calculated:
-        if (datetime.now(timezone.utc) - stats.last_updated).days >= STATS_CALCULATION_INTERVAL:
-            stale = True
-
-    if stale or not calculated:
-        artist_stats = db_stats.get_user_stats(user_id, stats_range, 'artists')
-
-        # If top artists are missing, return the stale stats if present, otherwise return 204
+        artist_stats = db_stats.get(user_id, "artists", stats_range, EntityRecord)
         if artist_stats is None:
-            if stale:
-                result = stats
-            else:
-                raise APINoContent('')
-        else:
-            # Calculate the data
-            artist_mbid_counts = defaultdict(int)
-            for artist in artist_stats.data.__root__:
-                for artist_mbid in artist.artist_mbids:
-                    artist_mbid_counts[artist_mbid] += artist.listen_count
+            raise APINoContent('')
 
-            country_code_data = _get_country_wise_counts(artist_mbid_counts)
-            result = StatApi[UserArtistMapRecord](**{
-                "data": country_code_data,
-                "from_ts": artist_stats.from_ts,
-                "to_ts": artist_stats.to_ts,
-                "stats_range": stats_range,
-                # this isn't stored in the database, but adding it here to avoid a subsequent db call to
-                # just fetch last updated. could just store this value instead in db but that complicates
-                # the implementation a bit
-                "last_updated": datetime.now(),
-                "user_id": user_id
-            })
+        # Calculate the data
+        artist_mbid_counts = defaultdict(int)
+        for artist in artist_stats.data.__root__:
+            for artist_mbid in artist.artist_mbids:
+                artist_mbid_counts[artist_mbid] += artist.listen_count
 
-            # Store in DB for future use
-            try:
-                db_stats.insert_user_jsonb_data(user_id, 'artist_map', result)
-            except Exception as err:
-                current_app.logger.error(
-                    "Error while inserting artist map stats for {user}. Error: {err}. Data: {data}".format(
-                        user=user_id, err=err, data=result), exc_info=True)
-    else:
-        result = stats
+        country_code_data = _get_country_wise_counts(artist_mbid_counts)
 
-    return result
+        try:
+            db_stats.insert_artist_map(user_id, stats_range, artist_stats.from_ts, artist_stats.to_ts, country_code_data)
+        except HTTPError as e:
+            current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+        stats = StatApi[UserArtistMapRecord](
+            user_id=user_id,
+            from_ts=artist_stats.from_ts,
+            to_ts=artist_stats.to_ts,
+            stats_range=stats_range,
+            data=StatRecordList[UserArtistMapRecord](__root__=country_code_data),
+            last_updated=int(datetime.now().timestamp())
+        )
+
+    return stats
 
 
 @stats_api_bp.route("/user/<user_name>/year-in-music/")
