@@ -4,7 +4,7 @@ import psycopg2
 from psycopg2.errors import OperationalError
 from unidecode import unidecode
 
-from mapping.utils import create_schema, insert_rows, log
+from mapping.utils import log
 from mapping.custom_sorts import create_custom_sort_tables
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
@@ -25,8 +25,6 @@ class CanonicalMusicBrainzData(BulkInsertTable):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.canonical_musicbrainz_data", mb_conn, lb_conn, batch_size)
-        self.last_artist_credit_id = None
-        self.artist_recordings = {}
 
     def get_create_table_columns(self):
         return [("id",                 "SERIAL"),
@@ -98,7 +96,13 @@ class CanonicalMusicBrainzData(BulkInsertTable):
                   FROM deleted_recs t1
                   JOIN all_recs t2
                     ON t1.combined_lookup = t2.combined_lookup
-                 WHERE t2.rnum = 1;
+                 WHERE t2.rnum = 1
+                 -- some recording mbids appear on multiple releases and the insert query inserts them once for
+                 -- for each appearance with the appropriate release mbid. the deletion criteria is combined_lookup
+                 -- which is unavailable in the insert sql query so we cannot easily apply a filter there itself.
+                 -- such rows  cleaned up in the deleted_recs with above so to above adding a redirect to the same
+                 -- recording as a canonical_recording, this condition.
+                   AND t1.recording_mbid != t2.recording_mbid;
         """]
 
     def get_index_names(self):
@@ -109,46 +113,21 @@ class CanonicalMusicBrainzData(BulkInsertTable):
         ]
 
     def process_row(self, row):
-
-        result = []
-        canonical_recording_result = []
-
-        if not self.last_artist_credit_id:
-            self.last_artist_credit_id = row['artist_credit_id']
-
-        if row['artist_credit_id'] != self.last_artist_credit_id:
-            result = self.artist_recordings.values()
-            self.artist_recordings = {}
-
         combined_lookup = unidecode(re.sub(r'[^\w]+', '', row['artist_credit_name'] + row['recording_name']).lower())
-        if combined_lookup not in self.artist_recordings:
-            self.artist_recordings[combined_lookup] = (row["artist_credit_id"],
-                                                       row["artist_mbids"],
-                                                       row["artist_credit_name"],
-                                                       row["release_mbid"],
-                                                       row["release_name"],
-                                                       row["recording_mbid"],
-                                                       row["recording_name"],
-                                                       combined_lookup,
-                                                       row["score"],
-                                                       row["year"])
-        else:
-            other_row = self.artist_recordings[combined_lookup]
-            if row["recording_mbid"] != other_row[5]:
-                canonical_recording_result.append((row["recording_mbid"],
-                                                   other_row[5],
-                                                   other_row[3]))
-
-        self.last_artist_credit_id = row['artist_credit_id']
-
-        return {"mapping.canonical_musicbrainz_data": result,
-                "mapping.canonical_recording_redirect": canonical_recording_result}
-
-    def process_row_complete(self):
-        if self.artist_recordings:
-            return {"mapping.canonical_musicbrainz_data": self.artist_recordings.values()}
-        else:
-            return None
+        return {"mapping.canonical_musicbrainz_data": [
+            (
+                row["artist_credit_id"],
+                row["artist_mbids"],
+                row["artist_credit_name"],
+                row["release_mbid"],
+                row["release_name"],
+                row["recording_mbid"],
+                row["recording_name"],
+                combined_lookup,
+                row["score"],
+                row["year"]
+            )
+        ]}
 
 
 def create_canonical_musicbrainz_data(use_lb_conn: bool):
