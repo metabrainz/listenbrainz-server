@@ -80,11 +80,11 @@ function docker_compose_run_int {
 }
 
 function build_unit_containers {
-    invoke_docker_compose build lb_db redis rabbitmq listenbrainz
+    invoke_docker_compose build lb_db redis rabbitmq listenbrainz couchdb
 }
 
 function bring_up_unit_db {
-    invoke_docker_compose up -d lb_db redis rabbitmq
+    invoke_docker_compose up -d lb_db redis rabbitmq couchdb
 }
 
 function unit_setup {
@@ -93,6 +93,7 @@ function unit_setup {
     docker_compose_run listenbrainz dockerize \
                   -wait tcp://lb_db:5432 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
+                  -wait tcp://couchdb:5984 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
                          python3 manage.py init_ts_db --create-db"
@@ -187,13 +188,14 @@ function int_setup {
     echo "Running setup"
     docker_compose_run_int listenbrainz dockerize \
                   -wait tcp://lb_db:5432 -timeout 60s \
+                  -wait tcp://couchdb:5984 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
                          python3 manage.py init_ts_db --create-db"
 }
 
 function bring_up_int_containers {
-    invoke_docker_compose_int up -d lb_db redis timescale_writer rabbitmq
+    invoke_docker_compose_int up -d lb_db redis timescale_writer rabbitmq couchdb
 }
 
 # Exit immediately if a command exits with a non-zero status.
@@ -225,7 +227,7 @@ if [ "$1" == "int" ]; then
     echo "Bringing containers up"
     bring_up_int_containers
     shift
-    if [ -z "$@" ]; then
+    if [ -z "$*" ]; then
         TESTS_TO_RUN="listenbrainz/tests/integration"
     else
         TESTS_TO_RUN="$@"

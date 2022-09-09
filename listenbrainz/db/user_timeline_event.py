@@ -45,7 +45,7 @@ def create_user_timeline_event(
     """ Creates a user timeline event in the database and returns the event.
     """
     try:
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             result = connection.execute(sqlalchemy.text("""
                 INSERT INTO user_timeline_event (user_id, event_type, metadata)
                     VALUES (:user_id, :event_type, :metadata)
@@ -88,7 +88,7 @@ def delete_user_timeline_event(
 ) -> bool:
     ''' Deletes recommendation and notification event using id'''
     try:
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             result = connection.execute(sqlalchemy.text('''
                     DELETE FROM user_timeline_event
                     WHERE user_id = :user_id
@@ -119,7 +119,7 @@ def create_personal_recommendation_event(user_id: int, metadata:
         metadata key are the recommendee
     """
     try:
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             result = connection.execute(sqlalchemy.text("""
                 INSERT INTO user_timeline_event (user_id, event_type, metadata)
                     VALUES (
@@ -324,7 +324,7 @@ def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTime
 def hide_user_timeline_event(user_id: int, event_type: UserTimelineEventType, event_id: int) -> bool:
     """ Adds events that are to be hidden """
     try:
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             result = connection.execute(sqlalchemy.text('''
                 INSERT INTO hide_user_timeline_event (user_id, event_type, event_id)
                     VALUES (:user_id, :event_type, :event_id)
@@ -364,7 +364,7 @@ def get_hidden_timeline_events(user_id: int, count: int) -> List[HiddenUserTimel
 def unhide_timeline_event(user: int, event_type: UserTimelineEventType, event_id: int) -> bool:
     ''' Deletes hidden timeline events for a user with specific row id '''
     try:
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             result = connection.execute(sqlalchemy.text('''
                 DELETE FROM hide_user_timeline_event WHERE
                 user_id = :user_id AND

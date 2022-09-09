@@ -114,6 +114,18 @@ TYPESENSE_PORT = 80
 {{end}}
 TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
+{{if service "couchdb-listenbrainz"}}
+{{with index (service "couchdb-listenbrainz") 0}}
+COUCHDB_HOST = "{{.Address}}"
+COUCHDB_PORT = {{.Port}}
+{{end}}
+{{else}}
+COUCHDB_HOST = "localhost"
+COUCHDB_PORT = 5984
+{{end}}
+COUCHDB_USER = "listenbrainz"
+COUCHDB_ADMIN_KEY = '''{{template "KEY" "couchdb_admin_key"}}'''
+
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"

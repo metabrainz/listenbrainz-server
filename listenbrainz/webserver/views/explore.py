@@ -28,13 +28,3 @@ def similar_users():
         "explore/similar-users.html",
         similar_users=similar_users
     )
-
-
-@explore_bp.route("/fresh-releases/")
-def fresh_releases():
-    """ Explore fresh releases """
-
-    return render_template(
-        "explore/fresh-releases.html",
-        props=ujson.dumps({})
-    )

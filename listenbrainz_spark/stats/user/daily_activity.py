@@ -65,21 +65,21 @@ def calculate_daily_activity():
     return iterator
 
 
-def get_daily_activity(stats_range: str) -> Iterator[Optional[Dict]]:
+def get_daily_activity(stats_range: str, database: str = None) -> Iterator[Optional[Dict]]:
     """ Calculate number of listens for an user for the specified time range """
     logger.debug(f"Calculating daily_activity_{stats_range}")
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
     get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
     data = calculate_daily_activity()
-    messages = create_messages(data=data, stats_range=stats_range, from_date=from_date, to_date=to_date)
-
+    messages = create_messages(data=data, stats_range=stats_range, from_date=from_date,
+                               to_date=to_date, database=database)
     logger.debug("Done!")
 
     return messages
 
 
-def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime) \
+def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime, database: str = None) \
         -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to webserver via RabbitMQ
@@ -89,9 +89,18 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
         stats_range: The range for which the statistics have been calculated
         from_date: The start time of the stats
         to_date: The end time of the stats
+        database: the name of the database in which the webserver should store the data
     Returns:
         messages: A list of messages to be sent via RabbitMQ
     """
+    if database is None:
+        database = f"daily_activity_{stats_range}"
+
+    yield {
+        "type": "couchdb_data_start",
+        "database": database
+    }
+
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
 
@@ -115,10 +124,16 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
                 "stats_range": stats_range,
                 "from_ts": from_ts,
                 "to_ts": to_ts,
-                "data": multiple_user_stats
+                "data": multiple_user_stats,
+                "database": database
             })
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
             logger.error(f"ValidationError while calculating {stats_range} daily_activity:", exc_info=True)
             yield None
+
+    yield {
+        "type": "couchdb_data_end",
+        "database": database
+    }

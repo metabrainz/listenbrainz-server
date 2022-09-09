@@ -24,7 +24,7 @@ class MappingTestCase(TimescaleTestCase):
         model = MsidMbidModel(recording_msid=str(uuid.uuid4()), recording_mbid=str(uuid.uuid4()))
 
     def insert_recording_in_mapping(self, recording, match_type):
-        with ts.engine.connect() as connection:
+        with ts.engine.begin() as connection:
             if match_type == "exact_match":
                 connection.execute(text("""
                     INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,

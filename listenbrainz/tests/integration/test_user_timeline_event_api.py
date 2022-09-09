@@ -211,39 +211,40 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
         approved_user = db_user.get_or_create(11, "troi-bot")
-        self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_notification_event',
-            user_name=self.user['musicbrainz_id']),
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata_not}),
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
+        self.assert200(r)
+        notification_event_id = r.json["id"]
         # Adding recording recommendation to db
-        new_user = db_user.get_or_create(2, "riksucks")
+        new_user = db_user.get_or_create(202, "riksucks")
         metadata_rec = {
             'artist_name': 'Nujabes',
             'track_name': 'Aruarian Dance',
             'artist_msid':  str(uuid.uuid4()),
             'recording_msid': str(uuid.uuid4()),
         }
-        self.client.post(
+        r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
-            user_name=new_user['musicbrainz_id']),
+                    user_name=new_user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata_rec}),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])},
         )
+        self.assert200(r)
+        rec_event_id = r.json["id"]
         # Deleting notification
         r_del_not = self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events',
-            user_name=self.user["musicbrainz_id"]),
-            data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': 1}),
+            url_for('user_timeline_event_api_bp.delete_feed_events', user_name=self.user["musicbrainz_id"]),
+            data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': notification_event_id}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         self.assert200(r_del_not)
 
         # Checking if notification still exists
         r_not = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed',
-            user_name=self.user['musicbrainz_id']),
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         payload_not = r_not.json["payload"]
@@ -252,17 +253,15 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # Deleting recommendation event
         r_del_rec = self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events',
-            user_name=new_user["musicbrainz_id"]),
-            data=json.dumps({'event_type': UserTimelineEventType.RECORDING_RECOMMENDATION.value, 'id': 2}),
+            url_for('user_timeline_event_api_bp.delete_feed_events', user_name=new_user["musicbrainz_id"]),
+            data=json.dumps({'event_type': UserTimelineEventType.RECORDING_RECOMMENDATION.value, 'id': rec_event_id}),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])}
         )
         self.assert200(r_del_rec)
 
         # Checking if recording recommendation still exists
         r_rec = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed',
-            user_name=new_user['musicbrainz_id']),
+            url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])}
         )
         payload_rec = r_rec.json["payload"]
@@ -1001,4 +1000,11 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         self.assertEqual(1, len(events))
 
-        self.assertEqual(metadata, events[0].metadata.dict())
+        received = events[0].metadata.dict()
+        self.assertEqual(metadata["track_name"], received["track_name"])
+        self.assertEqual(metadata["artist_name"], received["artist_name"])
+        self.assertEqual(metadata["release_name"], received["release_name"])
+        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
+        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
+        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
+        self.assertCountEqual(metadata["users"], received["users"])
