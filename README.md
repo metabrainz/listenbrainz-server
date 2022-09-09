@@ -21,7 +21,7 @@
 
 ## About
 
-ListenBrainz keeps tracks of what music you listen to and
+ListenBrainz keeps track of music you listen to and
 provides you with insights into your listening habits. We're
 completely open-source and publish our data as open data.
 
