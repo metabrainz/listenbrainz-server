@@ -6,5 +6,5 @@ from data.model.user_entity import EntityRecord
 
 class SitewideEntityStatMessage(StatMessage[EntityRecord]):
     """ Format of messages sent to the ListenBrainz Server """
-    entity: constr(min_length=1) # The entity for which stats are calculated, i.e artist, release or recording
+    entity: constr(min_length=1)  # The entity for which stats are calculated, i.e artist, release or recording
     count: NonNegativeInt

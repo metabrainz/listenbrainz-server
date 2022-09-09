@@ -12,6 +12,14 @@ services:
     environment:
       POSTGRES_PASSWORD: 'postgres'
 
+  couchdb:
+    image: couchdb:3.2.2
+    environment:
+      COUCHDB_USER: listenbrainz
+      COUCHDB_PASSWORD: listenbrainz
+    volumes:
+      - ./couchdb_test.ini:/opt/couchdb/etc/local.ini
+
   redis:
     image: redis:6.2.2
 
@@ -27,6 +35,7 @@ services:
       - ..:/code/listenbrainz:z
     environment:
       PYTHONDONTWRITEBYTECODE: 1
+      SQLALCHEMY_WARN_20: 1
     depends_on:
       - redis
       - lb_db

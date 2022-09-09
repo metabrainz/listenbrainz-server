@@ -48,7 +48,7 @@ class Session(object):
 
     @staticmethod
     def generate(user_id, sid, api_key):
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             result = connection.execute(text("""
                 INSERT INTO api_compat.session (user_id, sid, api_key)
                      VALUES (:user_id, :sid, :api_key)

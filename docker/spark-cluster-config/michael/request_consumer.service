@@ -1,0 +1,13 @@
+[Unit]
+Description=The ListenBrainz Request Consumer for Spark
+
+[Service]
+WorkingDirectory=/home/request_consumer/listenbrainz-server/
+ExecStart=/home/request_consumer/listenbrainz-server/docker/start-spark-request-consumer.sh
+# TODO: Investigate how to remove dependence on root user. This will involve looking into
+#   HDFS perms, local /data dir perms and existence of the non-root user to use on worker nodes
+User=root
+Environment=SPARK_HOME=/usr/local/spark
+
+[Install]
+WantedBy=multi-user.target

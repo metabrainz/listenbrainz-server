@@ -41,7 +41,7 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get_or_create(2, 'testlastloginuser')
 
         # set the last login value of the user to 0
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
                    SET last_login = to_timestamp(0)
@@ -103,21 +103,9 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get(user_id)
         self.assertIsNotNone(user)
 
-        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
-            artists_data = ujson.load(f)
-        db_stats.insert_user_jsonb_data(
-            user_id=user_id,
-            stats_type='artists',
-            stats=StatRange[EntityRecord](**artists_data),
-        )
-        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
-        self.assertIsNotNone(user_stats)
-
         db_user.delete(user_id)
         user = db_user.get(user_id)
         self.assertIsNone(user)
-        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
-        self.assertIsNone(user_stats)
 
     def test_delete_when_spotify_import_activated(self):
         user_id = db_user.create(11, 'kishore')
@@ -231,7 +219,7 @@ class UserTestCase(DatabaseTestCase):
         user_id_l = db_user.create(2, "lucifer")
         user_id_r = db_user.create(3, "rob")
 
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(
                 "INSERT INTO recommendation.similar_user (user_id, similar_users) VALUES (:user_id, :similar_users)"),
                 user_id=searcher_id,

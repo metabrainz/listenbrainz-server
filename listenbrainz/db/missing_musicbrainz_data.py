@@ -37,7 +37,7 @@ def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data:
                    but is not submitted to MusicBrainz.
             source : Source of generation of missing MusicBrainz data.
     """
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO missing_musicbrainz_data (user_id, data, source)
                  VALUES (:user_id, :missing_musicbrainz_data, :source)

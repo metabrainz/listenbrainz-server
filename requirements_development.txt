@@ -4,3 +4,4 @@ freezegun==1.2.0
 pytest==7.1.0
 pytest-cov==3.0.0
 requests-mock==1.9.3
+pytest-subtests==0.8.0

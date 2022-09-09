@@ -1,139 +1,137 @@
-{
+[
+  {
     "data": [
-        {
-            "artist_count": 8,
-            "artists": [
-                {
-                    "artist_mbid": "e3d5b5ec-101a-4529-9f2d-01dca64cf44e",
-                    "artist_name": "Anne\u2010Marie",
-                    "listen_count": 26
-                },
-                {
-                    "artist_mbid": "b8a7c51f-362c-4dcb-a259-bc6e0095f0a6",
-                    "artist_name": "Ed Sheeran",
-                    "listen_count": 3
-                },
-                {
-                    "artist_mbid": "dacc2d64-7e59-42a8-87a9-10c53919aff2",
-                    "artist_name": "Clean Bandit",
-                    "listen_count": 3
-                },
-                {
-                    "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
-                    "artist_name": "Coldplay",
-                    "listen_count": 2
-                },
-                {
-                    "artist_mbid": "6cd22c08-e353-4d47-ace7-84a2418a13b8",
-                    "artist_name": "220 KID",
-                    "listen_count": 2
-                },
-                {
-                    "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
-                    "artist_name": "Dua Lipa",
-                    "listen_count": 2
-                },
-                {
-                    "artist_mbid": "985f7e6f-0a7e-4de7-b9ec-a5dac63cb2f7",
-                    "artist_name": "ZAYN",
-                    "listen_count": 1
-                },
-                {
-                    "artist_mbid": "4c98aa1b-34eb-4336-987f-5e50aa059c00",
-                    "artist_name": "The Script",
-                    "listen_count": 1
-                }
-            ],
-            "country": "GBR",
-            "listen_count": 38
-        },
-        {
-            "artist_count": 2,
-            "artists": [
-                {
-                    "artist_mbid": "55e6074f-ef78-4ec3-8fff-bd1b8cc8c14a",
-                    "artist_name": "Niall Horan",
-                    "listen_count": 23
-                },
-                {
-                    "artist_mbid": "b4691384-50c3-4afd-9988-51d3ec5db65d",
-                    "artist_name": "Hozier",
-                    "listen_count": 1
-                }
-            ],
-            "country": "IRL",
-            "listen_count": 24
-        },
-        {
-            "artist_count": 2,
-            "artists": [
-                {
-                    "artist_mbid": "322ef4bc-5b5b-4c0f-8b6f-83f691bb4338",
-                    "artist_name": "Carlton Williams",
-                    "listen_count": 15
-                },
-                {
-                    "artist_mbid": "c3da3346-2643-48a7-93cd-011f6834b3d7",
-                    "artist_name": "Sean Paul",
-                    "listen_count": 1
-                }
-            ],
-            "country": "JAM",
-            "listen_count": 16
-        },
-        {
-            "artist_count": 5,
-            "artists": [
-                {
-                    "artist_mbid": "b7d92248-97e3-4450-8057-6fe06738f735",
-                    "artist_name": "Shawn Mendes",
-                    "listen_count": 4
-                },
-                {
-                    "artist_mbid": "e0140a67-e4d1-4f13-8a01-364355bee46e",
-                    "artist_name": "Justin Bieber",
-                    "listen_count": 4
-                },
-                {
-                    "artist_mbid": "c8b03190-306c-4120-bb0b-6f2ebfc06ea9",
-                    "artist_name": "The Weeknd",
-                    "listen_count": 2
-                },
-                {
-                    "artist_mbid": "97e69730-3791-423b-9770-287261588854",
-                    "artist_name": "Alessia Cara",
-                    "listen_count": 2
-                },
-                {
-                    "artist_mbid": "09887aa7-226e-4ecc-9a0c-02d2ae5777e1",
-                    "artist_name": "Carly Rae Jepsen",
-                    "listen_count": 1
-                }
-            ],
-            "country": "CAN",
-            "listen_count": 13
-        },
-        {
-            "artist_count": 2,
-            "artists": [
-                {
-                    "artist_mbid": "830e5c4e-6b7d-431d-86ab-00c751281dc5",
-                    "artist_name": "5 Seconds of Summer",
-                    "listen_count": 6
-                },
-                {
-                    "artist_mbid": "80609a00-b394-4a49-975b-2db6b543fa97",
-                    "artist_name": "The Kid LAROI",
-                    "listen_count": 2
-                }
-            ],
-            "country": "AUS",
-            "listen_count": 8
-        }
+      {
+        "artist_count": 8,
+        "artists": [
+          {
+            "artist_mbid": "e3d5b5ec-101a-4529-9f2d-01dca64cf44e",
+            "artist_name": "Anne\u2010Marie",
+            "listen_count": 26
+          },
+          {
+            "artist_mbid": "b8a7c51f-362c-4dcb-a259-bc6e0095f0a6",
+            "artist_name": "Ed Sheeran",
+            "listen_count": 3
+          },
+          {
+            "artist_mbid": "dacc2d64-7e59-42a8-87a9-10c53919aff2",
+            "artist_name": "Clean Bandit",
+            "listen_count": 3
+          },
+          {
+            "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+            "artist_name": "Coldplay",
+            "listen_count": 2
+          },
+          {
+            "artist_mbid": "6cd22c08-e353-4d47-ace7-84a2418a13b8",
+            "artist_name": "220 KID",
+            "listen_count": 2
+          },
+          {
+            "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+            "artist_name": "Dua Lipa",
+            "listen_count": 2
+          },
+          {
+            "artist_mbid": "985f7e6f-0a7e-4de7-b9ec-a5dac63cb2f7",
+            "artist_name": "ZAYN",
+            "listen_count": 1
+          },
+          {
+            "artist_mbid": "4c98aa1b-34eb-4336-987f-5e50aa059c00",
+            "artist_name": "The Script",
+            "listen_count": 1
+          }
+        ],
+        "country": "GBR",
+        "listen_count": 38
+      },
+      {
+        "artist_count": 2,
+        "artists": [
+          {
+            "artist_mbid": "55e6074f-ef78-4ec3-8fff-bd1b8cc8c14a",
+            "artist_name": "Niall Horan",
+            "listen_count": 23
+          },
+          {
+            "artist_mbid": "b4691384-50c3-4afd-9988-51d3ec5db65d",
+            "artist_name": "Hozier",
+            "listen_count": 1
+          }
+        ],
+        "country": "IRL",
+        "listen_count": 24
+      },
+      {
+        "artist_count": 2,
+        "artists": [
+          {
+            "artist_mbid": "322ef4bc-5b5b-4c0f-8b6f-83f691bb4338",
+            "artist_name": "Carlton Williams",
+            "listen_count": 15
+          },
+          {
+            "artist_mbid": "c3da3346-2643-48a7-93cd-011f6834b3d7",
+            "artist_name": "Sean Paul",
+            "listen_count": 1
+          }
+        ],
+        "country": "JAM",
+        "listen_count": 16
+      },
+      {
+        "artist_count": 5,
+        "artists": [
+          {
+            "artist_mbid": "b7d92248-97e3-4450-8057-6fe06738f735",
+            "artist_name": "Shawn Mendes",
+            "listen_count": 4
+          },
+          {
+            "artist_mbid": "e0140a67-e4d1-4f13-8a01-364355bee46e",
+            "artist_name": "Justin Bieber",
+            "listen_count": 4
+          },
+          {
+            "artist_mbid": "c8b03190-306c-4120-bb0b-6f2ebfc06ea9",
+            "artist_name": "The Weeknd",
+            "listen_count": 2
+          },
+          {
+            "artist_mbid": "97e69730-3791-423b-9770-287261588854",
+            "artist_name": "Alessia Cara",
+            "listen_count": 2
+          },
+          {
+            "artist_mbid": "09887aa7-226e-4ecc-9a0c-02d2ae5777e1",
+            "artist_name": "Carly Rae Jepsen",
+            "listen_count": 1
+          }
+        ],
+        "country": "CAN",
+        "listen_count": 13
+      },
+      {
+        "artist_count": 2,
+        "artists": [
+          {
+            "artist_mbid": "830e5c4e-6b7d-431d-86ab-00c751281dc5",
+            "artist_name": "5 Seconds of Summer",
+            "listen_count": 6
+          },
+          {
+            "artist_mbid": "80609a00-b394-4a49-975b-2db6b543fa97",
+            "artist_name": "The Kid LAROI",
+            "listen_count": 2
+          }
+        ],
+        "country": "AUS",
+        "listen_count": 8
+      }
     ],
-    "from_ts": 1009843200,
-    "last_updated": 1599918137,
-    "to_ts": 1589496658,
-    "user_id": "ishaanshah",
-    "stats_range": "all_time"
-}
+    "user_id": 1
+  }
+]

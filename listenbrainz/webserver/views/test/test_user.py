@@ -9,7 +9,6 @@ from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
-
 from listenbrainz.db import external_service_oauth as db_oauth, timescale
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -26,6 +25,8 @@ class UserViewsTestCase(IntegrationTestCase):
 
         user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
+        # fetch again so that gdpr agreed time is set
+        user = db_user.get(user['id'])
         self.user = User.from_dbrow(user)
 
         weirduser = db_user.get_or_create(2, 'weird\\user name')
@@ -36,6 +37,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
     def tearDown(self):
         self.logstore = None
+        super().tearDown()
 
     def test_redirects(self):
         """Test the /my/[something]/ endponts which redirect to the /user/ namespace"""
@@ -165,7 +167,7 @@ class UserViewsTestCase(IntegrationTestCase):
                 max_ts = listen.ts_since_epoch
 
         self.logstore.insert(self.test_data)
-        return (min_ts, max_ts)
+        return min_ts, max_ts
 
     def test_username_case(self):
         """Tests that the username in URL is case insensitive"""
@@ -181,7 +183,7 @@ class UserViewsTestCase(IntegrationTestCase):
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
-        user = User.from_dbrow(db_user.get(1)).to_dict()
+        user = self.user.to_dict()
         timescale.return_value = ([], 0, 0)
 
         # If no parameter is given, use current time as the to_ts
@@ -263,7 +265,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assert400(response, "Reason must be a string.")
 
     def test_user_pins(self):
-        with timescale.engine.connect() as connection:
+        with timescale.engine.begin() as connection:
             connection.execute(text("""
                 INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
                                                    artist_mbids, artist_credit_name, recording_name)

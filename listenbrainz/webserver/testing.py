@@ -5,7 +5,8 @@ from listenbrainz.webserver import create_api_compat_app, create_web_app
 
 class ServerTestCase(flask_testing.TestCase):
 
-    def create_app(self):
+    @classmethod
+    def create_app(cls):
         app = create_web_app(debug=False)
         app.config['TESTING'] = True
         return app

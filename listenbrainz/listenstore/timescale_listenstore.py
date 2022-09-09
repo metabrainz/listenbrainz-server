@@ -52,7 +52,7 @@ class TimescaleListenStore:
         """When a user is created, set the timestamp keys and insert an entry in the listen count
          table so that we can avoid the expensive lookup for a brand new user."""
         query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, NULL, NULL, NOW())"""
-        with timescale.engine.connect() as connection:
+        with timescale.engine.begin() as connection:
             connection.execute(sqlalchemy.text(query), user_id=user_id)
 
     def get_listen_count_for_user(self, user_id: int):
@@ -475,7 +475,7 @@ class TimescaleListenStore:
             DELETE FROM listen WHERE user_id = :user_id;
         """
         try:
-            with timescale.engine.connect() as connection:
+            with timescale.engine.begin() as connection:
                 connection.execute(sqlalchemy.text(query), user_id=user_id)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))

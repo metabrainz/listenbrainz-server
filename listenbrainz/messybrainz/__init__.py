@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 
 import sqlalchemy.exc
 
@@ -12,7 +13,7 @@ from listenbrainz.messybrainz import exceptions, data
 # This value must be incremented after schema changes on replicated tables!
 SCHEMA_VERSION = 1
 
-engine = None
+engine: Optional[sqlalchemy.engine.Engine] = None
 
 
 def init_db_connection(connect_str):

@@ -1,200 +1,110 @@
-{
+[
+  {
+    "user_id": 1,
+    "count": 7,
     "data": [
-        {
-            "artist_mbids": [
-                "7addbcac-ae39-4b4c-a956-53da336d68e8"
-            ],
-            "listen_count": 21,
-            "artist_name": "Ellie Goulding",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "6599e41e-390c-4855-a2ac-68ee798538b4"
-            ],
-            "listen_count": 12,
-            "artist_name": "Coldplay",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "67f4ae2e-260e-4020-b957-f2df5b719501"
-            ],
-            "listen_count": 10,
-            "artist_name": "OneRepublic",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "9d5adabb-9775-4535-93eb-12b485aed8bf"
-            ],
-            "listen_count": 10,
-            "artist_name": "Maroon 5",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "6817e85a-f5ae-4479-b73d-e8e320e1b927"
-            ],
-            "listen_count": 9,
-            "artist_name": "Ed Sheeran",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "1871df1a-93b7-4e25-9d60-64102ba89913"
-            ],
-            "listen_count": 8,
-            "artist_name": "The Script",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8f119e29-922e-42da-a5bf-b062f5261a3d"
-            ],
-            "listen_count": 6,
-            "artist_name": "Of Monsters and Men",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "ba64b195-01dd-4613-9534-bb87dc44cffb"
-            ],
-            "listen_count": 6,
-            "artist_name": "Lenka",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "bad9c78a-cbe3-4a6f-b7c0-f2009cecaabb"
-            ],
-            "listen_count": 6,
-            "artist_name": "Christina Perri",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "4e202a9c-c976-4e9e-8c9f-b0b96916f6a5"
-            ],
-            "listen_count": 5,
-            "artist_name": "Tommee Profitt",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "3b155259-b29e-4515-aa62-cb0b917f4cfd"
-            ],
-            "listen_count": 5,
-            "artist_name": "The Fray",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "8cb3fd5a-2194-4c3b-8eb8-3e538d109991"
-            ],
-            "listen_count": 4,
-            "artist_name": "Vance Joy",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea"
-            ],
-            "listen_count": 4,
-            "artist_name": "Taylor Swift",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "ac6f4804-6215-4e1b-bb47-3672f085dde6"
-            ],
-            "listen_count": 4,
-            "artist_name": "Sia",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "1024e884-3a17-4729-9e59-a026fe8a07ba"
-            ],
-            "listen_count": 4,
-            "artist_name": "M.I.A.",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "1b173852-64e9-4c7f-8ed7-01ce6158a6fd"
-            ],
-            "listen_count": 4,
-            "artist_name": "Linkin Park",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "52f911d4-8f73-4fc9-9145-a99aff057524"
-            ],
-            "listen_count": 4,
-            "artist_name": "George Ezra",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "d340853d-7408-4a0d-89c2-6ff13e568815"
-            ],
-            "listen_count": 2,
-            "artist_name": "The Local train",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "49ec6dae-0bd3-43f5-9acf-f3462fb3ff8f"
-            ],
-            "listen_count": 2,
-            "artist_name": "Ritviz",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "fecda98e-0533-4b87-a9d1-c89b4521918b"
-            ],
-            "listen_count": 2,
-            "artist_name": "Imagine Dragons",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "3dc53e0f-7090-44d2-8500-3012102f29a6"
-            ],
-            "listen_count": 2,
-            "artist_name": "Backstreet Boys",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c"
-            ],
-            "listen_count": 1,
-            "artist_name": "Train",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "0daecabb-f76d-4914-8726-82cefbecca52"
-            ],
-            "listen_count": 1,
-            "artist_name": "The Chainsmokers",
-            "artist_msid": null
-        },
-        {
-            "artist_mbids": [
-                "aebd2c50-9eed-447d-b8b0-dbdbe5850ba8"
-            ],
-            "listen_count": 1,
-            "artist_name": "Snow Patrol",
-            "artist_msid": null
-        }
-    ],
-    "count": 24,
-    "from_ts": 1588632658,
-    "to_ts": 1589237458,
-    "stats_range": "week"
-}
+      {
+        "artist_mbids": [
+          "7addbcac-ae39-4b4c-a956-53da336d68e8"
+        ],
+        "listen_count": 21,
+        "artist_name": "Ellie Goulding",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "9d5adabb-9775-4535-93eb-12b485aed8bf"
+        ],
+        "listen_count": 10,
+        "artist_name": "Maroon 5",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8f119e29-922e-42da-a5bf-b062f5261a3d"
+        ],
+        "listen_count": 6,
+        "artist_name": "Of Monsters and Men",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "ba64b195-01dd-4613-9534-bb87dc44cffb"
+        ],
+        "listen_count": 6,
+        "artist_name": "Lenka",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "8cb3fd5a-2194-4c3b-8eb8-3e538d109991"
+        ],
+        "listen_count": 4,
+        "artist_name": "Vance Joy",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "49ec6dae-0bd3-43f5-9acf-f3462fb3ff8f"
+        ],
+        "listen_count": 2,
+        "artist_name": "Ritviz",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c"
+        ],
+        "listen_count": 1,
+        "artist_name": "Train",
+        "artist_msid": null
+      }
+    ]
+  },
+  {
+    "user_id": 2,
+    "count": 5,
+    "data": [
+      {
+        "artist_mbids": [
+          "6599e41e-390c-4855-a2ac-68ee798538b4"
+        ],
+        "listen_count": 12,
+        "artist_name": "Coldplay",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "67f4ae2e-260e-4020-b957-f2df5b719501"
+        ],
+        "listen_count": 10,
+        "artist_name": "OneRepublic",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+        ],
+        "listen_count": 9,
+        "artist_name": "Ed Sheeran",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "1871df1a-93b7-4e25-9d60-64102ba89913"
+        ],
+        "listen_count": 8,
+        "artist_name": "The Script",
+        "artist_msid": null
+      },
+      {
+        "artist_mbids": [
+          "0daecabb-f76d-4914-8726-82cefbecca52"
+        ],
+        "listen_count": 1,
+        "artist_name": "The Chainsmokers",
+        "artist_msid": null
+      }
+    ]
+  }
+]

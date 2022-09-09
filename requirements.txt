@@ -50,3 +50,4 @@ more-itertools==8.13.0
 kombu==5.1.0
 itsdangerous==2.1.2
 countryinfo==0.1.2
+urllib3==1.26.9

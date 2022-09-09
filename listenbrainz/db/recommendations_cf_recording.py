@@ -51,7 +51,7 @@ def insert_user_recommendation(user_id: int, recommendations: UserRecommendation
             user_id (int): row id of the user.
             recommendations (dict): User recommendations.
     """
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO recommendation.cf_recording (user_id, recording_mbid)
                  VALUES (:user_id, :recommendation)

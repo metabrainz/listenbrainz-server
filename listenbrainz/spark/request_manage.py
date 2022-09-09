@@ -92,7 +92,8 @@ def send_request_to_spark_cluster(query, **params):
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
               help="Entity for which statistics should be calculated")
-def request_user_stats(type_, range_, entity):
+@click.option("--database", type=str, help="Name of the couchdb database to store data in")
+def request_user_stats(type_, range_, entity, database):
     """ Send a user stats request to the spark cluster
     """
     params = {
@@ -100,6 +101,13 @@ def request_user_stats(type_, range_, entity):
     }
     if type_ == "entity" and entity:
         params["entity"] = entity
+
+    if not database:
+        today = date.today().strftime("%Y%m%d")
+        prefix = entity if type_ == "entity" else type_
+        database = f"{prefix}_{range_}_{today}"
+
+    params["database"] = database
 
     send_request_to_spark_cluster(f"stats.user.{type_}", **params)
 
