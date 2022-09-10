@@ -1,7 +1,6 @@
 from unittest import mock
 from unittest.mock import MagicMock
 
-import ujson
 from flask import url_for
 from flask_login import login_required
 from requests.exceptions import HTTPError
@@ -9,16 +8,11 @@ from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.login
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import create_web_app
-from listenbrainz.webserver.testing import ServerTestCase
 
 
-class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
-
-    def setUp(self):
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+class IndexViewsTestCase(IntegrationTestCase):
 
     def test_index(self):
         resp = self.client.get(url_for('index.index'))
@@ -173,9 +167,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         mock_user_get.return_value = user
 
-        @self.app.route('/page_that_returns_500')
+        @self.app.route('/page_that_returns_500_2')
         @login_required
-        def view500():
+        def view500_2():
             # flask-login user is loaded during @login_required, so check that the db has been queried
             mock_user_get.assert_called_with(user['login_id'])
             raise InternalServerError('error')

@@ -124,7 +124,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
-        time.sleep(1)
+        time.sleep(2)
 
         # max_ts = 2, should have sent back 2 listens
         r = self.client.get(
