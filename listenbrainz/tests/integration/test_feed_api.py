@@ -124,7 +124,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
-        time.sleep(1)
+        time.sleep(2)
 
         # max_ts = 2, should have sent back 2 listens
         r = self.client.get(
@@ -155,7 +155,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'min_ts': ts + 1}
         )
         self.assert200(r)
-        print(json.dumps(r.json))
         payload = self.remove_own_follow_events(r.json['payload'])
         self.assertEqual(4, payload['count'])
 
