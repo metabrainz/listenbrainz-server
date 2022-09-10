@@ -96,11 +96,11 @@ def get_user_recommendation(user_id):
                     'user_id': user_id
                 }
         )
-        row = result.fetchone()
+        row = result.mappings().first()
 
     try:
-        return UserRecommendationsData(**row._asdict()) if row else None
+        return UserRecommendationsData(**row) if row else None
     except ValidationError:
         current_app.logger.error(f"ValidationError when getting recommendations for user with user_id: {user_id}."
-                                 f" Data: {ujson.dumps(row.recording_mbid._asdict())}", exc_info=True)
+                                 f" Data: {ujson.dumps(row)}", exc_info=True)
         return None

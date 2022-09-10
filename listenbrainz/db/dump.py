@@ -707,7 +707,7 @@ def get_dump_entries():
               ORDER BY created DESC
             """))
 
-        return [row._asdict() for row in result]
+        return result.mappings().all()
 
 
 def get_dump_entry(dump_id):
@@ -720,7 +720,7 @@ def get_dump_entry(dump_id):
             'dump_id': dump_id,
         })
         if result.rowcount > 0:
-            return result.fetchone()._asdict()
+            return result.mappings().first()
         return None
 
 

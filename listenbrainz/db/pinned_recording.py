@@ -118,8 +118,8 @@ def get_current_pin_for_user(user_id: int) -> PinnedRecording:
              WHERE (user_id = :user_id
                AND pinned_until >= NOW())
             """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {'user_id': user_id})
-        row = result.fetchone()
-        return PinnedRecording(**row._asdict()) if row else None
+        row = result.mappings().first()
+        return PinnedRecording(**row) if row else None
 
 
 def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[PinnedRecording]:
@@ -147,7 +147,7 @@ def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[Pinn
             'count': count,
             'offset': offset
         })
-        return [PinnedRecording(**row._asdict()) for row in result.fetchall()]
+        return [PinnedRecording(**row) for row in result.mappings()]
 
 
 def get_pins_for_user_following(user_id: int, count: int, offset: int) -> List[PinnedRecording]:
@@ -183,7 +183,7 @@ def get_pins_for_user_following(user_id: int, count: int, offset: int) -> List[P
             'count': count,
             'offset': offset
         })
-        return [PinnedRecording(**row._asdict()) for row in result.fetchall()]
+        return [PinnedRecording(**row) for row in result.mappings()]
 
 
 def get_pins_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[PinnedRecording]:
@@ -214,7 +214,7 @@ def get_pins_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int)
             "max_ts": datetime.utcfromtimestamp(max_ts),
             "count": count,
         })
-        return [PinnedRecording(**row._asdict()) for row in result.fetchall()]
+        return [PinnedRecording(**row) for row in result.mappings()]
 
 
 def get_pin_by_id(row_id: int) -> PinnedRecording:
@@ -232,8 +232,8 @@ def get_pin_by_id(row_id: int) -> PinnedRecording:
         """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {
             "row_id": row_id,
         })
-        row = result.fetchone()
-        return PinnedRecording(**row._asdict()) if row else None
+        row = result.mappings().first()
+        return PinnedRecording(**row) if row else None
 
 
 def get_pin_count_for_user(user_id: int) -> int:

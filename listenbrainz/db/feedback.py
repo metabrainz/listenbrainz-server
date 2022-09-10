@@ -133,7 +133,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
-        feedback = [Feedback(**row._asdict()) for row in result.fetchall()]
+        feedback = [Feedback(**row) for row in result.mappings()]
 
     if metadata and len(feedback) > 0:
         feedback = fetch_track_metadata_for_items(feedback)
@@ -206,7 +206,7 @@ def get_feedback_for_recording(recording_type: str, recording: str, limit: int, 
 
     with db.engine.connect() as connection:
         result = connection.execute(text(query), args)
-        return [Feedback(**row._asdict()) for row in result.fetchall()]
+        return [Feedback(**row) for row in result.mappings()]
 
 
 def get_feedback_count_for_recording(recording_type: str, recording: str) -> int:
@@ -290,4 +290,4 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, user_name: str, 
     query = query_base + query_remaining
     with db.engine.connect() as connection:
         result = connection.execute(text(query), params)
-        return [Feedback(user_id=user_id, user_name=user_name, **row._asdict()) for row in result.fetchall()]
+        return [Feedback(user_id=user_id, user_name=user_name, **row) for row in result.mappings()]
