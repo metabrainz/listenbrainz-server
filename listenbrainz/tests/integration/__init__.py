@@ -16,6 +16,11 @@ TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.
 
 class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        ServerTestCase.setUpClass()
+        DatabaseTestCase.setUpClass()
+
     def setUp(self):
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
@@ -23,6 +28,11 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
     def tearDown(self):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
+
+    @classmethod
+    def tearDownClass(cls):
+        ServerTestCase.tearDownClass()
+        DatabaseTestCase.tearDownClass()
 
 
 class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
