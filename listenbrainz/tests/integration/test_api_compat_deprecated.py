@@ -148,7 +148,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.assert200(r)
         self.assertEqual(r.data.decode('utf-8'), 'OK\n')
 
-        time.sleep(0.5)
+        time.sleep(1)
         recalculate_all_user_data()
         to_ts = int(time.time())
         listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
