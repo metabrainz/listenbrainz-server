@@ -286,8 +286,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         time.sleep(1.1)
 
         # should have expired by now
-        r = self.client.get(url_for('api_v1.get_playing_now',
-                                    user_name=self.user['musicbrainz_id']))
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
         self.assertEqual(r.json['payload']['count'], 0)
 
     def test_playing_now_with_duration_ms(self):

@@ -55,12 +55,13 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         count = 0
         while count < 10:
             count += 1
-            time.sleep(1)
 
             response = self.client.get(url, **kwargs)
             data = json.loads(response.data)['payload']
             if data['count'] == num_items:
                 break
+            time.sleep(0.5)
+
         return response
 
     def send_data(self, payload, user=None, recalculate=False):
@@ -78,9 +79,10 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
             # recalculate only if asked because there are many tests for invalid
             # submissions or where we don't fetch listens. in those cases, this
             # sleep will add unnecessary slowness.
-            time.sleep(1)  # wait for listens to be picked up by timescale writer
+            time.sleep(0.5)  # wait for listens to be picked up by timescale writer
             recalculate_all_user_data()
         return response
+
 
 class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase, TimescaleTestCase):
 
