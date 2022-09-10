@@ -1,9 +1,8 @@
 import logging
-from typing import List, Optional
+from typing import Optional
 
 import sqlalchemy
 import uuid
-import ujson
 
 from datetime import datetime
 from listenbrainz import db
@@ -95,8 +94,7 @@ def get(id: int, *, fetch_email: bool = False):
               FROM "user"
              WHERE id = :id
         """.format(columns=','.join(columns))), {"id": id})
-        row = result.fetchone()
-        return row._asdict() if row else None
+        return result.mappings().first()
 
 
 def get_by_login_id(login_id):
@@ -125,8 +123,7 @@ def get_by_login_id(login_id):
               FROM "user"
              WHERE login_id = :user_login_id
         """.format(columns=','.join(USER_GET_COLUMNS))), {"user_login_id": login_id})
-        row = result.fetchone()
-        return row._asdict() if row else None
+        return result.mappings().first()
 
 
 def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
@@ -146,7 +143,7 @@ def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
               FROM "user"
              WHERE LOWER(musicbrainz_id) in :mb_ids
         """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
-        return {row.musicbrainz_id.lower(): row._asdict() for row in result.fetchall()}
+        return {row["musicbrainz_id"].lower(): row for row in result.mappings()}
 
 
 def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
@@ -177,8 +174,7 @@ def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
               FROM "user"
              WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
         """.format(columns=','.join(columns))), {"mb_id": musicbrainz_id})
-        row = result.fetchone()
-        return row._asdict() if row else None
+        return result.mappings().first()
 
 
 def get_by_token(token: str, *, fetch_email: bool = False):
@@ -203,8 +199,7 @@ def get_by_token(token: str, *, fetch_email: bool = False):
               FROM "user"
              WHERE auth_token = :auth_token
         """.format(columns=','.join(columns))), {"auth_token": token})
-        row = result.fetchone()
-        return row._asdict() if row else None
+        return result.mappings().first()
 
 
 def get_user_count():
@@ -308,7 +303,7 @@ def get_all_users(created_before=None, columns=None):
             "created": created_before,
         })
 
-        return [row._asdict() for row in result]
+        return result.mappings().all()
 
 
 def delete(id):
@@ -404,8 +399,7 @@ def get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=None):
              {optional_filter}
         """.format(columns=','.join(USER_GET_COLUMNS), optional_filter=filter_str)), filter_data)
 
-        row = result.fetchone()
-        return row._asdict() if row else None
+        return result.mappings().first()
 
 
 def validate_usernames(musicbrainz_ids):
@@ -426,7 +420,7 @@ def validate_usernames(musicbrainz_ids):
         """), {
             'musicbrainz_ids': [musicbrainz_id.lower() for musicbrainz_id in musicbrainz_ids],
         })
-        return [row._asdict() for row in r.fetchall() if row.id is not None]
+        return [row for row in r.mappings().all() if row["id"] is not None]
 
 
 def get_users_in_order(user_ids):
@@ -440,7 +434,7 @@ def get_users_in_order(user_ids):
         """), {
             'user_ids': user_ids,
         })
-        return [row._asdict() for row in r.fetchall() if row.musicbrainz_id is not None]
+        return [row for row in r.fetchall() if row["musicbrainz_id"] is not None]
 
 
 def get_similar_users(user_id: int) -> Optional[SimilarUsers]:

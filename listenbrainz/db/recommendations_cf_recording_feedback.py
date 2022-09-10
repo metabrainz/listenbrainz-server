@@ -81,7 +81,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, rating: str = N
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
-        return [RecommendationFeedbackSubmit(**row._asdict()) for row in result.fetchall()]
+        return [RecommendationFeedbackSubmit(**row) for row in result.mappings()]
 
 
 def get_feedback_count_for_user(user_id: int) -> int:
@@ -134,4 +134,4 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: 
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
-        return [RecommendationFeedbackSubmit(**row._asdict()) for row in result.fetchall()]
+        return [RecommendationFeedbackSubmit(**row) for row in result.mappings()]

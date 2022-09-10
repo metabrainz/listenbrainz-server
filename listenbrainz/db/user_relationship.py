@@ -120,7 +120,7 @@ def get_followers_of_user(user: int) -> List[dict]:
         """), {
             "followed": user,
         })
-        return [row._asdict() for row in result.fetchall()]
+        return result.mappings().all()
 
 
 def get_following_for_user(user: int) -> List[dict]:
@@ -138,7 +138,8 @@ def get_following_for_user(user: int) -> List[dict]:
         """), {
             "user": user,
         })
-        return [row._asdict() for row in result.fetchall()]
+        return result.mappings().all()
+
 
 def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[dict]:
     """ Gets a list of follow events for specified users.
@@ -170,4 +171,4 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
             "count": count
         })
 
-        return [row._asdict() for row in result.fetchall()]
+        return result.mappings().all()

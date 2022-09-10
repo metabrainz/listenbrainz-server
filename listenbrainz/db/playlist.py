@@ -149,15 +149,15 @@ def _playlist_resultset_to_model(connection, result, load_recordings):
     """
     playlists = []
     user_id_map = {}
-    for row in result:
-        creator_id = row.creator_id
+    for row in result.mappings():
+        row = dict(row)
+        creator_id = row["creator_id"]
         if creator_id not in user_id_map:
             # TODO: Do this lookup in bulk
             user_id_map[creator_id] = db_user.get(creator_id)
-        created_for_id = row.created_for_id
+        created_for_id = row["created_for_id"]
         if created_for_id and created_for_id not in user_id_map:
             user_id_map[created_for_id] = db_user.get(created_for_id)
-        row = row._asdict()
         row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
         if created_for_id:
             row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
@@ -351,12 +351,12 @@ def get_recordings_for_playlists(connection, playlist_ids: List[int]):
     result = connection.execute(query, {"playlist_ids": tuple(playlist_ids)})
     user_id_map = {}
     playlist_recordings_map = collections.defaultdict(list)
-    for row in result:
-        added_by_id = row.added_by_id
+    for row in result.mappings():
+        row = dict(row)
+        added_by_id = row["added_by_id"]
         if added_by_id not in user_id_map:
             # TODO: Do this lookup in bulk
             user_id_map[added_by_id] = db_user.get(added_by_id)
-        row = row._asdict()
         row["added_by"] = user_id_map[added_by_id]["musicbrainz_id"]
         playlist_recording = model_playlist.PlaylistRecording.parse_obj(row)
         playlist_recordings_map[playlist_recording.playlist_id].append(playlist_recording)

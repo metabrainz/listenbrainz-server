@@ -153,6 +153,4 @@ def get_token(user_id: int, service: ExternalServiceType) -> Union[dict, None]:
                 'user_id': user_id,
                 'service': service.value
             })
-        if result.rowcount > 0:
-            return result.fetchone()._asdict()
-        return None
+        return result.mappings().first()
