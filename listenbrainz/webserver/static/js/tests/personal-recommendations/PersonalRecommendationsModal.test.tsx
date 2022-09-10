@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import PersonalRecommendationModal from "../../src/personal-recommendations/PersonalRecommendations";
+import PersonalRecommendationModal from "../../src/personal-recommendations/PersonalRecommendationsModal";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
 

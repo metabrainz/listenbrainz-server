@@ -1,7 +1,9 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import Pill, { PillProps } from "../../src/personal-recommendations/Pill";
+import NamePill, {
+  NamePillProps,
+} from "../../src/personal-recommendations/NamePill";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -10,20 +12,20 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const mockAction = jest.fn();
 
-const props: PillProps = {
+const props: NamePillProps = {
   title: "foobar",
   closeButton: true,
   closeAction: mockAction,
 };
 
-describe("Pill", () => {
+describe("NamePill", () => {
   it("renders correctly", () => {
-    const wrapper = mount(<Pill {...props} />);
+    const wrapper = mount(<NamePill {...props} />);
     expect(wrapper).toMatchSnapshot();
   });
 
   it("works when you click", () => {
-    const wrapper = mount(<Pill {...props} />);
+    const wrapper = mount(<NamePill {...props} />);
     wrapper.find("button").at(0).simulate("click");
     expect(mockAction).toHaveBeenCalledTimes(1);
   });

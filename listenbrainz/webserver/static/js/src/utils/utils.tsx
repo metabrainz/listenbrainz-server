@@ -6,7 +6,7 @@ import { Rating } from "react-simple-star-rating";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
-import Pill from "../personal-recommendations/Pill";
+import NamePill from "../personal-recommendations/NamePill";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -659,7 +659,7 @@ export function getPersonalRecommendationEventContent(
       {isCreator && (
         <div style={{ paddingBottom: "10px" }}>
           {eventMetadata.users!.map((userName) => {
-            return <Pill title={userName} />;
+            return <NamePill title={userName} />;
           })}
         </div>
       )}

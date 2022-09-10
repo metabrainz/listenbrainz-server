@@ -2,13 +2,13 @@ import * as React from "react";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import ListenControl from "../listens/ListenControl";
 
-export type PillProps = {
+export type NamePillProps = {
   title: string;
   closeAction?: (event: React.MouseEvent) => void;
   closeButton?: Boolean;
 };
 
-const Pill = (props: PillProps) => {
+const NamePill = (props: NamePillProps) => {
   const { title, closeAction, closeButton } = props;
   return (
     <div className="pill">
@@ -22,4 +22,4 @@ const Pill = (props: PillProps) => {
   );
 };
 
-export default Pill;
+export default NamePill;
