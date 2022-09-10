@@ -135,6 +135,7 @@ export default class PersonalRecommendationModal extends React.Component<
             "You personally recommended a track!",
             `${metadata.artist_name} - ${metadata.track_name}`
           );
+          this.setState({ blurbContent: "" });
         }
       } catch (error) {
         this.handleError(error, "Error while personally recommending");
