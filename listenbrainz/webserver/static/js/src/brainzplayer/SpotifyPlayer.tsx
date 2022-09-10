@@ -69,12 +69,19 @@ export default class SpotifyPlayer
   };
 
   static isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    // Retro-compatibility: listening_from has been deprecated in favor of music_service
     const listeningFrom = _get(
       listen,
       "track_metadata.additional_info.listening_from"
     );
+    const musicService = _get(
+      listen,
+      "track_metadata.additional_info.music_service"
+    );
     return (
       (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
+      (isString(musicService) &&
+        musicService.toLowerCase() === "spotify.com") ||
       Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
     );
   };
@@ -119,7 +126,15 @@ export default class SpotifyPlayer
   static getSpotifyURLFromListen(
     listen: Listen | JSPFTrack
   ): string | undefined {
-    return _get(listen, "track_metadata.additional_info.spotify_id");
+    const spotifyId = _get(listen, "track_metadata.additional_info.spotify_id");
+    if (spotifyId) {
+      return spotifyId;
+    }
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && /open\.spotify\.com\/track\//.test(originURL)) {
+      return originURL;
+    }
+    return undefined;
   }
 
   static getSpotifyTrackIDFromListen(listen: Listen | JSPFTrack): string {
@@ -255,17 +270,6 @@ export default class SpotifyPlayer
     } catch (error) {
       handleError(error.message);
     }
-  };
-
-  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
-    const listeningFrom = _get(
-      listen,
-      "track_metadata.additional_info.listening_from"
-    );
-    return (
-      (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
-      Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
-    );
   };
 
   canSearchAndPlayTracks = (): boolean => {
