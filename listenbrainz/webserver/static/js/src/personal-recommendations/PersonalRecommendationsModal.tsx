@@ -3,7 +3,7 @@ import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { uniq, includes, remove } from "lodash";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "../listens/ListenControl";
-import Pill from "./Pill";
+import NamePill from "./NamePill";
 import {
   getTrackName,
   getArtistName,
@@ -194,7 +194,7 @@ export default class PersonalRecommendationModal extends React.Component<
             <div className="modal-body">
               {users!.map((user) => {
                 return (
-                  <Pill
+                  <NamePill
                     title={user}
                     // eslint-disable-next-line react/jsx-no-bind
                     closeAction={this.removeUser.bind(this, user)}

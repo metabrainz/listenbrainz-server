@@ -31,7 +31,7 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
 import PinRecordingModal from "../pins/PinRecordingModal";
-import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendations";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,

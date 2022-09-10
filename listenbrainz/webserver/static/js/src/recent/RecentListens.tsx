@@ -33,7 +33,7 @@ import {
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
-import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendations";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
