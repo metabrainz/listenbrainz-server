@@ -39,12 +39,12 @@ def get(user_id: int):
             """), {
                 "user_id": user_id,
             })
-
-            if result.rowcount:
-                user_setting = result.fetchone()._asdict()
-                if not user_setting["timezone_name"]:
-                    user_setting["timezone_name"] = DEFAULT_TIMEZONE
-                return user_setting
+            row = result.mappings().first()
+            if row:
+                row = dict(row)
+                if not row["timezone_name"]:
+                    row["timezone_name"] = DEFAULT_TIMEZONE
+                return row
             return {"timezone_name": DEFAULT_TIMEZONE}
         except sqlalchemy.exc.ProgrammingError as err:
             raise DatabaseException(

@@ -57,7 +57,7 @@ def create_user_timeline_event(
                 }
             )
 
-            return UserTimelineEvent(**result.fetchone()._asdict())
+            return UserTimelineEvent(**result.mappings().first())
     except Exception as e:
         raise DatabaseException(str(e))
 
@@ -152,7 +152,7 @@ def create_personal_recommendation_event(user_id: int, metadata:
                 }
             )
 
-            return UserTimelineEvent(**result.fetchone()._asdict())
+            return UserTimelineEvent(**result.mappings().first())
     except Exception as e:
         raise DatabaseException(str(e))
 
@@ -176,7 +176,7 @@ def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, co
             'count': count,
         })
 
-        return [UserTimelineEvent(**row._asdict()) for row in result.fetchall()]
+        return [UserTimelineEvent(**row) for row in result.mappings()]
 
 
 def get_user_track_recommendation_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
@@ -214,7 +214,7 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
             "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
         })
 
-        return [UserTimelineEvent(**row._asdict()) for row in result.fetchall()]
+        return [UserTimelineEvent(**row) for row in result.mappings()]
 
 
 def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
@@ -261,7 +261,7 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
             "event_type": UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
         })
 
-        return [UserTimelineEvent(**row._asdict()) for row in result.fetchall()]
+        return [UserTimelineEvent(**row) for row in result.mappings()]
 
 
 def get_cb_review_events(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
@@ -287,7 +287,7 @@ def get_cb_review_events(user_ids: List[int], min_ts: int, max_ts: int, count: i
             "event_type": UserTimelineEventType.CRITIQUEBRAINZ_REVIEW.value,
         })
 
-        return [UserTimelineEvent(**row._asdict()) for row in result.fetchall()]
+        return [UserTimelineEvent(**row) for row in result.mappings()]
 
 
 def get_user_timeline_event_by_id(id: int) -> UserTimelineEvent:
@@ -303,8 +303,8 @@ def get_user_timeline_event_by_id(id: int) -> UserTimelineEvent:
         """), {
             "id": id,
         })
-        row = result.fetchone()
-        return UserTimelineEvent(**row._asdict()) if row else None
+        row = result.mappings().first()
+        return UserTimelineEvent(**row) if row else None
 
 
 def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
@@ -354,7 +354,7 @@ def get_hidden_timeline_events(user_id: int, count: int) -> List[HiddenUserTimel
                 'count': count
                 }
             )
-            return [HiddenUserTimelineEvent(**row._asdict()) for row in result.fetchall()]
+            return [HiddenUserTimelineEvent(**row) for row in result.mappings()]
     except Exception as e:
         raise DatabaseException(str(e))
 

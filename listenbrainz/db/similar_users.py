@@ -1,7 +1,6 @@
 from operator import itemgetter
 import time
 
-import sqlalchemy
 import psycopg2
 from psycopg2.errors import OperationalError
 from psycopg2.extras import execute_values
