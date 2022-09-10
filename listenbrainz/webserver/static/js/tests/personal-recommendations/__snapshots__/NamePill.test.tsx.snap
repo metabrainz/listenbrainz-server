@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Pill renders correctly 1`] = `
-<Pill
+exports[`NamePill renders correctly 1`] = `
+<NamePill
   closeAction={[MockFunction]}
   closeButton={true}
   title="foobar"
@@ -91,5 +91,5 @@ exports[`Pill renders correctly 1`] = `
       </ListenControl>
     </div>
   </div>
-</Pill>
+</NamePill>
 `;
