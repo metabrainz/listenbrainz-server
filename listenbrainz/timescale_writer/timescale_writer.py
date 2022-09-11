@@ -87,6 +87,8 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
                 if duration:
                     data['duration'] = int(duration_ms)
 
+            msb_listens.append(data)
+
         try:
             msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
         except (messybrainz.exceptions.BadDataException, messybrainz.exceptions.ErrorAddingException):
