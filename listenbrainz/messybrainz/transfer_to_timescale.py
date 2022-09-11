@@ -9,13 +9,32 @@ Steps to move MsB to TS database.
     5. Switch MsB submission to new tables by updating TS writer.
     6. Profit!
 """
+import time
+from typing import Optional
 
+import psycopg2
+import sqlalchemy.engine
 from flask import current_app
 from psycopg2.extras import execute_values
-from sqlalchemy import text
+from sqlalchemy import text, create_engine
+from sqlalchemy.pool import NullPool
 
-from listenbrainz import messybrainz
 from listenbrainz.db import timescale
+
+
+msb_engine: Optional[sqlalchemy.engine.Engine] = None
+
+
+def init_old_msb_db_connection(connect_str):
+    global msb_engine
+    while True:
+        try:
+            msb_engine = create_engine(connect_str, poolclass=NullPool)
+            break
+        except psycopg2.OperationalError as e:
+            print("Couldn't establish connection to db: {}".format(str(e)))
+            print("Sleeping for 2 seconds and trying again...")
+            time.sleep(2)
 
 
 def retrieve_data(last_row_id):
@@ -34,7 +53,7 @@ def retrieve_data(last_row_id):
           ORDER BY r.id ASC
         FETCH NEXT 50000 ROWS ONLY
     """
-    with messybrainz.engine.connect() as msb_conn:
+    with msb_engine.connect() as msb_conn:
         results = msb_conn.execute(text(query), last_row_id=last_row_id)
         return results.fetchall()
 
@@ -62,7 +81,7 @@ def retrieve_last_transferred_row_id():
     latest = row["latest"]
     current_app.logger.info("Latest submission row found: %s", latest.isoformat())
 
-    with messybrainz.engine.connect() as msb_conn:
+    with msb_engine.connect() as msb_conn:
         result = msb_conn.execute(text("""
             SELECT COALESCE(max(id), 0) AS last_row_id
               FROM recording
@@ -82,6 +101,7 @@ def run():
     table. It will then only transfer rows submitted to old db since that submission time. This assumes
     that no row has been written to the new table manually.
     """
+    init_old_msb_db_connection(current_app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
     current_app.logger.info("Starting MsB transfer.")
     last_row_id = retrieve_last_transferred_row_id()
 
