@@ -539,6 +539,21 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
+    def test_string_duration_conversion(self):
+        """Test that api converts string durations to integer if possible (but users are discouraged from doing this)"""
+        with open(self.path_to_data_file('valid_duration.json'), 'r') as f:
+            payload = json.load(f)
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_ms"] = "300000"
+
+        response = self.send_data(payload, recalculate=True)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, 1, query_string={'count': '1'})
+        self.assert200(response)
+        self.assertEqual(300000, response.json["payload"]["listens"][0]["track_metadata"]["additional_info"]["duration_ms"])
+
     def test_unicode_null_error(self):
         with open(self.path_to_data_file('listen_having_unicode_null.json'), 'r') as f:
             payload = json.load(f)
