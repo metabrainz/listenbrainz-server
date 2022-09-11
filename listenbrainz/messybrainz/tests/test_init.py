@@ -54,11 +54,18 @@ class DataTestCase(TimescaleTestCase):
                 recording["title"], recording["artist"], recording["release"],\
                 recording["additional_info"]["track_number"], recording["additional_info"]["duration"]
             recording_msid = messybrainz.submit_recording(connection, title, artist, release, track_number, duration)
-            received_msid_1 = str(messybrainz.get_msid(connection, title, artist, release, track_number, duration))
+            received_msid_1 = messybrainz.get_msid(connection, title, artist, release, track_number, duration)
             self.assertEqual(recording_msid, received_msid_1)
 
+            results = connection.execute("SELECT * FROM messybrainz.submissions")
+            for row in results.fetchall():
+                print(row)
+
             recording_msid_2 = messybrainz.submit_recording(connection, title, artist, release)
-            received_msid_2 = str(messybrainz.get_msid(connection, title, artist, release))
+            received_msid_2 = messybrainz.get_msid(connection, title, artist, release)
+            results = connection.execute("SELECT * FROM messybrainz.submissions")
+            for row in results.fetchall():
+                print(row)
             self.assertEqual(recording_msid_2, received_msid_2)
 
             self.assertNotEqual(received_msid_1, received_msid_2)
@@ -74,7 +81,7 @@ class DataTestCase(TimescaleTestCase):
                 recording2["title"], recording2["artist"], recording2["release"], \
                 recording2["additional_info"]["track_number"], recording2["additional_info"]["duration"]
             msid1 = messybrainz.submit_recording(connection, title1, artist1, release1, track_number1, duration1)
-            msid2 = str(messybrainz.get_msid(connection, title2, artist2, release2, track_number2, duration2))
+            msid2 = messybrainz.get_msid(connection, title2, artist2, release2, track_number2, duration2)
             self.assertEqual(msid1, msid2)
 
     def test_load_recordings_from_msids(self):
