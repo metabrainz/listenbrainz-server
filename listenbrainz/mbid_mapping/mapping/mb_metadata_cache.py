@@ -6,7 +6,7 @@ from psycopg2.errors import OperationalError
 import psycopg2.extras
 import ujson
 
-from mapping.utils import create_schema, insert_rows, log
+from mapping.utils import insert_rows, log
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 import config
@@ -244,7 +244,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 ON acn.artist_credit = ac.id
                               JOIN artist a
                                 ON acn.artist = a.id
-                              JOIN artist_type  at
+                         LEFT JOIN artist_type  at
                                 ON a.type = at.id
                          LEFT JOIN gender ag
                                 ON a.gender = ag.id
