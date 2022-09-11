@@ -58,7 +58,7 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
         raise exceptions.ErrorAddingException("Failed to add data")
 
 
-def insert_all_in_transaction(submissions):
+def insert_all_in_transaction(submissions: list[dict]):
     """ Inserts a list of recordings into MessyBrainz.
 
     Args:
@@ -69,7 +69,14 @@ def insert_all_in_transaction(submissions):
     ret = []
     with timescale.engine.begin() as ts_conn:
         for submission in submissions:
-            result = submit_recording(ts_conn, submission["title"], submission["artist"], submission["release"])
+            result = submit_recording(
+                ts_conn,
+                submission["title"],
+                submission["artist"],
+                submission.get("release"),
+                submission.get("track_number"),
+                submission.get("duration")
+            )
             ret.append(result)
     return ret
 
@@ -157,24 +164,19 @@ def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str | uuid.
     messybrainz_ids = [str(msid) for msid in messybrainz_ids]
 
     query = text("""
-        SELECT DISTINCT gid::TEXT, recording, artist_credit, release
+        SELECT DISTINCT gid::TEXT AS msid, recording, artist_credit, release, track_number, duration
                    FROM messybrainz.submissions
                   WHERE gid IN :msids 
     """)
     result = connection.execute(query, {"msids": tuple(messybrainz_ids)})
-    msid_recording_map = {x["gid"]: x for x in result.mappings()}
+    msid_recording_map = {x["msid"]: x for x in result.mappings()}
 
-    # match results to every given mbid so list is returned in the same order
+    # match results to every given msid so the list is returned in the same order
     results = []
     for msid in messybrainz_ids:
         if msid not in msid_recording_map:
             continue
         row = msid_recording_map[msid]
-        results.append({
-            "msid": msid,
-            "title": row["recording"],
-            "artist": row["artist_credit"],
-            "release": row["release"]
-        })
+        results.append(row)
 
     return results
