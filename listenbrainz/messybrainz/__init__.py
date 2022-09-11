@@ -81,9 +81,10 @@ def get_msid(connection, recording, artist, release=None, track_number=None, dur
           FROM messybrainz.submissions
          WHERE lower(recording) = lower(:recording)
            AND lower(artist_credit) = lower(:artist_credit)
-           AND lower(release) = lower(:release)
-           AND lower(track_number) = lower(:track_number)
-           AND duration = :duration
+           -- NULL = NULL is NULL and not true so we need to handle NULLABLE fields separately
+           AND ((lower(release) = lower(:release)) OR (release IS NULL AND :release IS NULL))
+           AND ((lower(track_number) = lower(:track_number)) OR (track_number IS NULL AND :track_number IS NULL))
+           AND ((duration = :duration) OR (duration IS NULL AND :duration IS NULL))
     """)
     result = connection.execute(query, {
         "recording": recording,
@@ -111,8 +112,7 @@ def submit_recording(connection, recording, artist, release=None, track_number=N
         the Recording MessyBrainz ID of the data
     """
     msid = get_msid(connection, recording, artist, release, track_number, duration)
-    if msid:
-        # msid already exists in db
+    if msid:  # msid already exists in db
         return msid
 
     msid = uuid.uuid4()  # new msid
