@@ -75,7 +75,9 @@ def insert_all_in_transaction(submissions):
 
 
 def get_msid(connection, recording, artist, release=None, track_number=None, duration=None):
-    """ Retrieve the msid for a (recording, artist, release) triplet if present in the db """
+    """ Retrieve the msid for a (recording, artist, release, track_number, duration) tuple if present in the db. If
+     there are duplicates in the table, the earliest submitted MSID will be returned.
+    """
     query = text("""
         SELECT gid::TEXT
           FROM messybrainz.submissions
@@ -85,6 +87,13 @@ def get_msid(connection, recording, artist, release=None, track_number=None, dur
            AND ((lower(release) = lower(:release)) OR (release IS NULL AND :release IS NULL))
            AND ((lower(track_number) = lower(:track_number)) OR (track_number IS NULL AND :track_number IS NULL))
            AND ((duration = :duration) OR (duration IS NULL AND :duration IS NULL))
+           -- historically, different set of fields have been used in calculating msids. therefore, the data imported
+           -- from old MsB has duplicates when looked at from the current set of fields. we cannot delete such
+           -- duplicates from the table easily (at least need to update all occurences of such MSIDs in all places
+           -- MSIDs are used in LB). therefore to be consistent in future lookups, return the earliest submitted MSID
+           -- of all matching ones
+      ORDER BY submitted
+         LIMIT 1   
     """)
     result = connection.execute(query, {
         "recording": recording,

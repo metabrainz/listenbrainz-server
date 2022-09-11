@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA)
+from datetime import datetime, timedelta
+
+from sqlalchemy import text
 
 from listenbrainz import messybrainz
 from listenbrainz.db import timescale
@@ -57,15 +60,10 @@ class DataTestCase(TimescaleTestCase):
             received_msid_1 = messybrainz.get_msid(connection, title, artist, release, track_number, duration)
             self.assertEqual(recording_msid, received_msid_1)
 
-            results = connection.execute("SELECT * FROM messybrainz.submissions")
-            for row in results.fetchall():
-                print(row)
+            # now test a listen with only partial data and check that a different msid is assigned from before
 
             recording_msid_2 = messybrainz.submit_recording(connection, title, artist, release)
             received_msid_2 = messybrainz.get_msid(connection, title, artist, release)
-            results = connection.execute("SELECT * FROM messybrainz.submissions")
-            for row in results.fetchall():
-                print(row)
             self.assertEqual(recording_msid_2, received_msid_2)
 
             self.assertNotEqual(received_msid_1, received_msid_2)
@@ -95,3 +93,24 @@ class DataTestCase(TimescaleTestCase):
                 "artist": artist,
                 "release": release
             })
+
+    def test_get_msid_duplicates(self):
+        """ Test that in case of duplicates the earliest submitted msid is returned """
+        with timescale.engine.begin() as connection:
+            args = {
+                "msid1": "0becc74d-9ba9-44c5-afa4-2f4ffe380d67",
+                "msid2": "9b750fdd-222e-4500-a22e-a0a942d5e342",
+                "recording": "05 Mentira ...",
+                "artist_credit": "Manu Chao",
+                "release": "Clandestino",
+                "submitted1": datetime.now(),
+                "submitted2": datetime.now() + timedelta(days=1)
+            }
+            connection.execute(text("""
+                INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, submitted)
+                     VALUES (:msid1, :recording, :artist_credit, :release, :submitted1),
+                            (:msid2, :recording, :artist_credit, :release, :submitted2)
+            """), args)
+
+            received_msid = messybrainz.get_msid(connection, args["recording"], args["artist_credit"], args["release"])
+            self.assertEqual(args["msid1"], received_msid)
