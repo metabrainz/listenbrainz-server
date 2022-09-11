@@ -47,7 +47,6 @@ class DataTestCase(TimescaleTestCase):
     def test_submit_recording(self):
         with timescale.engine.begin() as connection:
             title, artist, release = recording["title"], recording["artist"], recording["release"]
-            title, artist, release = recording["title"], recording["artist"], recording["release"]
             recording_msid = messybrainz.submit_recording(connection, title, artist, release)
             self.assertEqual(recording_msid, str(messybrainz.get_msid(connection, title, artist, release)))
 
