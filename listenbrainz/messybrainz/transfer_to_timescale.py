@@ -6,7 +6,7 @@ Steps to move MsB to TS database.
     2. Run the script for first time.
     3. Stop TS writer.
     4. Rerun the script to insert submissions since first run.
-    5. Switch MsB submission to new tables.
+    5. Switch MsB submission to new tables by updating TS writer.
     6. Profit!
 """
 
@@ -25,6 +25,7 @@ def retrieve_data(last_row_id):
                  , rj.data->>'title' AS recording
                  , rj.data->>'artist' AS artist
                  , rj.data->>'release' AS release
+                 , rj.data->>'track_number' AS track_number
                  , r.submitted
               FROM recording r
               JOIN recording_json rj
@@ -41,7 +42,9 @@ def retrieve_data(last_row_id):
 def insert_data(values):
     raw_conn = timescale.engine.raw_connection()
     query = """
-        INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, submitted)
+        -- note that we are leaving out duration here, that is because it has not historically been a part of
+        -- MsB so existing data in MsB will not have this field
+        INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, track_number, submitted)
              VALUES %s
     """
     with raw_conn.cursor() as curs:
@@ -94,6 +97,7 @@ def run():
                 row["recording"],
                 row["artist"],
                 row["release"],
+                row["track_number"],
                 row["submitted"]
             ))
             last_row_id = row["id"]

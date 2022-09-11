@@ -74,7 +74,7 @@ def insert_all_in_transaction(submissions):
     return ret
 
 
-def get_msid(connection, recording, artist, release):
+def get_msid(connection, recording, artist, release=None, track_number=None, duration=None):
     """ Retrieve the msid for a (recording, artist, release) triplet if present in the db """
     query = text("""
         SELECT gid::TEXT
@@ -82,13 +82,21 @@ def get_msid(connection, recording, artist, release):
          WHERE lower(recording) = lower(:recording)
            AND lower(artist_credit) = lower(:artist_credit)
            AND lower(release) = lower(:release)
+           AND lower(track_number) = lower(:track_number)
+           AND duration = :duration
     """)
-    result = connection.execute(query, recording=recording, artist_credit=artist, release=release)
+    result = connection.execute(query, {
+        "recording": recording,
+        "artist_credit": artist,
+        "release": release,
+        "track_number": track_number,
+        "duration": duration
+    })
     row = result.fetchone()
-    return row["gid"] if row else None
+    return row.gid if row else None
 
 
-def submit_recording(connection, recording, artist, release):
+def submit_recording(connection, recording, artist, release=None, track_number=None, duration=None):
     """ Submits a new recording to MessyBrainz.
 
     Args:
@@ -96,21 +104,30 @@ def submit_recording(connection, recording, artist, release):
         recording: recording name of the submitted listen
         artist: artist name of the submitted listen
         release: release name of the submitted listen
+        track_number: track number of the recording of which the submitted listen is
+        duration: the length of the track of which the submitted listen is in milliseconds
 
     Returns:
         the Recording MessyBrainz ID of the data
     """
-    msid = get_msid(connection, recording, artist, release)
+    msid = get_msid(connection, recording, artist, release, track_number, duration)
     if msid:
         # msid already exists in db
         return msid
 
     msid = uuid.uuid4()  # new msid
     query = text("""
-        INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release)
-             VALUES (:msid, :recording, :artist_credit, :release)
+        INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, track_number, duration)
+             VALUES (:msid, :recording, :artist_credit, :release, :track_number, :duration)
     """)
-    connection.execute(query, msid=msid, recording=recording, artist_credit=artist, release=release)
+    connection.execute(query, {
+        "msid": msid,
+        "recording": recording,
+        "artist_credit": artist,
+        "release": release,
+        "track_number": track_number,
+        "duration": duration
+    })
     return str(msid)
 
 
@@ -135,13 +152,8 @@ def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str | uuid.
                    FROM messybrainz.submissions
                   WHERE gid IN :msids 
     """)
-    result = connection.execute(query, msids=tuple(messybrainz_ids))
-    rows = result.fetchall()
-
-    if not rows:
-        return []
-
-    msid_recording_map = {x["gid"]: x for x in rows}
+    result = connection.execute(query, {"msids": tuple(messybrainz_ids)})
+    msid_recording_map = {x["gid"]: x for x in result.mappings()}
 
     # match results to every given mbid so list is returned in the same order
     results = []
