@@ -67,14 +67,26 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         return ret
 
     def messybrainz_lookup(self, listens):
-        msb_listens = [
-            {
+        msb_listens = []
+        for listen in listens:
+            if 'additional_info' not in listen['track_metadata']:
+                listen['track_metadata']['additional_info'] = {}
+
+            data = {
                 'artist': listen['track_metadata']['artist_name'],
                 'title': listen['track_metadata']['track_name'],
-                'release': listen['track_metadata'].get('release_name')
+                'release': listen['track_metadata'].get('release_name'),
+                'track_number': listen['track_metadata']['additional_info'].get('track_number')
             }
-            for listen in listens
-        ]
+
+            duration = listen['track_metadata']['additional_info'].get('duration')
+            if duration:
+                data['duration'] = int(duration * 1000)  # convert into ms
+            else:  # try duration_ms field next
+                duration_ms = listen['track_metadata']['additional_info'].get('duration_ms')
+                if duration:
+                    data['duration'] = int(duration_ms)
+
         try:
             msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
         except (messybrainz.exceptions.BadDataException, messybrainz.exceptions.ErrorAddingException):
@@ -83,8 +95,6 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
         augmented_listens = []
         for listen, msid in zip(listens, msb_responses):
-            if 'additional_info' not in listen['track_metadata']:
-                listen['track_metadata']['additional_info'] = {}
             listen['recording_msid'] = msid
             augmented_listens.append(listen)
         return augmented_listens
