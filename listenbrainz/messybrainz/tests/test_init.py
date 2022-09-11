@@ -114,3 +114,27 @@ class DataTestCase(TimescaleTestCase):
 
             received_msid = messybrainz.get_msid(connection, args["recording"], args["artist_credit"], args["release"])
             self.assertEqual(args["msid1"], received_msid)
+
+    def test_insert_all_in_transaction(self):
+        submissions: list[dict] = [
+            {
+                'artist': 'Frank Ocean',
+                'release': 'Blond',
+                'title': 'Pretty Sweet'
+            },
+            {
+                'artist': 'Frank Ocean',
+                'release': 'Blond',
+                'title': 'Pretty Sweet',
+                'track_number': '5/12',
+                'duration': 56000
+            }
+        ]
+        msids = messybrainz.insert_all_in_transaction(submissions)
+        with timescale.engine.begin() as conn:
+            received = messybrainz.load_recordings_from_msids(conn, msids)
+        submissions[0]['track_number'] = None
+        submissions[0]['duration'] = None
+
+        self.assertListEqual(submissions, received)
+
