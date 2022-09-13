@@ -91,7 +91,9 @@ class DataTestCase(TimescaleTestCase):
                 "msid": recording_msid,
                 "title": title,
                 "artist": artist,
-                "release": release
+                "release": release,
+                "duration": None,
+                "track_number": None
             })
 
     def test_get_msid_duplicates(self):
@@ -135,6 +137,9 @@ class DataTestCase(TimescaleTestCase):
             received = messybrainz.load_recordings_from_msids(conn, msids)
         submissions[0]['track_number'] = None
         submissions[0]['duration'] = None
+
+        submissions[0]['msid'] = received[0]
+        submissions[1]['msid'] = received[1]
 
         self.assertListEqual(submissions, received)
 
