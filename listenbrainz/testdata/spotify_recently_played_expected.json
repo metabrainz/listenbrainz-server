@@ -16,7 +16,9 @@
                         "discnumber": 1,
                         "duration_ms": 238805,
                         "isrc": "GBUM72000433",
-                        "listening_from": "spotify",
+                        "music_service": "spotify.com",
+                        "submission_client": "listenbrainz",
+                        "origin_url": "https://open.spotify.com/track/02MWAaffLxlfxAUY7c5dvx",
                         "recording_msid": "dce97a5f-09ad-4605-a239-4532abe7c8b2",
                         "release_artist_name": "Glass Animals",
                         "release_artist_names": [

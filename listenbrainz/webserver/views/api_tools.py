@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Dict, Tuple
 from urllib.parse import urlparse
 
@@ -273,12 +272,17 @@ def log_raise_400(msg, data=""):
 
 
 def validate_duration_field(listen, key):
-    if key in listen['track_metadata']['additional_info']:
-        duration = listen['track_metadata']['additional_info'][key]
+    additional_info = listen["track_metadata"]["additional_info"]
+    if key in additional_info:
+        duration = additional_info[key]
         try:
+            # the listen submission docs say we accept only integers for duration fields, but the current validation
+            # also allows strings if those are convertible to integers. we need this to work around api_compat quirks.
+            # see commit message for details.
             value = int(duration)
             if value <= 0:
                 raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)
+            additional_info[key] = value
         except (ValueError, TypeError):
             raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)
 

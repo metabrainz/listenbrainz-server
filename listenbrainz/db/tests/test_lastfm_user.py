@@ -31,7 +31,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
                 "id": uid,
             })
             row = result.fetchone()
-            self.user = User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
+            self.user = User(row.id, row.created, row.musicbrainz_id, row.auth_token)
 
     def tearDown(self):
         super(TestAPICompatUserClass, self).tearDown()

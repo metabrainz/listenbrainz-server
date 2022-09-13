@@ -6,7 +6,7 @@ from psycopg2.errors import OperationalError
 import psycopg2.extras
 import ujson
 
-from mapping.utils import create_schema, insert_rows, log
+from mapping.utils import insert_rows, log
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 import config
@@ -170,10 +170,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 SELECT a.gid
                                      , array_agg(distinct(ARRAY[lt.name, url])) AS artist_links
                                   FROM recording r
-                                  JOIN artist_credit ac
-                                    ON r.artist_credit = ac.id
                                   JOIN artist_credit_name acn
-                                    ON acn.artist_credit = ac.id
+                                 USING (artist_credit)
+                                -- we cannot directly start as FROM artist a because the values_join JOINs on recording
                                   JOIN artist a
                                     ON acn.artist = a.id
                              LEFT JOIN l_artist_url lau
@@ -238,13 +237,11 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                                               ,ar.name
                                                               ,artist_links)) AS artist_data
                               FROM recording r
-                              JOIN artist_credit ac
-                                ON r.artist_credit = ac.id
                               JOIN artist_credit_name acn
-                                ON acn.artist_credit = ac.id
+                             USING (artist_credit)
                               JOIN artist a
                                 ON acn.artist = a.id
-                              JOIN artist_type  at
+                         LEFT JOIN artist_type at
                                 ON a.type = at.id
                          LEFT JOIN gender ag
                                 ON a.gender = ag.id
@@ -271,10 +268,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                             SELECT r.gid AS recording_mbid
                                  , array_agg(jsonb_build_array(t.name, count, a.gid, g.gid)) AS artist_tags
                               FROM recording r
-                              JOIN artist_credit ac
-                                ON r.artist_credit = ac.id
                               JOIN artist_credit_name acn
-                                ON acn.artist_credit = ac.id
+                             USING (artist_credit)
                               JOIN artist a
                                 ON acn.artist = a.id
                               JOIN artist_tag at
@@ -345,14 +340,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                               FROM recording r
                               JOIN artist_credit ac
                                 ON r.artist_credit = ac.id
-                              JOIN artist_credit_name acn
-                                ON acn.artist_credit = ac.id
-                              JOIN artist a
-                                ON acn.artist = a.id
-                              JOIN artist_type  at
-                                ON a.type = at.id
-                              JOIN gender ag
-                                ON a.type = ag.id
                          LEFT JOIN artist_data ard
                                 ON ard.gid = r.gid
                          LEFT JOIN recording_rels rrl

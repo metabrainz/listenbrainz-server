@@ -1,3 +1,5 @@
+from brainzutils import cache
+from brainzutils.ratelimit import set_rate_limits
 from flask import url_for
 from typing import List
 from unittest.mock import patch
@@ -19,8 +21,17 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
     return pins
 
 
-
 class PinnedRecAPITestCase(IntegrationTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(PinnedRecAPITestCase, cls).setUpClass()
+        set_rate_limits(5000, 50000, 10)
+
+    @classmethod
+    def tearDownClass(cls):
+        cache._r.flushdb()
+        super(PinnedRecAPITestCase, cls).tearDownClass()
 
     def setUp(self):
         super(PinnedRecAPITestCase, self).setUp()

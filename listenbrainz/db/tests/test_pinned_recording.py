@@ -14,17 +14,15 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
-from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 from listenbrainz.db import timescale as ts
 from listenbrainz import messybrainz as msb_db
 
 
-class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
+class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
-        MessyBrainzTestCase.setUp(self)
         self.user = db_user.get_or_create(1, "test_user")
         self.followed_user_1 = db_user.get_or_create(2, "followed_user_1")
         self.followed_user_2 = db_user.get_or_create(3, "followed_user_2")
@@ -108,8 +106,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             }
         ]
 
-        submitted_data = msb_db.insert_all_in_transaction(recordings)
-        msids = [x["ids"]["recording_msid"] for x in submitted_data]
+        msids = msb_db.insert_all_in_transaction(recordings)
 
         with ts.engine.begin() as connection:
             query = """
@@ -128,7 +125,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
             query = """INSERT INTO mbid_mapping
                                    (recording_msid, recording_mbid, match_type, last_updated)
                             VALUES (:msid, '076255b4-1575-11ec-ac84-135bf6a670e3', 'exact_match', now())"""
-            connection.execute(sqlalchemy.text(query), msid=msids[0])
+            connection.execute(sqlalchemy.text(query), {"msid": msids[0]})
 
         pinned_recs = [
             {

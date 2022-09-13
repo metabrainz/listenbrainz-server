@@ -35,7 +35,7 @@ class StatsAPITestCase(IntegrationTestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST, config.COUCHDB_PORT)
+        super(StatsAPITestCase, cls).setUpClass()
         stats = ["artists", "releases", "recordings", "daily_activity", "listening_activity", "artistmap"]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
