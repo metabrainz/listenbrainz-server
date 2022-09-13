@@ -81,11 +81,11 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
             duration = listen['track_metadata']['additional_info'].get('duration')
             if duration:
-                data['duration'] = int(duration * 1000)  # convert into ms
+                data['duration'] = duration * 1000  # convert into ms
             else:  # try duration_ms field next
                 duration_ms = listen['track_metadata']['additional_info'].get('duration_ms')
                 if duration:
-                    data['duration'] = int(duration_ms)
+                    data['duration'] = duration_ms
 
             msb_listens.append(data)
 
