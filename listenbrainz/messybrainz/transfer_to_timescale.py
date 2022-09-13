@@ -65,6 +65,7 @@ def insert_data(values):
         -- MsB so existing data in MsB will not have this field
         INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, track_number, submitted)
              VALUES %s
+             ON CONFLICT (gid) DO NOTHING
     """
     with raw_conn.cursor() as curs:
         execute_values(curs, query, values)
