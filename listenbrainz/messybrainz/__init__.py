@@ -147,12 +147,12 @@ def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str | uuid.
     messybrainz_ids = [str(msid) for msid in messybrainz_ids]
 
     query = text("""
-        SELECT DISTINCT gid::TEXT AS msid, recording, artist_credit, release, track_number, duration
+        SELECT DISTINCT gid::TEXT AS msid, recording AS title, artist_credit AS artist, release, track_number, duration
                    FROM messybrainz.submissions
                   WHERE gid IN :msids 
     """)
     result = connection.execute(query, {"msids": tuple(messybrainz_ids)})
-    msid_recording_map = {x["msid"]: x for x in result.mappings()}
+    msid_recording_map = {x["msid"]: dict(x) for x in result.mappings()}
 
     # match results to every given msid so the list is returned in the same order
     results = []
