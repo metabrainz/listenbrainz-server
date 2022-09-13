@@ -106,16 +106,18 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
     _update_items_from_map(mbid_item_map, mapping_mbid_metadata, remaining_item_map)
     _update_items_from_map(msid_item_map, mapping_msid_metadata, remaining_item_map)
 
-    msid_metadatas = load_recordings_from_msids(remaining_item_map.keys())
+    with timescale.engine.begin() as connection:
+        msid_metadatas = load_recordings_from_msids(connection, remaining_item_map.keys())
+
     for metadata in msid_metadatas:
-        msid = metadata["ids"]["recording_msid"]
+        msid = metadata["msid"]
         if msid not in remaining_item_map:
             continue
 
         for item in remaining_item_map[msid]:
             item.track_metadata = {
-                "track_name": metadata["payload"]["title"],
-                "artist_name": metadata["payload"]["artist"],
+                "track_name": metadata["title"],
+                "artist_name": metadata["artist"],
                 "additional_info": {
                     "recording_msid": msid
                 }
