@@ -5,16 +5,14 @@ import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts
 from listenbrainz import messybrainz as msb_db
-from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 
-class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
+class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
-        MessyBrainzTestCase.setUp(self)
         self.user = db_user.get_or_create(1, "recording_feedback_user")
 
         self.sample_feedback = [
@@ -41,7 +39,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         ]
         self.sample_recording = {
             "title": "Strangers",
-            "artist": "Portishead"
+            "artist": "Portishead",
+            "release": None
         }
         self.sample_feedback_with_metadata = [
             {
@@ -67,10 +66,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
     def insert_test_data_with_metadata(self, user_id):
         """ Insert test data with metadata into the database """
-
-        with msb_db.engine.begin() as connection:
-            submitted = msb_db.insert_single(connection, self.sample_recording)
-            msid = str(submitted["ids"]["recording_msid"])
+        msid = msb_db.insert_all_in_transaction([self.sample_recording])[0]
 
         self.sample_feedback_with_metadata[0]["recording_msid"] = msid
 

@@ -22,8 +22,10 @@ interface AdditionalInfo {
   artist_msid?: string | null;
   discnumber?: number | null;
   duration_ms?: number | null;
+  duration?: number | null;
   isrc?: string | null;
-  listening_from?: string | null;
+  listening_from?: string | null; // Deprecated
+  music_service?: string | null;
   recording_mbid?: string | null;
   recording_msid?: string | null;
   release_artist_name?: string | null;
@@ -35,6 +37,7 @@ interface AdditionalInfo {
   spotify_album_id?: string | null;
   spotify_artist_ids?: Array<string> | null;
   spotify_id?: string | null;
+  submission_client?: string | null;
   youtube_id?: string | null;
   origin_url?: string | null;
   tags?: Array<string> | null;

@@ -69,27 +69,25 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
     def messybrainz_lookup(self, listens):
         msb_listens = []
         for listen in listens:
-            messy_dict = {
+            if 'additional_info' not in listen['track_metadata']:
+                listen['track_metadata']['additional_info'] = {}
+
+            data = {
                 'artist': listen['track_metadata']['artist_name'],
                 'title': listen['track_metadata']['track_name'],
+                'release': listen['track_metadata'].get('release_name'),
+                'track_number': listen['track_metadata']['additional_info'].get('track_number')
             }
-            if 'release_name' in listen['track_metadata']:
-                messy_dict['release'] = listen['track_metadata']['release_name']
 
-            if 'additional_info' in listen['track_metadata']:
-                ai = listen['track_metadata']['additional_info']
-                if 'artist_mbids' in ai and isinstance(ai['artist_mbids'], list):
-                    messy_dict['artist_mbids'] = sorted(ai['artist_mbids'])
-                if 'release_mbid' in ai:
-                    messy_dict['release_mbid'] = ai['release_mbid']
-                if 'recording_mbid' in ai:
-                    messy_dict['recording_mbid'] = ai['recording_mbid']
-                if 'track_number' in ai:
-                    messy_dict['track_number'] = ai['track_number']
-                if 'spotify_id' in ai:
-                    messy_dict['spotify_id'] = ai['spotify_id']
+            duration = listen['track_metadata']['additional_info'].get('duration')
+            if duration:
+                data['duration'] = duration * 1000  # convert into ms
+            else:  # try duration_ms field next
+                duration_ms = listen['track_metadata']['additional_info'].get('duration_ms')
+                if duration:
+                    data['duration'] = duration_ms
 
-            msb_listens.append(messy_dict)
+            msb_listens.append(data)
 
         try:
             msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
@@ -98,24 +96,8 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
             return []
 
         augmented_listens = []
-        for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
-            messybrainz_resp = messybrainz_resp['ids']
-
-            if 'additional_info' not in listen['track_metadata']:
-                listen['track_metadata']['additional_info'] = {}
-
-            try:
-                listen['recording_msid'] = messybrainz_resp['recording_msid']
-                listen['track_metadata']['additional_info']['artist_msid'] = messybrainz_resp['artist_msid']
-            except KeyError:
-                current_app.logger.error("MessyBrainz did not return a proper set of ids")
-                return []
-
-            try:
-                listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
-            except KeyError:
-                pass
-
+        for listen, msid in zip(listens, msb_responses):
+            listen['recording_msid'] = msid
             augmented_listens.append(listen)
         return augmented_listens
 

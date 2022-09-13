@@ -19,7 +19,7 @@
 						"discnumber": 1,
 						"duration_ms": 254815,
 						"isrc": "EEVC11700034",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "45ddbea4-79ee-4462-be9c-20a55bb5c20d",
 						"release_artist_name": "Tintura + Arno Tamm",
 						"release_artist_names": [
@@ -60,7 +60,7 @@
 						"discnumber": 1,
 						"duration_ms": 231351,
 						"isrc": "EEVC11700033",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "866818d9-a17b-43fc-b32a-3d9fbdc59fdb",
 						"release_artist_name": "Tintura + Arno Tamm",
 						"release_artist_names": [
@@ -101,7 +101,7 @@
 						"discnumber": 1,
 						"duration_ms": 325450,
 						"isrc": "EEVC11700032",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "d92c1f4e-b793-4ac5-a697-c2702563abbf",
 						"release_artist_name": "Tintura + Arno Tamm",
 						"release_artist_names": [
@@ -170,7 +170,7 @@
 						"discnumber": 1,
 						"duration_ms": 206193,
 						"isrc": "EEVC11700029",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "dc4e6b2c-a2fe-4a5d-a75a-736b87395046",
 						"release_artist_name": "Tintura + Arno Tamm",
 						"release_artist_names": [
@@ -211,7 +211,7 @@
 						"discnumber": 1,
 						"duration_ms": 165511,
 						"isrc": "EEVC11700028",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "2d1d1f67-60a5-4558-a5c6-b413c8374df5",
 						"release_artist_name": "Tintura + Arno Tamm",
 						"release_artist_names": [
@@ -255,7 +255,7 @@
 						"discnumber": 1,
 						"duration_ms": 200135,
 						"isrc": "FIUM72100016",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "20be8c56-c45e-4d5b-b1fa-9e3880410963",
 						"release_artist_name": "Pitsa",
 						"release_artist_names": [
@@ -302,7 +302,7 @@
 						"discnumber": 1,
 						"duration_ms": 120135,
 						"isrc": "FIUM72100015",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "6a62ea39-5661-4c5a-b6a0-470da1d0f921",
 						"release_artist_name": "Pitsa",
 						"release_artist_names": [
@@ -349,7 +349,7 @@
 						"discnumber": 1,
 						"duration_ms": 129547,
 						"isrc": "FIUM72100014",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "0eb7e0ec-f68b-4981-8d93-523aec9edbbc",
 						"release_artist_name": "Pitsa",
 						"release_artist_names": [
@@ -396,7 +396,7 @@
 						"discnumber": 1,
 						"duration_ms": 162932,
 						"isrc": "FIUM72100013",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "cd51317b-ff6e-4711-98fd-8b25a4c8e730",
 						"release_artist_name": "Pitsa",
 						"release_artist_names": [
@@ -444,7 +444,7 @@
 						"discnumber": 1,
 						"duration_ms": 226421,
 						"isrc": "FIUM72100012",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "efa4a107-7e2a-4519-860d-1ac758357ca9",
 						"release_artist_name": "Pitsa",
 						"release_artist_names": [
@@ -492,7 +492,7 @@
 						"discnumber": 1,
 						"duration_ms": 185092,
 						"isrc": "FIUM72100011",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "5bbefb15-27e8-4b57-b099-88ce9042d191",
 						"release_artist_name": "Pitsa",
 						"release_artist_names": [
@@ -539,7 +539,7 @@
 						"discnumber": 1,
 						"duration_ms": 216720,
 						"isrc": "FIUM72000442",
-						"listening_from": "spotify",
+						"music_service": "spotify.com",
 						"recording_msid": "411962f8-8dc1-47db-a766-b8f2a2c1a11c",
 						"release_artist_name": "Pitsa",
 						"release_artist_names": [
@@ -586,7 +586,7 @@
 					"discnumber": 1,
 					"duration_ms": 223184,
 					"isrc": "FIUM72100010",
-					"listening_from": "spotify",
+					"music_service": "spotify.com",
 					"recording_msid": "6469fb75-fef4-4c17-8c28-ab7b4f13feba",
 					"release_artist_name": "Pitsa",
 					"release_artist_names": [
@@ -634,7 +634,7 @@
 					"discnumber": 1,
 					"duration_ms": 197278,
 					"isrc": "FIUM72100009",
-					"listening_from": "spotify",
+					"music_service": "spotify.com",
 					"recording_msid": "2a6e8522-21a9-4f76-aed6-90b26e080991",
 					"release_artist_name": "Pitsa",
 					"release_artist_names": [
@@ -682,7 +682,7 @@
 					"discnumber": 1,
 					"duration_ms": 196135,
 					"isrc": "FIUM72000406",
-					"listening_from": "spotify",
+					"music_service": "spotify.com",
 					"recording_msid": "abc41027-81f5-45dc-8a44-6db0992cee26",
 					"release_artist_name": "Pitsa",
 					"release_artist_names": [
@@ -729,7 +729,7 @@
 					"discnumber": 1,
 					"duration_ms": 219134,
 					"isrc": "FIUM72000381",
-					"listening_from": "spotify",
+					"music_service": "spotify.com",
 					"recording_msid": "7989a204-f7f8-430c-8c5a-4028a61d4d9c",
 					"release_artist_name": "Pitsa",
 					"release_artist_names": [

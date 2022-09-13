@@ -52,7 +52,7 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
             })
 
         if record_listens:
-            external_service_oauth_id = result.fetchone()['id']
+            external_service_oauth_id = result.fetchone().id
             connection.execute(sqlalchemy.text("""
                 INSERT INTO listens_importer
                 (external_service_oauth_id, user_id, service)
@@ -153,6 +153,4 @@ def get_token(user_id: int, service: ExternalServiceType) -> Union[dict, None]:
                 'user_id': user_id,
                 'service': service.value
             })
-        if result.rowcount > 0:
-            return dict(result.fetchone())
-        return None
+        return result.mappings().first()

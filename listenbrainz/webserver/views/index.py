@@ -1,3 +1,4 @@
+import json
 import locale
 import os
 import requests
@@ -92,6 +93,27 @@ def about():
 @index_bp.route("/terms-of-service/")
 def terms_of_service():
     return render_template("index/terms-of-service.html")
+
+
+@index_bp.route("/blog-data/")
+def blog_data():
+    """Proxy to the MetaBrainz blog to get recent posts so that user IP addresses are not leaked to wordpress"""
+
+    cache_key = "blog-feed"
+    cache_blog_expires = 60*60
+    cached_blog = cache.get(cache_key)
+    if cached_blog:
+        return jsonify(cached_blog)
+
+    url = "https://public-api.wordpress.com/rest/v1.1/sites/blog.metabrainz.org/posts/"
+    try:
+        r = requests.get(url, timeout=5)
+        r.raise_for_status()
+        blog_data = r.json()
+        cache.set(cache_key, blog_data, cache_blog_expires)
+        return jsonify(blog_data)
+    except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
+        return jsonify({}), 503
 
 
 @index_bp.route("/current-status/")
