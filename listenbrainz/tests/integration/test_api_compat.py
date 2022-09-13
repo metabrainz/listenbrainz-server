@@ -127,7 +127,10 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         # Check if listen reached the timescale listenstore
         time.sleep(0.5)
         recalculate_all_user_data()
-        listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=data["timestamp[0]"]-1)
+
+        url = url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, num_items=1, query_string={'from_ts': data["timestamp[0]"] - 1})
+        listens = json.loads(response.data)['payload']['listens']
         self.assertEqual(len(listens), 1)
 
     def test_record_listen_now_playing(self):
@@ -270,7 +273,10 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         # Check if listen reached the timescale listenstore
         time.sleep(0.5)
         recalculate_all_user_data()
-        listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
+
+        url = url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, num_items=1, query_string={'from_ts': timestamp - 1})
+        listens = json.loads(response.data)['payload']['listens']
         self.assertEqual(len(listens), 1)
 
     def test_record_invalid_listen(self):
@@ -330,7 +336,10 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         # Check if listens reached the timescale listenstore
         time.sleep(0.5)
         recalculate_all_user_data()
-        listens, _, _ = self.ls.fetch_listens(self.lb_user, from_ts=timestamp-1)
+
+        url = url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, num_items=1, query_string={'from_ts': timestamp - 1})
+        listens = json.loads(response.data)['payload']['listens']
         self.assertEqual(len(listens), 2)
 
     def test_create_response_for_single_listen(self):
