@@ -85,10 +85,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         # make sure that artist msid, release msid and recording msid are present in data
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
-        self.assertTrue(is_valid_uuid(
-            data['listens'][0]['track_metadata']['additional_info']['artist_msid']))
-        self.assertTrue(is_valid_uuid(
-            data['listens'][0]['track_metadata']['additional_info']['release_msid']))
 
         # check for latest listen timestamp
         self.assertEqual(data['latest_listen_ts'], ts)
