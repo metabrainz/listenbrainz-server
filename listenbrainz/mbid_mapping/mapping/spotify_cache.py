@@ -39,11 +39,6 @@ class UniqueQueue(object):
         return self.queue.empty()
 
 
-import http
-
-http.client.HTTPConnection.debuglevel = 1
-
-
 class SpotifyMetadataCache:
 
     COUCHDB_NAME = "spotify-metadata-cache"
