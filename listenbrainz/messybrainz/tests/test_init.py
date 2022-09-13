@@ -138,8 +138,8 @@ class DataTestCase(TimescaleTestCase):
         submissions[0]['track_number'] = None
         submissions[0]['duration'] = None
 
-        submissions[0]['msid'] = received[0]
-        submissions[1]['msid'] = received[1]
+        submissions[0]['msid'] = msids[0]
+        submissions[1]['msid'] = msids[1]
 
         self.assertListEqual(submissions, received)
 
