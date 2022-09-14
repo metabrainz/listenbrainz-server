@@ -121,12 +121,12 @@ class SpotifyIdsQueue(threading.Thread):
             if results.get("items"):
                 tracks.extend(results.get("items"))
 
-            for track in tracks:
-                for track_artist in track.get("artists"):
-                    if track_artist["id"]:
-                        self.discover_albums(track_artist["id"])
+        for track in tracks:
+            for track_artist in track.get("artists"):
+                if track_artist["id"]:
+                    self.discover_albums(track_artist["id"])
 
-            album["tracks"] = tracks
+        album["tracks"] = tracks
 
         return album
 
