@@ -79,14 +79,12 @@ class SpotifyIdsQueue(threading.Thread):
         self.join()
 
     def update_metrics(self, stats):
-        """ Calculate stats and self.app.logger.info status to stdout and report metrics."""
+        """ Calculate stats and print status to stdout and report metrics."""
         # metrics.set("listenbrainz-spotify-metadata-cache", )
 
     def fetch_artist(self, artist_id):
-        self.app.logger.info("Fetch artist")
         artist = self.sp.artist(artist_id)
 
-        self.app.logger.info("Fetch albums")
         results = self.sp.artist_albums(artist_id, album_type='album,single,compilation')
         albums = results.get('items')
         if not albums:
@@ -97,7 +95,6 @@ class SpotifyIdsQueue(threading.Thread):
             if results.get('items'):
                 albums.extend(results.get('items'))
 
-        self.app.logger.info("Fetch tracks")
         for album in albums:
             results = self.sp.album_tracks(album["id"], limit=50)
             tracks = results.get("items")
@@ -116,7 +113,6 @@ class SpotifyIdsQueue(threading.Thread):
             album["tracks"] = tracks
 
         artist["albums"] = albums
-        self.app.logger.info("Fetch artist complete")
 
         return artist
 
