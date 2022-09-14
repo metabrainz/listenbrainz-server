@@ -46,8 +46,6 @@ CREATE INDEX messybrainz_duration_ndx ON messybrainz.submissions (duration);
 
 
 -- spotify_metadata_cache
-CREATE UNIQUE INDEX spotify_metadata_cache_spotify_id_ndx ON mapping.spotify_metadata_cache (spotify_id);
-CREATE INDEX spotify_metadata_cache_album_ids_ndx ON mapping.spotify_metadata_cache USING GIN ((data->'albums') jsonb_path_ops);
-
+CREATE UNIQUE INDEX spotify_metadata_cache_album_id_ndx ON mapping.spotify_metadata_cache (album_id);
 
 COMMIT;

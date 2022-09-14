@@ -18,8 +18,10 @@ from brainzutils import metrics, cache
 UPDATE_INTERVAL = 60  # in seconds
 CACHE_TIME = 180  # in days
 
-DISCOVERED_ARTIST_PRIORITY = 1
-INCOMING_ARTIST_PRIORITY = 0
+DISCOVERED_ALBUM_PRIORITY = 1
+INCOMING_ALBUM_PRIORITY = 0
+
+CACHE_KEY_PREFIX = "spotify:album:"
 
 
 @dataclass(order=True, eq=True, frozen=True)
@@ -63,6 +65,7 @@ class SpotifyIdsQueue(threading.Thread):
         self.done = False
         self.app = app
         self.queue = UniqueQueue()
+        self.discovered_artists = set()
 
         self.retry = urllib3.Retry(
             total=3,
@@ -72,17 +75,16 @@ class SpotifyIdsQueue(threading.Thread):
         )
         self.sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
             client_id=app.config["SPOTIFY_CLIENT_ID"],
-            client_secret=app.config["SPOTIFY_CLIENT_SECRET"])
-        )
+            client_secret=app.config["SPOTIFY_CLIENT_SECRET"]
+        ))
 
         init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
                    namespace=app.config['REDIS_NAMESPACE'])
         metrics.init("listenbrainz")
 
-    def add_spotify_ids(self, ids, priority=INCOMING_ARTIST_PRIORITY):
-        for spotify_id in ids:
-            spotify_id = spotify_id.split("/")[-1]
-            self.queue.put(JobItem(priority, spotify_id))
+    def add_spotify_ids(self, album_id, priority=INCOMING_ALBUM_PRIORITY):
+        spotify_id = album_id.split("/")[-1]
+        self.queue.put(JobItem(priority, spotify_id))
 
     def terminate(self):
         self.done = True
@@ -94,53 +96,55 @@ class SpotifyIdsQueue(threading.Thread):
         metrics.set("listenbrainz-spotify-metadata-cache", pending_count=pending_count)
         self.app.logger.info("Pending IDs in Queue: %d", pending_count)
 
-    def fetch_artist(self, artist_id):
-        artist = self.sp.artist(artist_id)
+    def fetch_album(self, album_id):
+        album = self.sp.album(album_id)
+
+        results = self.sp.album_tracks(album_id, limit=50)
+        tracks = results.get("items")
+        if not tracks:
+            return album
+
+        while results.get("next"):
+            results = self.sp.next(results)
+            if results.get("items"):
+                tracks.extend(results.get("items"))
+
+            for track in tracks:
+                for track_artist in track.get("artists"):
+                    if track_artist["id"]:
+                        self.discover_albums(track_artist["id"])
+
+            album["tracks"] = tracks
+
+        return album
+
+    def discover_albums(self, artist_id):
+        if artist_id in self.discovered_artists:
+            return
+        self.discovered_artists.add(artist_id)
 
         results = self.sp.artist_albums(artist_id, album_type='album,single,compilation')
         albums = results.get('items')
-        if not albums:
-            return artist
-
         while results.get('next'):
             results = self.sp.next(results)
             if results.get('items'):
                 albums.extend(results.get('items'))
 
         for album in albums:
-            results = self.sp.album_tracks(album["id"], limit=50)
-            tracks = results.get("items")
-            if not tracks:
-                return artist
-            while results.get("next"):
-                results = self.sp.next(results)
-                if results.get("items"):
-                    tracks.extend(results.get("items"))
+            self.queue.put(JobItem(DISCOVERED_ALBUM_PRIORITY, album["id"]))
 
-            for track in tracks:
-                for track_artist in track.get("artists"):
-                    if track_artist["id"] != artist_id and track_artist["id"]:
-                        self.queue.put(JobItem(DISCOVERED_ARTIST_PRIORITY, track_artist["id"]))
-
-            album["tracks"] = tracks
-
-        artist["albums"] = albums
-
-        return artist
-
-    def insert_artist(self, spotify_id, data):
+    def insert_album(self, spotify_id, data):
         last_refresh = datetime.utcnow()
         expires_at = datetime.utcnow() + timedelta(days=CACHE_TIME)
         with timescale.engine.begin() as ts_conn:
             query = """
-                INSERT INTO mapping.spotify_metadata_cache (spotify_id, data, dirty, last_refresh, expires_at)
-                     VALUES (:spotify_id, :data, 'f', :last_refresh, :expires_at)
-                ON CONFLICT (spotify_id)
+                INSERT INTO mapping.spotify_metadata_cache (album_id, data, last_refresh, expires_at)
+                     VALUES (:album_id, :data, :last_refresh, :expires_at)
+                ON CONFLICT (album_id)
                   DO UPDATE SET
                             data = EXCLUDED.data
                           , last_refresh = EXCLUDED.last_refresh
                           , expires_at = EXCLUDED.expires_at
-                          , dirty = 'f'
             """
             ts_conn.execute(text(query), {
                 "spotify_id": spotify_id,
@@ -149,19 +153,19 @@ class SpotifyIdsQueue(threading.Thread):
                 "expires_at": expires_at
             })
         
-        cache_key = "spotify:" + spotify_id
+        cache_key = CACHE_KEY_PREFIX + spotify_id
         cache.set(cache_key, 1, expirein=0)
         cache.expireat(cache_key, int(expires_at.timestamp()))
 
     def process_spotify_id(self, spotify_id):
-        cache_key = "spotify:" + spotify_id
+        cache_key = CACHE_KEY_PREFIX + spotify_id
         if cache.get(cache_key) is not None:
             return
 
         # TODO: check in PG too if missing from cache before querying spotify?
 
-        artist_data = self.fetch_artist(spotify_id)
-        self.insert_artist(spotify_id, artist_data)
+        album_data = self.fetch_album(spotify_id)
+        self.insert_album(spotify_id, album_data)
 
     def run(self):
         """ main thread entry point"""
