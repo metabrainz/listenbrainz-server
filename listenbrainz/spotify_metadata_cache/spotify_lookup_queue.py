@@ -111,7 +111,7 @@ class SpotifyIdsQueue(threading.Thread):
             for track in tracks:
                 for track_artist in track.get("artists"):
                     if track_artist["id"] != artist_id and track_artist["id"]:
-                        self.queue.put("artist:%s" % track_artist["id"])
+                        self.queue.put(track_artist["id"])
 
             album["tracks"] = tracks
 
@@ -160,20 +160,18 @@ class SpotifyIdsQueue(threading.Thread):
 
         # the main thread loop
         update_time = monotonic() + UPDATE_INTERVAL
-        try:
-            with self.app.app_context():
-                while not self.done:
-                    try:
-                        spotify_id = self.queue.get()
-                        self.process_spotify_id(spotify_id)
-                    except Empty:
-                        sleep(5)
-                        continue
+        with self.app.app_context():
+            while not self.done:
+                try:
+                    spotify_id = self.queue.get()
+                    self.process_spotify_id(spotify_id)
 
                     if monotonic() > update_time:
                         update_time = monotonic() + UPDATE_INTERVAL
                         self.update_metrics(stats)
-        except Exception:
-            self.app.logger.info(traceback.format_exc())
+                except Empty:
+                    sleep(5)
+                except Exception:
+                    self.app.logger.info(traceback.format_exc())
 
-        self.app.logger.info("job queue thread finished")
+            self.app.logger.info("job queue thread finished")
