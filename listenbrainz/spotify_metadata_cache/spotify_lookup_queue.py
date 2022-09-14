@@ -1,6 +1,6 @@
 import traceback
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from queue import Empty, PriorityQueue
 from time import monotonic, sleep
@@ -18,6 +18,7 @@ from brainzutils import metrics, cache
 
 UPDATE_INTERVAL = 60  # in seconds
 CACHE_TIME = 180  # in days
+BATCH_SIZE = 10  # number of spotify ids to process at a time
 
 DISCOVERED_ALBUM_PRIORITY = 1
 INCOMING_ALBUM_PRIORITY = 0
@@ -76,8 +77,8 @@ class SpotifyIdsQueue(threading.Thread):
             respect_retry_after_header=False
         )
         self.sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-            client_id=app.config["SPOTIFY_CLIENT_ID"],
-            client_secret=app.config["SPOTIFY_CLIENT_SECRET"]
+            client_id="fe1df319b19441b1bca721a28e2c7651",
+            client_secret="a3d2027e6bd84996a5e3764074a292c5"
         ))
 
         init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
@@ -108,27 +109,24 @@ class SpotifyIdsQueue(threading.Thread):
         self.app.logger.info("Albums discovered so far: %d", self.stats["discovered_albums"])
         self.app.logger.info("Albums inserted so far: %d", self.stats["albums_inserted"])
 
-    def fetch_album(self, album_id):
-        album = self.sp.album(album_id)
+    def fetch_albums(self, album_ids):
+        albums = self.sp.albums(album_ids).get("albums")
 
-        results = self.sp.album_tracks(album_id, limit=50)
-        tracks = results.get("items")
-        if not tracks:
-            return album
+        for album in albums:
+            tracks = album["tracks"]
+            results = tracks
 
-        while results.get("next"):
-            results = self.sp.next(results)
-            if results.get("items"):
-                tracks.extend(results.get("items"))
+            while results.get("next"):
+                results = self.sp.next(results)
+                if results.get("items"):
+                    tracks.extend(results.get("items"))
 
-        for track in tracks:
-            for track_artist in track.get("artists"):
-                if track_artist["id"]:
-                    self.discover_albums(track_artist["id"])
+            for track in tracks:
+                for track_artist in track.get("artists"):
+                    if track_artist["id"]:
+                        self.discover_albums(track_artist["id"])
 
-        album["tracks"] = tracks
-
-        return album
+        return albums
 
     def discover_albums(self, artist_id):
         if artist_id in self.discovered_artists:
@@ -147,9 +145,11 @@ class SpotifyIdsQueue(threading.Thread):
             if was_added:
                 self.stats["discovered_albums"] += 1
 
-    def insert_album(self, album_id, data):
+    def insert_album(self, data):
+        album_id = data["id"]
         last_refresh = datetime.utcnow()
         expires_at = datetime.utcnow() + timedelta(days=CACHE_TIME)
+
         with timescale.engine.begin() as ts_conn:
             query = """
                 INSERT INTO mapping.spotify_metadata_cache (album_id, data, last_refresh, expires_at)
@@ -173,15 +173,18 @@ class SpotifyIdsQueue(threading.Thread):
 
         self.stats["albums_inserted"] += 1
 
-    def process_spotify_id(self, spotify_id):
-        cache_key = CACHE_KEY_PREFIX + spotify_id
-        if cache.get(cache_key) is not None:
-            return
+    def process_spotify_id(self, spotify_ids):
+        filtered_ids = []
+        for spotify_id in spotify_ids:
+            cache_key = CACHE_KEY_PREFIX + spotify_id
+            if cache.get(cache_key) is None:
+                filtered_ids.append(spotify_id)
 
         # TODO: check in PG too if missing from cache before querying spotify?
 
-        album_data = self.fetch_album(spotify_id)
-        self.insert_album(spotify_id, album_data)
+        albums = self.fetch_albums(filtered_ids)
+        for album in albums:
+            self.insert_album(album)
 
     def run(self):
         """ main thread entry point"""
@@ -189,15 +192,23 @@ class SpotifyIdsQueue(threading.Thread):
         update_time = monotonic() + UPDATE_INTERVAL
         with self.app.app_context():
             while not self.done:
+                spotify_ids = []
+
                 try:
-                    item = self.queue.get()
-                    self.process_spotify_id(item.spotify_id)
+                    for _ in range(BATCH_SIZE):
+                        item = self.queue.get()
+                        spotify_ids.append(item.spotify_id)
+                except Empty:
+                    if len(spotify_ids) == 0:
+                        sleep(5)
+                        continue
+
+                try:
+                    self.process_spotify_id(spotify_ids)
 
                     if monotonic() > update_time:
                         update_time = monotonic() + UPDATE_INTERVAL
                         self.update_metrics()
-                except Empty:
-                    sleep(5)
                 except Exception:
                     self.app.logger.info(traceback.format_exc())
 
