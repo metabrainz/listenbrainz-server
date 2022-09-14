@@ -76,8 +76,10 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
                 'artist': listen['track_metadata']['artist_name'],
                 'title': listen['track_metadata']['track_name'],
                 'release': listen['track_metadata'].get('release_name'),
-                'track_number': listen['track_metadata']['additional_info'].get('track_number')
             }
+            track_number = listen['track_metadata']['additional_info'].get('track_number')
+            if track_number:
+                data['track_number'] = str(track_number)
 
             duration = listen['track_metadata']['additional_info'].get('duration')
             if duration:
