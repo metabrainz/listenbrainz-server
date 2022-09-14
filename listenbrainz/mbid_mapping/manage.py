@@ -14,9 +14,6 @@ from mapping.release_colors import sync_release_color_table, incremental_update_
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache
-from listenbrainz.spotify_metadata_cache.spotify_cache import run_spotify_metadata_cache as action_run_spotify_metadata_cache, \
-    queue_spotify_ids as action_queue_spotify_ids, \
-    load_spotify_ids_from_file as action_load_spotify_ids_from_file
 
 
 @click.group()
@@ -114,32 +111,6 @@ def build_mb_metadata_cache(use_lb_conn):
         Build the MB metadata cache that LB uses
     """
     create_mb_metadata_cache(use_lb_conn)
-
-
-@cli.command()
-def run_spotify_metadata_cache():
-    """
-        Run the spotify mapping cache process
-    """
-    action_run_spotify_metadata_cache()
-
-
-@cli.command()
-@click.argument('spotify_ids', nargs=-1)
-def queue_spotify_ids(spotify_ids):
-    """
-       Queue an spotify ids for inclusion in spotify metadata cache. Ids must start with artist: or track:
-    """
-    action_queue_spotify_ids(spotify_ids)
-
-
-@cli.command()
-@click.argument('filename')
-def load_spotify_ids(filename):
-    """
-        Load spotify ids from a file, one per line.
-    """
-    action_load_spotify_ids_from_file(filename)
 
 
 def usage(command):
