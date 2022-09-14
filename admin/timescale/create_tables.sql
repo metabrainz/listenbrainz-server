@@ -111,4 +111,13 @@ CREATE TABLE messybrainz.submissions (
     submitted       TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE mapping.spotify_metadata_cache (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    spotify_id      TEXT NOT NULL,
+    data            JSONB,
+    dirty           BOOLEAN NOT NULL DEFAULT FALSE,
+    last_refresh    TIMESTAMP WITH TIME ZONE NOT NULL,
+    expires_at      TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 COMMIT;

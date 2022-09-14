@@ -44,4 +44,8 @@ CREATE INDEX messybrainz_release_ndx ON messybrainz.submissions (lower(release))
 CREATE INDEX messybrainz_track_number_ndx ON messybrainz.submissions (lower(track_number));
 CREATE INDEX messybrainz_duration_ndx ON messybrainz.submissions (duration);
 
+
+-- spotify_metadata_cache
+CREATE UNIQUE INDEX spotify_metadata_cache_spotify_id_ndx ON mapping.spotify_metadata_cache (spotify_id);
+
 COMMIT;

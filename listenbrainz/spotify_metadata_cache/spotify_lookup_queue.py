@@ -150,7 +150,7 @@ class SpotifyIdsQueue(threading.Thread):
         if cache.get(cache_key) is not None:
             return
         
-        self.app.logger.info(f"{spotify_id}: ", end="")
+        self.app.logger.info(f"Processing {spotify_id}")
         artist_data = self.fetch_artist(spotify_id)
         self.insert_artist(spotify_id, artist_data)
 
