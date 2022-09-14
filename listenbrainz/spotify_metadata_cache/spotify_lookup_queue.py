@@ -121,23 +121,23 @@ class SpotifyIdsQueue(threading.Thread):
         return artist
 
     def insert_artist(self, spotify_id, data):
-        last_fetched = datetime.utcnow()
+        last_refresh = datetime.utcnow()
         expires_at = datetime.utcnow() + timedelta(days=CACHE_TIME)
         with timescale.engine.begin() as ts_conn:
             query = """
-                INSERT INTO mapping.spotify_metadata_cache (spotify_id, data, dirty, last_fetched, expires_at)
-                     VALUES (:spotify_id, :data, 'f', :last_fetched, :expires_at)
+                INSERT INTO mapping.spotify_metadata_cache (spotify_id, data, dirty, last_refresh, expires_at)
+                     VALUES (:spotify_id, :data, 'f', :last_refresh, :expires_at)
                 ON CONFLICT (spotify_id)
                   DO UPDATE SET
                             data = EXCLUDED.data
-                          , last_fetched = EXCLUDED.last_fetched
+                          , last_refresh = EXCLUDED.last_refresh
                           , expires_at = EXCLUDED.expires_at
                           , dirty = 'f'
             """
             ts_conn.execute(text(query), {
                 "spotify_id": spotify_id,
                 "data": ujson.dumps(data),
-                "last_fetched": last_fetched,
+                "last_refresh": last_refresh,
                 "expires_at": expires_at
             })
         
