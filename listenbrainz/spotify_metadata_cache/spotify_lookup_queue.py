@@ -28,7 +28,7 @@ CACHE_KEY_PREFIX = "spotify:album:"
 @dataclass(order=True, eq=True, frozen=True)
 class JobItem:
     priority: int
-    spotify_id: str = field(compare=False)
+    spotify_id: str
 
 
 class UniqueQueue:
