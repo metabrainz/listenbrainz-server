@@ -19,7 +19,7 @@ from brainzutils import metrics, cache
 
 UPDATE_INTERVAL = 60  # in seconds
 CACHE_TIME = 180  # in days
-BATCH_SIZE = 25  # number of spotify ids to process at a time
+BATCH_SIZE = 10  # number of spotify ids to process at a time
 
 DISCOVERED_ALBUM_PRIORITY = 1
 INCOMING_ALBUM_PRIORITY = 0
