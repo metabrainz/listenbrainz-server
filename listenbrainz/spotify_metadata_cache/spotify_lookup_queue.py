@@ -14,8 +14,8 @@ from listenbrainz.db import timescale
 from listenbrainz.utils import init_cache
 from brainzutils import metrics, cache
 
-UPDATE_INTERVAL = 30
-CACHE_TIME = 180
+UPDATE_INTERVAL = 60  # in seconds
+CACHE_TIME = 180  # in days
 
 
 class UniqueQueue(object):
@@ -80,7 +80,9 @@ class SpotifyIdsQueue(threading.Thread):
 
     def update_metrics(self, stats):
         """ Calculate stats and print status to stdout and report metrics."""
-        # metrics.set("listenbrainz-spotify-metadata-cache", )
+        pending_count = self.queue.size()
+        metrics.set("listenbrainz-spotify-metadata-cache", pending_count=pending_count)
+        self.app.logger.info("Pending IDs in Queue: %d", pending_count)
 
     def fetch_artist(self, artist_id):
         artist = self.sp.artist(artist_id)
@@ -145,8 +147,9 @@ class SpotifyIdsQueue(threading.Thread):
         cache_key = "spotify:" + spotify_id
         if cache.get(cache_key) is not None:
             return
-        
-        self.app.logger.info(f"Processing {spotify_id}")
+
+        # TODO: check in PG too if missing from cache before querying spotify?
+
         artist_data = self.fetch_artist(spotify_id)
         self.insert_artist(spotify_id, artist_data)
 
