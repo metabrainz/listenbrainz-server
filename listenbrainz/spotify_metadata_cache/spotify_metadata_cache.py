@@ -27,7 +27,6 @@ class SpotifyMetadataCache(ConsumerMixin):
 
     def callback(self, message: Message):
         listens = json.loads(message.body)
-        print("message received")
 
         for listen in listens:
             additional_info = listen["track_metadata"]["additional_info"]
@@ -55,8 +54,8 @@ class SpotifyMetadataCache(ConsumerMixin):
                 self.queue = SpotifyIdsQueue(app)
                 self.queue.start()
 
-                self.init_rabbitmq_connection()
                 self.app.logger.info("Starting Spotify Metadata Cache ...")
+                self.init_rabbitmq_connection()
                 self.run()
             except KeyboardInterrupt:
                 self.queue.terminate()

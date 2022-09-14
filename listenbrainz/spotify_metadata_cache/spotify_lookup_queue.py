@@ -72,7 +72,6 @@ class SpotifyIdsQueue(threading.Thread):
     def add_spotify_ids(self, ids):
         for spotify_id in ids:
             spotify_id = spotify_id.split("/")[-1]
-            print("added id", spotify_id)
             self.queue.put(spotify_id)
 
     def terminate(self):
@@ -148,7 +147,7 @@ class SpotifyIdsQueue(threading.Thread):
 
     def process_spotify_id(self, spotify_id):
         cache_key = "spotify:" + spotify_id
-        if cache.get(cache_key) is None:
+        if cache.get(cache_key) is not None:
             return
         
         self.app.logger.info(f"{spotify_id}: ", end="")
@@ -168,7 +167,7 @@ class SpotifyIdsQueue(threading.Thread):
                         spotify_id = self.queue.get()
                         self.process_spotify_id(spotify_id)
                     except Empty:
-                        sleep(60)
+                        sleep(5)
                         continue
 
                     if monotonic() > update_time:
