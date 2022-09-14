@@ -6,6 +6,7 @@ from queue import Empty, PriorityQueue
 from time import monotonic, sleep
 import threading
 
+import sentry_sdk
 import spotipy
 import ujson
 import urllib3
@@ -113,8 +114,8 @@ class SpotifyIdsQueue(threading.Thread):
         albums = self.sp.albums(album_ids).get("albums")
 
         for album in albums:
-            tracks = album["tracks"]
-            results = tracks
+            results = album["tracks"]
+            tracks = results.get("items")
 
             while results.get("next"):
                 results = self.sp.next(results)
@@ -125,6 +126,8 @@ class SpotifyIdsQueue(threading.Thread):
                 for track_artist in track.get("artists"):
                     if track_artist["id"]:
                         self.discover_albums(track_artist["id"])
+
+            album["tracks"] = tracks
 
         return albums
 
@@ -209,7 +212,8 @@ class SpotifyIdsQueue(threading.Thread):
                     if monotonic() > update_time:
                         update_time = monotonic() + UPDATE_INTERVAL
                         self.update_metrics()
-                except Exception:
+                except Exception as e:
+                    sentry_sdk.capture_exception(e)
                     self.app.logger.info(traceback.format_exc())
 
             self.app.logger.info("job queue thread finished")
