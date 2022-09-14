@@ -71,6 +71,7 @@ class SpotifyIdsQueue(threading.Thread):
 
     def add_spotify_ids(self, ids):
         for spotify_id in ids:
+            spotify_id = spotify_id.split("/")[-1]
             self.queue.put(spotify_id)
 
     def terminate(self):
@@ -118,14 +119,6 @@ class SpotifyIdsQueue(threading.Thread):
         self.app.logger.info("Fetch artist complete")
 
         return artist
-
-    def fetch_artist_ids_from_track_id(self, track_id):
-        try:
-            track = self.sp.track(track_id)
-        except spotipy.exceptions.SpotifyException:
-            return None
-
-        return [a["id"] for a in track["artists"]]
 
     def insert_artist(self, spotify_id, data):
         last_fetched = datetime.utcnow()
