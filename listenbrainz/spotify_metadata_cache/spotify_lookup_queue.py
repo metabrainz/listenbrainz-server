@@ -78,8 +78,8 @@ class SpotifyIdsQueue(threading.Thread):
             respect_retry_after_header=False
         )
         self.sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-            client_id="fe1df319b19441b1bca721a28e2c7651",
-            client_secret="a3d2027e6bd84996a5e3764074a292c5"
+            client_id=app.config["SPOTIFY_CLIENT_ID"],
+            client_secret=app.config["SPOTIFY_CLIENT_SECRET"]
         ))
 
         init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
