@@ -163,6 +163,7 @@ UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
 WEBSOCKETS_QUEUE = '''{{template "KEY" "websockets_queue"}}'''
 PLAYING_NOW_EXCHANGE = '''{{template "KEY" "playing_now_exchange"}}'''
 PLAYING_NOW_QUEUE = '''{{template "KEY" "playing_now_queue"}}'''
+SPOTIFY_METADATA_QUEUE = '''{{template "KEY" "spotify_metadata_queue"}}'''
 
 SPARK_RESULT_EXCHANGE = '''{{template "KEY" "spark_result_exchange"}}'''
 SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''

@@ -20,7 +20,7 @@ class SpotifyMetadataCache(ConsumerMixin):
         self.queue = None
         self.connection = None
         self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
-        self.unique_queue = Queue(self.app.config["UNIQUE_QUEUE"], exchange=self.unique_exchange, durable=True)
+        self.unique_queue = Queue(self.app.config["SPOTIFY_METADATA_QUEUE"], exchange=self.unique_exchange, durable=True)
 
     def get_consumers(self, _, channel):
         return [Consumer(channel, queues=[self.unique_queue], on_message=lambda x: self.callback(x))]
