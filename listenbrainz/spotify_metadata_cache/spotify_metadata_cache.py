@@ -27,7 +27,14 @@ class SpotifyMetadataCache(ConsumerMixin):
 
     def callback(self, message: Message):
         listens = json.loads(message.body)
-        self.queue.add_new_listens(listens)
+
+        for listen in listens:
+            additional_info = listen["track_metadata"]["additional_info"]
+            spotify_album_artist_ids = additional_info.get("spotify_album_artist_ids", [])
+            spotify_artist_ids = additional_info.get("spotify_artist_ids", [])
+            self.queue.add_spotify_ids(spotify_album_artist_ids)
+            self.queue.add_spotify_ids(spotify_artist_ids)
+
         message.ack()
 
     def init_rabbitmq_connection(self):
