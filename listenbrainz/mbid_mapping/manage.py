@@ -14,10 +14,9 @@ from mapping.release_colors import sync_release_color_table, incremental_update_
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache
-from mapping.spotify_cache import run_spotify_metadata_cache as action_run_spotify_metadata_cache, \
+from listenbrainz.spotify_metadata_cache.spotify_cache import run_spotify_metadata_cache as action_run_spotify_metadata_cache, \
     queue_spotify_ids as action_queue_spotify_ids, \
     load_spotify_ids_from_file as action_load_spotify_ids_from_file
-import config
 
 
 @click.group()
