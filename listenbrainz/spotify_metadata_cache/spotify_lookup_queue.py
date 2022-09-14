@@ -19,7 +19,7 @@ from brainzutils import metrics, cache
 
 UPDATE_INTERVAL = 60  # in seconds
 CACHE_TIME = 180  # in days
-BATCH_SIZE = 10  # number of spotify ids to process at a time
+BATCH_SIZE = 25  # number of spotify ids to process at a time
 
 DISCOVERED_ALBUM_PRIORITY = 1
 INCOMING_ALBUM_PRIORITY = 0
@@ -176,12 +176,15 @@ class SpotifyIdsQueue(threading.Thread):
 
         self.stats["albums_inserted"] += 1
 
-    def process_spotify_id(self, spotify_ids):
+    def process_spotify_ids(self, spotify_ids):
         filtered_ids = []
         for spotify_id in spotify_ids:
             cache_key = CACHE_KEY_PREFIX + spotify_id
             if cache.get(cache_key) is None:
                 filtered_ids.append(spotify_id)
+
+        if len(filtered_ids) == 0:
+            return
 
         # TODO: check in PG too if missing from cache before querying spotify?
 
@@ -207,7 +210,7 @@ class SpotifyIdsQueue(threading.Thread):
                         continue
 
                 try:
-                    self.process_spotify_id(spotify_ids)
+                    self.process_spotify_ids(spotify_ids)
 
                     if monotonic() > update_time:
                         update_time = monotonic() + UPDATE_INTERVAL
