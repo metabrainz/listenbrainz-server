@@ -133,7 +133,7 @@ class SpotifyIdsQueue(threading.Thread):
         for album in albums:
             self.queue.put(JobItem(DISCOVERED_ALBUM_PRIORITY, album["id"]))
 
-    def insert_album(self, spotify_id, data):
+    def insert_album(self, album_id, data):
         last_refresh = datetime.utcnow()
         expires_at = datetime.utcnow() + timedelta(days=CACHE_TIME)
         with timescale.engine.begin() as ts_conn:
@@ -147,13 +147,13 @@ class SpotifyIdsQueue(threading.Thread):
                           , expires_at = EXCLUDED.expires_at
             """
             ts_conn.execute(text(query), {
-                "spotify_id": spotify_id,
+                "album_id": album_id,
                 "data": ujson.dumps(data),
                 "last_refresh": last_refresh,
                 "expires_at": expires_at
             })
         
-        cache_key = CACHE_KEY_PREFIX + spotify_id
+        cache_key = CACHE_KEY_PREFIX + album_id
         cache.set(cache_key, 1, expirein=0)
         cache.expireat(cache_key, int(expires_at.timestamp()))
 
