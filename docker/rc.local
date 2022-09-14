@@ -60,3 +60,8 @@ if [ "${CONTAINER_NAME}" = "listenbrainz-mbid-mapping-writer-${DEPLOY_ENV}" ]
 then
     rm -f /etc/service/mbid_mapping_writer/down
 fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-metadata-cache-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/spotify_metadata_cache/down
+fi
