@@ -1,6 +1,7 @@
 import traceback
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from queue import Queue, Empty
+from queue import Empty, PriorityQueue
 from time import monotonic, sleep
 import threading
 
@@ -17,10 +18,19 @@ from brainzutils import metrics, cache
 UPDATE_INTERVAL = 60  # in seconds
 CACHE_TIME = 180  # in days
 
+DISCOVERED_ARTIST_PRIORITY = 1
+INCOMING_ARTIST_PRIORITY = 0
 
-class UniqueQueue(object):
+
+@dataclass(order=True)
+class JobItem:
+    priority: int
+    item: str = field(compare=False)
+
+
+class UniqueQueue:
     def __init__(self):
-        self.queue = Queue()
+        self.queue = PriorityQueue()
         self.set = set()
 
     def put(self, d):
@@ -69,10 +79,10 @@ class SpotifyIdsQueue(threading.Thread):
                    namespace=app.config['REDIS_NAMESPACE'])
         metrics.init("listenbrainz")
 
-    def add_spotify_ids(self, ids):
+    def add_spotify_ids(self, ids, priority=INCOMING_ARTIST_PRIORITY):
         for spotify_id in ids:
             spotify_id = spotify_id.split("/")[-1]
-            self.queue.put(spotify_id)
+            self.queue.put(JobItem(priority, spotify_id))
 
     def terminate(self):
         self.done = True
@@ -110,7 +120,7 @@ class SpotifyIdsQueue(threading.Thread):
             for track in tracks:
                 for track_artist in track.get("artists"):
                     if track_artist["id"] != artist_id and track_artist["id"]:
-                        self.queue.put(track_artist["id"])
+                        self.queue.put(JobItem(DISCOVERED_ARTIST_PRIORITY, track_artist["id"]))
 
             album["tracks"] = tracks
 
