@@ -72,6 +72,7 @@ class SpotifyIdsQueue(threading.Thread):
     def add_spotify_ids(self, ids):
         for spotify_id in ids:
             spotify_id = spotify_id.split("/")[-1]
+            print("added id", spotify_id)
             self.queue.put(spotify_id)
 
     def terminate(self):
