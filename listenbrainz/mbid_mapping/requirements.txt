@@ -5,6 +5,5 @@ psycopg2-binary==2.9.3
 ujson==5.4.0
 typesense
 unidecode
-spotipy@git+https://github.com/amCap1712/spotipy.git@retry-accept
 python-dateutil==2.8.2
 git+https://github.com/metabrainz/brainzutils-python.git@v2.1.0
