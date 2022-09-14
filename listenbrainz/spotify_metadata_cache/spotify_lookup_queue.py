@@ -1,4 +1,5 @@
 import traceback
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from queue import Empty, PriorityQueue
@@ -66,6 +67,7 @@ class SpotifyIdsQueue(threading.Thread):
         self.app = app
         self.queue = UniqueQueue()
         self.discovered_artists = set()
+        self.stats = Counter()
 
         self.retry = urllib3.Retry(
             total=3,
@@ -90,11 +92,21 @@ class SpotifyIdsQueue(threading.Thread):
         self.done = True
         self.join()
 
-    def update_metrics(self, stats):
+    def update_metrics(self):
         """ Calculate stats and print status to stdout and report metrics."""
         pending_count = self.queue.size()
-        metrics.set("listenbrainz-spotify-metadata-cache", pending_count=pending_count)
+        discovered_artists_count = len(self.discovered_artists)
+        metrics.set(
+            "listenbrainz-spotify-metadata-cache",
+            pending_count=pending_count,
+            discovered_artists_count=discovered_artists_count,
+            discovered_albums_count=self.stats["discovered_albums"],
+            albums_inserted=self.stats["albums_inserted"]
+        )
         self.app.logger.info("Pending IDs in Queue: %d", pending_count)
+        self.app.logger.info("Artists discovered so far: %d", discovered_artists_count)
+        self.app.logger.info("Albums discovered so far: %d", self.stats["discovered_albums"])
+        self.app.logger.info("Albums inserted so far: %d", self.stats["albums_inserted"])
 
     def fetch_album(self, album_id):
         album = self.sp.album(album_id)
@@ -131,7 +143,9 @@ class SpotifyIdsQueue(threading.Thread):
                 albums.extend(results.get('items'))
 
         for album in albums:
-            self.queue.put(JobItem(DISCOVERED_ALBUM_PRIORITY, album["id"]))
+            was_added = self.queue.put(JobItem(DISCOVERED_ALBUM_PRIORITY, album["id"]))
+            if was_added:
+                self.stats["discovered_albums"] += 1
 
     def insert_album(self, album_id, data):
         last_refresh = datetime.utcnow()
@@ -157,6 +171,8 @@ class SpotifyIdsQueue(threading.Thread):
         cache.set(cache_key, 1, expirein=0)
         cache.expireat(cache_key, int(expires_at.timestamp()))
 
+        self.stats["albums_inserted"] += 1
+
     def process_spotify_id(self, spotify_id):
         cache_key = CACHE_KEY_PREFIX + spotify_id
         if cache.get(cache_key) is not None:
@@ -169,8 +185,6 @@ class SpotifyIdsQueue(threading.Thread):
 
     def run(self):
         """ main thread entry point"""
-        stats = {}
-
         # the main thread loop
         update_time = monotonic() + UPDATE_INTERVAL
         with self.app.app_context():
@@ -181,7 +195,7 @@ class SpotifyIdsQueue(threading.Thread):
 
                     if monotonic() > update_time:
                         update_time = monotonic() + UPDATE_INTERVAL
-                        self.update_metrics(stats)
+                        self.update_metrics()
                 except Empty:
                     sleep(5)
                 except Exception:
