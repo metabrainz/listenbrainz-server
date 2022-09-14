@@ -22,10 +22,10 @@ DISCOVERED_ARTIST_PRIORITY = 1
 INCOMING_ARTIST_PRIORITY = 0
 
 
-@dataclass(order=True)
+@dataclass(order=True, eq=True, frozen=True)
 class JobItem:
     priority: int
-    item: str = field(compare=False)
+    spotify_id: str = field(compare=False)
 
 
 class UniqueQueue:
@@ -172,8 +172,8 @@ class SpotifyIdsQueue(threading.Thread):
         with self.app.app_context():
             while not self.done:
                 try:
-                    spotify_id = self.queue.get()
-                    self.process_spotify_id(spotify_id)
+                    item = self.queue.get()
+                    self.process_spotify_id(item.spotify_id)
 
                     if monotonic() > update_time:
                         update_time = monotonic() + UPDATE_INTERVAL
