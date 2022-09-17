@@ -45,12 +45,25 @@ class SpotifyMetadataCache(ConsumerMixin):
             transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
         )
 
+    def read_ids_file(self):
+        while True:
+            try:
+                with open("/code/listenbrainz/spotify_ids.txt") as f:
+                    ids = f.readlines()
+                for album_id in ids:
+                    self.queue.add_spotify_ids(album_id.strip())
+                break
+            except FileNotFoundError:
+                continue
+
     def start(self):
         while True:
             try:
                 self.app.logger.info("Starting queue stuffer...")
                 self.queue = SpotifyIdsQueue(app)
                 self.queue.start()
+
+                self.read_ids_file()
 
                 self.app.logger.info("Starting Spotify Metadata Cache ...")
                 self.init_rabbitmq_connection()
