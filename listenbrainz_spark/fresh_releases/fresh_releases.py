@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime
+from typing import Optional
 
 import requests
 from more_itertools import chunked
@@ -100,7 +101,7 @@ def get_query():
     """
 
 
-def main(days: int, database: str):
+def main(days: Optional[int], database: str):
     to_date = get_latest_listen_ts()
     if days:
         from_date = to_date + timedelta(days=-days)
@@ -121,10 +122,10 @@ def main(days: int, database: str):
         entries = []
         for row in rows:
             entry = row.asDict(recursive=True)
-            entry["database"] = database
             entries.append(entry)
         yield {
             "type": "fresh_releases",
+            "database": database,
             "data": entries
         }
 
