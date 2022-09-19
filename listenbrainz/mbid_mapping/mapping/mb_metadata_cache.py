@@ -283,9 +283,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , rg.gid AS release_group_mbid
                                  , array_agg(jsonb_build_array(t.name, count, rg.gid, g.gid)) AS release_group_tags
                               FROM recording r
-                         LEFT JOIN mapping.canonical_release_redirect crr
+                              JOIN mapping.canonical_release_redirect crr
                                 ON r.gid = crr.recording_mbid
-                         LEFT JOIN release rel
+                              JOIN release rel
                                 ON crr.release_mbid = rel.gid
                               JOIN release_group rg
                                 ON rel.release_group = rg.id
