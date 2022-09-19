@@ -65,7 +65,7 @@ class CanonicalMusicBrainzData(BulkInsertTable):
                    ON rl.id = m.release
                  JOIN mapping.canonical_musicbrainz_data_release_tmp rpr
                    ON rl.id = rpr.release
-                 JOIN (SELECT artist_credit, array_agg(gid) AS artist_mbids
+                 JOIN (SELECT artist_credit, array_agg(gid ORDER BY position) AS artist_mbids
                          FROM artist_credit_name acn2
                          JOIN artist a2
                            ON acn2.artist = a2.id
