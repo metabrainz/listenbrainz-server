@@ -202,29 +202,27 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 SELECT r.gid
                                      , array_agg(ARRAY[lt.name, a1.name, a1.gid::TEXT, lat.name]) AS recording_links
                                   FROM recording r
-                             LEFT JOIN l_artist_recording lar
+                                  JOIN l_artist_recording lar
                                     ON lar.entity1 = r.id
                                   JOIN artist a1
                                     ON lar.entity0 = a1.id
-                             LEFT JOIN link l
+                                  JOIN link l
                                     ON lar.link = l.id
-                             LEFT JOIN link_type lt
+                                  JOIN link_type lt
                                     ON l.link_type = lt.id
-                             LEFT JOIN link_attribute la
+                                  JOIN link_attribute la
                                     ON la.link = l.id
-                             LEFT JOIN link_attribute_type lat
+                                  JOIN link_attribute_type lat
                                     ON la.attribute_type = lat.id
                                   {values_join}
-                                 WHERE (lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
-                                                   ,'59054b12-01ac-43ee-a618-285fd397e461'
-                                                   ,'0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa'
-                                                   ,'234670ce-5f22-4fd0-921b-ef1662695c5d'
-                                                   ,'3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb'
-                                                   ,'92777657-504c-4acb-bd33-51a201bd57e1'
-                                                   ,'45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5'
-                                                   ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
-                                                   ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
-                                       OR lt.gid IS NULL)
+                                 WHERE lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
+                                                  ,'0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa'
+                                                  ,'234670ce-5f22-4fd0-921b-ef1662695c5d'
+                                                  ,'3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb'
+                                                  ,'92777657-504c-4acb-bd33-51a201bd57e1'
+                                                  ,'45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5'
+                                                  ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
+                                                  ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
