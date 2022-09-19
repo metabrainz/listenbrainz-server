@@ -307,9 +307,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                          , caa.id AS caa_id
                                          , row_number() OVER (partition by recording_mbid ORDER BY ordering) AS rownum
                                       FROM recording r
-                                 LEFT JOIN mapping.canonical_release_redirect crr
+                                      JOIN mapping.canonical_release_redirect crr
                                         ON r.gid = crr.recording_mbid
-                                 LEFT JOIN release rel
+                                      JOIN release rel
                                         ON crr.release_mbid = rel.gid
                                  LEFT JOIN cover_art_archive.cover_art caa
                                         ON caa.release = rel.id
