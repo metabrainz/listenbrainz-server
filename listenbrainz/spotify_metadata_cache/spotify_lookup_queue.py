@@ -206,6 +206,10 @@ class SpotifyIdsQueue(threading.Thread):
         update_time = monotonic() + UPDATE_INTERVAL
         with self.app.app_context():
             while not self.done:
+                if monotonic() > update_time:
+                    update_time = monotonic() + UPDATE_INTERVAL
+                    self.update_metrics()
+
                 spotify_ids = []
 
                 try:
@@ -223,9 +227,5 @@ class SpotifyIdsQueue(threading.Thread):
                     sentry_sdk.capture_exception(e)
                     self.app.logger.info(traceback.format_exc())
                     self.retry_spotify_ids(spotify_ids)
-
-                if monotonic() > update_time:
-                    update_time = monotonic() + UPDATE_INTERVAL
-                    self.update_metrics()
 
             self.app.logger.info("job queue thread finished")
