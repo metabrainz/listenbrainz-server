@@ -52,10 +52,29 @@ describe("ListenCard", () => {
   });
 
   it("renders correctly for playing_now listen", () => {
-    const playingNowListen: Listen = { playing_now: true, ...listen };
+    // listen without msid because playing now listens do not have msids
+    const playingNowListen: Listen = {
+      playing_now: true,
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Moondog",
+        track_name: "Bird's Lament",
+        additional_info: {
+          duration_ms: 123000,
+          release_mbid: "foo",
+          recording_mbid: "yyyy",
+          artist_mbids: ["xxxx"],
+        },
+      },
+      user_name: "test",
+    };
     const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, listen: playingNowListen }} />
     );
+
+    expect(
+      wrapper.find('button[title="Recommend to my followers"]')
+    ).toHaveLength(1);
 
     expect(wrapper).toMatchSnapshot();
   });
