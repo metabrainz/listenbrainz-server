@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from typing import List
 import uuid
 
@@ -396,6 +398,180 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         curs.execute('SET from_collapse_limit = 15')
         curs.execute('SET join_collapse_limit = 15')
 
+    def query_last_updated_items(self, timestamp):
+        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+
+        # there queries here try to mirror the structure and logic of the main cache building queries
+        # note that the tags queries in any of these omit the count > 0 clause because possible removal
+        # of a tag is also a change.
+        # the last_updated considered and last_updated ignored columns below together list all the last_updated
+        # columns a given CTE touches. any other tables touched by a given CTE do not have a last_updated column.
+
+        # 1. artist_rels, artist_data, artist_tags, artist
+        # these CTEs and tables concern artist data and we fetch artist mbids from these. all of the CTEs touch
+        # artist table but do not consider its last_updated column because that is done separately at end. further,
+        # the queries here have been simplified to not include recording tables as that will be considered by a
+        # separate query.
+        #
+        # |   CTE / table   |       purpose                  |  last_updated considered           | last_updated ignored
+        # |   artist_rels   |  artist - url links            |  link relationship related and url | artist
+        # |   artist_data   |  life span, area, type, gender |  area                              | artist
+        # |   artist_tags   |  artist tags                   |  recording_tag, genre              | artist
+        # |   artist        |                                |  artist                            |
+        artist_mbids_query = """
+            SELECT a.gid
+              FROM artist a
+              JOIN l_artist_url lau
+                ON lau.entity0 = a.id
+              JOIN url u
+                ON lau.entity1 = u.id
+              JOIN link l
+                ON lau.link = l.id
+              JOIN link_type lt
+                ON l.link_type = lt.id
+             WHERE lt.gid IN ('99429741-f3f6-484b-84f8-23af51991770'
+                             ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
+                             ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
+                             ,'689870a4-a1e4-4912-b17f-7b2664215698'
+                             ,'93883cf6-e818-4938-990e-75863f8db2d3'
+                             ,'6f77d54e-1d81-4e1a-9ea5-37947577151b'
+                             ,'e4d73442-3762-45a8-905c-401da65544ed'
+                             ,'611b1862-67af-4253-a64f-34adba305d1d'
+                             ,'f8319a2f-f824-4617-81c8-be6560b3b203'
+                             ,'34ae77fe-defb-43ea-95d4-63c7540bac78'
+                             ,'769085a1-c2f7-4c24-a532-2375a77693bd'
+                             ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
+                             ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
+                   AND (
+                        lau.last_updated > :timestamp
+                     OR   u.last_updated > :timestamp
+                     OR  lt.last_updated > :timestamp
+                   )
+        UNION
+            SELECT a.gid
+              FROM artist a
+              JOIN area ar
+                ON a.area = ar.id
+             WHERE ar.last_updated > :timestamp
+        UNION
+            SELECT a.gid
+              FROM artist a
+              JOIN artist_tag at
+                ON at.artist = a.id
+              JOIN tag t
+                ON at.tag = t.id
+         LEFT JOIN genre g
+                ON t.name = g.name
+             WHERE at.last_updated > :timestamp
+                OR  g.last_updated > :timestamp
+        UNION
+            SELECT a.gid
+              FROM artist a
+             WHERE a.last_updated > :timestamp
+        """
+
+        # 2. recording_rels, recording_tags, recording
+        # these CTEs concern recording data and we fetch recording_mbids from these. the CTEs do not join to artist
+        # table because that has been considered earlier.
+        #
+        # |   CTE / table    |         purpose               |  last_updated considered           | last_updated ignored
+        # |   recording_rels |   artist - recording links    |  link relationship related and url | recording, artist
+        # |   recording_tags |   recording tags              |  recording_tag, genre              | recording
+        # |   recording      |                               |  recording                         |
+        recording_mbids_query = """
+                SELECT r.gid
+                  FROM recording r
+                  JOIN l_artist_recording lar
+                    ON lar.entity1 = r.id
+                  JOIN link l
+                    ON lar.link = l.id
+                  JOIN link_type lt
+                    ON l.link_type = lt.id
+                  JOIN link_attribute la
+                    ON la.link = l.id
+                  JOIN link_attribute_type lat
+                    ON la.attribute_type = lat.id
+                 WHERE lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
+                                 ,'59054b12-01ac-43ee-a618-285fd397e461'
+                                 ,'0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa'
+                                 ,'234670ce-5f22-4fd0-921b-ef1662695c5d'
+                                 ,'3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb'
+                                 ,'92777657-504c-4acb-bd33-51a201bd57e1'
+                                 ,'45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5'
+                                 ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
+                                 ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
+                   AND (
+                         lar.last_updated > :timestamp
+                      OR  lt.last_updated > :timestamp
+                      OR lat.last_updated > :timestamp
+                   )
+            UNION
+                SELECT r.gid
+                  FROM musicbrainz.tag t
+                  JOIN recording_tag rt
+                    ON rt.tag = t.id
+                  JOIN recording r
+                    ON rt.recording = r.id
+             LEFT JOIN genre g
+                    ON t.name = g.name
+                 WHERE rt.last_updated > :timestamp
+                    OR  g.last_updated > :timestamp
+            UNION
+                SELECT r.gid
+                  FROM recording r
+                 WHERE r.last_updated > :timestamp
+        """
+
+        # 3. release_group_tags, release_data
+        # these CTEs concern release data and we fetch release and cover art data from these. the CTEs do not join to
+        # recording table because that has been considered earlier.
+        #
+        # |   CTE / table        |        purpose             |  last_updated considered    | last_updated ignored
+        # |   release_group_tags |  release group level tags  |  release_group_tag, genre   | release, release_group
+        # |   release_data       |  release name, cover art   |                             | release, release_group
+        # |   release            |                            |  release, release_group     |
+        release_mbids_query = """
+                SELECT rel.gid AS release_mbid
+                  FROM mapping.canonical_release_redirect crr
+                  JOIN release rel
+                    ON crr.release_mbid = rel.gid
+                  JOIN release_group rg
+                    ON rel.release_group = rg.id
+                  JOIN release_group_tag rgt
+                    ON rgt.release_group = rel.release_group
+                  JOIN tag t
+                    ON rgt.tag = t.id
+             LEFT JOIN genre g
+                    ON t.name = g.name
+                 WHERE rgt.last_updated > :timestamp
+                    OR   g.last_updated > :timestamp
+            UNION
+                SELECT rel.gid
+                  FROM mapping.canonical_release_redirect crr
+                  JOIN release rel
+                    ON crr.release_mbid = rel.gid
+                  JOIN release_group rg
+                    ON rel.release_group = rg.id
+                 WHERE rel.last_updated > :timestamp
+                   AND  rg.last_updated > :timestamp
+        """
+
+        try:
+            with conn.cursor() as curs:
+                curs.execute(artist_mbids_query, (timestamp,))
+                artist_mbids = [row[0] for row in curs.fetchall()]
+
+                curs.execute(recording_mbids_query, (timestamp,))
+                recording_mbids = [row[0] for row in curs.fetchall()]
+
+                curs.execute(release_mbids_query, (timestamp,))
+                release_mbids = [row[0] for row in curs.fetchall()]
+
+                return recording_mbids, artist_mbids, release_mbids
+        except psycopg2.errors.OperationalError as err:
+            log("mb metadata cache: cannot query rows for update", err)
+            return None
+
     def mark_rows_as_dirty(self, recording_mbids: List[uuid.UUID], artist_mbids: List[uuid.UUID], release_mbids: List[uuid.UUID]):
         """Mark rows as dirty if the row is for a given recording mbid or if it's by a given artist mbid, or is from a given release mbid"""
 
@@ -488,3 +664,24 @@ def create_mb_metadata_cache(use_lb_conn: bool):
 
         cache = MusicBrainzMetadataCache(mb_conn, lb_conn)
         cache.run()
+
+
+def incremental_update_mb_metadata_cache(use_lb_conn: bool):
+    """ Update the MB metadata cache incrementally """
+    psycopg2.extras.register_uuid()
+
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
+        lb_conn = None
+        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
+            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+
+        cache = MusicBrainzMetadataCache(mb_conn, lb_conn)
+        if not cache.table_exists():
+            log("mb metadata cache: table does not exist, first create the table normally")
+            return
+
+        # TODO: Update logic to get last update timestamp
+        timestamp = datetime.now() + timedelta(hours=-4)
+        recording_mbids, artist_mbids, release_mbids = cache.query_last_updated_items(timestamp)
+        cache.mark_rows_as_dirty(recording_mbids, artist_mbids, release_mbids)
+        cache.update_dirty_cache_items()
