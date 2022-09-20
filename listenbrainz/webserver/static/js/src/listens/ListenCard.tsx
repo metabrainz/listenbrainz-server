@@ -171,9 +171,18 @@ export default class ListenCard extends React.Component<
         artist_name: getArtistName(listen),
         track_name: getTrackName(listen),
         release_name: _get(listen, "track_metadata.release_name"),
-        recording_mbid: getRecordingMBID(listen),
-        recording_msid: getRecordingMSID(listen),
       };
+
+      const recording_mbid = getRecordingMBID(listen);
+      if (recording_mbid) {
+        metadata.recording_mbid = recording_mbid;
+      }
+
+      const recording_msid = getRecordingMSID(listen);
+      if (recording_msid) {
+        metadata.recording_msid = recording_msid;
+      }
+
       try {
         const status = await APIService.recommendTrackToFollowers(
           currentUser.name,
@@ -241,7 +250,9 @@ export default class ListenCard extends React.Component<
     const trackDurationMs = getTrackDurationInMs(listen);
 
     const hasRecordingMSID = Boolean(recordingMSID);
-    const enableRecommendButton = artistName && trackName && hasRecordingMSID;
+    const hasRecordingMBID = Boolean(recordingMBID);
+    const enableRecommendButton =
+      artistName && trackName && (hasRecordingMSID || hasRecordingMBID);
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
