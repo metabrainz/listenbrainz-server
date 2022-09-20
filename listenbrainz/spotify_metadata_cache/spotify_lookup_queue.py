@@ -115,6 +115,9 @@ class SpotifyIdsQueue(threading.Thread):
         albums = self.sp.albums(album_ids).get("albums")
 
         for album in albums:
+            if album is None:
+                continue
+
             results = album["tracks"]
             tracks = results.get("items")
 
