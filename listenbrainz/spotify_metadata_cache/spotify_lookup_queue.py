@@ -140,7 +140,7 @@ class SpotifyIdsQueue(threading.Thread):
                 return
             self.discovered_artists.add(artist_id)
 
-            results = self.sp.artist_albums(artist_id, album_type='album,single,compilation')
+            results = self.sp.artist_albums(artist_id, album_type='album,single,compilation', limit=50)
             albums = results.get('items')
             while results.get('next'):
                 results = self.sp.next(results)
