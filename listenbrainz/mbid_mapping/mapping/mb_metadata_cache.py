@@ -399,8 +399,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         curs.execute('SET join_collapse_limit = 15')
 
     def query_last_updated_items(self, timestamp):
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
-
         # there queries here try to mirror the structure and logic of the main cache building queries
         # note that the tags queries in any of these omit the count > 0 clause because possible removal
         # of a tag is also a change.
@@ -557,7 +555,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         """
 
         try:
-            with conn.cursor() as curs:
+            with self.mb_conn.cursor() as curs:
                 curs.execute(artist_mbids_query, {"timestamp": timestamp})
                 artist_mbids = [row[0] for row in curs.fetchall()]
 
