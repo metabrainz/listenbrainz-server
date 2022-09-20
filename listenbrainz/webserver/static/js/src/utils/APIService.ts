@@ -1139,4 +1139,16 @@ export default class APIService {
     await this.checkStatus(response);
     return response.status;
   };
+
+  fetchFreshReleases = async (
+    release_date?: string,
+    days?: number
+  ): Promise<any> => {
+    let url = `${this.APIBaseURI}/explore/fresh-releases/`;
+    if (!isUndefined(release_date)) url += `?release_date=${release_date}`;
+    if (!isUndefined(days)) url += `&days=${days}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
 }

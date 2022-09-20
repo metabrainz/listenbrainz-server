@@ -2,7 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import { isEqual, uniqBy, uniqWith } from "lodash";
+import { uniqBy } from "lodash";
 import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
@@ -10,31 +10,31 @@ import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ReleaseCard from "./ReleaseCard";
-import fakeData from "./fakeData.json";
 import ReleaseFilters from "./ReleaseFilters";
 
-type ReleaseDataType = {
-  date: string;
-  artist_mbids: Array<string>;
-  release_mbid: string;
-  release_name: string;
-  artist_credit_name: string;
-  release_group_primary_type: string | null;
-  release_group_secondary_type: string | null;
+type FreshReleasesProps = {
+  newAlert: (
+    alertType: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
 };
 
-export default function FreshReleases() {
+export default function FreshReleases({ newAlert }: FreshReleasesProps) {
   const RELEASE_TYPE_OTHER = "Other";
 
-  const [releaseData, setReleaseData] = React.useState<Array<ReleaseDataType>>(
-    fakeData
-  );
+  const { APIService } = React.useContext(GlobalAppContext);
+
+  const [releases, setReleases] = React.useState<Array<FreshReleaseItem>>();
   const [typesList, setTypesList] = React.useState<Array<string | null>>([]);
 
-  React.useEffect(() => {
-    setReleaseData(
-      // Deduplicate releases based on same release name by same artist name.
-      uniqBy(fakeData, (datum) => {
+  const fetchReleases = React.useCallback(async () => {
+    try {
+      const freshReleases: Array<FreshReleaseItem> = await APIService.fetchFreshReleases(
+        "",
+        1
+      );
+      const cleanReleases = uniqBy(freshReleases, (datum) => {
         return (
           /*
            * toLowerCase() solves an edge case.
@@ -46,29 +46,26 @@ export default function FreshReleases() {
           datum.release_name.toLowerCase() +
           datum.artist_credit_name.toLowerCase()
         );
-      })
-    );
+      });
+      const releaseTypes = cleanReleases
+        .map(
+          (release) =>
+            (release.release_group_primary_type ||
+              release.release_group_secondary_type) ??
+            RELEASE_TYPE_OTHER
+        )
+        .filter((value, index, self) => self.indexOf(value) === index);
+
+      setReleases(cleanReleases);
+      setTypesList(releaseTypes);
+    } catch (error) {
+      newAlert("danger", "Couldn't fetch fresh releases", error.toString());
+    }
   }, []);
 
   React.useEffect(() => {
-    setTypesList(
-      uniqWith(
-        releaseData.map((release) => {
-          if (
-            release.release_group_primary_type !== null ||
-            release.release_group_secondary_type !== null
-          )
-            return (
-              release.release_group_primary_type ||
-              release.release_group_secondary_type
-            );
-
-          return RELEASE_TYPE_OTHER;
-        }),
-        isEqual
-      )
-    );
-  }, []);
+    fetchReleases();
+  }, [fetchReleases]);
 
   return (
     <>
@@ -81,16 +78,17 @@ export default function FreshReleases() {
           <ReleaseFilters filters={typesList} />
         </div>
         <div className="release-cards-grid col-xs-12 col-md-10">
-          {releaseData.slice(600, 620).map((release) => {
+          {releases?.map((release) => {
             return (
               <ReleaseCard
                 key={release.release_mbid}
-                releaseDate={release.date}
+                releaseDate={release.release_date}
                 releaseMBID={release.release_mbid}
                 releaseName={release.release_name}
                 releaseType={
-                  release.release_group_primary_type ||
-                  release.release_group_secondary_type
+                  (release.release_group_primary_type ||
+                    release.release_group_secondary_type) ??
+                  RELEASE_TYPE_OTHER
                 }
                 artistCreditName={release.artist_credit_name}
                 artistMBIDs={release.artist_mbids}
