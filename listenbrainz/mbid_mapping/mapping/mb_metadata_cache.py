@@ -556,12 +556,15 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
         try:
             with self.mb_conn.cursor() as curs:
+                log("mb metadata cache: querying artist mbids to update")
                 curs.execute(artist_mbids_query, {"timestamp": timestamp})
                 artist_mbids = [row[0] for row in curs.fetchall()]
 
+                log("mb metadata cache: querying recording mbids to update")
                 curs.execute(recording_mbids_query, {"timestamp": timestamp})
                 recording_mbids = [row[0] for row in curs.fetchall()]
 
+                log("mb metadata cache: querying release mbids to update")
                 curs.execute(release_mbids_query, {"timestamp": timestamp})
                 release_mbids = [row[0] for row in curs.fetchall()]
 
@@ -573,6 +576,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
     def mark_rows_as_dirty(self, recording_mbids: List[uuid.UUID], artist_mbids: List[uuid.UUID], release_mbids: List[uuid.UUID]):
         """Mark rows as dirty if the row is for a given recording mbid or if it's by a given artist mbid, or is from a given release mbid"""
 
+        log("mb metadata cache: marking rows as dirty")
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
@@ -678,8 +682,12 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
             log("mb metadata cache: table does not exist, first create the table normally")
             return
 
+        log("mb metadata cache: starting incremental update")
+
         # TODO: Update logic to get last update timestamp
         timestamp = datetime.now() + timedelta(hours=-4)
         recording_mbids, artist_mbids, release_mbids = cache.query_last_updated_items(timestamp)
         cache.mark_rows_as_dirty(recording_mbids, artist_mbids, release_mbids)
         cache.update_dirty_cache_items()
+
+        log("mb metadata cache: incremental update completed")
