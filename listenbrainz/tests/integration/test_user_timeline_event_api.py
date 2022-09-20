@@ -84,6 +84,30 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('Kanye West', events[0].metadata.artist_name)
         self.assertEqual('Fade', events[0].metadata.track_name)
 
+    def test_recommendation_mbid_only(self):
+        """ Test recommendation with mbid only works """
+        metadata = {
+            'artist_name': 'Kanye West',
+            'track_name': 'Fade',
+            'artist_msid':  str(uuid.uuid4()),
+            'recording_mbid': str(uuid.uuid4()),
+        }
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert200(r)
+
+        events = db_user_timeline_event.get_user_track_recommendation_events(
+            user_id=self.user['id'],
+            count=1,
+        )
+        self.assertEqual(1, len(events))
+        self.assertEqual('Kanye West', events[0].metadata.artist_name)
+        self.assertEqual('Fade', events[0].metadata.track_name)
+        self.assertEqual(metadata['recording_mbid'], events[0].metadata.recording_mbid)
+
     def test_recommendation_checks_auth_token_for_authorization(self):
         metadata = {
             'artist_name': 'Kanye West',
@@ -879,7 +903,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(r)
 
-
     def test_personal_recommendation_checks_json_metadata(self):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
@@ -1013,5 +1036,47 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["release_name"], received["release_name"])
         self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
         self.assertEqual(metadata["recording_msid"], received["recording_msid"])
+        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
+        self.assertCountEqual(metadata["users"], received["users"])
+
+    def test_personal_recommendation_mbid_only(self):
+        """ Test that we can recommend a recording with only mbid """
+        # Let's create 2 users, who follow the request sender
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        metadata = {
+            "track_name": "Natkhat",
+            "artist_name": "Seedhe Maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert200(r)
+
+        events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            user_id=self.user['id'],
+            min_ts=0,
+            max_ts=int(time.time())+10,
+            count=50
+        )
+
+        self.assertEqual(1, len(events))
+
+        received = events[0].metadata.dict()
+        self.assertEqual(metadata["track_name"], received["track_name"])
+        self.assertEqual(metadata["artist_name"], received["artist_name"])
+        self.assertEqual(metadata["release_name"], received["release_name"])
+        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
+        self.assertEqual(None, received["recording_msid"])
         self.assertEqual(metadata["blurb_content"], received["blurb_content"])
         self.assertCountEqual(metadata["users"], received["users"])
