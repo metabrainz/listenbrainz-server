@@ -112,6 +112,7 @@ class SpotifyIdsQueue(threading.Thread):
         self.app.logger.info("Albums inserted so far: %d", self.stats["albums_inserted"])
 
     def fetch_albums(self, album_ids):
+        self.app.logger.info("Fetching albums")
         albums = self.sp.albums(album_ids).get("albums")
 
         for album in albums:
@@ -126,6 +127,7 @@ class SpotifyIdsQueue(threading.Thread):
                 if results.get("items"):
                     tracks.extend(results.get("items"))
 
+            self.app.logger.info("Discovering new albums")
             for track in tracks:
                 for track_artist in track.get("artists"):
                     if track_artist["id"]:
@@ -197,6 +199,7 @@ class SpotifyIdsQueue(threading.Thread):
         # TODO: check in PG too if missing from cache before querying spotify?
 
         albums = self.fetch_albums(filtered_ids)
+        self.app.logger.info("Inserting albums")
         for album in albums:
             self.insert_album(album)
 
