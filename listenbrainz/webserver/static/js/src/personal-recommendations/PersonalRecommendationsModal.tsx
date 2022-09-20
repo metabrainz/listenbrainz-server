@@ -24,9 +24,9 @@ export type PersonalRecommendationModalProps = {
 
 export interface PersonalRecommendationModalState {
   blurbContent: string;
-  users: Array<string> | null;
-  followers: Array<string> | null;
-  suggestions: Array<string> | null;
+  users: Array<string>;
+  followers: Array<string>;
+  suggestions: Array<string>;
 }
 
 export default class PersonalRecommendationModal extends React.Component<
@@ -80,8 +80,7 @@ export default class PersonalRecommendationModal extends React.Component<
 
   addUser = (user: string) => {
     const { users } = this.state;
-    users!.push(user);
-    this.setState({ users: uniq(users), suggestions: [] });
+    this.setState({ users: uniq([...users, user]), suggestions: [] });
   };
 
   removeUser = (user: string) => {
