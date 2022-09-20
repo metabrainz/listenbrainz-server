@@ -21,6 +21,7 @@ UPDATE_INTERVAL = 60  # in seconds
 CACHE_TIME = 180  # in days
 BATCH_SIZE = 10  # number of spotify ids to process at a time
 
+RETRY_ALBUM_PRIORITY = 2
 DISCOVERED_ALBUM_PRIORITY = 1
 INCOMING_ALBUM_PRIORITY = 0
 
@@ -176,6 +177,10 @@ class SpotifyIdsQueue(threading.Thread):
 
         self.stats["albums_inserted"] += 1
 
+    def retry_spotify_ids(self, spotify_ids):
+        for spotify_id in spotify_ids:
+            self.queue.put(JobItem(RETRY_ALBUM_PRIORITY, spotify_id))
+
     def process_spotify_ids(self, spotify_ids):
         filtered_ids = []
         for spotify_id in spotify_ids:
@@ -218,5 +223,6 @@ class SpotifyIdsQueue(threading.Thread):
                 except Exception as e:
                     sentry_sdk.capture_exception(e)
                     self.app.logger.info(traceback.format_exc())
+                    self.retry_spotify_ids(spotify_ids)
 
             self.app.logger.info("job queue thread finished")
