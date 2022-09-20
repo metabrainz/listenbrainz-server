@@ -22,7 +22,7 @@ CACHE_TIME = 180  # in days
 BATCH_SIZE = 10  # number of spotify ids to process at a time
 
 RETRY_ALBUM_PRIORITY = 2
-DISCOVERED_ALBUM_PRIORITY = 1
+DISCOVERED_ALBUM_PRIORITY = 3
 INCOMING_ALBUM_PRIORITY = 0
 
 CACHE_KEY_PREFIX = "spotify:album:"
@@ -112,7 +112,6 @@ class SpotifyIdsQueue(threading.Thread):
         self.app.logger.info("Albums inserted so far: %d", self.stats["albums_inserted"])
 
     def fetch_albums(self, album_ids):
-        self.app.logger.info("Fetching albums")
         albums = self.sp.albums(album_ids).get("albums")
 
         for album in albums:
@@ -127,7 +126,6 @@ class SpotifyIdsQueue(threading.Thread):
                 if results.get("items"):
                     tracks.extend(results.get("items"))
 
-            self.app.logger.info("Discovering new albums")
             for track in tracks:
                 for track_artist in track.get("artists"):
                     if track_artist["id"]:
@@ -199,8 +197,9 @@ class SpotifyIdsQueue(threading.Thread):
         # TODO: check in PG too if missing from cache before querying spotify?
 
         albums = self.fetch_albums(filtered_ids)
-        self.app.logger.info("Inserting albums")
         for album in albums:
+            if album is None:
+                continue
             self.insert_album(album)
 
     def run(self):
