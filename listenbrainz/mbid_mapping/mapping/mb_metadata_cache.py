@@ -443,16 +443,16 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                              ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
                              ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
                    AND (
-                        lau.last_updated > :timestamp
-                     OR   u.last_updated > :timestamp
-                     OR  lt.last_updated > :timestamp
+                        lau.last_updated > %(timestamp)s
+                     OR   u.last_updated > %(timestamp)s
+                     OR  lt.last_updated > %(timestamp)s
                    )
         UNION
             SELECT a.gid
               FROM artist a
               JOIN area ar
                 ON a.area = ar.id
-             WHERE ar.last_updated > :timestamp
+             WHERE ar.last_updated > %(timestamp)s
         UNION
             SELECT a.gid
               FROM artist a
@@ -462,12 +462,12 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 ON at.tag = t.id
          LEFT JOIN genre g
                 ON t.name = g.name
-             WHERE at.last_updated > :timestamp
-                OR  g.last_updated > :timestamp
+             WHERE at.last_updated > %(timestamp)s
+                OR  g.last_updated > %(timestamp)s
         UNION
             SELECT a.gid
               FROM artist a
-             WHERE a.last_updated > :timestamp
+             WHERE a.last_updated > %(timestamp)s
         """
 
         # 2. recording_rels, recording_tags, recording
@@ -501,9 +501,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
                                  ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                    AND (
-                         lar.last_updated > :timestamp
-                      OR  lt.last_updated > :timestamp
-                      OR lat.last_updated > :timestamp
+                         lar.last_updated > %(timestamp)s
+                      OR  lt.last_updated > %(timestamp)s
+                      OR lat.last_updated > %(timestamp)s
                    )
             UNION
                 SELECT r.gid
@@ -514,12 +514,12 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     ON rt.recording = r.id
              LEFT JOIN genre g
                     ON t.name = g.name
-                 WHERE rt.last_updated > :timestamp
-                    OR  g.last_updated > :timestamp
+                 WHERE rt.last_updated > %(timestamp)s
+                    OR  g.last_updated > %(timestamp)s
             UNION
                 SELECT r.gid
                   FROM recording r
-                 WHERE r.last_updated > :timestamp
+                 WHERE r.last_updated > %(timestamp)s
         """
 
         # 3. release_group_tags, release_data
@@ -543,8 +543,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     ON rgt.tag = t.id
              LEFT JOIN genre g
                     ON t.name = g.name
-                 WHERE rgt.last_updated > :timestamp
-                    OR   g.last_updated > :timestamp
+                 WHERE rgt.last_updated > %(timestamp)s
+                    OR   g.last_updated > %(timestamp)s
             UNION
                 SELECT rel.gid
                   FROM mapping.canonical_release_redirect crr
@@ -552,19 +552,19 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     ON crr.release_mbid = rel.gid
                   JOIN release_group rg
                     ON rel.release_group = rg.id
-                 WHERE rel.last_updated > :timestamp
-                   AND  rg.last_updated > :timestamp
+                 WHERE rel.last_updated > %(timestamp)s
+                   AND  rg.last_updated > %(timestamp)s
         """
 
         try:
             with conn.cursor() as curs:
-                curs.execute(artist_mbids_query, (timestamp,))
+                curs.execute(artist_mbids_query, {"timestamp": timestamp})
                 artist_mbids = [row[0] for row in curs.fetchall()]
 
-                curs.execute(recording_mbids_query, (timestamp,))
+                curs.execute(recording_mbids_query, {"timestamp": timestamp})
                 recording_mbids = [row[0] for row in curs.fetchall()]
 
-                curs.execute(release_mbids_query, (timestamp,))
+                curs.execute(release_mbids_query, {"timestamp": timestamp})
                 release_mbids = [row[0] for row in curs.fetchall()]
 
                 return recording_mbids, artist_mbids, release_mbids
