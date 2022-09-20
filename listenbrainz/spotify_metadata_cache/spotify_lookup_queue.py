@@ -21,7 +21,6 @@ UPDATE_INTERVAL = 60  # in seconds
 CACHE_TIME = 180  # in days
 BATCH_SIZE = 10  # number of spotify ids to process at a time
 
-RETRY_ALBUM_PRIORITY = 2
 DISCOVERED_ALBUM_PRIORITY = 3
 INCOMING_ALBUM_PRIORITY = 0
 
@@ -136,21 +135,25 @@ class SpotifyIdsQueue(threading.Thread):
         return albums
 
     def discover_albums(self, artist_id):
-        if artist_id in self.discovered_artists:
-            return
-        self.discovered_artists.add(artist_id)
+        try:
+            if artist_id in self.discovered_artists:
+                return
+            self.discovered_artists.add(artist_id)
 
-        results = self.sp.artist_albums(artist_id, album_type='album,single,compilation')
-        albums = results.get('items')
-        while results.get('next'):
-            results = self.sp.next(results)
-            if results.get('items'):
-                albums.extend(results.get('items'))
+            results = self.sp.artist_albums(artist_id, album_type='album,single,compilation')
+            albums = results.get('items')
+            while results.get('next'):
+                results = self.sp.next(results)
+                if results.get('items'):
+                    albums.extend(results.get('items'))
 
-        for album in albums:
-            was_added = self.queue.put(JobItem(DISCOVERED_ALBUM_PRIORITY, album["id"]))
-            if was_added:
-                self.stats["discovered_albums"] += 1
+            for album in albums:
+                was_added = self.queue.put(JobItem(DISCOVERED_ALBUM_PRIORITY, album["id"]))
+                if was_added:
+                    self.stats["discovered_albums"] += 1
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            self.app.logger.info(traceback.format_exc())
 
     def insert_album(self, data):
         album_id = data["id"]
@@ -179,10 +182,6 @@ class SpotifyIdsQueue(threading.Thread):
         cache.expireat(cache_key, int(expires_at.timestamp()))
 
         self.stats["albums_inserted"] += 1
-
-    def retry_spotify_ids(self, spotify_ids):
-        for spotify_id in spotify_ids:
-            self.queue.put(JobItem(RETRY_ALBUM_PRIORITY, spotify_id))
 
     def process_spotify_ids(self, spotify_ids):
         filtered_ids = []
@@ -228,6 +227,5 @@ class SpotifyIdsQueue(threading.Thread):
                 except Exception as e:
                     sentry_sdk.capture_exception(e)
                     self.app.logger.info(traceback.format_exc())
-                    self.retry_spotify_ids(spotify_ids)
 
             self.app.logger.info("job queue thread finished")
