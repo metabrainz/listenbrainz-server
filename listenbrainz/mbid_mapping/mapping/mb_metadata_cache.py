@@ -210,9 +210,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                     ON lar.link = l.id
                                   JOIN link_type lt
                                     ON l.link_type = lt.id
-                                  JOIN link_attribute la
+                             LEFT JOIN link_attribute la
                                     ON la.link = l.id
-                                  JOIN link_attribute_type lat
+                             LEFT JOIN link_attribute_type lat
                                     ON la.attribute_type = lat.id
                                   {values_join}
                                  WHERE lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
