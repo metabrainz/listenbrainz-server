@@ -34,7 +34,7 @@ class MappingTestCase(TimescaleTestCase):
                 """), {
                     "recording_mbid": recording["recording_mbid"],
                     "artist_mbids": recording["artist_mbids"],
-                    "release_mbids": recording["release_mbid"],
+                    "release_mbid": recording["release_mbid"],
                     "recording_data": json.dumps({"name": recording["title"]}),
                     "artist_data": json.dumps({"name": recording["artist"]}),
                     "release_data": json.dumps({"name": recording["release"]}),
