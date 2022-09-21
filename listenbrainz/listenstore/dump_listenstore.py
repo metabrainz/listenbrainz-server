@@ -344,21 +344,21 @@ class DumpListenStore:
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
                           -- here and let psycopg2 adapt it to a python list which is what we want anyway
                           , data->'track_metadata'->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
-                          , artist_credit_name AS m_artist_name
+                          , artist_data->>'name' AS m_artist_name
                           , data->'track_metadata'->>'artist_name' AS l_artist_name
-                          , release_name AS m_release_name
+                          , release_data->>'name' AS m_release_name
                           , data->'track_metadata'->>'release_name' AS l_release_name
                           , release_mbid::TEXT AS m_release_mbid
                           , data->'track_metadata'->'additional_info'->>'release_mbid' AS l_release_mbid
-                          , recording_name AS m_recording_name
+                          , recording_data->>'name' AS m_recording_name
                           , track_name AS l_recording_name
                           , mm.recording_mbid::TEXT AS m_recording_mbid
                           , data->'track_metadata'->'additional_info'->>'recording_mbid' AS l_recording_mbid
                        FROM listen l
                   LEFT JOIN mbid_mapping mm
                          ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
-                  LEFT JOIN mbid_mapping_metadata m
-                         ON mm.recording_mbid = m.recording_mbid
+                  LEFT JOIN mapping.mb_metadata_cache mbc
+                         ON mm.recording_mbid = mbc.recording_mbid
                       WHERE {criteria} > %(start)s
                         AND {criteria} <= %(end)s
                    ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))

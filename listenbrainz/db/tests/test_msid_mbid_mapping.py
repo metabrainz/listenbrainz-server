@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from sqlalchemy import text
@@ -27,11 +28,18 @@ class MappingTestCase(TimescaleTestCase):
         with ts.engine.begin() as connection:
             if match_type == "exact_match":
                 connection.execute(text("""
-                    INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
-                                                       artist_mbids, artist_credit_name, recording_name)
-                     VALUES (:artist_credit_id, :recording_mbid ::UUID, :release_mbid ::UUID, :release,
-                             :artist_mbids ::UUID[], :artist, :title)
-                """), recording)
+                    INSERT INTO mapping.mb_metadata_cache
+                            (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                     VALUES (:recording_mbid::UUID, :artist_mbids::UUID[], :release_mbid::UUID, :recording_data, :artist_data, :tag_data, :release_data, 'f')
+                """), {
+                    "recording_mbid": recording["recording_mbid"],
+                    "artist_mbids": recording["artist_mbids"],
+                    "release_mbids": recording["release_mbid"],
+                    "recording_data": json.dumps({"name": recording["title"]}),
+                    "artist_data": json.dumps({"name": recording["artist"]}),
+                    "release_data": json.dumps({"name": recording["release"]}),
+                    "tag_data": json.dumps({"artist": [], "recording": [], "release_group": []})
+                })
 
             connection.execute(
                 text("""
