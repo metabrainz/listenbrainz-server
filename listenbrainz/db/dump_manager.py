@@ -22,16 +22,17 @@ create and import postgres data dumps.
 
 import click
 from datetime import datetime, timedelta
-import listenbrainz.db.dump as db_dump
 import os
 import re
 import shutil
 import subprocess
 import sys
 
-import psycopg2
 from flask import current_app, render_template
+
 from brainzutils.mail import send_mail
+import listenbrainz.db.dump as db_dump
+import listenbrainz.mbid_mapping.mapping.dump as mapping_dump
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.year_in_music import insert_playlists
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
@@ -60,6 +61,40 @@ def send_dump_creation_notification(dump_name, dump_type):
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
         )
+
+
+@cli.command(name="create_mapping")
+@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
+              help="path to the directory where the dump should be made")
+def create_mapping(location):
+    app = create_app()
+    with app.app_context():
+        end_time = datetime.now()
+        ts = end_time.strftime('%Y%m%d-%H%M%S')
+        dump_name = 'metabrainz-metadata-dump-{time}'.format(time=ts)
+        dump_path = os.path.join(location, dump_name)
+        create_path(dump_path)
+
+        mapping_dump.create_public_mapping_dump(dump_path, end_time)
+        expected_num_dumps = 1
+
+        try:
+            write_hashes(dump_path)
+        except IOError as e:
+            current_app.logger.error(
+                'Unable to create hash files! Error: %s', str(e), exc_info=True)
+            sys.exit(-1)
+
+        try:
+            # archive, md5, sha256 for each expected dump archive
+            expected_num_dump_files = expected_num_dumps * 3
+            if not sanity_check_dumps(dump_path, expected_num_dump_files):
+                return sys.exit(-1)
+        except OSError:
+            sys.exit(-1)
+
+        current_app.logger.info(
+            'Dumps created and hashes written at %s' % dump_path)
 
 
 @cli.command(name="create_full")
