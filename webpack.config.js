@@ -46,6 +46,7 @@ module.exports = function (env, argv) {
     }),
     new StylelintPlugin({
       configFile: ".stylelintrc.js",
+      failOnError: isProd,
       files: "**/static/css/**/*.less",
       fix: !isProd,
       threads: true,
