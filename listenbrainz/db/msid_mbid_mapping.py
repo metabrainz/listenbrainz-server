@@ -60,7 +60,7 @@ def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]) -> 
              , artist_mbids::TEXT[]
              , artist_data->>'name' AS artist
              , recording_data->>'name' AS title
-             , release_data->>'title' AS release
+             , release_data->>'name' AS release
           FROM mbid_mapping m
           JOIN mapping.mb_metadata_cache mbc
          USING (recording_mbid)

@@ -30,7 +30,7 @@ class MappingTestCase(TimescaleTestCase):
                 connection.execute(text("""
                     INSERT INTO mapping.mb_metadata_cache
                             (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
-                     VALUES (:recording_mbid::UUID, :artist_mbids::UUID[], :release_mbid::UUID, :recording_data, :artist_data, :tag_data, :release_data, 'f')
+                     VALUES (:recording_mbid ::UUID, :artist_mbids ::UUID[], :release_mbid ::UUID, :recording_data, :artist_data, :tag_data, :release_data, 'f')
                 """), {
                     "recording_mbid": recording["recording_mbid"],
                     "artist_mbids": recording["artist_mbids"],
@@ -56,7 +56,6 @@ class MappingTestCase(TimescaleTestCase):
     def insert_recordings(self):
         recordings = [
             {
-                "artist_credit_id": 204,
                 "recording_mbid": "00000737-3a59-4499-b30a-31fe2464555d",
                 "release_mbid": "a2589025-8517-45ab-9d64-fe927ba087b1",
                 "release": "Batman Returns",
@@ -65,7 +64,6 @@ class MappingTestCase(TimescaleTestCase):
                 "title": "The Final Confrontation, Part 1"
             },
             {
-                "artist_credit_id": 133549,
                 "recording_mbid": "c5bfd98d-ccde-4cf3-8abb-63fad1b6065a",
                 "release_mbid": "5da4af04-d796-4d07-801d-a878e83dea48",
                 "release": "Random Is Resistance",
@@ -79,7 +77,6 @@ class MappingTestCase(TimescaleTestCase):
                 "release": None
             },
             {
-                "artist_credit_id": 347,
                 "recording_mbid": "67bcde07-bfb1-4b30-88ba-6b995ec04123",
                 "release_mbid": "27280632-fa33-3801-a5b1-081ed0b65bb3",
                 "release": "Year Zero",
@@ -96,14 +93,12 @@ class MappingTestCase(TimescaleTestCase):
         submitted = messybrainz.insert_all_in_transaction(recordings)
         # data sent to msb cannot contain nulls but we want it when inserting in mapping
         recordings[2].update(**{
-            "artist_credit_id": None,
             "recording_mbid": None,
             "release_mbid": None,
             "release": None,
             "artist_mbids": None,
         })
         recordings[4].update(**{
-            "artist_credit_id": None,
             "recording_mbid": None,
             "release_mbid": None,
             "release": None,
@@ -116,8 +111,6 @@ class MappingTestCase(TimescaleTestCase):
             else:
                 match_type = "exact_match"
             self.insert_recording_in_mapping(recordings[idx], match_type)
-            # artist_credit_id is not retrieved, remove from dict after submitting
-            del recordings[idx]["artist_credit_id"]
         return recordings
 
     def test_load_recordings_from_mapping(self):

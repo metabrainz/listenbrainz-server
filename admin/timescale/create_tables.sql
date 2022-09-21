@@ -68,6 +68,22 @@ CREATE TABLE mbid_mapping (
         check_again         TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE mbid_mapping_metadata (
+        artist_credit_id    INT NOT NULL,
+        recording_mbid      UUID NOT NULL,
+        release_mbid        UUID NOT NULL,
+        release_name        TEXT NOT NULL,
+        artist_mbids        UUID[] NOT NULL,
+        artist_credit_name  TEXT NOT NULL,
+        recording_name      TEXT NOT NULL,
+        last_updated        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- postgres does not enforce dimensionality of arrays. add explicit check to avoid regressions (once burnt, twice shy!).
+ALTER TABLE mbid_mapping_metadata
+    ADD CONSTRAINT mbid_mapping_metadata_artist_mbids_check
+    CHECK ( array_ndims(artist_mbids) = 1 );
+
 -- this table is defined in listenbrainz/mbid_mapping/mapping/mb_metadata_cache.py and created in production
 -- there. this definition is only for tests and local development. remember to keep both in sync.
 CREATE TABLE mapping.mb_metadata_cache (
