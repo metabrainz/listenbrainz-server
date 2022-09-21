@@ -58,11 +58,11 @@ def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]) -> 
              , recording_mbid::TEXT
              , release_mbid::TEXT
              , artist_mbids::TEXT[]
-             , artist_credit_name AS artist
-             , recording_name AS title
-             , release_name AS release
+             , artist_data->>'name' AS artist
+             , recording_data->>'name' AS title
+             , release_data->>'title' AS release
           FROM mbid_mapping m
-          JOIN mbid_mapping_metadata mm
+          JOIN mapping.mb_metadata_cache mbc
          USING (recording_mbid)
          WHERE {full_where_clause}
     """

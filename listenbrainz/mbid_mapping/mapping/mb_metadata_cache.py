@@ -61,6 +61,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         super().__init__("mapping.mb_metadata_cache", mb_conn, lb_conn, batch_size)
 
     def get_create_table_columns(self):
+        # this table is created in local development and tables using admin/timescale/create_tables.sql
+        # remember to keep both in sync.
         return [("dirty ",                     "BOOLEAN DEFAULT FALSE"),
                 ("recording_mbid ",            "UUID NOT NULL"),
                 ("artist_mbids ",              "UUID[] NOT NULL"),

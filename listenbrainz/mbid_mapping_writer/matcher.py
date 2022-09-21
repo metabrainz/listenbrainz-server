@@ -1,12 +1,9 @@
-import uuid
 from operator import itemgetter
 
 import sqlalchemy
 import psycopg2
-from flask import current_app
-from psycopg2.extras import execute_values
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
-from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_NO_MATCH, MATCH_TYPE_EXACT_MATCH
+from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_EXACT_MATCH
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.db import timescale
 
@@ -22,7 +19,7 @@ def process_listens(app, listens, priority):
        a result alrady exists in the DB -- the selection of legacy listens
        has already taken care of this."""
 
-    from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
+    from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN
 
     stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
     for typ in MATCH_TYPES:
@@ -83,13 +80,11 @@ def process_listens(app, listens, priority):
     with conn.cursor() as curs:
         try:
             # Try an exact lookup (in postgres) first.
-            matches, remaining_listens, stats = lookup_listens(
-                app, listens_to_check, stats, True, debug)
+            matches, remaining_listens, stats = lookup_listens(app, listens_to_check, stats, True, debug)
 
             # For all remaining listens, do a fuzzy lookup.
             if remaining_listens:
-                new_matches, remaining_listens, stats = lookup_listens(
-                    app, remaining_listens, stats, False, debug)
+                new_matches, remaining_listens, stats = lookup_listens(app, remaining_listens, stats, False, debug)
                 matches.extend(new_matches)
 
             if priority == NEW_LISTEN:
@@ -98,41 +93,10 @@ def process_listens(app, listens, priority):
             # For all listens that are not matched, enter a no match entry, so we don't
             # keep attempting to look up more listens.
             for listen in remaining_listens:
-                matches.append((listen['recording_msid'], None, None, None, None, None, None, None, MATCH_TYPES[0]))
+                matches.append((listen['recording_msid'], None, MATCH_TYPES[0]))
                 stats['no_match'] += 1
 
             stats["processed"] += len(matches)
-
-            metadata_query = """
-                INSERT INTO mbid_mapping_metadata AS mbid
-                          ( recording_mbid
-                          , release_mbid
-                          , release_name
-                          , artist_mbids
-                          , artist_credit_id
-                          , artist_credit_name
-                          , recording_name
-                          , last_updated
-                          )
-                     VALUES
-                          ( %s::UUID
-                          , %s::UUID
-                          , %s
-                          , %s::UUID[]
-                          , %s
-                          , %s
-                          , %s
-                          , now()
-                          )
-                ON CONFLICT (recording_mbid) DO UPDATE
-                        SET release_mbid = EXCLUDED.release_mbid
-                          , release_name = EXCLUDED.release_name
-                          , artist_mbids = EXCLUDED.artist_mbids
-                          , artist_credit_id = EXCLUDED.artist_credit_id
-                          , artist_credit_name = EXCLUDED.artist_credit_name
-                          , recording_name = EXCLUDED.recording_name
-                          , last_updated = now()
-            """
 
             mapping_query = """
                 INSERT INTO mbid_mapping AS m(recording_msid, recording_mbid, match_type, last_updated, check_again)
@@ -155,14 +119,10 @@ def process_listens(app, listens, priority):
 
             # Finally insert matches to PG
             for match in matches:
-                # Insert/update the metadata row
-                if match[1] is not None:
-                    curs.execute(metadata_query, match[1:8])
-
                 # Insert the mapping row
                 curs.execute(
                     mapping_query,
-                    {"recording_msid": match[0], "recording_mbid": match[1], "match_type": match[8]}
+                    {"recording_msid": match[0], "recording_mbid": match[1], "match_type": match[2]}
                 )
 
         except psycopg2.errors.CardinalityViolation:
@@ -186,7 +146,7 @@ def lookup_listens(app, listens, stats, exact, debug):
         use a typesense fuzzy lookup.
     """
     if len(listens) == 0:
-        return ([], [], stats)
+        return [], [], stats
 
     if debug:
         app.logger.info(f"""Lookup (exact {exact}) '{listens[0]["data"]["artist_name"]}', '{listens[0]["data"]["track_name"]}'""")
@@ -206,18 +166,10 @@ def lookup_listens(app, listens, stats, exact, debug):
     for hit in sorted(hits, key=itemgetter("index"), reverse=True):
         listen = listens[hit["index"]]
 
-        if exact:
-            hit["match_type"] = MATCH_TYPE_EXACT_MATCH
-        stats[MATCH_TYPES[hit["match_type"]]] += 1
-        rows.append((listen['recording_msid'],
-                     hit["recording_mbid"],
-                     hit["release_mbid"],
-                     hit["release_name"],
-                     hit["artist_mbids"],
-                     hit["artist_credit_id"],
-                     hit["artist_credit_name"],
-                     hit["recording_name"],
-                     MATCH_TYPES[hit["match_type"]]))
+        match_type_idx = MATCH_TYPE_EXACT_MATCH if exact else hit["match_type"]
+        match_type = MATCH_TYPES[match_type_idx]
+        stats[match_type] += 1
+        rows.append((listen["recording_msid"], hit["recording_mbid"], match_type))
 
         if debug:
             app.logger.info("\n".join(q.get_debug_log_lines()))

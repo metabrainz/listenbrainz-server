@@ -70,15 +70,17 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         self.sample_feedback_with_metadata[0]["recording_msid"] = msid
 
-        query = """INSERT INTO mbid_mapping_metadata
-                               (recording_mbid, release_mbid, release_name, artist_credit_id,
-                                artist_mbids, artist_credit_name, recording_name)
-                        VALUES ('076255b4-1575-11ec-ac84-135bf6a670e3',
-                                '1fd178b4-1575-11ec-b98a-d72392cd8c97',
-                                'release_name',
-                                65,
-                                '{6a221fda-2200-11ec-ac7d-dfa16a57158f}'::UUID[],
-                                'Portishead', 'Strangers')"""
+        query = """INSERT INTO mapping.mb_metadata_cache
+                               (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                        VALUES ('2f3d422f-8890-41a1-9762-fbe16f107c31'
+                              , '{8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11}'::UUID[]
+                              , '76df3287-6cda-33eb-8e9a-044b5e15ffdd'
+                              , '{"name": "Strangers", "rels": [], "length": 291160}'
+                              , '{"name": "Portishead", "artists": [{"area": "United Kingdom", "rels": {"lyrics": "https://muzikum.eu/en/122-6105/portishead/lyrics.html", "youtube": "https://www.youtube.com/user/portishead1002", "wikidata": "https://www.wikidata.org/wiki/Q191352", "streaming": "https://tidal.com/artist/27441", "free streaming": "https://www.deezer.com/artist/1069", "social network": "https://www.facebook.com/portishead", "official homepage": "http://www.portishead.co.uk/", "purchase for download": "https://www.junodownload.com/artists/Portishead/releases/"}, "type": "Group", "begin_year": 1991}]}'
+                              , '{"artist": [], "recording": [], "release_group": []}'
+                              , '{"mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd", "name": "Dummy", "caa_id": 829521842, "release_group_mbid": null}'
+                              , 'f'
+                               )"""
 
         with ts.engine.begin() as connection:
             connection.execute(sqlalchemy.text(query))
@@ -89,7 +91,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         with ts.engine.begin() as connection:
             connection.execute(sqlalchemy.text(query),
-                               {"msid": msid, "mbid": "076255b4-1575-11ec-ac84-135bf6a670e3", "match_type": "exact_match"})
+                               {"msid": msid, "mbid": "2f3d422f-8890-41a1-9762-fbe16f107c31", "match_type": "exact_match"})
 
         for fb in self.sample_feedback_with_metadata:
             db_feedback.insert(
@@ -239,8 +241,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(result[0].score, self.sample_feedback_with_metadata[0]["score"])
         self.assertEqual(result[0].track_metadata["artist_name"], "Portishead")
         self.assertEqual(result[0].track_metadata["track_name"], "Strangers")
-        self.assertEqual(result[0].track_metadata["additional_info"]["recording_mbid"], "076255b4-1575-11ec-ac84-135bf6a670e3")
-        self.assertEqual(result[0].track_metadata["additional_info"]["release_mbid"], "1fd178b4-1575-11ec-b98a-d72392cd8c97")
+        self.assertEqual(result[0].track_metadata["additional_info"]["recording_mbid"], "2f3d422f-8890-41a1-9762-fbe16f107c31")
+        self.assertEqual(result[0].track_metadata["additional_info"]["release_mbid"], "76df3287-6cda-33eb-8e9a-044b5e15ffdd")
 
     def test_get_feedback_count_for_user(self):
         count = self.insert_test_data(self.user["id"])
