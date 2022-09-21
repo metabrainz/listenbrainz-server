@@ -15,6 +15,8 @@ CREATE TABLE mapping.mb_metadata_cache (
     release_data        JSONB NOT NULL
 );
 
+ALTER TABLE mapping.mb_metadata_cache ADD CONSTRAINT mb_metadata_cache_pkey PRIMARY KEY (recording_mbid);
+
 -- postgres does not enforce dimensionality of arrays. add explicit check to avoid regressions (once burnt, twice shy!).
 ALTER TABLE mapping.mb_metadata_cache
     ADD CONSTRAINT mb_metadata_cache_artist_mbids_check
