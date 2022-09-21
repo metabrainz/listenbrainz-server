@@ -26,7 +26,7 @@ import {
   getReleaseMBID,
   getArtistName,
   getTrackName,
-  getTrackDuration,
+  getTrackDurationInMs,
   getRecordingMSID,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -238,7 +238,7 @@ export default class ListenCard extends React.Component<
 
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
-    const trackDuration = getTrackDuration(listen);
+    const trackDurationMs = getTrackDurationInMs(listen);
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const enableRecommendButton = artistName && trackName && hasRecordingMSID;
@@ -335,10 +335,10 @@ export default class ListenCard extends React.Component<
                 <div title={trackName} className="ellipsis-2-lines">
                   {getTrackLink(listen)}
                 </div>
-                {trackDuration && (
+                {trackDurationMs && (
                   <div className="small text-muted" title="Duration">
-                    {isNumber(trackDuration) &&
-                      millisecondsToStr(trackDuration)}
+                    {isNumber(trackDurationMs) &&
+                      millisecondsToStr(trackDurationMs)}
                   </div>
                 )}
               </div>
