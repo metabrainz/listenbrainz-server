@@ -207,7 +207,7 @@ def create_user_cb_review_event(user_name):
             entity_type=metadata["entity_type"],
             text=metadata["text"],
             language=metadata["language"],
-            rating=metadata.get("rating", 0)
+            rating=metadata.get("rating")
         )
     except (pydantic.ValidationError, KeyError):
         raise APIBadRequest(f"Invalid metadata: {str(data)}")

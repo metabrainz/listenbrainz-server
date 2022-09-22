@@ -1,8 +1,5 @@
-import sqlalchemy
+from typing import Optional
 from pydantic import BaseModel
-from typing import List
-
-from listenbrainz.db import timescale
 
 
 class CBReviewMetadata(BaseModel):
@@ -12,7 +9,7 @@ class CBReviewMetadata(BaseModel):
     """
     name: str
     entity_type: str
-    rating: int
+    rating: Optional[int]
     text: str
     entity_id: str
     language: str
