@@ -314,14 +314,26 @@ export default class ListenCard extends React.Component<
                 </a>
               ) : (
                 <a
-                  href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
-                  title="How can I add missing cover art?"
+                  href={
+                    releaseMBID
+                      ? `https://musicbrainz.org/release/${releaseMBID}/cover-art`
+                      : "https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                  }
+                  title={
+                    releaseMBID
+                      ? "Add cover art in MusicBrainz"
+                      : "How can I add missing cover art?"
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <img
                     src={ListenCard.defaultThumbnailSrc}
-                    alt="How can I add missing cover art?"
+                    alt={
+                      releaseMBID
+                        ? "Add cover art in MusicBrainz"
+                        : "How can I add missing cover art?"
+                    }
                   />
                 </a>
               )}
