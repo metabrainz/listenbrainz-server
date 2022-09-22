@@ -44,13 +44,13 @@ exports[`ListenCard renders correctly 1`] = `
           className="listen-thumbnail"
         >
           <a
-            href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+            href="https://musicbrainz.org/release/foo/cover-art"
             rel="noopener noreferrer"
             target="_blank"
-            title="How can I add missing cover art?"
+            title="Add cover art in MusicBrainz"
           >
             <img
-              alt="How can I add missing cover art?"
+              alt="Add cover art in MusicBrainz"
               src="/static/img/cover-art-placeholder.jpg"
             />
           </a>
@@ -593,13 +593,13 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
           className="listen-thumbnail"
         >
           <a
-            href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+            href="https://musicbrainz.org/release/foo/cover-art"
             rel="noopener noreferrer"
             target="_blank"
-            title="How can I add missing cover art?"
+            title="Add cover art in MusicBrainz"
           >
             <img
-              alt="How can I add missing cover art?"
+              alt="Add cover art in MusicBrainz"
               src="/static/img/cover-art-placeholder.jpg"
             />
           </a>
@@ -1142,13 +1142,13 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
           className="listen-thumbnail"
         >
           <a
-            href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+            href="https://musicbrainz.org/release/foo/cover-art"
             rel="noopener noreferrer"
             target="_blank"
-            title="How can I add missing cover art?"
+            title="Add cover art in MusicBrainz"
           >
             <img
-              alt="How can I add missing cover art?"
+              alt="Add cover art in MusicBrainz"
               src="/static/img/cover-art-placeholder.jpg"
             />
           </a>
