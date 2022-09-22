@@ -5,7 +5,7 @@ from kombu.pools import ProducerPool
 
 from listenbrainz.utils import get_fallback_connection_name
 
-rabbitmq_producers: Optional[ProducerPool] = None
+rabbitmq: Optional[ProducerPool] = None
 INCOMING_EXCHANGE: Optional[Exchange] = None
 PLAYING_NOW_EXCHANGE: Optional[Exchange] = None
 
@@ -19,9 +19,9 @@ def init_rabbitmq_connection(app):
     This initializes _rabbitmq as a connection pool from which new RabbitMQ
     connections can be acquired.
     """
-    global rabbitmq_producers, INCOMING_EXCHANGE, PLAYING_NOW_EXCHANGE
+    global rabbitmq, INCOMING_EXCHANGE, PLAYING_NOW_EXCHANGE
 
-    if rabbitmq_producers is not None:
+    if rabbitmq is not None:
         return
 
     # if RabbitMQ config values are not in the config file
@@ -43,4 +43,4 @@ def init_rabbitmq_connection(app):
 
     INCOMING_EXCHANGE = Exchange(app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
     PLAYING_NOW_EXCHANGE = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
-    rabbitmq_producers = producers[connection]
+    rabbitmq = producers[connection]

@@ -16,7 +16,7 @@ import sentry_sdk
 from flask import current_app, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
-from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, rmq_conn
+from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
 
@@ -356,15 +356,16 @@ def publish_data_to_queue(data, exchange):
         exchange: the name of the exchange
     """
     try:
-        rmq_conn.publish(
-            exchange=exchange,
-            routing_key='',
-            body=ujson.dumps(data),
-            delivery_mode=PERSISTENT_DELIVERY_MODE,
-            retry=True,
-            retry_policy={"max_retries": 5},
-            declare=[exchange]
-        )
+        with rabbitmq_connection.rabbitmq.acquire(block=True, timeout=60) as producer:
+            producer.publish(
+                exchange=exchange,
+                routing_key='',
+                body=ujson.dumps(data),
+                delivery_mode=PERSISTENT_DELIVERY_MODE,
+                retry=True,
+                retry_policy={"max_retries": 5},
+                declare=[exchange]
+            )
     except Exception:
         current_app.logger.error("Cannot publish to rabbitmq channel:", exc_info=True)
         raise APIServiceUnavailable("Cannot submit listens to queue, please try again later.")
