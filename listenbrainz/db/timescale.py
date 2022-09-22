@@ -32,7 +32,7 @@ def init_db_connection(connect_str):
 
     while True:
         try:
-            engine = create_engine(connect_str, poolclass=NullPool, pool_pre_ping=True)
+            engine = create_engine(connect_str, poolclass=NullPool)
             break
         except psycopg2.OperationalError as e:
             print("Couldn't establish connection to timescale: {}".format(str(e)))
