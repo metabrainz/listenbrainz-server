@@ -88,7 +88,7 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
     }
     entry = next(data).asDict(recursive=True)
     stats = entry["stats"]
-    message["count"] = len(stats)
+    message["count"] = entry["total_count"]
 
     entity_list = []
     for item in stats:
