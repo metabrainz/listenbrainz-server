@@ -297,7 +297,6 @@ const preciseTimestamp = (
         year: "numeric",
         hour: "numeric",
         minute: "numeric",
-        hour12: true,
       })}`;
     case "excludeYear":
       return `${listenDate.toLocaleString(undefined, {
@@ -305,7 +304,6 @@ const preciseTimestamp = (
         month: "short",
         hour: "numeric",
         minute: "numeric",
-        hour12: true,
       })}`;
     default:
       return `${timeago.ago(listened_at)}`;
