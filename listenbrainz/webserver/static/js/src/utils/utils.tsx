@@ -477,19 +477,20 @@ const getAlbumArtFromListenMetadata = async (
           return undefined;
         }
 
-        const frontImage =
-          body.images.find((image) => image.front) ?? body.images[0];
-        if (frontImage.thumbnails) {
-          const { thumbnails } = frontImage;
-          return (
-            thumbnails[250] ??
-            thumbnails.small ??
-            // If neither of the above exists, return the first one we find
-            // @ts-ignore
-            thumbnails[Object.keys(thumbnails)?.[0]]
-          );
+        const frontImage = body.images.find((image) => image.front);
+
+        if (frontImage?.id) {
+          // CAA links are http redirects instead of https, causing LB-1067 (mixed content warning).
+          // We also don't need or want the redirect from CAA, instead we can reconstruct
+          // the link to the underlying archive.org resource directly
+          // Also see https://github.com/metabrainz/listenbrainz-server/commit/9e40ad440d0b280b6c53d13e804f911657469c8b
+          const { id } = frontImage;
+          return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${id}_thumb250.jpg`;
         }
-        return frontImage.image;
+
+        // No front image? Fallback to whatever the first image is
+        const { thumbnails, image } = body.images[0];
+        return thumbnails[250] ?? thumbnails.small ?? image;
       }
     } catch (error) {
       // eslint-disable-next-line no-console
