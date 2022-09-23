@@ -26,7 +26,7 @@ import {
   getReleaseMBID,
   getArtistName,
   getTrackName,
-  getTrackDuration,
+  getTrackDurationInMs,
   getRecordingMSID,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -238,7 +238,7 @@ export default class ListenCard extends React.Component<
 
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
-    const trackDuration = getTrackDuration(listen);
+    const trackDurationMs = getTrackDurationInMs(listen);
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const enableRecommendButton = artistName && trackName && hasRecordingMSID;
@@ -314,14 +314,26 @@ export default class ListenCard extends React.Component<
                 </a>
               ) : (
                 <a
-                  href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
-                  title="How can I add missing cover art?"
+                  href={
+                    releaseMBID
+                      ? `https://musicbrainz.org/release/${releaseMBID}/cover-art`
+                      : "https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                  }
+                  title={
+                    releaseMBID
+                      ? "Add cover art in MusicBrainz"
+                      : "How can I add missing cover art?"
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <img
                     src={ListenCard.defaultThumbnailSrc}
-                    alt="How can I add missing cover art?"
+                    alt={
+                      releaseMBID
+                        ? "Add cover art in MusicBrainz"
+                        : "How can I add missing cover art?"
+                    }
                   />
                 </a>
               )}
@@ -335,10 +347,10 @@ export default class ListenCard extends React.Component<
                 <div title={trackName} className="ellipsis-2-lines">
                   {getTrackLink(listen)}
                 </div>
-                {trackDuration && (
+                {trackDurationMs && (
                   <div className="small text-muted" title="Duration">
-                    {isNumber(trackDuration) &&
-                      millisecondsToStr(trackDuration)}
+                    {isNumber(trackDurationMs) &&
+                      millisecondsToStr(trackDurationMs)}
                   </div>
                 )}
               </div>
