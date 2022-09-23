@@ -3,9 +3,13 @@ import * as _ from "lodash";
 import * as timeago from "time-ago";
 import { isFinite, isUndefined } from "lodash";
 import { Rating } from "react-simple-star-rating";
+import fetchRetry from "fetch-retry";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
+
+const originalFetch = window.fetch;
+const fetchWithRetry = fetchRetry(originalFetch);
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -468,8 +472,22 @@ const getAlbumArtFromListenMetadata = async (
   const releaseMBID = getReleaseMBID(listen);
   if (releaseMBID) {
     try {
-      const CAAResponse = await fetch(
-        `https://coverartarchive.org/release/${releaseMBID}`
+      const CAAResponse = await fetchWithRetry(
+        `https://coverartarchive.org/release/${releaseMBID}`,
+        {
+          retries: 3,
+          retryOn: [429],
+          retryDelay(attempt) {
+            // Retry at random interval between maxRetryTime and minRetryTime defined above, adding minRetryTime for every attempt
+            // attempt starts at 0
+            const maxRetryTime = 800;
+            const minRetryTime = 400;
+            return Math.floor(
+              Math.random() * (maxRetryTime - minRetryTime) +
+                attempt * minRetryTime
+            );
+          },
+        }
       );
       if (CAAResponse.ok) {
         const body: CoverArtArchiveResponse = await CAAResponse.json();
