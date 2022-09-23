@@ -45,6 +45,11 @@ def get_recordings(table: str, number_of_results: int):
                  , artist_credit_mbids
                  , lower(release_name)
                  , release_mbid
+        ), entity_count as (
+            SELECT user_id
+                 , count(*) as recordings_count
+              FROM intermediate_table
+          GROUP BY user_id      
         ), ranked_stats as (
             SELECT user_id
                  , any_recording_name AS track_name
@@ -56,25 +61,32 @@ def get_recordings(table: str, number_of_results: int):
                  , listen_count
                  , row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rank
               FROM intermediate_table
-        )
-        SELECT user_id
-             , sort_array(
-                    collect_list(
-                        struct(
-                            listen_count
-                          , track_name
-                          , recording_mbid
-                          , artist_name
-                          , coalesce(artist_credit_mbids, array()) AS artist_mbids
-                          , release_name
-                          , release_mbid
+        ), grouped_stats AS (
+            SELECT user_id
+                 , sort_array(
+                        collect_list(
+                            struct(
+                                listen_count
+                              , track_name
+                              , recording_mbid
+                              , artist_name
+                              , coalesce(artist_credit_mbids, array()) AS artist_mbids
+                              , release_name
+                              , release_mbid
+                            )
                         )
-                    )
-                   , false
-                ) as recordings
-          FROM ranked_stats
-         WHERE rank < {number_of_results}
-      GROUP BY user_id
+                        , false
+                   ) as recordings
+              FROM ranked_stats
+             WHERE rank < {number_of_results}
+          GROUP BY user_id
+        )
+            SELECT user_id
+                 , recordings_count
+                 , recordings
+              FROM grouped_stats
+              JOIN entity_count
+             USING (user_id)
         """)
 
     return result.toLocalIterator()
