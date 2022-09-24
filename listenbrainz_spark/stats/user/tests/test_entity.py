@@ -70,7 +70,8 @@ class UserEntityTestCase(StatsTestCase):
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
             'user_id': 1,
-            'artists': data
+            'artists': data,
+            'artists_count': 3
         }
 
         messages = entity.create_messages([mock_result], 'artists', 'all_time',
@@ -89,7 +90,8 @@ class UserEntityTestCase(StatsTestCase):
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
             'user_id': 1,
-            'releases': data
+            'releases': data,
+            'releases_count': 3
         }
 
         messages = entity.create_messages([mock_result], 'releases', 'all_time',
@@ -108,7 +110,8 @@ class UserEntityTestCase(StatsTestCase):
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
             'user_id': 1,
-            'recordings': data
+            'recordings': data,
+            'recordings_count': 4
         }
 
         messages = entity.create_messages([mock_result], 'recordings', 'all_time',
