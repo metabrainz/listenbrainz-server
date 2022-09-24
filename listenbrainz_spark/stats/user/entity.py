@@ -78,6 +78,7 @@ def parse_one_user_stats(entry, entity: str, stats_range: str) \
             entity_list.append(entity_model_map[entity](**item))
         except ValidationError:
             logger.error("Invalid entry in entity stats", exc_info=True)
+            total_entity_count -= 1
 
     try:
         return UserEntityRecords(
