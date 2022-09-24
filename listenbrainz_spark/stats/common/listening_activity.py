@@ -79,7 +79,7 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         from_ts = datetime.combine(from_date, time.min)
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
-        spark_date_format = "d MMMM y"
+        spark_date_format = "dd MMMM y"
         return from_ts, to_ts, step, date_format, spark_date_format
 
     if stats_range == "all_time":
@@ -108,14 +108,14 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
             # compute listening activity for each day, include weekday in date format
             step = relativedelta(days=+1)
             date_format = "%A %d %B %Y"
-            spark_date_format = "EEEE d MMMM y"
+            spark_date_format = "EEEE dd MMMM y"
         elif stats_range == "this_month":
             # if today is 1st then 1st of 2 months ago otherwise the 1st of last month
             from_offset = relativedelta(months=-2) if latest_listen_date.day == 1 else relativedelta(months=-1, day=1)
             # compute listening activity for each day but no weekday
             step = relativedelta(days=+1)
             date_format = "%d %B %Y"
-            spark_date_format = "d MMMM y"
+            spark_date_format = "dd MMMM y"
         else:
             # if today is the 1st of the year, then still show last year stats
             if latest_listen_date.day == 1 and latest_listen_date.month == 1:
@@ -145,20 +145,20 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         # compute listening activity for each day, include weekday in date format
         step = relativedelta(days=+1)
         date_format = "%A %d %B %Y"
-        spark_date_format = "EEEE d MMMM y"
+        spark_date_format = "EEEE dd MMMM y"
     elif stats_range == "month":
         from_offset = relativedelta(months=-2, day=1)  # start of the previous to previous month
         to_offset = relativedelta(months=+2)
         # compute listening activity for each day but no weekday
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
-        spark_date_format = "d MMMM y"
+        spark_date_format = "dd MMMM y"
     elif stats_range == "quarter":
         from_offset = get_two_quarters_ago_offset(latest_listen_date)
         to_offset = relativedelta(months=+6)
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
-        spark_date_format = "d MMMM y"
+        spark_date_format = "dd MMMM y"
     elif stats_range == "half_yearly":
         from_offset = _get_half_year_offset(latest_listen_date)
         to_offset = relativedelta(months=+12)

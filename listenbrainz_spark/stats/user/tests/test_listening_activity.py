@@ -106,7 +106,7 @@ class ListeningActivityTestCase(StatsTestCase):
         ]
         step = relativedelta(days=+1)
         fmt = "%d %B %Y"
-        spark_fmt = "d MMMM y"
+        spark_fmt = "dd MMMM y"
 
         mock_listen_ts.return_value = datetime(2021, 1, 5, 2, 3, 0)
         self.assertEqual((quarters[0], quarters[2], step, fmt, spark_fmt), listening_activity_utils.get_time_range("quarter"))
@@ -134,7 +134,7 @@ class ListeningActivityTestCase(StatsTestCase):
 
         step = relativedelta(days=+1)
         fmt = "%A %d %B %Y"
-        spark_fmt = "EEEE d MMMM y"
+        spark_fmt = "EEEE dd MMMM y"
 
         mock_listen_ts.return_value = datetime(2021, 11, 24, 2, 3, 0)
         self.assertEqual(
@@ -160,7 +160,7 @@ class ListeningActivityTestCase(StatsTestCase):
 
         step = relativedelta(days=+1)
         fmt = "%d %B %Y"
-        spark_fmt = "d MMMM y"
+        spark_fmt = "dd MMMM y"
 
         mock_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
         self.assertEqual(
