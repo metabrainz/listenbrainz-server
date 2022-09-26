@@ -88,7 +88,7 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
     }
     entry = next(data).asDict(recursive=True)
     stats = entry["stats"]
-    message["count"] = len(stats)
+    count = entry["total_count"]
 
     entity_list = []
     for item in stats:
@@ -96,6 +96,8 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             entity_list.append(entity_model_map[entity](**item))
         except ValidationError:
             logger.error("Invalid entry in entity stats", exc_info=True)
+            count -= 1
+    message["count"] = count
     message["data"] = entity_list
 
     try:
