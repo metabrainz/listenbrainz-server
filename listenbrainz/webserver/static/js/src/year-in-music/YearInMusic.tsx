@@ -624,7 +624,7 @@ export default class YearInMusic extends React.Component<
                       compact
                       key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
                       listen={listenHere}
-                      thumbnail={thumbnail}
+                      customThumbnail={thumbnail}
                       listenDetails={details}
                       showTimestamp={false}
                       showUsername={false}
@@ -888,7 +888,7 @@ export default class YearInMusic extends React.Component<
                                 <ListenCard
                                   className="playlist-item-card"
                                   listen={listen}
-                                  thumbnail={thumbnail}
+                                  beforeThumbnailContent={thumbnail}
                                   compact
                                   showTimestamp={false}
                                   showUsername={false}

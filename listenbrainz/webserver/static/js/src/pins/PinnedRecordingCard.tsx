@@ -196,7 +196,7 @@ export default class PinnedRecordingCard extends React.Component<
         newAlert={newAlert}
         additionalMenuItems={additionalMenuItems}
         additionalContent={blurb}
-        thumbnail={thumbnail}
+        customThumbnail={thumbnail}
       />
     );
   }
