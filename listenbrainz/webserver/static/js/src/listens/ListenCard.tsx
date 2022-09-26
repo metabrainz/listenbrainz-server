@@ -60,6 +60,8 @@ export type ListenCardProps = {
   // This show under the first line of listen details. It's meant for reviews, etc.
   additionalContent?: string | JSX.Element;
   thumbnail?: JSX.Element;
+  // Displays left of the cover art thumbnail. For special items like reorder/grab icon
+  beforeThumbnailContent?: JSX.Element;
   // The default details (recording name, artist name) can be replaced
   listenDetails?: JSX.Element;
   // The default timestamp can be replaced
@@ -211,6 +213,7 @@ export default class ListenCard extends React.Component<
   render() {
     const {
       additionalContent,
+      beforeThumbnailContent,
       listen,
       className,
       showUsername,
@@ -294,7 +297,7 @@ export default class ListenCard extends React.Component<
         }`}
       >
         <div className="main-content">
-          {thumbnail || (
+          {beforeThumbnailContent}
             <div className="listen-thumbnail">
               {thumbnailSrc ? (
                 <a

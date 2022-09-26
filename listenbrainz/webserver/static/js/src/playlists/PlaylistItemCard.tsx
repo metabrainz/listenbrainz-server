@@ -82,7 +82,7 @@ export default class PlaylistItemCard extends React.Component<
         showUsername={Boolean(listen.user_name)}
         // showTrackLength
         newAlert={newAlert}
-        thumbnail={thumbnail}
+        beforeThumbnailContent={thumbnail}
         data-recording-mbid={track.id}
         additionalMenuItems={additionalMenuItems}
         updateFeedbackCallback={updateFeedbackCallback}
