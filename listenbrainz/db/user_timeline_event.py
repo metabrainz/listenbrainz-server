@@ -32,7 +32,7 @@ from listenbrainz.db.model.user_timeline_event import (
 )
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from typing import List
+from typing import List, Tuple
 
 from listenbrainz.db.model.review import CBReviewTimelineMetadata
 
@@ -191,7 +191,7 @@ def get_user_track_recommendation_events(user_id: int, count: int = 50) -> List[
     )
 
 
-def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: float, max_ts: float, count: int) \
+def get_recording_recommendation_events_for_feed(user_ids: Tuple[int], min_ts: float, max_ts: float, count: int) \
         -> List[UserTimelineEvent]:
     """ Gets a list of recording_recommendation events for specified users.
 
