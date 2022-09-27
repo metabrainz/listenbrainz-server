@@ -391,8 +391,9 @@ export default class Listens extends React.Component<
   };
 
   handleKeyDown = (event: KeyboardEvent) => {
-    if (document.activeElement?.localName === "input") {
-      // Don't allow keyboard navigation if an input is currently in focus
+    const elementName = document.activeElement?.localName;
+    if (elementName && ["input", "textarea"].includes(elementName)) {
+      // Don't allow keyboard navigation if an input or textarea is currently in focus
       return;
     }
     switch (event.key) {
