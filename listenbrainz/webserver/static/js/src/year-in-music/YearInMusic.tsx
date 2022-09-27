@@ -888,7 +888,7 @@ export default class YearInMusic extends React.Component<
                                 <ListenCard
                                   className="playlist-item-card"
                                   listen={listen}
-                                  beforeThumbnailContent={thumbnail}
+                                  customThumbnail={thumbnail}
                                   compact
                                   showTimestamp={false}
                                   showUsername={false}
