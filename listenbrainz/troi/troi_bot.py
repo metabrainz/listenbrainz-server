@@ -2,20 +2,20 @@
     recommendations have been generated.
 """
 from flask import current_app
+from sqlalchemy import text
 from troi.core import generate_playlist
 
+from listenbrainz import db
 from listenbrainz.db.playlist import TROI_BOT_USER_ID, TROI_BOT_DEBUG_USER_ID
 from listenbrainz.db.user import get_by_mb_id
 from listenbrainz.db.user_relationship import get_followers_of_user
 from listenbrainz.db.user_timeline_event import create_user_timeline_event, UserTimelineEventType, NotificationMetadata
 
 
-def run_post_recommendation_troi_bot():
-    """
-        Top level function called after spark CF recommendations have been completed.
-    """
+def run_daily_jams_troi_bot():
+    """ Top level function called after spark CF recommendations have been completed. """
     # Save playlists for just a handful of people
-    users = get_followers_of_user(TROI_BOT_DEBUG_USER_ID)
+    users = get_users_for_playlist()
     users = [user["musicbrainz_id"] for user in users]
     for user in users:
         make_playlist_from_recommendations(user)
@@ -26,6 +26,25 @@ def run_post_recommendation_troi_bot():
     for user in users:
         run_daily_jams(user)
         # Add others here
+
+
+def get_users_for_playlist():
+    """ Retrieve users who follow troi bot and had midnight in their timezone less than 59 minutes ago. """
+    query = """
+        SELECT "user".musicbrainz_id AS musicbrainz_id
+             , "user".id as id
+          FROM user_relationship
+          JOIN "user"
+            ON "user".id = user_0
+     LEFT JOIN user_setting us
+            ON us.user_id = user_0  
+         WHERE user_1 = :followed
+           AND relationship_type = 'follow'
+           AND EXTRACT('hour' from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(text(query), {"followed": TROI_BOT_DEBUG_USER_ID})
+        return result.mappings().all()
 
 
 def make_playlist_from_recommendations(user):

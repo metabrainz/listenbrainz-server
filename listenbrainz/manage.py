@@ -14,6 +14,7 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
     delete_listens as ts_delete_listens, \
     delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data
 from listenbrainz.messybrainz import transfer_to_timescale
+from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
 
 
@@ -282,3 +283,9 @@ def msb_transfer_db():
     """ Transfer MsB tables from MsB DB to TS DB"""
     with create_app().app_context():
         transfer_to_timescale.run()
+
+
+@cli.command()
+def generate_playlists():
+    """ Generate daily playlists for users after checking timezone settings """
+    run_daily_jams_troi_bot()

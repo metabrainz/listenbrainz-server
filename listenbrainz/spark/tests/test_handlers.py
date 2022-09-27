@@ -368,10 +368,8 @@ class HandlersTestCase(DatabaseTestCase):
             )
         )
 
-    @mock.patch('listenbrainz.spark.troi_bot.get_followers_of_user')
-    @mock.patch('listenbrainz.spark.troi_bot.generate_playlist')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_gen_playlist, mock_get_followers):
+    def test_cf_recording_recommendations_complete(self, mock_send_mail):
         with self.app.app_context():
             active_user_count = 10
             top_artist_user_count = 5
@@ -382,10 +380,6 @@ class HandlersTestCase(DatabaseTestCase):
             self.app.config['TESTING'] = True
             self.app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token0", "fake_token1"]
 
-            mock_gen_playlist.return_value = "https://listenbrainz.org/playlist/97889d4d-1474-4a9b-925a-851148356f9d/"
-            mock_get_followers.side_effect = [[{"musicbrainz_id": "lucifer"}], [{"musicbrainz_id": "lucifer"}],
-                                              [{"musicbrainz_id": "lucifer"}], [{"musicbrainz_id": "lucifer"}]]
-
             cf_recording_recommendations_complete({
                 'active_user_count': active_user_count,
                 'top_artist_user_count': top_artist_user_count,
@@ -393,13 +387,6 @@ class HandlersTestCase(DatabaseTestCase):
                 'total_time': str(total_time)
             })
             mock_send_mail.assert_not_called()
-
-            calls = [
-                call("recs-to-playlist", args=["lucifer", "top"], upload=True, token="fake_token1", created_for="lucifer"),
-                call("recs-to-playlist", args=["lucifer", "similar"], upload=True, token="fake_token1", created_for="lucifer"),
-                call("daily-jams", args=["lucifer"], upload=True, token="fake_token0", created_for="lucifer")
-            ]
-            mock_gen_playlist.assert_has_calls(calls)
 
             # in prod now, should send it
             self.app.config['TESTING'] = False
