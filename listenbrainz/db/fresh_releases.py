@@ -1,10 +1,12 @@
 from datetime import date, timedelta
+from typing import List
+
 import psycopg2
 import psycopg2.extras
-
-from listenbrainz.db.model.fresh_releases import FreshRelease
-from typing import List
 from flask import current_app
+
+from listenbrainz.db import couchdb
+from listenbrainz.db.model.fresh_releases import FreshRelease
 
 
 def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_days: int) -> List[FreshRelease]:
@@ -90,3 +92,21 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             curs.execute(query, (from_date, to_date))
             return [FreshRelease(**dict(row)) for row in curs.fetchall()]
+
+
+def insert_fresh_releases(database: str, docs: list[dict]):
+    """ Insert the given fresh releases in the couchdb database. """
+    for doc in docs:
+        doc["_id"] = str(doc["user_id"])
+    couchdb.insert_data(database, docs)
+
+
+def get_fresh_releases(user_id: int):
+    """ Retrieve fresh releases for given user. """
+    data = couchdb.fetch_data("fresh_releases", user_id)
+    if not data:
+        return None
+    return {
+        "user_id": user_id,
+        "releases": data["releases"]
+    }
