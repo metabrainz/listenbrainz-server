@@ -15,7 +15,9 @@ def bulk_insert_loved_tracks(user_id: int, feedback: List[Tuple[int, str]]) -> i
     # remove it from feedback in any case.
     query = """
         INSERT INTO recording_feedback (user_id, created, recording_mbid, score)
-        VALUES %s ON CONFLICT (user_id, recording_mbid) DO NOTHING
+             VALUES %s
+        ON CONFLICT (user_id, recording_mbid)
+         DO NOTHING
     """
     with db.engine.raw_connection() as connection:
         cursor = connection.cursor()
@@ -70,7 +72,7 @@ def import_feedback(user_id, lfm_user) -> Tuple[int, int]:
             track_data = []
             for track in tracks:
                 if not track["mbid"]:
-                     continue
+                    continue
                 track_data.append((int(track["data"]["uts"]), track["mbid"]))
 
             recordings = load_recordings_from_tracks([track["mbid"] for track in tracks])
