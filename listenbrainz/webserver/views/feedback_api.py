@@ -8,7 +8,7 @@ from listenbrainz.db.model.feedback import Feedback
 
 from listenbrainz.domain import lastfm
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APINotFound
+from listenbrainz.webserver.errors import APINotFound, APIBadRequest
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import _parse_int_arg, log_raise_400, is_valid_uuid, \
     DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list, \
@@ -263,9 +263,9 @@ def get_feedback_for_recordings_for_user(user_name):
 
 
 @feedback_api_bp.route("/feedback/import", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain
 @ratelimit()
-def import_feedback_from_lastfm():
+def import_feedback():
     """
     Import feedback from external service.
     """
