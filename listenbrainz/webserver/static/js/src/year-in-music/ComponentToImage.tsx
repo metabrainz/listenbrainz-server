@@ -130,7 +130,7 @@ const ComponentToImage = ({
                       },
                     },
                   }}
-                  thumbnail={thumbnail}
+                  customThumbnail={thumbnail}
                   listenDetails={details}
                   showTimestamp={false}
                   showUsername={false}

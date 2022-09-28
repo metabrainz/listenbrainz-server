@@ -16,8 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from pydantic import BaseModel, validator, NonNegativeInt, constr
-from data.model.validators import check_valid_uuid
+from pydantic import BaseModel, NonNegativeInt, constr
 
 from datetime import datetime
 from enum import Enum
@@ -25,6 +24,7 @@ from typing import Union, Optional, List
 
 from data.model.listen import APIListen
 from listenbrainz.db.model.review import CBReviewTimelineMetadata
+from listenbrainz.db.msid_mbid_mapping import MsidMbidModel
 
 
 class UserTimelineEventType(Enum):
@@ -37,18 +37,10 @@ class UserTimelineEventType(Enum):
     PERSONAL_RECORDING_RECOMMENDATION = 'personal_recording_recommendation'
 
 
-class RecordingRecommendationMetadata(BaseModel):
+class RecordingRecommendationMetadata(MsidMbidModel):
     artist_name: constr(min_length=1)
     track_name: constr(min_length=1)
     release_name: Optional[str]
-    recording_mbid: Optional[str]
-    recording_msid: constr(min_length=1)
-
-    _validate_uuids: classmethod = validator(
-        "recording_mbid",
-        "recording_msid",
-        allow_reuse=True
-    )(check_valid_uuid)
 
 
 class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata):
@@ -62,7 +54,7 @@ class NotificationMetadata(BaseModel):
 
 
 UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata,
-    RecordingRecommendationMetadata, NotificationMetadata]
+                                  RecordingRecommendationMetadata, NotificationMetadata]
 
 
 class UserTimelineEvent(BaseModel):

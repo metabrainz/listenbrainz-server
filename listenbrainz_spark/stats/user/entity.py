@@ -69,7 +69,8 @@ def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, e
 def parse_one_user_stats(entry, entity: str, stats_range: str) \
         -> Optional[UserEntityRecords]:
     _dict = entry.asDict(recursive=True)
-    total_entity_count = len(_dict[entity])
+    count_key = entity + "_count"
+    total_entity_count = _dict[count_key]
 
     entity_list = []
     for item in _dict[entity]:
@@ -77,6 +78,7 @@ def parse_one_user_stats(entry, entity: str, stats_range: str) \
             entity_list.append(entity_model_map[entity](**item))
         except ValidationError:
             logger.error("Invalid entry in entity stats", exc_info=True)
+            total_entity_count -= 1
 
     try:
         return UserEntityRecords(
