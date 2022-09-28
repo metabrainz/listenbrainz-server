@@ -5,17 +5,40 @@
   {# Listen submission information #}
   <h3>Submitting Listens</h3>
   <p>
-    These are programs that submit listens to ListenBrainz:
+    There are many ways to submit your listening history to ListenBrainz:
   </p>
+  <h4>Music players</h4>
   <ul>
-    <li><em><a href="https://www.musicpd.org/">mpd</a></em>, a flexible, powerful, server-side application for playing music: <a href="https://codeberg.org/elomatreb/listenbrainz-mpd"><code>listenbrainz-mpd</code></a>, <a href="https://github.com/kori/wylt"><code>wylt</code></a></li>
+    <li><em><a href="https://www.videolan.org/vlc/">VLC</a></em>, cross-platform multimedia player: <a href="https://github.com/amCap1712/vlc-listenbrainz-plugin"><code>VLC Listenbrainz plugin</code></a></li>
+    <li><em><a href="https://www.musicpd.org/">mpd</a></em>, cross-platform server-side application for playing music: <a href="https://codeberg.org/elomatreb/listenbrainz-mpd"><code>listenbrainz-mpd</code></a>, <a href="https://github.com/kori/wylt"><code>wylt</code></a></li>
+    <li><em><a href="https://www.strawberrymusicplayer.org/">Strawberry</a></em>, a cross-platform music player which supports ListenBrainz natively</li>
+    <li><em><a href="https://www.foobar2000.org/">Foobar2000</a></em>, full-fledged audio player for Windows: <a href="https://github.com/phw/foo_listenbrainz2"><code>foo_listenbrainz2</code></a></li>
+    <li><em><a href="https://getmusicbee.com/">MusicBee</a></em>, a music manager and player for Windows: <a href="https://github.com/karaluh/ScrobblerBrainz"><code>ScrobblerBrainz plugin</code></a></li>
     <li><em><a href="https://wiki.gnome.org/Apps/Rhythmbox/">Rhythmbox</a></em>, a music playing application for GNOME: <a href="https://github.com/phw/rhythmbox-plugin-listenbrainz"><code>rhythmbox-plugin-listenbrainz</code></a></li>
     <li><em><a href="https://wiki.gnome.org/Apps/Lollypop">Lollypop</a></em>, a modern music player for GNOME</li>
+    <li><em><a href="https://cmus.github.io/">cmus</a></em>, a console-based music player for Unix-like operating systems: <a href="https://github.com/vjeranc/cmus-status-scrobbler"><code>cmus-status-scrobbler</code></a></li>
+  </ul>
+  
+  <h4>Standalone programs/streaming servers</h4>
+  <ul>
+    <li><em><a href="https://docs.funkwhale.audio/users/builtinplugins.html#listenbrainz-plugin">Funkwhale</a></em>, a decentralized music sharing and listening platform with built-in support for ListenBrainz</li>
+    <li><em><a href="https://jellyfin.org/">Jellyfin</a></em>, a free software media streaming system: <a href="https://github.com/lyarenei/jellyfin-plugin-listenbrainz"><code>jellyfin-plugin-listenbrainz</code></a></li>
     <li><em><a href="https://github.com/InputUsername/rescrobbled">Rescrobbled</a></em>, a universal Linux scrobbler for MPRIS enabled players</li>
-    <li><em><a href="https://add0n.com/lastfm-scrobbler.html">Last.fm Scrobbler</a></em>, an extension for Firefox and Chrome</li>
-    <li><em><a href="https://github.com/tgwizard/sls">Simple Last.fm Scrobbler</a></em>, for Android devices</li>
-    <li><em><a href="https://github.com/amCap1712/vlc-listenbrainz-plugin">VLC Listenbrainz plugin</a></em>, cross-platform plugin for VLC player</li>
+    <li><em><a href="https://github.com/mariusor/mpris-scrobbler">mpris-scrobbler</a></em>, a minimalistic unix scrobbler for MPRIS enabled players</li>
+    <li><em><a href="https://github.com/simonxciv/eavesdrop.fm">Eavesdrop.FM</a></em>, submits Plex music listening data to ListenBrainz</li>
+    <li><em><a href="https://github.com/vvdleun/audiostreamerscrobbler">AudioStreamerScrobbler</a></em>, submit listens from hardware audiostreamers (Bluesound/BluOS, MusicCast, HEOS)</li>
+    <li><em><a href="https://github.com/golgote/applescript-listenbrainz">applescript-listenbrainz</a></em>, an applescript service to submit Apple Music listens</li>
+  </ul>
+  
+  <h4>Browser extensions</h4>
+  <ul>
     <li><em><a href="https://web-scrobbler.com/">Web Scrobbler</a></em>, an extension for Firefox and Chromium-based browsers</li>
+    <li><em><a href="https://add0n.com/lastfm-scrobbler.html">Last.fm Scrobbler</a></em>, an extension for Firefox and Chrome</li>
+  </ul>
+  
+  <h4>Mobile devices</h4>
+  <ul>
+    <li><em><a href="https://github.com/tgwizard/sls">Simple Last.fm Scrobbler</a></em>, for Android devices</li>
     <li><em><a href="https://play.google.com/store/apps/details?id=com.arn.scrobble">Pano Scrobbler</a></em>, a scrobbling application for Android Devices</li>
   </ul>
 
@@ -34,7 +57,7 @@
 
   <h3>For advanced users</h3>
   <p>
-    Developers are able to submit their listens to Listenbrainz via the Listenbrainz API. Information on how to do this
+    Developers are able to submit their listens to Listenbrainz using the Listenbrainz API. Information on how to do this
     can be found in the <a href="https://listenbrainz.readthedocs.io">API docs</a>
   </p>
 {%- endblock -%}
