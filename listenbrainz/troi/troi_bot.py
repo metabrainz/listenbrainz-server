@@ -36,7 +36,7 @@ def get_users_for_daily_jams():
     query = """
         SELECT "user".musicbrainz_id AS musicbrainz_id
              , "user".id as id
-             , to_char(NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT'), 'YYYY-MM-DD DY') AS jam_date
+             , to_char(NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT'), 'YYYY-MM-DD Dy') AS jam_date
           FROM user_relationship
           JOIN "user"
             ON "user".id = user_0
