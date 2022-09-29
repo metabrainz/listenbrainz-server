@@ -1,7 +1,7 @@
 """ This module contains code to run the various troi-bot functions after
     recommendations have been generated.
 """
-from flask import current_app
+from flask import current_app, url_for
 from sqlalchemy import text
 from troi.core import generate_playlist
 
@@ -66,11 +66,13 @@ def run_daily_jams(user, jam_date):
     """
     token = current_app.config["WHITELISTED_AUTH_TOKENS"][0]
     try:
-        url = generate_playlist("daily-jams", args=[user, jam_date], upload=True, token=token, created_for=user)
+        playlist = generate_playlist("daily-jams", args=[user, jam_date], upload=True, token=token, created_for=user)
     except RuntimeError as err:
         current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user, str(err)))
         return
-    enter_timeline_notification(user, """Your daily-jams playlist has been updated. <a href="%s">Give it a listen!</a>.""" % url)
+    if len(playlist.playlists) > 0:
+        url = current_app.config["SERVER_ROOT_URL"] + "/playlist/" + playlist.playlists[0].mbid
+        enter_timeline_notification(user, """Your daily-jams playlist has been updated. <a href="%s">Give it a listen!</a>.""" % url)
 
 
 def enter_timeline_notification(username, message):
