@@ -122,6 +122,7 @@ def get_feedback_for_user(user_name):
         "offset": offset
     })
 
+
 @feedback_api_bp.route("/recording/<recording_mbid>/get-feedback-mbid", methods=["GET"])
 @crossdomain
 @ratelimit()
@@ -268,9 +269,6 @@ def get_feedback_for_recordings_for_user(user_name):
 @ratelimit()
 def import_feedback():
     """ Import feedback from external service. """
-    if musicbrainz_db.engine is None:
-        raise APIServiceUnavailable("Unable to connect to musicbrainz. Please try again later!")
-
     user = validate_auth_header()
     data = request.json
 

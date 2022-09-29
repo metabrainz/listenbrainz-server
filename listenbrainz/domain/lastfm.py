@@ -9,6 +9,8 @@ from sqlalchemy import text
 from listenbrainz import db
 from brainzutils import musicbrainz_db
 
+from listenbrainz.webserver.errors import APINotFound
+
 
 def bulk_insert_loved_tracks(user_id: int, feedback: list[tuple[int, str]]):
     # DO NOTHING because we can only import loved tracks.
@@ -53,6 +55,9 @@ def fetch_lfm_feedback(lfm_user):
         "limit": 100
     }
     response = session.get(current_app.config["LASTFM_API_URL"], params=params)
+    if response.status_code == 404:
+        raise APINotFound(f"Last.FM user with username '{lfm_user}' not found")
+    response.raise_for_status()
 
     data = response.json()["lovedtracks"]["@attr"]
     total_pages = int(data["totalPages"])
