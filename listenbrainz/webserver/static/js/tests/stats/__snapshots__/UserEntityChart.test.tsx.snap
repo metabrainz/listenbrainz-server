@@ -5322,8 +5322,9 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                         }
                         transform={null}
                       >
-                        <div
-                          className="youtube-drag-handle"
+                        <button
+                          className="btn btn-sm youtube-drag-handle"
+                          type="button"
                         >
                           <FontAwesomeIcon
                             border={false}
@@ -5374,7 +5375,62 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                               />
                             </svg>
                           </FontAwesomeIcon>
-                        </div>
+                        </button>
+                        <button
+                          className="btn btn-sm youtube-reduce-button"
+                          onClick={[Function]}
+                          type="button"
+                        >
+                          <FontAwesomeIcon
+                            border={false}
+                            className=""
+                            fixedWidth={false}
+                            flip={null}
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f2d1",
+                                  "M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z",
+                                ],
+                                "iconName": "window-minimize",
+                                "prefix": "fas",
+                              }
+                            }
+                            inverse={false}
+                            listItem={false}
+                            mask={null}
+                            pull={null}
+                            pulse={false}
+                            rotation={null}
+                            size={null}
+                            spin={false}
+                            swapOpacity={false}
+                            symbol={false}
+                            title=""
+                            transform={null}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              className="svg-inline--fa fa-window-minimize fa-w-16 "
+                              data-icon="window-minimize"
+                              data-prefix="fas"
+                              focusable="false"
+                              role="img"
+                              style={Object {}}
+                              viewBox="0 0 512 512"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z"
+                                fill="currentColor"
+                                style={Object {}}
+                              />
+                            </svg>
+                          </FontAwesomeIcon>
+                        </button>
                         <YouTube
                           className="youtube-player"
                           containerClassName=""
@@ -18184,8 +18240,9 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                         }
                         transform={null}
                       >
-                        <div
-                          className="youtube-drag-handle"
+                        <button
+                          className="btn btn-sm youtube-drag-handle"
+                          type="button"
                         >
                           <FontAwesomeIcon
                             border={false}
@@ -18236,7 +18293,62 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               />
                             </svg>
                           </FontAwesomeIcon>
-                        </div>
+                        </button>
+                        <button
+                          className="btn btn-sm youtube-reduce-button"
+                          onClick={[Function]}
+                          type="button"
+                        >
+                          <FontAwesomeIcon
+                            border={false}
+                            className=""
+                            fixedWidth={false}
+                            flip={null}
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f2d1",
+                                  "M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z",
+                                ],
+                                "iconName": "window-minimize",
+                                "prefix": "fas",
+                              }
+                            }
+                            inverse={false}
+                            listItem={false}
+                            mask={null}
+                            pull={null}
+                            pulse={false}
+                            rotation={null}
+                            size={null}
+                            spin={false}
+                            swapOpacity={false}
+                            symbol={false}
+                            title=""
+                            transform={null}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              className="svg-inline--fa fa-window-minimize fa-w-16 "
+                              data-icon="window-minimize"
+                              data-prefix="fas"
+                              focusable="false"
+                              role="img"
+                              style={Object {}}
+                              viewBox="0 0 512 512"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z"
+                                fill="currentColor"
+                                style={Object {}}
+                              />
+                            </svg>
+                          </FontAwesomeIcon>
+                        </button>
                         <YouTube
                           className="youtube-player"
                           containerClassName=""
@@ -24360,8 +24472,9 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                         }
                         transform={null}
                       >
-                        <div
-                          className="youtube-drag-handle"
+                        <button
+                          className="btn btn-sm youtube-drag-handle"
+                          type="button"
                         >
                           <FontAwesomeIcon
                             border={false}
@@ -24412,7 +24525,62 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                               />
                             </svg>
                           </FontAwesomeIcon>
-                        </div>
+                        </button>
+                        <button
+                          className="btn btn-sm youtube-reduce-button"
+                          onClick={[Function]}
+                          type="button"
+                        >
+                          <FontAwesomeIcon
+                            border={false}
+                            className=""
+                            fixedWidth={false}
+                            flip={null}
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f2d1",
+                                  "M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z",
+                                ],
+                                "iconName": "window-minimize",
+                                "prefix": "fas",
+                              }
+                            }
+                            inverse={false}
+                            listItem={false}
+                            mask={null}
+                            pull={null}
+                            pulse={false}
+                            rotation={null}
+                            size={null}
+                            spin={false}
+                            swapOpacity={false}
+                            symbol={false}
+                            title=""
+                            transform={null}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              className="svg-inline--fa fa-window-minimize fa-w-16 "
+                              data-icon="window-minimize"
+                              data-prefix="fas"
+                              focusable="false"
+                              role="img"
+                              style={Object {}}
+                              viewBox="0 0 512 512"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z"
+                                fill="currentColor"
+                                style={Object {}}
+                              />
+                            </svg>
+                          </FontAwesomeIcon>
+                        </button>
                         <YouTube
                           className="youtube-player"
                           containerClassName=""
@@ -25346,8 +25514,9 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                         }
                         transform={null}
                       >
-                        <div
-                          className="youtube-drag-handle"
+                        <button
+                          className="btn btn-sm youtube-drag-handle"
+                          type="button"
                         >
                           <FontAwesomeIcon
                             border={false}
@@ -25398,7 +25567,62 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                               />
                             </svg>
                           </FontAwesomeIcon>
-                        </div>
+                        </button>
+                        <button
+                          className="btn btn-sm youtube-reduce-button"
+                          onClick={[Function]}
+                          type="button"
+                        >
+                          <FontAwesomeIcon
+                            border={false}
+                            className=""
+                            fixedWidth={false}
+                            flip={null}
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f2d1",
+                                  "M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z",
+                                ],
+                                "iconName": "window-minimize",
+                                "prefix": "fas",
+                              }
+                            }
+                            inverse={false}
+                            listItem={false}
+                            mask={null}
+                            pull={null}
+                            pulse={false}
+                            rotation={null}
+                            size={null}
+                            spin={false}
+                            swapOpacity={false}
+                            symbol={false}
+                            title=""
+                            transform={null}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              className="svg-inline--fa fa-window-minimize fa-w-16 "
+                              data-icon="window-minimize"
+                              data-prefix="fas"
+                              focusable="false"
+                              role="img"
+                              style={Object {}}
+                              viewBox="0 0 512 512"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z"
+                                fill="currentColor"
+                                style={Object {}}
+                              />
+                            </svg>
+                          </FontAwesomeIcon>
+                        </button>
                         <YouTube
                           className="youtube-player"
                           containerClassName=""
@@ -31228,8 +31452,9 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                         }
                         transform={null}
                       >
-                        <div
-                          className="youtube-drag-handle"
+                        <button
+                          className="btn btn-sm youtube-drag-handle"
+                          type="button"
                         >
                           <FontAwesomeIcon
                             border={false}
@@ -31280,7 +31505,62 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                               />
                             </svg>
                           </FontAwesomeIcon>
-                        </div>
+                        </button>
+                        <button
+                          className="btn btn-sm youtube-reduce-button"
+                          onClick={[Function]}
+                          type="button"
+                        >
+                          <FontAwesomeIcon
+                            border={false}
+                            className=""
+                            fixedWidth={false}
+                            flip={null}
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f2d1",
+                                  "M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z",
+                                ],
+                                "iconName": "window-minimize",
+                                "prefix": "fas",
+                              }
+                            }
+                            inverse={false}
+                            listItem={false}
+                            mask={null}
+                            pull={null}
+                            pulse={false}
+                            rotation={null}
+                            size={null}
+                            spin={false}
+                            swapOpacity={false}
+                            symbol={false}
+                            title=""
+                            transform={null}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              className="svg-inline--fa fa-window-minimize fa-w-16 "
+                              data-icon="window-minimize"
+                              data-prefix="fas"
+                              focusable="false"
+                              role="img"
+                              style={Object {}}
+                              viewBox="0 0 512 512"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z"
+                                fill="currentColor"
+                                style={Object {}}
+                              />
+                            </svg>
+                          </FontAwesomeIcon>
+                        </button>
                         <YouTube
                           className="youtube-player"
                           containerClassName=""
@@ -44096,8 +44376,9 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                         }
                         transform={null}
                       >
-                        <div
-                          className="youtube-drag-handle"
+                        <button
+                          className="btn btn-sm youtube-drag-handle"
+                          type="button"
                         >
                           <FontAwesomeIcon
                             border={false}
@@ -44148,7 +44429,62 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               />
                             </svg>
                           </FontAwesomeIcon>
-                        </div>
+                        </button>
+                        <button
+                          className="btn btn-sm youtube-reduce-button"
+                          onClick={[Function]}
+                          type="button"
+                        >
+                          <FontAwesomeIcon
+                            border={false}
+                            className=""
+                            fixedWidth={false}
+                            flip={null}
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f2d1",
+                                  "M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z",
+                                ],
+                                "iconName": "window-minimize",
+                                "prefix": "fas",
+                              }
+                            }
+                            inverse={false}
+                            listItem={false}
+                            mask={null}
+                            pull={null}
+                            pulse={false}
+                            rotation={null}
+                            size={null}
+                            spin={false}
+                            swapOpacity={false}
+                            symbol={false}
+                            title=""
+                            transform={null}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              className="svg-inline--fa fa-window-minimize fa-w-16 "
+                              data-icon="window-minimize"
+                              data-prefix="fas"
+                              focusable="false"
+                              role="img"
+                              style={Object {}}
+                              viewBox="0 0 512 512"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z"
+                                fill="currentColor"
+                                style={Object {}}
+                              />
+                            </svg>
+                          </FontAwesomeIcon>
+                        </button>
                         <YouTube
                           className="youtube-player"
                           containerClassName=""
@@ -50278,8 +50614,9 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                         }
                         transform={null}
                       >
-                        <div
-                          className="youtube-drag-handle"
+                        <button
+                          className="btn btn-sm youtube-drag-handle"
+                          type="button"
                         >
                           <FontAwesomeIcon
                             border={false}
@@ -50330,7 +50667,62 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                               />
                             </svg>
                           </FontAwesomeIcon>
-                        </div>
+                        </button>
+                        <button
+                          className="btn btn-sm youtube-reduce-button"
+                          onClick={[Function]}
+                          type="button"
+                        >
+                          <FontAwesomeIcon
+                            border={false}
+                            className=""
+                            fixedWidth={false}
+                            flip={null}
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f2d1",
+                                  "M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z",
+                                ],
+                                "iconName": "window-minimize",
+                                "prefix": "fas",
+                              }
+                            }
+                            inverse={false}
+                            listItem={false}
+                            mask={null}
+                            pull={null}
+                            pulse={false}
+                            rotation={null}
+                            size={null}
+                            spin={false}
+                            swapOpacity={false}
+                            symbol={false}
+                            title=""
+                            transform={null}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              className="svg-inline--fa fa-window-minimize fa-w-16 "
+                              data-icon="window-minimize"
+                              data-prefix="fas"
+                              focusable="false"
+                              role="img"
+                              style={Object {}}
+                              viewBox="0 0 512 512"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z"
+                                fill="currentColor"
+                                style={Object {}}
+                              />
+                            </svg>
+                          </FontAwesomeIcon>
+                        </button>
                         <YouTube
                           className="youtube-player"
                           containerClassName=""
@@ -51270,8 +51662,9 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                         }
                         transform={null}
                       >
-                        <div
-                          className="youtube-drag-handle"
+                        <button
+                          className="btn btn-sm youtube-drag-handle"
+                          type="button"
                         >
                           <FontAwesomeIcon
                             border={false}
@@ -51322,7 +51715,62 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                               />
                             </svg>
                           </FontAwesomeIcon>
-                        </div>
+                        </button>
+                        <button
+                          className="btn btn-sm youtube-reduce-button"
+                          onClick={[Function]}
+                          type="button"
+                        >
+                          <FontAwesomeIcon
+                            border={false}
+                            className=""
+                            fixedWidth={false}
+                            flip={null}
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f2d1",
+                                  "M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z",
+                                ],
+                                "iconName": "window-minimize",
+                                "prefix": "fas",
+                              }
+                            }
+                            inverse={false}
+                            listItem={false}
+                            mask={null}
+                            pull={null}
+                            pulse={false}
+                            rotation={null}
+                            size={null}
+                            spin={false}
+                            swapOpacity={false}
+                            symbol={false}
+                            title=""
+                            transform={null}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              className="svg-inline--fa fa-window-minimize fa-w-16 "
+                              data-icon="window-minimize"
+                              data-prefix="fas"
+                              focusable="false"
+                              role="img"
+                              style={Object {}}
+                              viewBox="0 0 512 512"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M464 352H48c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-32c0-26.5-21.5-48-48-48z"
+                                fill="currentColor"
+                                style={Object {}}
+                              />
+                            </svg>
+                          </FontAwesomeIcon>
+                        </button>
                         <YouTube
                           className="youtube-player"
                           containerClassName=""
