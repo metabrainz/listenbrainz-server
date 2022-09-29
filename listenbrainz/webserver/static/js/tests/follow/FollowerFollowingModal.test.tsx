@@ -60,14 +60,14 @@ describe("updateMode()", () => {
     const instance = wrapper.instance();
 
     // initial state after first fetch
-    expect(instance.state.activeMode).toEqual("follower");
+    expect(instance.state.activeMode).toEqual("following");
 
     // does nothing if the same mode as the current mode is passed
-    instance.updateMode("follower");
-    expect(instance.state.activeMode).toEqual("follower");
-
-    // updates the mode correctly
     instance.updateMode("following");
     expect(instance.state.activeMode).toEqual("following");
+
+    // updates the mode correctly
+    instance.updateMode("follower");
+    expect(instance.state.activeMode).toEqual("follower");
   });
 });
