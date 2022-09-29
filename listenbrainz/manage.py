@@ -290,4 +290,5 @@ def run_daily_jams():
     """ Generate daily playlists for users soon after the new day begins in their timezone. This is an internal LB
     method and not a core function of troi.
     """
-    run_daily_jams_troi_bot()
+    with create_app().app_context():
+        run_daily_jams_troi_bot()
