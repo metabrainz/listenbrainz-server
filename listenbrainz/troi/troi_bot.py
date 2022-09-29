@@ -70,8 +70,9 @@ def run_daily_jams(user, jam_date):
     except RuntimeError as err:
         current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user, str(err)))
         return
-    url = current_app.config["SERVER_ROOT_URL"] + "/playlist/" + playlist.mbid
-    enter_timeline_notification(user, """Your daily-jams playlist has been updated. <a href="%s">Give it a listen!</a>.""" % url)
+    if len(playlist.playlists) > 0:
+        url = current_app.config["SERVER_ROOT_URL"] + "/playlist/" + playlist.playlists[0].mbid
+        enter_timeline_notification(user, """Your daily-jams playlist has been updated. <a href="%s">Give it a listen!</a>.""" % url)
 
 
 def enter_timeline_notification(username, message):
