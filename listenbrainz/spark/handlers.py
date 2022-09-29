@@ -18,7 +18,7 @@ from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJ
 from listenbrainz.db import year_in_music, couchdb
 from listenbrainz.db.fresh_releases import insert_fresh_releases
 from listenbrainz.db.similar_users import import_user_similarities
-from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
+from listenbrainz.troi.troi_bot import run_post_recommendation_troi_bot
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -307,7 +307,6 @@ def cf_recording_recommendations_complete(data):
     Run any troi scripts necessary now that recommendations have been generated and
     send an email to notify recommendations have been generated and are being written into db.
     """
-
     run_post_recommendation_troi_bot()
 
     if current_app.config['TESTING']:
