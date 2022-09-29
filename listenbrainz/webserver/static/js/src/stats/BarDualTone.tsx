@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { ResponsiveBar, Layer } from "@nivo/bar";
 import { BoxLegendSvg, LegendProps } from "@nivo/legends";
+import { BarDatum, ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
 
 export type BarDualToneProps = {
@@ -198,7 +198,7 @@ export default function BarDualTone(
 
   return (
     <ResponsiveBar
-      data={data}
+      data={data as BarDatum[]}
       indexBy="id"
       keys={keys}
       groupMode="grouped"
