@@ -59,7 +59,10 @@ export type ListenCardProps = {
   ) => void;
   // This show under the first line of listen details. It's meant for reviews, etc.
   additionalContent?: string | JSX.Element;
-  thumbnail?: JSX.Element;
+  // Displays left of the cover art thumbnail. For special items like reorder/grab icon
+  beforeThumbnailContent?: JSX.Element;
+  // Replaces automatic cover art thumbnail. Also disables loading cover art
+  customThumbnail?: JSX.Element;
   // The default details (recording name, artist name) can be replaced
   listenDetails?: JSX.Element;
   // The default timestamp can be replaced
@@ -100,8 +103,12 @@ export default class ListenCard extends React.Component<
   }
 
   async componentDidUpdate(oldProps: ListenCardProps) {
-    const { listen } = this.props;
-    if (Boolean(listen) && !isEqual(listen, oldProps.listen)) {
+    const { listen, customThumbnail } = this.props;
+    if (
+      !customThumbnail &&
+      Boolean(listen) &&
+      !isEqual(listen, oldProps.listen)
+    ) {
       await this.getCoverArt();
     }
   }
@@ -171,9 +178,18 @@ export default class ListenCard extends React.Component<
         artist_name: getArtistName(listen),
         track_name: getTrackName(listen),
         release_name: _get(listen, "track_metadata.release_name"),
-        recording_mbid: getRecordingMBID(listen),
-        recording_msid: getRecordingMSID(listen),
       };
+
+      const recording_mbid = getRecordingMBID(listen);
+      if (recording_mbid) {
+        metadata.recording_mbid = recording_mbid;
+      }
+
+      const recording_msid = getRecordingMSID(listen);
+      if (recording_msid) {
+        metadata.recording_msid = recording_msid;
+      }
+
       try {
         const status = await APIService.recommendTrackToFollowers(
           currentUser.name,
@@ -211,11 +227,12 @@ export default class ListenCard extends React.Component<
   render() {
     const {
       additionalContent,
+      beforeThumbnailContent,
+      customThumbnail,
       listen,
       className,
       showUsername,
       showTimestamp,
-      thumbnail,
       listenDetails,
       customTimestamp,
       compact,
@@ -241,7 +258,9 @@ export default class ListenCard extends React.Component<
     const trackDurationMs = getTrackDurationInMs(listen);
 
     const hasRecordingMSID = Boolean(recordingMSID);
-    const enableRecommendButton = artistName && trackName && hasRecordingMSID;
+    const hasRecordingMBID = Boolean(recordingMBID);
+    const enableRecommendButton =
+      artistName && trackName && (hasRecordingMSID || hasRecordingMBID);
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
@@ -294,7 +313,8 @@ export default class ListenCard extends React.Component<
         }`}
       >
         <div className="main-content">
-          {thumbnail || (
+          {beforeThumbnailContent}
+          {customThumbnail || (
             <div className="listen-thumbnail">
               {thumbnailSrc ? (
                 <a
