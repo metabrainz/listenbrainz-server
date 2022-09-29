@@ -286,7 +286,7 @@ def msb_transfer_db():
 
 
 @cli.command()
-def generate_playlists():
+def run_daily_jams():
     """ Generate daily playlists for users soon after the new day begins in their timezone. This is an internal LB
     method and not a core function of troi.
     """
