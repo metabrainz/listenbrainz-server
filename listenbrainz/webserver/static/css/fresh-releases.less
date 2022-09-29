@@ -36,13 +36,11 @@
           text-transform: uppercase;
           font-size: large;
           font-weight: bold;
-          // color: @orange;
         }
 
         #clearall-btn {
           display: none;
           font-size: small;
-          // font-weight: 700;
           flex-grow: 2;
         }
       }
@@ -54,17 +52,16 @@
           margin: 1rem 0;
           font-size: larger;
           &:hover {
+            cursor: pointer;
             color: fade(@orange, 75%);
           }
 
-          .type-name {
+          .type-name-inactive {
             margin-right: 0.25rem;
-            // font-weight: 700;
           }
 
-          .clear-btn {
-            display: none;
-            font-weight: 700;
+          .type-name-active {
+            margin-right: 0.25rem;
             color: @orange;
           }
         }

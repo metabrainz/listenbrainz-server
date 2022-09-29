@@ -1,11 +1,39 @@
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 
 type ReleaseFiltersProps = {
-  filters: Array<string | null>;
+  allFilters: Array<string>;
+  releases: Array<FreshReleaseItem>;
+  setFilteredList: Dispatch<SetStateAction<Array<FreshReleaseItem>>>;
 };
 
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
-  const { filters } = props;
+  const { allFilters, releases, setFilteredList } = props;
+
+  const [checkedList, setCheckedList] = React.useState<
+    Array<string | undefined>
+  >([]);
+
+  const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.persist();
+    const { value } = event.target;
+    const isChecked = event.target.checked;
+
+    if (isChecked) {
+      setCheckedList([...checkedList, value]);
+    } else {
+      const filtersList = checkedList.filter((item) => item !== value);
+      setCheckedList(filtersList);
+    }
+
+    setFilteredList(() =>
+      releases.filter((item) =>
+        checkedList.includes(
+          item.release_group_primary_type || item.release_group_secondary_type
+        )
+      )
+    );
+  };
+
   return (
     <div id="filters-container">
       <div id="coverart-checkbox">
@@ -24,10 +52,19 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
           </div>
         </div>
         <div id="filters-list">
-          {filters.map((type) => (
-            <div className="type-container" role="button">
-              <span className="type-name">{type}</span>
-              <span className="clear-btn">&times;</span>
+          {allFilters.map((type, index) => (
+            <div>
+              <input
+                id={`custom-checkbox-${index}`}
+                className="type-container"
+                type="checkbox"
+                value={type}
+                checked={checkedList.includes(type)}
+                onChange={(e) => handleOnChange(e)}
+                aria-hidden="true"
+                aria-checked="false"
+              />
+              <label htmlFor={`custom-checkbox-${index}`}>{type}</label>
             </div>
           ))}
         </div>

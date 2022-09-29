@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useCallback, useContext } from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
@@ -23,12 +23,13 @@ type FreshReleasesProps = {
 export default function FreshReleases({ newAlert }: FreshReleasesProps) {
   const RELEASE_TYPE_OTHER = "Other";
 
-  const { APIService } = React.useContext(GlobalAppContext);
+  const { APIService } = useContext(GlobalAppContext);
 
-  const [releases, setReleases] = React.useState<Array<FreshReleaseItem>>();
-  const [typesList, setTypesList] = React.useState<Array<string | null>>([]);
+  const [releases, setReleases] = useState<Array<FreshReleaseItem>>([]);
+  const [filteredList, setFilteredList] = useState<Array<FreshReleaseItem>>([]);
+  const [allFilters, setAllFilters] = useState<Array<string>>([]);
 
-  const fetchReleases = React.useCallback(async () => {
+  const fetchReleases = useCallback(async () => {
     try {
       const freshReleases: Array<FreshReleaseItem> = await APIService.fetchFreshReleases(
         "",
@@ -57,9 +58,12 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
         .filter((value, index, self) => self.indexOf(value) === index);
 
       setReleases(cleanReleases);
-      setTypesList(releaseTypes);
+      setFilteredList(cleanReleases);
+      setAllFilters(releaseTypes);
     } catch (error) {
       newAlert("danger", "Couldn't fetch fresh releases", error.toString());
+      // eslint-disable-next-line no-console
+      // console.log("Couldn't fetch fresh releases.");
     }
   }, []);
 
@@ -75,10 +79,14 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
           className="col-md-1 hidden-xs hidden-sm hidden-md"
           style={{ padding: "2rem 0" }}
         >
-          <ReleaseFilters filters={typesList} />
+          <ReleaseFilters
+            allFilters={allFilters}
+            releases={releases}
+            setFilteredList={setFilteredList}
+          />
         </div>
         <div className="release-cards-grid col-xs-12 col-md-10">
-          {releases?.map((release) => {
+          {filteredList?.map((release) => {
             return (
               <ReleaseCard
                 key={release.release_mbid}
