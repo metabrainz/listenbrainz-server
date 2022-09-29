@@ -30,7 +30,7 @@ export default class FollowerFollowingModal extends React.Component<
   constructor(props: FollowerFollowingModalProps) {
     super(props);
     this.state = {
-      activeMode: "follower",
+      activeMode: "following",
     };
   }
 
