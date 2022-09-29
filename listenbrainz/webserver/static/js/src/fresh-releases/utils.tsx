@@ -1,23 +1,40 @@
+const originalFetch = window.fetch;
+const fetchWithRetry = require("fetch-retry")(originalFetch);
+
 const getCoverartFromReleaseMBID = async (
   releaseMBID: string
 ): Promise<string | undefined> => {
   try {
-    const CAAResponse = await fetch(
-      `https://coverartarchive.org/release/${releaseMBID}`
+    const CAAResponse = await fetchWithRetry(
+      `https://coverartarchive.org/release/${releaseMBID}`,
+      {
+        retries: 3,
+        retryOn: [429],
+        retryDelay(attempt: number) {
+          const maxRetryTime = 800;
+          const minRetryTime = 400;
+          return Math.floor(
+            Math.random() * (maxRetryTime - minRetryTime) +
+              attempt * minRetryTime
+          );
+        },
+      }
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      if (!body.images?.[0]?.thumbnails) {
+      if (!body.images?.length) {
         return undefined;
       }
-      const { thumbnails } = body.images[0];
-      return (
-        thumbnails[250] ??
-        thumbnails.small ??
-        // If neither of the above exists, return the first one we find
-        // @ts-ignore
-        thumbnails[Object.keys(thumbnails)?.[0]]
-      );
+      const frontImage = body.images.find((image) => image.front);
+
+      if (frontImage?.id) {
+        const { id } = frontImage;
+        return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${id}_thumb250.jpg`;
+      }
+
+      // No front image? Fallback to whatever the first image is
+      const { thumbnails, image } = body.images[0];
+      return thumbnails[250] ?? thumbnails.small ?? image;
     }
   } catch (error) {
     // eslint-disable-next-line no-console
