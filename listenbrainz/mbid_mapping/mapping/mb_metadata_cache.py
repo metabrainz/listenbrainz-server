@@ -7,6 +7,7 @@ import psycopg2
 from psycopg2.errors import OperationalError
 import psycopg2.extras
 import ujson
+from psycopg2.extras import execute_values
 
 from mapping.utils import insert_rows, log
 from mapping.bulk_table import BulkInsertTable
@@ -590,7 +591,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     FROM dirty_mbids
                    WHERE {self.table_name}.recording_mbid = dirty_mbids.recording_mbid
                 """
-                curs.execute(query, (tuple(recording_mbids),))
+                execute_values(curs, query, [(mbid,) for mbid in recording_mbids], page_size=len(recording_mbids))
 
                 log("mb metadata cache: marking dirty artist mbids")
                 query = f"""
@@ -600,7 +601,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     FROM dirty_mbids
                    WHERE {self.table_name}.artist_mbids && dirty_mbids.artist_mbids
                 """
-                curs.execute(query, (artist_mbids,))
+                execute_values(curs, query, [(mbid,) for mbid in artist_mbids], page_size=len(artist_mbids))
 
                 log("mb metadata cache: marking dirty release mbids")
                 query = f"""
@@ -610,7 +611,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     FROM dirty_mbids
                    WHERE {self.table_name}.release_mbid = dirty_mbids.release_mbid
                 """
-                curs.execute(query, (tuple(release_mbids),))
+                execute_values(curs, query, [(mbid,) for mbid in release_mbids], page_size=len(release_mbids))
 
                 conn.commit()
 
