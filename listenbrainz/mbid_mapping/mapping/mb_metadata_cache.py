@@ -420,6 +420,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         # |   artist_tags   |  artist tags                   |  recording_tag, genre              | artist
         # |   artist        |                                |  artist                            |
         artist_mbids_query = """
+        WITH artist_mbids(mbid) AS (
             SELECT a.gid
               FROM artist a
               JOIN l_artist_url lau
@@ -468,6 +469,14 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             SELECT a.gid
               FROM artist a
              WHERE a.last_updated > %(timestamp)s
+        ) SELECT r.gid
+            FROM recording r
+            JOIN artist_credit_name acn
+           USING (artist_credit)
+            JOIN artist a
+              ON acn.artist = a.id
+            JOIN artist_mbids am
+              ON a.gid = am.mbid           
         """
 
         # 2. recording_rels, recording_tags, recording
@@ -560,7 +569,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             with self.mb_conn.cursor() as curs:
                 log("mb metadata cache: querying artist mbids to update")
                 curs.execute(artist_mbids_query, {"timestamp": timestamp})
-                artist_mbids = [row[0] for row in curs.fetchall()]
+                artist_recording_mbids = [row[0] for row in curs.fetchall()]
 
                 log("mb metadata cache: querying recording mbids to update")
                 curs.execute(recording_mbids_query, {"timestamp": timestamp})
@@ -570,12 +579,12 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 curs.execute(release_mbids_query, {"timestamp": timestamp})
                 release_mbids = [row[0] for row in curs.fetchall()]
 
-                return recording_mbids, artist_mbids, release_mbids
+                return recording_mbids, artist_recording_mbids, release_mbids
         except psycopg2.errors.OperationalError as err:
             log("mb metadata cache: cannot query rows for update", err)
             return None
 
-    def mark_rows_as_dirty(self, recording_mbids: List[uuid.UUID], artist_mbids: List[uuid.UUID], release_mbids: List[uuid.UUID]):
+    def mark_rows_as_dirty(self, recording_mbids: List[uuid.UUID], artist_recording_mbids: List[uuid.UUID], release_mbids: List[uuid.UUID]):
         """Mark rows as dirty if the row is for a given recording mbid or if it's by a given artist mbid, or is from a given release mbid"""
 
         log("mb metadata cache: marking rows as dirty")
@@ -593,15 +602,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 """
                 execute_values(curs, query, [(mbid,) for mbid in recording_mbids], page_size=len(recording_mbids))
 
-                log("mb metadata cache: marking dirty artist mbids")
-                query = f"""
-                    WITH dirty_mbids(artist_mbid) AS (VALUES %s)  
-                  UPDATE {self.table_name}
-                     SET dirty = 't'
-                    FROM dirty_mbids
-                   WHERE {self.table_name}.artist_mbids @> dirty_mbids.artist_mbid
-                """
-                execute_values(curs, query, [([mbid],) for mbid in artist_mbids], page_size=len(artist_mbids))
+                log("mb metadata cache: marking dirty artist_recording_mbids")
+                execute_values(curs, query, [(mbid,) for mbid in artist_recording_mbids], page_size=len(artist_recording_mbids))
 
                 log("mb metadata cache: marking dirty release mbids")
                 query = f"""
