@@ -573,7 +573,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 JOIN release rel
                   ON rel.id = m.release
                 JOIN release_mbids rm 
-                  ON rm.gid = rel.gid
+                  ON rm.mbid = rel.gid
         """
 
         try:
