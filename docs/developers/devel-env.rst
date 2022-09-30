@@ -69,8 +69,8 @@ configuration.
 
     cp listenbrainz/config.py.sample listenbrainz/config.py
 
-Don't change anything in config.py.sample.
-Next, open the file with your favorite text editor and look for this section.
+Now, open the new config.py file (don’t change config.py.sample) with your favorite
+text editor and look for this section.
 
 .. code-block:: yaml
 
