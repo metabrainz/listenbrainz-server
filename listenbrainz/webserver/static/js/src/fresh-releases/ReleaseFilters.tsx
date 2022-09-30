@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React, { useState, Dispatch, SetStateAction, useEffect } from "react";
 
 type ReleaseFiltersProps = {
   allFilters: Array<string>;
@@ -9,9 +9,7 @@ type ReleaseFiltersProps = {
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const { allFilters, releases, setFilteredList } = props;
 
-  const [checkedList, setCheckedList] = React.useState<
-    Array<string | undefined>
-  >([]);
+  const [checkedList, setCheckedList] = useState<Array<string | undefined>>([]);
 
   const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.persist();
@@ -24,15 +22,16 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
       const filtersList = checkedList.filter((item) => item !== value);
       setCheckedList(filtersList);
     }
+  };
 
-    setFilteredList(() =>
-      releases.filter((item) =>
-        checkedList.includes(
-          item.release_group_primary_type || item.release_group_secondary_type
-        )
+  useEffect(() => {
+    const filteredReleases = releases.filter((item) =>
+      checkedList.includes(
+        item.release_group_primary_type || item.release_group_secondary_type
       )
     );
-  };
+    setFilteredList(filteredReleases);
+  }, [checkedList]);
 
   return (
     <div id="filters-container">
