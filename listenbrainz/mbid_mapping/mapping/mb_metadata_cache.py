@@ -599,7 +599,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                   UPDATE {self.table_name}
                      SET dirty = 't'
                     FROM dirty_mbids
-                   WHERE {self.table_name}.artist_mbids && dirty_mbids.artist_mbid
+                   WHERE {self.table_name}.artist_mbids @> dirty_mbids.artist_mbid
                 """
                 execute_values(curs, query, [([mbid],) for mbid in artist_mbids], page_size=len(artist_mbids))
 
