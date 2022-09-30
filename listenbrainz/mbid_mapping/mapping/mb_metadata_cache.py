@@ -646,6 +646,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 log("mb metadata update: Running looooong query on dirty items")
                 query = self.get_metadata_cache_query(with_values=True)
                 values = [(row[0],) for row in recording_mbids]
+                print(len(values))
                 psycopg2.extras.execute_values(mb_curs, query, values, page_size=len(values))
 
                 rows = []
@@ -713,7 +714,7 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
         log("mb metadata cache: starting incremental update")
 
         # TODO: Update logic to get last update timestamp
-        timestamp = datetime(2022, 8, 17, 0, 0, 0)
+        timestamp = datetime(2022, 8, 17, 14, 0, 0)
         recording_mbids, artist_mbids, release_mbids = cache.query_last_updated_items(timestamp)
         cache.mark_rows_as_dirty(recording_mbids, artist_mbids, release_mbids)
         cache.update_dirty_cache_items()
