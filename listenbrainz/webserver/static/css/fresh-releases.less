@@ -1,67 +1,81 @@
 .releases-page {
   // FILTERS
-  #filters-container {
-    display: flex;
-    flex-direction: column;
+  .filters-main {
+    padding: 2rem 0;
 
-    #coverart-checkbox {
-      // TODO add :checked color
-      input[type="checkbox"] {
-        transform: scale(1.5);
-        margin: 0.5rem;
-        &:checked::after {
-          background: @orange;
-          color: @white;
-        }
-      }
-
-      label {
-        display: inline;
-        font-weight: 500;
-      }
-    }
-
-    #release-filters {
+    #filters-container {
       display: flex;
       flex-direction: column;
-      user-select: none;
 
-      #title-container {
-        display: flex;
-        margin-top: 2em;
-        align-items: flex-end;
-
-        #type-title {
-          flex-grow: 1;
-          text-transform: uppercase;
-          font-size: large;
-          font-weight: bold;
+      #coverart-checkbox {
+        input[type="checkbox"] {
+          transform: scale(1.5);
+          margin: 0.5rem;
+          accent-color: @orange;
         }
 
-        #clearall-btn {
-          display: none;
-          font-size: small;
-          flex-grow: 2;
+        label {
+          display: inline;
+          font-weight: 500;
         }
       }
 
-      #filters-list {
-        text-transform: lowercase;
+      #release-filters {
+        display: flex;
+        flex-direction: column;
+        user-select: none;
 
-        .type-container {
-          margin: 1rem 0;
-          font-size: larger;
-          &:hover {
-            cursor: pointer;
-            color: fade(@orange, 75%);
+        #title-container {
+          display: flex;
+          height: 2rem;
+          margin-top: 2em;
+          align-items: center;
+
+          #type-title {
+            flex-grow: 1;
+            text-transform: uppercase;
+            font-size: large;
+            font-weight: bold;
+          }
+
+          #clearall-btn-inactive {
+            display: none;
+            flex-grow: 2;
+          }
+
+          #clearall-btn-active {
+            font-size: 2.5rem;
+            flex-grow: 2;
+            &:hover {
+              font-weight: bold;
+              color: @orange;
+            }
+          }
+        }
+
+        #filters-list {
+          text-transform: lowercase;
+          font-size: 1.6rem;
+
+          input[type="checkbox"] {
+            display: none;
           }
 
           .type-name-inactive {
-            margin-right: 0.25rem;
+            margin-top: 1rem;
+            font-weight: normal;
+            cursor: pointer;
+            color: @asphalt;
+            &:hover {
+              font-weight: bold;
+              color: @blue;
+            }
           }
 
           .type-name-active {
-            margin-right: 0.25rem;
+            margin-top: 1rem;
+            font-weight: bold;
+            cursor: pointer;
             color: @orange;
           }
         }

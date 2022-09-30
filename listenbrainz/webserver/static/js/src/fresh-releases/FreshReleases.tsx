@@ -75,10 +75,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
     <>
       <h3 id="row">Fresh releases</h3>
       <div className="releases-page row">
-        <div
-          className="col-md-1 hidden-xs hidden-sm hidden-md"
-          style={{ padding: "2rem 0" }}
-        >
+        <div className="filters-main col-md-1 hidden-xs hidden-sm hidden-md">
           <ReleaseFilters
             allFilters={allFilters}
             releases={releases}
