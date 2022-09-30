@@ -595,11 +595,11 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
                 log("mb metadata cache: marking dirty artist mbids")
                 query = f"""
-                    WITH dirty_mbids(artist_mbids) AS (VALUES %s)  
+                    WITH dirty_mbids(artist_mbid) AS (VALUES %s)  
                   UPDATE {self.table_name}
                      SET dirty = 't'
                     FROM dirty_mbids
-                   WHERE {self.table_name}.artist_mbids && dirty_mbids.artist_mbids
+                   WHERE ANY({self.table_name}.artist_mbids) = dirty_mbids.artist_mbid
                 """
                 execute_values(curs, query, [(mbid,) for mbid in artist_mbids], page_size=len(artist_mbids))
 
