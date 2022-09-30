@@ -51,15 +51,25 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
           <div id="type-title" className="text-muted">
             Filters
           </div>
-          <div id="clearall-btn" className="text-muted" role="button">
-            clear all
+          <div
+            id={
+              checkedList.length === 0
+                ? "clearall-btn-inactive"
+                : "clearall-btn-active"
+            }
+            className="text-muted"
+            role="button"
+            onClick={() => setCheckedList([])}
+            aria-hidden="true"
+          >
+            &times;
           </div>
         </div>
         <div id="filters-list">
           {allFilters.map((type, index) => (
             <div>
               <input
-                id={`custom-checkbox-${index}`}
+                id={`filters-item-${index}`}
                 className="type-container"
                 type="checkbox"
                 value={type}
@@ -68,7 +78,16 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 aria-hidden="true"
                 aria-checked="false"
               />
-              <label htmlFor={`custom-checkbox-${index}`}>{type}</label>
+              <label
+                htmlFor={`filters-item-${index}`}
+                className={
+                  checkedList.includes(type)
+                    ? "type-name-active"
+                    : "type-name-inactive"
+                }
+              >
+                {type}
+              </label>
             </div>
           ))}
         </div>
