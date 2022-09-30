@@ -25,12 +25,17 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   };
 
   useEffect(() => {
-    const filteredReleases = releases.filter((item) =>
-      checkedList.includes(
-        item.release_group_primary_type || item.release_group_secondary_type
-      )
-    );
-    setFilteredList(filteredReleases);
+    // if no filter is chosen, display all releases
+    if (checkedList.length === 0) {
+      setFilteredList(releases);
+    } else {
+      const filteredReleases = releases.filter((item) =>
+        checkedList.includes(
+          item.release_group_primary_type || item.release_group_secondary_type
+        )
+      );
+      setFilteredList(filteredReleases);
+    }
   }, [checkedList]);
 
   return (
