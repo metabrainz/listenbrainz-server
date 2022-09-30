@@ -36,14 +36,22 @@ if [[ ! -d "docker" ]]; then
     exit 255
 fi
 
+echo "Checking docker compose version"
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+else
+    DOCKER_COMPOSE_CMD="docker-compose"
+fi
+
+
 function invoke_docker_compose {
-    docker-compose -f $COMPOSE_FILE_LOC \
+    $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                    "$@"
 }
 
 function invoke_docker_compose_spark {
-    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
+    $DOCKER_COMPOSE_CMD -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
                    "$@"
 }
@@ -213,7 +221,7 @@ if [ "$1" == "-s" ]; then
 fi
 
 if [ "$1" == "-d" ]; then
-    echo "Running docker-compose down"
+    echo "Running docker compose down"
     unit_dcdown
     exit 0
 fi
