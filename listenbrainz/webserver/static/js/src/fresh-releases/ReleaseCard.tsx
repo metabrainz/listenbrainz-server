@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { formattedReleaseDate, getCoverartFromReleaseMBID } from "./utils";
+import { getAlbumArtFromReleaseMBID } from "../utils/utils";
+import { formattedReleaseDate } from "./utils";
 
 type ReleaseCardProps = {
   releaseDate: string;
@@ -25,7 +26,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   const [coverartSrc, setCoverartSrc] = useState<string>(COVERART_PLACEHOLDER);
 
   const getCoverArt = async () => {
-    const coverartURL = await getCoverartFromReleaseMBID(releaseMBID);
+    const coverartURL = await getAlbumArtFromReleaseMBID(releaseMBID);
     if (coverartURL) {
       setCoverartSrc(coverartURL);
     }
