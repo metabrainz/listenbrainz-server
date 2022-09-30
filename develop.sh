@@ -8,8 +8,16 @@ if [[ ! -d "docker" ]]; then
     exit -1
 fi
 
+echo "Checking docker compose version"
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+else
+    DOCKER_COMPOSE_CMD="docker-compose"
+fi
+
+
 function invoke_docker_compose {
-    exec docker-compose -f docker/docker-compose.yml \
+    exec $DOCKER_COMPOSE_CMD -f docker/docker-compose.yml \
                 -p listenbrainz \
                 "$@"
 }
@@ -31,7 +39,7 @@ function open_timescale_shell {
 }
 
 function invoke_docker_compose_spark {
-    exec docker-compose -f docker/docker-compose.spark.yml -f docker/docker-compose.spark.override.yml \
+    exec $DOCKER_COMPOSE_CMD -f docker/docker-compose.spark.yml -f docker/docker-compose.spark.override.yml \
                 -p listenbrainzspark \
                 "$@"
 }
