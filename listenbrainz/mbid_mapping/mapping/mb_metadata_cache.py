@@ -540,6 +540,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         # |   release_data       |  release name, cover art   |                             | release, release_group
         # |   release            |                            |  release, release_group     |
         release_mbids_query = """
+            WITH release_mbids(mbid) AS (
                 SELECT rel.gid AS release_mbid
                   FROM mapping.canonical_release_redirect crr
                   JOIN release rel
@@ -563,89 +564,51 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     ON rel.release_group = rg.id
                  WHERE rel.last_updated > %(timestamp)s
                    AND  rg.last_updated > %(timestamp)s
+            ) SELECT r.gid
+                FROM recording r
+                JOIN track t
+                  ON t.recording = r.id
+                JOIN medium m
+                  ON m.id = t.medium
+                JOIN release rel
+                  ON rel.id = m.release
+                JOIN release_mbids rm 
+                  ON rm.gid = rel.gid
         """
 
         try:
             with self.mb_conn.cursor() as curs:
-                log("mb metadata cache: querying artist mbids to update")
-                curs.execute(artist_mbids_query, {"timestamp": timestamp})
-                artist_recording_mbids = [row[0] for row in curs.fetchall()]
-
                 log("mb metadata cache: querying recording mbids to update")
                 curs.execute(recording_mbids_query, {"timestamp": timestamp})
                 recording_mbids = [row[0] for row in curs.fetchall()]
 
+                log("mb metadata cache: querying artist mbids to update")
+                curs.execute(artist_mbids_query, {"timestamp": timestamp})
+                recording_mbids.extend([row[0] for row in curs.fetchall()])
+
                 log("mb metadata cache: querying release mbids to update")
                 curs.execute(release_mbids_query, {"timestamp": timestamp})
-                release_mbids = [row[0] for row in curs.fetchall()]
+                recording_mbids.extend([row[0] for row in curs.fetchall()])
 
-                return recording_mbids, artist_recording_mbids, release_mbids
+                return recording_mbids
         except psycopg2.errors.OperationalError as err:
             log("mb metadata cache: cannot query rows for update", err)
             return None
 
-    def mark_rows_as_dirty(self, recording_mbids: List[uuid.UUID], artist_recording_mbids: List[uuid.UUID], release_mbids: List[uuid.UUID]):
-        """Mark rows as dirty if the row is for a given recording mbid or if it's by a given artist mbid, or is from a given release mbid"""
-
-        log("mb metadata cache: marking rows as dirty")
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
-        try:
-            with conn.cursor() as curs:
-
-                log("mb metadata cache: marking dirty recording mbids")
-                query = f"""
-                    WITH dirty_mbids(recording_mbid) AS (VALUES %s)  
-                  UPDATE {self.table_name}
-                     SET dirty = 't'
-                    FROM dirty_mbids
-                   WHERE {self.table_name}.recording_mbid = dirty_mbids.recording_mbid
-                """
-                execute_values(curs, query, [(mbid,) for mbid in recording_mbids], page_size=len(recording_mbids))
-
-                log("mb metadata cache: marking dirty artist_recording_mbids")
-                execute_values(curs, query, [(mbid,) for mbid in artist_recording_mbids], page_size=len(artist_recording_mbids))
-
-                log("mb metadata cache: marking dirty release mbids")
-                query = f"""
-                    WITH dirty_mbids(release_mbid) AS (VALUES %s)  
-                  UPDATE {self.table_name}
-                     SET dirty = 't'
-                    FROM dirty_mbids
-                   WHERE {self.table_name}.release_mbid = dirty_mbids.release_mbid
-                """
-                execute_values(curs, query, [(mbid,) for mbid in release_mbids], page_size=len(release_mbids))
-
-                conn.commit()
-
-        except psycopg2.errors.OperationalError as err:
-            log("mb metadata cache: cannot mark rows as dirty", err)
-            conn.rollback()
-            raise
-
-    def update_dirty_cache_items(self):
+    def update_dirty_cache_items(self, recording_mbids: List[uuid.UUID]):
         """Refresh any dirty items in the mb_metadata_cache table.
 
         This process first looks for all recording MIBDs which are dirty, gets updated metadata for them, and then
         in batches deletes the dirty rows and inserts the updated ones.
         """
-        dirty_query = f"""
-            SELECT recording_mbid
-              FROM {self.table_name}
-             WHERE dirty = 't'
-        """
-
-        log("mb metadata update: getting dirty items")
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
             with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-                lb_curs.execute(dirty_query)
-                recording_mbids = lb_curs.fetchall()
-
                 self.config_postgres_join_limit(mb_curs)
 
                 log("mb metadata update: Running looooong query on dirty items")
                 query = self.get_metadata_cache_query(with_values=True)
-                values = [(row[0],) for row in recording_mbids]
+                values = [(mbid,) for mbid in recording_mbids]
                 print(len(values))
                 psycopg2.extras.execute_values(mb_curs, query, values, page_size=len(values))
 
@@ -715,8 +678,7 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
 
         # TODO: Update logic to get last update timestamp
         timestamp = datetime(2022, 8, 17, 16, 0, 0)
-        recording_mbids, artist_mbids, release_mbids = cache.query_last_updated_items(timestamp)
-        cache.mark_rows_as_dirty(recording_mbids, artist_mbids, release_mbids)
-        cache.update_dirty_cache_items()
+        recording_mbids = cache.query_last_updated_items(timestamp)
+        cache.update_dirty_cache_items(recording_mbids)
 
         log("mb metadata cache: incremental update completed")
