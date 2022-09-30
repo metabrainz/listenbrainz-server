@@ -405,6 +405,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         # the last_updated considered and last_updated ignored columns below together list all the last_updated
         # columns a given CTE touches. any other tables touched by a given CTE do not have a last_updated column.
 
+        # further note that these queries only take updates and deletions into consideration, not deletes
+
         # 1. artist_rels, artist_data, artist_tags, artist
         # these CTEs and tables concern artist data and we fetch artist mbids from these. all of the CTEs touch
         # artist table but do not consider its last_updated column because that is done separately at end. further,
@@ -428,7 +430,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
               JOIN link_type lt
                 ON l.link_type = lt.id
              WHERE lt.gid IN ('99429741-f3f6-484b-84f8-23af51991770'
-                             ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
                              ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
                              ,'689870a4-a1e4-4912-b17f-7b2664215698'
                              ,'93883cf6-e818-4938-990e-75863f8db2d3'
@@ -580,13 +581,37 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
-                query = f"""UPDATE {self.table_name}
-                               SET dirty = 't'
-                             WHERE recording_mbid IN %s
-                                OR %s && artist_mbids
-                                OR release_mbid IN %s
-                        """
-                curs.execute(query, (tuple(recording_mbids), artist_mbids, tuple(release_mbids)))
+
+                log("mb metadata cache: marking dirty recording mbids")
+                query = f"""
+                    WITH dirty_mbids(recording_mbid) AS (VALUES %s)  
+                  UPDATE {self.table_name}
+                     SET dirty = 't'
+                    FROM dirty_mbids
+                   WHERE {self.table_name}.recording_mbid = dirty_mbids.recording_mbid
+                """
+                curs.execute(query, (tuple(recording_mbids),))
+
+                log("mb metadata cache: marking dirty artist mbids")
+                query = f"""
+                    WITH dirty_mbids(artist_mbids) AS (VALUES %s)  
+                  UPDATE {self.table_name}
+                     SET dirty = 't'
+                    FROM dirty_mbids
+                   WHERE {self.table_name}.artist_mbids && dirty_mbids.artist_mbids
+                """
+                curs.execute(query, (artist_mbids,))
+
+                log("mb metadata cache: marking dirty release mbids")
+                query = f"""
+                    WITH dirty_mbids(release_mbid) AS (VALUES %s)  
+                  UPDATE {self.table_name}
+                     SET dirty = 't'
+                    FROM dirty_mbids
+                   WHERE {self.table_name}.release_mbid = dirty_mbids.release_mbid
+                """
+                curs.execute(query, (tuple(release_mbids),))
+
                 conn.commit()
 
         except psycopg2.errors.OperationalError as err:
