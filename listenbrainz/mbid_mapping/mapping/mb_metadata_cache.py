@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from typing import List
+from typing import List, Iterable
 import uuid
 
 import psycopg2
@@ -578,24 +578,29 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
         try:
             with self.mb_conn.cursor() as curs:
+                recording_mbids = set()
+
                 log("mb metadata cache: querying recording mbids to update")
                 curs.execute(recording_mbids_query, {"timestamp": timestamp})
-                recording_mbids = [row[0] for row in curs.fetchall()]
+                for row in curs.fetchall():
+                    recording_mbids.add(row[0])
 
                 log("mb metadata cache: querying artist mbids to update")
                 curs.execute(artist_mbids_query, {"timestamp": timestamp})
-                recording_mbids.extend([row[0] for row in curs.fetchall()])
+                for row in curs.fetchall():
+                    recording_mbids.add(row[0])
 
                 log("mb metadata cache: querying release mbids to update")
                 curs.execute(release_mbids_query, {"timestamp": timestamp})
-                recording_mbids.extend([row[0] for row in curs.fetchall()])
+                for row in curs.fetchall():
+                    recording_mbids.add(row[0])
 
                 return recording_mbids
         except psycopg2.errors.OperationalError as err:
             log("mb metadata cache: cannot query rows for update", err)
             return None
 
-    def update_dirty_cache_items(self, recording_mbids: List[uuid.UUID]):
+    def update_dirty_cache_items(self, recording_mbids: set[uuid.UUID]):
         """Refresh any dirty items in the mb_metadata_cache table.
 
         This process first looks for all recording MIBDs which are dirty, gets updated metadata for them, and then
