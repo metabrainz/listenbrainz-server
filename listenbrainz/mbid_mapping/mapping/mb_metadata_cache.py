@@ -614,7 +614,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 log("mb metadata update: Running looooong query on dirty items")
                 query = self.get_metadata_cache_query(with_values=True)
                 values = [(mbid,) for mbid in recording_mbids]
-                print(len(values))
                 execute_values(mb_curs, query, values, page_size=len(values))
 
                 rows = []
