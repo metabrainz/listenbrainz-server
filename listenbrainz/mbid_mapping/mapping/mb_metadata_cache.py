@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from typing import List, Iterable
+from typing import List, Set
 import uuid
 
 import psycopg2
@@ -600,7 +600,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             log("mb metadata cache: cannot query rows for update", err)
             return None
 
-    def update_dirty_cache_items(self, recording_mbids: set[uuid.UUID]):
+    def update_dirty_cache_items(self, recording_mbids: Set[uuid.UUID]):
         """Refresh any dirty items in the mb_metadata_cache table.
 
         This process first looks for all recording MIBDs which are dirty, gets updated metadata for them, and then
@@ -615,7 +615,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 query = self.get_metadata_cache_query(with_values=True)
                 values = [(mbid,) for mbid in recording_mbids]
                 print(len(values))
-                psycopg2.extras.execute_values(mb_curs, query, values, page_size=len(values))
+                execute_values(mb_curs, query, values, page_size=len(values))
 
                 rows = []
                 count = 0
