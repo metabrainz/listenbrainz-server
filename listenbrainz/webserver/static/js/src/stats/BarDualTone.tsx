@@ -50,11 +50,11 @@ export default function BarDualTone(
         day: "2-digit",
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         day: "2-digit",
         month: "short",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["lastRangeCount", "thisRangeCount"],
       itemWidth: 120,
     },
@@ -63,11 +63,11 @@ export default function BarDualTone(
         day: "2-digit",
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         day: "2-digit",
         month: "short",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["lastRangeCount", "thisRangeCount"],
       itemWidth: 120,
     },
@@ -76,11 +76,11 @@ export default function BarDualTone(
         day: "2-digit",
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: !isMobile
         ? ["lastRangeCount", "thisRangeCount"]
         : ["thisRangeCount"],
@@ -91,11 +91,11 @@ export default function BarDualTone(
         day: "2-digit",
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: !isMobile
         ? ["lastRangeCount", "thisRangeCount"]
         : ["thisRangeCount"],
@@ -105,10 +105,10 @@ export default function BarDualTone(
       dateFormat: {
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["lastRangeCount", "thisRangeCount"],
       itemWidth: 70,
     },
@@ -116,17 +116,17 @@ export default function BarDualTone(
       dateFormat: {
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["lastRangeCount", "thisRangeCount"],
       itemWidth: 70,
     },
     all_time: {
       dateFormat: {
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["thisRangeCount"],
       itemWidth: 0,
     },

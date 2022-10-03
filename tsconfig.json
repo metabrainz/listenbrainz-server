@@ -13,6 +13,9 @@
     // See https://github.com/SortableJS/react-sortablejs/issues/186
     // Remove skipLibCheck once the issue is fixed.
     "skipLibCheck": true,
+    // Preserving old behavior after moving to TypeScript ^4.4
+    // https://www.typescriptlang.org/tsconfig#useUnknownInCatchVariables
+    "useUnknownInCatchVariables": false,
   },
   "exclude": [
     "node_modules"

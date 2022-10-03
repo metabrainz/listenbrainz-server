@@ -656,7 +656,6 @@ describe.each([
       });
       const instance = wrapper.instance();
 
-      delete window.location;
       window.location = {
         href: "https://foobar.org?page=2&range=week&entity=release",
       } as Window["location"];
