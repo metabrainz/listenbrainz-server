@@ -49,7 +49,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         },
       },
     ],
-  } as LegendProps;
+  };
 
   const legends = {
     desktop: {
@@ -116,7 +116,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     <BoxLegendSvg
       containerHeight={containerHeight}
       containerWidth={containerWidth}
-      data={colorScale.range().map((color, index) => {
+      data={colorScale.range().map((color: string, index: number) => {
         // eslint-disable-next-line prefer-const
         let [start, end] = colorScale.invertExtent(color);
 
