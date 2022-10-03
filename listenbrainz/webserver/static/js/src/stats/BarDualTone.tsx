@@ -148,7 +148,6 @@ export default function BarDualTone(props: BarDualToneProps) {
     let listenCount: number;
     if (id === "lastRangeCount") {
       const lastRangeDate = new Date(datum.lastRangeTs! * 1000);
-      // @ts-ignore // issues with string literals
       dateString = lastRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
@@ -156,7 +155,6 @@ export default function BarDualTone(props: BarDualToneProps) {
       listenCount = datum.lastRangeCount!;
     } else {
       const thisRangeDate = new Date(datum?.thisRangeTs! * 1000);
-      // @ts-ignore // issues with string literals
       dateString = thisRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
@@ -176,7 +174,7 @@ export default function BarDualTone(props: BarDualToneProps) {
 
   return (
     <ResponsiveBar
-      data={data as BarDatum[]}
+      data={data}
       indexBy="id"
       keys={keys}
       groupMode="grouped"
