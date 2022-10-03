@@ -138,7 +138,6 @@ describe.each([
       const wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
-      delete window.location;
       window.location = {
         href: "https://foobar.org",
       } as Window["location"];
@@ -151,7 +150,6 @@ describe.each([
       const wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
-      delete window.location;
       window.location = {
         href: "https://foobar.org?range=year",
       } as Window["location"];
