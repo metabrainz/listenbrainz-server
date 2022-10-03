@@ -14,7 +14,7 @@ import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
 
 export type SelectTimezoneProps = {
-  pg_timezones: Array<[string, string]>;
+  pg_timezones: Array<string[]>;
   user_timezone: string;
 } & WithAlertNotificationsInjectedProps;
 export interface SelectTimezoneState {
@@ -115,7 +115,7 @@ export default class SelectTimezone extends React.Component<
                 <option value="default" disabled>
                   Choose an option
                 </option>
-                {pg_timezones.map((zone: [string, string]) => {
+                {pg_timezones.map((zone: string[]) => {
                   return (
                     <option key={zone[0]} value={zone[0]}>
                       {zone[0]} ({zone[1]})
