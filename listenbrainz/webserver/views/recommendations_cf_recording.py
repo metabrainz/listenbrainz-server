@@ -112,7 +112,6 @@ def _get_template(active_section, user):
             "id": user.id,
             "name": user.musicbrainz_id,
         },
-        "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "recommendations": recommendations,
     }
 
