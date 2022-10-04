@@ -1106,6 +1106,5 @@
     "youtube": {
         "api_key": "fake-api-key"
     },
-    "webSocketsServerUrl": "",
     "searchLargerTimeRange": 0
 }

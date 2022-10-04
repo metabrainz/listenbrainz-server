@@ -368,8 +368,8 @@ class HandlersTestCase(DatabaseTestCase):
             )
         )
 
-    @mock.patch('listenbrainz.spark.troi_bot.get_followers_of_user')
-    @mock.patch('listenbrainz.spark.troi_bot.generate_playlist')
+    @mock.patch('listenbrainz.troi.troi_bot.get_followers_of_user')
+    @mock.patch('listenbrainz.troi.troi_bot.generate_playlist')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_gen_playlist, mock_get_followers):
         with self.app.app_context():
@@ -397,7 +397,6 @@ class HandlersTestCase(DatabaseTestCase):
             calls = [
                 call("recs-to-playlist", args=["lucifer", "top"], upload=True, token="fake_token1", created_for="lucifer"),
                 call("recs-to-playlist", args=["lucifer", "similar"], upload=True, token="fake_token1", created_for="lucifer"),
-                call("daily-jams", args=["lucifer"], upload=True, token="fake_token0", created_for="lucifer")
             ]
             mock_gen_playlist.assert_has_calls(calls)
 

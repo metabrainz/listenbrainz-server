@@ -47,7 +47,7 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
          WHERE pl.mbid = :mbid""")
     with ts.engine.connect() as connection:
         result = connection.execute(query, {"mbid": playlist_id})
-        obj = result.fetchone()
+        obj = result.mappings().first()
         if not obj:
             return None
         obj = dict(obj)

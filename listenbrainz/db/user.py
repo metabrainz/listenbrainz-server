@@ -434,7 +434,7 @@ def get_users_in_order(user_ids):
         """), {
             'user_ids': user_ids,
         })
-        return [row for row in r.fetchall() if row["musicbrainz_id"] is not None]
+        return [row for row in r.mappings() if row["musicbrainz_id"] is not None]
 
 
 def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
