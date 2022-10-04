@@ -19,7 +19,7 @@ Clone listenbrainz-server
 -------------------------
 
 ListenBrainz is hosted on GitHub at https://github.com/metabrainz/listenbrainz-server/.
-You can use ``git`` to clone it (or your own fork/branch) to your computer
+You can use ``git`` to clone it (or your own fork) to your computer
 
 .. code-block:: bash
 
