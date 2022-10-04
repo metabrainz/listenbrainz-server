@@ -186,6 +186,10 @@ describe("processData", () => {
       userDailyActivityResponse as UserDailyActivityResponse
     );
 
+    // Sort results for stable comparison with test fixture
+    result.forEach((day) => {
+      day.data.sort((a, b) => (a.x as number) - (b.x as number));
+    });
     expect(result).toEqual(userDailyActivityProcessedData);
   });
   it("returns an empty array if no payload", () => {
@@ -226,9 +230,12 @@ describe("loadData", () => {
       .mockImplementationOnce(() => Promise.resolve(userDailyActivityResponse));
     await instance.loadData();
 
-    expect(wrapper.state()).toMatchObject({
-      data: userDailyActivityProcessedData,
-      loading: false,
+    expect(wrapper.state().loading).toEqual(false);
+    const { data } = wrapper.state();
+    // Sort results for stable comparison with test fixture
+    data.forEach((day) => {
+      day.data.sort((a, b) => (a.x as number) - (b.x as number));
     });
+    expect(data).toEqual(userDailyActivityProcessedData);
   });
 });
