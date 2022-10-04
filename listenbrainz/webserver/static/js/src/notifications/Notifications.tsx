@@ -148,9 +148,12 @@ export function overwriteMediaSession(
       // Certain handlers might not be supported so we wrap each call in a try/catch
       actionHandlers.forEach(({ action, handler }) => {
         try {
-          navigator.mediaSession.setActionHandler(action, (actionDetails) => {
-            handler();
-          });
+          navigator.mediaSession.setActionHandler(
+            action as MediaSessionAction,
+            (actionDetails) => {
+              handler();
+            }
+          );
         } catch (error) {
           console.warn(
             `The media session action "${action}" is not supported yet.`,
