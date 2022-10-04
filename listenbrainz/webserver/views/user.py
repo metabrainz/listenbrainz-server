@@ -134,7 +134,6 @@ def profile(user_name):
         "oldest_listen_ts": min_ts_per_user,
         "profile_url": url_for('user.profile', user_name=user_name),
         "userPinnedRecording": pin,
-        "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
     }

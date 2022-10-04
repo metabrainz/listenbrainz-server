@@ -14,6 +14,7 @@
 @youtube-player-height: 200px;
 @youtube-player-width: 350px;
 @youtube-drag-handle-size: 30px;
+@youtube-resize-transition: height 0.25s ease-out;
 
 #brainz-player {
   position: fixed;
@@ -74,24 +75,35 @@
         width: @youtube-player-width;
         max-width: calc(100vw - 20px);
         z-index: 4;
+        text-align: right; // to align the move and reduce buttons
+        transition: @youtube-resize-transition;
+
+        &.reduced {
+          height: @youtube-drag-handle-size;
+          .youtube-player {
+            height: 0;
+          }
+        }
 
         .youtube-player {
           height: @youtube-player-height;
           border-radius: 8px;
           border-top-right-radius: 0; // intersection with the square drag handle
           overflow: hidden;
+          transition: @youtube-resize-transition;
           > * {
             height: inherit;
           }
         }
-        .youtube-drag-handle {
-          width: @youtube-drag-handle-size;
+
+        .youtube-drag-handle,
+        .youtube-reduce-button {
           height: @youtube-drag-handle-size;
-          margin-left: auto; // push all the way to the right
+          display: inline-block;
           background: fadeout(black, 50%);
           color: @white;
-          text-align: center;
-          padding-top: 6px;
+        }
+        .youtube-drag-handle {
           cursor: grab;
           &:active {
             cursor: grabbing;

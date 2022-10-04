@@ -300,7 +300,6 @@ const preciseTimestamp = (
         year: "numeric",
         hour: "numeric",
         minute: "numeric",
-        hour12: true,
       })}`;
     case "excludeYear":
       return `${listenDate.toLocaleString(undefined, {
@@ -308,7 +307,6 @@ const preciseTimestamp = (
         month: "short",
         hour: "numeric",
         minute: "numeric",
-        hour12: true,
       })}`;
     default:
       return `${timeago.ago(listened_at)}`;
@@ -474,17 +472,17 @@ const getAlbumArtFromListenMetadata = async (
       const CAAResponse = await fetchWithRetry(
         `https://coverartarchive.org/release/${releaseMBID}`,
         {
-          retries: 3,
+          retries: 4,
           retryOn: [429],
           retryDelay(attempt: number) {
-            // Retry at random interval between maxRetryTime and minRetryTime defined above, adding minRetryTime for every attempt
-            // attempt starts at 0
-            const maxRetryTime = 800;
-            const minRetryTime = 400;
-            return Math.floor(
-              Math.random() * (maxRetryTime - minRetryTime) +
-                attempt * minRetryTime
-            );
+            // Exponential backoff at random interval between maxRetryTime and minRetryTime,
+            // adding minRetryTime for every attempt. `attempt` starts at 0
+            const maxRetryTime = 2500;
+            const minRetryTime = 1800;
+            const clampedRandomTime =
+              Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
+            // Make it exponential
+            return Math.floor(clampedRandomTime) * 2 ** attempt;
           },
         }
       );

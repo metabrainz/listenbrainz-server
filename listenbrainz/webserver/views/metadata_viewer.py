@@ -25,8 +25,7 @@ def playing_now_metadata_viewer():
     # and add to props as 'metadata'
 
     props = {
-        "playing_now": playing_now,
-        "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
+        "playing_now": playing_now
     }
 
     return render_template(
