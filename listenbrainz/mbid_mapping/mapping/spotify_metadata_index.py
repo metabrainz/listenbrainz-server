@@ -39,7 +39,7 @@ class SpotifyMetadataIndex(BulkInsertTable):
                          , track.id AS track_id
                          , track.name AS track_name
                          , track.track_number AS track_number
-                         , array_agg(ARRAY[artist.name, artist.spotify_id])
+                         , array_agg(ARRAY[artist.name, artist.spotify_id]) AS artists
                       FROM spotify_cache.album album
                       JOIN spotify_cache.track track
                         ON album.spotify_id = track.album_id
@@ -68,8 +68,8 @@ class SpotifyMetadataIndex(BulkInsertTable):
 
     def process_row(self, row):
 
-        artist_names = " ".join([ a[0] for a in row["artists"]])
-        artist_ids = [ a[1] for a in row["artists"] ]
+        artist_names = " ".join([a[0] for a in row["artists"]])
+        artist_ids = [a[1] for a in row["artists"]]
         self.row_id += 1
 
         combined_lookup = unidecode(re.sub(r'[^\w]+', '', artist_names + row["album_name"] + row['track_name']).lower())
