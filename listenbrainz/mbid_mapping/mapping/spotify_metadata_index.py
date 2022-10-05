@@ -1,15 +1,10 @@
 import re
 
 import psycopg2
-from psycopg2.errors import OperationalError
 from unidecode import unidecode
 
 from mapping.utils import log
-from mapping.custom_sorts import create_custom_sort_tables
 from mapping.bulk_table import BulkInsertTable
-from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
-from mapping.canonical_release_redirect import CanonicalReleaseRedirect
-from mapping.canonical_musicbrainz_data_release import CanonicalMusicBrainzDataRelease
 import config
 
 TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
@@ -36,27 +31,34 @@ class SpotifyMetadataIndex(BulkInsertTable):
                 ("score",              "INTEGER NOT NULL")]
 
     def get_insert_queries(self):
-        return [("LB", """SELECT data->>'release_date'
-                               , data->>'album_type'
-                               , data->>'id' AS album_id
-                               , data->>'name' AS album_name
-                               , tracks->>'track_number' AS track_num
-                               , tracks->>'id' AS track_id
-                               , tracks->>'name' AS track_name
-                               , array_agg(ARRAY[artists->>'name', artists->>'id']) AS artists
-                            FROM mapping.spotify_metadata_cache,
-                                 jsonb_array_elements(data->'tracks') tracks,
-                                 jsonb_array_elements(tracks->'artists') artists
-                        GROUP BY data->>'release_date'
-                               , data->>'album_type'
-                               , data->>'id'
-                               , data->>'id'
-                               , data->>'name'
-                               , tracks->>'id'
-                               , tracks->>'track_number'
-                               , tracks->>'name'
-                        ORDER BY data->>'release_date', data->>'album_type', album_id,
-                                 CAST(tracks->>'track_number' AS INTEGER), tracks->>'name'""")]
+        return [("LB", """
+                    SELECT album.spotify_id AS album_id
+                         , album.name AS album_name
+                         , album.type AS album_type
+                         , album.release_date AS release_date
+                         , track.id AS track_id
+                         , track.name AS track_name
+                         , track.track_number AS track_number
+                         , array_agg(ARRAY[artist.name, artist.spotify_id])
+                      FROM spotify_cache.album album
+                      JOIN spotify_cache.track track
+                        ON album.spotify_id = track.album_id
+                      JOIN spotify_cache.rel_track_artist rta
+                        ON track.spotify_id = rta.track_id
+                      JOIN spotify_cache.artist artist
+                        ON rta.artist_id = artist.spotify_id
+                  GROUP BY album.spotify_id
+                         , album.name
+                         , album.type
+                         , album.release_date
+                         , track.id
+                         , track.name
+                         , track.track_number
+                  ORDER BY release_date
+                         , album_type
+                         , album_id
+                         , track_number
+                         , track_name""")]
 
     def get_index_names(self):
         return [
@@ -96,6 +98,7 @@ def create_spotify_metadata_index(use_lb_conn: bool):
     lb_conn = None
     if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
         lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+    log("spotify_metdata_index: start!")
 
     ndx = SpotifyMetadataIndex(None, lb_conn)
     ndx.run()
