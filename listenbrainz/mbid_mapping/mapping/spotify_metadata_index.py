@@ -36,7 +36,7 @@ class SpotifyMetadataIndex(BulkInsertTable):
                          , album.name AS album_name
                          , album.type AS album_type
                          , album.release_date AS release_date
-                         , track.id AS track_id
+                         , track.spotify_id AS track_id
                          , track.name AS track_name
                          , track.track_number AS track_number
                          , array_agg(ARRAY[artist.name, artist.spotify_id]) AS artists
@@ -51,7 +51,7 @@ class SpotifyMetadataIndex(BulkInsertTable):
                          , album.name
                          , album.type
                          , album.release_date
-                         , track.id
+                         , track.spotify_id
                          , track.name
                          , track.track_number
                   ORDER BY release_date
