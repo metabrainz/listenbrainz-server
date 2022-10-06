@@ -398,14 +398,16 @@ class BulkInsertTable:
                     total_rows = curs.rowcount
                     log(f"{self.table_name}: fetch {total_rows:,} rows")
                     while True:
-                        row = curs.fetchone()
-                        if not row:
+                        batch = curs.fetchmany(1000)
+                        if len(batch) == 0:
                             break
 
-                        row_count += 1
-                        total_row_count += 1
-                        result = self.process_row(row)
-                        rows.extend(self._handle_result(result))
+                        for row in batch:
+                            row_count += 1
+                            total_row_count += 1
+                            result = self.process_row(row)
+                            rows.extend(self._handle_result(result))
+
                         if len(rows) >= self.batch_size:
                             insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
                             ins_conn.commit()
