@@ -1,0 +1,281 @@
+@color_1: #999;
+@color_2: #666;
+@color_3: #fff;
+@background_color_1: #e9e9e9;
+@background_color_2: #abe2fb;
+@background_color_3: #fff;
+@background_color_4: #ccc;
+@background_color_5: #6c6c6c;
+@border_color_1: @orange;
+@border_color_2: @orange;
+@border_color_3: #96dbfa;
+@border_color_4: #ccc;
+@border_color_5: transparent;
+@border_top_color_1: #6c6c6c;
+
+@keyframes rcSliderTooltipZoomDownIn {
+  0% {
+    transform: scale(0, 0);
+    transform-origin: 50% 100%;
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1, 1);
+    transform-origin: 50% 100%;
+  }
+}
+@keyframes rcSliderTooltipZoomDownOut {
+  0% {
+    transform: scale(1, 1);
+    transform-origin: 50% 100%;
+  }
+  100% {
+    transform: scale(0, 0);
+    transform-origin: 50% 100%;
+    opacity: 0;
+  }
+}
+.rc-slider {
+  position: relative;
+  width: 100%;
+  height: 14px;
+  padding: 5px 0;
+  border-radius: 6px;
+  touch-action: none;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+}
+.rc-slider-rail {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background-color: @background_color_1;
+  border-radius: 6px;
+}
+.rc-slider-track {
+  position: absolute;
+  height: 4px;
+  background-color: @background_color_2;
+  border-radius: 6px;
+}
+.rc-slider-handle {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  margin-top: -8px;
+  background-color: @white;
+  border: solid 2px @orange;
+  border-radius: 50%;
+  cursor: pointer;
+  cursor: -webkit-grab;
+  cursor: grab;
+  opacity: 0.8;
+  touch-action: pan-x;
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  &:focus-visible {
+    border-color: @border_color_2;
+    box-shadow: 0 0 0 3px @orange;
+  }
+  &:hover {
+    border-color: @border_color_1;
+  }
+  &:active {
+    border-color: @border_color_1;
+    box-shadow: 0 0 5px @orange;
+    cursor: -webkit-grabbing;
+    cursor: grabbing;
+  }
+}
+.rc-slider-handle-dragging.rc-slider-handle-dragging.rc-slider-handle-dragging {
+  border-color: @border_color_1;
+  box-shadow: 0 0 0 5px @orange;
+}
+.rc-slider-handle-click-focused {
+  &:focus {
+    border-color: @orange;
+    box-shadow: unset;
+  }
+}
+.rc-slider-mark {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  width: 100%;
+  font-size: 12px;
+}
+.rc-slider-mark-text {
+  position: absolute;
+  display: inline-block;
+  color: @color_1;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.rc-slider-mark-text-active {
+  color: @color_2;
+}
+.rc-slider-step {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: transparent;
+  pointer-events: none;
+}
+.rc-slider-dot {
+  position: absolute;
+  bottom: -2px;
+  width: 8px;
+  height: 8px;
+  vertical-align: middle;
+  background-color: @background_color_3;
+  border: 2px solid #e9e9e9;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.rc-slider-dot-active {
+  border-color: @border_color_3;
+}
+.rc-slider-dot-reverse {
+  margin-right: -4px;
+}
+.rc-slider-disabled {
+  background-color: @background_color_1;
+  .rc-slider-track {
+    background-color: @background_color_4;
+  }
+  .rc-slider-handle {
+    background-color: @background_color_3;
+    border-color: @border_color_4;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .rc-slider-dot {
+    background-color: @background_color_3;
+    border-color: @border_color_4;
+    box-shadow: none;
+    cursor: not-allowed !important;
+  }
+  .rc-slider-mark-text {
+    cursor: not-allowed !important;
+  }
+}
+.rc-slider-vertical {
+  width: 14px;
+  height: 100%;
+  padding: 0 5px;
+  margin: 1rem 0 1rem 1rem;
+
+  .rc-slider-rail {
+    width: 4px;
+    height: 100%;
+  }
+  .rc-slider-track {
+    bottom: 0;
+    left: 5px;
+    width: 4px;
+  }
+  .rc-slider-handle {
+    margin-top: 0;
+    margin-left: -8px;
+    touch-action: pan-y;
+  }
+  .rc-slider-mark {
+    top: 0;
+    left: 18px;
+    height: 100%;
+  }
+  .rc-slider-step {
+    width: 4px;
+    height: 100%;
+  }
+  .rc-slider-dot {
+    margin-left: -2px;
+  }
+}
+.rc-slider-tooltip-zoom-down-enter {
+  display: block !important;
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+  animation-play-state: paused;
+  transform: scale(0, 0);
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+.rc-slider-tooltip-zoom-down-appear {
+  display: block !important;
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+  animation-play-state: paused;
+  transform: scale(0, 0);
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+.rc-slider-tooltip-zoom-down-leave {
+  display: block !important;
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+  animation-play-state: paused;
+  animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+}
+.rc-slider-tooltip-zoom-down-enter.rc-slider-tooltip-zoom-down-enter-active {
+  animation-name: rcSliderTooltipZoomDownIn;
+  animation-play-state: running;
+}
+.rc-slider-tooltip-zoom-down-appear.rc-slider-tooltip-zoom-down-appear-active {
+  animation-name: rcSliderTooltipZoomDownIn;
+  animation-play-state: running;
+}
+.rc-slider-tooltip-zoom-down-leave.rc-slider-tooltip-zoom-down-leave-active {
+  animation-name: rcSliderTooltipZoomDownOut;
+  animation-play-state: running;
+}
+.rc-slider-tooltip {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  visibility: visible;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+}
+.rc-slider-tooltip-hidden {
+  display: none;
+}
+.rc-slider-tooltip-placement-top {
+  padding: 4px 0 8px 0;
+  .rc-slider-tooltip-arrow {
+    bottom: 4px;
+    left: 50%;
+    margin-left: -4px;
+    border-width: 4px 4px 0;
+    border-top-color: @border_top_color_1;
+  }
+}
+.rc-slider-tooltip-inner {
+  min-width: 24px;
+  height: 24px;
+  padding: 6px 2px;
+  color: @color_3;
+  font-size: 12px;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  background-color: @background_color_5;
+  border-radius: 6px;
+  box-shadow: 0 0 4px #d9d9d9;
+}
+.rc-slider-tooltip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-color: @border_color_5;
+  border-style: solid;
+}
