@@ -1,0 +1,193 @@
+{
+  "lovedtracks": {
+    "track": [
+      {
+        "artist": {
+          "url": "https:\/\/www.last.fm\/music\/Ariana+Grande",
+          "name": "Ariana Grande",
+          "mbid": "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"
+        },
+        "date": {
+          "uts": "1664461146",
+          "#text": "29 Sep 2022, 14:19"
+        },
+        "mbid": "",
+        "url": "https:\/\/www.last.fm\/music\/Ariana+Grande\/_\/Let+Me+Love+You",
+        "name": "Let Me Love You",
+        "image": [
+          {
+            "size": "small",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/34s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/64s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "large",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/174s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/300x300\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          }
+        ],
+        "streamable": {
+          "fulltrack": "0",
+          "#text": "0"
+        }
+      },
+      {
+        "artist": {
+          "url": "https:\/\/www.last.fm\/music\/Madison+Beer",
+          "name": "Madison Beer",
+          "mbid": "749ef494-8518-4b49-b685-63d8e728d25c"
+        },
+        "date": {
+          "uts": "1664331557",
+          "#text": "28 Sep 2022, 02:19"
+        },
+        "mbid": "07e81754-518c-4e3b-8671-c5df5643dad0",
+        "url": "https:\/\/www.last.fm\/music\/Madison+Beer\/_\/Dead",
+        "name": "Dead",
+        "image": [
+          {
+            "size": "small",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/34s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/64s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "large",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/174s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/300x300\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          }
+        ],
+        "streamable": {
+          "fulltrack": "0",
+          "#text": "0"
+        }
+      },
+      {
+        "artist": {
+          "url": "https:\/\/www.last.fm\/music\/Whitney+Houston",
+          "name": "Whitney Houston",
+          "mbid": "0307edfc-437c-4b48-8700-80680e66a228"
+        },
+        "date": {
+          "uts": "1664330996",
+          "#text": "28 Sep 2022, 02:09"
+        },
+        "mbid": "018dfa9b-7a80-3997-b64e-8520488656a1",
+        "url": "https:\/\/www.last.fm\/music\/Whitney+Houston\/_\/Run+to+You",
+        "name": "Run to You",
+        "image": [
+          {
+            "size": "small",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/34s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/64s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "large",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/174s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/300x300\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          }
+        ],
+        "streamable": {
+          "fulltrack": "0",
+          "#text": "0"
+        }
+      },
+      {
+        "artist": {
+          "url": "https:\/\/www.last.fm\/music\/Ariana+Grande",
+          "name": "Ariana Grande",
+          "mbid": "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"
+        },
+        "date": {
+          "uts": "1664212128",
+          "#text": "26 Sep 2022, 17:08"
+        },
+        "mbid": "001f0a24-fd0a-424b-8e6d-097a19812466",
+        "url": "https:\/\/www.last.fm\/music\/Ariana+Grande\/_\/get+well+soon",
+        "name": "get well soon",
+        "image": [
+          {
+            "size": "small",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/34s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/64s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "large",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/174s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/300x300\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          }
+        ],
+        "streamable": {
+          "fulltrack": "0",
+          "#text": "0"
+        }
+      },
+      {
+        "artist": {
+          "url": "https:\/\/www.last.fm\/music\/Ariana+Grande",
+          "name": "Ariana Grande",
+          "mbid": "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"
+        },
+        "date": {
+          "uts": "1664211873",
+          "#text": "26 Sep 2022, 17:04"
+        },
+        "mbid": "267aa996-a6a2-411b--6136208f41b9",
+        "url": "https:\/\/www.last.fm\/music\/Ariana+Grande\/_\/R.E.M",
+        "name": "R.E.M",
+        "image": [
+          {
+            "size": "small",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/34s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/64s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "large",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/174s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/300x300\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          }
+        ],
+        "streamable": {
+          "fulltrack": "0",
+          "#text": "0"
+        }
+      }
+    ],
+    "@attr": {
+      "user": "lucifer",
+      "totalPages": "2",
+      "page": "1",
+      "perPage": "5",
+      "total": "8"
+    }
+  }
+}

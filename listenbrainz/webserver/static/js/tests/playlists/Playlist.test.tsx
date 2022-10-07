@@ -26,13 +26,11 @@ const {
   labsApiUrl,
   currentUser,
   playlist,
-  webSocketsServerUrl,
 } = playlistPageProps;
 
 const props = {
   labsApiUrl,
   playlist: playlist as JSPFObject,
-  webSocketsServerUrl,
   newAlert: () => {},
 };
 
