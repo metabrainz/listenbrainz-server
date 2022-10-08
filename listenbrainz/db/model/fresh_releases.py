@@ -55,6 +55,9 @@ class FreshRelease(BaseModel):
     # The release group's secondary type
     release_group_secondary_type: Optional[ReleaseGroupSecondaryType]
 
+    # The cover art archive id of the release's front cover art if it has any
+    caa_id: Optional[int]
+
     def to_dict(self):
         """Convert this model to a dict for easy jsonification"""
 

@@ -30,7 +30,8 @@ def load_all_releases():
             release_name=release["release_name"],
             release_mbid=release["release_mbid"],
             release_group_primary_type=release["release_group_primary_type"],
-            release_group_secondary_type=release["release_group_secondary_type"]
+            release_group_secondary_type=release["release_group_secondary_type"],
+            caa_id=release["caa_id"]
         ))
 
     return listenbrainz_spark.session.createDataFrame(releases, schema=fresh_releases_schema)
@@ -62,6 +63,7 @@ def get_query():
                  , rr.date
                  , rr.release_group_primary_type
                  , rr.release_group_secondary_type
+                 , rr.caa_id
                  , SUM(partial_confidence) AS confidence
               FROM artist_discovery ad
               JOIN fresh_releases rr
@@ -74,6 +76,7 @@ def get_query():
                  , rr.date
                  , rr.release_group_primary_type
                  , rr.release_group_secondary_type
+                 , rr.caa_id
         )
         SELECT user_id
              , array_sort(
@@ -86,6 +89,7 @@ def get_query():
                           , date
                           , release_group_primary_type
                           , release_group_secondary_type
+                          , caa_id
                           , confidence
                         )
                     )
