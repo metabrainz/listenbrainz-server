@@ -34,8 +34,5 @@ jobs:
         run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
         continue-on-error: true
 
-      - uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
-
       - name: Build production image
         run: docker build --target listenbrainz-prod --build-arg GIT_COMMIT_SHA=HEAD .
