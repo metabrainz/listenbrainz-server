@@ -12,6 +12,7 @@
         "date": "2022-6-9",
         "release_group_primary_type": "Single",
         "release_group_secondary_type": null,
+        "caa_id": 33759180025,
         "confidence": 3
       },
       {
@@ -25,6 +26,7 @@
         "date": "2022-5-27",
         "release_group_primary_type": "Single",
         "release_group_secondary_type": "Soundtrack",
+        "caa_id": 33709392020,
         "confidence": 2
       },
       {
@@ -37,6 +39,7 @@
         "date": "2022-5-30",
         "release_group_primary_type": "Single",
         "release_group_secondary_type": null,
+        "caa_id": null,
         "confidence": 1
       }
     ]
@@ -55,6 +58,7 @@
         "date": "2022-5-17",
         "release_group_primary_type": "Album",
         "release_group_secondary_type": null,
+        "caa_id": null,
         "confidence": 4
       },
       {
@@ -67,6 +71,7 @@
         "date": "2022-5-30",
         "release_group_primary_type": "Album",
         "release_group_secondary_type": null,
+        "caa_id": null,
         "confidence": 1
       }
     ]
