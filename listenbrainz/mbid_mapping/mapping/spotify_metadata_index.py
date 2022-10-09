@@ -62,7 +62,6 @@ class SpotifyMetadataIndex(BulkInsertTable):
         return [
             ("spotify_metadata_index_idx_combined_lookup_all", "combined_lookup_all", False),
             ("spotify_metadata_index_idx_combined_lookup_without_album", "combined_lookup_without_album", False),
-            ("spotify_metadata_index_idx_artist_track_name", "artist_names, track_name", False)
         ]
 
     def process_row(self, row):
