@@ -113,7 +113,7 @@ exports[`BarDualTone renders correctly for all_time 1`] = `
     range="month"
     thisRangePeriod={Object {}}
   >
-    <ResponsiveBar
+    <Component
       axisBottom={
         Object {
           "format": undefined,
@@ -242,7 +242,7 @@ exports[`BarDualTone renders correctly for all_time 1`] = `
           "bars",
           "markers",
           "annotations",
-          [Function],
+          "legends",
         ]
       }
       legends={Array []}
@@ -257,38 +257,17 @@ exports[`BarDualTone renders correctly for all_time 1`] = `
       padding={0.3}
       tooltip={[Function]}
     >
-      <ResponsiveWrapper>
-        <Measure
-          bounds={true}
-          onResize={[Function]}
-        >
-          <Component
-            bounds={true}
-            contentRect={
-              Object {
-                "bounds": Object {},
-                "client": Object {},
-                "entry": Object {},
-                "margin": Object {},
-                "offset": Object {},
-                "scroll": Object {},
-              }
+      <Ee>
+        <div
+          style={
+            Object {
+              "height": "100%",
+              "width": "100%",
             }
-            measure={[Function]}
-            measureRef={[Function]}
-          >
-            <div
-              style={
-                Object {
-                  "height": "100%",
-                  "width": "100%",
-                }
-              }
-            />
-          </Component>
-        </Measure>
-      </ResponsiveWrapper>
-    </ResponsiveBar>
+          }
+        />
+      </Ee>
+    </Component>
   </BarDualTone>
 </div>
 `;
@@ -511,7 +490,7 @@ exports[`BarDualTone renders correctly for month 1`] = `
       }
     }
   >
-    <ResponsiveBar
+    <Component
       axisBottom={
         Object {
           "format": undefined,
@@ -736,7 +715,7 @@ exports[`BarDualTone renders correctly for month 1`] = `
           "bars",
           "markers",
           "annotations",
-          [Function],
+          "legends",
         ]
       }
       legends={
@@ -775,38 +754,17 @@ exports[`BarDualTone renders correctly for month 1`] = `
       padding={0.3}
       tooltip={[Function]}
     >
-      <ResponsiveWrapper>
-        <Measure
-          bounds={true}
-          onResize={[Function]}
-        >
-          <Component
-            bounds={true}
-            contentRect={
-              Object {
-                "bounds": Object {},
-                "client": Object {},
-                "entry": Object {},
-                "margin": Object {},
-                "offset": Object {},
-                "scroll": Object {},
-              }
+      <Ee>
+        <div
+          style={
+            Object {
+              "height": "100%",
+              "width": "100%",
             }
-            measure={[Function]}
-            measureRef={[Function]}
-          >
-            <div
-              style={
-                Object {
-                  "height": "100%",
-                  "width": "100%",
-                }
-              }
-            />
-          </Component>
-        </Measure>
-      </ResponsiveWrapper>
-    </ResponsiveBar>
+          }
+        />
+      </Ee>
+    </Component>
   </BarDualTone>
 </div>
 `;
@@ -889,7 +847,7 @@ exports[`BarDualTone renders correctly for week 1`] = `
       }
     }
   >
-    <ResponsiveBar
+    <Component
       axisBottom={
         Object {
           "format": undefined,
@@ -972,7 +930,7 @@ exports[`BarDualTone renders correctly for week 1`] = `
           "bars",
           "markers",
           "annotations",
-          [Function],
+          "legends",
         ]
       }
       legends={
@@ -1011,38 +969,17 @@ exports[`BarDualTone renders correctly for week 1`] = `
       padding={0.3}
       tooltip={[Function]}
     >
-      <ResponsiveWrapper>
-        <Measure
-          bounds={true}
-          onResize={[Function]}
-        >
-          <Component
-            bounds={true}
-            contentRect={
-              Object {
-                "bounds": Object {},
-                "client": Object {},
-                "entry": Object {},
-                "margin": Object {},
-                "offset": Object {},
-                "scroll": Object {},
-              }
+      <Ee>
+        <div
+          style={
+            Object {
+              "height": "100%",
+              "width": "100%",
             }
-            measure={[Function]}
-            measureRef={[Function]}
-          >
-            <div
-              style={
-                Object {
-                  "height": "100%",
-                  "width": "100%",
-                }
-              }
-            />
-          </Component>
-        </Measure>
-      </ResponsiveWrapper>
-    </ResponsiveBar>
+          }
+        />
+      </Ee>
+    </Component>
   </BarDualTone>
 </div>
 `;
@@ -1146,7 +1083,7 @@ exports[`BarDualTone renders correctly for year 1`] = `
       }
     }
   >
-    <ResponsiveBar
+    <Component
       axisBottom={
         Object {
           "format": undefined,
@@ -1252,7 +1189,7 @@ exports[`BarDualTone renders correctly for year 1`] = `
           "bars",
           "markers",
           "annotations",
-          [Function],
+          "legends",
         ]
       }
       legends={
@@ -1291,38 +1228,17 @@ exports[`BarDualTone renders correctly for year 1`] = `
       padding={0.3}
       tooltip={[Function]}
     >
-      <ResponsiveWrapper>
-        <Measure
-          bounds={true}
-          onResize={[Function]}
-        >
-          <Component
-            bounds={true}
-            contentRect={
-              Object {
-                "bounds": Object {},
-                "client": Object {},
-                "entry": Object {},
-                "margin": Object {},
-                "offset": Object {},
-                "scroll": Object {},
-              }
+      <Ee>
+        <div
+          style={
+            Object {
+              "height": "100%",
+              "width": "100%",
             }
-            measure={[Function]}
-            measureRef={[Function]}
-          >
-            <div
-              style={
-                Object {
-                  "height": "100%",
-                  "width": "100%",
-                }
-              }
-            />
-          </Component>
-        </Measure>
-      </ResponsiveWrapper>
-    </ResponsiveBar>
+          }
+        />
+      </Ee>
+    </Component>
   </BarDualTone>
 </div>
 `;
