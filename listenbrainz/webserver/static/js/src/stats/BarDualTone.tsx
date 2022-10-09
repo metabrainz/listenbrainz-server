@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { BarDatum, BarTooltipProps, ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
+import { BasicTooltip } from "@nivo/tooltip";
 
 export type BarDualToneProps = {
   data: UserListeningActivityData;
@@ -142,7 +143,7 @@ export default function BarDualTone(props: BarDualToneProps) {
   const { dateFormat, keys, itemWidth } = rangeMap[range] || {};
 
   const customTooltip = (elem: BarTooltipProps<UserListeningActivityDatum>) => {
-    const { id, data: datum } = elem;
+    const { id, data: datum, color, value } = elem;
 
     let dateString: string;
     let listenCount: number;
@@ -162,9 +163,11 @@ export default function BarDualTone(props: BarDualToneProps) {
       listenCount = datum.thisRangeCount!;
     }
     return (
-      <div>
-        {dateString}: <strong>{String(listenCount)} Listens</strong>
-      </div>
+      <BasicTooltip
+        id={dateString}
+        value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
+        color={color}
+      />
     );
   };
 
