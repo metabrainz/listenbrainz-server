@@ -20,15 +20,13 @@ class SpotifyMetadataIndex(BulkInsertTable):
         self.row_id = 0 
 
     def get_create_table_columns(self):
-        return [("id",                 "SERIAL"),
-                ("artist_ids",         "TEXT NOT NULL"),
-                ("artist_names",       "TEXT NOT NULL"),
-                ("album_id",           "TEXT NOT NULL"),
-                ("album_name",         "TEXT NOT NULL"),
-                ("track_id",           "TEXT NOT NULL"),
-                ("track_name",         "TEXT NOT NULL"),
-                ("combined_lookup",    "TEXT NOT NULL"),
-                ("score",              "INTEGER NOT NULL")]
+        return [("id",                               "SERIAL"),
+                ("artist_ids",                       "TEXT NOT NULL"),
+                ("album_id",                         "TEXT NOT NULL"),
+                ("track_id",                         "TEXT NOT NULL"),
+                ("combined_lookup_all",              "TEXT NOT NULL"),
+                ("combined_lookup_without_album",    "TEXT NOT NULL"),
+                ("score",                            "INTEGER NOT NULL")]
 
     def get_insert_queries(self):
         return [("LB", """
@@ -39,7 +37,7 @@ class SpotifyMetadataIndex(BulkInsertTable):
                          , track.spotify_id AS track_id
                          , track.name AS track_name
                          , track.track_number AS track_number
-                         , array_agg(ARRAY[artist.name, artist.spotify_id]) AS artists
+                         , array_agg(ARRAY[artist.name, artist.spotify_id] ORDER BY rta.position) AS artists
                       FROM spotify_cache.album album
                       JOIN spotify_cache.track track
                         ON album.spotify_id = track.album_id
@@ -62,7 +60,8 @@ class SpotifyMetadataIndex(BulkInsertTable):
 
     def get_index_names(self):
         return [
-            ("spotify_metadata_index_idx_combined_lookup", "combined_lookup", False),
+            ("spotify_metadata_index_idx_combined_lookup_all", "combined_lookup_all", False),
+            ("spotify_metadata_index_idx_combined_lookup_without_album", "combined_lookup_without_album", False),
             ("spotify_metadata_index_idx_artist_track_name", "artist_names, track_name", False)
         ]
 
@@ -72,16 +71,15 @@ class SpotifyMetadataIndex(BulkInsertTable):
         artist_ids = [a[1] for a in row["artists"]]
         self.row_id += 1
 
-        combined_lookup = unidecode(re.sub(r'[^\w]+', '', artist_names + row["album_name"] + row['track_name']).lower())
+        combined_lookup_all = unidecode(re.sub(r'[^\w]+', '', artist_names + row["album_name"] + row["track_name"]).lower())
+        combined_lookup_without_album = unidecode(re.sub(r'[^\w]+', '', artist_names + row["track_name"]).lower())
         return {"mapping.spotify_metadata_index": [
             (
                 artist_ids,
-                artist_names,
                 row["album_id"],
-                row["album_name"],
                 row["track_id"],
-                row["track_name"],
-                combined_lookup,
+                combined_lookup_all,
+                combined_lookup_without_album,
                 -self.row_id 
             )
         ]}
