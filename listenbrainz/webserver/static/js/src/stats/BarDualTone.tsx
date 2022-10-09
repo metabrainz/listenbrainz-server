@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { BarDatum, BarTooltipProps, ResponsiveBar } from "@nivo/bar";
+import { BarTooltipProps, ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
 import { BasicTooltip } from "@nivo/tooltip";
 
