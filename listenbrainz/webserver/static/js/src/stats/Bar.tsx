@@ -1,7 +1,13 @@
 import * as React from "react";
-import { ResponsiveBar, LabelFormatter, BarDatum } from "@nivo/bar";
+import {
+  ResponsiveBar,
+  LabelFormatter,
+  BarDatum,
+  BarTooltipProps,
+} from "@nivo/bar";
 import type { AxisTickProps } from "@nivo/axes";
 import { omit } from "lodash";
+import { BasicTooltip } from "@nivo/tooltip";
 
 export type BarProps = {
   data: UserEntityData;
@@ -29,11 +35,14 @@ export default function Bar(props: BarProps) {
     );
   }) as unknown) as LabelFormatter;
 
-  const customTooltip = (datum: any) => {
+  const customTooltip = (tooltipProps: BarTooltipProps<BarDatum>) => {
+    const { data: datum, value, color } = tooltipProps;
     return (
-      <div>
-        {datum.data.entity}: <strong>{datum.value} Listens</strong>
-      </div>
+      <BasicTooltip
+        id={datum.entity}
+        value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
+        color={color}
+      />
     );
   };
 
