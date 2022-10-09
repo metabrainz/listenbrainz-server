@@ -30,13 +30,9 @@ export default function Heatmap(props: HeatMapProps) {
   return (
     <HeatMap
       data={data}
-      indexBy="day"
-      colors="oranges"
-      keys={Array.from(Array(24).keys()).map((elem) => String(elem))}
       width={width}
       height={height}
       enableLabels={false}
-      padding={1}
       axisBottom={{
         legend: `Hour (${Intl.DateTimeFormat().resolvedOptions().timeZone})`,
         legendPosition: "middle",
@@ -68,9 +64,12 @@ export default function Heatmap(props: HeatMapProps) {
         },
       }}
       hoverTarget="cell"
-      cellOpacity={0.85}
-      cellHoverOpacity={1}
-      cellHoverOthersOpacity={0.85}
+      colors={{ type: "sequential", scheme: "oranges" }}
+      opacity={0.85}
+      inactiveOpacity={0.85}
+      activeOpacity={1}
+      xInnerPadding={0.05}
+      yInnerPadding={0.1}
       margin={isMobile ? margin.mobile : margin.desktop}
       forceSquare
     />
