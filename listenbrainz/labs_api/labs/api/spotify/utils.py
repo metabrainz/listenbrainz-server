@@ -9,6 +9,7 @@ from listenbrainz import config
 
 def perform_combined_lookup(column: str, lookups: list[tuple]):
     with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as conn, conn.cursor() as curs:
+        # TODO: Handle duplicates on combined lookup
         query = f"""
               WITH lookups (idx, value) AS (VALUES %s)
             SELECT idx, track_id
