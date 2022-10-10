@@ -10,8 +10,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const { allFilters, releases, setFilteredList } = props;
 
   const [checkedList, setCheckedList] = useState<Array<string | undefined>>([]);
+  const [coverartOnly, setCoverartOnly] = useState<boolean>();
 
-  const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.persist();
     const { value } = event.target;
     const isChecked = event.target.checked;
@@ -21,6 +22,17 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     } else {
       const filtersList = checkedList.filter((item) => item !== value);
       setCheckedList(filtersList);
+    }
+  };
+
+  const handleCoverartChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.persist();
+    const isChecked = event.target.checked;
+
+    if (isChecked) {
+      setCoverartOnly(true);
+    } else {
+      setCoverartOnly(false);
     }
   };
 
@@ -38,10 +50,26 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     }
   }, [checkedList]);
 
+  useEffect(() => {
+    if (!coverartOnly) {
+      setFilteredList(releases);
+    } else {
+      const filteredReleases = releases.filter((item) => item.caa_id !== null);
+      setFilteredList(filteredReleases);
+    }
+  }, [coverartOnly]);
+
   return (
     <div id="filters-container">
       <div id="coverart-checkbox">
-        <input type="checkbox" id="coverart-only" />
+        <input
+          type="checkbox"
+          id="coverart-only"
+          onChange={(e) => handleCoverartChange(e)}
+          checked={coverartOnly}
+          aria-hidden="true"
+          aria-checked="false"
+        />
         <label className="text-muted" htmlFor="coverart-only">
           Releases with cover arts only
         </label>
@@ -74,7 +102,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 type="checkbox"
                 value={type}
                 checked={checkedList.includes(type)}
-                onChange={(e) => handleOnChange(e)}
+                onChange={(e) => handleFilterChange(e)}
                 aria-hidden="true"
                 aria-checked="false"
               />
