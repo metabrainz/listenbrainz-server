@@ -85,25 +85,36 @@ export default class PersonalRecommendationModal extends React.Component<
 
   removeUser = (user: string) => {
     const { users } = this.state;
-    remove(users!, (element) => {
-      return element === user;
-    });
-    this.setState({ users });
+    this.setState({ users: users.filter((element) => element !== user) });
   };
 
   searchUsers = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { followers } = this.state;
     if (event.target.value) {
-      const suggestions = followers!.filter((username) => {
-        if (includes(username, event.target.value)) {
-          return username;
-        }
-        return null;
-      });
+      const suggestions = followers.filter((username) =>
+        includes(username, event.target.value)
+      );
       this.setState({ suggestions });
     } else {
       this.setState({ suggestions: [] });
     }
+  };
+
+  closeModal = () => {
+    const { APIService, currentUser } = this.context;
+    this.setState({
+      users: [],
+      blurbContent: "",
+      suggestions: [],
+    });
+    // update the followers list
+    APIService.getFollowersOfUser(currentUser.name)
+      .then((response) => {
+        this.setState({ followers: response.followers });
+      })
+      .catch((error) => {
+        this.handleError(error, "Error while fetching followers");
+      });
   };
 
   submitPersonalRecommendation = async () => {
@@ -131,7 +142,9 @@ export default class PersonalRecommendationModal extends React.Component<
         if (status === 200) {
           newAlert(
             "success",
-            "You personally recommended a track!",
+            `You recommended this track to ${users.length} user${
+              users.length > 1 ? "s" : ""
+            }`,
             `${metadata.artist_name} - ${metadata.track_name}`
           );
           this.setState({ blurbContent: "" });
@@ -148,8 +161,10 @@ export default class PersonalRecommendationModal extends React.Component<
       return null;
     }
     const { blurbContent, users, suggestions } = this.state;
-    const { track_name } = recordingToPersonallyRecommend.track_metadata;
-    const { artist_name } = recordingToPersonallyRecommend.track_metadata;
+    const {
+      track_name,
+      artist_name,
+    } = recordingToPersonallyRecommend.track_metadata;
     const { APIService, currentUser } = this.context;
     return (
       <div
@@ -168,21 +183,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 className="close"
                 data-dismiss="modal"
                 aria-label="Close"
-                onClick={() => {
-                  this.setState({
-                    users: [],
-                    blurbContent: "",
-                    suggestions: [],
-                  });
-                  // update the followers list
-                  APIService.getFollowersOfUser(currentUser.name)
-                    .then((response) => {
-                      this.setState({ followers: response.followers });
-                    })
-                    .catch((error) => {
-                      this.handleError(error, "Error while fetching followers");
-                    });
-                }}
+                onClick={this.closeModal}
               >
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -191,7 +192,7 @@ export default class PersonalRecommendationModal extends React.Component<
               </h4>
             </div>
             <div className="modal-body">
-              {users!.map((user) => {
+              {users.map((user) => {
                 return (
                   <NamePill
                     title={user}
@@ -218,7 +219,7 @@ export default class PersonalRecommendationModal extends React.Component<
                   {" "}
                   {track_name} by {artist_name}
                 </b>
-                ? (Optional)
+                (Optional)
               </p>
               <div className="form-group">
                 <textarea
@@ -229,7 +230,6 @@ export default class PersonalRecommendationModal extends React.Component<
                   name="blurb-content"
                   rows={4}
                   style={{ resize: "vertical" }}
-                  spellCheck="false"
                   onChange={this.handleBlurbInputChange}
                 />
               </div>
