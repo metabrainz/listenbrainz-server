@@ -15,7 +15,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
 
     return (
       <div className={cssClasses} style={propStyle} {...otherProps} ref={ref}>
-        <>{children}</>
+        {children}
       </div>
     );
   }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const Blog = ({ apiUrl }: { apiUrl: string }) => {
+function Blog({ apiUrl }: { apiUrl: string }) {
   const [blogDetails, setBlogDetails] = useState<object[]>();
 
   const fetchBlogDetails = async () => {
@@ -79,6 +79,6 @@ const Blog = ({ apiUrl }: { apiUrl: string }) => {
       </div>
     </div>
   );
-};
+}
 
 export default Blog;

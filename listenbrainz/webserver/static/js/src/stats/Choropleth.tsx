@@ -112,8 +112,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     .range(schemeOranges[6]);
 
   // Create a custom legend component because the default doesn't work with scaleThreshold
-  const CustomLegend = () => (
-    <BoxLegendSvg
+  function CustomLegend() {
+  return <BoxLegendSvg
       containerHeight={containerHeight}
       containerWidth={containerWidth}
       data={colorScale.range().map((color: string, index: number) => {
@@ -135,7 +135,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       })}
       {...(isMobile ? legends.mobile : legends.desktop)}
     />
-  );
+}
   const tooltipWidth = 250;
 
   const customTooltip = useMemo(() => {

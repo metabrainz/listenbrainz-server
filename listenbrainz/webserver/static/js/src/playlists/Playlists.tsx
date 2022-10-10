@@ -529,8 +529,7 @@ export default class UserPlaylists extends React.Component<
                     &nbsp;Save
                   </button>
                 ) : (
-                  <>
-                    <div className="dropup playlist-card-action-dropdown">
+                  <div className="dropup playlist-card-action-dropdown">
                       <button
                         className="dropdown-toggle playlist-card-action-button"
                         type="button"
@@ -594,7 +593,6 @@ export default class UserPlaylists extends React.Component<
                         )}
                       </ul>
                     </div>
-                  </>
                 )}
                 <a className="info" href={`/playlist/${sanitize(playlistId)}`}>
                   <h4>{playlist.title}</h4>

@@ -185,8 +185,7 @@ export default class MissingMBDataPage extends React.Component<
               </div>
               {missingData.map((data, index) => {
                 const additionalActions = (
-                  <>
-                    <ListenControl
+                  <ListenControl
                       buttonClassName="btn btn-sm btn-success"
                       icon={faPlus}
                       title="Add missing recording"
@@ -197,7 +196,6 @@ export default class MissingMBDataPage extends React.Component<
                         missingMBDataAsListen[index]
                       )}
                     />
-                  </>
                 );
                 return (
                   <ListenCard
