@@ -36,13 +36,6 @@ module.exports = function (env, argv) {
         mode: "write-references",
         memoryLimit: 4096,
       },
-      eslint: {
-        // Starting the path with "**/" because of current dev/prod path discrepancy
-        // In dev we bind-mount the source code to "/code/static" and in prod to "/static"
-        // The "**/" allows us to ignore the folder structure and find source files in whatever CWD we're in.
-        files: "**/js/src/**/*.{ts,tsx,js,jsx}",
-        options: { fix: !isProd },
-      },
     }),
     new StylelintPlugin({
       configFile: ".stylelintrc.js",
