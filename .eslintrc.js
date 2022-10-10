@@ -40,7 +40,10 @@ module.exports = {
     "jsx-a11y/label-has-associated-control": ['error', {
       "assert":"either"
     }],
-    "react/static-property-placement": ["error", "static public field"]
+    "react/static-property-placement": "warn",
+    "class-methods-use-this": "off",
+    "react/no-unused-class-component-methods": "warn",
+    "default-param-last": "warn"
   },
   settings: {
     "import/resolver": {
@@ -50,6 +53,19 @@ module.exports = {
     },
   },
   overrides: [
+    {
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        // Disabling no-undef rule for typescript files
+        // "The checks it provides are already provided by TypeScript without the need for configuration"
+        // see https://typescript-eslint.io/docs/linting/troubleshooting/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
+        'no-undef': 'off',
+        // see https://typescript-eslint.io/rules/no-use-before-define/
+        "no-use-before-define": "off",
+        "@typescript-eslint/no-use-before-define": "warn",
+        "react/require-default-props": "off"
+      },
+    },
     {
       files: ["**/*.test.js", "**/*.test.ts", "**/*.test.tsx"],
       env: {
