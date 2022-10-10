@@ -17,3 +17,9 @@ if (!process.env.LISTENING_TO_UNHANDLED_REJECTION) {
   // Avoid memory leak by adding too many listeners
   process.env.LISTENING_TO_UNHANDLED_REJECTION = "true";
 }
+
+window.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
