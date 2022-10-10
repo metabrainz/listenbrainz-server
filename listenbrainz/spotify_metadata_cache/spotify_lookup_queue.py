@@ -8,12 +8,11 @@ import threading
 
 import sentry_sdk
 import spotipy
-import ujson
 import urllib3
 from spotipy import SpotifyClientCredentials
-from sqlalchemy import text
 
 from listenbrainz.db import timescale
+from listenbrainz.spotify_metadata_cache.store import insert_normalized, insert_raw
 from listenbrainz.utils import init_cache
 from brainzutils import metrics, cache
 
@@ -155,29 +154,22 @@ class SpotifyIdsQueue(threading.Thread):
             sentry_sdk.capture_exception(e)
             self.app.logger.info(traceback.format_exc())
 
-    def insert_album(self, data):
-        album_id = data["id"]
+    def insert(self, data):
         last_refresh = datetime.utcnow()
         expires_at = datetime.utcnow() + timedelta(days=CACHE_TIME)
 
-        with timescale.engine.begin() as ts_conn:
-            query = """
-                INSERT INTO mapping.spotify_metadata_cache (album_id, data, last_refresh, expires_at)
-                     VALUES (:album_id, :data, :last_refresh, :expires_at)
-                ON CONFLICT (album_id)
-                  DO UPDATE SET
-                            data = EXCLUDED.data
-                          , last_refresh = EXCLUDED.last_refresh
-                          , expires_at = EXCLUDED.expires_at
-            """
-            ts_conn.execute(text(query), {
-                "album_id": album_id,
-                "data": ujson.dumps(data),
-                "last_refresh": last_refresh,
-                "expires_at": expires_at
-            })
-        
-        cache_key = CACHE_KEY_PREFIX + album_id
+        conn = timescale.engine.raw_connection()
+        try:
+            with conn.cursor() as curs:
+                # do raw insert first because normalized insert modifies data inplace.
+                # keeping raw inserts for now incase we want to alter the normalized schema.
+                insert_raw(curs, data, last_refresh, expires_at)
+                insert_normalized(curs, data, last_refresh, expires_at)
+            conn.commit()
+        finally:
+            conn.close()
+
+        cache_key = CACHE_KEY_PREFIX + data["id"]
         cache.set(cache_key, 1, expirein=0)
         cache.expireat(cache_key, int(expires_at.timestamp()))
 
@@ -199,7 +191,7 @@ class SpotifyIdsQueue(threading.Thread):
         for album in albums:
             if album is None:
                 continue
-            self.insert_album(album)
+            self.insert(album)
 
     def run(self):
         """ main thread entry point"""
