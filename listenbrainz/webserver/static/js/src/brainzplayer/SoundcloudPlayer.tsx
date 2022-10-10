@@ -87,7 +87,7 @@ export default class SoundcloudPlayer
     this.iFrameRef = React.createRef();
   }
 
-  componentDidMount = () => {
+  componentDidMount() {
     const { onInvalidateDataSource } = this.props;
     if (!(window as any).SC) {
       onInvalidateDataSource(this, "Soundcloud JS API did not load properly.");

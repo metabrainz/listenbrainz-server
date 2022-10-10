@@ -9,7 +9,7 @@ export type ModalProps = {
   onClose(event: React.MouseEvent<HTMLButtonElement>): void;
 };
 
-const LastFMImporterModal = (props: ModalProps) => {
+function LastFMImporterModal(props: ModalProps) {
   const divStyle = {
     position: "fixed",
     height: "auto",
@@ -49,6 +49,6 @@ const LastFMImporterModal = (props: ModalProps) => {
       <div>{children}</div>
     </div>
   );
-};
+}
 
 export default LastFMImporterModal;

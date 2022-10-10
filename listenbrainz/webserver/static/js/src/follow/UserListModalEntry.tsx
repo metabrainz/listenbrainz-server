@@ -15,13 +15,12 @@ export type UserListModalEntryProps = {
   ) => void;
 };
 
-const UserListModalEntry = (props: UserListModalEntryProps) => {
+function UserListModalEntry(props: UserListModalEntryProps) {
   const { mode, user, loggedInUserFollowsUser, updateFollowingList } = props;
   const { currentUser } = useContext(GlobalAppContext);
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   return (
-    <>
-      <div key={user.name}>
+    <div key={user.name}>
         <div>
           <a
             href={`/user/${user.name}/`}
@@ -47,8 +46,7 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
           />
         )}
       </div>
-    </>
   );
-};
+}
 
 export default UserListModalEntry;

@@ -22,7 +22,7 @@ const MOUSE_THROTTLE_DELAY: number = 300;
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
 const TOOLTIP_TOP_OFFSET: number = 102;
 
-const ProgressBar = (props: ProgressBarProps) => {
+function ProgressBar(props: ProgressBarProps) {
   const { durationMs, progressMs, seekToPositionMs } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
   const progressPercentage = Math.round(
@@ -125,6 +125,6 @@ const ProgressBar = (props: ProgressBarProps) => {
       />
     </div>
   );
-};
+}
 
 export default ProgressBar;

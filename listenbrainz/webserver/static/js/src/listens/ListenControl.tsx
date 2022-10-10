@@ -24,7 +24,7 @@ export type ListenControlProps = {
   title?: string;
 };
 
-const ListenControl = (props: ListenControlProps) => {
+function ListenControl(props: ListenControlProps) {
   const {
     buttonClassName,
     iconClassName,
@@ -77,6 +77,6 @@ const ListenControl = (props: ListenControlProps) => {
       {iconElement} {text}
     </button>
   );
-};
+}
 
 export default ListenControl;

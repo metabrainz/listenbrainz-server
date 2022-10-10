@@ -13,11 +13,11 @@ export type ComponentToImageProps = {
   user: ListenBrainzUser;
 };
 
-const ComponentToImage = ({
+function ComponentToImage({
   data,
   entityType,
   user,
-}: ComponentToImageProps) => {
+}: ComponentToImageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const saveAs = (blob: string, fileName: string) => {
     const elem = window.document.createElement("a");
@@ -182,6 +182,6 @@ const ComponentToImage = ({
       </div>
     </>
   );
-};
+}
 
 export default ComponentToImage;

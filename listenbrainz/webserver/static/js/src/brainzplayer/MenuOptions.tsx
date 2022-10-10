@@ -19,7 +19,7 @@ type MenuOptionsProps = {
   currentListen?: Listen | JSPFTrack;
 };
 
-const MenuOptions = (props: MenuOptionsProps) => {
+function MenuOptions(props: MenuOptionsProps) {
   const [dropdownActionsOpen, setDropdownActionsOpen] = React.useState(false);
   const { currentListen } = props;
   let recordingMBID;
@@ -125,6 +125,6 @@ const MenuOptions = (props: MenuOptionsProps) => {
       )}
     </div>
   );
-};
+}
 
 export default MenuOptions;

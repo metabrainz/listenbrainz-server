@@ -29,7 +29,7 @@ import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import ReportUserButton from "../report-user/ReportUser";
 import { getPageProps } from "../utils/utils";
 
-const UserPageHeading = ({
+function UserPageHeading({
   user,
   loggedInUser,
   loggedInUserFollowsUser = false,
@@ -39,7 +39,7 @@ const UserPageHeading = ({
   loggedInUser?: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
   alreadyReportedUser: boolean;
-}) => {
+}) {
   const hasLoggedInUser = !isNil(loggedInUser) && !isEmpty(loggedInUser);
   return (
     <>
@@ -58,7 +58,7 @@ const UserPageHeading = ({
       )}
     </>
   );
-};
+}
 
 export default UserPageHeading;
 
