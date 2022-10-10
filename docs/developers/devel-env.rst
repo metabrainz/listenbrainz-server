@@ -19,7 +19,7 @@ Clone listenbrainz-server
 -------------------------
 
 ListenBrainz is hosted on GitHub at https://github.com/metabrainz/listenbrainz-server/.
-You can use ``git`` to clone it to your computer
+You can use ``git`` to clone it (or your own fork) to your computer
 
 .. code-block:: bash
 
@@ -69,7 +69,8 @@ configuration.
 
     cp listenbrainz/config.py.sample listenbrainz/config.py
 
-Next, open the file with your favorite text editor and look for this section.
+Now, open the new config.py file (don’t change config.py.sample) with your favorite
+text editor and look for this section.
 
 .. code-block:: yaml
 
