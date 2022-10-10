@@ -2,21 +2,24 @@ import re
 
 import psycopg2
 
+from flask import current_app
 from unidecode import unidecode
 from psycopg2.extras import execute_values
-from listenbrainz import config
+from psycopg2.sql import SQL, Identifier
 
 
 def perform_combined_lookup(column: str, lookups: list[tuple]):
-    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as conn, conn.cursor() as curs:
-        # TODO: Handle duplicates on combined lookup
-        query = f"""
-              WITH lookups (idx, value) AS (VALUES %s)
-            SELECT idx, track_id
-              FROM lookups
-              JOIN mapping.spotify_metadata_index
-                ON {column} = value
-        """
+    query = SQL("""
+          WITH lookups (idx, value) AS (VALUES %s)
+        SELECT DISTINCT ON ({column})
+               idx, track_id
+          FROM lookups
+          JOIN mapping.spotify_metadata_index
+            ON {column} = value
+      ORDER BY {column}, score DESC
+    """).format(column=Identifier(column))
+
+    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn, conn.cursor() as curs:
         execute_values(curs, query, lookups, page_size=len(lookups))
         result = curs.fetchall()
         return {row[0]: row[1] for row in result}
