@@ -1144,7 +1144,8 @@ export default class APIService {
     release_date?: string,
     days?: number
   ): Promise<any> => {
-    let url = `${this.APIBaseURI}/explore/fresh-releases/`;
+    // TODO Change back to base URL once caa_id is out of beta
+    let url = "https://beta-api.listenbrainz.org/1/explore/fresh-releases/";
     if (!isUndefined(release_date)) url += `?release_date=${release_date}`;
     if (!isUndefined(days)) url += `&days=${days}`;
     const response = await fetch(url);

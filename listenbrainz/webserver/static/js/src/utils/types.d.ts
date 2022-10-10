@@ -637,6 +637,7 @@ type MissingMBData = {
 type FreshReleaseItem = {
   artist_credit_name: string;
   artist_mbids: Array<string>;
+  caa_id: number;
   release_date: string;
   release_group_mbid: string;
   release_group_primary_type?: string;
