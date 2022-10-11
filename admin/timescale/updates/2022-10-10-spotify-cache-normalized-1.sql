@@ -2,6 +2,16 @@ BEGIN;
 
 CREATE SCHEMA spotify_cache;
 
+
+CREATE UNLOGGED TABLE spotify_cache.raw_cache_data (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    album_id        TEXT NOT NULL,
+    data            JSONB,
+    last_refresh    TIMESTAMP WITH TIME ZONE NOT NULL,
+    expires_at      TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+
 CREATE UNLOGGED TABLE spotify_cache.album (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
     spotify_id              TEXT   NOT NULL,
@@ -19,8 +29,6 @@ CREATE UNLOGGED TABLE spotify_cache.artist (
     name                    TEXT NOT NULL,
     data                    JSONB NOT NULL
 );
-
-CREATE UNIQUE INDEX spotify_cache_artist_uniq_idx ON spotify_cache.artist (spotify_id, name); -- use name in unique idx for now because we don't know how spotify handles track credits
 
 CREATE UNLOGGED TABLE spotify_cache.track (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
