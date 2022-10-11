@@ -25,6 +25,67 @@ export type ChoroplethProps = {
   selectedMetric: "artist" | "listen";
 };
 
+const commonLegendProps = {
+  anchor: "bottom-left",
+  direction: "column",
+  itemDirection: "left-to-right",
+  itemOpacity: 0.85,
+  itemWidth: 90,
+  effects: [
+    {
+      on: "hover",
+      style: {
+        itemTextColor: "#000000",
+        itemOpacity: 1,
+      },
+    },
+  ],
+};
+
+const legends = {
+  desktop: {
+    itemHeight: 18,
+    symbolSize: 18,
+    translateX: 50,
+    translateY: -50,
+    ...commonLegendProps,
+  } as LegendProps,
+  mobile: {
+    itemHeight: 10,
+    symbolSize: 10,
+    translateX: 20,
+    translateY: -15,
+    ...commonLegendProps,
+  } as LegendProps,
+};
+
+const themes: {
+  desktop: Theme;
+  mobile: Theme;
+} = {
+  desktop: {
+    legends: {
+      text: {
+        fontSize: 12,
+      },
+    },
+  },
+  mobile: {
+    legends: {
+      text: {
+        fontSize: 8,
+      },
+    },
+  },
+};
+
+const tooltipWidth = 250;
+
+function getEmptyJSXFragment() {
+  // eslint-disable-next-line react/jsx-no-useless-fragment
+  return <></>;
+}
+
 export default function CustomChoropleth(props: ChoroplethProps) {
   const [tooltipPosition, setTooltipPosition] = useState([0, 0]);
   const [selectedCountry, setSelectedCountry] = useState<
@@ -33,60 +94,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   const refContainer = useRef<HTMLDivElement>(null);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
-
-  const commonLegendProps = {
-    anchor: "bottom-left",
-    direction: "column",
-    itemDirection: "left-to-right",
-    itemOpacity: 0.85,
-    itemWidth: 90,
-    effects: [
-      {
-        on: "hover",
-        style: {
-          itemTextColor: "#000000",
-          itemOpacity: 1,
-        },
-      },
-    ],
-  };
-
-  const legends = {
-    desktop: {
-      itemHeight: 18,
-      symbolSize: 18,
-      translateX: 50,
-      translateY: -50,
-      ...commonLegendProps,
-    } as LegendProps,
-    mobile: {
-      itemHeight: 10,
-      symbolSize: 10,
-      translateX: 20,
-      translateY: -15,
-      ...commonLegendProps,
-    } as LegendProps,
-  };
-
-  const themes: {
-    desktop: Theme;
-    mobile: Theme;
-  } = {
-    desktop: {
-      legends: {
-        text: {
-          fontSize: 12,
-        },
-      },
-    },
-    mobile: {
-      legends: {
-        text: {
-          fontSize: 8,
-        },
-      },
-    },
-  };
 
   const { data } = props;
   const { width } = props;
@@ -112,31 +119,32 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     .range(schemeOranges[6]);
 
   // Create a custom legend component because the default doesn't work with scaleThreshold
-  function CustomLegend() {
-  return <BoxLegendSvg
-      containerHeight={containerHeight}
-      containerWidth={containerWidth}
-      data={colorScale.range().map((color: string, index: number) => {
-        // eslint-disable-next-line prefer-const
-        let [start, end] = colorScale.invertExtent(color);
+  const customLegend = useMemo(() => {
+    return (
+      <BoxLegendSvg
+        containerHeight={containerHeight}
+        containerWidth={containerWidth}
+        data={colorScale.range().map((color: string, index: number) => {
+          // eslint-disable-next-line prefer-const
+          let [start, end] = colorScale.invertExtent(color);
 
-        // Domain starts with 1
-        if (start === undefined) {
-          start = 1;
-        }
+          // Domain starts with 1
+          if (start === undefined) {
+            start = 1;
+          }
 
-        return {
-          index,
-          color,
-          id: color,
-          extent: [start, end],
-          label: `${format(".2s")(start)} - ${format(".2s")(end!)}`,
-        };
-      })}
-      {...(isMobile ? legends.mobile : legends.desktop)}
-    />
-}
-  const tooltipWidth = 250;
+          return {
+            index,
+            color,
+            id: color,
+            extent: [start, end],
+            label: `${format(".2s")(start)} - ${format(".2s")(end!)}`,
+          };
+        })}
+        {...(isMobile ? legends.mobile : legends.desktop)}
+      />
+    );
+  }, [containerHeight, containerWidth, colorScale, isMobile, legends]);
 
   const customTooltip = useMemo(() => {
     if (!selectedCountry?.data) {
@@ -250,7 +258,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         valueFormat=".2~s"
         // We can't set isInteractive to false (need onClick event)
         // But we don't want to show a tooltip, so this function returns an empty element
-        tooltip={() => <></>}
+        tooltip={getEmptyJSXFragment}
         onClick={showTooltipFromEvent}
         unknownColor="#efefef"
         label="properties.name"
@@ -262,7 +270,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         // The typescript definition file for Choropleth is incomplete, so disable typescript
         // until it is fixed.
         // @ts-ignore
-        layers={["features", CustomLegend]}
+        layers={["features", customLegend]}
       />
       {selectedCountry && (
         <div

@@ -9,7 +9,9 @@ type LoaderProps = {
   [key: string]: any;
 };
 
-export default function Loader(props: React.PropsWithChildren<LoaderProps>) {
+export default function Loader(
+  props: React.PropsWithChildren<LoaderProps>
+): JSX.Element {
   const {
     isLoading,
     children,
@@ -38,6 +40,7 @@ export default function Loader(props: React.PropsWithChildren<LoaderProps>) {
       )}
     </div>
   ) : (
+    // eslint-disable-next-line react/jsx-no-useless-fragment
     <>{children}</>
   );
 }

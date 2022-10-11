@@ -106,7 +106,7 @@ export default class SoundcloudPlayer
       SoundCloudHTML5WidgetEvents.READY,
       this.onReady.bind(this)
     );
-  };
+  }
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;

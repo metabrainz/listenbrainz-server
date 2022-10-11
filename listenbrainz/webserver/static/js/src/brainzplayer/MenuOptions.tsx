@@ -60,11 +60,11 @@ function MenuOptions(props: MenuOptionsProps) {
     <div
       ref={wrapperRef}
       aria-label="Actions menu"
-      aria-haspopup="true"
+      aria-haspopup="menu"
       aria-expanded={dropdownActionsOpen}
       onClick={toggleDropupMenu}
       onKeyDown={toggleDropupMenu}
-      role="menu"
+      role="button"
       tabIndex={0}
     >
       <FontAwesomeIcon
@@ -76,6 +76,7 @@ function MenuOptions(props: MenuOptionsProps) {
         <ul
           className={`dropup-content ${dropdownActionsOpen ? " open" : ""}`}
           aria-label="actions submenu"
+          role="menu"
         >
           {recordingMBID && (
             <ListenControl

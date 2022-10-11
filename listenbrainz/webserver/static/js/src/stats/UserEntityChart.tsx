@@ -30,7 +30,6 @@ import ListenCard from "../listens/ListenCard";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
-  apiUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
 export type UserEntityChartState = {
@@ -561,7 +560,7 @@ export default class UserEntityChart extends React.Component<
                   <div
                     className="col-xs-6"
                     style={{
-                      height: listenContainerHeight ?? `${65 * data?.length}px`,
+                      height: listenContainerHeight ?? `${65 * (data?.length ?? 1)}px`,
                       paddingLeft: 0,
                     }}
                   >
@@ -680,7 +679,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <UserEntityChartWithAlertNotifications
           initialAlerts={optionalAlerts}
-          apiUrl={api_url}
           user={user}
         />
       </GlobalAppContext.Provider>

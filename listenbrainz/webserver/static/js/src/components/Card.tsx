@@ -2,6 +2,7 @@ import * as React from "react";
 
 type CardProps = {
   style?: React.CSSProperties;
+  children?: React.ReactNode;
   className?: string;
   [key: string]: any;
 };
