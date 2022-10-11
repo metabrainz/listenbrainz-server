@@ -420,8 +420,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         # |   artist_tags   |  artist tags                   |  recording_tag, genre              | artist
         # |   artist        |                                |  artist                            |
         artist_mbids_query = """
-        WITH artist_mbids(mbid) AS (
-            SELECT a.gid
+        WITH artist_mbids(id) AS (
+            SELECT a.id
               FROM artist a
               JOIN l_artist_url lau
                 ON lau.entity0 = a.id
@@ -449,13 +449,13 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                      OR  lt.last_updated > %(timestamp)s
                    )
         UNION
-            SELECT a.gid
+            SELECT a.id
               FROM artist a
               JOIN area ar
                 ON a.area = ar.id
              WHERE ar.last_updated > %(timestamp)s
         UNION
-            SELECT a.gid
+            SELECT a.id
               FROM artist a
               JOIN artist_tag at
                 ON at.artist = a.id
@@ -466,17 +466,15 @@ class MusicBrainzMetadataCache(BulkInsertTable):
              WHERE at.last_updated > %(timestamp)s
                 OR  g.last_updated > %(timestamp)s
         UNION
-            SELECT a.gid
+            SELECT a.id
               FROM artist a
              WHERE a.last_updated > %(timestamp)s
         ) SELECT r.gid
             FROM recording r
             JOIN artist_credit_name acn
            USING (artist_credit)
-            JOIN artist a
-              ON acn.artist = a.id
             JOIN artist_mbids am
-              ON a.gid = am.mbid           
+              ON acn.artist = am.id          
         """
 
         # 2. recording_rels, recording_tags, recording
@@ -540,8 +538,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         # |   release_data       |  release name, cover art   |                             | release, release_group
         # |   release            |                            |  release, release_group     |
         release_mbids_query = """
-            WITH release_mbids(mbid) AS (
-                SELECT rel.gid AS release_mbid
+            WITH release_mbids(id) AS (
+                SELECT rel.id
                   FROM mapping.canonical_release_redirect crr
                   JOIN release rel
                     ON crr.release_mbid = rel.gid
@@ -556,7 +554,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                  WHERE rgt.last_updated > %(timestamp)s
                     OR   g.last_updated > %(timestamp)s
             UNION
-                SELECT rel.gid
+                SELECT rel.id
                   FROM mapping.canonical_release_redirect crr
                   JOIN release rel
                     ON crr.release_mbid = rel.gid
@@ -570,10 +568,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                   ON t.recording = r.id
                 JOIN medium m
                   ON m.id = t.medium
-                JOIN release rel
-                  ON rel.id = m.release
-                JOIN release_mbids rm 
-                  ON rm.mbid = rel.gid
+                JOIN release_mbids rm
+                  ON rm.id = m.release
         """
 
         try:
