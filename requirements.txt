@@ -20,7 +20,7 @@ xmltodict == 0.13.0
 oauth2client == 4.1.3
 pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v2.7.1
-spotipy@git+https://github.com/amCap1712/spotipy.git@retry-accept
+spotipy==2.20.0
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@v-2021-02-10.0
 troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2022-09-29
 PyYAML==6.0
