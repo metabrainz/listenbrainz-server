@@ -40,7 +40,6 @@ const {
   latestListenTs,
   listens,
   oldestListenTs,
-  profileUrl,
   user,
 } = recentListensPropsOneListen;
 
@@ -48,7 +47,6 @@ const props: ListensProps = {
   latestListenTs,
   listens,
   oldestListenTs,
-  profileUrl,
   user,
   newAlert: jest.fn(),
 };
