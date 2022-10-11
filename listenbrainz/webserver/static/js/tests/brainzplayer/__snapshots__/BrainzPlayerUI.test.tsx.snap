@@ -431,11 +431,11 @@ exports[`BrainzPlayerUI renders 1`] = `
       <MenuOptions>
         <div
           aria-expanded={false}
-          aria-haspopup="true"
+          aria-haspopup="menu"
           aria-label="Actions menu"
           onClick={[Function]}
           onKeyDown={[Function]}
-          role="menu"
+          role="button"
           tabIndex={0}
         >
           <FontAwesomeIcon
