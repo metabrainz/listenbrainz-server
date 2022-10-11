@@ -677,7 +677,7 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
         log("mb metadata cache: starting incremental update")
 
         # TODO: Update logic to get last update timestamp
-        timestamp = datetime(2022, 8, 17, 16, 0, 0)
+        timestamp = datetime(2022, 10, 4, 0, 0, 0)
         recording_mbids = cache.query_last_updated_items(timestamp)
         cache.update_dirty_cache_items(recording_mbids)
 
