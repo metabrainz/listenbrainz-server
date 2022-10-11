@@ -54,6 +54,9 @@ module.exports = {
   },
   overrides: [
     {
+      // Configuration specific to Typescript files.
+      // These are defined mostly when the ESLint rules don't support typescript
+      // Usually there is an equivalent typescript rule from typescript-eslint
       files: ['**/*.ts', '**/*.tsx'],
       rules: {
         // Disabling no-undef rule for typescript files
@@ -63,7 +66,9 @@ module.exports = {
         // see https://typescript-eslint.io/rules/no-use-before-define/
         "no-use-before-define": "off",
         "@typescript-eslint/no-use-before-define": "warn",
-        "react/require-default-props": "off"
+        "react/require-default-props": "off",
+        "no-shadow":"off",
+        "@typescript-eslint/no-shadow": "error",
       },
     },
     {
