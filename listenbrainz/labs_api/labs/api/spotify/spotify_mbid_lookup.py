@@ -80,6 +80,8 @@ class SpotifyIdFromMBIDQuery(Query):
         return canonical_mbids, index
 
     def fetch_metadata_from_mbids(self, mbids):
+        """ Retrieve metadata from canonical tables for given mbids. Note that all mbids should be canonical mbids
+        otherwise metadata may not be found. """
         query = """
               WITH mbids(gid) AS (VALUES %s)
             SELECT recording_mbid::TEXT

@@ -1,4 +1,5 @@
 import re
+from enum import Enum
 
 import psycopg2
 
@@ -8,14 +9,21 @@ from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Identifier
 
 
-def detune(artist_name: str):
+class LookupType(Enum):
+    ALL = "combined_lookup_all"
+    WITHOUT_ALBUM = "combined_lookup_without_album"
+
+
+def detune(artist_name: str) -> str:
+    """ Remove commonly used join phrases from artist name """
     phrases = [" ft ", " feat ", " ft. ", " feat. "]
     for phrase in phrases:
         artist_name = artist_name.replace(phrase, " ")
     return artist_name
 
 
-def perform_combined_lookup(column: str, lookups: list[tuple]):
+def query_combined_lookup(column: LookupType, lookups: list[tuple]):
+    """ Lookup track ids for the given lookups in the metadata index using the specified lookup type"""
     query = SQL("""
           WITH lookups (idx, value) AS (VALUES %s)
         SELECT DISTINCT ON ({column})
@@ -24,7 +32,7 @@ def perform_combined_lookup(column: str, lookups: list[tuple]):
           JOIN mapping.spotify_metadata_index
             ON {column} = value
       ORDER BY {column}, score DESC
-    """).format(column=Identifier(column))
+    """).format(column=Identifier(column.value))
 
     with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn, conn.cursor() as curs:
         execute_values(curs, query, lookups, page_size=len(lookups))
@@ -32,60 +40,66 @@ def perform_combined_lookup(column: str, lookups: list[tuple]):
         return {row[0]: row[1] for row in result}
 
 
-def lookup_using_metadata(params):
-    metadata = {}
+def perform_one_lookup(column, metadata, generate_lookup):
+    """ Given the lookup type and a function to generate to the lookup text, query database for spotify track ids """
+    if not metadata:
+        return metadata, {}
+
     lookups = []
-    for idx, item in enumerate(params):
-        metadata[idx] = item
-        combined_text_all = item["artist_name"] + item["release_name"] + item["track_name"]
-        combined_lookup_all = unidecode(re.sub(r'[^\w]+', '', combined_text_all).lower())
-        lookups.append((idx, combined_lookup_all))
+    for idx, item in metadata.items():
+        text = generate_lookup(item)
+        lookup = unidecode(re.sub(r'[^\w]+', '', text).lower())
+        lookups.append((idx, lookup))
+
+    index = query_combined_lookup(column, lookups)
 
     remaining_items = {}
-    index = perform_combined_lookup("combined_lookup_all", lookups)
     for idx, item in metadata.items():
         spotify_id = index.get(idx)
         if spotify_id:
             metadata[idx]["spotify_track_id"] = spotify_id
         else:
-            metadata[idx]["spotify_track_id"] = None
             remaining_items[idx] = item
 
-    if remaining_items:
-        remaining_lookups = []
-        for idx, item in remaining_items.items():
-            combined_text_all_detuned = detune(item["artist_name"]) + item["release_name"] + item["track_name"]
-            combined_lookup_all_detuned = unidecode(re.sub(r'[^\w]+', '', combined_text_all_detuned).lower())
-            remaining_lookups.append((idx, combined_lookup_all_detuned))
+    return metadata, remaining_items
 
-        index = perform_combined_lookup("combined_lookup_all", remaining_lookups)
-        for idx, spotify_id in index.items():
-            metadata[idx]["spotify_track_id"] = spotify_id
-            remaining_items.pop(idx, None)
 
-    if remaining_items:
-        remaining_lookups = []
-        for idx, item in remaining_items.items():
-            combined_text_without_album = item["artist_name"] + item["track_name"]
-            combined_lookup_without_album = unidecode(re.sub(r'[^\w]+', '', combined_text_without_album).lower())
-            remaining_lookups.append((idx, combined_lookup_without_album))
+def combined_all(item) -> str:
+    """ A lookup using original artist, release and track names """
+    return item["artist_name"] + item["release_name"] + item["track_name"]
 
-        index = perform_combined_lookup("combined_lookup_without_album", remaining_lookups)
-        for idx, spotify_id in index.items():
-            metadata[idx]["spotify_track_id"] = spotify_id
-            remaining_items.pop(idx, None)
 
-    if remaining_items:
-        remaining_lookups = []
-        for idx, item in remaining_items.items():
-            combined_text_without_album_detuned = detune(item["artist_name"]) + item["track_name"]
-            combined_lookup_without_album_detuned = unidecode(re.sub(r'[^\w]+', '', combined_text_without_album_detuned).lower())
-            remaining_lookups.append((idx, combined_lookup_without_album_detuned))
+def combined_all_detuned(item) -> str:
+    """ A lookup using detuned artist name and original release and track names """
+    return detune(item["artist_name"]) + item["release_name"] + item["track_name"]
 
-        index = perform_combined_lookup("combined_lookup_without_album", remaining_lookups)
-        for idx, spotify_id in index.items():
-            metadata[idx]["spotify_track_id"] = spotify_id
-            remaining_items.pop(idx, None)
+
+def combined_without_album(item) -> str:
+    """ A lookup using artist name and track name but no release name """
+    return item["artist_name"] + item["track_name"]
+
+
+def combined_without_album_detuned(item) -> str:
+    """ A lookup using detuned artist name, original track name but no release name """
+    return detune(item["artist_name"]) + item["track_name"]
+
+
+def lookup_using_metadata(params: list[dict]):
+    """ Given a list of dicts each having artist name, release name and track name, attempt to find spotify track
+    id for each. """
+    metadata = {}
+    for idx, item in enumerate(params):
+        metadata[idx] = item
+
+    # first attempt matching on artist, track and release followed by trying various detunings for unmatched recordings
+    _, remaining_items = perform_one_lookup(LookupType.ALL, metadata, combined_all)
+    _, remaining_items = perform_one_lookup(LookupType.ALL, remaining_items, combined_all_detuned)
+    _, remaining_items = perform_one_lookup(LookupType.WITHOUT_ALBUM, remaining_items, combined_without_album)
+    _, remaining_items = perform_one_lookup(LookupType.WITHOUT_ALBUM, remaining_items, combined_without_album_detuned)
+
+    # to the still unmatched recordings, add null value so that each item has in the response has spotify_track_id key
+    for item in remaining_items.values():
+        item["spotify_track_id"] = None
 
     return list(metadata.values())
 
