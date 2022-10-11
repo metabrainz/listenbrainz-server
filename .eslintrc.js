@@ -24,7 +24,7 @@ module.exports = {
   },
   plugins: ["react", "@typescript-eslint", "prettier"],
   rules: {
-    "react/prop-tyes": "off",
+    "react/prop-types": "off",
     "react/jsx-filename-extension": "off",
     "react/jsx-props-no-spreading": "off",
     "react/no-did-update-set-state": "off",
@@ -37,13 +37,16 @@ module.exports = {
       "always",
       { exceptAfterSingleLine: true },
     ],
-    "jsx-a11y/label-has-associated-control": ['error', {
-      "assert":"either"
-    }],
-    "react/static-property-placement": "warn",
+    "jsx-a11y/label-has-associated-control": [
+      "error",
+      {
+        assert: "either",
+      },
+    ],
+    "react/static-property-placement": "off",
     "class-methods-use-this": "off",
-    "react/no-unused-class-component-methods": "warn",
-    "default-param-last": "warn"
+    "react/no-unused-class-component-methods": "off",
+    "default-param-last": "off",
   },
   settings: {
     "import/resolver": {
@@ -57,17 +60,17 @@ module.exports = {
       // Configuration specific to Typescript files.
       // These are defined mostly when the ESLint rules don't support typescript
       // Usually there is an equivalent typescript rule from typescript-eslint
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ["**/*.ts", "**/*.tsx"],
       rules: {
         // Disabling no-undef rule for typescript files
         // "The checks it provides are already provided by TypeScript without the need for configuration"
         // see https://typescript-eslint.io/docs/linting/troubleshooting/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-        'no-undef': 'off',
+        "no-undef": "off",
         // see https://typescript-eslint.io/rules/no-use-before-define/
         "no-use-before-define": "off",
         "@typescript-eslint/no-use-before-define": "warn",
         "react/require-default-props": "off",
-        "no-shadow":"off",
+        "no-shadow": "off",
         "@typescript-eslint/no-shadow": "error",
       },
     },
