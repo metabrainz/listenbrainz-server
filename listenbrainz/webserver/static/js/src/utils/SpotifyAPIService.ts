@@ -206,7 +206,9 @@ export default class SpotifyAPIService {
       } catch (error) {
         if (error.status === 429) {
           // Too many requests, take a nap before continuing
-          await new Promise((resolve) => {setTimeout(resolve, 600)});
+          await new Promise((resolve) => {
+            setTimeout(resolve, 600);
+          });
         } else {
           throw error;
         }

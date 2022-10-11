@@ -190,7 +190,7 @@ export default class BrainzPlayer extends React.Component<
     ) {
       this.invalidateDataSource(this.spotifyPlayer.current);
     }
-  };
+  }
 
   componentWillUnMount = () => {
     window.removeEventListener("storage", this.onLocalStorageEvent);

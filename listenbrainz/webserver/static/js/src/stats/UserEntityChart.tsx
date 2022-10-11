@@ -560,7 +560,9 @@ export default class UserEntityChart extends React.Component<
                   <div
                     className="col-xs-6"
                     style={{
-                      height: listenContainerHeight ?? `${65 * (data?.length ?? 1)}px`,
+                      height:
+                        listenContainerHeight ??
+                        `${65 * (data?.length ?? 1)}px`,
                       paddingLeft: 0,
                     }}
                   >
