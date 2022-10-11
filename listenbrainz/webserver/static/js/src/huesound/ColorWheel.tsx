@@ -17,18 +17,18 @@ type ColorWheelProps = {
   radius: number;
   lineWidth: number;
   onColorSelected: (rgbValue: string) => void;
-  padding: number;
-  spacers: {
+  padding?: number;
+  spacers?: {
     colour: string;
     shadowColor: string;
     shadowBlur: number | string;
   };
-  colours: string[];
-  shades: number;
-  dynamicCursor: boolean;
-  preset: boolean;
-  presetColor: string;
-  animated: boolean;
+  colours?: string[];
+  shades?: number;
+  dynamicCursor?: boolean;
+  preset?: boolean;
+  presetColor?: string;
+  animated?: boolean;
   onRef?: (arg?: ColorWheel) => void;
 };
 type ColorWheelState = {

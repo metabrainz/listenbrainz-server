@@ -37,7 +37,6 @@ import ListenControl from "../listens/ListenControl";
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
   totalCount: number;
-  profileUrl?: string;
   user: ListenBrainzUser;
 } & WithAlertNotificationsInjectedProps;
 
@@ -643,7 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube,
     sentry_traces_sample_rate,
   } = globalReactProps;
-  const { feedback, feedback_count, profile_url, user } = reactProps;
+  const { feedback, feedback_count, user } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -674,7 +673,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <UserFeedbackWithAlertNotifications
           initialAlerts={optionalAlerts}
           feedback={feedback}
-          profileUrl={profile_url}
           user={user}
           totalCount={feedback_count}
         />

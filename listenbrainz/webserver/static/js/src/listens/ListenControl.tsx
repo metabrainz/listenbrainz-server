@@ -73,6 +73,7 @@ function ListenControl(props: ListenControlProps) {
       data-toggle={dataToggle}
       data-target={dataTarget}
       aria-label={ariaLabel ?? text}
+      role="menuitem"
     >
       {iconElement} {text}
     </button>
