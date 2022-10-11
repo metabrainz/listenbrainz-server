@@ -273,17 +273,16 @@ export default class ListenCard extends React.Component<
     const hideActionsMenu = compact || !hasActionOptions;
 
     let timeStampForDisplay;
-    if(customTimestamp){
+    if (customTimestamp) {
       timeStampForDisplay = customTimestamp;
-    } else if(listen.playing_now){
+    } else if (listen.playing_now) {
       timeStampForDisplay = (
         <span className="listen-time">
           <a href="/listening-now/" target="_blank" rel="noopener noreferrer">
-            <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now
-            &#8212;
+            <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
           </a>
         </span>
-      )
+      );
     } else {
       timeStampForDisplay = (
         <span
@@ -293,16 +292,14 @@ export default class ListenCard extends React.Component<
               ? fullLocalizedDateFromTimestampOrISODate(
                   listen.listened_at * 1000
                 )
-              : fullLocalizedDateFromTimestampOrISODate(
-                  listen.listened_at_iso
-                )
+              : fullLocalizedDateFromTimestampOrISODate(listen.listened_at_iso)
           }
         >
           {preciseTimestamp(
             listen.listened_at_iso || listen.listened_at * 1000
           )}
         </span>
-      )
+      );
     }
 
     return (
