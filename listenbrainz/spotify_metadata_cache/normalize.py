@@ -46,7 +46,7 @@ WITH extract_albums AS (
               , name
               , artist_data
            FROM extract_album_artists
-    ON CONFLICT (spotify_id, name) DO NOTHING
+    ON CONFLICT (spotify_id) DO NOTHING
 ), insert_rel_album_artist AS (
     INSERT INTO spotify_cache.rel_album_artist (album_id, artist_id, position)
          SELECT spotify_album_id
@@ -83,7 +83,7 @@ WITH extract_albums AS (
               , name
               , artist_data
            FROM extract_track_artists
-    ON CONFLICT (spotify_id, name) DO NOTHING
+    ON CONFLICT (spotify_id) DO NOTHING
 ), insert_rel_track_artist AS (
     INSERT INTO spotify_cache.rel_track_artist (track_id, artist_id, position)
         SELECT spotify_track_id
