@@ -114,32 +114,30 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     .range(schemeOranges[6]);
 
   // Create a custom legend component because the default doesn't work with scaleThreshold
-  const customLegend = useMemo(() => {
-    return (
-      <BoxLegendSvg
-        containerHeight={containerHeight}
-        containerWidth={containerWidth}
-        data={colorScale.range().map((color: string, index: number) => {
-          // eslint-disable-next-line prefer-const
-          let [start, end] = colorScale.invertExtent(color);
+  const customLegend = () => (
+    <BoxLegendSvg
+      containerHeight={containerHeight}
+      containerWidth={containerWidth}
+      data={colorScale.range().map((color: string, index: number) => {
+        // eslint-disable-next-line prefer-const
+        let [start, end] = colorScale.invertExtent(color);
 
-          // Domain starts with 1
-          if (start === undefined) {
-            start = 1;
-          }
+        // Domain starts with 1
+        if (start === undefined) {
+          start = 1;
+        }
 
-          return {
-            index,
-            color,
-            id: color,
-            extent: [start, end],
-            label: `${format(".2s")(start)} - ${format(".2s")(end!)}`,
-          };
-        })}
-        {...(isMobile ? legends.mobile : legends.desktop)}
-      />
-    );
-  }, [containerHeight, containerWidth, colorScale, isMobile, legends]);
+        return {
+          index,
+          color,
+          id: color,
+          extent: [start, end],
+          label: `${format(".2s")(start)} - ${format(".2s")(end!)}`,
+        };
+      })}
+      {...(isMobile ? legends.mobile : legends.desktop)}
+    />
+  );
 
   const customTooltip = useMemo(() => {
     if (!selectedCountry?.data) {
