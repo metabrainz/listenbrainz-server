@@ -3,6 +3,7 @@ import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { uniqBy } from "lodash";
+import Spinner from "react-loader-spinner";
 import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
@@ -29,8 +30,10 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
   const [releases, setReleases] = useState<Array<FreshReleaseItem>>([]);
   const [filteredList, setFilteredList] = useState<Array<FreshReleaseItem>>([]);
   const [allFilters, setAllFilters] = useState<Array<string>>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchReleases = useCallback(async () => {
+    setIsLoading(true);
     try {
       const freshReleases: Array<FreshReleaseItem> = await APIService.fetchFreshReleases(
         "",
@@ -61,10 +64,9 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
       setReleases(cleanReleases);
       setFilteredList(cleanReleases);
       setAllFilters(releaseTypes);
+      setIsLoading(false);
     } catch (error) {
       newAlert("danger", "Couldn't fetch fresh releases", error.toString());
-      // eslint-disable-next-line no-console
-      // console.log("Couldn't fetch fresh releases.");
     }
   }, []);
 
@@ -76,35 +78,57 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
     <>
       <h3 id="row">Fresh releases</h3>
       <div className="releases-page row">
-        <div className="filters-main col-md-1 hidden-xs hidden-sm hidden-md">
-          <ReleaseFilters
-            allFilters={allFilters}
-            releases={releases}
-            setFilteredList={setFilteredList}
-          />
-        </div>
-        <div className="release-cards-grid col-xs-12 col-md-10">
-          {filteredList?.map((release) => {
-            return (
-              <ReleaseCard
-                key={release.release_mbid}
-                releaseDate={release.release_date}
-                releaseMBID={release.release_mbid}
-                releaseName={release.release_name}
-                releaseType={
-                  (release.release_group_primary_type ||
-                    release.release_group_secondary_type) ??
-                  RELEASE_TYPE_OTHER
-                }
-                artistCreditName={release.artist_credit_name}
-                artistMBIDs={release.artist_mbids}
+        {isLoading ? (
+          <div className="spinner-container">
+            <Spinner
+              type="Grid"
+              color="#eb743b"
+              height={100}
+              width={100}
+              visible
+            />
+            <div
+              className="text-muted"
+              style={{ fontSize: "2rem", margin: "1rem" }}
+            >
+              Loading Fresh Releases...
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="filters-main col-md-1 hidden-xs hidden-sm hidden-md">
+              <ReleaseFilters
+                allFilters={allFilters}
+                releases={releases}
+                setFilteredList={setFilteredList}
               />
-            );
-          })}
-        </div>
-        <div className="releases-timeline col-xs-12 col-md-1">
-          {releases.length > 0 ? <ReleaseTimeline releases={releases} /> : null}
-        </div>
+            </div>
+            <div className="release-cards-grid col-xs-12 col-md-10">
+              {filteredList?.map((release) => {
+                return (
+                  <ReleaseCard
+                    key={release.release_mbid}
+                    releaseDate={release.release_date}
+                    releaseMBID={release.release_mbid}
+                    releaseName={release.release_name}
+                    releaseType={
+                      (release.release_group_primary_type ||
+                        release.release_group_secondary_type) ??
+                      RELEASE_TYPE_OTHER
+                    }
+                    artistCreditName={release.artist_credit_name}
+                    artistMBIDs={release.artist_mbids}
+                  />
+                );
+              })}
+            </div>
+            <div className="releases-timeline col-xs-12 col-md-1">
+              {releases.length > 0 ? (
+                <ReleaseTimeline releases={releases} />
+              ) : null}
+            </div>
+          </>
+        )}
       </div>
     </>
   );
