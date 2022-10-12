@@ -791,7 +791,8 @@ export default class Listens extends React.Component<
     const isOlderButtonDisabled =
       !nextListenTs || nextListenTs <= oldestListenTs;
     const isOldestButtonDisabled =
-      listens?.[(listens?.length ?? 0) - 1]?.listened_at <= oldestListenTs;
+      listens?.length > 0 &&
+      listens[listens.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
         {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
