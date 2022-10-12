@@ -29,18 +29,12 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
   const [releases, setReleases] = useState<Array<FreshReleaseItem>>([]);
   const [filteredList, setFilteredList] = useState<Array<FreshReleaseItem>>([]);
   const [allFilters, setAllFilters] = useState<Array<string>>([]);
-  const [minDate, setMinDate] = useState<string>(
-    new Date().toLocaleDateString()
-  );
-  const [maxDate, setMaxDate] = useState<string>(
-    new Date().toLocaleDateString()
-  );
 
   const fetchReleases = useCallback(async () => {
     try {
       const freshReleases: Array<FreshReleaseItem> = await APIService.fetchFreshReleases(
         "",
-        6
+        2
       );
       const cleanReleases = uniqBy(freshReleases, (datum) => {
         return (
@@ -67,8 +61,6 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
       setReleases(cleanReleases);
       setFilteredList(cleanReleases);
       setAllFilters(releaseTypes);
-      setMinDate(cleanReleases[0].release_date);
-      setMaxDate(cleanReleases[cleanReleases.length - 1].release_date);
     } catch (error) {
       newAlert("danger", "Couldn't fetch fresh releases", error.toString());
       // eslint-disable-next-line no-console
@@ -79,7 +71,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
   React.useEffect(() => {
     fetchReleases();
   }, [fetchReleases]);
-  // console.log(releases);
+
   return (
     <>
       <h3 id="row">Fresh releases</h3>
@@ -111,11 +103,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
           })}
         </div>
         <div className="releases-timeline col-xs-12 col-md-1">
-          <ReleaseTimeline
-            // releases={releases}
-            minDate={minDate}
-            maxDate={maxDate}
-          />
+          {releases.length > 0 ? <ReleaseTimeline releases={releases} /> : null}
         </div>
       </div>
     </>

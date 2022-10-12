@@ -1,5 +1,5 @@
 const formattedReleaseDate = (releaseDate: string) => {
-  return new Intl.DateTimeFormat("default", {
+  return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
   })

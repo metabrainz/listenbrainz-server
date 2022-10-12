@@ -1,7 +1,10 @@
+// Converted rc-slider/assets/index.css to .less
+
+// TODO name colors properly
 @color_1: #999;
 @color_2: #666;
 @color_3: #fff;
-@background_color_1: #e9e9e9;
+@background_color_1: #8d8d8d;
 @background_color_2: #abe2fb;
 @background_color_3: #fff;
 @background_color_4: #ccc;
@@ -64,16 +67,15 @@
 }
 .rc-slider-handle {
   position: absolute;
-  width: 2rem;
-  height: 2rem;
+  width: 4rem;
+  height: 4rem;
   margin-top: -8px;
-  background-color: @white;
-  border: solid 2px @orange;
+  background-color: @orange;
+  border: solid 2px @white;
   border-radius: 50%;
   cursor: pointer;
   cursor: -webkit-grab;
   cursor: grab;
-  opacity: 0.8;
   touch-action: pan-x;
   &:focus {
     outline: none;
@@ -173,7 +175,7 @@
   margin: 1rem 0 1rem 1rem;
 
   .rc-slider-rail {
-    width: 4px;
+    width: 0.7rem;
     height: 100%;
   }
   .rc-slider-track {
@@ -183,7 +185,7 @@
   }
   .rc-slider-handle {
     margin-top: 0;
-    margin-left: -8px;
+    margin-left: -16px;
     touch-action: pan-y;
   }
   .rc-slider-mark {
