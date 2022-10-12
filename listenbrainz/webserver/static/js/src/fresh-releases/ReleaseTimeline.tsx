@@ -3,64 +3,63 @@ import Slider from "rc-slider";
 import { formattedReleaseDate } from "./utils";
 
 type ReleaseTimelineProps = {
-  minDate: string;
-  maxDate: string;
+  releases: Array<FreshReleaseItem>;
 };
-
-const style: React.CSSProperties = {
-  height: "48rem",
-  marginBottom: "10rem",
-  marginLeft: "1rem",
-};
-
-const parentStyle = { overflow: "hidden" };
 
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
-  const { minDate, maxDate } = props;
+  const { releases } = props;
 
-  const [dateRange, setDateRange] = useState<Array<string>>([]);
-  const [currentValue, setCurrentValue] = useState<number>(0);
-  const [maxRange, setMaxRange] = useState<number>(3);
+  const minDate = releases[0].release_date;
+  const maxDate = releases[releases.length - 1].release_date;
+
+  const [minSliderDate, setMinSliderDate] = useState<number>(0);
+  const [maxSliderDate, setMaxSliderDate] = useState<number>(100);
+  const [currentValue, setCurrentValue] = useState<number>(
+    new Date().getTime()
+  );
+
+  const MS_TO_DAY = 1000 * 60 * 60 * 24;
 
   function getDatesInRange(startDate: any, endDate: any) {
     const date = new Date(startDate.getTime());
     const dates = [];
     while (date <= endDate) {
-      dates.push(new Date(date).toLocaleDateString());
+      dates.push(new Date(date).toLocaleDateString("en-US"));
       date.setDate(date.getDate() + 1);
     }
-    setMaxRange(dates.length);
-    setDateRange(dates);
+    setMinSliderDate(new Date(dates[0]).getTime());
+    setMaxSliderDate(new Date(dates[dates.length - 1]).getTime());
   }
 
   const onDateChange = (newDate: any) => {
     setCurrentValue(newDate);
   };
 
-  function fakeApiCall() {
-    setCurrentValue(currentValue);
-  }
-
   useEffect(() => {
     getDatesInRange(new Date(minDate), new Date(maxDate));
     setCurrentValue(currentValue);
   }, []);
 
-  return (
-    <div style={parentStyle}>
-      <div style={style}>
-        <div className="slider-legend">{formattedReleaseDate(minDate)}</div>
-        <Slider
-          vertical
-          included={false}
-          min={0}
-          max={2}
-          value={currentValue}
-          defaultValue={1}
-          onChange={onDateChange}
-        />
-        <div className="slider-legend">{formattedReleaseDate(maxDate)}</div>
-      </div>
-    </div>
-  );
+  function renderSlider() {
+    if (minSliderDate && maxSliderDate) {
+      return (
+        <div className="slider">
+          <div className="slider-legend">{formattedReleaseDate(minDate)}</div>
+          <Slider
+            vertical
+            included={false}
+            step={MS_TO_DAY}
+            min={minSliderDate}
+            max={maxSliderDate}
+            value={currentValue}
+            onChange={onDateChange}
+          />
+          <div className="slider-legend">{formattedReleaseDate(maxDate)}</div>
+        </div>
+      );
+    }
+    return <div className="text-muted">Couldn&apos;t load timeline</div>;
+  }
+
+  return renderSlider();
 }
