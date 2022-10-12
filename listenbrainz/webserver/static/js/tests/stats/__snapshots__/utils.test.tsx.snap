@@ -10,4 +10,8 @@ exports[`getEntityLink renders a link if MBID is provided 1`] = `
 </a>
 `;
 
-exports[`getEntityLink renders a string if MBID is not provided 1`] = `"test_artist"`;
+exports[`getEntityLink renders a string if MBID is not provided 1`] = `
+<span>
+  test_artist
+</span>
+`;

@@ -14,7 +14,7 @@ export type SimilarUsersModalProps = {
   ) => void;
 };
 
-const SimilarUsersModal = (props: SimilarUsersModalProps) => {
+function SimilarUsersModal(props: SimilarUsersModalProps) {
   const {
     user,
     loggedInUserFollowsUser,
@@ -67,6 +67,6 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
       {renderSimilarUsersList()}
     </>
   );
-};
+}
 
 export default SimilarUsersModal;

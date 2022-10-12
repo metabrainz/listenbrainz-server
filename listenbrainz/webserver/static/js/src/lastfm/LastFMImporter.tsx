@@ -222,7 +222,9 @@ export default class LastFmImporter extends React.Component<
           `Failed to fetch page ${page} from ${service} after ${LASTFM_RETRIES} retries: ${err.toString()}`
         );
       }
-      await new Promise((resolve) => setTimeout(resolve, timeout));
+      await new Promise((resolve) => {
+        setTimeout(resolve, timeout);
+      });
       // eslint-disable-next-line no-return-await
       return await this.getPage(page, retries - 1);
     }
