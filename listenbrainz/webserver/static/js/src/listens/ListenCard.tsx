@@ -272,35 +272,35 @@ export default class ListenCard extends React.Component<
       soundcloudURL;
     const hideActionsMenu = compact || !hasActionOptions;
 
-    const timeStampForDisplay = customTimestamp ?? (
-      <>
-        {listen.playing_now ? (
-          <span className="listen-time">
-            <a href="/listening-now/" target="_blank" rel="noopener noreferrer">
-              <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now
-              &#8212;
-            </a>
-          </span>
-        ) : (
-          <span
-            className="listen-time"
-            title={
-              listen.listened_at
-                ? fullLocalizedDateFromTimestampOrISODate(
-                    listen.listened_at * 1000
-                  )
-                : fullLocalizedDateFromTimestampOrISODate(
-                    listen.listened_at_iso
-                  )
-            }
-          >
-            {preciseTimestamp(
-              listen.listened_at_iso || listen.listened_at * 1000
-            )}
-          </span>
-        )}
-      </>
-    );
+    let timeStampForDisplay;
+    if (customTimestamp) {
+      timeStampForDisplay = customTimestamp;
+    } else if (listen.playing_now) {
+      timeStampForDisplay = (
+        <span className="listen-time">
+          <a href="/listening-now/" target="_blank" rel="noopener noreferrer">
+            <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
+          </a>
+        </span>
+      );
+    } else {
+      timeStampForDisplay = (
+        <span
+          className="listen-time"
+          title={
+            listen.listened_at
+              ? fullLocalizedDateFromTimestampOrISODate(
+                  listen.listened_at * 1000
+                )
+              : fullLocalizedDateFromTimestampOrISODate(listen.listened_at_iso)
+          }
+        >
+          {preciseTimestamp(
+            listen.listened_at_iso || listen.listened_at * 1000
+          )}
+        </span>
+      );
+    }
 
     return (
       <Card

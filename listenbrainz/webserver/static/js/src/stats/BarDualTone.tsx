@@ -148,14 +148,14 @@ export default function BarDualTone(props: BarDualToneProps) {
     let dateString: string;
     let listenCount: number;
     if (id === "lastRangeCount") {
-      const lastRangeDate = new Date(datum.lastRangeTs! * 1000);
+      const lastRangeDate = new Date((datum.lastRangeTs ?? 0) * 1000);
       dateString = lastRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
       });
       listenCount = datum.lastRangeCount!;
     } else {
-      const thisRangeDate = new Date(datum?.thisRangeTs! * 1000);
+      const thisRangeDate = new Date((datum?.thisRangeTs ?? 0) * 1000);
       dateString = thisRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",

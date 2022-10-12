@@ -258,7 +258,9 @@ export default class SpotifyPlayer
       if (response.status === 404) {
         // Device not found
         // Wait a second, reconnect and try again
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => {
+          setTimeout(resolve, 1000);
+        });
         this.connectSpotifyPlayer(
           this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1)
         );
