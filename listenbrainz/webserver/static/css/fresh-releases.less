@@ -3,6 +3,11 @@
   .filters-main {
     padding: 2rem 0;
 
+    #filters-sticky {
+      position: fixed;
+      width: inherit;
+    }
+
     #filters-container {
       display: flex;
       flex-direction: column;
@@ -230,10 +235,14 @@
   .releases-timeline {
     overflow: hidden;
 
+    #timeline-sticky {
+      position: fixed;
+      width: inherit;
+    }
+
     .slider {
-      height: 48rem;
-      margin-bottom: 10rem;
-      margin-left: 1rem;
+      height: 62vh;
+      margin-left: 1em;
 
       .slider-legend {
         text-transform: uppercase;

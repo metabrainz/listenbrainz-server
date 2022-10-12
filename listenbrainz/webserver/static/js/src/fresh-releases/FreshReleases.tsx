@@ -97,11 +97,13 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
         ) : (
           <>
             <div className="filters-main col-md-1 hidden-xs hidden-sm hidden-md">
-              <ReleaseFilters
-                allFilters={allFilters}
-                releases={releases}
-                setFilteredList={setFilteredList}
-              />
+              <div id="filters-sticky">
+                <ReleaseFilters
+                  allFilters={allFilters}
+                  releases={releases}
+                  setFilteredList={setFilteredList}
+                />
+              </div>
             </div>
             <div className="release-cards-grid col-xs-12 col-md-10">
               {filteredList?.map((release) => {
@@ -123,9 +125,11 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
               })}
             </div>
             <div className="releases-timeline col-xs-12 col-md-1">
-              {releases.length > 0 ? (
-                <ReleaseTimeline releases={releases} />
-              ) : null}
+              <div id="timeline-sticky">
+                {releases.length > 0 ? (
+                  <ReleaseTimeline releases={releases} />
+                ) : null}
+              </div>
             </div>
           </>
         )}
