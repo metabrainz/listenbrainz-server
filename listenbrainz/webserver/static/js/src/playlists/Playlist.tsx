@@ -81,7 +81,6 @@ export default class PlaylistPage extends React.Component<
   private APIService!: APIServiceClass;
 
   private SpotifyAPIService?: SpotifyAPIService;
-  private spotifyPlaylist?: SpotifyPlaylistObject;
   private searchForTrackDebounced: any;
 
   private socket!: Socket;
@@ -549,7 +548,8 @@ export default class PlaylistPage extends React.Component<
   exportToSpotify = async () => {
     const { newAlert } = this.props;
     const { playlist } = this.state;
-    if (!playlist || !this.SpotifyAPIService) {
+    const { currentUser } = this.context;
+    if (!playlist || !currentUser.auth_token) {
       return;
     }
     if (!playlist.track.length) {
@@ -560,58 +560,26 @@ export default class PlaylistPage extends React.Component<
       );
       return;
     }
-    const { title, annotation, identifier } = playlist;
-    const customFields = getPlaylistExtension(playlist);
     this.setState({ loading: true });
     try {
-      const newPlaylist: SpotifyPlaylistObject =
-        this.spotifyPlaylist ||
-        (await this.SpotifyAPIService.createPlaylist(
-          title,
-          customFields?.public,
-          `${annotation}
-          Exported from ListenBrainz playlist ${identifier}`
-        ));
-
-      if (!this.spotifyPlaylist) {
-        // Store the playlist ID, in case something goes wrong we don't recreate another playlist
-        this.spotifyPlaylist = newPlaylist;
-      }
-
-      const spotifyURIs = await this.SpotifyAPIService.searchForSpotifyURIs(
-        playlist.track
+      const playlistId = getPlaylistId(playlist);
+      const result = await this.APIService.exportPlaylistToSpotify(
+        currentUser.auth_token,
+        playlistId
       );
-      await this.SpotifyAPIService.addSpotifyTracksToPlaylist(
-        newPlaylist.id,
-        spotifyURIs
-      );
-      const playlistLink = `https://open.spotify.com/playlist/${newPlaylist.id}`;
+      const { external_url } = result;
       newAlert(
         "success",
         "Playlist exported to Spotify",
         <>
           Successfully exported playlist:{" "}
-          <a href={playlistLink} target="_blank" rel="noopener noreferrer">
-            {playlistLink}
+          <a href={external_url} target="_blank" rel="noopener noreferrer">
+            {external_url}
           </a>
-          {spotifyURIs.length !== playlist.track.length && (
-            <b>
-              <br />
-              {playlist.track.length - spotifyURIs.length} tracks were not found
-              on Spotify, and consequently skipped.
-            </b>
-          )}
         </>
       );
     } catch (error) {
-      if (error.error?.status === 401) {
-        try {
-          const newUserToken = await this.APIService.refreshSpotifyToken();
-          this.SpotifyAPIService.setUserToken(newUserToken);
-        } catch (err) {
-          this.handleError(err.error ?? err);
-        }
-      } else if (
+      if (
         error.error?.status === 403 &&
         error.error?.message === "Invalid token scopes."
       ) {
@@ -721,21 +689,17 @@ export default class PlaylistPage extends React.Component<
                           </li>
                         </>
                       )}
-                      {this.SpotifyAPIService && (
-                        <>
-                          <li role="separator" className="divider" />
-                          <li>
-                            <a
-                              role="button"
-                              href="#"
-                              onClick={this.exportToSpotify}
-                            >
-                              <FontAwesomeIcon icon={faSpotify as IconProp} />{" "}
-                              Export to Spotify
-                            </a>
-                          </li>
-                        </>
-                      )}
+                      <li role="separator" className="divider" />
+                      <li>
+                        <a
+                          role="button"
+                          href="#"
+                          onClick={this.exportToSpotify}
+                        >
+                          <FontAwesomeIcon icon={faSpotify as IconProp} />{" "}
+                          Export to Spotify
+                        </a>
+                      </li>
                     </ul>
                   </span>
                 </div>
