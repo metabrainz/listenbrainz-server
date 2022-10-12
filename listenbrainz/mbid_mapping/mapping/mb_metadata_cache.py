@@ -560,8 +560,11 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     ON crr.release_mbid = rel.gid
                   JOIN release_group rg
                     ON rel.release_group = rg.id
-                 WHERE rel.last_updated > %(timestamp)s
-                   AND  rg.last_updated > %(timestamp)s
+             LEFT JOIN cover_art_archive.cover_art caa
+                    ON caa.release = rel.id
+                 WHERE  rel.last_updated > %(timestamp)s
+                    OR   rg.last_updated > %(timestamp)s
+                    OR caa.date_uploaded > %(timestamp)s
             ) SELECT r.gid
                 FROM recording r
                 JOIN track t
