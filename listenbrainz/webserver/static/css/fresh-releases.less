@@ -13,15 +13,32 @@
       flex-direction: column;
 
       #coverart-checkbox {
-        input[type="checkbox"] {
-          transform: scale(1.5);
-          margin: 0.5rem;
-          accent-color: @orange;
-        }
+        #coverart-only {
+          cursor: pointer;
 
-        label {
-          display: inline;
-          font-weight: 500;
+          input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            visibility: hidden;
+            pointer-events: none;
+          }
+
+          span {
+            font-size: 1.2em;
+            font-weight: normal;
+            color: fade(@asphalt, 80);
+
+            &:hover {
+              color: @blue;
+              font-weight: bold;
+            }
+          }
+
+          input:checked + span {
+            font-weight: bold;
+            color: @orange;
+          }
         }
       }
 
@@ -68,6 +85,7 @@
 
           .type-name-inactive {
             margin-top: 1rem;
+            padding: 0.25rem 1rem;
             font-weight: normal;
             cursor: pointer;
             color: @asphalt;
@@ -79,9 +97,12 @@
 
           .type-name-active {
             margin-top: 1rem;
+            padding: 0.25rem 1rem;
             font-weight: bold;
             cursor: pointer;
-            color: @orange;
+            background-color: @orange;
+            color: @white;
+            border-radius: 4px;
           }
         }
       }
