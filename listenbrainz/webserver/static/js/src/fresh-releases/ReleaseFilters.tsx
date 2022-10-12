@@ -62,16 +62,15 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   return (
     <div id="filters-container">
       <div id="coverart-checkbox">
-        <input
-          type="checkbox"
-          id="coverart-only"
-          onChange={(e) => handleCoverartChange(e)}
-          checked={coverartOnly}
-          aria-hidden="true"
-          aria-checked="false"
-        />
-        <label className="text-muted" htmlFor="coverart-only">
-          Releases with cover arts only
+        <label className="text-muted" id="coverart-only">
+          <input
+            type="checkbox"
+            onChange={(e) => handleCoverartChange(e)}
+            checked={coverartOnly}
+            aria-hidden="true"
+            aria-checked="false"
+          />
+          <span>Hide releases without coverart</span>
         </label>
       </div>
       <div id="release-filters">
