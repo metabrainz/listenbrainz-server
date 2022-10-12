@@ -84,6 +84,7 @@ export default class PlaylistItemCard extends React.Component<
         newAlert={newAlert}
         beforeThumbnailContent={dragHandle}
         // Empty thumbnail, we can't currently resolve cover art from the info we have
+        // eslint-disable-next-line react/jsx-no-useless-fragment
         customThumbnail={<></>}
         data-recording-mbid={track.id}
         additionalMenuItems={additionalMenuItems}

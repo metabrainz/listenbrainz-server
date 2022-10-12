@@ -29,7 +29,6 @@ import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackCo
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
-  profileUrl?: string;
   user: ListenBrainzUser;
 } & WithAlertNotificationsInjectedProps;
 

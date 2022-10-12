@@ -2,6 +2,7 @@ import * as React from "react";
 
 type CardProps = {
   style?: React.CSSProperties;
+  children?: React.ReactNode;
   className?: string;
   [key: string]: any;
 };
@@ -15,7 +16,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
 
     return (
       <div className={cssClasses} style={propStyle} {...otherProps} ref={ref}>
-        <>{children}</>
+        {children}
       </div>
     );
   }

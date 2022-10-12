@@ -24,7 +24,7 @@ export type ListenControlProps = {
   title?: string;
 };
 
-const ListenControl = (props: ListenControlProps) => {
+function ListenControl(props: ListenControlProps) {
   const {
     buttonClassName,
     iconClassName,
@@ -73,10 +73,11 @@ const ListenControl = (props: ListenControlProps) => {
       data-toggle={dataToggle}
       data-target={dataTarget}
       aria-label={ariaLabel ?? text}
+      role="menuitem"
     >
       {iconElement} {text}
     </button>
   );
-};
+}
 
 export default ListenControl;

@@ -6,7 +6,7 @@ type ReportUserModalProps = {
   reportedUserName: string;
 };
 
-const ReportUserModal = (props: ReportUserModalProps) => {
+function ReportUserModal(props: ReportUserModalProps) {
   const { reportedUserName, onSubmit } = props;
   const [optionalReason, setOptionalReason] = useState("");
   const submit = useCallback(
@@ -96,6 +96,6 @@ const ReportUserModal = (props: ReportUserModalProps) => {
       </div>
     </div>
   );
-};
+}
 
 export default ReportUserModal;

@@ -45,7 +45,7 @@ type PlaybackControlButtonProps = {
   size?: "2x";
 };
 
-const PlaybackControlButton = (props: PlaybackControlButtonProps) => {
+function PlaybackControlButton(props: PlaybackControlButtonProps) {
   const { className, action, icon, title, size } = props;
   return (
     <div
@@ -59,11 +59,9 @@ const PlaybackControlButton = (props: PlaybackControlButtonProps) => {
       <FontAwesomeIcon icon={icon as IconProp} size={size} />
     </div>
   );
-};
+}
 
-const BrainzPlayerUI = (
-  props: React.PropsWithChildren<BrainzPlayerUIProps>
-) => {
+function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const { listenBrainzAPIBaseURI, currentListen, newAlert } = props;
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const { currentUser } = React.useContext(GlobalAppContext);
@@ -248,6 +246,6 @@ const BrainzPlayerUI = (
       </div>
     </div>
   );
-};
+}
 
 export default BrainzPlayerUI;

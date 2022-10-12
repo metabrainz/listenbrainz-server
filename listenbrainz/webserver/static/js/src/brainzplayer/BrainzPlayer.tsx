@@ -178,7 +178,7 @@ export default class BrainzPlayer extends React.Component<
     ];
   }
 
-  componentDidMount = () => {
+  componentDidMount() {
     window.addEventListener("storage", this.onLocalStorageEvent);
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
     window.addEventListener("beforeunload", this.alertBeforeClosingPage);
@@ -190,7 +190,7 @@ export default class BrainzPlayer extends React.Component<
     ) {
       this.invalidateDataSource(this.spotifyPlayer.current);
     }
-  };
+  }
 
   componentWillUnMount = () => {
     window.removeEventListener("storage", this.onLocalStorageEvent);

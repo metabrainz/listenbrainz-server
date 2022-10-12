@@ -48,7 +48,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
           setRecordingData(metadata);
         }
       } catch (error) {
-        props.newAlert(
+        newAlert(
           "danger",
           "Could not load currently playing track",
           error.message
@@ -92,7 +92,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
               await onNewPlayingNow(propOrFetchedPlayingNow);
             }
           } catch (error) {
-            props.newAlert(
+            newAlert(
               "danger",
               "Error fetching your currently playing track",
               error.message ?? error

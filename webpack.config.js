@@ -3,6 +3,7 @@ const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const LessPluginCleanCSS = require("less-plugin-clean-css");
 const StylelintPlugin = require("stylelint-webpack-plugin");
+const ESLintPlugin = require("eslint-webpack-plugin");
 
 const baseDir = "/static";
 const jsDir = path.join(baseDir, "js");
@@ -36,13 +37,6 @@ module.exports = function (env, argv) {
         mode: "write-references",
         memoryLimit: 4096,
       },
-      eslint: {
-        // Starting the path with "**/" because of current dev/prod path discrepancy
-        // In dev we bind-mount the source code to "/code/static" and in prod to "/static"
-        // The "**/" allows us to ignore the folder structure and find source files in whatever CWD we're in.
-        files: "**/js/src/**/*.{ts,tsx,js,jsx}",
-        options: { fix: !isProd },
-      },
     }),
     new StylelintPlugin({
       configFile: ".stylelintrc.js",
@@ -50,6 +44,13 @@ module.exports = function (env, argv) {
       files: "**/static/css/**/*.less",
       fix: !isProd,
       threads: true,
+    }),
+    new ESLintPlugin({
+      // Starting the path with "**/" because of current dev/prod path discrepancy
+      // In dev we bind-mount the source code to "/code/static" and in prod to "/static"
+      // The "**/" allows us to ignore the folder structure and find source files in whatever CWD we're in.
+      files: "**/js/src/**/*.{ts,tsx,js,jsx}",
+      fix: !isProd,
     }),
   ];
   return {
