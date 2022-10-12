@@ -1,14 +1,15 @@
 
 import datetime
-from urllib.parse import urlparse
 from uuid import UUID
 
-import bleach
 import ujson
 from flask import Blueprint, current_app, jsonify, request
 import requests
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
+import listenbrainz.db.external_service_oauth as db_external
+from listenbrainz.domain.spotify import SPOTIFY_LISTEN_PERMISSIONS, SpotifyService
+from listenbrainz.troi.export import export_to_spotify
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
@@ -691,3 +692,48 @@ def copy_playlist(playlist_mbid):
         raise APIInternalServerError("Failed to copy the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid})
+
+
+@playlist_api_bp.route("/<playlist_mbid>/export/<service>", methods=["POST", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def export_playlist(playlist_mbid, service):
+    """
+
+    Export a playlist to an external service.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlist copied.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: Playlist not found
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header()
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    if not db_playlist.check_playlist_exists_and_is_visible(playlist_mbid, user["id"]):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if service != 'spotify':
+        raise APIBadRequest(f"Service name {service} is invalid or currently not supported")
+
+    spotify_service = SpotifyService()
+    token = spotify_service.get_user(user["id"])
+    if not token:
+        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
+
+    if not SPOTIFY_LISTEN_PERMISSIONS.issubset(set(token["scopes"])):
+        raise APIBadRequest(f"Missing required scopes to export playlists."
+                            f" Please relink your {service} account with appropriate scopes.")
+
+    if spotify_service.user_oauth_token_has_expired(token):
+        token = spotify_service.refresh_access_token(token['user_id'], token['refresh_token'])
+
+    is_public = parse_boolean_arg("is_public", True)
+
+    url = export_to_spotify(user["auth_token"], token["access_token"], playlist_mbid, is_public)
+    return jsonify({'external_url': url})
