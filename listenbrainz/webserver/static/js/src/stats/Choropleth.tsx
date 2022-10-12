@@ -81,11 +81,6 @@ const themes: {
 
 const tooltipWidth = 250;
 
-function getEmptyJSXFragment() {
-  // eslint-disable-next-line react/jsx-no-useless-fragment
-  return <></>;
-}
-
 export default function CustomChoropleth(props: ChoroplethProps) {
   const [tooltipPosition, setTooltipPosition] = useState([0, 0]);
   const [selectedCountry, setSelectedCountry] = useState<
@@ -258,7 +253,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         valueFormat=".2~s"
         // We can't set isInteractive to false (need onClick event)
         // But we don't want to show a tooltip, so this function returns an empty element
-        tooltip={getEmptyJSXFragment}
+        // eslint-disable-next-line
+        tooltip={() => <></>}
         onClick={showTooltipFromEvent}
         unknownColor="#efefef"
         label="properties.name"
