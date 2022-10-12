@@ -67,7 +67,6 @@
     "lodash": "^4.17.21",
     "react": "^16.14.0",
     "react-bs-notifier": "^6.0.0",
-    "react-coverflow": "^0.2.20",
     "react-date-picker": "^8.1.1",
     "react-dom": "^16.13.1",
     "react-draggable": "^4.4.4",
