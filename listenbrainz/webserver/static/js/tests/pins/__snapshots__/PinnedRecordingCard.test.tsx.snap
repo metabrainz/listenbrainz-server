@@ -2,7 +2,6 @@
 
 exports[`PinnedRecordingCard renders correctly 1`] = `
 <PinnedRecordingCard
-  className=""
   isCurrentUser={true}
   newAlert={[Function]}
   pinnedRecording={
@@ -19,7 +18,6 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
     }
   }
   removePinFromPinsList={[Function]}
-  userName="name"
 >
   <ListenCard
     additionalContent={
@@ -302,6 +300,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
                     aria-label="Unpin"
                     disabled={false}
                     onClick={[Function]}
+                    role="menuitem"
                     title="Unpin"
                     type="button"
                   >
@@ -318,6 +317,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
                     aria-label="Delete Pin"
                     disabled={false}
                     onClick={[Function]}
+                    role="menuitem"
                     title="Delete Pin"
                     type="button"
                   >

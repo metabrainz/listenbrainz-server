@@ -51,7 +51,6 @@ export type ListensProps = {
   latestListenTs: number;
   listens?: Array<Listen>;
   oldestListenTs: number;
-  profileUrl?: string;
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
 } & WithAlertNotificationsInjectedProps;
@@ -194,6 +193,10 @@ export default class Listens extends React.Component<
       this.afterListensFetch
     );
   };
+
+  handlePinnedRecording(pinnedRecording: PinnedRecording) {
+    this.setState({ userPinnedRecording: pinnedRecording });
+  }
 
   connectWebsockets = (): void => {
     this.createWebsocketsConnection();
@@ -758,10 +761,6 @@ export default class Listens extends React.Component<
     }
   }
 
-  handlePinnedRecording(pinnedRecording: PinnedRecording) {
-    this.setState({ userPinnedRecording: pinnedRecording });
-  }
-
   render() {
     const {
       listens,
@@ -792,7 +791,8 @@ export default class Listens extends React.Component<
     const isOlderButtonDisabled =
       !nextListenTs || nextListenTs <= oldestListenTs;
     const isOldestButtonDisabled =
-      listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
+      listens?.length > 0 &&
+      listens[listens.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
         {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
@@ -801,7 +801,6 @@ export default class Listens extends React.Component<
             {playingNowListen && this.getListenCard(playingNowListen)}
             {userPinnedRecording && (
               <PinnedRecordingCard
-                userName={user.name}
                 pinnedRecording={userPinnedRecording}
                 isCurrentUser={currentUser?.name === user?.name}
                 currentFeedback={userPinnedRecordingFeedback}
@@ -1016,7 +1015,6 @@ document.addEventListener("DOMContentLoaded", () => {
     listens,
     oldest_listen_ts,
     userPinnedRecording,
-    profile_url,
     user,
   } = reactProps;
 
@@ -1051,7 +1049,6 @@ document.addEventListener("DOMContentLoaded", () => {
           listens={listens}
           userPinnedRecording={userPinnedRecording}
           oldestListenTs={oldest_listen_ts}
-          profileUrl={profile_url}
           user={user}
         />
       </GlobalAppContext.Provider>

@@ -16,7 +16,7 @@ export function getEntityLink(
       </a>
     );
   }
-  return <>{entityName}</>;
+  return <span>{entityName}</span>;
 }
 
 export function userChartEntityToListen(

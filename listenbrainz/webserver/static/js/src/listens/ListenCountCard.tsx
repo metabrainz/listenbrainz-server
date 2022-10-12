@@ -7,7 +7,7 @@ export type ListenCountCardProps = {
   user: ListenBrainzUser;
 };
 
-const ListenCountCard = (props: ListenCountCardProps) => {
+function ListenCountCard(props: ListenCountCardProps) {
   const { currentUser } = React.useContext(GlobalAppContext);
   const { listenCount, user } = props;
   const isCurrentUser = currentUser?.name === user?.name;
@@ -40,6 +40,6 @@ const ListenCountCard = (props: ListenCountCardProps) => {
   }
 
   return <Card id="listen-count-card">{content}</Card>;
-};
+}
 
 export default ListenCountCard;

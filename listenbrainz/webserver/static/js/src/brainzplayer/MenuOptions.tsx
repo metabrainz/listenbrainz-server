@@ -19,7 +19,7 @@ type MenuOptionsProps = {
   currentListen?: Listen | JSPFTrack;
 };
 
-const MenuOptions = (props: MenuOptionsProps) => {
+function MenuOptions(props: MenuOptionsProps) {
   const [dropdownActionsOpen, setDropdownActionsOpen] = React.useState(false);
   const { currentListen } = props;
   let recordingMBID;
@@ -60,11 +60,11 @@ const MenuOptions = (props: MenuOptionsProps) => {
     <div
       ref={wrapperRef}
       aria-label="Actions menu"
-      aria-haspopup="true"
+      aria-haspopup="menu"
       aria-expanded={dropdownActionsOpen}
       onClick={toggleDropupMenu}
       onKeyDown={toggleDropupMenu}
-      role="menu"
+      role="button"
       tabIndex={0}
     >
       <FontAwesomeIcon
@@ -76,6 +76,7 @@ const MenuOptions = (props: MenuOptionsProps) => {
         <ul
           className={`dropup-content ${dropdownActionsOpen ? " open" : ""}`}
           aria-label="actions submenu"
+          role="menu"
         >
           {recordingMBID && (
             <ListenControl
@@ -125,6 +126,6 @@ const MenuOptions = (props: MenuOptionsProps) => {
       )}
     </div>
   );
-};
+}
 
 export default MenuOptions;
