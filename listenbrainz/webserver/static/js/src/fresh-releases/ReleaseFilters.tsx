@@ -39,25 +39,29 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   useEffect(() => {
     // if no filter is chosen, display all releases
     if (checkedList.length === 0) {
-      setFilteredList(releases);
+      if (coverartOnly === false) {
+        setFilteredList(releases);
+      } else {
+        setFilteredList(releases.filter((item) => item.caa_id !== null));
+      }
     } else {
-      const filteredReleases = releases.filter((item) =>
-        checkedList.includes(
+      const filteredReleases = releases.filter((item) => {
+        if (coverartOnly) {
+          return (
+            item.caa_id !== null &&
+            checkedList.includes(
+              item.release_group_primary_type ||
+                item.release_group_secondary_type
+            )
+          );
+        }
+        return checkedList.includes(
           item.release_group_primary_type || item.release_group_secondary_type
-        )
-      );
+        );
+      });
       setFilteredList(filteredReleases);
     }
-  }, [checkedList]);
-
-  useEffect(() => {
-    if (!coverartOnly) {
-      setFilteredList(releases);
-    } else {
-      const filteredReleases = releases.filter((item) => item.caa_id !== null);
-      setFilteredList(filteredReleases);
-    }
-  }, [coverartOnly]);
+  }, [checkedList, coverartOnly]);
 
   return (
     <div id="filters-container">
