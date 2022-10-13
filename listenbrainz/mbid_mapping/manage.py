@@ -124,6 +124,12 @@ def update_mb_metadata_cache(use_lb_conn):
 
 
 @cli.command()
+def cron_build_mb_metadata_cache():
+    create_canonical_musicbrainz_data(False)
+    create_mb_metadata_cache(True)
+
+
+@cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
 def build_spotify_metadata_index(use_lb_conn):
     """
