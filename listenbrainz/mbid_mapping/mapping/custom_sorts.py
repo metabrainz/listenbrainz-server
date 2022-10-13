@@ -2,17 +2,17 @@ import psycopg2
 from psycopg2.errors import OperationalError, UndefinedTable
 
 RELEASE_GROUP_SECONDARY_TYPES = [
-    (1, "Compilation"),
     (2, "Soundtrack"),
-    (6, "Live"),
-    (7, "Remix"),
-    (10, "Demo"),
-    (8, "DJ-mix"),
     (9, "Mixtape/Street"),
+    (7, "Remix"),
     (5, "Audiobook"),
     (11, "Audio drama"),
     (3, "Spokenword"),
     (4, "Interview")
+    (10, "Demo"),
+    (6, "Live"),
+    (1, "Compilation"),
+    (8, "DJ-mix")
 ]
 
 DIGITAL_FORMATS = [
