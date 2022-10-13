@@ -10,7 +10,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const { allFilters, releases, setFilteredList } = props;
 
   const [checkedList, setCheckedList] = useState<Array<string | undefined>>([]);
-  const [coverartOnly, setCoverartOnly] = useState<boolean>();
+  const [coverartOnly, setCoverartOnly] = useState<boolean>(false);
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.persist();
