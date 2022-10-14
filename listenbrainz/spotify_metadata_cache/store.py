@@ -4,6 +4,7 @@ from psycopg2.sql import SQL, Literal
 
 
 def insert_album(curs, data, last_refresh, expires_at):
+    """ Insert album data into normalized album table """
     query = """
         INSERT INTO spotify_cache.album (spotify_id, name, type, release_date, last_refresh, expires_at, data)
              VALUES (%(spotify_id)s, %(name)s, %(type)s, %(release_date)s, %(last_refresh)s, %(expires_at)s, %(data)s)
@@ -28,6 +29,7 @@ def insert_album(curs, data, last_refresh, expires_at):
 
 
 def insert_artists(curs, data):
+    """ Insert artist in normalized artist table """
     artist_ids = set()
     query = """
         INSERT INTO spotify_cache.artist (spotify_id, name, data)
@@ -46,6 +48,7 @@ def insert_artists(curs, data):
 
 
 def insert_album_artists(curs, album_id, data):
+    """ Insert album and artist ids in rel_album_artist table to mark which artist appear on which albums """
     # delete before insert so that if existing artists have changed the updates are captured properly.
     # say if an artist id was removed from the album then a ON CONFLICT DO UPDATE would insert the new artist
     # but not remove the outdated entry. so delete first and then insert.
@@ -59,6 +62,7 @@ def insert_album_artists(curs, album_id, data):
 
 
 def insert_tracks(curs, album_id, data):
+    """ Insert track data in normalized track tables """
     query = """
         INSERT INTO spotify_cache.track (spotify_id, name, track_number, album_id, data)
              VALUES %s
@@ -75,6 +79,7 @@ def insert_tracks(curs, album_id, data):
 
 
 def insert_track_artists(curs, data):
+    """ Insert track and artist ids in rel_track_artists table to mark which tracks have which artists """
     delete_query = "DELETE FROM spotify_cache.rel_track_artist WHERE track_id IN %s"
     insert_query = "INSERT INTO spotify_cache.rel_track_artist (track_id, artist_id, position) VALUES %s"
 
@@ -93,6 +98,7 @@ def insert_track_artists(curs, data):
 
 
 def insert_normalized(curs, album, last_refresh, expires_at):
+    """ Main function to insert data in normalized spotify tables """
     album_artists = album.pop("artists")
     tracks = album.pop("tracks")
 
@@ -120,8 +126,10 @@ def insert_normalized(curs, album, last_refresh, expires_at):
 
 
 def insert_raw(curs, album, last_refresh, expires_at):
+    """ Insert data in the raw data table. This table only exists as a stop gap till we are satisfied that the
+     normalized tables are working correctly and well. """
     query = """
-        INSERT INTO mapping.spotify_metadata_cache (album_id, data, last_refresh, expires_at)
+        INSERT INTO spotify_cache.raw_cache_data (album_id, data, last_refresh, expires_at)
              VALUES (%(album_id)s, %(data)s, %(last_refresh)s, %(expires_at)s)
         ON CONFLICT (album_id)
           DO UPDATE SET

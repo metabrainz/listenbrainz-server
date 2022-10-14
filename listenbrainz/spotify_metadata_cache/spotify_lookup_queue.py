@@ -86,6 +86,7 @@ class SpotifyIdsQueue(threading.Thread):
         metrics.init("listenbrainz")
 
     def add_spotify_ids(self, album_id, priority=INCOMING_ALBUM_PRIORITY):
+        """ add given spotify ids to the job queue """
         spotify_id = album_id.split("/")[-1]
         self.queue.put(JobItem(priority, spotify_id))
 
@@ -110,6 +111,7 @@ class SpotifyIdsQueue(threading.Thread):
         self.app.logger.info("Albums inserted so far: %d", self.stats["albums_inserted"])
 
     def fetch_albums(self, album_ids):
+        """ retrieve album data from spotify to store in the spotify metadata cache """
         albums = self.sp.albums(album_ids).get("albums")
 
         for album in albums:
@@ -134,6 +136,7 @@ class SpotifyIdsQueue(threading.Thread):
         return albums
 
     def discover_albums(self, artist_id):
+        """ lookup albums of the given artist to discover more albums to seed the job queue """
         try:
             if artist_id in self.discovered_artists:
                 return
@@ -155,6 +158,7 @@ class SpotifyIdsQueue(threading.Thread):
             self.app.logger.info(traceback.format_exc())
 
     def insert(self, data):
+        """ insert album data into the spotify metadata cache """
         last_refresh = datetime.utcnow()
         expires_at = datetime.utcnow() + timedelta(days=CACHE_TIME)
 
