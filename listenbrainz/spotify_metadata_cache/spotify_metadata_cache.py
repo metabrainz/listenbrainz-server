@@ -9,7 +9,6 @@ from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
 
-# TODO: Extract the functionality between this class and MBIDMappingWriter into a common class and reuse it.
 class SpotifyMetadataCache(ConsumerMixin):
     """ Main entry point for the mapping writer. Sets up connections and 
         handles messages from RabbitMQ and stuff them into the queue for the
