@@ -17,7 +17,7 @@ class SpotifyIdFromMetadataQuery(Query):
                   this query will attempt to find a suitable match in Spotify."""
 
     def outputs(self):
-        return ['artist_name', 'release_name', 'track_name', 'spotify_track_id']
+        return ['artist_name', 'release_name', 'track_name', 'spotify_track_ids']
 
     def fetch(self, params, offset=-1, count=-1):
         data = []

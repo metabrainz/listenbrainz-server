@@ -23,7 +23,7 @@ class SpotifyIdFromMBIDQuery(Query):
         tables and using that attempt to find a suitable match in Spotify."""
 
     def outputs(self):
-        return ['recording_mbid', 'artist_name', 'release_name', 'track_name', 'spotify_track_id']
+        return ['recording_mbid', 'artist_name', 'release_name', 'track_name', 'spotify_track_ids']
 
     def resolve_redirect_mbids(self, mbids):
         """ Given a list of mbids, resolve redirects if any and return the list of new mbids and a dict of

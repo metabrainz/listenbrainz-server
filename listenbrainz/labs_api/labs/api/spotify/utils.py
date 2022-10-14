@@ -27,11 +27,11 @@ def query_combined_lookup(column: LookupType, lookups: list[tuple]):
     query = SQL("""
           WITH lookups (idx, value) AS (VALUES %s)
         SELECT DISTINCT ON ({column})
-               idx, track_id
+               idx, array_agg(track_id ORDER BY score DESC) AS spotify_track_ids
           FROM lookups
           JOIN mapping.spotify_metadata_index
             ON {column} = value
-      ORDER BY {column}, score DESC
+      GROUP BY {column}, idx      
     """).format(column=Identifier(column.value))
 
     with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn, conn.cursor() as curs:
@@ -55,9 +55,9 @@ def perform_one_lookup(column, metadata, generate_lookup):
 
     remaining_items = {}
     for idx, item in metadata.items():
-        spotify_id = index.get(idx)
-        if spotify_id:
-            metadata[idx]["spotify_track_id"] = spotify_id
+        spotify_ids = index.get(idx)
+        if spotify_ids:
+            metadata[idx]["spotify_track_ids"] = spotify_ids
         else:
             remaining_items[idx] = item
 
@@ -99,7 +99,7 @@ def lookup_using_metadata(params: list[dict]):
 
     # to the still unmatched recordings, add null value so that each item has in the response has spotify_track_id key
     for item in remaining_items.values():
-        item["spotify_track_id"] = None
+        item["spotify_track_ids"] = []
 
     return list(metadata.values())
 
