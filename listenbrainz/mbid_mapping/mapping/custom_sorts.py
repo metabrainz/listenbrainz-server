@@ -8,7 +8,7 @@ RELEASE_GROUP_SECONDARY_TYPES = [
     (5, "Audiobook"),
     (11, "Audio drama"),
     (3, "Spokenword"),
-    (4, "Interview")
+    (4, "Interview"),
     (10, "Demo"),
     (6, "Live"),
     (1, "Compilation"),
