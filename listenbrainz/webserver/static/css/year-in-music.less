@@ -6,6 +6,9 @@
 @coverflow-image-height: 400px;
 
 #year-in-music {
+  // For coverflow arrow colors
+  --swiper-theme-color: @blue;
+  
   .accent {
     color: @orange;
   }
@@ -71,10 +74,11 @@
     background-color: whitesmoke;
 
     .swiper-wrapper {
-      height: @coverflow-image-height + 80px;
+      padding: 1em 0;
+      align-items: center;
     }
     .swiper-slide {
-      width: @coverflow-image-height;
+      max-width: @coverflow-image-height;
       display: flex;
       align-items: center;
       justify-content: center;

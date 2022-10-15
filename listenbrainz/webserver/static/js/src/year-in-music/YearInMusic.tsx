@@ -494,16 +494,28 @@ export default class YearInMusic extends React.Component<
               <div id="releases-coverflow">
                 <Swiper
                   modules={[Navigation, Keyboard, EffectCoverflow]}
-                  spaceBetween={100}
-                  slidesPerView={3}
-                  initialSlide={3}
+                  spaceBetween={15}
+                  slidesPerView={2}
+                  initialSlide={0}
                   centeredSlides
                   navigation
                   effect="coverflow"
                   coverflowEffect={{
-                    rotate: 20,
-                    depth: 300,
+                    rotate: 40,
+                    depth: 100,
                     slideShadows: false,
+                  }}
+                  breakpoints={{
+                    700: {
+                      initialSlide: 3,
+                      spaceBetween: 100,
+                      slidesPerView: 3,
+                      coverflowEffect: {
+                        rotate: 20,
+                        depth: 300,
+                        slideShadows: false,
+                      },
+                    },
                   }}
                 >
                   {yearInMusicData.top_releases.slice(0, 50).map((release) => {
