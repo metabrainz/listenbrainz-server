@@ -38,6 +38,12 @@ class SpotifyMetadataIndex(BulkInsertTable):
                          , track.name AS track_name
                          , track.track_number AS track_number
                          , array_agg(ARRAY[artist.name, artist.spotify_id] ORDER BY rta.position) AS artists
+                         , CASE 
+                            WHEN album.type = 'album' THEN 1
+                            WHEN album.type = 'single' THEN 2
+                            WHEN album.type = 'compilation' THEN 3
+                            ELSE 4 END
+                            AS album_sort_order
                       FROM spotify_cache.album album
                       JOIN spotify_cache.track track
                         ON album.spotify_id = track.album_id
@@ -52,8 +58,8 @@ class SpotifyMetadataIndex(BulkInsertTable):
                          , track.spotify_id
                          , track.name
                          , track.track_number
-                  ORDER BY release_date
-                         , album_type
+                  ORDER BY album_sort_order
+                         , release_date
                          , album_id
                          , track_number
                          , track_name""")]
