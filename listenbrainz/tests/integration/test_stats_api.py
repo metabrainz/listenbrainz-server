@@ -218,6 +218,7 @@ class StatsAPITestCase(IntegrationTestCase):
             this method also accepts a count and offset parameter denoting how many stats and which
             entries to check.
         """
+        self.maxDiff = None
         self.assert200(response)
 
         sent = request[0]
@@ -430,13 +431,7 @@ class StatsAPITestCase(IntegrationTestCase):
 
     @requests_mock.Mocker(real_http=True)
     def test_get_country_code_mbid_country_mapping_failure(self, mock_requests):
-        """ Test to check if appropriate message is returned if fetching msid_mbid_mapping fails """
-        # Mock fetching mapping from "bono"
-        with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
-            msid_mbid_mapping_result = json.load(f)
-        mock_requests.post("{}/artist-credit-from-artist-msid/json".format(LISTENBRAINZ_LABS_API_URL),
-                           json=msid_mbid_mapping_result)
-
+        """ Test to check if appropriate message is returned if fetching country code fetching fails """
         # Mock fetching country data from labs.api.listenbrainz.org
         mock_requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
                            status_code=500)
@@ -453,7 +448,6 @@ class StatsAPITestCase(IntegrationTestCase):
         artist_stats = deepcopy(self.user_artist_payload)
         for artist in artist_stats[0]["data"]:
             artist['artist_mbids'] = []
-            artist['artist_msid'] = None
         couchdb.create_database("artists_this_week_20220718")
         couchdb.create_database("artistmap_this_week")
         db_stats.insert("artists_this_week_20220718", 0, 5, artist_stats)

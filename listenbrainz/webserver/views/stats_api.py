@@ -76,7 +76,7 @@ def get_user_artist(user_name):
 
     .. note::
         - This endpoint is currently in beta
-        - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the responses
+        - ``artist_mbids`` is an optional field and may not be present in all the responses
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -144,7 +144,7 @@ def get_release(user_name):
 
     .. note::
         - This endpoint is currently in beta
-        - ``artist_mbids``, ``artist_msid``, ``release_mbid`` and ``release_msid`` are optional fields and
+        - ``artist_mbids`` and ``release_mbid`` are optional fields and
           may not be present in all the responses
 
     :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -211,8 +211,8 @@ def get_recording(user_name):
     .. note::
         - This endpoint is currently in beta
         - We only calculate the top 1000 all_time recordings
-        - ``artist_mbids``, ``artist_msid``, ``release_name``, ``release_mbid``, ``release_msid``,
-          ``recording_mbid`` and ``recording_msid`` are optional fields and may not be present in all the responses
+        - ``artist_mbids``, ``release_name``, ``release_mbid`` and ``recording_mbid`` are optional fields
+         and may not be present in all the responses
 
     :param count: Optional, number of recordings to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -521,7 +521,7 @@ def get_sitewide_artist():
 
     .. note::
         - This endpoint is currently in beta
-        - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the entries
+        - ``artist_mbids`` is optional field and may not be present in all the entries
         - We only calculate the top 1000 artists for each time period.
 
     :param count: Optional, number of artists to return for each time range,
@@ -589,8 +589,7 @@ def get_sitewide_release():
 
     .. note::
         - This endpoint is currently in beta
-        - ``artist_mbids``, ``artist_msid``, ``release_mbid`` and ``release_msid`` are optional fields and
-          may not be present in all the responses
+        - ``artist_mbids`` and ``release_mbid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of artists to return for each time range,
         Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -655,8 +654,8 @@ def get_sitewide_recording():
     .. note::
         - This endpoint is currently in beta
         - We only calculate the top 1000 all_time recordings
-        - ``artist_mbids``, ``artist_msid``, ``release_name``, ``release_mbid``, ``release_msid``,
-          ``recording_mbid`` and ``recording_msid`` are optional fields and may not be present in all the responses
+        - ``artist_mbids``, ``release_name``, ``release_mbid`` and ``recording_mbid`` are optional fields and
+         may not be present in all the responses
 
     :param count: Optional, number of artists to return for each time range,
         Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -950,7 +949,7 @@ def _is_valid_range(stats_range: str) -> bool:
 
 
 def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:
-    """ Get country wise listen counts and artist lists from dict of given artist_msids and listen counts
+    """ Get country wise listen counts and artist lists from dict of given artist_mbids and listen counts
     """
     # Get artist_origin_countries from artist_credit_ids
     artist_country_codes = _get_country_code_from_mbids(artist_mbids.keys())

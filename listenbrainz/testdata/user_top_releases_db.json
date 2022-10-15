@@ -8,8 +8,6 @@
             "release_name": "Halycon Days",
             "listen_count": 230,
             "artist_name": "Ellie Goulding",
-            "artist_msid": null,
-            "release_msid": null
         },
         {
             "artist_mbids": [],
@@ -17,8 +15,6 @@
             "release_name": "Delirium",
             "listen_count": 229,
             "artist_name": "Ellie Goulding",
-            "artist_msid": null,
-            "release_msid": null
         }
     ],
     "count": 2,
