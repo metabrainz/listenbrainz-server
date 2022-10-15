@@ -1,5 +1,5 @@
 import * as React from "react";
-import {mount} from "enzyme";
+import { mount } from "enzyme";
 
 import ListenFeedbackComponent, {
   ListenFeedbackComponentProps,
@@ -20,7 +20,6 @@ const listen: Listen = {
     additional_info: {
       release_mbid: "foo",
       recording_msid: "bar",
-      artist_msid: "artist_msid",
       recording_mbid: "yyyy",
       artist_mbids: ["xxxx"],
     },

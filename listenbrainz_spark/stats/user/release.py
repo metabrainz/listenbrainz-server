@@ -16,10 +16,8 @@ def get_releases(table: str, number_of_results: int):
                 {
                     'user1' : [{
                         'release_name': str
-                        'release_msid': str,
                         'release_mbid': str,
                         'artist_name': str,
-                        'artist_msid': str,
                         'artist_mbids': list(str),
                         'listen_count': int
                     }],

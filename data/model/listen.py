@@ -23,7 +23,6 @@ from data.model.validators import check_valid_uuid
 
 class AdditionalInfo(BaseModel):
     artist_mbids: Optional[List[str]]
-    artist_msid: Optional[constr(min_length=1)]
     discnumber: Optional[NonNegativeInt]
     duration_ms: Optional[NonNegativeInt]
     isrc: Optional[str]
@@ -34,7 +33,6 @@ class AdditionalInfo(BaseModel):
     release_artist_names: Optional[List[str]]
     release_group_mbid: Optional[str]
     release_mbid: Optional[str]
-    release_msid: Optional[str]
     spotify_album_artist_ids: Optional[List[str]]
     spotify_album_id: Optional[str]
     spotify_artist_ids: Optional[List[str]]
@@ -48,12 +46,10 @@ class AdditionalInfo(BaseModel):
     work_mbids: Optional[List[str]]
 
     _validate_uuids: classmethod = validator(
-        "artist_msid",
         "recording_mbid",
         "recording_msid",
         "release_group_mbid",
         "release_mbid",
-        "release_msid",
         "track_mbid",
         allow_reuse=True
     )(check_valid_uuid)

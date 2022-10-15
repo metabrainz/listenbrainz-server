@@ -38,7 +38,6 @@ const APIPinsPageTwo = {
       recording_msid: "a539519f-e99e-4a6a-acc8-b80f6cd38476",
       row_id: 30,
       track_metadata: {
-        artist_msid: "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a",
         artist_name: "Lorde",
         track_name: "400 Lux",
       },

@@ -66,7 +66,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
-            'artist_msid':  str(uuid.uuid4()),
             'recording_msid': str(uuid.uuid4()),
         }
         r = self.client.post(
@@ -89,7 +88,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
-            'artist_msid':  str(uuid.uuid4()),
             'recording_mbid': str(uuid.uuid4()),
         }
         r = self.client.post(
@@ -112,7 +110,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
-            'artist_msid':  str(uuid.uuid4()),
             'recording_msid': str(uuid.uuid4()),
         }
 
@@ -156,7 +153,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
-            'artist_msid':  str(uuid.uuid4()),
             'recording_msid': str(uuid.uuid4()),
         }
         r = self.client.post(
@@ -172,7 +168,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         metadata = {
             'artist_name': 'Kanye West',
             'track_name': 'Fade',
-            'artist_msid':  str(uuid.uuid4()),
             'recording_msid': str(uuid.uuid4()),
         }
         r = self.client.post(
@@ -247,7 +242,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         metadata_rec = {
             'artist_name': 'Nujabes',
             'track_name': 'Aruarian Dance',
-            'artist_msid':  str(uuid.uuid4()),
             'recording_msid': str(uuid.uuid4()),
         }
         r = self.client.post(
@@ -314,7 +308,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         metadata_rec = {
             'artist_name': 'Nujabes',
             'track_name': 'Aruarian Dance',
-            'artist_msid':  str(uuid.uuid4()),
             'recording_msid': str(uuid.uuid4()),
         }
         self.client.post(
