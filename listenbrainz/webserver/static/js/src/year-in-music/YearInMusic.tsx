@@ -1,7 +1,8 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import Coverflow from "react-coverflow";
+import { Navigation, Keyboard, EffectCoverflow } from "swiper";
+import { Swiper, SwiperSlide } from "swiper/react";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import {
   get,
@@ -491,44 +492,70 @@ export default class YearInMusic extends React.Component<
 
             {yearInMusicData.top_releases ? (
               <div id="releases-coverflow">
-                <Coverflow
-                  displayQuantityOfSide={3}
-                  currentFigureScale={2}
-                  otherFigureScale={1}
+                <Swiper
+                  modules={[Navigation, Keyboard, EffectCoverflow]}
+                  spaceBetween={15}
+                  slidesPerView={2}
+                  initialSlide={0}
+                  centeredSlides
                   navigation
-                  enableScroll
-                  infiniteScroll
-                  enableHeading
-                  active={activeCoverflowImage}
-                  clickable
-                  media={{
-                    "@media (max-width: 900px)": {
-                      width: "100%",
-                      height: "300px",
-                    },
-                    "@media (min-width: 900px)": {
-                      width: "100%",
-                      height: "500px",
+                  effect="coverflow"
+                  coverflowEffect={{
+                    rotate: 40,
+                    depth: 100,
+                    slideShadows: false,
+                  }}
+                  breakpoints={{
+                    700: {
+                      initialSlide: 3,
+                      spaceBetween: 100,
+                      slidesPerView: 3,
+                      coverflowEffect: {
+                        rotate: 20,
+                        depth: 300,
+                        slideShadows: false,
+                      },
                     },
                   }}
                 >
-                  {yearInMusicData.top_releases.slice(0, 50).map((release) => (
-                    <img
-                      key={`coverflow-${release.release_name}`}
-                      data-action={
+                  {yearInMusicData.top_releases.slice(0, 50).map((release) => {
+                    const coverArtSrc =
+                      yearInMusicData.top_releases_coverart?.[
                         release.release_mbid
-                          ? `https://musicbrainz.org/release/${release.release_mbid}/`
-                          : undefined
-                      }
-                      src={
-                        yearInMusicData.top_releases_coverart?.[
-                          release.release_mbid
-                        ] ?? "/static/img/cover-art-placeholder.jpg"
-                      }
-                      alt={release.release_name}
-                    />
-                  ))}
-                </Coverflow>
+                      ];
+                    if (!coverArtSrc) {
+                      return null;
+                    }
+                    return (
+                      <SwiperSlide key={`coverflow-${release.release_name}`}>
+                        <img
+                          src={
+                            yearInMusicData.top_releases_coverart?.[
+                              release.release_mbid
+                            ] ?? "/static/img/cover-art-placeholder.jpg"
+                          }
+                          alt={release.release_name}
+                        />
+                        <div title={release.release_name}>
+                          <a
+                            href={
+                              release.release_mbid
+                                ? `https://musicbrainz.org/release/${release.release_mbid}/`
+                                : undefined
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {release.release_name}
+                          </a>
+                          <div className="small text-muted">
+                            {release.artist_name}
+                          </div>
+                        </div>
+                      </SwiperSlide>
+                    );
+                  })}
+                </Swiper>
               </div>
             ) : (
               noDataText
