@@ -144,10 +144,9 @@ class BulkInsertTable:
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
-                query = f"""SELECT count(*)
-                            FROM {self.table_name}"""
+                query = f"SELECT 1 FROM {self.table_name} LIMIT 1"
                 curs.execute(query)
-                if curs.fetchone()[0] > 0:
+                if curs.rowcount > 0:
                     return True
                 else:
                     return False

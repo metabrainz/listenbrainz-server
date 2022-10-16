@@ -5,6 +5,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ '*' ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
     paths:
       - 'listenbrainz_spark/**'
       - 'requirements_spark.txt'

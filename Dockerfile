@@ -139,6 +139,12 @@ COPY ./docker/services/mbid_mapping_writer/mbid_mapping_writer.service /etc/serv
 COPY ./docker/services/mbid_mapping_writer/mbid_mapping_writer.finish /etc/service/mbid_mapping_writer/finish
 RUN touch /etc/service/mbid_mapping_writer/down
 
+# Spotify Metadata Cache
+COPY ./docker/services/spotify_metadata_cache/consul-template-spotify-metadata-cache.conf /etc/consul-template-spotify-metadata-cache.conf
+COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.service /etc/service/spotify_metadata_cache/run
+COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.finish /etc/service/spotify_metadata_cache/finish
+RUN touch /etc/service/spotify_metadata_cache/down
+
 # uwsgi (website)
 COPY ./docker/services/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf

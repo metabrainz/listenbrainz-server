@@ -58,6 +58,7 @@ UNIQUE_QUEUE = "unique"
 WEBSOCKETS_QUEUE = "follow_list"
 PLAYING_NOW_EXCHANGE = "playing_now"
 PLAYING_NOW_QUEUE = "playing_now"
+SPOTIFY_METADATA_QUEUE = "spotify_metadata"
 
 SPARK_RESULT_EXCHANGE = "spark_result"
 SPARK_RESULT_QUEUE = "spark_result"

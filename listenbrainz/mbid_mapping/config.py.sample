@@ -20,6 +20,5 @@ REDIS_HOST = "redis"
 REDIS_PORT = 6379
 REDIS_NAMESPACE = "listenbrainz"
 
-
 # For debugging, only fetches a tiny portion of the data if True
 USE_MINIMAL_DATASET = True 
