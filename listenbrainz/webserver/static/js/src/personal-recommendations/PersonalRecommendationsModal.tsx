@@ -17,7 +17,6 @@ export type PersonalRecommendationModalProps = {
     title: string,
     message: string | JSX.Element
   ) => void;
-  onSuccessfulPersonalRecommendation?: UserTrackPersonalRecommendationMetadata;
 };
 
 export interface PersonalRecommendationModalState {

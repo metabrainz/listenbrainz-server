@@ -7,11 +7,11 @@ export type SearchDropDownProps = {
   suggestions?: Array<string>;
 };
 
-const SearchDropDown = (props: SearchDropDownProps) => {
+function SearchDropDown(props: SearchDropDownProps) {
   const { suggestions, action } = props;
   return (
     <div className="searchdropdown">
-      {suggestions!.map((name) => {
+      {suggestions?.map((name) => {
         return (
           <ListenControl
             text={name}
@@ -24,6 +24,6 @@ const SearchDropDown = (props: SearchDropDownProps) => {
       })}
     </div>
   );
-};
+}
 
 export default SearchDropDown;
