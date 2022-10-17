@@ -6,16 +6,15 @@ import ListenControl from "../listens/ListenControl";
 export type NamePillProps = {
   title: string;
   closeAction?: (event: React.MouseEvent) => void;
-  closeButton?: Boolean;
 };
 
 function NamePill(props: NamePillProps) {
-  const { title, closeAction, closeButton } = props;
+  const { title, closeAction } = props;
   return (
     <div className="pill">
       <div>
         <span>{title}</span>
-        {closeButton && (
+        {isFunction(closeAction) && (
           <ListenControl text="" icon={faTimesCircle} action={closeAction} />
         )}
       </div>
