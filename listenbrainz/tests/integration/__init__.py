@@ -16,6 +16,11 @@ TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.
 
 class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        ServerTestCase.setUpClass()
+        DatabaseTestCase.setUpClass()
+
     def setUp(self):
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
@@ -23,6 +28,11 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
     def tearDown(self):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
+
+    @classmethod
+    def tearDownClass(cls):
+        ServerTestCase.tearDownClass()
+        DatabaseTestCase.tearDownClass()
 
 
 class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
@@ -55,12 +65,13 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         count = 0
         while count < 10:
             count += 1
-            time.sleep(1)
 
             response = self.client.get(url, **kwargs)
             data = json.loads(response.data)['payload']
             if data['count'] == num_items:
                 break
+            time.sleep(0.5)
+
         return response
 
     def send_data(self, payload, user=None, recalculate=False):
@@ -78,9 +89,10 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
             # recalculate only if asked because there are many tests for invalid
             # submissions or where we don't fetch listens. in those cases, this
             # sleep will add unnecessary slowness.
-            time.sleep(1)  # wait for listens to be picked up by timescale writer
+            time.sleep(0.5)  # wait for listens to be picked up by timescale writer
             recalculate_all_user_data()
         return response
+
 
 class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase, TimescaleTestCase):
 

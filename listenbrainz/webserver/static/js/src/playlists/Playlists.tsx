@@ -529,72 +529,64 @@ export default class UserPlaylists extends React.Component<
                     &nbsp;Save
                   </button>
                 ) : (
-                  <>
-                    <div className="dropup playlist-card-action-dropdown">
-                      <button
-                        className="dropdown-toggle playlist-card-action-button"
-                        type="button"
-                        id="playlistOptionsDropdown"
-                        data-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="true"
-                        onClick={this.selectPlaylistForEdit.bind(
-                          this,
-                          playlist
-                        )}
-                      >
-                        <FontAwesomeIcon
-                          icon={faCog as IconProp}
-                          title="More options"
-                        />
-                        &nbsp;Options
-                      </button>
-                      <ul
-                        className="dropdown-menu"
-                        aria-labelledby="playlistOptionsDropdown"
-                      >
-                        <li>
-                          <button
-                            onClick={this.copyPlaylist.bind(
-                              this,
-                              playlistId,
-                              playlist.title
-                            )}
-                            type="button"
-                          >
-                            Duplicate
-                          </button>
-                        </li>
-                        {isOwner && (
-                          <>
-                            <li role="separator" className="divider" />
-                            <li>
-                              <button
-                                type="button"
-                                data-toggle="modal"
-                                data-target="#playlistEditModal"
-                              >
-                                <FontAwesomeIcon icon={faPen as IconProp} />{" "}
-                                Edit
-                              </button>
-                            </li>
-                            <li>
-                              <button
-                                type="button"
-                                data-toggle="modal"
-                                data-target="#confirmDeleteModal"
-                              >
-                                <FontAwesomeIcon
-                                  icon={faTrashAlt as IconProp}
-                                />{" "}
-                                Delete
-                              </button>
-                            </li>
-                          </>
-                        )}
-                      </ul>
-                    </div>
-                  </>
+                  <div className="dropup playlist-card-action-dropdown">
+                    <button
+                      className="dropdown-toggle playlist-card-action-button"
+                      type="button"
+                      id="playlistOptionsDropdown"
+                      data-toggle="dropdown"
+                      aria-haspopup="true"
+                      aria-expanded="true"
+                      onClick={this.selectPlaylistForEdit.bind(this, playlist)}
+                    >
+                      <FontAwesomeIcon
+                        icon={faCog as IconProp}
+                        title="More options"
+                      />
+                      &nbsp;Options
+                    </button>
+                    <ul
+                      className="dropdown-menu"
+                      aria-labelledby="playlistOptionsDropdown"
+                    >
+                      <li>
+                        <button
+                          onClick={this.copyPlaylist.bind(
+                            this,
+                            playlistId,
+                            playlist.title
+                          )}
+                          type="button"
+                        >
+                          Duplicate
+                        </button>
+                      </li>
+                      {isOwner && (
+                        <>
+                          <li role="separator" className="divider" />
+                          <li>
+                            <button
+                              type="button"
+                              data-toggle="modal"
+                              data-target="#playlistEditModal"
+                            >
+                              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              type="button"
+                              data-toggle="modal"
+                              data-target="#confirmDeleteModal"
+                            >
+                              <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
+                              Delete
+                            </button>
+                          </li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
                 )}
                 <a className="info" href={`/playlist/${sanitize(playlistId)}`}>
                   <h4>{playlist.title}</h4>

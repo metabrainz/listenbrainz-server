@@ -34,6 +34,7 @@ exports[`NamePill renders correctly 1`] = `
           aria-label=""
           disabled={false}
           onClick={[MockFunction]}
+          role="menuitem"
           title=""
           type="button"
         >

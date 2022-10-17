@@ -16,6 +16,7 @@ from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData
 from listenbrainz.db import stats as db_stats
 from listenbrainz.db import user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.tests.utils import delete_all_couch_databases
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
@@ -35,6 +36,10 @@ class HandlersTestCase(DatabaseTestCase):
         self.app = create_app()
         self.user1 = db_user.get_or_create(1, 'iliekcomputers')
         self.user2 = db_user.get_or_create(2, 'lucifer')
+
+    def tearDown(self):
+        super(HandlersTestCase, self).tearDown()
+        delete_all_couch_databases()
 
     def test_handle_user_entity(self):
         data = {
@@ -363,8 +368,8 @@ class HandlersTestCase(DatabaseTestCase):
             )
         )
 
-    @mock.patch('listenbrainz.spark.troi_bot.get_followers_of_user')
-    @mock.patch('listenbrainz.spark.troi_bot.generate_playlist')
+    @mock.patch('listenbrainz.troi.troi_bot.get_followers_of_user')
+    @mock.patch('listenbrainz.troi.troi_bot.generate_playlist')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_gen_playlist, mock_get_followers):
         with self.app.app_context():
@@ -392,7 +397,6 @@ class HandlersTestCase(DatabaseTestCase):
             calls = [
                 call("recs-to-playlist", args=["lucifer", "top"], upload=True, token="fake_token1", created_for="lucifer"),
                 call("recs-to-playlist", args=["lucifer", "similar"], upload=True, token="fake_token1", created_for="lucifer"),
-                call("daily-jams", args=["lucifer"], upload=True, token="fake_token0", created_for="lucifer")
             ]
             mock_gen_playlist.assert_has_calls(calls)
 

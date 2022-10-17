@@ -1,7 +1,7 @@
 from typing import Optional
 
 import sqlalchemy
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import time
 import psycopg2
@@ -41,14 +41,12 @@ def init_db_connection(connect_str):
 
 
 def run_sql_script(sql_file_path):
-    with open(sql_file_path) as sql:
-        with engine.begin() as connection:
-            connection.execute(sql.read())
+    with open(sql_file_path) as sql, engine.begin() as connection:
+        connection.execute(text(sql.read()))
 
 
 def run_sql_script_without_transaction(sql_file_path):
-    with open(sql_file_path) as sql:
-        connection = engine.connect()
+    with open(sql_file_path) as sql, engine.connect() as connection:
         connection.connection.set_isolation_level(0)
         lines = sql.read().splitlines()
         try:
@@ -56,7 +54,7 @@ def run_sql_script_without_transaction(sql_file_path):
                 # TODO: Not a great way of removing comments. The alternative is to catch
                 # the exception sqlalchemy.exc.ProgrammingError "can't execute an empty query"
                 if line and not line.startswith("--"):
-                    connection.execute(line)
+                    connection.execute(text(line))
         except sqlalchemy.exc.ProgrammingError as e:
             print("Error: {}".format(e))
             return False

@@ -69,7 +69,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                                   r.comment,
                                   ac.id AS artist_credit_id,
                                   ac.name AS artist_credit_name,
-                                  array_agg(a.gid)::TEXT[] AS artist_credit_mbids
+                                  array_agg(a.gid ORDER BY acn.position)::TEXT[] AS artist_credit_mbids
                              FROM recording r
                              JOIN artist_credit ac
                                ON r.artist_credit = ac.id

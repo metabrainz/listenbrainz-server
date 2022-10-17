@@ -21,7 +21,7 @@
           "discnumber": 1,
           "duration_ms": 203417,
           "isrc": "GBUM71800366",
-          "listening_from": "spotify",
+          "music_service": "spotify.com",
           "recording_msid": "f730bec5-d243-478e-ae46-2c47770ca1f0",
           "release_artist_name": "5 Seconds of Summer",
           "release_artist_names": [
@@ -86,7 +86,7 @@
             "discnumber": 1,
             "duration_ms": 139563,
             "isrc": "FR9W12028036",
-            "listening_from": "spotify",
+            "music_service": "spotify.com",
             "recording_msid": "f16652d3-d9ac-4fc2-973f-047b7f45bee1",
             "release_artist_name": "Ofenbach, Lagique",
             "release_artist_names": [
@@ -130,6 +130,5 @@
       "user-read-email",
       "user-read-private"
     ]
-  },
-  "webSocketsServerUrl": "http://localhost:7082"
+  }
 }

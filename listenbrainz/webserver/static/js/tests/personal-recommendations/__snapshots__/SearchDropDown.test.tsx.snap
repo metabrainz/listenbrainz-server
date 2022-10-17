@@ -34,6 +34,7 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
         aria-label="hrik2001"
         disabled={false}
         onClick={[Function]}
+        role="menuitem"
         title="hrik2001"
         type="button"
       >
@@ -111,6 +112,7 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
         aria-label="riksucks"
         disabled={false}
         onClick={[Function]}
+        role="menuitem"
         title="riksucks"
         type="button"
       >

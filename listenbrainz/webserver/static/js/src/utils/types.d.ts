@@ -4,7 +4,6 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "time-ago";
 declare module "debounce-async";
-declare module "react-coverflow";
 
 declare module "react-bs-notifier";
 declare type AlertType = "danger" | "warning" | "success" | "info";
@@ -22,8 +21,10 @@ interface AdditionalInfo {
   artist_msid?: string | null;
   discnumber?: number | null;
   duration_ms?: number | null;
+  duration?: number | null;
   isrc?: string | null;
-  listening_from?: string | null;
+  listening_from?: string | null; // Deprecated
+  music_service?: string | null;
   recording_mbid?: string | null;
   recording_msid?: string | null;
   release_artist_name?: string | null;
@@ -35,6 +36,7 @@ interface AdditionalInfo {
   spotify_album_id?: string | null;
   spotify_artist_ids?: Array<string> | null;
   spotify_id?: string | null;
+  submission_client?: string | null;
   youtube_id?: string | null;
   origin_url?: string | null;
   tags?: Array<string> | null;
@@ -335,8 +337,11 @@ declare type UserListeningActivityDatum = {
 declare type UserListeningActivityData = Array<UserListeningActivityDatum>;
 
 declare type UserDailyActivityDatum = {
-  day: string;
-  [hour: number]: number;
+  id: string;
+  data: Array<{
+    x: string | number;
+    y: number;
+  }>;
 };
 
 declare type UserDailyActivityData = Array<UserDailyActivityDatum>;
@@ -513,7 +518,7 @@ declare type UserTrackRecommendationMetadata = {
   track_name: string;
   release_name?: string;
   recording_mbid?: string;
-  recording_msid: string;
+  recording_msid?: string;
 };
 
 /** For recommending a track personally from the front-end */

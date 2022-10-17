@@ -18,7 +18,7 @@ const getclassName = (similarityScore: number): string => {
   return className;
 };
 
-const SimilarityScore = (props: SimilarityScoreProps) => {
+function SimilarityScore(props: SimilarityScoreProps) {
   const { user, type, similarityScore } = props;
 
   // We transform the similarity score from a scale 0-1 to 0-10
@@ -57,6 +57,6 @@ const SimilarityScore = (props: SimilarityScoreProps) => {
       )}
     </div>
   );
-};
+}
 
 export default SimilarityScore;

@@ -58,6 +58,7 @@ UNIQUE_QUEUE = "unique"
 WEBSOCKETS_QUEUE = "follow_list"
 PLAYING_NOW_EXCHANGE = "playing_now"
 PLAYING_NOW_QUEUE = "playing_now"
+SPOTIFY_METADATA_QUEUE = "spotify_metadata"
 
 SPARK_RESULT_EXCHANGE = "spark_result"
 SPARK_RESULT_QUEUE = "spark_result"
@@ -132,7 +133,6 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8101/'
 SERVER_ROOT_URL = 'http://localhost:8100'
-WEBSOCKETS_SERVER_URL = 'http://localhost:8102'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 

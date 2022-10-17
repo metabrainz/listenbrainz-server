@@ -20,7 +20,7 @@ import logging
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Iterable
 
 import pydantic
 import ujson
@@ -207,7 +207,7 @@ def create_user_cb_review_event(user_name):
             entity_type=metadata["entity_type"],
             text=metadata["text"],
             language=metadata["language"],
-            rating=metadata.get("rating", 0)
+            rating=metadata.get("rating")
         )
     except (pydantic.ValidationError, KeyError):
         raise APIBadRequest(f"Invalid metadata: {str(data)}")
@@ -273,7 +273,6 @@ def user_feed(user_name: str):
     )
 
     recording_recommendation_events = get_recording_recommendation_events(
-        user=user,
         users_for_events=users_for_feed_events,
         min_ts=min_ts or 0,
         max_ts=max_ts or int(time.time()),
@@ -297,7 +296,6 @@ def user_feed(user_name: str):
     notification_events = get_notification_events(user, count)
 
     recording_pin_events = get_recording_pin_events(
-        user=user,
         users_for_events=users_for_feed_events,
         min_ts=min_ts or 0,
         max_ts=max_ts or int(time.time()),
@@ -559,6 +557,7 @@ def create_personal_recommendation_event(user_name):
 
     return jsonify({"status": "ok"})
 
+
 def get_listen_events(
     users: List[Dict],
     min_ts: int,
@@ -654,14 +653,12 @@ def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
 
 
 def get_recording_recommendation_events(
-        user: dict,
-        users_for_events: List[dict],
-        min_ts: int,
-        max_ts: int,
-        count: int
-        ) -> List[APITimelineEvent]:
-    """ Gets all recording recommendation events in the feed.
-    """
+    users_for_events: Iterable[dict],
+    min_ts: int,
+    max_ts: int,
+    count: int
+) -> List[APITimelineEvent]:
+    """ Gets all recording recommendation events in the feed. """
 
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     recording_recommendation_events_db = db_user_timeline_event.get_recording_recommendation_events_for_feed(
@@ -752,12 +749,11 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
 
 
 def get_recording_pin_events(
-        user: dict,
-        users_for_events: List[dict],
-        min_ts: int,
-        max_ts: int,
-        count: int
-        ) -> List[APITimelineEvent]:
+    users_for_events: List[dict],
+    min_ts: int,
+    max_ts: int,
+    count: int
+) -> List[APITimelineEvent]:
     """ Gets all recording pin events in the feed."""
 
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
@@ -801,11 +797,11 @@ def get_recording_pin_events(
 
 
 def get_personal_recording_recommendation_events(
-        user: dict,
-        min_ts: int,
-        max_ts: int,
-        count: int
-        ) -> List[APITimelineEvent]:
+    user: dict,
+    min_ts: int,
+    max_ts: int,
+    count: int
+) -> List[APITimelineEvent]:
     """ Gets all personal recording recommendation events in the feed.
     """
 

@@ -238,7 +238,7 @@ The following optional elements may also be included in the ``additional_info`` 
      - string
      - If the song of this listen comes from an online source, the URL to the place where it is available. This could be a spotify url (see ``spotify_id``), a YouTube video URL, a Soundcloud recording page URL, or the full URL to a public MP3 file. If there is a webpage for this song (e.g. Youtube page, Soundcloud page) **do not** try and resolve the URL to an actual audio resource.
    * - ``duration_ms`` and ``duration``
-     - integer or float
+     - integer
      - The duration of the track in milliseconds and seconds respectively. You should only include one of ``duration_ms`` or ``duration``.
 .. note::
 

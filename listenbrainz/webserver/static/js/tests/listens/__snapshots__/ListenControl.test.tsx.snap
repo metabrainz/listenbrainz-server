@@ -21,6 +21,7 @@ exports[`ListenCountCard renders correctly 1`] = `
   <button
     aria-label="foobar"
     disabled={false}
+    role="menuitem"
     title="foobar"
     type="button"
   >

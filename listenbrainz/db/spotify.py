@@ -28,7 +28,7 @@ def get_active_users_to_process() -> List[dict]:
                 AND error_message IS NULL
           ORDER BY latest_listened_at DESC NULLS LAST
         """))
-        return [dict(row) for row in result.fetchall()]
+        return [row for row in result.mappings()]
 
 
 def get_user_import_details(user_id: int) -> Optional[dict]:
@@ -52,9 +52,8 @@ def get_user_import_details(user_id: int) -> Optional[dict]:
             """), {
                 'user_id': user_id,
             })
-        if result.rowcount > 0:
-            return dict(result.fetchone())
-    return None
+        row = result.mappings().first()
+        return dict(row) if row else None
 
 
 def get_user(user_id: int) -> Optional[dict]:
@@ -84,6 +83,4 @@ def get_user(user_id: int) -> Optional[dict]:
         """), {
             'user_id': user_id
         })
-        if result.rowcount > 0:
-            return dict(result.fetchone())
-    return None
+        return result.mappings().first()

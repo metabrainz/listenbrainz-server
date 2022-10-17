@@ -25,6 +25,62 @@ export type ChoroplethProps = {
   selectedMetric: "artist" | "listen";
 };
 
+const commonLegendProps = {
+  anchor: "bottom-left",
+  direction: "column",
+  itemDirection: "left-to-right",
+  itemOpacity: 0.85,
+  itemWidth: 90,
+  effects: [
+    {
+      on: "hover",
+      style: {
+        itemTextColor: "#000000",
+        itemOpacity: 1,
+      },
+    },
+  ],
+};
+
+const legends = {
+  desktop: {
+    itemHeight: 18,
+    symbolSize: 18,
+    translateX: 50,
+    translateY: -50,
+    ...commonLegendProps,
+  } as LegendProps,
+  mobile: {
+    itemHeight: 10,
+    symbolSize: 10,
+    translateX: 20,
+    translateY: -15,
+    ...commonLegendProps,
+  } as LegendProps,
+};
+
+const themes: {
+  desktop: Theme;
+  mobile: Theme;
+} = {
+  desktop: {
+    legends: {
+      text: {
+        fontSize: 12,
+      },
+    },
+  },
+  mobile: {
+    legends: {
+      text: {
+        fontSize: 8,
+      },
+    },
+  },
+};
+
+const tooltipWidth = 250;
+
 export default function CustomChoropleth(props: ChoroplethProps) {
   const [tooltipPosition, setTooltipPosition] = useState([0, 0]);
   const [selectedCountry, setSelectedCountry] = useState<
@@ -33,60 +89,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   const refContainer = useRef<HTMLDivElement>(null);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
-
-  const commonLegendProps = {
-    anchor: "bottom-left",
-    direction: "column",
-    itemDirection: "left-to-right",
-    itemOpacity: 0.85,
-    itemWidth: 90,
-    effects: [
-      {
-        on: "hover",
-        style: {
-          itemTextColor: "#000000",
-          itemOpacity: 1,
-        },
-      },
-    ],
-  } as LegendProps;
-
-  const legends = {
-    desktop: {
-      itemHeight: 18,
-      symbolSize: 18,
-      translateX: 50,
-      translateY: -50,
-      ...commonLegendProps,
-    } as LegendProps,
-    mobile: {
-      itemHeight: 10,
-      symbolSize: 10,
-      translateX: 20,
-      translateY: -15,
-      ...commonLegendProps,
-    } as LegendProps,
-  };
-
-  const themes: {
-    desktop: Theme;
-    mobile: Theme;
-  } = {
-    desktop: {
-      legends: {
-        text: {
-          fontSize: 12,
-        },
-      },
-    },
-    mobile: {
-      legends: {
-        text: {
-          fontSize: 8,
-        },
-      },
-    },
-  };
 
   const { data } = props;
   const { width } = props;
@@ -112,11 +114,11 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     .range(schemeOranges[6]);
 
   // Create a custom legend component because the default doesn't work with scaleThreshold
-  const CustomLegend = () => (
+  const customLegend = () => (
     <BoxLegendSvg
       containerHeight={containerHeight}
       containerWidth={containerWidth}
-      data={colorScale.range().map((color, index) => {
+      data={colorScale.range().map((color: string, index: number) => {
         // eslint-disable-next-line prefer-const
         let [start, end] = colorScale.invertExtent(color);
 
@@ -136,7 +138,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       {...(isMobile ? legends.mobile : legends.desktop)}
     />
   );
-  const tooltipWidth = 250;
 
   const customTooltip = useMemo(() => {
     if (!selectedCountry?.data) {
@@ -250,6 +251,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         valueFormat=".2~s"
         // We can't set isInteractive to false (need onClick event)
         // But we don't want to show a tooltip, so this function returns an empty element
+        // eslint-disable-next-line
         tooltip={() => <></>}
         onClick={showTooltipFromEvent}
         unknownColor="#efefef"
@@ -262,7 +264,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         // The typescript definition file for Choropleth is incomplete, so disable typescript
         // until it is fixed.
         // @ts-ignore
-        layers={["features", CustomLegend]}
+        layers={["features", customLegend]}
       />
       {selectedCountry && (
         <div

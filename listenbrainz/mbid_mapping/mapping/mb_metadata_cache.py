@@ -6,7 +6,7 @@ from psycopg2.errors import OperationalError
 import psycopg2.extras
 import ujson
 
-from mapping.utils import create_schema, insert_rows, log
+from mapping.utils import insert_rows, log
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 import config
@@ -170,22 +170,21 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 SELECT a.gid
                                      , array_agg(distinct(ARRAY[lt.name, url])) AS artist_links
                                   FROM recording r
-                                  JOIN artist_credit ac
-                                    ON r.artist_credit = ac.id
                                   JOIN artist_credit_name acn
-                                    ON acn.artist_credit = ac.id
+                                 USING (artist_credit)
+                                -- we cannot directly start as FROM artist a because the values_join JOINs on recording
                                   JOIN artist a
                                     ON acn.artist = a.id
-                             LEFT JOIN l_artist_url lau
+                                  JOIN l_artist_url lau
                                     ON lau.entity0 = a.id
-                             LEFT JOIN url u
+                                  JOIN url u
                                     ON lau.entity1 = u.id
-                             LEFT JOIN link l
+                                  JOIN link l
                                     ON lau.link = l.id
-                             LEFT JOIN link_type lt
+                                  JOIN link_type lt
                                     ON l.link_type = lt.id
                                   {values_join}
-                                 WHERE (lt.gid IN ('99429741-f3f6-484b-84f8-23af51991770'
+                                 WHERE lt.gid IN ('99429741-f3f6-484b-84f8-23af51991770'
                                                   ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
                                                   ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
                                                   ,'689870a4-a1e4-4912-b17f-7b2664215698'
@@ -198,35 +197,33 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                                   ,'769085a1-c2f7-4c24-a532-2375a77693bd'
                                                   ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
                                                   ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
-                                        OR lt.gid IS NULL)
                               GROUP BY a.gid
                    ), recording_rels AS (
                                 SELECT r.gid
                                      , array_agg(ARRAY[lt.name, a1.name, a1.gid::TEXT, lat.name]) AS recording_links
                                   FROM recording r
-                             LEFT JOIN l_artist_recording lar
+                                  JOIN l_artist_recording lar
                                     ON lar.entity1 = r.id
                                   JOIN artist a1
                                     ON lar.entity0 = a1.id
-                             LEFT JOIN link l
+                                  JOIN link l
                                     ON lar.link = l.id
-                             LEFT JOIN link_type lt
+                                  JOIN link_type lt
                                     ON l.link_type = lt.id
                              LEFT JOIN link_attribute la
                                     ON la.link = l.id
                              LEFT JOIN link_attribute_type lat
                                     ON la.attribute_type = lat.id
                                   {values_join}
-                                 WHERE (lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
-                                                   ,'59054b12-01ac-43ee-a618-285fd397e461'
-                                                   ,'0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa'
-                                                   ,'234670ce-5f22-4fd0-921b-ef1662695c5d'
-                                                   ,'3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb'
-                                                   ,'92777657-504c-4acb-bd33-51a201bd57e1'
-                                                   ,'45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5'
-                                                   ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
-                                                   ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
-                                       OR lt.gid IS NULL)
+                                 WHERE lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
+                                                  ,'59054b12-01ac-43ee-a618-285fd397e461'
+                                                  ,'0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa'
+                                                  ,'234670ce-5f22-4fd0-921b-ef1662695c5d'
+                                                  ,'3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb'
+                                                  ,'92777657-504c-4acb-bd33-51a201bd57e1'
+                                                  ,'45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5'
+                                                  ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
+                                                  ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
@@ -238,13 +235,11 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                                               ,ar.name
                                                               ,artist_links)) AS artist_data
                               FROM recording r
-                              JOIN artist_credit ac
-                                ON r.artist_credit = ac.id
                               JOIN artist_credit_name acn
-                                ON acn.artist_credit = ac.id
+                             USING (artist_credit)
                               JOIN artist a
                                 ON acn.artist = a.id
-                              JOIN artist_type  at
+                         LEFT JOIN artist_type at
                                 ON a.type = at.id
                          LEFT JOIN gender ag
                                 ON a.gender = ag.id
@@ -271,10 +266,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                             SELECT r.gid AS recording_mbid
                                  , array_agg(jsonb_build_array(t.name, count, a.gid, g.gid)) AS artist_tags
                               FROM recording r
-                              JOIN artist_credit ac
-                                ON r.artist_credit = ac.id
                               JOIN artist_credit_name acn
-                                ON acn.artist_credit = ac.id
+                             USING (artist_credit)
                               JOIN artist a
                                 ON acn.artist = a.id
                               JOIN artist_tag at
@@ -291,9 +284,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , rg.gid AS release_group_mbid
                                  , array_agg(jsonb_build_array(t.name, count, rg.gid, g.gid)) AS release_group_tags
                               FROM recording r
-                         LEFT JOIN mapping.canonical_release_redirect crr
+                              JOIN mapping.canonical_release_redirect crr
                                 ON r.gid = crr.recording_mbid
-                         LEFT JOIN release rel
+                              JOIN release rel
                                 ON crr.release_mbid = rel.gid
                               JOIN release_group rg
                                 ON rel.release_group = rg.id
@@ -315,9 +308,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                          , caa.id AS caa_id
                                          , row_number() OVER (partition by recording_mbid ORDER BY ordering) AS rownum
                                       FROM recording r
-                                 LEFT JOIN mapping.canonical_release_redirect crr
+                                      JOIN mapping.canonical_release_redirect crr
                                         ON r.gid = crr.recording_mbid
-                                 LEFT JOIN release rel
+                                      JOIN release rel
                                         ON crr.release_mbid = rel.gid
                                  LEFT JOIN cover_art_archive.cover_art caa
                                         ON caa.release = rel.id
@@ -345,14 +338,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                               FROM recording r
                               JOIN artist_credit ac
                                 ON r.artist_credit = ac.id
-                              JOIN artist_credit_name acn
-                                ON acn.artist_credit = ac.id
-                              JOIN artist a
-                                ON acn.artist = a.id
-                              JOIN artist_type  at
-                                ON a.type = at.id
-                              JOIN gender ag
-                                ON a.type = ag.id
                          LEFT JOIN artist_data ard
                                 ON ard.gid = r.gid
                          LEFT JOIN recording_rels rrl

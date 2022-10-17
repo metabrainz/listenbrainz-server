@@ -1,0 +1,161 @@
+[
+  {
+    "date": "2022-5-16",
+    "artist_mbids": [
+      "d95313c7-9103-4ff8-a566-72ea3a3153b8"
+    ],
+    "release_mbid": "46962eb4-82c1-499c-b5ca-d1520cacb9e2",
+    "release_name": "27, 28, 29",
+    "artist_credit_name": "티키틱 TIKITIK",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": null,
+    "caa_id": 33755527018
+  },
+  {
+    "date": "2022-5-17",
+    "artist_mbids": [
+      "9d091774-d913-4412-acee-edd882ff7cac",
+      "b78ce5fa-fde8-4e51-9b9e-f25d3c477cb8"
+    ],
+    "release_mbid": "db4fda62-744b-440c-ae4b-a690be0d7bba",
+    "release_name": "ARuFa・恐山の匿名ラジオCD2 〜ぶどうゼリーの章〜",
+    "artist_credit_name": "ARuFa / ダ・ヴィンチ・恐山",
+    "release_group_primary_type": "Album",
+    "release_group_secondary_type": null,
+    "caa_id": null
+  },
+  {
+    "date": "2022-5-18",
+    "artist_mbids": [
+      "de1d37ff-942a-4c85-a375-ff4f5bf2eaa9"
+    ],
+    "release_mbid": "6948e168-3316-4458-b5d7-f14d6b9c8aa0",
+    "release_name": "dawn of infinity",
+    "artist_credit_name": "fripSide",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": null,
+    "caa_id": 33684408555
+  },
+  {
+    "date": "2022-5-25",
+    "artist_mbids": [
+      "c0347d84-96a8-4c8e-8992-178b7862468e",
+      "3ebf9b8d-755e-4f98-adcc-a0089a40b8a5"
+    ],
+    "release_mbid": "8d322ab8-ca68-40f6-8d3b-527545830302",
+    "release_name": "世界、西原商会の世界！ Part 2",
+    "artist_credit_name": "ライムスター 逆featuring CRAZY KEN BAND",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": "Remix",
+    "caa_id": 33713737777
+  },
+  {
+    "date": "2022-5-27",
+    "artist_mbids": [
+      "587e775d-5798-41bb-b039-c6af5095e1c4"
+    ],
+    "release_mbid": "c5955771-c7ec-4de6-9c5f-cc53ee5c1cb7",
+    "release_name": "Continuum",
+    "artist_credit_name": "Amadea Music Productions",
+    "release_group_primary_type": "Album",
+    "release_group_secondary_type": null,
+    "caa_id": 33702046539
+  },
+  {
+    "date": "2022-5-27",
+    "artist_mbids": [
+      "b5da230b-f1fc-4822-af88-03f91891fccd",
+      "7803ba53-9ed3-40e4-b6fe-5e76d27eb811"
+    ],
+    "release_mbid": "a202dc7e-cb61-4ecd-87d0-3bedf597f8cc",
+    "release_name": "Raja Jatt (from the Movie ’Sher Bagga’)",
+    "artist_credit_name": "Ammy Virk & Simar Kaur",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": "Soundtrack",
+    "caa_id": 33709392020
+  },
+  {
+    "date": "2022-5-30",
+    "artist_mbids": [
+      "28e4d96a-e405-4a43-9b30-baf4f8fa7a29"
+    ],
+    "release_mbid": "5be2dc20-13c7-4d8a-945c-fcf2d1815a98",
+    "release_name": "nothing has changed",
+    "artist_credit_name": "sadfem",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": null,
+    "caa_id": null
+  },
+  {
+    "date": "2022-5-30",
+    "artist_mbids": [
+      "cf2bd942-6e78-480d-a6f5-67b04f879f14"
+    ],
+    "release_mbid": "3e39dbe2-1753-4c69-9118-f2c4f46c7111",
+    "release_name": "Uvod…",
+    "artist_credit_name": "Тишина",
+    "release_group_primary_type": "Album",
+    "release_group_secondary_type": null,
+    "caa_id": null
+  },
+  {
+    "date": "2022-5-31",
+    "artist_mbids": [
+      "b12eaf15-9e92-421e-8b9e-5178b39e4626"
+    ],
+    "release_mbid": "db05975c-2210-47c6-8c31-15b7e29465df",
+    "release_name": "So Cold",
+    "artist_credit_name": "44closures",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": null,
+    "caa_id": 33706994031
+  },
+  {
+    "date": "2022-6-1",
+    "artist_mbids": [
+      "b51c672b-85e0-48fe-8648-470a2422229f"
+    ],
+    "release_mbid": "b9f75d97-5ed9-466d-8c64-069af4505fd1",
+    "release_name": "Illusion",
+    "artist_credit_name": "aespa",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": null,
+    "caa_id": null
+  },
+  {
+    "date": "2022-6-3",
+    "artist_mbids": [
+      "7952ffb1-ee94-4869-ad5c-6abe36465567"
+    ],
+    "release_mbid": "4544abf3-f7a0-4748-9a22-30998ca357fa",
+    "release_name": "Endless Garden",
+    "artist_credit_name": "Witchfinder",
+    "release_group_primary_type": "EP",
+    "release_group_secondary_type": null,
+    "caa_id": null
+  },
+  {
+    "date": "2022-6-8",
+    "artist_mbids": [
+      "466e197e-1d82-441e-82c4-380b97fd1839"
+    ],
+    "release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+    "release_name": "magic! / 生きなくちゃ",
+    "artist_credit_name": "Little Glee Monster",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": null,
+    "caa_id": 33700346677
+  },
+  {
+    "date": "2022-6-9",
+    "artist_mbids": [
+      "3377f3bb-60fc-4403-aea9-7e800612e060"
+    ],
+    "release_mbid": "daa1e865-42d9-46d5-b272-c92c099dbc2d",
+    "release_name": "So Good",
+    "artist_credit_name": "Halsey",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": null,
+    "caa_id": 33759180025
+  }
+]

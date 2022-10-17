@@ -66,4 +66,4 @@ if __name__ == "__main__":
     app = create_app()
     with app.app_context():
         mw = MBIDMappingWriter(app)
-        mw.run()
+        mw.start()
