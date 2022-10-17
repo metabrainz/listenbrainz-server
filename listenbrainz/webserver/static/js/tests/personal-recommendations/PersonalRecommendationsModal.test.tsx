@@ -166,7 +166,7 @@ describe("submitPersonalRecommendation", () => {
     expect(instance.handleError).toHaveBeenCalledTimes(1);
     expect(instance.handleError).toHaveBeenCalledWith(
       error,
-      "Error while personally recommending"
+      "Error while recommending a track"
     );
   });
 });
