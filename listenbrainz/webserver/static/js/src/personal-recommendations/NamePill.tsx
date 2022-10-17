@@ -9,7 +9,7 @@ export type NamePillProps = {
   closeButton?: Boolean;
 };
 
-const NamePill = (props: NamePillProps) => {
+function NamePill(props: NamePillProps) {
   const { title, closeAction, closeButton } = props;
   return (
     <div className="pill">
@@ -21,6 +21,6 @@ const NamePill = (props: NamePillProps) => {
       </div>
     </div>
   );
-};
+}
 
 export default NamePill;
