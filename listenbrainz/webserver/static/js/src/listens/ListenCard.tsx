@@ -26,7 +26,7 @@ import {
   getReleaseMBID,
   getArtistName,
   getTrackName,
-  getTrackDuration,
+  getTrackDurationInMs,
   getRecordingMSID,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -59,7 +59,10 @@ export type ListenCardProps = {
   ) => void;
   // This show under the first line of listen details. It's meant for reviews, etc.
   additionalContent?: string | JSX.Element;
-  thumbnail?: JSX.Element;
+  // Displays left of the cover art thumbnail. For special items like reorder/grab icon
+  beforeThumbnailContent?: JSX.Element;
+  // Replaces automatic cover art thumbnail. Also disables loading cover art
+  customThumbnail?: JSX.Element;
   // The default details (recording name, artist name) can be replaced
   listenDetails?: JSX.Element;
   // The default timestamp can be replaced
@@ -100,8 +103,12 @@ export default class ListenCard extends React.Component<
   }
 
   async componentDidUpdate(oldProps: ListenCardProps) {
-    const { listen } = this.props;
-    if (Boolean(listen) && !isEqual(listen, oldProps.listen)) {
+    const { listen, customThumbnail } = this.props;
+    if (
+      !customThumbnail &&
+      Boolean(listen) &&
+      !isEqual(listen, oldProps.listen)
+    ) {
       await this.getCoverArt();
     }
   }
@@ -171,9 +178,18 @@ export default class ListenCard extends React.Component<
         artist_name: getArtistName(listen),
         track_name: getTrackName(listen),
         release_name: _get(listen, "track_metadata.release_name"),
-        recording_mbid: getRecordingMBID(listen),
-        recording_msid: getRecordingMSID(listen),
       };
+
+      const recording_mbid = getRecordingMBID(listen);
+      if (recording_mbid) {
+        metadata.recording_mbid = recording_mbid;
+      }
+
+      const recording_msid = getRecordingMSID(listen);
+      if (recording_msid) {
+        metadata.recording_msid = recording_msid;
+      }
+
       try {
         const status = await APIService.recommendTrackToFollowers(
           currentUser.name,
@@ -211,11 +227,12 @@ export default class ListenCard extends React.Component<
   render() {
     const {
       additionalContent,
+      beforeThumbnailContent,
+      customThumbnail,
       listen,
       className,
       showUsername,
       showTimestamp,
-      thumbnail,
       listenDetails,
       customTimestamp,
       compact,
@@ -238,10 +255,12 @@ export default class ListenCard extends React.Component<
 
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
-    const trackDuration = getTrackDuration(listen);
+    const trackDurationMs = getTrackDurationInMs(listen);
 
     const hasRecordingMSID = Boolean(recordingMSID);
-    const enableRecommendButton = artistName && trackName && hasRecordingMSID;
+    const hasRecordingMBID = Boolean(recordingMBID);
+    const enableRecommendButton =
+      artistName && trackName && (hasRecordingMSID || hasRecordingMBID);
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
@@ -253,35 +272,35 @@ export default class ListenCard extends React.Component<
       soundcloudURL;
     const hideActionsMenu = compact || !hasActionOptions;
 
-    const timeStampForDisplay = customTimestamp ?? (
-      <>
-        {listen.playing_now ? (
-          <span className="listen-time">
-            <a href="/listening-now/" target="_blank" rel="noopener noreferrer">
-              <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now
-              &#8212;
-            </a>
-          </span>
-        ) : (
-          <span
-            className="listen-time"
-            title={
-              listen.listened_at
-                ? fullLocalizedDateFromTimestampOrISODate(
-                    listen.listened_at * 1000
-                  )
-                : fullLocalizedDateFromTimestampOrISODate(
-                    listen.listened_at_iso
-                  )
-            }
-          >
-            {preciseTimestamp(
-              listen.listened_at_iso || listen.listened_at * 1000
-            )}
-          </span>
-        )}
-      </>
-    );
+    let timeStampForDisplay;
+    if (customTimestamp) {
+      timeStampForDisplay = customTimestamp;
+    } else if (listen.playing_now) {
+      timeStampForDisplay = (
+        <span className="listen-time">
+          <a href="/listening-now/" target="_blank" rel="noopener noreferrer">
+            <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
+          </a>
+        </span>
+      );
+    } else {
+      timeStampForDisplay = (
+        <span
+          className="listen-time"
+          title={
+            listen.listened_at
+              ? fullLocalizedDateFromTimestampOrISODate(
+                  listen.listened_at * 1000
+                )
+              : fullLocalizedDateFromTimestampOrISODate(listen.listened_at_iso)
+          }
+        >
+          {preciseTimestamp(
+            listen.listened_at_iso || listen.listened_at * 1000
+          )}
+        </span>
+      );
+    }
 
     return (
       <Card
@@ -294,7 +313,8 @@ export default class ListenCard extends React.Component<
         }`}
       >
         <div className="main-content">
-          {thumbnail || (
+          {beforeThumbnailContent}
+          {customThumbnail || (
             <div className="listen-thumbnail">
               {thumbnailSrc ? (
                 <a
@@ -314,14 +334,26 @@ export default class ListenCard extends React.Component<
                 </a>
               ) : (
                 <a
-                  href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
-                  title="How can I add missing cover art?"
+                  href={
+                    releaseMBID
+                      ? `https://musicbrainz.org/release/${releaseMBID}/cover-art`
+                      : "https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                  }
+                  title={
+                    releaseMBID
+                      ? "Add cover art in MusicBrainz"
+                      : "How can I add missing cover art?"
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <img
                     src={ListenCard.defaultThumbnailSrc}
-                    alt="How can I add missing cover art?"
+                    alt={
+                      releaseMBID
+                        ? "Add cover art in MusicBrainz"
+                        : "How can I add missing cover art?"
+                    }
                   />
                 </a>
               )}
@@ -335,10 +367,10 @@ export default class ListenCard extends React.Component<
                 <div title={trackName} className="ellipsis-2-lines">
                   {getTrackLink(listen)}
                 </div>
-                {trackDuration && (
+                {trackDurationMs && (
                   <div className="small text-muted" title="Duration">
-                    {isNumber(trackDuration) &&
-                      millisecondsToStr(trackDuration)}
+                    {isNumber(trackDurationMs) &&
+                      millisecondsToStr(trackDurationMs)}
                   </div>
                 )}
               </div>

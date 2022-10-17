@@ -224,7 +224,6 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 "id": self.user2["id"],
                 "name": 'vansika_1',
             },
-            "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
             "recommendations": recommendations,
         }
         received_props = ujson.loads(self.get_context_variable('props'))

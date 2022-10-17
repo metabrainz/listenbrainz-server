@@ -6,6 +6,5 @@
     "user": {
         "id": 2,
         "name": "bob"
-    },
-    "webSocketsServerUrl": "http://localhost:7082"
+    }
 }

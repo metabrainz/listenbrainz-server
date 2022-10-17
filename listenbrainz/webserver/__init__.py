@@ -93,10 +93,8 @@ def create_app(debug=None):
     # Database connections
     from listenbrainz import db
     from listenbrainz.db import timescale as ts
-    from listenbrainz import messybrainz as msb
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
     ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
-    msb.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
     # Redis connection
     from listenbrainz.webserver.redis_connection import init_redis_connection
@@ -318,6 +316,9 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.stats_api import stats_api_bp
     app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
+
+    from listenbrainz.webserver.views.fresh_releases import fresh_releases_bp
+    app.register_blueprint(fresh_releases_bp, url_prefix=API_PREFIX)
 
     from listenbrainz.webserver.views.status_api import status_api_bp
     app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')

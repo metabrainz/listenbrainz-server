@@ -10,6 +10,7 @@ volumes:
   rabbitmq:
   # The contents of /root, so that bash and ipython can store history
   web_home:
+  couchdb:
 
 services:
 
@@ -26,6 +27,15 @@ services:
       - "127.0.0.1:7432:5432"
     environment:
       POSTGRES_PASSWORD: 'postgres'
+
+  couchdb:
+    image: couchdb:3.2.2
+    environment:
+      COUCHDB_USER: listenbrainz
+      COUCHDB_PASSWORD: listenbrainz
+    volumes:
+      - ./couchdb_test.ini:/opt/couchdb/etc/local.ini
+      - couchdb:/var/lib/couchdb
 
   rabbitmq:
     image: rabbitmq:3.8.16

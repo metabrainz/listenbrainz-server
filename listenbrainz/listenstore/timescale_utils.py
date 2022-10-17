@@ -193,27 +193,27 @@ def delete_listens():
     delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE id <= :max_id"
 
     with timescale.engine.begin() as connection:
-        result = connection.execute(select_max_id)
+        result = connection.execute(text(select_max_id))
         row = result.fetchone()
 
         if not row:
             logger.info("No pending deletes")
             return
 
-        max_id = row["max_id"]
+        max_id = row.max_id
         logger.info("Found max id in listen_delete_metadata table: %s", max_id)
 
         logger.info("Deleting Listens and updating affected listens counts")
-        connection.execute(text(delete_listens_and_update_listen_counts), max_id=max_id)
+        connection.execute(text(delete_listens_and_update_listen_counts), {"max_id": max_id})
 
         logger.info("Update minimum listen timestamp affected by deleted listens")
-        connection.execute(text(update_listen_min_ts), max_id=max_id)
+        connection.execute(text(update_listen_min_ts), {"max_id": max_id})
 
         logger.info("Update maximum listen timestamp affected by deleted listens")
-        connection.execute(text(update_listen_max_ts), max_id=max_id)
+        connection.execute(text(update_listen_max_ts), {"max_id": max_id})
 
         logger.info("Clean up listen delete metadata table")
-        connection.execute(text(delete_user_metadata), max_id=max_id)
+        connection.execute(text(delete_user_metadata), {"max_id": max_id})
 
         logger.info("Completed deleting listens and updating affected metadata")
 
@@ -247,7 +247,7 @@ def update_user_listen_data():
     # in remaining LB is beyond me then.
     with timescale.engine.begin() as connection:
         logger.info("Starting to update listen counts")
-        connection.execute(text(query), until=datetime.now())
+        connection.execute(text(query), {"until": datetime.now()})
         logger.info("Completed updating listen counts")
 
 
@@ -264,7 +264,7 @@ def add_missing_to_listen_users_metadata():
     query = 'SELECT id FROM "user"'
     try:
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query))
+            result = connection.execute(text(query))
             for row in result:
                 user_list.append(row[0])
     except psycopg2.OperationalError as e:
@@ -299,8 +299,8 @@ def recalculate_all_user_data():
     query = 'SELECT id FROM "user"'
     try:
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query))
-            user_list = [row["id"] for row in result]
+            result = connection.execute(text(query))
+            user_list = [row.id for row in result]
     except psycopg2.OperationalError:
         logger.error("Cannot query db to fetch user list", exc_info=True)
         raise

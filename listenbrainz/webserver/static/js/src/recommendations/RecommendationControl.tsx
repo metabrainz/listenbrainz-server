@@ -12,7 +12,7 @@ export type RecommendationControlProps = {
   title: string;
 };
 
-const RecommendationControl = (props: RecommendationControlProps) => {
+function RecommendationControl(props: RecommendationControlProps) {
   const { iconHover, icon, action, title, cssClass } = props;
   return (
     <div
@@ -31,6 +31,6 @@ const RecommendationControl = (props: RecommendationControlProps) => {
       </span>
     </div>
   );
-};
+}
 
 export default RecommendationControl;

@@ -1,4 +1,14 @@
+// Import Swiper styles
+@import "/node_modules/swiper/swiper.less";
+@import "/node_modules/swiper/modules/navigation/navigation.less";
+@import "/node_modules/swiper/modules/effect-coverflow/effect-coverflow.less";
+
+@coverflow-image-height: 400px;
+
 #year-in-music {
+  // For coverflow arrow colors
+  --swiper-theme-color: @blue;
+
   .accent {
     color: @orange;
   }
@@ -58,46 +68,33 @@
     margin-left: 0;
   }
 
-  div[class*="coverflow__stage__"] {
-    perspective: 800px;
-  }
-  div[class*="coverflow__container__"] {
-    background: rgba(0, 0, 0, 0.04);
-  }
-  div[class*="coverflow__arrowWrapper__"] {
-    transform-style: preserve-3d;
-  }
-  div[class*="coverflow__figure__"] {
-    box-shadow: 0 20px 40px rgb(0 0 0 / 30%);
-    -webkit-box-reflect: below 1px -webkit-linear-gradient(bottom, rgba(0, 0, 0, 0.1), rgba(
-            0,
-            0,
-            0,
-            0
-          )
-          20%, rgba(0, 0, 0, 0));
-  }
-  div[class*="coverflow__text__"] {
-    font-size: 0.6em;
-    @media (max-width: @screen-tablet) {
-      text-overflow: ellipsis;
-      white-space: nowrap;
+  .swiper {
+    width: 100%;
+    perspective: 900px;
+    background-color: whitesmoke;
+
+    .swiper-wrapper {
+      padding: 1em 0;
+      align-items: center;
+    }
+    .swiper-slide {
+      max-width: @coverflow-image-height;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      > img {
+        width: inherit;
+        box-shadow: 0 4px 10px 0 fade(@black, 20%);
+      }
+      > div {
+        // center text in album title + artist name container
+        text-align: center;
+        margin-top: 0.5em;
+      }
     }
   }
-  div[class*="coverflow__left__"] {
-    left: calc(45%) !important;
-    transform: translateZ(70px);
-  }
-  div[class*="coverflow__right__"] {
-    right: calc(45%) !important;
-    transform: translateZ(70px);
-  }
-  div[class*="coverflow__arrow__"] {
-    &:before,
-    &:after {
-      height: 3px;
-    }
-  }
+
   /* "Save as image" component */
   #savable-release-component {
     width: 500px;

@@ -222,12 +222,14 @@ class UserTestCase(DatabaseTestCase):
         with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(
                 "INSERT INTO recommendation.similar_user (user_id, similar_users) VALUES (:user_id, :similar_users)"),
-                user_id=searcher_id,
-                similar_users=json.dumps({
-                    str(user_id_c): [0.42, 0.20],
-                    str(user_id_l): [0.61, 0.25],
-                    str(user_id_r): [0.87, 0.43]
-                })
+                {
+                    "user_id": searcher_id,
+                    "similar_users": json.dumps({
+                        str(user_id_c): [0.42, 0.20],
+                        str(user_id_l): [0.61, 0.25],
+                        str(user_id_r): [0.87, 0.43]
+                    })
+                }
             )
 
         results = db_user.search("cif", 10, searcher_id)

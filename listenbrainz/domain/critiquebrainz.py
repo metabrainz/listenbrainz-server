@@ -99,12 +99,11 @@ class CritiqueBrainzService(ExternalService):
     def _submit_review_to_CB(self, token: str, review: CBReviewMetadata):
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json;charset=UTF-8"
         }
-        payload = review.dict()
+        payload = review.dict(exclude_none=True)
         payload["is_draft"] = False
         payload["license_choice"] = CRITIQUEBRAINZ_REVIEW_LICENSE
-        return requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, data=json.dumps(payload), headers=headers)
+        return requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, json=payload, headers=headers)
 
     def submit_review(self, user_id: int, review: CBReviewMetadata) -> str:
         """ Submit a review for the user to CritiqueBrainz.

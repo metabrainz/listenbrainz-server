@@ -31,7 +31,6 @@ def load_playlist(playlist_mbid: str):
 
     props = {
         "labs_api_url": current_app.config["LISTENBRAINZ_LABS_API_URL"],
-        "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "playlist": serialize_jspf(playlist),
     }
 

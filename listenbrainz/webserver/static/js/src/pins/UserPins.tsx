@@ -331,7 +331,6 @@ export default class UserPins extends React.Component<
                     return (
                       <PinnedRecordingCard
                         key={pin.created}
-                        userName={user.name}
                         pinnedRecording={pin}
                         isCurrentUser={currentUser?.name === user?.name}
                         removePinFromPinsList={this.removePinFromPinsList}

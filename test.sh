@@ -6,7 +6,7 @@ if [ "$CI" == "true" ] ; then
     echo "Running in CI mode"
 fi
 
-# UNIT TESTS
+# BACKEND TESTS
 # ./test.sh                build unit test containers, bring up, make database, test, bring down
 # for development:
 # ./test.sh -u             build unit test containers, bring up background and load database if needed
@@ -25,44 +25,39 @@ fi
 # ./test.sh spark          run spark tests
 # ./test.sh spark -b       build spark test containers
 
-# INTEGRATION TESTS
-# ./test.sh int            run integration tests
-
 COMPOSE_FILE_LOC=docker/docker-compose.test.yml
 COMPOSE_PROJECT_NAME=listenbrainz_test
 
 SPARK_COMPOSE_FILE_LOC=docker/docker-compose.spark.yml
 SPARK_COMPOSE_PROJECT_NAME=listenbrainz_spark_test
 
-INT_COMPOSE_FILE_LOC=docker/docker-compose.integration.yml
-INT_COMPOSE_PROJECT_NAME=listenbrainz_int
-
-
 if [[ ! -d "docker" ]]; then
     echo "This script must be run from the top level directory of the listenbrainz-server source."
     exit 255
 fi
 
+echo "Checking docker compose version"
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+else
+    DOCKER_COMPOSE_CMD="docker-compose"
+fi
+
+
 function invoke_docker_compose {
-    docker-compose -f $COMPOSE_FILE_LOC \
+    $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                    "$@"
 }
 
 function invoke_docker_compose_spark {
-    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
+    $DOCKER_COMPOSE_CMD -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
                    "$@"
 }
 
-function invoke_docker_compose_int {
-    docker-compose -f $INT_COMPOSE_FILE_LOC \
-                   -p $INT_COMPOSE_PROJECT_NAME \
-                   "$@"
-}
-
 function docker_compose_run {
-    invoke_docker_compose run --rm --user `id -u`:`id -g` "$@"
+    invoke_docker_compose run --rm --user "$(id -u)":"$(id -g)" "$@"
 }
 
 function docker_compose_run_fe {
@@ -75,16 +70,12 @@ function docker_compose_run_spark {
     invoke_docker_compose_spark run --rm "$@"
 }
 
-function docker_compose_run_int {
-    invoke_docker_compose_int run --rm --user `id -u`:`id -g` "$@"
-}
-
 function build_unit_containers {
-    invoke_docker_compose build lb_db redis rabbitmq listenbrainz couchdb
+    invoke_docker_compose build listenbrainz
 }
 
 function bring_up_unit_db {
-    invoke_docker_compose up -d lb_db redis rabbitmq couchdb
+    invoke_docker_compose up -d lb_db redis rabbitmq couchdb timescale_writer
 }
 
 function unit_setup {
@@ -95,14 +86,13 @@ function unit_setup {
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                   -wait tcp://couchdb:5984 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
-                         python3 manage.py init_msb_db --create-db && \
                          python3 manage.py init_ts_db --create-db"
 }
 
 function is_unit_db_running {
     # Check if the database container is running
     containername="${COMPOSE_PROJECT_NAME}_lb_db_1"
-    res=`docker ps --filter "name=$containername" --filter "status=running" -q`
+    res=$(docker ps --filter "name=$containername" --filter "status=running" -q)
     if [ -n "$res" ]; then
         return 0
     else
@@ -112,7 +102,7 @@ function is_unit_db_running {
 
 function is_unit_db_exists {
     containername="${COMPOSE_PROJECT_NAME}_lb_db_1"
-    res=`docker ps --filter "name=$containername" --filter "status=exited" -q`
+    res=$(docker ps --filter "name=$containername" --filter "status=exited" -q)
     if [ -n "$res" ]; then
         return 0
     else
@@ -175,29 +165,6 @@ function spark_dcdown {
     invoke_docker_compose_spark down
 }
 
-function int_build {
-    invoke_docker_compose_int build
-}
-
-function int_dcdown {
-    # Shutting down all integration test containers associated with this project
-    invoke_docker_compose_int down
-}
-
-function int_setup {
-    echo "Running setup"
-    docker_compose_run_int listenbrainz dockerize \
-                  -wait tcp://lb_db:5432 -timeout 60s \
-                  -wait tcp://couchdb:5984 -timeout 60s \
-                bash -c "python3 manage.py init_db --create-db && \
-                         python3 manage.py init_msb_db --create-db && \
-                         python3 manage.py init_ts_db --create-db"
-}
-
-function bring_up_int_containers {
-    invoke_docker_compose_int up -d lb_db redis timescale_writer rabbitmq couchdb
-}
-
 # Exit immediately if a command exits with a non-zero status.
 # set -e
 # trap cleanup EXIT  # Cleanup after tests finish running
@@ -214,34 +181,6 @@ if [ "$1" == "spark" ]; then
     docker_compose_run_spark request_consumer
     RET=$?
     spark_dcdown
-    exit $RET
-fi
-
-if [ "$1" == "int" ]; then
-    echo "Taking down old containers"
-    int_dcdown
-    echo "Building current setup"
-    int_build
-    echo "Building containers"
-    int_setup
-    echo "Bringing containers up"
-    bring_up_int_containers
-    shift
-    if [ -z "$*" ]; then
-        TESTS_TO_RUN="listenbrainz/tests/integration"
-    else
-        TESTS_TO_RUN="$@"
-    fi
-    echo "Running tests $TESTS_TO_RUN"
-
-    docker_compose_run_int listenbrainz dockerize \
-                  -wait tcp://lb_db:5432 -timeout 60s \
-                  -wait tcp://redis:6379 -timeout 60s \
-                  -wait tcp://rabbitmq:5672 -timeout 60s \
-                bash -c "pytest $TESTS_TO_RUN"
-    RET=$?
-    echo "Taking containers down"
-    int_dcdown
     exit $RET
 fi
 
@@ -282,7 +221,7 @@ if [ "$1" == "-s" ]; then
 fi
 
 if [ "$1" == "-d" ]; then
-    echo "Running docker-compose down"
+    echo "Running docker compose down"
     unit_dcdown
     exit 0
 fi
@@ -293,7 +232,7 @@ if [ "$1" == "-u" ]; then
     DB_EXISTS=$?
     is_unit_db_running
     DB_RUNNING=$?
-    if [ $DB_EXISTS -eq 0 -o $DB_RUNNING -eq 0 ]; then
+    if [ $DB_EXISTS -eq 0 ] || [ $DB_RUNNING -eq 0 ]; then
         echo "Database is already up, doing nothing"
     else
         echo "Building containers"
@@ -309,7 +248,7 @@ is_unit_db_exists
 DB_EXISTS=$?
 is_unit_db_running
 DB_RUNNING=$?
-if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
+if [ $DB_EXISTS -eq 1 ] && [ $DB_RUNNING -eq 1 ] ; then
     # If no containers, build them, run setup then run tests, then bring down
     build_unit_containers
     bring_up_unit_db

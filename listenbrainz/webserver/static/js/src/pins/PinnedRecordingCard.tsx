@@ -20,7 +20,6 @@ import ListenCard from "../listens/ListenCard";
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type PinnedRecordingCardProps = {
-  userName: string;
   pinnedRecording: PinnedRecording;
   currentFeedback?: ListenFeedBack | null;
   // Only used when not passing a custom feedbackComponent
@@ -29,7 +28,6 @@ export type PinnedRecordingCardProps = {
     score: ListenFeedBack | RecommendationFeedBack,
     recordingMbid?: string
   ) => void;
-  className?: string;
   isCurrentUser: Boolean;
   removePinFromPinsList: (pin: PinnedRecording) => void;
   newAlert: (
@@ -196,7 +194,7 @@ export default class PinnedRecordingCard extends React.Component<
         newAlert={newAlert}
         additionalMenuItems={additionalMenuItems}
         additionalContent={blurb}
-        thumbnail={thumbnail}
+        customThumbnail={thumbnail}
       />
     );
   }

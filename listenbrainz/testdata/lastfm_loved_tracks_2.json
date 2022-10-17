@@ -1,0 +1,121 @@
+{
+  "lovedtracks": {
+    "track": [
+      {
+        "artist": {
+          "url": "https:\/\/www.last.fm\/music\/Mila+J",
+          "name": "Mila J",
+          "mbid": "7ffcff92-d71b-4f0b-a578-c959ded4ba49"
+        },
+        "date": {
+          "uts": "1664153478",
+          "#text": "26 Sep 2022, 00:51"
+        },
+        "mbid": "",
+        "url": "https:\/\/www.last.fm\/music\/Mila+J\/_\/Kickin%E2%80%99+Back",
+        "name": "Kickin’ Back",
+        "image": [
+          {
+            "size": "small",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/34s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/64s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "large",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/174s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/300x300\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          }
+        ],
+        "streamable": {
+          "fulltrack": "0",
+          "#text": "0"
+        }
+      },
+      {
+        "artist": {
+          "url": "https:\/\/www.last.fm\/music\/Thuy",
+          "name": "Thuy",
+          "mbid": ""
+        },
+        "date": {
+          "uts": "1664149583",
+          "#text": "25 Sep 2022, 23:46"
+        },
+        "mbid": "0124ea45-0328-455a-b0c4-3b522bdb976c",
+        "url": "https:\/\/www.last.fm\/music\/Thuy\/_\/universe",
+        "name": "universe",
+        "image": [
+          {
+            "size": "small",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/34s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/64s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "large",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/174s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/300x300\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          }
+        ],
+        "streamable": {
+          "fulltrack": "0",
+          "#text": "0"
+        }
+      },
+      {
+        "artist": {
+          "url": "https:\/\/www.last.fm\/music\/Beyonc%C3%A9",
+          "name": "Beyoncé",
+          "mbid": "859d0860-d480-4efd-970c-c05d5f1776b8"
+        },
+        "date": {
+          "uts": "1664045391",
+          "#text": "24 Sep 2022, 18:49"
+        },
+        "mbid": "2446a9ae-6e63-3273-bfc9-58eed8571d7a",
+        "url": "https:\/\/www.last.fm\/music\/Beyonc%C3%A9\/_\/End+of+Time",
+        "name": "End of Time",
+        "image": [
+          {
+            "size": "small",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/34s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/64s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "large",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/174s\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https:\/\/lastfm.freetls.fastly.net\/i\/u\/300x300\/2a96cbd8b46e442fc41c2b86b821562f.png"
+          }
+        ],
+        "streamable": {
+          "fulltrack": "0",
+          "#text": "0"
+        }
+      }
+    ],
+    "@attr": {
+      "user": "lucifer",
+      "totalPages": "2",
+      "page": "2",
+      "perPage": "5",
+      "total": "8"
+    }
+  }
+}

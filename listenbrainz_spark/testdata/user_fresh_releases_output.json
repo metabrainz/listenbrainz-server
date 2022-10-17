@@ -1,0 +1,79 @@
+[
+  {
+    "user_id": 2,
+    "releases": [
+      {
+        "release_name": "So Good",
+        "release_mbid": "daa1e865-42d9-46d5-b272-c92c099dbc2d",
+        "artist_credit_name": "Halsey",
+        "artist_mbids": [
+          "3377f3bb-60fc-4403-aea9-7e800612e060"
+        ],
+        "date": "2022-6-9",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": null,
+        "caa_id": 33759180025,
+        "confidence": 3
+      },
+      {
+        "release_name": "Raja Jatt (from the Movie ’Sher Bagga’)",
+        "release_mbid": "a202dc7e-cb61-4ecd-87d0-3bedf597f8cc",
+        "artist_credit_name": "Ammy Virk & Simar Kaur",
+        "artist_mbids": [
+          "b5da230b-f1fc-4822-af88-03f91891fccd",
+          "7803ba53-9ed3-40e4-b6fe-5e76d27eb811"
+        ],
+        "date": "2022-5-27",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Soundtrack",
+        "caa_id": 33709392020,
+        "confidence": 2
+      },
+      {
+        "release_name": "nothing has changed",
+        "release_mbid": "5be2dc20-13c7-4d8a-945c-fcf2d1815a98",
+        "artist_credit_name": "sadfem",
+        "artist_mbids": [
+          "28e4d96a-e405-4a43-9b30-baf4f8fa7a29"
+        ],
+        "date": "2022-5-30",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": null,
+        "caa_id": null,
+        "confidence": 1
+      }
+    ]
+  },
+  {
+    "user_id": 1,
+    "releases": [
+      {
+        "release_name": "ARuFa・恐山の匿名ラジオCD2 〜ぶどうゼリーの章〜",
+        "release_mbid": "db4fda62-744b-440c-ae4b-a690be0d7bba",
+        "artist_credit_name": "ARuFa / ダ・ヴィンチ・恐山",
+        "artist_mbids": [
+          "9d091774-d913-4412-acee-edd882ff7cac",
+          "b78ce5fa-fde8-4e51-9b9e-f25d3c477cb8"
+        ],
+        "date": "2022-5-17",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": null,
+        "caa_id": null,
+        "confidence": 4
+      },
+      {
+        "release_name": "Uvod…",
+        "release_mbid": "3e39dbe2-1753-4c69-9118-f2c4f46c7111",
+        "artist_credit_name": "Тишина",
+        "artist_mbids": [
+          "cf2bd942-6e78-480d-a6f5-67b04f879f14"
+        ],
+        "date": "2022-5-30",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": null,
+        "caa_id": null,
+        "confidence": 1
+      }
+    ]
+  }
+]

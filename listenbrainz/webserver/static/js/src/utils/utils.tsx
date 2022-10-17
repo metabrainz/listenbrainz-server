@@ -8,6 +8,9 @@ import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
 import NamePill from "../personal-recommendations/NamePill";
 
+const originalFetch = window.fetch;
+const fetchWithRetry = require("fetch-retry")(originalFetch);
+
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
   trackName?: string,
@@ -146,8 +149,9 @@ const getReleaseGroupMBID = (listen: Listen): string | undefined =>
 const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
   _.get(listen, "track_metadata.track_name", "") || _.get(listen, "title", "");
 
-const getTrackDuration = (listen?: Listen | JSPFTrack): number =>
+const getTrackDurationInMs = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "track_metadata.additional_info.duration_ms", "") ||
+  _.get(listen, "track_metadata.additional_info.duration", "") * 1000 ||
   _.get(listen, "duration", "");
 
 const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
@@ -297,7 +301,6 @@ const preciseTimestamp = (
         year: "numeric",
         hour: "numeric",
         minute: "numeric",
-        hour12: true,
       })}`;
     case "excludeYear":
       return `${listenDate.toLocaleString(undefined, {
@@ -305,7 +308,6 @@ const preciseTimestamp = (
         month: "short",
         hour: "numeric",
         minute: "numeric",
-        hour12: true,
       })}`;
     default:
       return `${timeago.ago(listened_at)}`;
@@ -468,8 +470,22 @@ const getAlbumArtFromListenMetadata = async (
   const releaseMBID = getReleaseMBID(listen);
   if (releaseMBID) {
     try {
-      const CAAResponse = await fetch(
-        `https://coverartarchive.org/release/${releaseMBID}`
+      const CAAResponse = await fetchWithRetry(
+        `https://coverartarchive.org/release/${releaseMBID}`,
+        {
+          retries: 4,
+          retryOn: [429],
+          retryDelay(attempt: number) {
+            // Exponential backoff at random interval between maxRetryTime and minRetryTime,
+            // adding minRetryTime for every attempt. `attempt` starts at 0
+            const maxRetryTime = 2500;
+            const minRetryTime = 1800;
+            const clampedRandomTime =
+              Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
+            // Make it exponential
+            return Math.floor(clampedRandomTime) * 2 ** attempt;
+          },
+        }
       );
       if (CAAResponse.ok) {
         const body: CoverArtArchiveResponse = await CAAResponse.json();
@@ -477,19 +493,20 @@ const getAlbumArtFromListenMetadata = async (
           return undefined;
         }
 
-        const frontImage =
-          body.images.find((image) => image.front) ?? body.images[0];
-        if (frontImage.thumbnails) {
-          const { thumbnails } = frontImage;
-          return (
-            thumbnails[250] ??
-            thumbnails.small ??
-            // If neither of the above exists, return the first one we find
-            // @ts-ignore
-            thumbnails[Object.keys(thumbnails)?.[0]]
-          );
+        const frontImage = body.images.find((image) => image.front);
+
+        if (frontImage?.id) {
+          // CAA links are http redirects instead of https, causing LB-1067 (mixed content warning).
+          // We also don't need or want the redirect from CAA, instead we can reconstruct
+          // the link to the underlying archive.org resource directly
+          // Also see https://github.com/metabrainz/listenbrainz-server/commit/9e40ad440d0b280b6c53d13e804f911657469c8b
+          const { id } = frontImage;
+          return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${id}_thumb250.jpg`;
         }
-        return frontImage.image;
+
+        // No front image? Fallback to whatever the first image is
+        const { thumbnails, image } = body.images[0];
+        return thumbnails[250] ?? thumbnails.small ?? image;
       }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -688,7 +705,7 @@ export {
   getArtistMBIDs,
   getArtistName,
   getTrackName,
-  getTrackDuration,
+  getTrackDurationInMs,
   pinnedRecordingToListen,
   getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,

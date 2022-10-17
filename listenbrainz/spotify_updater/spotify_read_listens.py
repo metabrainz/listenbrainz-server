@@ -99,7 +99,6 @@ def _convert_spotify_play_to_listen(play, listen_type):
         'tracknumber': track.get('track_number'),
         'spotify_artist_ids': spotify_artist_ids,
         'artist_names': artist_names,
-        'listening_from': 'spotify',
         'discnumber': track.get('disc_number'),
         'duration_ms': track.get('duration_ms'),
         'spotify_album_id': album.get('external_urls', {}).get('spotify'),
@@ -108,6 +107,8 @@ def _convert_spotify_play_to_listen(play, listen_type):
         'release_artist_names': release_artist_names,
         # Named 'album_*' because Spotify calls it album and this is spotify-specific
         'spotify_album_artist_ids': spotify_album_artist_ids,
+        'submission_client': 'listenbrainz',
+        'music_service': 'spotify.com'
     }
     isrc = track.get('external_ids', {}).get('isrc')
     spotify_url = track.get('external_urls', {}).get('spotify')
@@ -115,6 +116,7 @@ def _convert_spotify_play_to_listen(play, listen_type):
         additional['isrc'] = isrc
     if spotify_url:
         additional['spotify_id'] = spotify_url
+        additional['origin_url'] = spotify_url
 
     listen['track_metadata'] = {
         'artist_name': artist_name,

@@ -17,7 +17,7 @@ def get_pg_timezone():
             SELECT * FROM pg_timezone_names
             ORDER BY name
         """))
-        timezones = [(row["name"], row["utc_offset"]) for row in result.fetchall()]
+        timezones = [(row.name, row.utc_offset) for row in result.fetchall()]
         timezones = standardize_timezone(timezones)
         return timezones
 
@@ -39,12 +39,12 @@ def get(user_id: int):
             """), {
                 "user_id": user_id,
             })
-
-            if result.rowcount:
-                user_setting = dict(result.fetchone())
-                if not user_setting["timezone_name"]:
-                    user_setting["timezone_name"] = DEFAULT_TIMEZONE
-                return user_setting
+            row = result.mappings().first()
+            if row:
+                row = dict(row)
+                if not row["timezone_name"]:
+                    row["timezone_name"] = DEFAULT_TIMEZONE
+                return row
             return {"timezone_name": DEFAULT_TIMEZONE}
         except sqlalchemy.exc.ProgrammingError as err:
             raise DatabaseException(

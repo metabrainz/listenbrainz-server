@@ -53,7 +53,7 @@ class TimescaleListenStore:
          table so that we can avoid the expensive lookup for a brand new user."""
         query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, NULL, NULL, NOW())"""
         with timescale.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(query), user_id=user_id)
+            connection.execute(sqlalchemy.text(query), {"user_id": user_id})
 
     def get_listen_count_for_user(self, user_id: int):
         """Get the total number of listens for a user.
@@ -73,10 +73,10 @@ class TimescaleListenStore:
 
         with timescale.engine.connect() as connection:
             query = "SELECT count, created FROM listen_user_metadata WHERE user_id = :user_id"
-            result = connection.execute(sqlalchemy.text(query), user_id=user_id)
+            result = connection.execute(sqlalchemy.text(query), {"user_id": user_id})
             row = result.fetchone()
             if row:
-                count, created = row["count"], row["created"]
+                count, created = row.count, row.created
             else:
                 # we can reach here only in tests, because we create entries in listen_user_metadata
                 # table when user signs up and for existing users an entry should always exist.
@@ -88,10 +88,11 @@ class TimescaleListenStore:
                  WHERE user_id = :user_id
                    AND created > :created
             """
-            result = connection.execute(sqlalchemy.text(query_remaining),
-                                        user_id=user_id,
-                                        created=created)
-            remaining_count = result.fetchone()["remaining_count"]
+            result = connection.execute(
+                sqlalchemy.text(query_remaining),
+                {"user_id": user_id, "created": created}
+            )
+            remaining_count = result.fetchone().remaining_count
 
             total_count = count + remaining_count
             cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), total_count, REDIS_USER_LISTEN_COUNT_EXPIRY)
@@ -141,11 +142,11 @@ class TimescaleListenStore:
                JOIN last_update ON TRUE
         """
         with timescale.engine.connect() as connection:
-            result = connection.execute(text(query), user_id=user_id)
+            result = connection.execute(text(query), {"user_id": user_id})
             row = result.fetchone()
             if row is None:
                 return 0, 0
-            return row["min_ts"], row["max_ts"]
+            return row.min_ts, row.max_ts
 
     def get_total_listen_count(self):
         """ Returns the total number of listens stored in the ListenStore.
@@ -162,7 +163,7 @@ class TimescaleListenStore:
                 result = connection.execute(sqlalchemy.text(query))
                 # psycopg2 returns the `value` as a DECIMAL type which is not recognized
                 # by msgpack/redis. so cast to python int first.
-                count = int(result.fetchone()["value"] or 0)
+                count = int(result.fetchone().value or 0)
         except psycopg2.OperationalError:
             self.log.error("Cannot query listen counts:", exc_info=True)
             raise
@@ -270,8 +271,10 @@ class TimescaleListenStore:
                     done = True
                     break
 
-                curs = connection.execute(sqlalchemy.text(query), user_id=user["id"],
-                                          from_ts=from_ts, to_ts=to_ts, limit=limit)
+                curs = connection.execute(
+                    sqlalchemy.text(query),
+                    {"user_id": user["id"], "from_ts": from_ts, "to_ts": to_ts, "limit": limit}
+                )
                 while True:
                     result = curs.fetchone()
                     if not result:
@@ -300,14 +303,14 @@ class TimescaleListenStore:
                         break
 
                     listens.append(Listen.from_timescale(
-                        listened_at=result["listened_at"],
-                        track_name=result["track_name"],
-                        user_id=result["user_id"],
-                        created=result["created"],
-                        data=result["data"],
-                        recording_mbid=result["recording_mbid"],
-                        release_mbid=result["release_mbid"],
-                        artist_mbids=result["artist_mbids"],
+                        listened_at=result.listened_at,
+                        track_name=result.track_name,
+                        user_id=result.user_id,
+                        created=result.created,
+                        data=result.data,
+                        recording_mbid=result.recording_mbid,
+                        release_mbid=result.release_mbid,
+                        artist_mbids=result.artist_mbids,
                         user_name=user["musicbrainz_id"]
                     ))
 
@@ -371,16 +374,16 @@ class TimescaleListenStore:
                 result = curs.fetchone()
                 if not result:
                     break
-                user_name = user_id_map[result["user_id"]]
+                user_name = user_id_map[result.user_id]
                 listens.append(Listen.from_timescale(
-                    listened_at=result["listened_at"],
-                    track_name=result["track_name"],
-                    user_id=result["user_id"],
-                    created=result["created"],
-                    data=result["data"],
-                    recording_mbid=result["recording_mbid"],
-                    release_mbid=result["release_mbid"],
-                    artist_mbids=result["artist_mbids"],
+                    listened_at=result.listened_at,
+                    track_name=result.track_name,
+                    user_id=result.user_id,
+                    created=result.created,
+                    data=result.data,
+                    recording_mbid=result.recording_mbid,
+                    release_mbid=result.release_mbid,
+                    artist_mbids=result.artist_mbids,
                     user_name=user_name
                 ))
         return listens
@@ -476,7 +479,7 @@ class TimescaleListenStore:
         """
         try:
             with timescale.engine.begin() as connection:
-                connection.execute(sqlalchemy.text(query), user_id=user_id)
+                connection.execute(sqlalchemy.text(query), {"user_id": user_id})
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise
@@ -502,8 +505,10 @@ class TimescaleListenStore:
         """
         try:
             with timescale.engine.begin() as connection:
-                connection.execute(sqlalchemy.text(query), listened_at=listened_at,
-                                   user_id=user_id, recording_msid=recording_msid)
+                connection.execute(
+                    sqlalchemy.text(query),
+                    {"listened_at": listened_at, "user_id": user_id, "recording_msid": recording_msid}
+                )
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException

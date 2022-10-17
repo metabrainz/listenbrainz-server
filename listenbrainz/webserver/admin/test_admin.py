@@ -1,13 +1,11 @@
 import listenbrainz.db.user as db_user
+from listenbrainz.tests.integration import IntegrationTestCase
 
-from listenbrainz.webserver.testing import ServerTestCase
-from listenbrainz.db.testing import DatabaseTestCase
 
-class AdminTestCase(ServerTestCase, DatabaseTestCase):
+class AdminTestCase(IntegrationTestCase):
 
     def setUp(self):
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+        IntegrationTestCase.setUp(self)
         self.authorized_user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(self.authorized_user['musicbrainz_id'])
         self.unauthorized_user = db_user.get_or_create(2, 'blahblahblah')

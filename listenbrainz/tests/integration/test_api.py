@@ -1,5 +1,6 @@
 import json
 import time
+from unittest.mock import patch
 
 import pytest
 from flask import url_for
@@ -8,7 +9,6 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 
@@ -35,10 +35,9 @@ class APITestCase(ListenAPIIntegrationTestCase):
             url, query_string={'max_ts': '1400000000', 'min_ts': '1500000000'})
         self.assert400(response)
 
+    @patch("listenbrainz.webserver.timescale_connection._ts", None)
     def test_get_listens_ts_unavailable(self):
         """Check that an error message is returned if the listenstore is unavailable"""
-        timescale_connection._ts = None
-
         url = url_for('api_v1.get_listens',
                       user_name=self.user['musicbrainz_id'])
         response = self.client.get(url)
@@ -82,14 +81,10 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['listens'][0]['track_metadata']
                          ['release_name'], 'The Life of Pablo')
         self.assertEqual(data['listens'][0]['track_metadata']
-                         ['additional_info']['listening_from'], 'spotify')
+                         ['additional_info']['music_service'], 'spotify.com')
 
         # make sure that artist msid, release msid and recording msid are present in data
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
-        self.assertTrue(is_valid_uuid(
-            data['listens'][0]['track_metadata']['additional_info']['artist_msid']))
-        self.assertTrue(is_valid_uuid(
-            data['listens'][0]['track_metadata']['additional_info']['release_msid']))
 
         # check for latest listen timestamp
         self.assertEqual(data['latest_listen_ts'], ts)
@@ -286,8 +281,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         time.sleep(1.1)
 
         # should have expired by now
-        r = self.client.get(url_for('api_v1.get_playing_now',
-                                    user_name=self.user['musicbrainz_id']))
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
         self.assertEqual(r.json['payload']['count'], 0)
 
     def test_playing_now_with_duration_ms(self):
@@ -540,6 +534,21 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
+
+    def test_string_duration_conversion(self):
+        """Test that api converts string durations to integer if possible (but users are discouraged from doing this)"""
+        with open(self.path_to_data_file('valid_duration.json'), 'r') as f:
+            payload = json.load(f)
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_ms"] = "300000"
+
+        response = self.send_data(payload, recalculate=True)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, 1, query_string={'count': '1'})
+        self.assert200(response)
+        self.assertEqual(300000, response.json["payload"]["listens"][0]["track_metadata"]["additional_info"]["duration_ms"])
 
     def test_unicode_null_error(self):
         with open(self.path_to_data_file('listen_having_unicode_null.json'), 'r') as f:
@@ -940,7 +949,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         r = self.client.get(url_for("social_api_v1.get_followers", user_name=self.followed_user["musicbrainz_id"]))
         self.assert200(r)
-        self.assertListEqual([self.user.musicbrainz_id], r.json['followers'])
+        self.assertListEqual([self.user["musicbrainz_id"]], r.json['followers'])
 
     def test_following_returns_the_people_who_follow_the_user(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
@@ -953,7 +962,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def test_follow_user(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
 
     def test_follow_user_requires_login(self):
         r = self.client.post(self.follow_user_url)
@@ -965,14 +974,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert404(r)
 
     def test_following_yourself_errors_out(self):
-        r = self.client.post(url_for("social_api_v1.follow_user", user_name=self.user.musicbrainz_id),
+        r = self.client.post(url_for("social_api_v1.follow_user", user_name=self.user["musicbrainz_id"]),
                              headers=self.follow_user_headers)
         self.assert400(r)
 
     def test_follow_user_twice_leads_to_error(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
 
         # now, try to follow again, this time expecting a 400
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
@@ -982,19 +991,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # first, follow the user
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
 
         # now, unfollow and check the db
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
                              headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertFalse(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+        self.assertFalse(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
 
     def test_unfollow_not_following_user(self):
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
                              headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertFalse(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+        self.assertFalse(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
 
     def test_unfollow_user_requires_login(self):
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]))

@@ -183,7 +183,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
 
-        time.sleep(3)
+        ts2 = time.time()
         new_user = db_user.get_or_create(4, 'new_user')
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
@@ -206,7 +206,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         # check that it honors min_ts as well
         events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
             user_ids=(self.user['id'], new_user['id']),
-            min_ts=ts + 1,
+            min_ts=ts2,
             max_ts=ts + 10,
             count=50,
         )

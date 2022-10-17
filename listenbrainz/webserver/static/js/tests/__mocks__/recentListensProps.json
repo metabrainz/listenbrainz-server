@@ -25,7 +25,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 268629,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "973e5620-829d-46dd-89a8-760d87076287",
               "release_artist_name": "SOHN",
               "release_artist_names": [
@@ -67,7 +67,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 197720,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "1b91585d-7e91-4e16-8ea1-63b32c1c3a71",
               "release_artist_name": "SOHN",
               "release_artist_names": [
@@ -109,7 +109,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 207060,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "aa6469c3-fc7b-4f71-b788-9fe09397599a",
               "release_artist_name": "SOHN",
               "release_artist_names": [
@@ -151,7 +151,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 183467,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "3b25d198-ef1c-477a-9cb4-2f304c68b30e",
               "release_artist_name": "SOHN",
               "release_artist_names": [
@@ -193,7 +193,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 267046,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "f13ccd3f-7969-4c68-a7c8-d941d9dd7792",
               "release_artist_name": "SOHN",
               "release_artist_names": [
@@ -235,7 +235,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 223095,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "f2fb4d7b-ab6c-4f19-9c8c-40c19b9d547e",
               "release_artist_name": "SOHN",
               "release_artist_names": [
@@ -277,7 +277,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 244186,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "3e0ec489-916d-40dd-8230-87dff3615ae9",
               "release_artist_name": "SOHN",
               "release_artist_names": [
@@ -319,7 +319,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 220765,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "5049f89c-6f3c-42af-8425-629463c90d01",
               "release_artist_name": "Ankur Tewari",
               "release_artist_names": [
@@ -361,7 +361,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 191172,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "45fab49f-02d0-46da-92a9-c61fd6538100",
               "release_artist_name": "Ankur Tewari",
               "release_artist_names": [
@@ -404,7 +404,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 250960,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "ec532252-9d27-4905-a51b-259b05f7275c",
               "release_artist_name": "Beyoncé",
               "release_artist_names": [
@@ -448,7 +448,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 266920,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "fdca6309-7995-4ba7-949e-7a90188195a2",
               "release_artist_name": "Beyoncé",
               "release_artist_names": [
@@ -491,7 +491,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 230893,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "e1416ebe-85c8-4c2b-b8df-49bd5f034710",
               "release_artist_name": "Beyoncé",
               "release_artist_names": [
@@ -534,7 +534,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 276560,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "7c903c79-401c-4aec-a55c-62becf7a07d0",
               "release_artist_name": "Beyoncé",
               "release_artist_names": [
@@ -578,7 +578,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 250960,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "ec532252-9d27-4905-a51b-259b05f7275c",
               "release_artist_name": "Beyoncé",
               "release_artist_names": [
@@ -621,7 +621,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 281518,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "933f16fa-25aa-44d2-a683-234bbd3d71d6",
               "release_artist_name": "Drake",
               "release_artist_names": [
@@ -663,7 +663,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 235566,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "454f5461-102b-4b71-bcdf-8aed09e2cbd8",
               "release_artist_name": "Drake",
               "release_artist_names": [
@@ -707,7 +707,7 @@
               ],
               "discnumber": 2,
               "duration_ms": 197652,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "7d27a3e1-0918-4366-9ee8-8ac61cd0c305",
               "release_artist_name": "Rae Sremmurd, Swae Lee, Slim Jxmmi",
               "release_artist_names": [
@@ -757,7 +757,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 250337,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "1836080b-050b-414a-8345-824b600941be",
               "release_artist_name": "Drake",
               "release_artist_names": [
@@ -801,7 +801,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 107673,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "c1c52262-596e-4be4-8ffe-847a48198934",
               "release_artist_name": "Drake",
               "release_artist_names": [
@@ -843,7 +843,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 298940,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "605181e8-1b79-4e17-99ad-f4aa75f1ec23",
               "release_artist_name": "Drake",
               "release_artist_names": [
@@ -885,7 +885,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 223275,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "0c512050-554f-4372-853c-8d81363b8d32",
               "release_artist_name": "Swae Lee",
               "release_artist_names": [
@@ -928,7 +928,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 142273,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "f918904b-ba07-4fd1-aa1e-3d56f361983a",
               "release_artist_name": "Lil Baby",
               "release_artist_names": [
@@ -973,7 +973,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 173973,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "47ca076c-c518-41ec-be3a-100ad1255967",
               "release_artist_name": "Drake",
               "release_artist_names": [
@@ -1017,7 +1017,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 178626,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "2e8dec65-10a6-4fb4-a8dc-fe26dee92ace",
               "release_artist_name": "Ariana Grande",
               "release_artist_names": [
@@ -1059,7 +1059,7 @@
               ],
               "discnumber": 1,
               "duration_ms": 186873,
-              "listening_from": "spotify",
+              "music_service": "spotify.com",
               "recording_msid": "ab8d8149-0032-4f49-a668-1185672585de",
               "release_artist_name": "Prateek Kuhad",
               "release_artist_names": [
@@ -1106,6 +1106,5 @@
     "youtube": {
         "api_key": "fake-api-key"
     },
-    "webSocketsServerUrl": "",
     "searchLargerTimeRange": 0
 }

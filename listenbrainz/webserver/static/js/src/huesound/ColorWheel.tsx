@@ -17,24 +17,34 @@ type ColorWheelProps = {
   radius: number;
   lineWidth: number;
   onColorSelected: (rgbValue: string) => void;
-  padding: number;
-  spacers: {
+  padding?: number;
+  spacers?: {
     colour: string;
     shadowColor: string;
     shadowBlur: number | string;
   };
-  colours: string[];
-  shades: number;
-  dynamicCursor: boolean;
-  preset: boolean;
-  presetColor: string;
-  animated: boolean;
+  colours?: string[];
+  shades?: number;
+  dynamicCursor?: boolean;
+  preset?: boolean;
+  presetColor?: string;
+  animated?: boolean;
   onRef?: (arg?: ColorWheel) => void;
 };
 type ColorWheelState = {
   rgb: { r: string | number; g: string | number; b: string | number } | null;
   innerWheelOpen: boolean;
   centerCircleOpen: boolean;
+};
+
+const defaultProps = {
+  colours: defaultColors,
+  shades: 16,
+  padding: 0,
+  dynamicCursor: true,
+  preset: false,
+  animated: true,
+  presetColor: "",
 };
 
 // Global-vars:
@@ -58,17 +68,6 @@ export default class ColorWheel extends React.Component<
   canvasEl: React.RefObject<HTMLCanvasElement>;
   ctx: any = null;
 
-  static defaultProps = {
-    colours: defaultColors,
-    shades: 16,
-    padding: 0,
-    dynamicCursor: true,
-    preset: false,
-    animated: true,
-    spacers: {},
-    presetColor: "",
-  };
-
   constructor(props: ColorWheelProps) {
     super(props);
 
@@ -91,8 +90,10 @@ export default class ColorWheel extends React.Component<
 
     // Setting effective radii:
     this.outerWheelRadius = radius;
-    this.innerWheelRadius = this.outerWheelRadius - lineWidth - padding;
-    this.centerCircleRadius = this.innerWheelRadius - lineWidth - padding;
+    this.innerWheelRadius =
+      this.outerWheelRadius - lineWidth - (padding ?? defaultProps.padding);
+    this.centerCircleRadius =
+      this.innerWheelRadius - lineWidth - (padding ?? defaultProps.padding);
     this.firstSpacerRadius = this.outerWheelRadius - lineWidth; // NOTE: effectiveRadius will take into account padding as lineWidth.
     this.secondSpacerRadius = this.innerWheelRadius - lineWidth;
 
@@ -121,7 +122,7 @@ export default class ColorWheel extends React.Component<
     this.ctx = this.canvasEl.current?.getContext("2d");
 
     if (preset) {
-      const rgb = colourToRgbObj(presetColor);
+      const rgb = colourToRgbObj(presetColor ?? defaultProps.presetColor);
 
       this.setState({ rgb }, () => {
         this.drawOuterWheel();
@@ -306,7 +307,9 @@ export default class ColorWheel extends React.Component<
     const effectiveRadius = getEffectiveRadius(radius, lineWidth);
 
     // Converting each colour into a relative rgb-object we can iterate through.
-    const rgbArr = colours.map((colour) => colourToRgbObj(colour));
+    const rgbArr = (colours ?? defaultProps.colours).map((colour) =>
+      colourToRgbObj(colour)
+    );
 
     rgbArr.forEach((rgb, i) => {
       this.ctx.beginPath();
@@ -340,16 +343,19 @@ export default class ColorWheel extends React.Component<
   }
 
   drawSpacer(spacerRadius: number) {
-    const {
-      radius,
-      padding,
-      spacers: { colour, shadowColor, shadowBlur },
-    } = this.props;
+    const { radius, padding, spacers } = this.props;
+    if (!spacers) {
+      return;
+    }
+    const { colour, shadowColor, shadowBlur } = spacers;
 
     const height = radius * 2;
     const width = radius * 2;
 
-    const effectiveRadius = getEffectiveRadius(spacerRadius, padding);
+    const effectiveRadius = getEffectiveRadius(
+      spacerRadius,
+      padding ?? defaultProps.padding
+    );
 
     this.ctx.beginPath();
 
@@ -398,7 +404,12 @@ export default class ColorWheel extends React.Component<
     this.drawSpacers();
     let rgbShades: any[] = [];
     if (rgb) {
-      rgbShades = produceRgbShades(rgb.r, rgb.g, rgb.b, shades);
+      rgbShades = produceRgbShades(
+        rgb.r,
+        rgb.g,
+        rgb.b,
+        shades ?? defaultProps.shades
+      );
     }
 
     // Different functions for drawing our inner-wheel of shades.
