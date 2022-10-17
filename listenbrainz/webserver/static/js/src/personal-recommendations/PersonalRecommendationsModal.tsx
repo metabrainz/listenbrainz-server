@@ -1,8 +1,6 @@
 import * as React from "react";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
-import { uniq, includes, remove } from "lodash";
+import { uniq, includes } from "lodash";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import ListenControl from "../listens/ListenControl";
 import NamePill from "./NamePill";
 import {
   getTrackName,
@@ -122,14 +120,14 @@ export default class PersonalRecommendationModal extends React.Component<
     const { blurbContent, users } = this.state;
     const { APIService, currentUser } = this.context;
 
-    if (currentUser?.auth_token) {
+    if (recordingToPersonallyRecommend && currentUser?.auth_token) {
       const metadata: UserTrackPersonalRecommendationMetadata = {
         artist_name: getArtistName(recordingToPersonallyRecommend),
         track_name: getTrackName(recordingToPersonallyRecommend),
         release_name: recordingToPersonallyRecommend!.track_metadata
           .release_name,
-        recording_mbid: getRecordingMBID(recordingToPersonallyRecommend!),
-        recording_msid: getRecordingMSID(recordingToPersonallyRecommend!),
+        recording_mbid: getRecordingMBID(recordingToPersonallyRecommend),
+        recording_msid: getRecordingMSID(recordingToPersonallyRecommend),
         users,
         blurb_content: blurbContent,
       };
@@ -213,7 +211,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 // eslint-disable-next-line react/jsx-no-bind
                 action={this.addUser}
               />
-              <p style={{ marginTop: "24px", marginBottom: "24px" }}>
+              <p>
                 Tell the users selected above why are you recommending them{" "}
                 <b>
                   {" "}
@@ -233,7 +231,7 @@ export default class PersonalRecommendationModal extends React.Component<
                   onChange={this.handleBlurbInputChange}
                 />
               </div>
-              <small style={{ display: "block", textAlign: "right" }}>
+              <small>
                 {blurbContent.length} / {this.maxBlurbContentLength}
               </small>
             </div>

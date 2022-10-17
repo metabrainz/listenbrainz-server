@@ -518,8 +518,8 @@ declare type UserTrackRecommendationMetadata = {
 
 /** For recommending a track personally from the front-end */
 declare type UserTrackPersonalRecommendationMetadata = UserTrackRecommendationMetadata & {
-  blurb_content: string | null;
-  users: Array<string> | null;
+  blurb_content: string;
+  users: Array<string>;
 };
 
 declare type PinEventMetadata = Listen & {
