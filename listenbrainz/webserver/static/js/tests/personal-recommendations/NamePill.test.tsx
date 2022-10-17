@@ -14,7 +14,6 @@ const mockAction = jest.fn();
 
 const props: NamePillProps = {
   title: "foobar",
-  closeButton: true,
   closeAction: mockAction,
 };
 
@@ -30,10 +29,13 @@ describe("NamePill", () => {
     expect(mockAction).toHaveBeenCalledTimes(1);
   });
 
-  it("renders according to closeButton", () => {
-    const wrapper = mount(
-      <NamePill title="foobar" closeButton={false} closeAction={mockAction} />
-    );
+  it("renders a close button if closeAction is a function", () => {
+    const wrapper = mount(<NamePill title="foobar" closeAction={() => {}} />);
+    expect(wrapper.find("button").exists()).toBeTruthy();
+  });
+
+  it("does not render a close button if closeAction is not a function (undefined)", () => {
+    const wrapper = mount(<NamePill title="foobar" />);
     expect(wrapper.find("button").exists()).toBeFalsy();
   });
 });

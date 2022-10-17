@@ -3,7 +3,6 @@
 exports[`NamePill renders correctly 1`] = `
 <NamePill
   closeAction={[MockFunction]}
-  closeButton={true}
   title="foobar"
 >
   <div

@@ -195,7 +195,6 @@ export default class PersonalRecommendationModal extends React.Component<
                     title={user}
                     // eslint-disable-next-line react/jsx-no-bind
                     closeAction={this.removeUser.bind(this, user)}
-                    closeButton
                   />
                 );
               })}
