@@ -4,7 +4,7 @@ import ListenControl from "../listens/ListenControl";
 
 export type SearchDropDownProps = {
   action: (event: string) => void;
-  suggestions?: Array<string> | null;
+  suggestions?: Array<string>;
 };
 
 const SearchDropDown = (props: SearchDropDownProps) => {

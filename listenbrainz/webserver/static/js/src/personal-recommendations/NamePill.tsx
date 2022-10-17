@@ -15,7 +15,7 @@ const NamePill = (props: NamePillProps) => {
     <div className="pill">
       <div>
         <span>{title}</span>
-        {isFunction(closeButton) && (
+        {closeButton && (
           <ListenControl text="" icon={faTimesCircle} action={closeAction} />
         )}
       </div>

@@ -29,4 +29,11 @@ describe("NamePill", () => {
     wrapper.find("button").at(0).simulate("click");
     expect(mockAction).toHaveBeenCalledTimes(1);
   });
+
+  it("renders according to closeButton", () => {
+    const wrapper = mount(
+      <NamePill title="foobar" closeButton={false} closeAction={mockAction} />
+    );
+    expect(wrapper.find("button").exists()).toBeFalsy();
+  });
 });

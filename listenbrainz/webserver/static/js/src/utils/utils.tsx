@@ -658,7 +658,7 @@ export function getPersonalRecommendationEventContent(
     <>
       {isCreator && (
         <div style={{ paddingBottom: "10px" }}>
-          {eventMetadata.users!.map((userName) => {
+          {eventMetadata.users.map((userName) => {
             return <NamePill title={userName} />;
           })}
         </div>
