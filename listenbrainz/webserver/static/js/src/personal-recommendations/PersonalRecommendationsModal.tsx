@@ -148,7 +148,7 @@ export default class PersonalRecommendationModal extends React.Component<
           this.setState({ blurbContent: "" });
         }
       } catch (error) {
-        this.handleError(error, "Error while personally recommending");
+        this.handleError(error, "Error while recommending a track");
       }
     }
   };
