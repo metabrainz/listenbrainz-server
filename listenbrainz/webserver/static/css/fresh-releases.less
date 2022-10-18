@@ -1,12 +1,9 @@
 .releases-page {
   // FILTERS
   .filters-main {
+    top: 4rem;
+    position: sticky;
     padding: 2rem 0;
-
-    #filters-sticky {
-      position: fixed;
-      width: inherit;
-    }
 
     #filters-container {
       display: flex;
@@ -254,16 +251,14 @@
 
   // TIMELINE
   .releases-timeline {
-    overflow: hidden;
-
-    #timeline-sticky {
-      position: fixed;
-      width: inherit;
-    }
+    top: 6rem;
+    position: sticky;
+    height: 68vh;
+    width: inherit;
+    padding-bottom: 6rem;
 
     .slider {
-      height: 62vh;
-      margin-left: 1em;
+      height: 100%;
 
       .slider-legend {
         text-transform: uppercase;
