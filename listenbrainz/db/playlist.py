@@ -15,29 +15,6 @@ TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
 
 
-def check_playlist_exists_and_is_visible(playlist_id: str, user_id: int) -> bool:
-    """ Check whether a playlist with given mbid exists and is visible to the specified user """
-    query = sqlalchemy.text("""
-        SELECT pl.id, pl.creator_id, pl.public
-          FROM playlist.playlist AS pl
-         WHERE pl.mbid = :mbid 
-    """)
-    with ts.engine.connect() as connection:
-        result = connection.execute(query, {"mbid": playlist_id})
-        playlist = result.first()
-        if playlist is None:
-            return False
-
-        if playlist.public or user_id == playlist.creator_id:
-            return True
-
-        collaborators = get_collaborators_for_playlists(connection, playlist.id)
-        if user_id in collaborators[playlist.id]:
-            return True
-
-        return False
-
-
 def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
     """Get a playlist given its mbid
 

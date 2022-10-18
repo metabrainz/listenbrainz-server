@@ -7,13 +7,12 @@ from flask import Blueprint, current_app, jsonify, request
 import requests
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-import listenbrainz.db.external_service_oauth as db_external
 from listenbrainz.domain.spotify import SPOTIFY_LISTEN_PERMISSIONS, SpotifyService
 from listenbrainz.troi.export import export_to_spotify
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
     _filter_description_html
@@ -709,16 +708,12 @@ def export_playlist(playlist_mbid, service):
     :statuscode 404: Playlist not found
     :resheader Content-Type: *application/json*
     """
-
     user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    if not db_playlist.check_playlist_exists_and_is_visible(playlist_mbid, user["id"]):
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
-
-    if service != 'spotify':
+    if service != "spotify":
         raise APIBadRequest(f"Service name {service} is invalid or currently not supported")
 
     spotify_service = SpotifyService()
@@ -731,9 +726,12 @@ def export_playlist(playlist_mbid, service):
                             f" Please relink your {service} account with appropriate scopes.")
 
     if spotify_service.user_oauth_token_has_expired(token):
-        token = spotify_service.refresh_access_token(token['user_id'], token['refresh_token'])
+        token = spotify_service.refresh_access_token(token["user_id"], token["refresh_token"])
 
     is_public = parse_boolean_arg("is_public", True)
-
-    url = export_to_spotify(user["auth_token"], token["access_token"], playlist_mbid, is_public)
-    return jsonify({'external_url': url})
+    try:
+        url = export_to_spotify(user["auth_token"], token["access_token"], playlist_mbid, is_public)
+        return jsonify({"external_url": url})
+    except requests.exceptions.HTTPError as exc:
+        error = exc.response.json()
+        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
