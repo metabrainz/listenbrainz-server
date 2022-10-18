@@ -92,6 +92,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/user-settings/SelectTimezone.tsx"
       ),
+      selectTroiPreferences: path.resolve(
+        jsDir,
+        "src/user-settings/SelectTroiPreferences.tsx"
+      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
