@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Slider from "rc-slider";
+import { countBy, zipObject } from "lodash";
 import { formattedReleaseDate } from "./utils";
 
 type ReleaseTimelineProps = {
@@ -14,11 +15,10 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
 
   const [minSliderDate, setMinSliderDate] = useState<number>(0);
   const [maxSliderDate, setMaxSliderDate] = useState<number>(100);
-  const [currentValue, setCurrentValue] = useState<number>(
-    new Date().getTime()
-  );
+  const [currentValue, setCurrentValue] = useState<number>(51);
+  const [marks, setMarks] = useState<{ [key: number]: string }>({});
 
-  const MS_TO_DAY = 1000 * 60 * 60 * 24;
+  // const MS_TO_DAY = 1000 * 60 * 60 * 24;
 
   function getDatesInRange(startDate: any, endDate: any) {
     const date = new Date(startDate.getTime());
@@ -31,14 +31,36 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     setMaxSliderDate(new Date(dates[dates.length - 1]).getTime());
   }
 
-  const onDateChange = (newDate: any) => {
-    setCurrentValue(newDate);
+  function createMarks(data: FreshReleaseItem[]) {
+    const releasesPerDate = countBy(releases, (item) => item.release_date);
+    const datesArr = Object.keys(releasesPerDate).map((item) =>
+      formattedReleaseDate(item)
+    );
+    const percentArr = Object.values(releasesPerDate)
+      .map((item) => Math.floor((item / data.length) * 100))
+      .map((_, index, arr) =>
+        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+      );
+    percentArr.unshift(0);
+    percentArr.pop();
+    return zipObject(percentArr, datesArr);
+  }
+
+  // const onDateChange = (newDate: any) => {
+  //   setCurrentValue(newDate);
+  // };
+
+  const changeHandler = (percent: any) => {
+    const pageScrollHeight = document.documentElement.scrollHeight;
+    const scrollYPx = (percent / 100) * pageScrollHeight;
+    window.scrollTo(0, Math.round(scrollYPx));
   };
 
   useEffect(() => {
     getDatesInRange(new Date(minDate), new Date(maxDate));
     setCurrentValue(currentValue);
-  }, []);
+    setMarks(createMarks(releases));
+  }, [releases]);
 
   function renderSlider() {
     if (minSliderDate && maxSliderDate) {
@@ -47,12 +69,11 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
           <div className="slider-legend">{formattedReleaseDate(minDate)}</div>
           <Slider
             vertical
+            reverse
             included={false}
-            step={MS_TO_DAY}
-            min={minSliderDate}
-            max={maxSliderDate}
+            marks={marks}
             value={currentValue}
-            onChange={onDateChange}
+            onChange={changeHandler}
           />
           <div className="slider-legend">{formattedReleaseDate(maxDate)}</div>
         </div>
