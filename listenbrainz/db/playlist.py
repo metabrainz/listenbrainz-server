@@ -1,7 +1,6 @@
 import collections
 import datetime
 from typing import List, Optional
-from flask import current_app
 
 import sqlalchemy
 import ujson
