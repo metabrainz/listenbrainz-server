@@ -1,9 +1,11 @@
 """ This module contains code to run the various troi-bot functions after
     recommendations have been generated.
 """
-from flask import current_app, url_for
+from flask import current_app
 from sqlalchemy import text
 from troi.core import generate_playlist
+from troi.patches.recs_to_playlist import RecommendationsToPlaylistPatch
+from troi.patches.daily_jams import DailyJamsPatch
 
 from listenbrainz import db
 from listenbrainz.db.playlist import TROI_BOT_USER_ID, TROI_BOT_DEBUG_USER_ID
@@ -56,8 +58,15 @@ def make_playlist_from_recommendations(user):
         Save the top 100 tracks from the current tracks you might like into a playlist.
     """
     token = current_app.config["WHITELISTED_AUTH_TOKENS"][1]
-    for type in ["top", "similar"]:
-        generate_playlist("recs-to-playlist", args=[user, type], upload=True, token=token, created_for=user)
+    args = {
+        "user_name": user,
+        "upload": True,
+        "token": token,
+        "created_for": user
+    }
+    for recs_type in ["top", "similar"]:
+        args["type"] = recs_type
+        generate_playlist(RecommendationsToPlaylistPatch(), args)
 
 
 def run_daily_jams(user, jam_date):
@@ -65,8 +74,15 @@ def run_daily_jams(user, jam_date):
         Run the daily-jams patch to create the daily playlist for the given user.
     """
     token = current_app.config["WHITELISTED_AUTH_TOKENS"][0]
+    args = {
+        "user_name": user,
+        "upload": True,
+        "token": token,
+        "created_for": user,
+        "jam_date": jam_date
+    }
     try:
-        playlist = generate_playlist("daily-jams", args=[user, jam_date], upload=True, token=token, created_for=user)
+        playlist = generate_playlist(DailyJamsPatch(), args)
     except RuntimeError as err:
         current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user, str(err)))
         return
