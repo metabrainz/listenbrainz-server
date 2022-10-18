@@ -8,11 +8,15 @@ from psycopg2.errors import OperationalError
 import psycopg2.extras
 import ujson
 from psycopg2.extras import execute_values
+from psycopg2.sql import SQL, Literal
 
 from mapping.utils import insert_rows, log
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 import config
+
+
+MB_METADATA_CACHE_TIMESTAMP_KEY = "mb_metadata_cache_last_update_timestamp"
 
 
 class MusicBrainzMetadataCache(BulkInsertTable):
@@ -642,6 +646,33 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         log("mb metadata update: Done!")
 
 
+def select_metadata_cache_timestamp(conn):
+    """ Retrieve the last time the mb metadata cache update was updated """
+    query = SQL("SELECT value FROM background_worker_state WHERE key = {key}")\
+        .format(key=Literal(MB_METADATA_CACHE_TIMESTAMP_KEY))
+    try:
+        with conn.cursor() as curs:
+            curs.execute(query)
+            row = curs.fetchone()
+            if row is None:
+                log("mb metadata cache: last update timestamp in missing from background worker state")
+                return None
+            return datetime.fromisoformat(row[0])
+    except psycopg2.errors.UndefinedTable:
+        log("mb metadata cache: background_worker_state table is missing, create the table to record update timestamps")
+        return None
+
+
+def update_metadata_cache_timestamp(conn, ts: datetime):
+    """ Update the timestamp of metadata creation in database. The incremental update process will read this
+     timestamp next time it runs and only update cache for rows updated since then in MB database. """
+    query = SQL("UPDATE background_worker_state SET value = %s WHERE key = {key}") \
+        .format(key=Literal(MB_METADATA_CACHE_TIMESTAMP_KEY))
+    with conn.cursor() as curs:
+        curs.execute(query, (ts.isoformat()))
+    conn.commit()
+
+
 def create_mb_metadata_cache(use_lb_conn: bool):
     """
         Main function for creating the MB metadata cache and its related tables.
@@ -661,8 +692,10 @@ def create_mb_metadata_cache(use_lb_conn: bool):
             log("mb metadata cache: canonical_release_redirect table doesn't exist, run `canonical-data` manage command first with --use-mb-conn option")
             return
 
+        new_timestamp = datetime.now()
         cache = MusicBrainzMetadataCache(mb_conn, lb_conn)
         cache.run()
+        update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp)
 
 
 def incremental_update_mb_metadata_cache(use_lb_conn: bool):
@@ -681,9 +714,13 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
 
         log("mb metadata cache: starting incremental update")
 
-        # TODO: Update logic to get last update timestamp
-        timestamp = datetime(2022, 10, 11, 0, 0, 0)
+        timestamp = select_metadata_cache_timestamp(lb_conn or mb_conn)
+        if not timestamp:
+            return
+
+        new_timestamp = datetime.now()
         recording_mbids = cache.query_last_updated_items(timestamp)
         cache.update_dirty_cache_items(recording_mbids)
+        update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp)
 
         log("mb metadata cache: incremental update completed")
