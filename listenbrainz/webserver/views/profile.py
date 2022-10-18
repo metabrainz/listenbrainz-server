@@ -68,6 +68,16 @@ def select_timezone():
     )
 
 
+@profile_bp.route("/troi/", methods=["GET", "OPTIONS"])
+@login_required
+def set_troi_prefs():
+    current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
+    return render_template(
+        "profile/troi_prefs.html",
+        props=ujson.dumps({"troi_prefs": current_troi_prefs})
+    )
+
+
 @profile_bp.route("/resetlatestimportts/", methods=["GET", "POST"])
 @login_required
 def reset_latest_import_timestamp():

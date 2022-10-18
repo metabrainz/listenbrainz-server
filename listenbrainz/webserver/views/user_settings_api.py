@@ -22,7 +22,7 @@ user_settings_api_bp = Blueprint('user_settings_api_v1', __name__)
 @ratelimit()
 def reset_timezone():
     """
-    Reset localtimezone for user. A user token (found on  https://listenbrainz.org/profile/)
+    Reset local timezone for user. A user token (found on https://listenbrainz.org/profile/)
     must be provided in the Authorization header! 
 
     :reqheader Authorization: Token <user token>
@@ -45,4 +45,35 @@ def reset_timezone():
         db_usersetting.set_timezone(user["id"], zonename)
     except Exception as e:
         raise APIInternalServerError("Something went wrong! Unable to update timezone right now.")
+    return jsonify({"status": "ok"})
+
+
+@user_settings_api_bp.route('/troi', methods=["POST", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def update_troi_prefs():
+    """
+    Update troi preferences for the user. A user token (found on https://listenbrainz.org/profile/)
+    must be provided in the Authorization header!
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: timezone reset.
+    :statuscode 400: Bad request. See error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+    try:
+        data = ujson.loads(request.get_data())
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+    if "export_to_spotify" not in data:
+        raise APIBadRequest("JSON document must contain export_to_spotify key", data)
+
+    export_to_spotify = data["export_to_spotify"]
+    if type(export_to_spotify) != bool:
+        raise APIBadRequest("export_to_spotify key in the JSON document must be a boolean", data)
+
+    db_usersetting.update_troi_prefs(user["id"], export_to_spotify)
     return jsonify({"status": "ok"})
