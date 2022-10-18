@@ -618,11 +618,15 @@ export default class PlaylistPage extends React.Component<
       searchInputValue,
       cachedSearchResults,
     } = this.state;
-    const { APIService } = this.context;
+    const { APIService, spotifyAuth } = this.context;
     const { newAlert } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
     const isOwner = this.isOwner();
+
+    const showSpotifyExportButton = spotifyAuth?.permission?.includes(
+      "playlist-modify-public"
+    );
 
     const customFields = getPlaylistExtension(playlist);
 
@@ -689,17 +693,21 @@ export default class PlaylistPage extends React.Component<
                           </li>
                         </>
                       )}
-                      <li role="separator" className="divider" />
-                      <li>
-                        <a
-                          role="button"
-                          href="#"
-                          onClick={this.exportToSpotify}
-                        >
-                          <FontAwesomeIcon icon={faSpotify as IconProp} />{" "}
-                          Export to Spotify
-                        </a>
-                      </li>
+                      {showSpotifyExportButton && (
+                        <>
+                          <li role="separator" className="divider" />
+                          <li>
+                            <a
+                              role="button"
+                              href="#"
+                              onClick={this.exportToSpotify}
+                            >
+                              <FontAwesomeIcon icon={faSpotify as IconProp} />{" "}
+                              Export to Spotify
+                            </a>
+                          </li>
+                        </>
+                      )}
                     </ul>
                   </span>
                 </div>
