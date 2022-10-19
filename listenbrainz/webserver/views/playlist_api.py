@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, jsonify, request
 import requests
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-from listenbrainz.domain.spotify import SPOTIFY_LISTEN_PERMISSIONS, SpotifyService
+from listenbrainz.domain.spotify import SPOTIFY_LISTEN_PERMISSIONS, SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.troi.export import export_to_spotify
 
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -714,16 +714,17 @@ def export_playlist(playlist_mbid, service):
         log_raise_400("Provided playlist ID is invalid.")
 
     if service != "spotify":
-        raise APIBadRequest(f"Service name {service} is invalid or currently not supported")
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
 
     spotify_service = SpotifyService()
     token = spotify_service.get_user(user["id"])
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
 
-    if not SPOTIFY_LISTEN_PERMISSIONS.issubset(set(token["scopes"])):
-        raise APIBadRequest(f"Missing required scopes to export playlists."
-                            f" Please relink your {service} account with appropriate scopes.")
+    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+        raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
+                            f" to use this feature.")
 
     if spotify_service.user_oauth_token_has_expired(token):
         token = spotify_service.refresh_access_token(token["user_id"], token["refresh_token"])

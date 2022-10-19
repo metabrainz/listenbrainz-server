@@ -383,8 +383,7 @@ class HandlersTestCase(DatabaseTestCase):
             self.app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token0", "fake_token1"]
 
             mock_gen_playlist.return_value = "https://listenbrainz.org/playlist/97889d4d-1474-4a9b-925a-851148356f9d/"
-            mock_get_followers.side_effect = [[{"musicbrainz_id": "lucifer"}], [{"musicbrainz_id": "lucifer"}],
-                                              [{"musicbrainz_id": "lucifer"}], [{"musicbrainz_id": "lucifer"}]]
+            mock_get_followers.return_value = [{"musicbrainz_id": "lucifer"}]
 
             cf_recording_recommendations_complete({
                 'active_user_count': active_user_count,
@@ -395,8 +394,8 @@ class HandlersTestCase(DatabaseTestCase):
             mock_send_mail.assert_not_called()
 
             calls = [
-                call("recs-to-playlist", args=["lucifer", "top"], upload=True, token="fake_token1", created_for="lucifer"),
-                call("recs-to-playlist", args=["lucifer", "similar"], upload=True, token="fake_token1", created_for="lucifer"),
+                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'type': 'top'}),
+                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'type': 'similar'}),
             ]
             mock_gen_playlist.assert_has_calls(calls)
 

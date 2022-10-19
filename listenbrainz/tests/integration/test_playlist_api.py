@@ -1114,7 +1114,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"], "Service name lastfm is invalid or currently not supported")
+        self.assertEqual(response.json["error"], "Service lastfm is not supported. We currently only support 'spotify'.")
 
         response = self.client.post(
             url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
@@ -1140,8 +1140,12 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"], "Missing required scopes to export playlists. "
-                                                 "Please relink your spotify account with appropriate scopes.")
+        self.assertEqual(
+            response.json["error"],
+            "Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+            " Please relink your spotify account from ListenBrainz settings with appropriate scopes"
+            " to use this feature."
+        )
 
         db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, True)
 

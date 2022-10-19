@@ -65,8 +65,10 @@ def make_playlist_from_recommendations(user):
         "created_for": user
     }
     for recs_type in ["top", "similar"]:
-        args["type"] = recs_type
-        generate_playlist(RecommendationsToPlaylistPatch(), args)
+        # need to copy dict so that test mocks keep working
+        _args = args.copy()
+        _args["type"] = recs_type
+        generate_playlist(RecommendationsToPlaylistPatch(), _args)
 
 
 def run_daily_jams(user, jam_date):
