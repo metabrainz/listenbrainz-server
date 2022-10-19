@@ -46,7 +46,7 @@ RECORDING_LINK_GIDS = (
     '7e41ef12-a124-4324-afdb-fdbae687a89c',
     'b5f3058a-666c-406f-aafb-f9249fc7b122'
 )
-RECORDING_LINK_GIDS_SQL = ", ".format(RECORDING_LINK_GIDS)
+RECORDING_LINK_GIDS_SQL = ", ".join(RECORDING_LINK_GIDS)
 
 
 class MusicBrainzMetadataCache(BulkInsertTable):
