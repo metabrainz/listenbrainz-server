@@ -99,7 +99,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
           </div>
         ) : (
           <>
-            <div className="filters-main col-md-1 hidden-xs hidden-sm hidden-md">
+            <div className="filters-main col-xs-12 col-md-1">
               <ReleaseFilters
                 allFilters={allFilters}
                 releases={releases}

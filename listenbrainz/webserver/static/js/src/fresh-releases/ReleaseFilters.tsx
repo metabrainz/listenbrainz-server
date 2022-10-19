@@ -98,7 +98,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         </div>
         <div id="filters-list">
           {allFilters.map((type, index) => (
-            <div>
+            <span>
               <input
                 id={`filters-item-${index}`}
                 className="type-container"
@@ -119,7 +119,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               >
                 {type}
               </label>
-            </div>
+            </span>
           ))}
         </div>
       </div>
