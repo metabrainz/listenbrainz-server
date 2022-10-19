@@ -404,13 +404,13 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         curs.execute('SET join_collapse_limit = 15')
 
     def query_last_updated_items(self, timestamp):
-        # there queries here try to mirror the structure and logic of the main cache building queries
+        # there queries mirror the structure and logic of the main cache building queries
         # note that the tags queries in any of these omit the count > 0 clause because possible removal
         # of a tag is also a change.
         # the last_updated considered and last_updated ignored columns below together list all the last_updated
         # columns a given CTE touches. any other tables touched by a given CTE do not have a last_updated column.
 
-        # further note that these queries only take updates and deletions into consideration, not deletes
+        # these queries only take updates and deletions into consideration, not deletes
 
         # 1. artist_rels, artist_data, artist_tags, artist
         # these CTEs and tables concern artist data and we fetch artist mbids from these. all of the CTEs touch
