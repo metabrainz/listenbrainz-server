@@ -218,7 +218,6 @@ class StatsAPITestCase(IntegrationTestCase):
             this method also accepts a count and offset parameter denoting how many stats and which
             entries to check.
         """
-        self.maxDiff = None
         self.assert200(response)
 
         sent = request[0]
