@@ -27,15 +27,18 @@ def run_post_recommendation_troi_bot():
 
 def run_daily_jams_troi_bot():
     """ Top level function called hourly to generate daily jams playlists for users """
-
     # Now generate daily jams (and other in the future) for users who follow troi bot
     users = get_users_for_daily_jams()
     # TODO: Add endpoint to configure auto-export to spotify and do check scopes,
     #  coordinate with linking/delinking account
     service = SpotifyService()
     for user in users:
-        run_daily_jams(user, service)
-        # Add others here
+        try:
+            run_daily_jams(user, service)
+            # Add others here
+        except RuntimeError as err:
+            current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user["musicbrainz_id"], str(err)))
+            return
 
 
 def get_users_for_daily_jams():
@@ -88,22 +91,19 @@ def run_daily_jams(user, service):
         "created_for": username,
         "jam_date": user["jam_date"]
     }
-    try:
-        if user["export_to_spotify"]:
-            token = service.get_user(user["id"], refresh=True)
-            sp = spotipy.Spotify(auth=token["access_token"])
-            spotify_user_id = sp.current_user()["id"]
-            args["spotify"] = {
-                "is_public": True,
-                "is_collaborative": False,
-                "user_id": spotify_user_id,
-                "token": token["access_token"]
-            }
 
-        playlist = generate_playlist(DailyJamsPatch(), args)
-    except RuntimeError as err:
-        current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (username, str(err)))
-        return
+    if user["export_to_spotify"]:
+        token = service.get_user(user["id"], refresh=True)
+        sp = spotipy.Spotify(auth=token["access_token"])
+        spotify_user_id = sp.current_user()["id"]
+        args["spotify"] = {
+            "is_public": True,
+            "is_collaborative": False,
+            "user_id": spotify_user_id,
+            "token": token["access_token"]
+        }
+
+    playlist = generate_playlist(DailyJamsPatch(), args)
 
     if len(playlist.playlists) > 0:
         url = current_app.config["SERVER_ROOT_URL"] + "/playlist/" + playlist.playlists[0].mbid
