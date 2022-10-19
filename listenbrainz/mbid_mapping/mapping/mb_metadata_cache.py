@@ -619,7 +619,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 log("mb metadata update: Running looooong query on dirty items")
                 query = self.get_metadata_cache_query(with_values=True)
                 values = [(mbid,) for mbid in recording_mbids]
-                print(values)
                 execute_values(mb_curs, query, values, page_size=len(values))
 
                 rows = []
@@ -722,6 +721,11 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
         new_timestamp = datetime.now()
         recording_mbids = cache.query_last_updated_items(timestamp)
         cache.update_dirty_cache_items(recording_mbids)
+
+        if len(recording_mbids) == 0:
+            log("mb metadata cache: no recording mbids found to update")
+            return
+
         update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp)
 
         log("mb metadata cache: incremental update completed")
