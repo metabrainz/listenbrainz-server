@@ -887,7 +887,6 @@ describe("recommendTrackToFollowers", () => {
           release_mbid: "release_mbid",
           recording_msid: "recording_msid",
           recording_mbid: "recording_mbid",
-          artist_msid: "artist_msid",
         },
       },
     };
@@ -1344,19 +1343,16 @@ describe("resetUserTimezone", () => {
 
   it("calls fetch with correct parameters", async () => {
     await apiService.resetUserTimezone("foobar", "America/Denver");
-    expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/settings/timezone",
-      {
-        method: "POST",
-        headers: {
-          Authorization: "Token foobar",
-          "Content-Type": "application/json;charset=UTF-8",
-        },
-        body: JSON.stringify({
-          zonename: "America/Denver"
-        }),
-      }
-    );
+    expect(window.fetch).toHaveBeenCalledWith("foobar/1/settings/timezone", {
+      method: "POST",
+      headers: {
+        Authorization: "Token foobar",
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        zonename: "America/Denver",
+      }),
+    });
   });
 
   it("calls checkStatus once", async () => {
