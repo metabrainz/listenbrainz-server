@@ -3,3 +3,6 @@
 
 # Run the huesound color sync hourly
 10 * * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py update-coverart >> /code/mapper/lb-cron.log 2>&1
+
+# Rebuild the spotify metadata index every friday at 1 A.M.
+0 1 * * 5 listenbrainz /usr/local/bin/python /code/mapper/manage.py build-spotify-metadata-index >> /code/mapper/cron-spotify-metadata-index.log 2>&1
