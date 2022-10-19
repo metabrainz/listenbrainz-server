@@ -32,7 +32,8 @@ jobs:
       with:
         build-args: GIT_COMMIT_SHA=${{ steps.get_tag.outputs.TAG }}
         cache-from: metabrainz/listenbrainz:cache
-        cache-to: metabrainz/listenbrainz:cache
+        # use type=max to cache intermediate layers as well
+        cache-to: type=registry,mode-max,oci-mediatypes=true,compression=zstd,compression-level=7,ref=metabrainz/listenbrainz:cache
         push: true
         tags: metabrainz/listenbrainz:${{ steps.get_tag.outputs.TAG }}
         target: listenbrainz-prod
