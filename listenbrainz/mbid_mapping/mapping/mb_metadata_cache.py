@@ -669,7 +669,7 @@ def update_metadata_cache_timestamp(conn, ts: datetime):
     query = SQL("UPDATE background_worker_state SET value = %s WHERE key = {key}") \
         .format(key=Literal(MB_METADATA_CACHE_TIMESTAMP_KEY))
     with conn.cursor() as curs:
-        curs.execute(query, (ts.isoformat()))
+        curs.execute(query, (ts.isoformat(),))
     conn.commit()
 
 
