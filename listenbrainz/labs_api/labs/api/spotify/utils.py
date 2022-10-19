@@ -40,7 +40,7 @@ def query_combined_lookup(column: LookupType, lookups: list[tuple]):
         return {row[0]: row[1] for row in result}
 
 
-def perform_one_lookup(column, metadata, generate_lookup):
+def perform_lookup(column, metadata, generate_lookup):
     """ Given the lookup type and a function to generate to the lookup text, query database for spotify track ids """
     if not metadata:
         return metadata, {}
@@ -92,10 +92,10 @@ def lookup_using_metadata(params: list[dict]):
         metadata[idx] = item
 
     # first attempt matching on artist, track and release followed by trying various detunings for unmatched recordings
-    _, remaining_items = perform_one_lookup(LookupType.ALL, metadata, combined_all)
-    _, remaining_items = perform_one_lookup(LookupType.ALL, remaining_items, combined_all_detuned)
-    _, remaining_items = perform_one_lookup(LookupType.WITHOUT_ALBUM, remaining_items, combined_without_album)
-    _, remaining_items = perform_one_lookup(LookupType.WITHOUT_ALBUM, remaining_items, combined_without_album_detuned)
+    _, remaining_items = perform_lookup(LookupType.ALL, metadata, combined_all)
+    _, remaining_items = perform_lookup(LookupType.ALL, remaining_items, combined_all_detuned)
+    _, remaining_items = perform_lookup(LookupType.WITHOUT_ALBUM, remaining_items, combined_without_album)
+    _, remaining_items = perform_lookup(LookupType.WITHOUT_ALBUM, remaining_items, combined_without_album_detuned)
 
     # to the still unmatched recordings, add null value so that each item has in the response has spotify_track_id key
     for item in remaining_items.values():
