@@ -717,7 +717,7 @@ def export_playlist(playlist_mbid, service):
         raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
 
     spotify_service = SpotifyService()
-    token = spotify_service.get_user(user["id"])
+    token = spotify_service.get_user(user["id"], refresh=True)
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
 
@@ -725,9 +725,6 @@ def export_playlist(playlist_mbid, service):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
-
-    if spotify_service.user_oauth_token_has_expired(token):
-        token = spotify_service.refresh_access_token(token["user_id"], token["refresh_token"])
 
     is_public = parse_boolean_arg("is_public", True)
     try:
