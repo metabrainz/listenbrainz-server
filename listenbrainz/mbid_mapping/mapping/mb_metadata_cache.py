@@ -583,6 +583,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
         try:
             with self.mb_conn.cursor() as curs:
+                self.config_postgres_join_limit(curs)
                 recording_mbids = set()
 
                 log("mb metadata cache: querying recording mbids to update")
