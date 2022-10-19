@@ -715,6 +715,7 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
         log("mb metadata cache: starting incremental update")
 
         timestamp = select_metadata_cache_timestamp(lb_conn or mb_conn)
+        log(f"mb metadata cache: last update timestamp - {timestamp}")
         if not timestamp:
             return
 
