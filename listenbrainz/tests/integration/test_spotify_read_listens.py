@@ -53,9 +53,5 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
         actual_listen['recording_msid'] = expected_listen['recording_msid']
         actual_listen['track_metadata']['additional_info']['recording_msid'] = \
             expected_listen['track_metadata']['additional_info']['recording_msid']
-        actual_listen['track_metadata']['additional_info']['release_msid'] = \
-            expected_listen['track_metadata']['additional_info']['release_msid']
-        actual_listen['track_metadata']['additional_info']['artist_msid'] = \
-            expected_listen['track_metadata']['additional_info']['artist_msid']
 
         self.assertEqual(expected_listen, actual_listen)

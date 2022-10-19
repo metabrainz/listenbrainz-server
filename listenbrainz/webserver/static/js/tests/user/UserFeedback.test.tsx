@@ -184,7 +184,6 @@ describe("UserFeedback", () => {
           score: 1,
           track_metadata: {
             additional_info: {
-              artist_msid: "49cd7874-b996-4caf-bece-cad2997b0fe3",
               recording_mbid: "9812475d-c800-4f29-8a9a-4ac4af4b4dfd",
               release_mbid: "17276c50-dd38-4c62-990e-186ef0ff36f4",
             },
