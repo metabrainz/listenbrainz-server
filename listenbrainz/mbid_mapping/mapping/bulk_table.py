@@ -398,7 +398,7 @@ class BulkInsertTable:
                     total_rows = curs.rowcount
                     log(f"{self.table_name}: fetch {total_rows:,} rows")
                     while True:
-                        batch = curs.fetchmany(1000)
+                        batch = curs.fetchmany(BATCH_SIZE)
                         if len(batch) == 0:
                             break
 
