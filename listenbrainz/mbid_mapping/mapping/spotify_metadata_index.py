@@ -29,6 +29,10 @@ class SpotifyMetadataIndex(BulkInsertTable):
                 ("score",                            "INTEGER NOT NULL")]
 
     def get_insert_queries(self):
+        """ Retrieve the album name, track name, artist name for all tracks in spotify cache in a specific order.
+        These name fields will be used to calculate a lookup for each track which will then be used for matching
+        purposes. The order by determines the tie-breaking score in case of multiple rows have the same lookup.
+        """
         return [("LB", """
                     SELECT album.spotify_id AS album_id
                          , album.name AS album_name
@@ -37,7 +41,9 @@ class SpotifyMetadataIndex(BulkInsertTable):
                          , track.spotify_id AS track_id
                          , track.name AS track_name
                          , track.track_number AS track_number
+                         -- retrieve track artists in same order as they appear on the spotify track
                          , array_agg(ARRAY[artist.name, artist.spotify_id] ORDER BY rta.position) AS artists
+                         -- prefer albums over single over compilations.
                          , CASE 
                             WHEN album.type = 'album' THEN 1
                             WHEN album.type = 'single' THEN 2
@@ -71,13 +77,14 @@ class SpotifyMetadataIndex(BulkInsertTable):
         ]
 
     def process_row(self, row):
-
+        """ Calculate lookup for each track and assign a score based on ordering """
         artist_names = " ".join([a[0] for a in row["artists"]])
         artist_ids = [a[1] for a in row["artists"]]
         self.row_id += 1
 
         combined_lookup_all = unidecode(re.sub(r'[^\w]+', '', artist_names + row["album_name"] + row["track_name"]).lower())
         combined_lookup_without_album = unidecode(re.sub(r'[^\w]+', '', artist_names + row["track_name"]).lower())
+
         return {"mapping.spotify_metadata_index": [
             (
                 artist_ids,
