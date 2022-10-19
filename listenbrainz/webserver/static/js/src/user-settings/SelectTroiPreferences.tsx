@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sentry_traces_sample_rate,
   } = globalReactProps;
   const { troi_prefs } = reactProps;
-  const exportToSpotify = troi_prefs?.export_to_spotify ?? false;
+  const exportToSpotify = troi_prefs?.troi?.export_to_spotify ?? false;
 
   if (sentry_dsn) {
     Sentry.init({
