@@ -19,6 +19,36 @@ import config
 MB_METADATA_CACHE_TIMESTAMP_KEY = "mb_metadata_cache_last_update_timestamp"
 
 
+ARTIST_LINK_GIDS = (
+    '99429741-f3f6-484b-84f8-23af51991770',
+    'fe33d22f-c3b0-4d68-bd53-a856badf2b15',
+    '689870a4-a1e4-4912-b17f-7b2664215698',
+    '93883cf6-e818-4938-990e-75863f8db2d3',
+    '6f77d54e-1d81-4e1a-9ea5-37947577151b',
+    'e4d73442-3762-45a8-905c-401da65544ed',
+    '611b1862-67af-4253-a64f-34adba305d1d',
+    'f8319a2f-f824-4617-81c8-be6560b3b203',
+    '34ae77fe-defb-43ea-95d4-63c7540bac78',
+    '769085a1-c2f7-4c24-a532-2375a77693bd',
+    '63cc5d1f-f096-4c94-a43f-ecb32ea94161',
+    '6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0'
+)
+ARTIST_LINK_GIDS_SQL = Literal(", ".join(ARTIST_LINK_GIDS))
+
+RECORDING_LINK_GIDS = (
+    '628a9658-f54c-4142-b0c0-95f031b544da',
+    '59054b12-01ac-43ee-a618-285fd397e461',
+    '0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa',
+    '234670ce-5f22-4fd0-921b-ef1662695c5d',
+    '3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb',
+    '92777657-504c-4acb-bd33-51a201bd57e1',
+    '45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5',
+    '7e41ef12-a124-4324-afdb-fdbae687a89c',
+    'b5f3058a-666c-406f-aafb-f9249fc7b122'
+)
+RECORDING_LINK_GIDS_SQL = Literal(", ".format(RECORDING_LINK_GIDS))
+
+
 class MusicBrainzMetadataCache(BulkInsertTable):
     """
         This class creates the MB metadata cache
@@ -191,19 +221,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                   JOIN link_type lt
                                     ON l.link_type = lt.id
                                   {values_join}
-                                 WHERE lt.gid IN ('99429741-f3f6-484b-84f8-23af51991770'
-                                                  ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
-                                                  ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
-                                                  ,'689870a4-a1e4-4912-b17f-7b2664215698'
-                                                  ,'93883cf6-e818-4938-990e-75863f8db2d3'
-                                                  ,'6f77d54e-1d81-4e1a-9ea5-37947577151b'
-                                                  ,'e4d73442-3762-45a8-905c-401da65544ed'
-                                                  ,'611b1862-67af-4253-a64f-34adba305d1d'
-                                                  ,'f8319a2f-f824-4617-81c8-be6560b3b203'
-                                                  ,'34ae77fe-defb-43ea-95d4-63c7540bac78'
-                                                  ,'769085a1-c2f7-4c24-a532-2375a77693bd'
-                                                  ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
-                                                  ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
+                                 WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
                               GROUP BY a.gid
                    ), recording_rels AS (
                                 SELECT r.gid
@@ -222,15 +240,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                              LEFT JOIN link_attribute_type lat
                                     ON la.attribute_type = lat.id
                                   {values_join}
-                                 WHERE lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
-                                                  ,'59054b12-01ac-43ee-a618-285fd397e461'
-                                                  ,'0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa'
-                                                  ,'234670ce-5f22-4fd0-921b-ef1662695c5d'
-                                                  ,'3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb'
-                                                  ,'92777657-504c-4acb-bd33-51a201bd57e1'
-                                                  ,'45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5'
-                                                  ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
-                                                  ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
+                                 WHERE lt.gid IN ({RECORDING_LINK_GIDS_SQL})
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
@@ -410,7 +420,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         # the last_updated considered and last_updated ignored columns below together list all the last_updated
         # columns a given CTE touches. any other tables touched by a given CTE do not have a last_updated column.
 
-        # these queries only take updates and deletions into consideration, not deletes
+        # these queries only take updates and deletions into consideration, not deletes. because the deleted data
+        # has already been removed from the database. a periodic rebuild of the entire cache removes deleted rows
 
         # 1. artist_rels, artist_data, artist_tags, artist
         # these CTEs and tables concern artist data and we fetch artist mbids from these. all of the CTEs touch
@@ -423,7 +434,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         # |   artist_data   |  life span, area, type, gender |  area                              | artist
         # |   artist_tags   |  artist tags                   |  recording_tag, genre              | artist
         # |   artist        |                                |  artist                            |
-        artist_mbids_query = """
+        artist_mbids_query = f"""
         WITH artist_mbids(id) AS (
             SELECT a.id
               FROM artist a
@@ -435,18 +446,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 ON lau.link = l.id
               JOIN link_type lt
                 ON l.link_type = lt.id
-             WHERE lt.gid IN ('99429741-f3f6-484b-84f8-23af51991770'
-                             ,'fe33d22f-c3b0-4d68-bd53-a856badf2b15'
-                             ,'689870a4-a1e4-4912-b17f-7b2664215698'
-                             ,'93883cf6-e818-4938-990e-75863f8db2d3'
-                             ,'6f77d54e-1d81-4e1a-9ea5-37947577151b'
-                             ,'e4d73442-3762-45a8-905c-401da65544ed'
-                             ,'611b1862-67af-4253-a64f-34adba305d1d'
-                             ,'f8319a2f-f824-4617-81c8-be6560b3b203'
-                             ,'34ae77fe-defb-43ea-95d4-63c7540bac78'
-                             ,'769085a1-c2f7-4c24-a532-2375a77693bd'
-                             ,'63cc5d1f-f096-4c94-a43f-ecb32ea94161'
-                             ,'6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0')
+             WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
                    AND (
                         lau.last_updated > %(timestamp)s
                      OR   u.last_updated > %(timestamp)s
@@ -489,7 +489,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         # |   recording_rels |   artist - recording links    |  link relationship related and url | recording, artist
         # |   recording_tags |   recording tags              |  recording_tag, genre              | recording
         # |   recording      |                               |  recording                         |
-        recording_mbids_query = """
+        recording_mbids_query = f"""
                 SELECT r.gid
                   FROM recording r
                   JOIN l_artist_recording lar
@@ -502,15 +502,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     ON la.link = l.id
                   JOIN link_attribute_type lat
                     ON la.attribute_type = lat.id
-                 WHERE lt.gid IN ('628a9658-f54c-4142-b0c0-95f031b544da'
-                                 ,'59054b12-01ac-43ee-a618-285fd397e461'
-                                 ,'0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa'
-                                 ,'234670ce-5f22-4fd0-921b-ef1662695c5d'
-                                 ,'3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb'
-                                 ,'92777657-504c-4acb-bd33-51a201bd57e1'
-                                 ,'45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5'
-                                 ,'7e41ef12-a124-4324-afdb-fdbae687a89c'
-                                 ,'b5f3058a-666c-406f-aafb-f9249fc7b122')
+                 WHERE lt.gid IN ({RECORDING_LINK_GIDS_SQL})
                    AND (
                          lar.last_updated > %(timestamp)s
                       OR  lt.last_updated > %(timestamp)s
