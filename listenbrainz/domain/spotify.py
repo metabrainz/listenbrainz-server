@@ -30,6 +30,11 @@ SPOTIFY_LISTEN_PERMISSIONS = {
     'playlist-modify-private',
 }
 
+SPOTIFY_PLAYLIST_PERMISSIONS = {
+    'playlist-modify-public',
+    'playlist-modify-private'
+}
+
 SPOTIFY_API_RETRIES = 5
 
 
