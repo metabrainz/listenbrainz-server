@@ -106,6 +106,94 @@
     }
   }
 
+  // Mobile responsive filters
+  @media (max-width: @screen-xs) {
+    .filters-main {
+      display: block;
+      padding: 1rem;
+      font-size: small;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: @white;
+      box-shadow: 0px 6px 10px 0px fade(@asphalt, 20%);
+
+      #filters-container {
+        display: block;
+
+        #coverart-checkbox {
+          text-align: center;
+        }
+
+        #release-filters {
+          display: block;
+
+          &:before {
+            content: "";
+            height: 100%;
+            width: 3rem;
+            background: linear-gradient(
+              90deg,
+              rgba(255, 255, 255, 1) 50%,
+              rgba(255, 255, 255, 0) 100%
+            );
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+          }
+
+          &:after {
+            content: "";
+            height: 100%;
+            width: 3rem;
+            background: linear-gradient(
+              -90deg,
+              rgba(255, 255, 255, 1) 50%,
+              rgba(255, 255, 255, 0) 100%
+            );
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 1;
+          }
+
+          #title-container {
+            display: none;
+
+            #type-title {
+              display: none;
+            }
+
+            #clearall-btn-inactive {
+              display: none;
+            }
+
+            #clearall-btn-active {
+              display: none;
+            }
+          }
+
+          #filters-list {
+            font-size: small;
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+
+            .type-name-inactive {
+              margin: 0.5rem 0.25rem;
+            }
+
+            .type-name-active {
+              margin: 0.5rem 0.25rem;
+            }
+          }
+        }
+      }
+    }
+  }
+
   // CARDS
   .release-cards-grid {
     display: grid;
