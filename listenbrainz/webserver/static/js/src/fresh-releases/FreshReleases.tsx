@@ -13,6 +13,7 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import ReleaseCard from "./ReleaseCard";
 import ReleaseFilters from "./ReleaseFilters";
 import ReleaseTimeline from "./ReleaseTimeline";
+import { showTooltipOnOverflow } from "./utils";
 
 type FreshReleasesProps = {
   newAlert: (
@@ -73,6 +74,8 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
   React.useEffect(() => {
     fetchReleases();
   }, [fetchReleases]);
+
+  showTooltipOnOverflow();
 
   return (
     <>
