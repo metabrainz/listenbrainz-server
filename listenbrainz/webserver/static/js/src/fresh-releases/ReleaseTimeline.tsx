@@ -18,8 +18,6 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const [currentValue, setCurrentValue] = useState<number>(51);
   const [marks, setMarks] = useState<{ [key: number]: string }>({});
 
-  // const MS_TO_DAY = 1000 * 60 * 60 * 24;
-
   function getDatesInRange(startDate: any, endDate: any) {
     const date = new Date(startDate.getTime());
     const dates = [];
@@ -31,7 +29,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     setMaxSliderDate(new Date(dates[dates.length - 1]).getTime());
   }
 
-  function createMarks(data: FreshReleaseItem[]) {
+  function createMarks(data: Array<FreshReleaseItem>) {
     const releasesPerDate = countBy(releases, (item) => item.release_date);
     const datesArr = Object.keys(releasesPerDate).map((item) =>
       formattedReleaseDate(item)
@@ -46,19 +44,15 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     return zipObject(percentArr, datesArr);
   }
 
-  // const onDateChange = (newDate: any) => {
-  //   setCurrentValue(newDate);
-  // };
-
-  const changeHandler = (percent: any) => {
+  function changeHandler(percent: number) {
+    setCurrentValue(percent);
     const pageScrollHeight = document.documentElement.scrollHeight;
     const scrollYPx = (percent / 100) * pageScrollHeight;
     window.scrollTo(0, Math.round(scrollYPx));
-  };
+  }
 
   useEffect(() => {
     getDatesInRange(new Date(minDate), new Date(maxDate));
-    setCurrentValue(currentValue);
     setMarks(createMarks(releases));
   }, [releases]);
 
