@@ -25,12 +25,12 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
   const [coverartSrc, setCoverartSrc] = useState<string>(COVERART_PLACEHOLDER);
 
-  const getCoverArt = async () => {
+  async function getCoverArt() {
     const coverartURL = await getAlbumArtFromReleaseMBID(releaseMBID);
     if (coverartURL) {
       setCoverartSrc(coverartURL);
     }
-  };
+  }
 
   useEffect(() => {
     getCoverArt();

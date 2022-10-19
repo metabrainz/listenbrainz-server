@@ -1,4 +1,4 @@
-const formattedReleaseDate = (releaseDate: string) => {
+export function formattedReleaseDate(releaseDate: string) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
@@ -7,7 +7,7 @@ const formattedReleaseDate = (releaseDate: string) => {
     .reverse()
     .map((date_parts) => date_parts.value)
     .join("");
-};
+}
 
 /* All credits to Joackim Pennerup for coming up with
  * a framework/library agnostic solution for this.
@@ -15,7 +15,7 @@ const formattedReleaseDate = (releaseDate: string) => {
  * https://stackoverflow.com/a/72299932/4458075
  *
  */
-function showTooltipOnOverflow() {
+export function showTooltipOnOverflow() {
   let lastMouseOverElement: Element | null = null;
   document.addEventListener("mouseover", function (event) {
     const element = event.target;
@@ -36,6 +36,3 @@ function showTooltipOnOverflow() {
     }
   });
 }
-
-// eslint-disable-next-line import/prefer-default-export
-export { formattedReleaseDate, showTooltipOnOverflow };
