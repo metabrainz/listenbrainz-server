@@ -77,20 +77,16 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
             "data": {
                 "missing_musicbrainz_data": [
                     {
-                        "artist_msid": "f26d35e3-5fdd-43cf-8b94-71936451bc07",
                         "artist_name": "Katty Peri"
                         "listened_at": 1588204593,
                         "recording_msid": "568eeea3-9255-4878-9df8-296043344e04",
-                        "release_msid": "8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
                         "release_name": "No Place Is Home",
                         "track_name": "How High"
                     },
                     {
-                        "artist_msid": "f26d35e3-5fdd-43cf-8b94-71936451bc07",
                         "artist_name": "Welshly Arms",
                         "listened_at": 1588204583,
                         "recording_msid": "b911620d-8541-44e5-a0db-977679efb37d",
-                        "release_msid": "8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
                         "release_name": "No Place Is Home",
                         "track_name": "Sanctuary"
                     }

@@ -134,8 +134,14 @@ describe("UserFeedback", () => {
     expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
     expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
       "pikachu",
-      props.feedback.map((item) => item.recording_msid).join(","),
-      ""
+      props.feedback
+        .map((item) => item.recording_msid)
+        .filter(Boolean)
+        .join(","),
+      props.feedback
+        .map((item) => item.recording_mbid)
+        .filter(Boolean)
+        .join(",")
     );
     await flushPromises();
     expect(instance.state.recordingMsidFeedbackMap).toEqual({
@@ -184,7 +190,6 @@ describe("UserFeedback", () => {
           score: 1,
           track_metadata: {
             additional_info: {
-              artist_msid: "49cd7874-b996-4caf-bece-cad2997b0fe3",
               recording_mbid: "9812475d-c800-4f29-8a9a-4ac4af4b4dfd",
               release_mbid: "17276c50-dd38-4c62-990e-186ef0ff36f4",
             },

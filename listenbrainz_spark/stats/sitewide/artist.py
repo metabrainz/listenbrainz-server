@@ -2,7 +2,7 @@ from listenbrainz_spark.stats import run_query, SITEWIDE_STATS_ENTITY_LIMIT
 
 
 def get_artists(table: str, user_listen_count_limit, top_artists_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
-    """ Get artist information (artist_name, artist_msid etc) for every time range specified
+    """ Get artist information (artist_name etc) for every time range specified
         the "time_range" table ordered by listen count
 
         Args:
