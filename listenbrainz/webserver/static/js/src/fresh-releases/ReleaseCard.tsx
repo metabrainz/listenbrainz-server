@@ -8,7 +8,8 @@ type ReleaseCardProps = {
   releaseMBID: string;
   releaseName: string;
   artistCreditName: string;
-  releaseType: string;
+  releaseTypePrimary: string;
+  releaseTypeSecondary: string;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -16,12 +17,17 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     releaseMBID,
     releaseDate,
     releaseName,
-    releaseType,
     artistMBIDs,
     artistCreditName,
+    releaseTypePrimary,
+    releaseTypeSecondary,
   } = props;
 
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
+  const RELEASE_TYPE_UNKNOWN = "Unknown";
+  const releaseTypeTooltip: string = releaseTypeSecondary
+    ? `${releaseTypePrimary} + ${releaseTypeSecondary}`
+    : releaseTypePrimary;
 
   const [coverartSrc, setCoverartSrc] = useState<string>(COVERART_PLACEHOLDER);
 
@@ -46,7 +52,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
         loading="lazy"
       />
       <div className="name-type-container">
-        <div className="release-name">
+        <div className="release-name" title={releaseName}>
           <a
             href={`https://musicbrainz.org/release/${releaseMBID}`}
             target="_blank"
@@ -55,9 +61,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
             {releaseName}
           </a>
         </div>
-        <div className="release-type-chip">{releaseType}</div>
+        <div className="release-type-chip" title={releaseTypeTooltip}>
+          {releaseTypeSecondary || releaseTypePrimary || RELEASE_TYPE_UNKNOWN}
+        </div>
       </div>
-      <div className="release-artist">
+      <div className="release-artist" title={artistCreditName}>
         <a
           href={`https://musicbrainz.org/artist/${artistMBIDs[0]}`}
           target="_blank"

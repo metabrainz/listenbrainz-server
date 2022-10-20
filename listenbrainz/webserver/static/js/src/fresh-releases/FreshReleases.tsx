@@ -13,7 +13,6 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import ReleaseCard from "./ReleaseCard";
 import ReleaseFilters from "./ReleaseFilters";
 import ReleaseTimeline from "./ReleaseTimeline";
-import { showTooltipOnOverflow } from "./utils";
 
 type FreshReleasesProps = {
   newAlert: (
@@ -24,8 +23,6 @@ type FreshReleasesProps = {
 };
 
 export default function FreshReleases({ newAlert }: FreshReleasesProps) {
-  const RELEASE_TYPE_OTHER = "Other";
-
   const { APIService } = useContext(GlobalAppContext);
 
   const [releases, setReleases] = useState<Array<FreshReleaseItem>>([]);
@@ -56,11 +53,13 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
       const releaseTypes = cleanReleases
         .map(
           (release) =>
-            (release.release_group_primary_type ||
-              release.release_group_secondary_type) ??
-            RELEASE_TYPE_OTHER
+            release.release_group_secondary_type ||
+            release.release_group_primary_type
         )
-        .filter((value, index, self) => self.indexOf(value) === index);
+        .filter(
+          (value, index, self) =>
+            self.indexOf(value) === index && value !== undefined
+        );
 
       setReleases(cleanReleases);
       setFilteredList(cleanReleases);
@@ -74,8 +73,6 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
   React.useEffect(() => {
     fetchReleases();
   }, [fetchReleases]);
-
-  showTooltipOnOverflow();
 
   return (
     <>
@@ -94,7 +91,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
               className="text-muted"
               style={{ fontSize: "2rem", margin: "1rem" }}
             >
-              Loading Fresh Releases...
+              Loading Fresh Releases&#8230;
             </div>
           </div>
         ) : (
@@ -106,7 +103,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
                 setFilteredList={setFilteredList}
               />
             </div>
-            <div className="release-cards-grid col-xs-12 col-md-10">
+            <div className="release-cards-grid col-xs-9 col-md-10">
               {filteredList?.map((release) => {
                 return (
                   <ReleaseCard
@@ -114,18 +111,15 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
                     releaseDate={release.release_date}
                     releaseMBID={release.release_mbid}
                     releaseName={release.release_name}
-                    releaseType={
-                      (release.release_group_primary_type ||
-                        release.release_group_secondary_type) ??
-                      RELEASE_TYPE_OTHER
-                    }
+                    releaseTypePrimary={release.release_group_primary_type}
+                    releaseTypeSecondary={release.release_group_secondary_type}
                     artistCreditName={release.artist_credit_name}
                     artistMBIDs={release.artist_mbids}
                   />
                 );
               })}
             </div>
-            <div className="releases-timeline col-xs-12 col-md-1">
+            <div className="releases-timeline col-xs-3 col-md-1">
               {releases.length > 0 ? (
                 <ReleaseTimeline releases={releases} />
               ) : null}
