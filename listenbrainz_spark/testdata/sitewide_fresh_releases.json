@@ -115,8 +115,6 @@
     "release_group_mbid": "ef1497b6-01ae-4477-94a8-e3e0e9a12125",
     "release_name": "So Cold",
     "artist_credit_name": "44closures",
-    "release_group_primary_type": "Single",
-    "release_group_secondary_type": null,
     "caa_id": 33706994031
   },
   {
@@ -142,7 +140,6 @@
     "release_name": "Endless Garden",
     "artist_credit_name": "Witchfinder",
     "release_group_primary_type": "EP",
-    "release_group_secondary_type": null,
     "caa_id": null
   },
   {
