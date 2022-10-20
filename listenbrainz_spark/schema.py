@@ -16,7 +16,7 @@ listens_new_schema = StructType([
 ])
 
 fresh_releases_schema = StructType([
-    StructField('date', StringType(), nullable=False),
+    StructField('release_date', StringType(), nullable=False),
     StructField('artist_credit_name', StringType(), nullable=False),
     StructField('artist_mbids', ArrayType(StringType()), nullable=False),
     StructField('release_name', StringType(), nullable=False),
