@@ -76,7 +76,7 @@ class SpotifyService(ImporterService):
         """ If refresh = True, then check whether the access token has expired and refresh it
         before returning the user."""
         user = spotify.get_user(user_id)
-        if refresh and self.user_oauth_token_has_expired(user):
+        if user and refresh and self.user_oauth_token_has_expired(user):
             user = self.refresh_access_token(user['user_id'], user['refresh_token'])
         return user
 
