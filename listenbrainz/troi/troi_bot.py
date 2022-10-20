@@ -29,8 +29,6 @@ def run_daily_jams_troi_bot():
     """ Top level function called hourly to generate daily jams playlists for users """
     # Now generate daily jams (and other in the future) for users who follow troi bot
     users = get_users_for_daily_jams()
-    # TODO: Add endpoint to configure auto-export to spotify and do check scopes,
-    #  coordinate with linking/delinking account
     service = SpotifyService()
     for user in users:
         try:
@@ -80,6 +78,28 @@ def make_playlist_from_recommendations(user):
         generate_playlist(RecommendationsToPlaylistPatch(), _args)
 
 
+def _get_spotify_details(user_id, service):
+    """ Get the spotify token and spotify user id for the given user. If an occurs ignore and proceed. """
+    try:
+        token = service.get_user(user_id, refresh=True)
+
+        # will be None, if the user has disconnected the spotify account but not disabled the auto-export preference
+        if not token:
+            return None
+
+        sp = spotipy.Spotify(auth=token["access_token"])
+        spotify_user_id = sp.current_user()["id"]
+        return {
+            "is_public": True,
+            "is_collaborative": False,
+            "user_id": spotify_user_id,
+            "token": token["access_token"]
+        }
+    except Exception:
+        current_app.logger.error("Unable to obtain spotify user details for daily jams:", exc_info=True)
+    return None
+
+
 def run_daily_jams(user, service):
     """  Run the daily-jams patch to create the daily playlist for the given user. """
     token = current_app.config["WHITELISTED_AUTH_TOKENS"][0]
@@ -93,15 +113,8 @@ def run_daily_jams(user, service):
     }
 
     if user["export_to_spotify"]:
-        token = service.get_user(user["id"], refresh=True)
-        sp = spotipy.Spotify(auth=token["access_token"])
-        spotify_user_id = sp.current_user()["id"]
-        args["spotify"] = {
-            "is_public": True,
-            "is_collaborative": False,
-            "user_id": spotify_user_id,
-            "token": token["access_token"]
-        }
+        spotify = _get_spotify_details(user["id"], service)
+        args["spotify"] = spotify
 
     playlist = generate_playlist(DailyJamsPatch(), args)
 
