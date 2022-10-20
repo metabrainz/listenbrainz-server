@@ -96,19 +96,21 @@ class SelectTroiPreferences extends React.Component<
 
         <div>
           <form onSubmit={this.submitPreferences}>
-            <label className="preferences-switch">
-              Export playlists to Spotify
+            <div className="preference-switch">
               <input
+                id="export-to-spotify"
+                name="export-to-spotify"
                 type="checkbox"
                 onChange={(e) =>
                   this.exportToSpotifySelection(e.target.checked)
                 }
                 checked={exportToSpotify}
-                style={{ marginLeft: 8 }}
               />
-              <span className="preferences-slider preferences-slider-round" />
-            </label>
-            <br />
+              <label htmlFor="export-to-spotify">
+                <b>Auto-export playlists to Spotify</b>
+                <span className="switch label-info label-primary" />
+              </label>
+            </div>
             <p>
               <button type="submit" className="btn btn-info btn-lg">
                 Save Changes
