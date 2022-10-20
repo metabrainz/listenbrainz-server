@@ -1,11 +1,15 @@
+import time
 from unittest import mock
 from uuid import UUID
 
 import dateutil.parser
 from flask import url_for, current_app
 from redis import Redis
+
+from data.model.external_service import ExternalServiceType
 from listenbrainz.tests.integration import IntegrationTestCase
 import listenbrainz.db.user as db_user
+import listenbrainz.db.external_service_oauth as db_oauth
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.views import playlist_api
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_EXTENSION_URI
@@ -1013,6 +1017,12 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert401(response)
 
+        response = self.client.post(
+            url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
+            json={}
+        )
+        self.assert401(response)
+
     def test_playlist_invalid_user(self):
         """ Test for checking that forbidden access returns 403 """
 
@@ -1074,3 +1084,98 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
         )
         self.assert403(response)
+
+    @mock.patch("listenbrainz.webserver.views.playlist_api.export_to_spotify")
+    @mock.patch("listenbrainz.domain.spotify.SpotifyService.user_oauth_token_has_expired")
+    def test_playlist_export(self, mock_oauth_expired, mock_troi_bot):
+        """ Test various error cases related to exporting a playlist to spotify """
+        playlist = {
+            "playlist": {
+                "title": "my stupid playlist",
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True
+                    }
+                },
+            }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        response = self.client.post(
+            url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="lastfm"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Service lastfm is not supported. We currently only support 'spotify'.")
+
+        response = self.client.post(
+            url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Service spotify is not linked. Please link your spotify account first.")
+
+        db_oauth.save_token(
+            user_id=self.user['id'],
+            service=ExternalServiceType.SPOTIFY,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=['user-read-recently-played']
+        )
+
+        response = self.client.post(
+            url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+            " Please relink your spotify account from ListenBrainz settings with appropriate scopes"
+            " to use this feature."
+        )
+
+        db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, True)
+
+        db_oauth.save_token(
+            user_id=self.user['id'],
+            service=ExternalServiceType.SPOTIFY,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=[
+                'streaming',
+                'user-read-email',
+                'user-read-private',
+                'playlist-modify-public',
+                'playlist-modify-private',
+                'user-read-currently-playing',
+                'user-read-recently-played'
+            ]
+        )
+        mock_oauth_expired.assert_not_called()
+        mock_troi_bot.assert_not_called()
+
+        mock_troi_bot.return_value = "foobar"
+        mock_oauth_expired.return_value = False
+
+        response = self.client.post(
+            url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json, {"external_url": "foobar"})

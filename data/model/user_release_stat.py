@@ -12,9 +12,6 @@ class ReleaseRecord(BaseModel):
     release_name: str
     listen_count: NonNegativeInt
     artist_name: str
-    # to add empty fields to stats API response, for compatibility
-    artist_msid: Optional[str]
-    release_msid: Optional[str]
 
     _validate_uuids: classmethod = validator("release_mbid", allow_reuse=True)(check_valid_uuid)
 

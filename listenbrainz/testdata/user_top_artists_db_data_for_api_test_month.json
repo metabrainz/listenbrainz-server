@@ -8,32 +8,28 @@
         "artist_name": "Dance Gavin Dance",
         "artist_mbids": [
           "a200b8a0-2248-4abb-9454-5f99750be117"
-        ],
-        "artist_msid": null
+        ]
       },
       {
         "listen_count": 25,
         "artist_name": "Webb Pierce",
         "artist_mbids": [
           "000a993a-03af-48f4-a810-e0524fda111a"
-        ],
-        "artist_msid": null
+        ]
       },
       {
         "listen_count": 20,
         "artist_name": "Lana Del Rey",
         "artist_mbids": [
           "e29fd013-45c0-4edd-abe2-8635fdd0502a"
-        ],
-        "artist_msid": null
+        ]
       },
       {
         "listen_count": 17,
         "artist_name": "The Colorist & Emil\u00edana Torrini",
         "artist_mbids": [
           "aa5bc83f-70a7-4f21-8b00-60309b7fa1d1"
-        ],
-        "artist_msid": null
+        ]
       }
     ]
   },
@@ -46,56 +42,49 @@
         "artist_name": "Vader",
         "artist_mbids": [
           "b9956564-f7fd-4c97-a3fa-b88b157affa1"
-        ],
-        "artist_msid": null
+        ]
       },
       {
         "listen_count": 31,
         "artist_name": "The Clash",
         "artist_mbids": [
           "b5e3b53e-34e1-4dd3-bb39-6ffcf61e0855"
-        ],
-        "artist_msid": null
+        ]
       },
       {
         "listen_count": 24,
         "artist_name": "Citizen Bravo & Raymond MacDonald",
         "artist_mbids": [
           "b6082729-fc87-4a0f-b874-00ae560c6f29"
-        ],
-        "artist_msid": null
+        ]
       },
       {
         "listen_count": 20,
         "artist_name": "Grinderman",
         "artist_mbids": [
           "517ac5e2-0a9f-4974-8233-44be9bec9c42"
-        ],
-        "artist_msid": null
+        ]
       },
       {
         "listen_count": 18,
         "artist_name": "Pink Floyd",
         "artist_mbids": [
           "52758846-744f-4295-8dbc-6a4caf77459c"
-        ],
-        "artist_msid": null
+        ]
       },
       {
         "listen_count": 17,
         "artist_name": "David Thomas Broughton",
         "artist_mbids": [
           "3f4ed551-99ce-422a-aaee-04829c60cbb9"
-        ],
-        "artist_msid": null
+        ]
       },
       {
         "listen_count": 16,
         "artist_name": "Portishead",
         "artist_mbids": [
           "bf4cb1ee-7a93-44d6-9463-c46063506a20"
-        ],
-        "artist_msid": null
+        ]
       }
     ]
   }

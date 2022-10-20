@@ -4,7 +4,9 @@ import * as timeago from "time-ago";
 import AsyncSelect from "react-select/async";
 import PlaylistPage from "../../src/playlists/Playlist";
 import * as playlistPageProps from "../__mocks__/playlistPageProps.json";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "../../src/playlists/utils";
 // Font Awesome generates a random hash ID for each icon everytime.
@@ -22,11 +24,7 @@ function flushPromises() {
   });
 }
 
-const {
-  labsApiUrl,
-  currentUser,
-  playlist,
-} = playlistPageProps;
+const { labsApiUrl, currentUser, playlist } = playlistPageProps;
 
 const props = {
   labsApiUrl,
@@ -58,6 +56,39 @@ describe("PlaylistPage", () => {
     });
     expect(wrapper.html()).toMatchSnapshot();
   });
+
+  it("hides exportPlaylistToSpotify button if playlist permissions are absent", () => {
+    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+      wrappingComponent: GlobalAppContext.Provider,
+      wrappingComponentProps: {
+        value: GlobalContextMock,
+      },
+    });
+    expect(wrapper.find("#exportPlaylistToSpotify")).toHaveLength(0);
+  });
+
+  it("shows exportPlaylistToSpotify button if playlist permissions are present", () => {
+    const alternativeContextMock = {
+      ...GlobalContextMock,
+      spotifyAuth: {
+        access_token: "heyo",
+        refresh_token: "news",
+        permission: [
+          "playlist-modify-public",
+          "playlist-modify-private",
+          "streaming",
+        ] as Array<SpotifyPermission>,
+      },
+    };
+    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+      wrappingComponent: GlobalAppContext.Provider,
+      wrappingComponentProps: {
+        value: alternativeContextMock,
+      },
+    });
+    expect(wrapper.find("#exportPlaylistToSpotify")).toHaveLength(1);
+  });
+
   it("does not clear the add-a-track input on blur", async () => {
     const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
@@ -101,6 +132,7 @@ describe("PlaylistPage", () => {
     // @ts-ignore
     expect(searchInput.props().inputValue).toEqual("mysearch");
   });
+
   it("filters out playlist owner from collaborators", async () => {
     const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,

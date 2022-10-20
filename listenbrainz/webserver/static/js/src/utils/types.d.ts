@@ -18,7 +18,6 @@ declare type Alert = {
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {
   artist_mbids?: Array<string> | null;
-  artist_msid?: string | null;
   discnumber?: number | null;
   duration_ms?: number | null;
   duration?: number | null;
@@ -31,7 +30,6 @@ interface AdditionalInfo {
   release_artist_names?: Array<string> | null;
   release_group_mbid?: string | null;
   release_mbid?: string | null;
-  release_msid?: string | null;
   spotify_album_artist_ids?: Array<string> | null;
   spotify_album_id?: string | null;
   spotify_artist_ids?: Array<string> | null;
@@ -217,7 +215,6 @@ declare type UserArtistsResponse = {
   payload: {
     artists: Array<{
       artist_mbids?: Array<string>;
-      artist_msid?: string;
       artist_name: string;
       listen_count: number;
     }>;
@@ -236,10 +233,8 @@ declare type UserReleasesResponse = {
   payload: {
     releases: Array<{
       artist_mbids?: Array<string>;
-      artist_msid?: string;
       artist_name: string;
       release_mbid?: string;
-      release_msid?: string;
       release_name: string;
       listen_count: number;
     }>;
@@ -258,10 +253,8 @@ declare type UserRecordingsResponse = {
   payload: {
     recordings: Array<{
       artist_mbids?: Array<string>;
-      artist_msid?: string;
       artist_name: string;
       release_mbid?: string;
-      release_msid?: string;
       release_name?: string;
       track_name: string;
       recording_mbid?: string;
@@ -409,9 +402,7 @@ declare type TrackMetadata = {
   release_name?: string;
   recording_mbid?: string;
   recording_msid?: string;
-  artist_msid?: string;
   release_mbid?: string;
-  release_msid?: string;
   additional_info?: AdditionalInfo;
   mbid_mapping?: MbidMapping;
 };

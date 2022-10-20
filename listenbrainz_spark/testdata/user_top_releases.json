@@ -2,110 +2,88 @@
   {
     "user_name": "user1",
     "release_name": "release1",
-    "release_msid": "1",
     "release_mbid": "1",
     "artist_name": "artist1",
-    "artist_msid": "1",
     "artist_mbids": ["1"],
     "count": 8
   },
   {
     "user_name": "user1",
     "release_name": "release2",
-    "release_msid": "2",
     "release_mbid": "2",
     "artist_name": "artist2",
-    "artist_msid": "",
     "artist_mbids": [],
     "count": 3
   },
   {
     "user_name": "user1",
     "release_name": "release2",
-    "release_msid": "",
     "release_mbid": "2",
     "artist_name": "artist2",
-    "artist_msid": "",
     "artist_mbids": [],
     "count": 3
   },
   {
     "user_name": "user1",
     "release_name": "release2",
-    "release_msid": null,
     "release_mbid": "2",
     "artist_name": "artist2",
-    "artist_msid": "",
     "artist_mbids": [],
     "count": 3
   },
   {
     "user_name": "user1",
     "release_name": "release3",
-    "release_msid": "",
     "release_mbid": "",
     "artist_name": "artist3",
-    "artist_msid": "",
     "artist_mbids": ["3"],
     "count": 4
   },
   {
     "user_name": "user1",
     "release_name": "release3",
-    "release_msid": "",
     "release_mbid": "",
     "artist_name": "artist3",
-    "artist_msid": "3",
     "artist_mbids": ["3"],
     "count": 4
   },
   {
     "user_name": "user2",
     "release_name": "release1",
-    "release_msid": "1",
     "release_mbid": "",
     "artist_name": "artist1",
-    "artist_msid": "",
     "artist_mbids": ["1"],
     "count": 4
   },
   {
     "user_name": "user2",
     "release_name": "release3",
-    "release_msid": "",
     "release_mbid": "3",
     "artist_name": "artist3",
-    "artist_msid": "3",
     "artist_mbids": [],
     "count": 7
   },
   {
     "user_name": "user2",
     "release_name": "release4",
-    "release_msid": "",
     "release_mbid": "",
     "artist_name": "artist4",
-    "artist_msid": "",
     "artist_mbids": [],
     "count": 2
   },
   {
     "user_name": "user3",
     "release_name": "release1",
-    "release_msid": "1",
     "release_mbid": "1",
     "artist_name": "artist1",
-    "artist_msid": "1",
     "artist_mbids": ["1"],
     "count": 2
   },
   {
     "user_name": "user3",
     "release_name": "",
-    "release_msid": "",
     "release_mbid": "",
     "artist_name": "artist1",
-    "artist_msid": "",
     "artist_mbids": ["1"],
     "count": 2
   }

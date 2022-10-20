@@ -13,8 +13,6 @@ const listen: Listen = {
     artist_name: "Britney Spears",
     release_name: "The Essential Britney Spears",
     additional_info: {
-      artist_msid: "03d17ddc-cd52-455a-b574-3e6a2371ca21",
-      release_msid: "67c6298f-738e-44f3-ae95-4cdeb5192719",
       recording_mbid: "2bf47421-2344-4255-a525-e7d7f54de742",
       listening_from: "lastfm",
       recording_msid: "ff32f7c7-c8ce-4048-b392-770e013bc05b",
