@@ -134,8 +134,14 @@ describe("UserFeedback", () => {
     expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
     expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
       "pikachu",
-      props.feedback.map((item) => item.recording_msid).join(","),
-      ""
+      props.feedback
+        .map((item) => item.recording_msid)
+        .filter(Boolean)
+        .join(","),
+      props.feedback
+        .map((item) => item.recording_mbid)
+        .filter(Boolean)
+        .join(",")
     );
     await flushPromises();
     expect(instance.state.recordingMsidFeedbackMap).toEqual({
