@@ -21,7 +21,7 @@ oauth2client == 4.1.3
 pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v2.7.1
 spotipy==2.20.0
-datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@arbitrary-outputs
+datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@7228937639f024b3937c498895534f0e1c5e484c
 troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2022-09-29
 PyYAML==6.0
 eventlet == 0.33.1
