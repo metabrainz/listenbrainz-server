@@ -25,11 +25,18 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
-  const releaseTypeTooltip: string = releaseTypeSecondary
-    ? `${releaseTypePrimary} + ${releaseTypeSecondary}`
-    : releaseTypePrimary;
 
   const [coverartSrc, setCoverartSrc] = useState<string>(COVERART_PLACEHOLDER);
+
+  function releaseTypeTooltip(): string {
+    if (releaseTypeSecondary !== undefined && releaseTypePrimary === undefined)
+      return releaseTypeSecondary;
+
+    if (releaseTypePrimary !== undefined && releaseTypeSecondary === undefined)
+      return releaseTypePrimary;
+
+    return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
+  }
 
   async function getCoverArt() {
     const coverartURL = await getAlbumArtFromReleaseMBID(releaseMBID);
@@ -61,7 +68,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
             {releaseName}
           </a>
         </div>
-        <div className="release-type-chip" title={releaseTypeTooltip}>
+        <div className="release-type-chip" title={releaseTypeTooltip()}>
           {releaseTypeSecondary || releaseTypePrimary || RELEASE_TYPE_UNKNOWN}
         </div>
       </div>
