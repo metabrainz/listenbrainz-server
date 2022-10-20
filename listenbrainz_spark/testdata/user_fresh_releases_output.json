@@ -10,7 +10,7 @@
         "artist_mbids": [
           "3377f3bb-60fc-4403-aea9-7e800612e060"
         ],
-        "date": "2022-6-9",
+        "release_date": "2022-6-9",
         "release_group_primary_type": "Single",
         "release_group_secondary_type": null,
         "caa_id": 33759180025,
@@ -25,7 +25,7 @@
           "b5da230b-f1fc-4822-af88-03f91891fccd",
           "7803ba53-9ed3-40e4-b6fe-5e76d27eb811"
         ],
-        "date": "2022-5-27",
+        "release_date": "2022-5-27",
         "release_group_primary_type": "Single",
         "release_group_secondary_type": "Soundtrack",
         "caa_id": 33709392020,
@@ -39,7 +39,7 @@
         "artist_mbids": [
           "28e4d96a-e405-4a43-9b30-baf4f8fa7a29"
         ],
-        "date": "2022-5-30",
+        "release_date": "2022-5-30",
         "release_group_primary_type": "Single",
         "release_group_secondary_type": null,
         "caa_id": null,
@@ -59,7 +59,7 @@
           "9d091774-d913-4412-acee-edd882ff7cac",
           "b78ce5fa-fde8-4e51-9b9e-f25d3c477cb8"
         ],
-        "date": "2022-5-17",
+        "release_date": "2022-5-17",
         "release_group_primary_type": "Album",
         "release_group_secondary_type": null,
         "caa_id": null,
@@ -73,7 +73,7 @@
         "artist_mbids": [
           "cf2bd942-6e78-480d-a6f5-67b04f879f14"
         ],
-        "date": "2022-5-30",
+        "release_date": "2022-5-30",
         "release_group_primary_type": "Album",
         "release_group_secondary_type": null,
         "caa_id": null,
