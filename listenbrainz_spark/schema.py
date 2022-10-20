@@ -21,6 +21,7 @@ fresh_releases_schema = StructType([
     StructField('artist_mbids', ArrayType(StringType()), nullable=False),
     StructField('release_name', StringType(), nullable=False),
     StructField('release_mbid', StringType(), nullable=False),
+    StructField('release_group_mbid', StringType(), nullable=False),
     StructField('release_group_primary_type', StringType(), nullable=True),
     StructField('release_group_secondary_type', StringType(), nullable=True),
     StructField('caa_id', LongType(), nullable=True)

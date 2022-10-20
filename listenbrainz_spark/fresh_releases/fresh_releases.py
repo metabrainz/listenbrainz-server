@@ -29,6 +29,7 @@ def load_all_releases():
             artist_mbids=release["artist_mbids"],
             release_name=release["release_name"],
             release_mbid=release["release_mbid"],
+            release_group_mbid=release["release_group_mbid"],
             release_group_primary_type=release["release_group_primary_type"],
             release_group_secondary_type=release["release_group_secondary_type"],
             caa_id=release["caa_id"]
@@ -58,6 +59,7 @@ def get_query():
             SELECT ad.user_id
                  , rr.release_name
                  , rr.release_mbid
+                 , rr.release_group_mbid
                  , rr.artist_credit_name
                  , rr.artist_mbids
                  , rr.date
@@ -71,6 +73,7 @@ def get_query():
           GROUP BY ad.user_id
                  , rr.release_name
                  , rr.release_mbid
+                 , rr.release_group_mbid
                  , rr.artist_credit_name
                  , rr.artist_mbids
                  , rr.date
@@ -84,6 +87,7 @@ def get_query():
                         struct(
                             release_name
                           , release_mbid
+                          , release_group_mbid
                           , artist_credit_name
                           , artist_mbids
                           , date
