@@ -17,7 +17,13 @@ def get_releases(user_name):
 
     try:
         data = get_fresh_releases(user["id"])
-        return jsonify({"payload": data})
+        releases = data["releases"] if data else []
+        return jsonify({
+            "payload": {
+                "releases": releases,
+                "user_id": user_name
+            }
+        })
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        raise APINoContent('')
+        raise APINoContent("")
