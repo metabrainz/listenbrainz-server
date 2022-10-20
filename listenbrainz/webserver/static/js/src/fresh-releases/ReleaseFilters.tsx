@@ -50,13 +50,13 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
           return (
             item.caa_id !== null &&
             checkedList.includes(
-              item.release_group_primary_type ||
-                item.release_group_secondary_type
+              item.release_group_secondary_type ||
+                item.release_group_primary_type
             )
           );
         }
         return checkedList.includes(
-          item.release_group_primary_type || item.release_group_secondary_type
+          item.release_group_secondary_type || item.release_group_primary_type
         );
       });
       setFilteredList(filteredReleases);
