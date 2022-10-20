@@ -576,27 +576,11 @@ export default class PlaylistPage extends React.Component<
           <a href={external_url} target="_blank" rel="noopener noreferrer">
             {external_url}
           </a>
+          Heads up: the new playlist is public on Spotify.
         </>
       );
     } catch (error) {
-      if (
-        error.error?.status === 403 &&
-        error.error?.message === "Invalid token scopes."
-      ) {
-        newAlert(
-          "danger",
-          "Spotify permissions missing",
-          <>
-            Please try to{" "}
-            <a href="/profile/music-services/details/" target="_blank">
-              disconnect and reconnect
-            </a>{" "}
-            your Spotify account and refresh this page
-          </>
-        );
-      } else {
-        this.handleError(error.error ?? error);
-      }
+      this.handleError(error.error ?? error);
     }
     this.setState({ loading: false });
   };
