@@ -1366,3 +1366,34 @@ describe("resetUserTimezone", () => {
     ).resolves.toEqual(200);
   });
 });
+
+describe("exportPlaylistToSpotify", () => {
+  it("calls fetch with correct parameters, calls checkStatus and returns exported playlist url", async () => {
+    const response = {
+      external_url: "https://open.spotify.com/playlist/33DUxaq2HQI7PDFODpFWJV",
+    };
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(response),
+      });
+    });
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+    await expect(
+      apiService.exportPlaylistToSpotify("auth", "bar")
+    ).resolves.toEqual(response);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/playlist/bar/export/spotify",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token auth",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+      }
+    );
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+});
