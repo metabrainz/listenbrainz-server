@@ -5,6 +5,7 @@
       {
         "release_name": "So Good",
         "release_mbid": "daa1e865-42d9-46d5-b272-c92c099dbc2d",
+        "release_group_mbid": "5a861eef-fedb-4e54-bdb2-869d49c3f2cd",
         "artist_credit_name": "Halsey",
         "artist_mbids": [
           "3377f3bb-60fc-4403-aea9-7e800612e060"
@@ -18,6 +19,7 @@
       {
         "release_name": "Raja Jatt (from the Movie ’Sher Bagga’)",
         "release_mbid": "a202dc7e-cb61-4ecd-87d0-3bedf597f8cc",
+        "release_group_mbid": "e0843fdd-92cc-49e8-8579-7566e777ddc9",
         "artist_credit_name": "Ammy Virk & Simar Kaur",
         "artist_mbids": [
           "b5da230b-f1fc-4822-af88-03f91891fccd",
@@ -32,6 +34,7 @@
       {
         "release_name": "nothing has changed",
         "release_mbid": "5be2dc20-13c7-4d8a-945c-fcf2d1815a98",
+        "release_group_mbid": "fe3d4b62-d8c8-416c-a115-6d00b0ee0f77",
         "artist_credit_name": "sadfem",
         "artist_mbids": [
           "28e4d96a-e405-4a43-9b30-baf4f8fa7a29"
@@ -50,6 +53,7 @@
       {
         "release_name": "ARuFa・恐山の匿名ラジオCD2 〜ぶどうゼリーの章〜",
         "release_mbid": "db4fda62-744b-440c-ae4b-a690be0d7bba",
+        "release_group_mbid": "cce1f6dc-5c00-41a9-a44f-1865dbb9b380",
         "artist_credit_name": "ARuFa / ダ・ヴィンチ・恐山",
         "artist_mbids": [
           "9d091774-d913-4412-acee-edd882ff7cac",
@@ -64,6 +68,7 @@
       {
         "release_name": "Uvod…",
         "release_mbid": "3e39dbe2-1753-4c69-9118-f2c4f46c7111",
+        "release_group_mbid": "36a86ebe-178e-4cd7-a297-99ab07a6d81c",
         "artist_credit_name": "Тишина",
         "artist_mbids": [
           "cf2bd942-6e78-480d-a6f5-67b04f879f14"
