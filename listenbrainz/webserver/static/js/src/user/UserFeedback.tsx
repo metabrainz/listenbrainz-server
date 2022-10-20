@@ -526,7 +526,7 @@ export default class UserFeedback extends React.Component<
                       <ListenCard
                         showUsername={false}
                         showTimestamp
-                        key={`${listen.listened_at}`}
+                        key={`${listen.listened_at}-${listen.track_metadata.track_name}`}
                         listen={listen}
                         currentFeedback={this.getFeedbackForListen(listen)}
                         updateFeedbackCallback={this.updateFeedback}
