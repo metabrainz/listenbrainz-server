@@ -517,10 +517,8 @@ export default class UserFeedback extends React.Component<
                         dataTarget="#PinRecordingModal"
                       />,
                     ];
-                    const recording_msid =
-                      listen.track_metadata.additional_info?.recording_msid;
-                    const recording_mbid =
-                      listen.track_metadata.additional_info?.recording_mbid;
+                    const recording_msid = getRecordingMSID(listen);
+                    const recording_mbid = getRecordingMBID(listen);
                     return (
                       <ListenCard
                         showUsername={false}
