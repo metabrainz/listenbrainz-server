@@ -698,6 +698,7 @@ export default class PlaylistPage extends React.Component<
                           <li role="separator" className="divider" />
                           <li>
                             <a
+                              id="exportPlaylistToSpotify"
                               role="button"
                               href="#"
                               onClick={this.exportToSpotify}
