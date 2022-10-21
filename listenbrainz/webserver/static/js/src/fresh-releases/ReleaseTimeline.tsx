@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Slider from "rc-slider";
 import { countBy, zipObject } from "lodash";
-import { formattedReleaseDate } from "./utils";
+import formattedReleaseDate from "./utils";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
@@ -44,7 +44,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     return zipObject(percentArr, datesArr);
   }
 
-  function changeHandler(percent: number) {
+  // let's keep the type to any until we figure out a proper one
+  function changeHandler(percent: any) {
     setCurrentValue(percent);
     const pageScrollHeight = document.documentElement.scrollHeight;
     const scrollYPx = (percent / 100) * pageScrollHeight;
