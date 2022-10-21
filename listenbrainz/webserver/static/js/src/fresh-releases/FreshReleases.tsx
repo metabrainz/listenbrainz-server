@@ -33,7 +33,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
   const fetchReleases = useCallback(async () => {
     setIsLoading(true);
     try {
-      const freshReleases: Array<FreshReleaseItem> = await APIService.fetchFreshReleases(
+      const freshReleases: Array<FreshReleaseItem> = await APIService.fetchSitewideFreshReleases(
         "",
         2
       );
@@ -58,8 +58,14 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
         )
         .filter(
           (value, index, self) =>
-            self.indexOf(value) === index && value !== undefined
+            self.indexOf(value) === index &&
+            value !== undefined &&
+            value !== null
         );
+
+      console.log(
+        cleanReleases.map((release) => release.release_group_secondary_type)
+      );
 
       setReleases(cleanReleases);
       setFilteredList(cleanReleases);

@@ -1177,10 +1177,19 @@ export default class APIService {
     release_date?: string,
     days?: number
   ): Promise<any> => {
-    // TODO Change back to base URL once caa_id is out of beta
-    let url = "https://beta-api.listenbrainz.org/1/explore/fresh-releases/";
+    let url = `${this.APIBaseURI}/explore/fresh-releases/`;
     if (!isUndefined(release_date)) url += `?release_date=${release_date}`;
     if (!isUndefined(days)) url += `&days=${days}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  fetchUserFreshReleases = async (username: string): Promise<any> => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+    const url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
