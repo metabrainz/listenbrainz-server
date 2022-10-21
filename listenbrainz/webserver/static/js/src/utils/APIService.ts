@@ -1140,17 +1140,21 @@ export default class APIService {
     return response.status;
   };
 
-  fetchFreshReleases = async (
-    release_date?: string,
-    days?: number
+  submitTroiPreferences = async (
+    userToken: string,
+    exportToSpotify: boolean
   ): Promise<any> => {
-    // TODO Change back to base URL once caa_id is out of beta
-    let url = "https://beta-api.listenbrainz.org/1/explore/fresh-releases/";
-    if (!isUndefined(release_date)) url += `?release_date=${release_date}`;
-    if (!isUndefined(days)) url += `&days=${days}`;
-    const response = await fetch(url);
+    const url = `${this.APIBaseURI}/settings/troi`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ export_to_spotify: exportToSpotify }),
+    });
     await this.checkStatus(response);
-    return response.json();
+    return response.status;
   };
 
   exportPlaylistToSpotify = async (
@@ -1165,6 +1169,19 @@ export default class APIService {
         "Content-Type": "application/json;charset=UTF-8",
       },
     });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  fetchSitewideFreshReleases = async (
+    release_date?: string,
+    days?: number
+  ): Promise<any> => {
+    // TODO Change back to base URL once caa_id is out of beta
+    let url = "https://beta-api.listenbrainz.org/1/explore/fresh-releases/";
+    if (!isUndefined(release_date)) url += `?release_date=${release_date}`;
+    if (!isUndefined(days)) url += `&days=${days}`;
+    const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };

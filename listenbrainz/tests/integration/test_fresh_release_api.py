@@ -29,6 +29,6 @@ class FreshReleasesTestCase(IntegrationTestCase):
         self.assert200(r)
 
         self.assertEqual(r.json, {"payload": {
-            "user_id": self.user["id"],
+            "user_id": self.user["musicbrainz_id"],
             "releases": self.expected
         }})
