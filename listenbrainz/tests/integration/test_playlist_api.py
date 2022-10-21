@@ -3,10 +3,12 @@ from unittest import mock
 from uuid import UUID
 
 import dateutil.parser
+import requests_mock
 from flask import url_for, current_app
 from redis import Redis
 
 from data.model.external_service import ExternalServiceType
+from listenbrainz.domain.spotify import OAUTH_TOKEN_URL
 from listenbrainz.tests.integration import IntegrationTestCase
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
@@ -1085,10 +1087,16 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert403(response)
 
+    @requests_mock.Mocker()
     @mock.patch("listenbrainz.webserver.views.playlist_api.export_to_spotify")
-    @mock.patch("listenbrainz.domain.spotify.SpotifyService.user_oauth_token_has_expired")
-    def test_playlist_export(self, mock_oauth_expired, mock_troi_bot):
+    def test_playlist_export(self, mock_requests, mock_troi_bot):
         """ Test various error cases related to exporting a playlist to spotify """
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=200, json={
+            'access_token': 'tokentoken',
+            'expires_in': 3600,
+            'scope': '',
+        })
+
         playlist = {
             "playlist": {
                 "title": "my stupid playlist",
@@ -1166,11 +1174,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
                 'user-read-recently-played'
             ]
         )
-        mock_oauth_expired.assert_not_called()
         mock_troi_bot.assert_not_called()
 
         mock_troi_bot.return_value = "foobar"
-        mock_oauth_expired.return_value = False
 
         response = self.client.post(
             url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
