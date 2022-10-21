@@ -112,7 +112,8 @@ services:
   static_builder:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.webpack
+      dockerfile: Dockerfile
+      target: listenbrainz-frontend-dev
     command: npm run build:dev
     volumes:
       # Mount source front-end files
