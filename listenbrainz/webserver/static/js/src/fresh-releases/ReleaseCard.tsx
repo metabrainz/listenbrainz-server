@@ -8,8 +8,8 @@ type ReleaseCardProps = {
   releaseMBID: string;
   releaseName: string;
   artistCreditName: string;
-  releaseTypePrimary: string;
-  releaseTypeSecondary: string;
+  releaseTypePrimary: string | undefined;
+  releaseTypeSecondary: string | undefined;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {

@@ -1,7 +1,7 @@
 import React, { useState, Dispatch, SetStateAction, useEffect } from "react";
 
 type ReleaseFiltersProps = {
-  allFilters: Array<string>;
+  allFilters: Array<string | undefined>;
   releases: Array<FreshReleaseItem>;
   setFilteredList: Dispatch<SetStateAction<Array<FreshReleaseItem>>>;
 };
