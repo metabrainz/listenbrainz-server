@@ -5,11 +5,6 @@ const LessPluginCleanCSS = require("less-plugin-clean-css");
 const StylelintPlugin = require("stylelint-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
 
-const baseDir = "/static";
-const jsDir = path.join(baseDir, "js");
-const distDir = path.join(baseDir, "dist");
-const cssDir = path.join(baseDir, "css");
-
 const es5LibrariesToTranspile = [
   "d3-array",
   "d3-scale",
@@ -26,6 +21,15 @@ const babelExcludeLibrariesRegexp = new RegExp(
 );
 module.exports = function (env, argv) {
   const isProd = argv.mode === "production";
+  let baseDir;
+  if (isProd) {
+    baseDir = "/static";
+  } else {
+    baseDir = "/code/listenbrainz/webserver/static";
+  }
+  const jsDir = path.join(baseDir, "js");
+  const distDir = path.join(baseDir, "dist");
+  const cssDir = path.join(baseDir, "css");
   const plugins = [
     new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
@@ -96,7 +100,7 @@ module.exports = function (env, argv) {
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
       path: distDir,
-      publicPath: `${distDir}/`,
+      publicPath: `/static/dist/`,
       clean: true, // Clean the output directory before emit.
     },
     devtool: isProd ? "source-map" : "eval-source-map",
