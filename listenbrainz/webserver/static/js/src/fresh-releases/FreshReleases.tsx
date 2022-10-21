@@ -27,7 +27,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
 
   const [releases, setReleases] = useState<Array<FreshReleaseItem>>([]);
   const [filteredList, setFilteredList] = useState<Array<FreshReleaseItem>>([]);
-  const [allFilters, setAllFilters] = useState<Array<string>>([]);
+  const [allFilters, setAllFilters] = useState<Array<string | undefined>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchReleases = useCallback(async () => {
