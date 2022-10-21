@@ -1,4 +1,4 @@
-export function formattedReleaseDate(releaseDate: string) {
+export default function formattedReleaseDate(releaseDate: string) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
