@@ -76,14 +76,17 @@ LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-serve
       org.label-schema.name="ListenBrainz Static Builder" \
       org.metabrainz.based-on-image="node:$NODE_VERSION"
 
-RUN mkdir /static
-WORKDIR /static
+RUN mkdir /code
+WORKDIR /code
 
-COPY package.json package-lock.json /static/
+COPY package.json package-lock.json /code/
 RUN npm install
 
+RUN mkdir /static
+
 # Compile front-end (static) files
-COPY webpack.config.js babel.config.js .eslintrc.js .stylelintrc.js tsconfig.json ./listenbrainz/webserver/static /static/
+COPY webpack.config.js babel.config.js .eslintrc.js .stylelintrc.js tsconfig.json /code/
+COPY ./listenbrainz/webserver/static /static
 RUN npm run build:prod
 
 
