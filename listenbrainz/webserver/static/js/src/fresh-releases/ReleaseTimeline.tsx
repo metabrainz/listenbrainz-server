@@ -68,7 +68,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
             included={false}
             marks={marks}
             value={currentValue}
-            onChange={changeHandler}
+            onChange={() => changeHandler}
           />
           <div className="slider-legend">{formattedReleaseDate(maxDate)}</div>
         </div>
