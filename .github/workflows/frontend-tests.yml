@@ -12,7 +12,7 @@ on:
       - '**.snap'
       - '**.less'
       - '**.json'
-      - 'docker/Dockerfile.webpack'
+      - 'docker/Dockerfile'
       - 'docker/docker-compose.test.yml'
       - 'test.sh'
 

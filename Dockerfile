@@ -63,10 +63,10 @@ RUN pip3 install --no-cache-dir -r ./docs/requirements.txt
 COPY . /code/listenbrainz
 
 
-#########################################################################
-# NOTE: The javascript files for production are compiled in this image. #
-#########################################################################
-FROM node:$NODE_VERSION as listenbrainz-frontend
+#####################################################################################################
+# NOTE: The javascript files are continously watched and compiled using this image in developement. #
+#####################################################################################################
+FROM node:$NODE_VERSION as listenbrainz-frontend-dev
 
 ARG NODE_VERSION
 
@@ -83,6 +83,11 @@ COPY package.json package-lock.json /code/
 RUN npm install
 
 RUN mkdir /static
+
+#########################################################################
+# NOTE: The javascript files for production are compiled in this image. #
+#########################################################################
+FROM listenbrainz-frontend-dev as listenbrainz-frontend-prod
 
 # Compile front-end (static) files
 COPY webpack.config.js babel.config.js .eslintrc.js .stylelintrc.js tsconfig.json /code/
