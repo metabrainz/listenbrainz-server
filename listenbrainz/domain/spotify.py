@@ -72,8 +72,13 @@ class SpotifyService(ImporterService):
         self.client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
         self.redirect_url = current_app.config['SPOTIFY_CALLBACK_URL']
 
-    def get_user(self, user_id: int) -> Optional[dict]:
-        return spotify.get_user(user_id)
+    def get_user(self, user_id: int, refresh: bool = False) -> Optional[dict]:
+        """ If refresh = True, then check whether the access token has expired and refresh it
+        before returning the user."""
+        user = spotify.get_user(user_id)
+        if user and refresh and self.user_oauth_token_has_expired(user):
+            user = self.refresh_access_token(user['user_id'], user['refresh_token'])
+        return user
 
     def add_new_user(self, user_id: int, token: dict) -> bool:
         """Create a spotify row for a user based on OAuth access tokens

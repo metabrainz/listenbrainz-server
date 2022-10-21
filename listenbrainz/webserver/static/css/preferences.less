@@ -1,0 +1,57 @@
+.preference-switch {
+  // adapted from this snippet by ppraveenkumar92: https://bootsnipp.com/snippets/ZlQ32
+
+  padding: 1.3em 0;
+
+  > input[type="checkbox"] {
+    // hide underlying checkbox
+    display: none;
+
+    &:checked + label > .switch::before {
+      background: inherit;
+      opacity: 0.5;
+    }
+    &:checked + label > .switch::after {
+      background: inherit;
+      left: 20px;
+    }
+  }
+  > label {
+    display: flex;
+    align-items: center;
+
+    .switch {
+      cursor: pointer;
+      height: 0px;
+      position: relative;
+      width: 40px;
+      margin-left: 2em;
+
+      &::before {
+        background: rgb(0, 0, 0);
+        box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+        content: "";
+        height: 16px;
+        margin-top: -8px;
+        position: absolute;
+        opacity: 0.3;
+        transition: all 0.4s ease-in-out;
+        width: 40px;
+      }
+      &::after {
+        background: rgb(255, 255, 255);
+        border-radius: 16px;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+        content: "";
+        height: 24px;
+        left: -4px;
+        margin-top: -8px;
+        position: absolute;
+        top: -4px;
+        transition: all 0.3s ease-in-out;
+        width: 24px;
+      }
+    }
+  }
+}
