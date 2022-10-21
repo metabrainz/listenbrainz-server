@@ -53,6 +53,7 @@ services:
   frontend_tester:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.webpack
+      dockerfile: Dockerfile
+      target: listenbrainz-frontend-dev
     volumes:
       - ../listenbrainz/webserver/static:/code/static:z
