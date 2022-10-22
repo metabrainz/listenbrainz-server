@@ -29,19 +29,9 @@ class SimilarRecordingsViewerQuery(Query):
         count = count if count > 0 else 100
 
         # resolve redirect for the given mbid if any
-        reference = get_recordings_from_mbids([recording_mbid])
+        reference = get_recordings_from_mbids([recording_mbid])[0]
 
         recordings = get_similar_recordings(reference["recording_mbid"], algorithm, count)
-
-        index = {}
-        mbids = []
-        for r in recordings:
-            index[r.similar_mbid] = r.score
-            mbids.append(r.similar_mbid)
-
-        metadata = get_recordings_from_mbids(mbids)
-        for r in metadata:
-            r["score"] = index[r["original_recording_mbid"]]
 
         results = [
             {
@@ -50,25 +40,37 @@ class SimilarRecordingsViewerQuery(Query):
             },
             {
                 "type": "dataset",
-                "columns": reference.keys(),
-                "data": reference
+                "columns": list(reference.keys()),
+                "data": [reference]
             }
         ]
 
-        if len(metadata) > 0:
-            results.append({
-                "type": "markup",
-                "data": Markup("<p><b>Similar Recordings</b></p>")
-            })
-            results.append({
-                "type": "dataset",
-                "columns": metadata[0].keys(),
-                "data": metadata
-            })
-        else:
+        if len(recordings) == 0:
             results.append({
                 "type": "markup",
                 "data": Markup("<p><b>No similar recordings found!</b></p>")
             })
+            return results
+
+        index = {}
+        mbids = []
+        for r in recordings:
+            mbid = str(r.similar_mbid)
+            index[mbid] = r.score
+            mbids.append(mbid)
+
+        metadata = get_recordings_from_mbids(mbids)
+        for r in metadata:
+            r["score"] = index[r["original_recording_mbid"]]
+
+        results.append({
+            "type": "markup",
+            "data": Markup("<p><b>Similar Recordings</b></p>")
+        })
+        results.append({
+            "type": "dataset",
+            "columns": list(metadata[0].keys()),
+            "data": metadata
+        })
 
         return results
