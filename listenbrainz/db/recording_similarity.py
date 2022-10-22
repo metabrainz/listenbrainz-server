@@ -28,7 +28,7 @@ def insert_similar_recordings(data, algorithm):
 def get_similar_recordings(mbid, algorithm, count):
     query = """
         SELECT CASE WHEN mbid0 = :mbid THEN mbid1 ELSE mbid0 END AS similar_mbid
-             , jsonb_object_field(metadata, :algorithm)::numeric AS score
+             , jsonb_object_field(metadata, :algorithm)::integer AS score
           FROM similarity.recording
          WHERE (mbid0 = :mbid OR mbid1 = :mbid)
            AND metadata ? :algorithm
