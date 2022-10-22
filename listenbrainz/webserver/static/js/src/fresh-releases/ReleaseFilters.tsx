@@ -98,7 +98,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         </div>
         <div id="filters-list">
           {allFilters.map((type, index) => (
-            <span>
+            <span key={`filter-${type}`}>
               <input
                 id={`filters-item-${index}`}
                 className="type-container"
