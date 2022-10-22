@@ -3,10 +3,8 @@
 // TODO name colors properly
 @color_1: #999;
 @color_2: #666;
-@color_3: #fff;
-@background_color_1: #8d8d8d;
+@slider_base_color: #8d8d8d;
 @background_color_2: #abe2fb;
-@background_color_3: #fff;
 @background_color_4: #ccc;
 @background_color_5: #6c6c6c;
 @border_color_1: @orange;
@@ -56,7 +54,7 @@
   position: absolute;
   width: 100%;
   height: 4px;
-  background-color: @background_color_1;
+  background-color: @slider_base_color;
   border-radius: 6px;
 }
 .rc-slider-track {
@@ -71,7 +69,7 @@
   height: 4rem;
   margin-top: -8px;
   background-color: @orange;
-  border: solid 2px @white;
+  // border: solid 2px @white;
   border-radius: 50%;
   cursor: pointer;
   cursor: -webkit-grab;
@@ -82,22 +80,23 @@
     box-shadow: none;
   }
   &:focus-visible {
-    border-color: @border_color_2;
-    box-shadow: 0 0 0 3px @orange;
+    border-color: lighten(@purple, 10%);
+    box-shadow: 0 0 3px @purple;
   }
   &:hover {
-    border-color: @border_color_1;
+    border: solid 5px lighten(@orange, 10%);
   }
   &:active {
-    border-color: @border_color_1;
-    box-shadow: 0 0 5px @orange;
+    border-color: @purple;
+    box-shadow: 0 0 8px darken(@purple, 10%);
     cursor: -webkit-grabbing;
     cursor: grabbing;
   }
 }
 .rc-slider-handle-dragging.rc-slider-handle-dragging.rc-slider-handle-dragging {
-  border-color: @border_color_1;
-  box-shadow: 0 0 0 5px @orange;
+  background-color: @purple;
+  border-color: lighten(@purple, 10%);
+  box-shadow: 0 0 7px @purple;
 }
 .rc-slider-handle-click-focused {
   &:focus {
@@ -115,10 +114,14 @@
 .rc-slider-mark-text {
   position: absolute;
   display: inline-block;
-  color: @color_1;
+  color: @slider_base_color;
   text-align: center;
   vertical-align: middle;
   cursor: pointer;
+  &:hover {
+    color: lighten(@blue, 10%);
+    font-weight: 700;
+  }
 }
 .rc-slider-mark-text-active {
   color: @color_2;
@@ -131,12 +134,13 @@
   pointer-events: none;
 }
 .rc-slider-dot {
+  visibility: hidden;
   position: absolute;
   bottom: -2px;
   width: 8px;
   height: 8px;
   vertical-align: middle;
-  background-color: @background_color_3;
+  background-color: @white;
   border: 2px solid #e9e9e9;
   border-radius: 50%;
   cursor: pointer;
@@ -148,18 +152,18 @@
   margin-right: -4px;
 }
 .rc-slider-disabled {
-  background-color: @background_color_1;
+  background-color: @slider_base_color;
   .rc-slider-track {
     background-color: @background_color_4;
   }
   .rc-slider-handle {
-    background-color: @background_color_3;
+    background-color: @white;
     border-color: @border_color_4;
     box-shadow: none;
     cursor: not-allowed;
   }
   .rc-slider-dot {
-    background-color: @background_color_3;
+    background-color: @white;
     border-color: @border_color_4;
     box-shadow: none;
     cursor: not-allowed !important;
@@ -187,6 +191,7 @@
     margin-top: 0;
     margin-left: -16px;
     touch-action: pan-y;
+    z-index: 1;
   }
   .rc-slider-mark {
     top: 0;
@@ -265,7 +270,7 @@
   min-width: 24px;
   height: 24px;
   padding: 6px 2px;
-  color: @color_3;
+  color: @white;
   font-size: 12px;
   line-height: 1;
   text-align: center;
