@@ -1,9 +1,14 @@
 from datetime import datetime, date, time, timedelta
 
+from more_itertools import chunked
+
 import listenbrainz_spark
-from listenbrainz_spark import config, path
+from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_new_dump
+
+
+RECORDINGS_PER_MESSAGE = 1000
 
 
 def build_sessioned_index(listen_table, mbc_table, session):
@@ -60,11 +65,15 @@ def main(days, session):
     metadata_df = listenbrainz_spark.sql_context.read.json(config.HDFS_CLUSTER_URI + "/mb_metadata_cache.jsonl")
     metadata_df.createOrReplaceTempView(metadata_table)
 
-    save_path = f"{path.RECORDING_SIMILARITY}/session_based_days_{days}_session_{session}"
-
     query = build_sessioned_index(table, metadata_table, session)
+    data = run_query(query).toLocalIterator()
 
-    run_query(query) \
-        .write \
-        .format('csv') \
-        .save(config.HDFS_CLUSTER_URI + save_path, mode="overwrite")
+    algorithm = f"session_based_days_{days}_session_{session}"
+
+    for entries in chunked(data, RECORDINGS_PER_MESSAGE):
+        items = [row.asDict() for row in entries]
+        yield {
+            "type": "similar_recordings",
+            "algorithm": algorithm,
+            "data": items
+        }
