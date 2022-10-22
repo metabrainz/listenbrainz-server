@@ -82,6 +82,8 @@ WORKDIR /code
 COPY package.json package-lock.json /code/
 RUN npm install
 
+COPY webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.json .eslintrc.js .stylelintrc.js /code/
+
 RUN mkdir /static
 
 #########################################################################
@@ -90,7 +92,6 @@ RUN mkdir /static
 FROM listenbrainz-frontend-dev as listenbrainz-frontend-prod
 
 # Compile front-end (static) files
-COPY webpack.config.js babel.config.js .eslintrc.js .stylelintrc.js tsconfig.json /code/
 COPY ./listenbrainz/webserver/static /static
 RUN npm run build:prod
 
@@ -184,7 +185,7 @@ COPY ./docker/services/cron/crontab /etc/cron.d/crontab
 RUN chmod 0644 /etc/cron.d/crontab
 
 # copy the compiled js files and statis assets from image to prod
-COPY --from=listenbrainz-frontend /static /static
+COPY --from=listenbrainz-frontend-prod /static /static
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/
