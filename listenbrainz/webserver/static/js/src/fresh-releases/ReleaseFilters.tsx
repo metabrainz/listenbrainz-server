@@ -60,6 +60,11 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         );
       });
       setFilteredList(filteredReleases);
+
+      window.scrollTo(
+        0,
+        document.getElementById("release-cards-grid")!.offsetTop
+      );
     }
   }, [checkedList, coverartOnly]);
 
