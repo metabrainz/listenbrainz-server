@@ -63,10 +63,6 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
             value !== null
         );
 
-      console.log(
-        cleanReleases.map((release) => release.release_group_secondary_type)
-      );
-
       setReleases(cleanReleases);
       setFilteredList(cleanReleases);
       setAllFilters(releaseTypes);
@@ -109,7 +105,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
                 setFilteredList={setFilteredList}
               />
             </div>
-            <div className="release-cards-grid col-xs-9 col-md-10">
+            <div id="release-cards-grid" className="col-xs-12 col-md-10">
               {filteredList?.map((release) => {
                 return (
                   <ReleaseCard
@@ -125,7 +121,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
                 );
               })}
             </div>
-            <div className="releases-timeline col-xs-3 col-md-1">
+            <div className="releases-timeline col-xs-12 col-md-1">
               {releases.length > 0 ? (
                 <ReleaseTimeline releases={releases} />
               ) : null}

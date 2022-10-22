@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Slider from "rc-slider";
 import { countBy, zipObject } from "lodash";
 import formattedReleaseDate from "./utils";
@@ -15,7 +15,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
 
   const [minSliderDate, setMinSliderDate] = useState<number>(0);
   const [maxSliderDate, setMaxSliderDate] = useState<number>(100);
-  const [currentValue, setCurrentValue] = useState<number>(51);
+  const [currentValue, setCurrentValue] = useState<number>();
   const [marks, setMarks] = useState<{ [key: number]: string }>({});
 
   function getDatesInRange(startDate: any, endDate: any) {
@@ -29,27 +29,40 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     setMaxSliderDate(new Date(dates[dates.length - 1]).getTime());
   }
 
+  // let's keep the type to any until we figure out a proper one
+  const changeHandler = useCallback((percent: any) => {
+    setCurrentValue(percent);
+    const element: HTMLElement | null = document.getElementById(
+      "release-cards-grid"
+    )!;
+    const scrollHeight = (percent / 100) * element.scrollHeight;
+    const scrollTo = scrollHeight + element.offsetTop;
+    window.scrollTo({ top: scrollTo, behavior: "smooth" });
+    return scrollTo;
+  }, []);
+
   function createMarks(data: Array<FreshReleaseItem>) {
-    const releasesPerDate = countBy(releases, (item) => item.release_date);
+    const releasesPerDate = countBy(
+      releases,
+      (item: FreshReleaseItem) => item.release_date
+    );
     const datesArr = Object.keys(releasesPerDate).map((item) =>
       formattedReleaseDate(item)
     );
     const percentArr = Object.values(releasesPerDate)
-      .map((item) => Math.floor((item / data.length) * 100))
+      .map((item) => (item / data.length) * 100)
       .map((_, index, arr) =>
         arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
       );
     percentArr.unshift(0);
     percentArr.pop();
-    return zipObject(percentArr, datesArr);
-  }
+    const middle = percentArr[Math.floor(percentArr.length / 2)];
 
-  // let's keep the type to any until we figure out a proper one
-  function changeHandler(percent: any) {
-    setCurrentValue(percent);
-    const pageScrollHeight = document.documentElement.scrollHeight;
-    const scrollYPx = (percent / 100) * pageScrollHeight;
-    window.scrollTo(0, Math.round(scrollYPx));
+    // Scroll to the current date
+    setCurrentValue(middle);
+    window.scrollTo({ top: changeHandler(middle), behavior: "smooth" });
+
+    return zipObject(percentArr, datesArr);
   }
 
   useEffect(() => {
@@ -68,7 +81,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
             included={false}
             marks={marks}
             value={currentValue}
-            onChange={() => changeHandler}
+            onChange={changeHandler}
           />
           <div className="slider-legend">{formattedReleaseDate(maxDate)}</div>
         </div>
