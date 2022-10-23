@@ -34,7 +34,7 @@ def run_daily_jams_troi_bot():
         try:
             run_daily_jams(user, service)
             # Add others here
-        except RuntimeError as err:
+        except Exception as err:
             current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user["musicbrainz_id"], str(err)))
             return
 
@@ -122,7 +122,8 @@ def run_daily_jams(user, service):
         url = current_app.config["SERVER_ROOT_URL"] + "/playlist/" + playlist.playlists[0].mbid
         message = f"""Your daily-jams playlist has been updated. <a href="{url}">Give it a listen!</a>."""
 
-        if len(playlist.playlists[0].external_urls) > 0:
+        external_urls = getattr(playlist.playlists[0], "external_urls", None)
+        if external_urls and len(external_urls) > 0:
             spotify_link = playlist.playlists[0].external_urls
             message += f""" You can also listen it on <a href="{spotify_link}">Spotify!</a>."""
 
