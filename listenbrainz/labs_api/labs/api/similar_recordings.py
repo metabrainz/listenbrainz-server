@@ -24,12 +24,15 @@ class SimilarRecordingsViewerQuery(Query):
         return None
 
     def fetch(self, params, offset=-1, count=-1):
-        recording_mbid = params[0]["recording_mbid"]
-        algorithm = params[0]["algorithm"]
+        recording_mbid = params[0]["recording_mbid"].strip()
+        algorithm = params[0]["algorithm"].strip()
         count = count if count > 0 else 100
 
         # resolve redirect for the given mbid if any
         reference = get_recordings_from_mbids([recording_mbid])[0]
+        # remove unwanted fields from output
+        reference.pop("original_recording_mbid", None)
+        reference.pop("artist_credit_id", None)
 
         recordings = get_similar_recordings(reference["recording_mbid"], algorithm, count)
 
@@ -62,6 +65,8 @@ class SimilarRecordingsViewerQuery(Query):
         metadata = get_recordings_from_mbids(mbids)
         for r in metadata:
             r["score"] = index[r["original_recording_mbid"]]
+            r.pop("original_recording_mbid", None)
+            r.pop("artist_credit_id", None)
 
         results.append({
             "type": "markup",
