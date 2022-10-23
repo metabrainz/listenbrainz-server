@@ -35,6 +35,9 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     if (releaseTypePrimary !== undefined && releaseTypeSecondary === undefined)
       return releaseTypePrimary;
 
+    if (releaseTypePrimary === undefined && releaseTypeSecondary === undefined)
+      return "";
+
     return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
   }
 
