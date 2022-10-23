@@ -11,5 +11,6 @@ CREATE TABLE similarity.recording (
 );
 
 CREATE UNIQUE INDEX similar_recordings_uniq_idx ON similarity.recording (mbid0, mbid1);
+CREATE INDEX similar_recordings_algorithm_idx ON similarity.recording USING gin (metadata);
 
 COMMIT;

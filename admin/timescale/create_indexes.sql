@@ -52,5 +52,6 @@ CREATE INDEX spotify_cache_rel_album_artist_track_id_idx ON spotify_cache.rel_al
 CREATE INDEX spotify_cache_rel_track_artist_track_id_idx ON spotify_cache.rel_track_artist (track_id);
 
 CREATE UNIQUE INDEX similar_recordings_uniq_idx ON similarity.recording (mbid0, mbid1);
+CREATE INDEX similar_recordings_algorithm_idx ON similarity.recording USING gin (metadata);
 
 COMMIT;
