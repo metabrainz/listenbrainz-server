@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import psycopg2.extras
 from datasethoster.main import create_app, init_sentry, register_query
 from listenbrainz.labs_api.labs.api.artist_country_from_artist_mbid import ArtistCountryFromArtistMBIDQuery
 from listenbrainz.labs_api.labs.api.artist_credit_from_artist_mbid import ArtistCreditIdFromArtistMBIDQuery
@@ -33,3 +33,4 @@ load_config(app)
 init_sentry(app, "DATASETS_SENTRY_DSN")
 db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
 ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
+psycopg2.extras.register_uuid()
