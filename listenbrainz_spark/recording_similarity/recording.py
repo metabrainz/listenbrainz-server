@@ -11,8 +11,9 @@ from listenbrainz_spark.utils import get_listens_from_new_dump
 RECORDINGS_PER_MESSAGE = 1000
 
 
-def build_sessioned_index(listen_table, mbc_table, session):
+def build_sessioned_index(listen_table, mbc_table, session, threshold):
     # TODO: Handle case of unmatched recordings breaking sessions!
+    #  Detect and remove skips!
     return f"""
         WITH listens AS (
                  SELECT user_id
@@ -38,8 +39,8 @@ def build_sessioned_index(listen_table, mbc_table, session):
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), grouped_mbids AS (
-                SELECT CASE WHEN s1.recording_mbid < s2.recording_mbid THEN s1.recording_mbid ELSE s2.recording_mbid END AS lexical_mbid0
-                     , CASE WHEN s1.recording_mbid > s2.recording_mbid THEN s1.recording_mbid ELSE s2.recording_mbid END AS lexical_mbid1
+                SELECT IF(s1.recording_mbid < s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid0
+                     , IF(s1.recording_mbid > s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid1
                   FROM sessions s1
                   JOIN sessions s2
                  USING (user_id, session_id) 
@@ -50,10 +51,11 @@ def build_sessioned_index(listen_table, mbc_table, session):
                 FROM grouped_mbids
             GROUP BY lexical_mbid0
                    , lexical_mbid1
+              HAVING score > {threshold}    
     """
 
 
-def main(days, session):
+def main(days, session, threshold):
     to_date = datetime.combine(date.today(), time.min)
     from_date = to_date + timedelta(days=-days)
 
@@ -65,10 +67,10 @@ def main(days, session):
     metadata_df = listenbrainz_spark.sql_context.read.json(config.HDFS_CLUSTER_URI + "/mb_metadata_cache.jsonl")
     metadata_df.createOrReplaceTempView(metadata_table)
 
-    query = build_sessioned_index(table, metadata_table, session)
+    query = build_sessioned_index(table, metadata_table, session, threshold)
     data = run_query(query).toLocalIterator()
 
-    algorithm = f"session_based_days_{days}_session_{session}"
+    algorithm = f"session_based_days_{days}_session_{session}_threshold_{threshold}"
 
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]
