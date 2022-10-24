@@ -349,9 +349,10 @@ def request_similar_users(max_num_users):
 @cli.command(name='request_similar_recordings')
 @click.option("--days", type=int, help="The number of days of listens to use.", required=True)
 @click.option("--session", type=int, help="The maximum duration in seconds between two listens to consider for similarity.", required=True)
-def request_similar_recordings(days, session):
+@click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the simlarity index.", required=True)
+def request_similar_recordings(days, session, threshold):
     """ Send the cluster a request to generate similar recordings index. """
-    send_request_to_spark_cluster('similarity.recording', days=days, session=session)
+    send_request_to_spark_cluster('similarity.recording', days=days, session=session, threshold=threshold)
 
 
 @cli.command(name="request_yim_similar_users")
