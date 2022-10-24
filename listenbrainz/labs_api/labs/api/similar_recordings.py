@@ -24,17 +24,20 @@ class SimilarRecordingsViewerQuery(Query):
         return None
 
     def fetch(self, params, offset=-1, count=-1):
-        recording_mbid = params[0]["recording_mbid"].strip()
+        recording_mbids = [p["recording_mbid"] for p in params]
         algorithm = params[0]["algorithm"].strip()
-        count = count if count > 0 else 100
+        count = count if count > 0 else 10
 
         # resolve redirect for the given mbid if any
-        reference = get_recordings_from_mbids([recording_mbid])[0]
-        # remove unwanted fields from output
-        reference.pop("original_recording_mbid", None)
-        reference.pop("artist_credit_id", None)
+        references = get_recordings_from_mbids(recording_mbids)
+        for r in references:
+            # remove unwanted fields from output
+            r.pop("original_recording_mbid", None)
+            r.pop("artist_credit_id", None)
+            r.pop("length", None)
+            r.pop("comment", None)
 
-        recordings = get_similar_recordings(reference["recording_mbid"], algorithm, count)
+        recordings = get_similar_recordings(recording_mbids, algorithm, count)
 
         results = [
             {
@@ -43,8 +46,8 @@ class SimilarRecordingsViewerQuery(Query):
             },
             {
                 "type": "dataset",
-                "columns": list(reference.keys()),
-                "data": [reference]
+                "columns": list(references[0].keys()),
+                "data": references
             }
         ]
 
@@ -55,18 +58,25 @@ class SimilarRecordingsViewerQuery(Query):
             })
             return results
 
-        index = {}
+        similar_mbid_index = {}
+        score_index = {}
         mbids = []
         for r in recordings:
-            mbid = str(r.similar_mbid)
-            index[mbid] = r.score
-            mbids.append(mbid)
+            similar_mbid = str(r["similar_mbid"])
+            similar_mbid_index[similar_mbid] = str(r["mbid"])
+            score_index[similar_mbid] = r["score"]
+            mbids.append(similar_mbid)
 
         metadata = get_recordings_from_mbids(mbids)
         for r in metadata:
-            r["score"] = index[r["original_recording_mbid"]]
+            similar_mbid = r["original_recording_mbid"]
+            r["score"] = score_index[similar_mbid]
+            r["reference_mbid"] = similar_mbid_index[similar_mbid]
+
             r.pop("original_recording_mbid", None)
             r.pop("artist_credit_id", None)
+            r.pop("length", None)
+            r.pop("comment", None)
 
         results.append({
             "type": "markup",
