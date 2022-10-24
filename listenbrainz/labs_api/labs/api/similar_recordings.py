@@ -26,7 +26,7 @@ class SimilarRecordingsViewerQuery(Query):
     def fetch(self, params, offset=-1, count=-1):
         recording_mbids = [p["recording_mbid"] for p in params]
         algorithm = params[0]["algorithm"].strip()
-        count = count if count > 0 else 10
+        count = count if count > 0 else 100
 
         # resolve redirect for the given mbid if any
         references = get_recordings_from_mbids(recording_mbids)
