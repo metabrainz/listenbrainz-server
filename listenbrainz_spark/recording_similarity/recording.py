@@ -43,7 +43,7 @@ def build_sessioned_index(listen_table, mbc_table, session, threshold):
                      , IF(s1.recording_mbid > s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid1
                   FROM sessions s1
                   JOIN sessions s2
-                 USING (user_id, session_id) 
+                 USING (user_id, session_id)
                  WHERE s1.recording_mbid != s2.recording_mbid
             ) SELECT lexical_mbid0 AS mbid0
                    , lexical_mbid1 AS mbid1
@@ -51,7 +51,7 @@ def build_sessioned_index(listen_table, mbc_table, session, threshold):
                 FROM grouped_mbids
             GROUP BY lexical_mbid0
                    , lexical_mbid1
-              HAVING score > {threshold}    
+              HAVING score > {threshold}
     """
 
 
