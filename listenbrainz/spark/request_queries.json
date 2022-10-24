@@ -133,7 +133,8 @@
     "description": "Generate recording similarity",
     "params": [
       "days",
-      "session"
+      "session",
+      "threshold"
     ]
   },
   "year_in_music.similar_users": {
