@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext } from "react";
+import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
@@ -23,14 +23,18 @@ type FreshReleasesProps = {
 };
 
 export default function FreshReleases({ newAlert }: FreshReleasesProps) {
-  const { APIService } = useContext(GlobalAppContext);
+  const { APIService } = React.useContext(GlobalAppContext);
 
-  const [releases, setReleases] = useState<Array<FreshReleaseItem>>([]);
-  const [filteredList, setFilteredList] = useState<Array<FreshReleaseItem>>([]);
-  const [allFilters, setAllFilters] = useState<Array<string | undefined>>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [releases, setReleases] = React.useState<Array<FreshReleaseItem>>([]);
+  const [filteredList, setFilteredList] = React.useState<
+    Array<FreshReleaseItem>
+  >([]);
+  const [allFilters, setAllFilters] = React.useState<Array<string | undefined>>(
+    []
+  );
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
-  const fetchReleases = useCallback(async () => {
+  const fetchReleases = React.useCallback(async () => {
     setIsLoading(true);
     try {
       const freshReleases: Array<FreshReleaseItem> = await APIService.fetchSitewideFreshReleases(

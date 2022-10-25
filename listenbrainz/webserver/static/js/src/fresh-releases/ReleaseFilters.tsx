@@ -1,16 +1,20 @@
-import React, { useState, Dispatch, SetStateAction, useEffect } from "react";
+import * as React from "react";
 
 type ReleaseFiltersProps = {
   allFilters: Array<string | undefined>;
   releases: Array<FreshReleaseItem>;
-  setFilteredList: Dispatch<SetStateAction<Array<FreshReleaseItem>>>;
+  setFilteredList: React.Dispatch<
+    React.SetStateAction<Array<FreshReleaseItem>>
+  >;
 };
 
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const { allFilters, releases, setFilteredList } = props;
 
-  const [checkedList, setCheckedList] = useState<Array<string | undefined>>([]);
-  const [coverartOnly, setCoverartOnly] = useState<boolean>(false);
+  const [checkedList, setCheckedList] = React.useState<
+    Array<string | undefined>
+  >([]);
+  const [coverartOnly, setCoverartOnly] = React.useState<boolean>(false);
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.persist();
@@ -36,7 +40,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     }
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     // if no filter is chosen, display all releases
     if (checkedList.length === 0) {
       if (coverartOnly === false) {
