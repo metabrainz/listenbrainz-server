@@ -16,6 +16,9 @@ from listenbrainz.db.user_timeline_event import create_user_timeline_event, User
 from listenbrainz.domain.spotify import SpotifyService
 
 
+SPOTIFY_EXPORT_PREFERENCE = "export_to_spotify"
+
+
 def run_post_recommendation_troi_bot():
     """ Top level function called after spark CF recommendations have been completed. """
     # Save playlists for just a handful of people
@@ -45,7 +48,7 @@ def get_users_for_daily_jams():
         SELECT "user".musicbrainz_id AS musicbrainz_id
              , "user".id as id
              , to_char(NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT'), 'YYYY-MM-DD Dy') AS jam_date
-             , COALESCE(us.troi->>'export_to_spotify', 'f')::bool AS export_to_spotify
+             , COALESCE(us.troi->>:export_preference, 'f')::bool AS export_to_spotify
           FROM user_relationship
           JOIN "user"
             ON "user".id = user_0
@@ -56,7 +59,10 @@ def get_users_for_daily_jams():
            AND EXTRACT('hour' from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0
     """
     with db.engine.connect() as connection:
-        result = connection.execute(text(query), {"followed": TROI_BOT_USER_ID})
+        result = connection.execute(text(query), {
+            "followed": TROI_BOT_USER_ID,
+            "export_preference": SPOTIFY_EXPORT_PREFERENCE
+        })
         return result.mappings().all()
 
 
