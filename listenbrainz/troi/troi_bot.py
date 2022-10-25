@@ -45,7 +45,7 @@ def get_users_for_daily_jams():
         SELECT "user".musicbrainz_id AS musicbrainz_id
              , "user".id as id
              , to_char(NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT'), 'YYYY-MM-DD Dy') AS jam_date
-             , COALESCE(us.troi->>'auto_export_to_spotify', 'f') AS export_to_spotify
+             , COALESCE(us.troi->>'export_to_spotify', 'f')::bool AS export_to_spotify
           FROM user_relationship
           JOIN "user"
             ON "user".id = user_0
