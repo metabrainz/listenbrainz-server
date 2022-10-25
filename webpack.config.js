@@ -25,7 +25,7 @@ module.exports = function (env, argv) {
   if (isProd) {
     baseDir = "/static";
   } else {
-    baseDir = "/code/listenbrainz/webserver/static";
+    baseDir = "./listenbrainz/webserver/static";
   }
   const jsDir = path.join(baseDir, "js");
   const distDir = path.join(baseDir, "dist");
@@ -103,7 +103,7 @@ module.exports = function (env, argv) {
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
-      path: distDir,
+      path: path.resolve(distDir),
       publicPath: `/static/dist/`,
       clean: true, // Clean the output directory before emit.
     },
@@ -135,7 +135,11 @@ module.exports = function (env, argv) {
       ],
     },
     resolve: {
-      modules: ["/code/node_modules", path.resolve(baseDir, "node_modules")],
+      modules: [
+        path.resolve("./node_modules"),
+        "/code/node_modules",
+        path.resolve(baseDir, "node_modules"),
+      ],
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
     },
     plugins,
