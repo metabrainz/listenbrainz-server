@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import * as React from "react";
 import { getAlbumArtFromReleaseMBID } from "../utils/utils";
 import formattedReleaseDate from "./utils";
 
@@ -26,7 +26,9 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
 
-  const [coverartSrc, setCoverartSrc] = useState<string>(COVERART_PLACEHOLDER);
+  const [coverartSrc, setCoverartSrc] = React.useState<string>(
+    COVERART_PLACEHOLDER
+  );
 
   function releaseTypeTooltip(): string {
     if (releaseTypeSecondary !== undefined && releaseTypePrimary === undefined)
@@ -48,7 +50,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     }
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     getCoverArt();
   }, []);
 

@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+// import React, { React.useCallback, React.useEffect, React.useState } from "react";
+import * as React from "react";
 import Slider from "rc-slider";
 import { countBy, zipObject } from "lodash";
 import formattedReleaseDate from "./utils";
@@ -13,10 +14,10 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const minDate = releases[0].release_date;
   const maxDate = releases[releases.length - 1].release_date;
 
-  const [minSliderDate, setMinSliderDate] = useState<number>(0);
-  const [maxSliderDate, setMaxSliderDate] = useState<number>(100);
-  const [currentValue, setCurrentValue] = useState<number>();
-  const [marks, setMarks] = useState<{ [key: number]: string }>({});
+  const [minSliderDate, setMinSliderDate] = React.useState<number>(0);
+  const [maxSliderDate, setMaxSliderDate] = React.useState<number>(100);
+  const [currentValue, setCurrentValue] = React.useState<number>();
+  const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
 
   function getDatesInRange(startDate: any, endDate: any) {
     const date = new Date(startDate.getTime());
@@ -30,7 +31,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   }
 
   // let's keep the type to any until we figure out a proper one
-  const changeHandler = useCallback((percent: any) => {
+  const changeHandler = React.useCallback((percent: any) => {
     setCurrentValue(percent);
     const element: HTMLElement | null = document.getElementById(
       "release-cards-grid"
@@ -65,7 +66,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     return zipObject(percentArr, datesArr);
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     getDatesInRange(new Date(minDate), new Date(maxDate));
     setMarks(createMarks(releases));
   }, [releases]);
