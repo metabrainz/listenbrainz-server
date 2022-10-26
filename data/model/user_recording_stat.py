@@ -14,10 +14,6 @@ class RecordingRecord(BaseModel):
     release_mbid: Optional[str]
     track_name: str
     listen_count: int
-    # to add empty fields to stats API response, for compatibility
-    artist_msid: Optional[str]
-    recording_msid: Optional[str]
-    release_msid: Optional[str]
 
     _validate_uuids: classmethod = validator(
         "recording_mbid",

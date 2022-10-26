@@ -14,7 +14,6 @@
       "recording_msid": "f730bec5-d243-478e-ae46-2c47770ca1f0",
       "track_metadata": {
         "additional_info": {
-          "artist_msid": "6ed637a9-773d-4c14-a673-9e3c1d4f0bd0",
           "artist_names": [
             "5 Seconds of Summer"
           ],
@@ -27,7 +26,6 @@
           "release_artist_names": [
             "5 Seconds of Summer"
           ],
-          "release_msid": "c7aaabf9-3463-4815-b427-f92163157287",
           "spotify_album_artist_ids": [
             "https://open.spotify.com/artist/5Rl15oVamLq7FbSb0NNBNy"
           ],
@@ -78,7 +76,6 @@
         "recording_msid": "f16652d3-d9ac-4fc2-973f-047b7f45bee1",
         "track_metadata": {
           "additional_info": {
-            "artist_msid": "50e7fc68-8051-4533-a5d1-d0a5faceedef",
             "artist_names": [
               "Ofenbach",
               "Lagique"
@@ -93,7 +90,6 @@
               "Ofenbach",
               "Lagique"
             ],
-            "release_msid": "3b1abf24-6d89-467f-8460-627ff4486972",
             "spotify_album_artist_ids": [
               "https://open.spotify.com/artist/4AKwRarlmsUlLjIwt38NLw",
               "https://open.spotify.com/artist/1PbtWtrN7jZpd4toqxrjm2"

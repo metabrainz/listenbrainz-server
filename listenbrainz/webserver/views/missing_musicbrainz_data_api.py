@@ -49,20 +49,16 @@ def get_missing_musicbrainz_data(user_name):
                     "last_updated": 1588494361,
                     "data": [
                         {
-                            "artist_msid": "fd32e967-b874-44b2-809c-3862f714813c",
                             "artist_name": "Red City Radio",
                             "listened_at": "2020-04-29 23:40:47",
                             "recording_msid": "78f63ece-86e1-48bf-a7ff-29793d4a84e6",
-                            "release_msid": "47818692-f669-4846-acbc-cb0a69987aee",
                             "release_name": "The Dangers Of Standing Still",
                             "track_name": "Never Bring A Cup Of Water To A Gunfight"
                         },
                         {
-                            "artist_msid": "fd32e967-b874-44b2-809c-3862f714813c",
                             "artist_name": "Red City Radio",
                             "listened_at": "2020-04-29 23:37:57",
                             "recording_msid": "d226200a-a9be-4e9e-9f7c-d74a71647893",
-                            "release_msid": "47818692-f669-4846-acbc-cb0a69987aee",
                             "release_name": "The Dangers Of Standing Still",
                             "track_name": "Nathaniel Martinez"
                         }

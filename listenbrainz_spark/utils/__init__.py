@@ -25,13 +25,11 @@ logger = logging.getLogger(__name__)
 # A typical listen is of the form:
 # {
 #   "artist_mbids": [],
-#   "artist_msid": "6276299c-57e9-4014-9fdd-ab9ed800f61d",
 #   "artist_name": "Cake",
 #   "listened_at": "2005-02-28T20:39:08Z",
 #   "recording_msid": "c559b2f8-41ff-4b55-ab3c-0b57d9b85d11",
 #   "recording_mbid": "1750f8ca-410e-4bdc-bf90-b0146cb5ee35",
 #   "release_mbid": "",
-#   "release_msid": null,
 #   "release_name": null,
 #   "tags": [],
 #   "track_name": "Tougher Than It Is"

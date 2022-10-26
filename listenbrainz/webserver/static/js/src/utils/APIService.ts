@@ -1158,4 +1158,37 @@ export default class APIService {
     await this.checkStatus(response);
     return response.status;
   };
+
+  submitTroiPreferences = async (
+    userToken: string,
+    exportToSpotify: boolean
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/troi`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ export_to_spotify: exportToSpotify }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  exportPlaylistToSpotify = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/spotify`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
 }

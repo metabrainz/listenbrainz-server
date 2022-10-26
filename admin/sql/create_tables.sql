@@ -268,7 +268,8 @@ ALTER TABLE pinned_recording
 CREATE TABLE user_setting(
     id                     SERIAL, --PK
     user_id                INTEGER NOT NULL, --FK to "user".id
-    timezone_name          TEXT   
+    timezone_name          TEXT,
+    troi                   JSONB -- troi related prefs
 );
 
 ALTER TABLE user_setting

@@ -9,7 +9,6 @@
                 "recording_msid": "dce97a5f-09ad-4605-a239-4532abe7c8b2",
                 "track_metadata": {
                     "additional_info": {
-                        "artist_msid": "f8f216b7-d0e9-4843-9c90-3f7f44374c0b",
                         "artist_names": [
                             "Glass Animals"
                         ],
@@ -24,7 +23,6 @@
                         "release_artist_names": [
                             "Glass Animals"
                         ],
-                        "release_msid": "6806d392-3622-4b29-abf5-8024c103bdcb",
                         "spotify_album_artist_ids": [
                             "https://open.spotify.com/artist/4yvcSjfu4PC0CYQyLy4wSq"
                         ],

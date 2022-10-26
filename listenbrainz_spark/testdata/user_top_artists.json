@@ -2,63 +2,54 @@
   {
     "user_id": 1,
     "artist_name": "artist1",
-    "artist_msid": "1",
     "artist_mbids": [],
     "count": 8
   },
   {
     "user_id": 1,
     "artist_name": "artist2",
-    "artist_msid": "2",
     "artist_mbids": ["2"],
     "count": 3
   },
   {
     "user_id": 1,
     "artist_name": "artist2",
-    "artist_msid": "",
     "artist_mbids": ["2"],
     "count": 3
   },
   {
     "user_id": 1,
     "artist_name": "artist2",
-    "artist_msid": null,
     "artist_mbids": ["2"],
     "count": 3
   },
   {
     "user_id": 1,
     "artist_name": "artist3",
-    "artist_msid": "3",
     "artist_mbids": ["3"],
     "count": 4
   },
   {
     "user_id": 2,
     "artist_name": "artist1",
-    "artist_msid": "",
     "artist_mbids": [],
     "count": 4
   },
   {
     "user_id": 2,
     "artist_name": "artist3",
-    "artist_msid": "3",
     "artist_mbids": ["3"],
     "count": 7
   },
   {
     "user_id": 2,
     "artist_name": "artist4",
-    "artist_msid": "",
     "artist_mbids": ["4"],
     "count": 2
   },
   {
     "user_id": 3,
     "artist_name": "artist1",
-    "artist_msid": "1",
     "artist_mbids": [],
     "count": 2
   }

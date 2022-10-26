@@ -125,10 +125,4 @@ def insert_fresh_releases(database: str, docs: list[dict]):
 
 def get_fresh_releases(user_id: int):
     """ Retrieve fresh releases for given user. """
-    data = couchdb.fetch_data("fresh_releases", user_id)
-    if not data:
-        return None
-    return {
-        "user_id": user_id,
-        "releases": data["releases"]
-    }
+    return couchdb.fetch_data("fresh_releases", user_id)
