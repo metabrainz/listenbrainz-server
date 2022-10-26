@@ -21,12 +21,7 @@ const babelExcludeLibrariesRegexp = new RegExp(
 );
 module.exports = function (env, argv) {
   const isProd = argv.mode === "production";
-  let baseDir;
-  if (isProd) {
-    baseDir = "/static";
-  } else {
-    baseDir = "./listenbrainz/webserver/static";
-  }
+  const baseDir = "./listenbrainz/webserver/static";
   const jsDir = path.join(baseDir, "js");
   const distDir = path.join(baseDir, "dist");
   const cssDir = path.join(baseDir, "css");
@@ -50,10 +45,7 @@ module.exports = function (env, argv) {
       threads: true,
     }),
     new ESLintPlugin({
-      // Starting the path with "**/" because of current dev/prod path discrepancy
-      // In dev we bind-mount the source code to "/code/static" and in prod to "/static"
-      // The "**/" allows us to ignore the folder structure and find source files in whatever CWD we're in.
-      files: "**/js/src/**/*.{ts,tsx,js,jsx}",
+      files: path.join(jsDir, "src/**/*.{ts,tsx,js,jsx}"),
       fix: !isProd,
     }),
   ];
@@ -104,6 +96,7 @@ module.exports = function (env, argv) {
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
       path: path.resolve(distDir),
+      // This is for the manifest file used by the server. Files end up in /static folder
       publicPath: `/static/dist/`,
       clean: true, // Clean the output directory before emit.
     },
