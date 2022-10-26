@@ -188,6 +188,8 @@ COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/robot
 COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/sound /static/sound
 COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/fonts /static/fonts
 COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/img /static/img
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/js/lib /static/js/lib
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/js/info.js /static/js/
 COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/dist /static/dist
 
 # Now install our code, which may change frequently
