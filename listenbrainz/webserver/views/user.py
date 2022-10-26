@@ -262,47 +262,29 @@ def playlists(user_name: str):
     )
 
 
-@user_bp.route("/<user_name>/recommendations/")
+@user_bp.route("/<user_name>/created-for-you/")
 @web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
 
-    offset = request.args.get('offset', 0)
-    try:
-        offset = int(offset)
-    except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" %
-                         request.args.get("offset"))
-
-    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-    try:
-        count = int(count)
-    except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" %
-                         request.args.get("count"))
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
     }
 
-    playlists = []
-    user_playlists, playlist_count = get_playlists_created_for_user(
-        user.id, False, count, offset)
-    for playlist in user_playlists:
-        playlists.append(serialize_jspf(playlist))
-
+    # TODO: We will want to get the latest playlists (daily jams, top 100 artists, top similar artists, etc.)
+    # generated for the user, and pass the links down as props so the user can directly click on a card to go to the playlist
     props = {
-        "playlists": playlists,
         "user": user_data,
-        "active_section": "recommendations",
-        "playlist_count": playlist_count,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
+        "daily_jams_url": "dailyJamsUrl",
+        "top_100_artists_rl": "top100ArtistsUrl",
+        "similar_artists_url": "similarArtistsUrl",
     }
-
     return render_template(
-        "playlists/playlists.html",
-        active_section="recommendations",
+        "user/created-for-you.html",
+        active_section="created-for-you",
         props=ujson.dumps(props),
         user=user
     )

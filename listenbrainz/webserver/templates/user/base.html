@@ -23,8 +23,8 @@
         <li {{ 'class=active' if active_section=='charts' }}><a href="{{ url_for('user.charts', user_name=user.musicbrainz_id) }}">Charts</a></li>
         <li {{ 'class=active' if active_section=='feedback' }}><a href="{{ url_for('user.feedback', user_name=user.musicbrainz_id) }}">Love/Hate</a></li>
         <li {{ 'class=active' if active_section=='pins' }}><a href="{{ url_for('user.pins', user_name=user.musicbrainz_id) }}">Pins</a></li>
+        <li {{ 'class=active' if active_section=='created-for-you' }}><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) }}">Created for you</a></li>
         <li {{ 'class=active' if active_section=='playlists' }}><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) }}">Playlists</a></li>
-        <li {{ 'class=active' if active_section=='recommendations' }}><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) }}">Recommendations</a></li>
         <li {{ 'class=active' if active_section=='collaborations' }}><a href="{{ url_for('user.collaborations', user_name=user.musicbrainz_id) }}">Collaborations</a></li>
       </ul>
 
