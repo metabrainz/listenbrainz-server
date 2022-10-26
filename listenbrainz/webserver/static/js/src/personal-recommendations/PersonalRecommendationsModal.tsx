@@ -185,7 +185,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 <span aria-hidden="true">&times;</span>
               </button>
               <h4 className="modal-title" id="PersonalRecommendationModalLabel">
-                Recommend {track_name} to certain follower(s)
+                Recommend <b>{track_name}</b> to certain follower(s)
               </h4>
             </div>
             <div className="modal-body">
@@ -232,11 +232,11 @@ export default class PersonalRecommendationModal extends React.Component<
               <small className="character-count">
                 {blurbContent.length} / {this.maxBlurbContentLength}
                 <br />
-                The person you want to recommend to isn&apos;t on the drop-down
-                list? Do make sure to tell them to follow you by making them go
-                to your listen page and clicking the button next to your name!
-                And if the name still doesn&apos;t appear then close the modal
-                and open it again to see a fresh list of followers!
+                Are the people you want to recommend to not on the drop-down
+                list? Make sure to tell them to follow you by asking them go to
+                your listen page and clicking the button next to your name! And
+                if the names still don&apos;t appear then close the modal and
+                open it again to see the fresh and updated list of followers!
               </small>
             </div>
             <div className="modal-footer">
@@ -253,7 +253,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 data-dismiss="modal"
                 onClick={this.submitPersonalRecommendation}
               >
-                Personally Recommend
+                Send Recommendation
               </button>
             </div>
           </form>
