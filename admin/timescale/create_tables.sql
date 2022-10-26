@@ -162,5 +162,10 @@ CREATE TABLE spotify_cache.rel_track_artist (
     position        INTEGER NOT NULL
 );
 
+CREATE TABLE background_worker_state (
+    key     TEXT NOT NULL,
+    value   TEXT
+);
+COMMENT ON TABLE background_worker_state IS 'This table is used to store miscellaneous data by various background processes or the ListenBrainz webserver. Use it when storing the data is redis is not reliable enough.';
 
 COMMIT;

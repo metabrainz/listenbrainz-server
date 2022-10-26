@@ -9,10 +9,7 @@
             "release_name": "Halycon Days",
             "release_mbid": null,
             "track_name": "Burn",
-            "listen_count": 230,
-            "artist_msid": null,
-            "recording_msid": null,
-            "release_msid": null
+            "listen_count": 230
         },
         {
             "artist_name": "Ellie Goulding",
@@ -21,10 +18,7 @@
             "release_name": "Delirium",
             "release_mbid": null,
             "track_name": "Love Me Like You Do - From \"Fifty Shades of Grey\"",
-            "listen_count": 229,
-            "artist_msid": null,
-            "recording_msid": null,
-            "release_msid": null
+            "listen_count": 229
         }
     ],
     "count": 2,

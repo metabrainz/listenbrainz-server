@@ -22,7 +22,6 @@ const listen: Listen = {
       duration_ms: 123000,
       release_mbid: "foo",
       recording_msid: "bar",
-      artist_msid: "artist_msid",
       recording_mbid: "yyyy",
       artist_mbids: ["xxxx"],
     },

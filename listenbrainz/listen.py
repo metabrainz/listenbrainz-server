@@ -56,8 +56,6 @@ class Listen(object):
         'isrc',
         'spotify_id',
         'tags',
-        'artist_msid',
-        'release_msid',
         'recording_msid',
         'duration_ms',
         'duration',
@@ -71,8 +69,8 @@ class Listen(object):
         'release_name',
     )
 
-    def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, release_msid=None,
-                 recording_msid=None, dedup_tag=0, inserted_timestamp=None, data=None):
+    def __init__(self, user_id=None, user_name=None, timestamp=None, recording_msid=None,
+                 dedup_tag=0, inserted_timestamp=None, data=None):
         self.user_id = user_id
         self.user_name = user_name
 
@@ -88,8 +86,6 @@ class Listen(object):
                 self.timestamp = None
                 self.ts_since_epoch = None
 
-        self.artist_msid = artist_msid
-        self.release_msid = release_msid
         self.recording_msid = recording_msid
         self.dedup_tag = dedup_tag
         self.inserted_timestamp = inserted_timestamp
@@ -123,8 +119,6 @@ class Listen(object):
             user_id=j.get('user_id'),
             user_name=j.get('user_name', ''),
             timestamp=j['listened_at'],
-            artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
-            release_msid=j['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=j.get('recording_msid'),
             dedup_tag=j.get('dedup_tag', 0),
             data=j.get('track_metadata')
@@ -146,8 +140,6 @@ class Listen(object):
             user_id=user_id,
             user_name=user_name,
             timestamp=data['listened_at'],
-            artist_msid=data['track_metadata']['additional_info'].get('artist_msid'),
-            release_msid=data['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=data['track_metadata']['additional_info'].get('recording_msid'),
             dedup_tag=data.get('dedup_tag', 0),
             inserted_timestamp=created,
@@ -163,8 +155,6 @@ class Listen(object):
             dict with fields 'track_metadata', 'listened_at' and 'recording_msid'
         """
         track_metadata = self.data.copy()
-        track_metadata['additional_info']['artist_msid'] = self.artist_msid
-        track_metadata['additional_info']['release_msid'] = self.release_msid
 
         data = {
             'track_metadata': track_metadata,
@@ -187,8 +177,6 @@ class Listen(object):
 
     def to_timescale(self):
         track_metadata = deepcopy(self.data)
-        track_metadata['additional_info']['artist_msid'] = self.artist_msid
-        track_metadata['additional_info']['release_msid'] = self.release_msid
         track_metadata['additional_info']['recording_msid'] = self.recording_msid
         track_name = track_metadata['track_name']
         del track_metadata['track_name']
@@ -198,7 +186,7 @@ class Listen(object):
         }))
 
     def validate(self):
-        return (self.user_id is not None and self.timestamp is not None and self.artist_msid is not None
+        return (self.user_id is not None and self.timestamp is not None
                 and self.recording_msid is not None and self.data is not None)
 
     @property
@@ -210,8 +198,8 @@ class Listen(object):
         return pformat(vars(self))
 
     def __unicode__(self):
-        return "<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
-               (self.user_name, self.ts_since_epoch, self.artist_msid, self.release_msid, self.recording_msid, self.data['artist_name'], self.data['track_name'])
+        return "<Listen: user_name: %s, time: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
+               (self.user_name, self.ts_since_epoch, self.recording_msid, self.data['artist_name'], self.data['track_name'])
 
 
 class NowPlayingListen:
@@ -250,10 +238,8 @@ def convert_dump_row_to_spark_row(row):
     data = {
         'listened_at': str(datetime.utcfromtimestamp(row['timestamp'])),
         'user_name': row['user_name'],
-        'artist_msid': row['track_metadata']['additional_info']['artist_msid'],
         'artist_name': row['track_metadata'].get('artist_name', ''),
         'artist_mbids': convert_comma_seperated_string_to_list(row['track_metadata']['additional_info'].get('artist_mbids', '')),
-        'release_msid': row['track_metadata']['additional_info'].get('release_msid', ''),
         'release_name': row['track_metadata'].get('release_name', ''),
         'release_mbid': row['track_metadata']['additional_info'].get('release_mbid', ''),
         'track_name': row['track_metadata']['track_name'],

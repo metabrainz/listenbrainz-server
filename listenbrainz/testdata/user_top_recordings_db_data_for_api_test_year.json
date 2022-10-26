@@ -12,10 +12,7 @@
         "release_name": "We Belong",
         "release_mbid": "868e1be0-58db-412d-90b5-939f9a9ef63f",
         "track_name": "We Belong",
-        "listen_count": 5,
-        "artist_msid": null,
-        "recording_msid": null,
-        "release_msid": null
+        "listen_count": 5
       },
       {
         "artist_name": "Ellie Goulding",
@@ -26,10 +23,7 @@
         "release_name": "Sixteen",
         "release_mbid": "ee9da2f5-a110-4bff-9cfd-28a56c753bbd",
         "track_name": "Sixteen",
-        "listen_count": 5,
-        "artist_msid": null,
-        "recording_msid": null,
-        "release_msid": null
+        "listen_count": 5
       },
       {
         "artist_name": "Coldplay",
@@ -40,10 +34,7 @@
         "release_name": "Ghost Stories",
         "release_mbid": "623a3d9d-9d22-418e-9adf-0de145dd871e",
         "track_name": "Ink",
-        "listen_count": 5,
-        "artist_msid": null,
-        "recording_msid": null,
-        "release_msid": null
+        "listen_count": 5
       },
       {
         "artist_name": "Train",
@@ -54,10 +45,7 @@
         "release_name": "Save Me, San Francisco (Golden Gate Edition)",
         "release_mbid": "09b9ed8f-48b7-49c2-8b2f-ad7b72584bbc",
         "track_name": "Hey, Soul Sister",
-        "listen_count": 5,
-        "artist_msid": null,
-        "recording_msid": null,
-        "release_msid": null
+        "listen_count": 5
       },
       {
         "artist_name": "Maroon 5",
@@ -68,10 +56,7 @@
         "release_name": "Girls Like You (feat. Cardi B)",
         "release_mbid": "5162d1cd-c926-4fa0-a52c-fdb183e039b6",
         "track_name": "Girls Like You (feat. Cardi B)",
-        "listen_count": 5,
-        "artist_msid": null,
-        "recording_msid": null,
-        "release_msid": null
+        "listen_count": 5
       },
       {
         "artist_name": "Within Temptation",
@@ -82,10 +67,7 @@
         "release_name": "The Unforgiving",
         "release_mbid": "907b37ad-71df-4237-a7ed-3ed5fea96179",
         "track_name": "Faster",
-        "listen_count": 5,
-        "artist_msid": null,
-        "recording_msid": null,
-        "release_msid": null
+        "listen_count": 5
       }
     ]
   },
@@ -102,10 +84,7 @@
         "release_name": "A Head Full Of Dreams",
         "release_mbid": "452351a2-a730-4df0-88f9-f63f24101562",
         "track_name": "Everglow",
-        "listen_count": 5,
-        "artist_msid": null,
-        "recording_msid": null,
-        "release_msid": null
+        "listen_count": 5
       },
       {
         "artist_name": "The Weeknd",
@@ -116,10 +95,7 @@
         "release_name": "Blinding Lights",
         "release_mbid": "51b2ee66-ce30-4c83-8250-1a183f321de6",
         "track_name": "Blinding Lights",
-        "listen_count": 5,
-        "artist_msid": null,
-        "recording_msid": null,
-        "release_msid": null
+        "listen_count": 5
       }
     ]
   }

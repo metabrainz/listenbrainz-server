@@ -1,55 +1,46 @@
 [
   {
     "artist_name": "artist1",
-    "artist_msid": "1",
     "artist_mbids": ["1"],
     "timestamp": 1597622400
   },
   {
     "artist_name": "artist1",
-    "artist_msid": "2",
     "artist_mbids": ["1"],
     "timestamp": 1597622400
   },
   {
     "artist_name": "artist1",
-    "artist_msid": "",
     "artist_mbids": ["1"],
     "timestamp": 1597622400
   },
   {
     "artist_name": "artist2",
-    "artist_msid": "3",
     "artist_mbids": [],
     "timestamp": 1597622400
   },
   {
     "artist_name": "artist2",
-    "artist_msid": "3",
     "artist_mbids": [],
     "timestamp": 1597622400
   },
   {
     "artist_name": "artist3",
-    "artist_msid": "4",
     "artist_mbids": [],
     "timestamp": 1597622400
   },
   {
     "artist_name": "artist1",
-    "artist_msid": "1",
     "artist_mbids": ["1"],
     "timestamp": 1597708800
   },
   {
     "artist_name": "artist2",
-    "artist_msid": "3",
     "artist_mbids": [],
     "timestamp": 1597708800
   },
   {
     "artist_name": "artist3",
-    "artist_msid": "4",
     "artist_mbids": [],
     "timestamp": 1597795200
   }

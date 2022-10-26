@@ -35,9 +35,6 @@ jobs:
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
       continue-on-error: true
 
-    - uses: satackey/action-docker-layer-caching@v0.0.11
-      continue-on-error: true
-
     # We do not use this to install node but only to register problem matchers
     # so that eslint annotations work.
     - name: Setup Node.js environment to enable annotations

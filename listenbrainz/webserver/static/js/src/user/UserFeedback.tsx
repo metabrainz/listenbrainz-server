@@ -11,7 +11,7 @@ import {
   faHeartBroken,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
-import { get, clone, has, isNaN } from "lodash";
+import { clone, get, has, isNaN } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
@@ -59,15 +59,10 @@ export default class UserFeedback extends React.Component<
   static RecordingMetadataToListenFormat = (
     feedbackItem: FeedbackResponseWithTrackMetadata
   ): Listen => {
-    const listen: Listen = {
+    return {
       listened_at: feedbackItem.created ?? 0,
       track_metadata: { ...feedbackItem.track_metadata },
     };
-    listen.track_metadata.additional_info = {
-      ...listen.track_metadata.additional_info,
-      recording_msid: feedbackItem.recording_msid,
-    };
-    return listen;
   };
 
   private listensTable = React.createRef<HTMLTableElement>();
@@ -522,11 +517,13 @@ export default class UserFeedback extends React.Component<
                         dataTarget="#PinRecordingModal"
                       />,
                     ];
+                    const recording_msid = getRecordingMSID(listen);
+                    const recording_mbid = getRecordingMBID(listen);
                     return (
                       <ListenCard
                         showUsername={false}
                         showTimestamp
-                        key={`${listen.listened_at}`}
+                        key={`${listen.listened_at}-${recording_msid}-${recording_mbid}`}
                         listen={listen}
                         currentFeedback={this.getFeedbackForListen(listen)}
                         updateFeedbackCallback={this.updateFeedback}
