@@ -184,7 +184,11 @@ COPY ./docker/services/cron/crontab /etc/cron.d/crontab
 RUN chmod 0644 /etc/cron.d/crontab
 
 # copy the compiled js files and statis assets from image to prod
-COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/dist /code/listenbrainz/webserver/static/fonts /code/listenbrainz/webserver/static/img /code/listenbrainz/webserver/static/sound /code/listenbrainz/webserver/static/robots.txt /static/
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/robots.txt /static/
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/sound /static/sound
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/fonts /static/fonts
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/img /static/img
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/dist /static/dist
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/
