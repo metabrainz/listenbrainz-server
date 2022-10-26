@@ -185,7 +185,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 <span aria-hidden="true">&times;</span>
               </button>
               <h4 className="modal-title" id="PersonalRecommendationModalLabel">
-                Personally recommend this recording
+                Recommend {track_name} to certain follower(s)
               </h4>
             </div>
             <div className="modal-body">
@@ -210,12 +210,12 @@ export default class PersonalRecommendationModal extends React.Component<
                 action={this.addUser}
               />
               <p>
-                Tell the users selected above why are you recommending them{" "}
+                Tell your above chosen followers why are you recommending them{" "}
                 <b>
                   {" "}
                   {track_name} by {artist_name}
                 </b>
-                (Optional)
+                <small> (Optional)</small>
               </p>
               <div className="form-group">
                 <textarea
@@ -229,8 +229,14 @@ export default class PersonalRecommendationModal extends React.Component<
                   onChange={this.handleBlurbInputChange}
                 />
               </div>
-              <small>
+              <small className="character-count">
                 {blurbContent.length} / {this.maxBlurbContentLength}
+                <br />
+                The person you want to recommend to isn&apos;t on the drop-down
+                list? Do make sure to tell them to follow you by making them go
+                to your listen page and clicking the button next to your name!
+                And if the name still doesn&apos;t appear then close the modal
+                and open it again to see a fresh list of followers!
               </small>
             </div>
             <div className="modal-footer">

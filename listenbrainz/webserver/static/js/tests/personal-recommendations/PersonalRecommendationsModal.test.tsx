@@ -106,6 +106,8 @@ describe("submitPersonalRecommendation", () => {
     });
 
     wrapper.setState({ blurbContent: "hii", users: ["riksucks", "hrik2001"] });
+    expect(wrapper.state("blurbContent")).toEqual("hii");
+    expect(wrapper.state("users")).toEqual(["riksucks", "hrik2001"]);
     const setStateSpy = jest.spyOn(instance, "setState");
     await instance.submitPersonalRecommendation();
     expect(setStateSpy).toHaveBeenCalledTimes(1);
