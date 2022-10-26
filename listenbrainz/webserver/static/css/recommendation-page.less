@@ -38,10 +38,6 @@
     repeating-linear-gradient( fade(@color1, 80%), fade(@color1, 40%) );
   }
   &.top-100 {
-    color: white;
-    > h4 {
-      color: white;
-    }
     background-image: linear-gradient(154deg, #f2e859 5%, #fa9f55 5%, #fa9f55 50%, #f2e859 50%, #f2e859 55%, #fa9f55 55%, #fa9f55 100%);
 background-size: 20.00px 9.75px;
     
@@ -57,5 +53,17 @@ background-size: 20.00px 9.75px;
       linear-gradient(60deg, fade(@color1,20%) 25%, transparent 25.5%, transparent 75%, fade(@color1,20%) 75%, fade(@color1,20%)),
       linear-gradient(60deg, fade(@color1,20%) 25%, transparent 25.5%, transparent 75%, fade(@color1,20%) 75%, fade(@color1,20%));
     background-position: 0 0,0 0,10px 18px,10px 18px,0 0,160px 48px;
+  }
+}
+
+// This is just for a mockup, redo this when implementing properly
+.playlist {
+  padding:1em;
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+  > *:last-child{
+    margin-top: auto;
+    text-align-last: justify;
   }
 }

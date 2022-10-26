@@ -10,6 +10,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import { Swiper, SwiperSlide } from "swiper/react";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -115,6 +116,103 @@ export default class UserPlaylists extends React.Component<
               </p>
             </Card>
           )}
+        </div>
+        <hr />
+        <h2>Other playlists</h2>
+        <p>
+          You have given permission for these bots to generate playlists for
+          you. To review your permissions, please go to <a>this page</a>
+        </p>
+        <div>
+          <h4 className="text-center">
+            Created by <a>my-great-playlist-bot</a>
+          </h4>
+          <Swiper
+            slidesPerView={4}
+            // slidesPerColumn={2}
+            spaceBetween={30}
+            pagination={{ clickable: true }}
+            navigation
+          >
+            <SwiperSlide>
+              <Card className="playlist">
+                <h4>My playlist 1</h4>
+                <div className="description">A great description here</div>
+                <div>
+                  Created:{" "}
+                  {new Date().toLocaleString(undefined, {
+                    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+                    dateStyle: "short",
+                  })}
+                </div>
+              </Card>
+            </SwiperSlide>
+            <SwiperSlide>
+              <Card className="playlist">
+                <h4>My playlist 2</h4>
+                <div className="description">A great description here</div>
+                <div>
+                  Created:{" "}
+                  {new Date().toLocaleString(undefined, {
+                    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+                    dateStyle: "short",
+                  })}
+                </div>
+              </Card>
+            </SwiperSlide>
+            <SwiperSlide>
+              <Card className="playlist">
+                <h4>My playlist 3</h4>
+                <div className="description">A great description here</div>
+                <div>
+                  Created:{" "}
+                  {new Date().toLocaleString(undefined, {
+                    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+                    dateStyle: "short",
+                  })}
+                </div>
+              </Card>
+            </SwiperSlide>
+            <SwiperSlide>
+              <Card className="playlist">
+                <h4>My playlist 4</h4>
+                <div className="description">A great description here</div>
+                <div>
+                  Created:{" "}
+                  {new Date().toLocaleString(undefined, {
+                    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+                    dateStyle: "short",
+                  })}
+                </div>
+              </Card>
+            </SwiperSlide>
+            <SwiperSlide>
+              <Card className="playlist">
+                <h4>My playlist 5</h4>
+                <div className="description">A great description here</div>
+                <div>
+                  Created:{" "}
+                  {new Date().toLocaleString(undefined, {
+                    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+                    dateStyle: "short",
+                  })}
+                </div>
+              </Card>
+            </SwiperSlide>
+            <SwiperSlide>
+              <Card className="playlist">
+                <h4>My playlist 6</h4>
+                <div className="description">A great description here</div>
+                <div>
+                  Created:{" "}
+                  {new Date().toLocaleString(undefined, {
+                    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+                    dateStyle: "short",
+                  })}
+                </div>
+              </Card>
+            </SwiperSlide>
+          </Swiper>
         </div>
       </div>
     );
