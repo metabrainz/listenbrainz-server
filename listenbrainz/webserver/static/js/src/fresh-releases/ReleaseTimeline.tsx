@@ -1,8 +1,7 @@
-// import React, { React.useCallback, React.useEffect, React.useState } from "react";
 import * as React from "react";
 import Slider from "rc-slider";
 import { countBy, zipObject } from "lodash";
-import formattedReleaseDate from "./utils";
+import { formattedReleaseDate, useMediaQuery } from "./utils";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
@@ -18,6 +17,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const [maxSliderDate, setMaxSliderDate] = React.useState<number>(100);
   const [currentValue, setCurrentValue] = React.useState<number>();
   const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
+
+  const screenMd = useMediaQuery("(max-width: 992px)");
 
   function getDatesInRange(startDate: any, endDate: any) {
     const date = new Date(startDate.getTime());
@@ -74,17 +75,16 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   function renderSlider() {
     if (minSliderDate && maxSliderDate) {
       return (
-        <div className="slider">
-          <div className="slider-legend">{formattedReleaseDate(minDate)}</div>
+        <div className="slider-container">
           <Slider
-            vertical
-            reverse
+            className={screenMd ? "slider-horizontal" : "slider-vertical"}
+            vertical={!screenMd}
+            reverse={!screenMd}
             included={false}
             marks={marks}
             value={currentValue}
             onChange={changeHandler}
           />
-          <div className="slider-legend">{formattedReleaseDate(maxDate)}</div>
         </div>
       );
     }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { getAlbumArtFromReleaseMBID } from "../utils/utils";
-import formattedReleaseDate from "./utils";
+import { formattedReleaseDate } from "./utils";
 
 type ReleaseCardProps = {
   releaseDate: string;
