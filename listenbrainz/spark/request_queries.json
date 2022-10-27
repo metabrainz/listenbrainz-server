@@ -134,7 +134,8 @@
     "params": [
       "days",
       "session",
-      "threshold"
+      "threshold",
+      "limit"
     ]
   },
   "year_in_music.similar_users": {
