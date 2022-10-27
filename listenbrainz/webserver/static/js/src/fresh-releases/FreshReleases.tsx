@@ -127,7 +127,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
             </div>
             <div className="releases-timeline col-xs-12 col-md-1">
               {releases.length > 0 ? (
-                <ReleaseTimeline releases={releases} />
+                <ReleaseTimeline releases={filteredList} />
               ) : null}
             </div>
           </>
