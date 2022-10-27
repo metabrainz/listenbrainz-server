@@ -108,7 +108,7 @@
   }
 
   // Mobile responsive filters
-  @media (max-width: @screen-xs) {
+  @media (max-width: @screen-md) {
     .filters-main {
       display: block;
       padding: 1rem;
@@ -117,7 +117,6 @@
       top: 0;
       z-index: 50;
       background-color: @white;
-      box-shadow: 0px 6px 10px 0px fade(@asphalt, 20%);
 
       #filters-container {
         display: block;
@@ -278,46 +277,46 @@
       grid-template-columns: repeat(1, 1fr);
       & > .release-card-container {
         & > .release-coverart {
-          width: 15.5em;
-          height: 15.5em;
+          width: 13em;
+          height: 13em;
         }
         & > .name-type-container {
-          width: 15.5em;
+          width: 13em;
         }
         & > .release-artist {
-          width: 15.5em;
+          width: 13em;
         }
       }
     }
 
-    @media (min-width: @screen-xs) and (max-width: @screen-sm) {
+    @media (min-width: @screen-xs) and (max-width: 576px) {
       grid-template-columns: repeat(2, 1fr);
       & > .release-card-container {
         & > .release-coverart {
-          width: 14.25em;
-          height: 14.25em;
+          width: 12em;
+          height: 12em;
         }
         & > .name-type-container {
-          width: 14.25em;
+          width: 12em;
         }
         & > .release-artist {
-          width: 14.25em;
+          width: 12em;
         }
       }
     }
 
-    @media (min-width: @screen-sm) and (max-width: @screen-md) {
+    @media (min-width: 576px) and (max-width: @screen-md) {
       grid-template-columns: repeat(3, 1fr);
       & > .release-card-container {
         & > .release-coverart {
-          width: 13.5em;
-          height: 13.5em;
+          width: 11.75em;
+          height: 11.75em;
         }
         & > .name-type-container {
-          width: 13.5em;
+          width: 11.75em;
         }
         & > .release-artist {
-          width: 13.5em;
+          width: 11.75em;
         }
       }
     }
@@ -337,24 +336,48 @@
         }
       }
     }
+
+    @media (min-width: 1200px) {
+      grid-template-columns: repeat(5, 1fr);
+      & > .release-card-container {
+        & > .release-coverart {
+          width: 11em;
+          height: 11em;
+        }
+        & > .name-type-container {
+          width: 11em;
+        }
+        & > .release-artist {
+          width: 11em;
+        }
+      }
+    }
   }
 
   // TIMELINE
   .releases-timeline {
+    display: flex;
+    justify-content: center;
     top: 6rem;
     position: sticky;
     height: 68vh;
-    width: inherit;
     padding-bottom: 6rem;
 
-    .slider {
-      height: 100%;
+    .slider-container {
+      width: 100%;
 
-      .slider-legend {
-        text-transform: uppercase;
-        font-weight: 500;
-        cursor: default;
+      .slider-vertical {
+        height: 100%;
       }
+    }
+
+    @media (max-width: @screen-md) {
+      height: unset;
+      position: sticky;
+      bottom: 0;
+      padding: 3rem;
+      z-index: 50;
+      background-color: @white;
     }
   }
 }
