@@ -119,7 +119,7 @@ export default class PlayerPage extends React.Component<
 
   savePlaylist = async () => {
     const { currentUser } = this.context;
-    if (!currentUser || !currentUser.auth_token) {
+    if (!currentUser?.auth_token) {
       return;
     }
     const { newAlert, playlist } = this.props;
@@ -137,7 +137,7 @@ export default class PlayerPage extends React.Component<
         </>
       );
     } catch (error) {
-      newAlert("danger", "Error", error.message);
+      newAlert("danger", "Could not save playlist", error.message);
     }
   };
 
@@ -187,7 +187,8 @@ export default class PlayerPage extends React.Component<
       tracks?.[0]?.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]
         ?.release_identifier;
     const isPlayerPage = false;
-    const showOptionsMenu = Boolean(releaseLink) || Boolean(currentUser?.name);
+    const showOptionsMenu =
+      Boolean(releaseLink) || Boolean(currentUser?.auth_token);
     return (
       <div className="playlist-details row">
         <h1 className="title">
@@ -225,7 +226,7 @@ export default class PlayerPage extends React.Component<
                       />
                     </li>
                   )}
-                  {currentUser?.name && (
+                  {currentUser?.auth_token && (
                     <li>
                       <a
                         id="exportPlaylistToSpotify"
