@@ -201,7 +201,7 @@ export default class SpotifyPlayer
         this.handleAccountError();
         return;
       }
-      handleError(errorObject);
+      handleError(errorObject.message ?? errorObject);
     }
   };
 
@@ -233,29 +233,30 @@ export default class SpotifyPlayer
           },
         }
       );
-      let errorMessage;
+      let errorObject;
       if (response.ok) {
         return;
       }
       try {
-        errorMessage = await response.json();
+        errorObject = await response.json();
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(err);
       }
-      if (response.status === 401) {
+      const status = errorObject?.status ?? response.status;
+      if (status === 401) {
         // Handle token error and try again if fixed
         this.handleTokenError(
-          response.statusText,
+          errorObject ?? response.statusText,
           this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1)
         );
         return;
       }
-      if (response.status === 403) {
+      if (status === 403) {
         this.handleAccountError();
         return;
       }
-      if (response.status === 404) {
+      if (status === 404) {
         // Device not found
         // Wait a second, reconnect and try again
         await new Promise((resolve) => {
@@ -266,9 +267,8 @@ export default class SpotifyPlayer
         );
         return;
       }
-      if (!response.ok) {
-        handleError(errorMessage || response);
-      }
+      // catch-all
+      handleError(errorObject?.message ?? response);
     } catch (error) {
       handleError(error.message);
     }
@@ -316,15 +316,10 @@ export default class SpotifyPlayer
   };
 
   handleTokenError = async (
-    error: Error | string,
+    error: Error | string | Spotify.Error,
     callbackFunction: () => void
   ): Promise<void> => {
-    if (
-      error &&
-      typeof error === "object" &&
-      error.message &&
-      error.message === "Invalid token scopes."
-    ) {
+    if (!isString(error) && error?.message === "Invalid token scopes.") {
       this.handleAccountError();
     }
     const { refreshSpotifyToken, onTrackNotFound } = this.props;
@@ -335,7 +330,7 @@ export default class SpotifyPlayer
       });
     } catch (err) {
       const { handleError } = this.props;
-      handleError(err.message, "Spotify error");
+      handleError(err.message, "Spotify token error");
       onTrackNotFound();
     }
   };
