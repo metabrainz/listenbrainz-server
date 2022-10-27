@@ -10,18 +10,17 @@ type ReleaseTimelineProps = {
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases } = props;
 
-  const [currentValue, setCurrentValue] = React.useState<number>();
+  const [currentValue, setCurrentValue] = React.useState<number | number[]>();
   const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 
-  // let's keep the type to any until we figure out a proper one
-  const changeHandler = React.useCallback((percent: any) => {
+  const changeHandler = React.useCallback((percent: number | number[]) => {
     setCurrentValue(percent);
     const element: HTMLElement | null = document.getElementById(
       "release-cards-grid"
     )!;
-    const scrollHeight = (percent / 100) * element.scrollHeight;
+    const scrollHeight = ((percent as number) / 100) * element.scrollHeight;
     const scrollTo = scrollHeight + element.offsetTop;
     window.scrollTo({ top: scrollTo, behavior: "smooth" });
     return scrollTo;
