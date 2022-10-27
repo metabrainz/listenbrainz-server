@@ -39,7 +39,7 @@ def run_daily_jams_troi_bot():
             # Add others here
         except Exception as err:
             current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user["musicbrainz_id"], str(err)))
-            return
+            continue
 
 
 def get_users_for_daily_jams():
