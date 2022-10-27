@@ -1,6 +1,6 @@
 import * as React from "react";
 import Slider from "rc-slider";
-import { countBy, zipObject } from "lodash";
+import { countBy, debounce, zipObject } from "lodash";
 import { formattedReleaseDate, useMediaQuery } from "./utils";
 
 type ReleaseTimelineProps = {
@@ -50,9 +50,25 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     return zipObject(percentArr, datesArr);
   }
 
+  const handleScroll = React.useCallback(
+    debounce(() => {
+      // TODO change to relative position of #release-cards-grid instead of window
+      const scrollPos = (scrollY / document.documentElement.scrollHeight) * 100;
+      setCurrentValue(scrollPos);
+    }, 300),
+    []
+  );
+
   React.useEffect(() => {
     setMarks(createMarks(releases));
   }, [releases]);
+
+  React.useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
     <div className="slider-container">
