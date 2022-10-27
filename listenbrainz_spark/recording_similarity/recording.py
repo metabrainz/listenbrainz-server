@@ -8,7 +8,7 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_new_dump
 
 
-RECORDINGS_PER_MESSAGE = 1000
+RECORDINGS_PER_MESSAGE = 10000
 
 
 def build_sessioned_index(listen_table, mbc_table, session, threshold, limit):
