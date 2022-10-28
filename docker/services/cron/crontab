@@ -19,6 +19,9 @@ MAILTO=""
 # Dump user feedback before we generate recommendations
 15 2 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
 
+# Run spotify metadata cache seeder
+0 4 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark run-spotify-metadata-cache-seeder >> /logs/spotify_metadata_cache.log 2>&1
+
 # batch up all the spark requests, spaced by 1 minute in order to ensure the correct order
 # Request all statistics
 0 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_all_stats >> /logs/stats.log 2>&1

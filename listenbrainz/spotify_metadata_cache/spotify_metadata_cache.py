@@ -19,12 +19,34 @@ class SpotifyMetadataCache(ConsumerMixin):
         self.queue = None
         self.connection = None
         self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
-        self.unique_queue = Queue(self.app.config["SPOTIFY_METADATA_QUEUE"], exchange=self.unique_exchange, durable=True)
+        self.listens_queue = Queue(
+            self.app.config["SPOTIFY_METADATA_QUEUE"],
+            exchange=self.unique_exchange, 
+            durable=True
+        )
+        self.external_services_exchange = Exchange(
+            self.app.config["EXTERNAL_SERVICES_EXCHANGE"],
+            "topic",
+            durable=True
+        )
+        self.spotify_queue = Queue(
+            self.app.config["EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE"],
+            exchange=self.external_services_exchange, 
+            durable=True
+        )
 
     def get_consumers(self, _, channel):
-        return [Consumer(channel, queues=[self.unique_queue], on_message=lambda x: self.callback(x))]
+        self.spotify_channel = channel.connection.channel()
+        return [
+            Consumer(channel, queues=[self.listens_queue], on_message=lambda x: self.process_listens(x)),
+            Consumer(self.spotify_channel, queues=[self.spotify_queue], on_message=lambda x: self.process_album_ids(x))
+        ]
 
-    def callback(self, message: Message):
+    def on_consume_end(self, connection, default_channel):
+        if self.spotify_channel:
+            self.spotify_channel.close()
+
+    def process_listens(self, message: Message):
         listens = json.loads(message.body)
 
         for listen in listens:
@@ -32,6 +54,12 @@ class SpotifyMetadataCache(ConsumerMixin):
             if spotify_album_id:
                 self.queue.add_spotify_ids(spotify_album_id)
 
+        message.ack()
+
+    def process_album_ids(self, message: Message):
+        body = json.loads(message.body)
+        for album_id in body["album_ids"]:
+            self.queue.add_spotify_ids(album_id)
         message.ack()
 
     def init_rabbitmq_connection(self):
