@@ -454,8 +454,7 @@ export default class SpotifyPlayer
       paused,
       position,
       duration,
-      loading,
-      track_window: { current_track },
+      track_window: { current_track, previous_tracks },
     } = playerState;
 
     const { currentSpotifyTrack, durationMs } = this.state;
@@ -476,9 +475,14 @@ export default class SpotifyPlayer
       return;
     }
     // How do we accurately detect the end of a song?
-    // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
-    // To the above I added a check for the 'loading' prop, otherwise we skip a song every time
-    if (position === 0 && paused === true && loading === false) {
+    // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-509159445
+    // If the current_track (i.e. just finished track) also appears in previous_tracks, we're at the end of that track
+    if (
+      position === 0 &&
+      paused === true &&
+      previous_tracks?.findIndex((track) => track.id === current_track.id) !==
+        -1
+    ) {
       // Track finished or skipped, play next track
       this.debouncedOnTrackEnd();
       return;
