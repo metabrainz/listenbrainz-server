@@ -217,6 +217,7 @@ describe("SpotifyPlayer", () => {
   describe("handlePlayerStateChanged", () => {
     const spotifyPlayerState: SpotifyPlayerSDKState = {
       paused: true,
+      loading: false,
       position: 10,
       duration: 1000,
       track_window: {
