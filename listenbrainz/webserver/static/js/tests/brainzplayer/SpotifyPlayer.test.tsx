@@ -237,6 +237,7 @@ describe("SpotifyPlayer", () => {
           type: "track",
           uri: "my-spotify-uri",
         },
+        previous_tracks: [],
       },
     };
     it("calls onPlayerPausedChange if player paused state changes", () => {
@@ -270,20 +271,25 @@ describe("SpotifyPlayer", () => {
       const mockProps = { ...props, onTrackEnd };
       const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
+
+      instance.handlePlayerStateChanged(spotifyPlayerState);
+      instance.handlePlayerStateChanged(spotifyPlayerState);
+      expect(instance.props.onTrackEnd).not.toHaveBeenCalled();
+
+      const endOfTrackPlayerState = {
+        ...spotifyPlayerState,
+        // This is how we detect the end of a track
+        paused: true,
+        position: 0,
+        previous_tracks: [
+          { id: spotifyPlayerState.track_window.current_track?.id },
+        ],
+      };
       // Spotify has a tendency to send multiple messages in a short burst,
       // and we debounce calls to onTrackEnd
-      instance.handlePlayerStateChanged({
-        ...spotifyPlayerState,
-        position: 0,
-      });
-      instance.handlePlayerStateChanged({
-        ...spotifyPlayerState,
-        position: 0,
-      });
-      instance.handlePlayerStateChanged({
-        ...spotifyPlayerState,
-        position: 0,
-      });
+      instance.handlePlayerStateChanged(endOfTrackPlayerState);
+      instance.handlePlayerStateChanged(endOfTrackPlayerState);
+      instance.handlePlayerStateChanged(endOfTrackPlayerState);
       expect(instance.props.onTrackEnd).toHaveBeenCalledTimes(1);
     });
 
