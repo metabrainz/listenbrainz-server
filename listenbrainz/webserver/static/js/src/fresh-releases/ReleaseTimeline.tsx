@@ -53,7 +53,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const handleScroll = React.useCallback(
     debounce(() => {
       // TODO change to relative position of #release-cards-grid instead of window
-      const scrollPos = (scrollY / document.documentElement.scrollHeight) * 100;
+      const scrollPos =
+        (window.scrollY / document.documentElement.scrollHeight) * 100;
       setCurrentValue(scrollPos);
     }, 300),
     []
