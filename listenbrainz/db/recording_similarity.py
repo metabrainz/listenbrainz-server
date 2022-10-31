@@ -7,6 +7,7 @@ from listenbrainz.db import timescale
 
 
 def insert_similar_recordings(data, algorithm):
+    """ Insert similar recordings in database """
     query = """
         INSERT INTO similarity.recording AS sr (mbid0, mbid1, metadata)
              VALUES %s
@@ -27,8 +28,8 @@ def insert_similar_recordings(data, algorithm):
 
 
 def get_similar_recordings(mbids, algorithm, count):
-    # todo: the lateral join query is cleaner but performed a bit worse in limited testing. do more testing to
-    #  check if its indeed slower, if not use that.
+    """ Fetch at most `count` number of similar recordings for each mbid in the given
+     list using the given algorithm. """
     query = SQL("""
         WITH mbids(mbid) AS (
             VALUES %s
