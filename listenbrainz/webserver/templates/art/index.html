@@ -1,76 +1,134 @@
-<html>
-  <head>
-   <title>ListenBrainz Cover Art Grid demo</title>
-   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
-  </head>
-  <body style="margin: 2em">
+{%- extends 'base.html' -%}
+{%- block content -%}
+   <h1>ListenBrainz Cover Art Grid demo</h1>
      <h2>Custom layouts</h2>
        <h3>Vinyl on the floor</h3>
-       <object data="/1/art/lps-on-the-floor/mr_monkey/week/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/lps-on-the-floor/mr_monkey/week/750</p>
-
-       <object data="/1/art/lps-on-the-floor/rob/week/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/lps-on-the-floor/rob/week/750</p>
-
-       <object data="/1/art/lps-on-the-floor/jukevox/week/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/lps-on-the-floor/jukevox/week/750</p>
+       <object data="{{ url_for("art_api_v1.cover_art_custom_stats",
+		                custom_name="lps-on-the-floor",
+				image_size=750,
+				time_range="week",
+				user_name="rob") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
+       <object data="{{ url_for("art_api_v1.cover_art_custom_stats",
+		                custom_name="lps-on-the-floor",
+				image_size=750,
+				time_range="week",
+				user_name="jukevox") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
 
        <h3>Top Five Artists</h3>
-       <object data="/1/art/designer-top-5/rob/week/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/designer-top-5/rob/week/750</p>
-
-       <h3>Top 10 Releases</h3>
-       <object data="/1/art/designer-top-10/jukevox/week/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/designer-top-10/jukevox/week/750</p>
-
-       <object data="/1/art/designer-top-10-alt/zas/week/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/designer-top-10-alt/zas/week/750</p>
+       <object data="{{ url_for("art_api_v1.cover_art_custom_stats",
+		                custom_name="designer-top-5",
+				image_size=750,
+				time_range="week",
+				user_name="rob") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
+       <object data="{{ url_for("art_api_v1.cover_art_custom_stats",
+		                custom_name="designer-top-10",
+				image_size=750,
+				time_range="week",
+				user_name="jukevox") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
+       <object data="{{ url_for("art_api_v1.cover_art_custom_stats",
+		                custom_name="designer-top-10-alt",
+				image_size=750,
+				time_range="week",
+				user_name="zas") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
 
      <h2>Grids of Dimension 2</h2>
        <h3>Layout 0</h3>
-       <object data="/1/art/grid-stats/heyarne/week/2/0/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/grid-stats/heyarne/week/2/0/750</p>
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="week",
+				user_name="heyarne",
+				dimension="2",
+				layout="0") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
 
      <h2>Grids of Dimension 3</h2>
        <h3>Layout 0</h3>
-       <object data="/1/art/grid-stats/aerozol/week/3/0/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/grid-stats/aerozol/week/3/0/750</p>
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="week",
+				user_name="aerozol",
+				dimension="3",
+				layout="0") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
 
        <h3>Layout 1</h3>
-       <object data="/1/art/grid-stats/chinmaykunkikar/week/3/1/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/grid-stats/chinmaykunkikar/week/3/1/750</p>
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="week",
+				user_name="chinmaykunkikar",
+				dimension="3",
+				layout="1") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
 
        <h3>Layout 2</h3>
-       <object data="/1/art/grid-stats/lucifer/week/3/2/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/grid-stats/lucifer/week/3/2/750</p>
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="week",
+				user_name="lucifer",
+				dimension="3",
+				layout="2") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
 
      <h2>Grids of Dimension 4</h2>
        <h3>Layout 0</h3>
-       <object data="/1/art/grid-stats/rob/week/4/0/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/grid-stats/rob/week/4/750/0</p>
-       
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="week",
+				user_name="rob",
+				dimension="4",
+				layout="0") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
+
        <h3>Layout 1</h3>
-       <object data="/1/art/grid-stats/akshaaatt/week/4/1/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/grid-stats/akshaaatt/week/4/1/750</p>
-       
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="week",
+				user_name="akshaaatt",
+				dimension="4",
+				layout="1") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
+
        <h3>Layout 2</h3>
-       <object data="/1/art/grid-stats/throwawaytest140/week/4/2/750" width="{{ width }}" height="{{ height }}"></object> 
-       <p>art/grid-stats/throwawaytest140/week/4/2/750</p>
-       
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="week",
+				user_name="throwawaytest140",
+				dimension="4",
+				layout="2") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
+
        <h3>Layout 3</h3>
-       <object data="/1/art/grid-stats/damselfish/week/4/3/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/grid-stats/damselfish/week/4/3/750</p>
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="week",
+				user_name="damselfish",
+				dimension="4",
+				layout="2") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
+
 
      <h2>Grids of Dimension 5</h2>
        <h3>Layout 0</h3>
-       <object data="/1/art/grid-stats/zas/month/5/0/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/grid-stats/zas/week/5/0/750</p>
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="month",
+				user_name="zas",
+				dimension="5",
+				layout="0") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
 
        <h3>Layout 1</h3>
-       <object data="/1/art/grid-stats/outsidecontext/month/5/1/750" width="{{ width }}" height="{{ height }}"></object>
-       <p>art/grid-stats/outsidecontext/week/5/1/750</p>
+       <object data="{{ url_for("art_api_v1.cover_art_grid_stats",
+				image_size=750,
+				time_range="month",
+				user_name="outsidecontext",
+				dimension="5",
+				layout="1") }}"
+	       width="{{ width }}" height="{{ height }}"></object>
 
-  </body>
-</html>
+{%- endblock content -%}

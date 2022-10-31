@@ -338,5 +338,8 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.explore_api import explore_api_bp
     app.register_blueprint(explore_api_bp, url_prefix=API_PREFIX+'/explore')
 
+    from listenbrainz.webserver.views.art import art_bp
+    _register_blueprint_with_context(app, art_bp, url_prefix='/art')
+
     from listenbrainz.webserver.views.art_api import art_api_bp
     _register_blueprint_with_context(app, art_api_bp, url_prefix=API_PREFIX+'/art')
