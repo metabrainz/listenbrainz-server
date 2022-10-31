@@ -13,6 +13,7 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import ReleaseCard from "./ReleaseCard";
 import ReleaseFilters from "./ReleaseFilters";
 import ReleaseTimeline from "./ReleaseTimeline";
+import Pill from "../components/Pill";
 
 type FreshReleasesProps = {
   newAlert: (
@@ -23,7 +24,11 @@ type FreshReleasesProps = {
 };
 
 export default function FreshReleases({ newAlert }: FreshReleasesProps) {
-  const { APIService } = React.useContext(GlobalAppContext);
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+
+  const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
+  const PAGE_TYPE_USER: string = "user";
+  const PAGE_TYPE_SITEWIDE: string = "sitewide";
 
   const [releases, setReleases] = React.useState<Array<FreshReleaseItem>>([]);
   const [filteredList, setFilteredList] = React.useState<
@@ -33,14 +38,23 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
     []
   );
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [pageType, setPageType] = React.useState<string>(
+    isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
+  );
 
   const fetchReleases = React.useCallback(async () => {
     setIsLoading(true);
+    let freshReleases: Array<FreshReleaseItem>;
     try {
-      const freshReleases: Array<FreshReleaseItem> = await APIService.fetchSitewideFreshReleases(
-        "",
-        2
-      );
+      if (pageType === PAGE_TYPE_SITEWIDE) {
+        freshReleases = await APIService.fetchSitewideFreshReleases("", 2);
+      } else {
+        const userFreshReleases = await APIService.fetchUserFreshReleases(
+          currentUser.name
+        );
+        freshReleases = userFreshReleases.payload.releases;
+      }
+
       const cleanReleases = uniqBy(freshReleases, (datum) => {
         return (
           /*
@@ -74,15 +88,38 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
     } catch (error) {
       newAlert("danger", "Couldn't fetch fresh releases", error.toString());
     }
-  }, []);
+  }, [pageType]);
 
   React.useEffect(() => {
     fetchReleases();
-  }, [fetchReleases]);
+  }, [fetchReleases, pageType]);
 
   return (
     <>
-      <h3 id="row">Fresh releases</h3>
+      <h2 id="fr-heading">Fresh Releases</h2>
+      {isLoggedIn ? (
+        <>
+          <h3 id="fr-subheading">
+            Discover new music from artists you listen to
+          </h3>
+          <div id="fr-pill-row">
+            <Pill
+              onClick={() => setPageType(PAGE_TYPE_USER)}
+              active={pageType === PAGE_TYPE_USER}
+            >
+              Releases For You
+            </Pill>
+            <Pill
+              onClick={() => setPageType(PAGE_TYPE_SITEWIDE)}
+              active={pageType === PAGE_TYPE_SITEWIDE}
+            >
+              All Releases
+            </Pill>
+          </div>
+        </>
+      ) : (
+        <h3 id="fr-subheading">Discover new music</h3>
+      )}
       <div className="releases-page row">
         {isLoading ? (
           <div className="spinner-container">
@@ -125,11 +162,14 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
                 );
               })}
             </div>
-            <div className="releases-timeline col-xs-12 col-md-1">
-              {releases.length > 0 ? (
-                <ReleaseTimeline releases={filteredList} />
-              ) : null}
-            </div>
+
+            {pageType === PAGE_TYPE_SITEWIDE ? (
+              <div className="releases-timeline col-xs-12 col-md-1">
+                {releases.length > 0 ? (
+                  <ReleaseTimeline releases={filteredList} />
+                ) : null}
+              </div>
+            ) : null}
           </>
         )}
       </div>
