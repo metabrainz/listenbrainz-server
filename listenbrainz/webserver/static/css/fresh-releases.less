@@ -29,36 +29,6 @@
       display: flex;
       flex-direction: column;
 
-      #coverart-checkbox {
-        #coverart-only {
-          cursor: pointer;
-
-          input {
-            position: absolute;
-            top: 0;
-            left: 0;
-            visibility: hidden;
-            pointer-events: none;
-          }
-
-          span {
-            font-size: 1em;
-            font-weight: normal;
-            color: fade(@asphalt, 80);
-
-            &:hover {
-              color: @blue;
-              font-weight: bold;
-            }
-          }
-
-          input:checked + span {
-            font-weight: bold;
-            color: @orange;
-          }
-        }
-      }
-
       #release-filters {
         display: flex;
         flex-direction: column;
