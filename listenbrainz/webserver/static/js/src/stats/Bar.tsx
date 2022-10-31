@@ -8,6 +8,7 @@ import {
 import type { AxisTickProps } from "@nivo/axes";
 import { omit } from "lodash";
 import { BasicTooltip } from "@nivo/tooltip";
+import { COLOR_LB_ORANGE } from "../utils/constants";
 
 export type BarProps = {
   data: UserEntityData;
@@ -67,7 +68,7 @@ export default function Bar(props: BarProps) {
       data={typescriptCompliantData}
       maxValue={maxValue}
       layout="horizontal"
-      colors="#EB743B"
+      colors={COLOR_LB_ORANGE}
       indexBy="id"
       enableGridY={false}
       padding={0.1}

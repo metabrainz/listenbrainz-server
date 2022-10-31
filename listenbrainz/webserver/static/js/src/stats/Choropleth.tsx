@@ -16,6 +16,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import * as worldCountries from "./world_countries.json";
+import { COLOR_BLACK } from "../utils/constants";
 
 const { useState, useCallback, useMemo, useEffect, useRef } = React;
 
@@ -35,7 +36,7 @@ const commonLegendProps = {
     {
       on: "hover",
       style: {
-        itemTextColor: "#000000",
+        itemTextColor: COLOR_BLACK,
         itemOpacity: 1,
       },
     },
