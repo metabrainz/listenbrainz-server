@@ -38,9 +38,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
     []
   );
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [pageType, setPageType] = React.useState<string>(
-    isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
-  );
+  const [pageType, setPageType] = React.useState<string>(PAGE_TYPE_SITEWIDE);
 
   const fetchReleases = React.useCallback(async () => {
     setIsLoading(true);
@@ -104,16 +102,16 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
           </h3>
           <div id="fr-pill-row">
             <Pill
-              onClick={() => setPageType(PAGE_TYPE_USER)}
-              active={pageType === PAGE_TYPE_USER}
-            >
-              Releases For You
-            </Pill>
-            <Pill
               onClick={() => setPageType(PAGE_TYPE_SITEWIDE)}
               active={pageType === PAGE_TYPE_SITEWIDE}
             >
               All Releases
+            </Pill>
+            <Pill
+              onClick={() => setPageType(PAGE_TYPE_USER)}
+              active={pageType === PAGE_TYPE_USER}
+            >
+              Releases For You
             </Pill>
           </div>
         </>
@@ -146,7 +144,14 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
                 setFilteredList={setFilteredList}
               />
             </div>
-            <div id="release-cards-grid" className="col-xs-12 col-md-10">
+            <div
+              id="release-cards-grid"
+              className={
+                pageType === PAGE_TYPE_SITEWIDE
+                  ? "col-xs-12 col-md-10"
+                  : "col-xs-12 col-md-11"
+              }
+            >
               {filteredList?.map((release) => {
                 return (
                   <ReleaseCard
