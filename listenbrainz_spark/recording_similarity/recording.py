@@ -11,7 +11,7 @@ from listenbrainz_spark.utils import get_listens_from_new_dump
 RECORDINGS_PER_MESSAGE = 10000
 
 
-def build_sessioned_index(listen_table, mbc_table, session, threshold, limit):
+def build_sessioned_index(listen_table, metadata_table, session, threshold, limit):
     # TODO: Handle case of unmatched recordings breaking sessions!
     #  Detect and remove skips!
     return f"""
@@ -21,7 +21,7 @@ def build_sessioned_index(listen_table, mbc_table, session, threshold, limit):
                       , CAST(COALESCE(recording_data.length / 1000, 180) AS BIGINT) AS duration
                       , recording_mbid
                    FROM {listen_table} l
-              LEFT JOIN {mbc_table} mbc
+              LEFT JOIN {metadata_table} mbc
                   USING (recording_mbid)
                   WHERE l.recording_mbid IS NOT NULL
             ), ordered AS (
