@@ -1,4 +1,5 @@
 import * as React from "react";
+import Pill from "../components/Pill";
 
 type ReleaseFiltersProps = {
   allFilters: Array<string | undefined>;
@@ -26,17 +27,6 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     } else {
       const filtersList = checkedList.filter((item) => item !== value);
       setCheckedList(filtersList);
-    }
-  };
-
-  const handleCoverartChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    event.persist();
-    const isChecked = event.target.checked;
-
-    if (isChecked) {
-      setCoverartOnly(true);
-    } else {
-      setCoverartOnly(false);
     }
   };
 
@@ -75,16 +65,13 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   return (
     <div id="filters-container">
       <div id="coverart-checkbox">
-        <label className="text-muted" id="coverart-only">
-          <input
-            type="checkbox"
-            onChange={(e) => handleCoverartChange(e)}
-            checked={coverartOnly}
-            aria-hidden="true"
-            aria-checked="false"
-          />
-          <span>Hide releases without coverart</span>
-        </label>
+        <Pill
+          type="secondary"
+          active={coverartOnly}
+          onClick={() => setCoverartOnly(!coverartOnly)}
+        >
+          Hide releases without coverart
+        </Pill>
       </div>
       <div id="release-filters">
         <div id="title-container">
