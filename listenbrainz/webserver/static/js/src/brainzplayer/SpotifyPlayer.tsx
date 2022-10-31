@@ -88,7 +88,7 @@ export default class SpotifyPlayer
   public domainName = "spotify.com";
   // Saving the access token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
-  public accessToken = "";
+  private accessToken = "";
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 
