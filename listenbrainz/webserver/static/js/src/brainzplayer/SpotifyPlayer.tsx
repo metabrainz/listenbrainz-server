@@ -6,7 +6,6 @@ import {
   has as _has,
   debounce as _debounce,
   isString,
-  difference,
 } from "lodash";
 import {
   searchForSpotifyTrack,
@@ -36,7 +35,6 @@ type SpotifyPlayerProps = DataSourceProps & {
 };
 
 type SpotifyPlayerState = {
-  accessToken: string;
   currentSpotifyTrack?: SpotifyTrack;
   durationMs: number;
   trackWindow?: SpotifyPlayerTrackWindow;
@@ -88,13 +86,18 @@ export default class SpotifyPlayer
 
   public name = "spotify";
   public domainName = "spotify.com";
+  // Saving the access token outside of state because when connecting to Spotify player
+  // getOAuthToken must be called with an updated token. Storing it here allows direct modification
+  // outside of React to solve closure issue (accesstoken not up to date on later calls of connectSpotifyPlayer because closures)
+  public accessToken = "";
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 
   constructor(props: SpotifyPlayerProps) {
     super(props);
+
+    this.accessToken = props.spotifyUser?.access_token || "";
     this.state = {
-      accessToken: props.spotifyUser?.access_token || "",
       durationMs: 0,
     };
 
@@ -175,10 +178,10 @@ export default class SpotifyPlayer
       handleWarning("Not enough info to search on Spotify");
       onTrackNotFound();
     }
-    const { accessToken } = this.state;
+
     try {
       const track = await searchForSpotifyTrack(
-        accessToken,
+        this.accessToken,
         trackName,
         artistName,
         releaseName
@@ -209,7 +212,7 @@ export default class SpotifyPlayer
     spotifyURI: string,
     retryCount = 0
   ): Promise<void> => {
-    const { accessToken, device_id } = this.state;
+    const { device_id } = this.state;
     const { handleError } = this.props;
     if (retryCount > 5) {
       handleError("Could not play Spotify track", "Playback error");
@@ -229,7 +232,7 @@ export default class SpotifyPlayer
           body: JSON.stringify({ uris: [spotifyURI] }),
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${this.accessToken}`,
           },
         }
       );
@@ -325,9 +328,8 @@ export default class SpotifyPlayer
     const { refreshSpotifyToken, onTrackNotFound } = this.props;
     try {
       const userToken = await refreshSpotifyToken();
-      this.setState({ accessToken: userToken }, () => {
-        this.connectSpotifyPlayer(callbackFunction);
-      });
+      this.accessToken = userToken;
+      this.connectSpotifyPlayer(callbackFunction);
     } catch (err) {
       const { handleError } = this.props;
       handleError(err.message, "Spotify token error");
@@ -390,17 +392,18 @@ export default class SpotifyPlayer
   connectSpotifyPlayer = (callbackFunction?: () => void): void => {
     this.disconnectSpotifyPlayer();
 
-    const { accessToken } = this.state;
-
     if (!window.Spotify) {
       setTimeout(this.connectSpotifyPlayer.bind(this, callbackFunction), 1000);
       return;
     }
+    const { refreshSpotifyToken } = this.props;
 
     this.spotifyPlayer = new window.Spotify.Player({
       name: "ListenBrainz Player",
-      getOAuthToken: (authCallback) => {
-        authCallback(accessToken);
+      getOAuthToken: async (authCallback) => {
+        const userToken = await refreshSpotifyToken();
+        this.accessToken = userToken;
+        authCallback(userToken);
       },
       volume: 0.7, // Careful with this, now…
     });
