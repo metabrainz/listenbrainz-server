@@ -86,9 +86,8 @@ export default class SpotifyPlayer
 
   public name = "spotify";
   public domainName = "spotify.com";
-  // Saving the access token outside of state because when connecting to Spotify player
-  // getOAuthToken must be called with an updated token. Storing it here allows direct modification
-  // outside of React to solve closure issue (accesstoken not up to date on later calls of connectSpotifyPlayer because closures)
+  // Saving the access token outside of React state , we do not need it for any rendering purposes
+  // and it simplifies some of the closure issues we've had with old tokens.
   public accessToken = "";
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
@@ -327,8 +326,7 @@ export default class SpotifyPlayer
     }
     const { refreshSpotifyToken, onTrackNotFound } = this.props;
     try {
-      const userToken = await refreshSpotifyToken();
-      this.accessToken = userToken;
+      // Reconnect spotify player; user token will be refreshed in the process
       this.connectSpotifyPlayer(callbackFunction);
     } catch (err) {
       const { handleError } = this.props;
