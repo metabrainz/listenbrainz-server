@@ -8,8 +8,9 @@ type ReleaseCardProps = {
   releaseMBID: string;
   releaseName: string;
   artistCreditName: string;
-  releaseTypePrimary: string | undefined;
-  releaseTypeSecondary: string | undefined;
+  releaseTypePrimary: string | undefined | null;
+  releaseTypeSecondary: string | undefined | null;
+  confidence?: number | null;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -30,14 +31,26 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     COVERART_PLACEHOLDER
   );
 
-  function releaseTypeTooltip(): string {
-    if (releaseTypeSecondary !== undefined && releaseTypePrimary === undefined)
+  function releaseTypeTooltip(): string | undefined | null {
+    if (
+      (releaseTypeSecondary !== undefined &&
+        releaseTypePrimary === undefined) ||
+      (releaseTypeSecondary !== null && releaseTypePrimary === null)
+    )
       return releaseTypeSecondary;
 
-    if (releaseTypePrimary !== undefined && releaseTypeSecondary === undefined)
+    if (
+      (releaseTypePrimary !== undefined &&
+        releaseTypeSecondary === undefined) ||
+      (releaseTypePrimary !== null && releaseTypeSecondary === null)
+    )
       return releaseTypePrimary;
 
-    if (releaseTypePrimary === undefined && releaseTypeSecondary === undefined)
+    if (
+      (releaseTypePrimary === undefined &&
+        releaseTypeSecondary === undefined) ||
+      (releaseTypePrimary === null && releaseTypeSecondary === null)
+    )
       return "";
 
     return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
@@ -73,7 +86,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
             {releaseName}
           </a>
         </div>
-        <div className="release-type-chip" title={releaseTypeTooltip()}>
+        <div className="release-type-chip" title={releaseTypeTooltip()!}>
           {releaseTypeSecondary || releaseTypePrimary || RELEASE_TYPE_UNKNOWN}
         </div>
       </div>

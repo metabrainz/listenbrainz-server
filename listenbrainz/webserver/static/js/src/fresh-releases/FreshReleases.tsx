@@ -163,6 +163,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
                     releaseTypeSecondary={release.release_group_secondary_type}
                     artistCreditName={release.artist_credit_name}
                     artistMBIDs={release.artist_mbids}
+                    confidence={release.confidence}
                   />
                 );
               })}
