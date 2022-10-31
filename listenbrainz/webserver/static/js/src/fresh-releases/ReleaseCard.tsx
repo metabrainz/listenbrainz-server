@@ -22,6 +22,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     artistCreditName,
     releaseTypePrimary,
     releaseTypeSecondary,
+    confidence,
   } = props;
 
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
