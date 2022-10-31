@@ -35,10 +35,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -59,10 +59,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -83,10 +83,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -4611,7 +4611,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                     "tickValues": 25,
                   }
                 }
-                colors="#EB743B"
+                colors="#eb743b"
                 data={
                   Array [
                     Object {
@@ -5996,10 +5996,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -6020,10 +6020,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -6044,10 +6044,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -17515,7 +17515,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                     "tickValues": 25,
                   }
                 }
-                colors="#EB743B"
+                colors="#eb743b"
                 data={
                   Array [
                     Object {
@@ -18900,10 +18900,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -18924,10 +18924,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -18948,10 +18948,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -23751,7 +23751,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                     "tickValues": 25,
                   }
                 }
-                colors="#EB743B"
+                colors="#eb743b"
                 data={
                   Array [
                     Object {
@@ -25139,7 +25139,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                     "border": "2px solid #353070",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "white",
+                    "color": "#fff",
                     "fontWeight": 700,
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
@@ -25161,10 +25161,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -25185,10 +25185,10 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -26184,10 +26184,10 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -26208,10 +26208,10 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -26232,10 +26232,10 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -30760,7 +30760,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     "tickValues": 25,
                   }
                 }
-                colors="#EB743B"
+                colors="#eb743b"
                 data={
                   Array [
                     Object {
@@ -32151,10 +32151,10 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -32175,10 +32175,10 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -32199,10 +32199,10 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -43670,7 +43670,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                     "tickValues": 25,
                   }
                 }
-                colors="#EB743B"
+                colors="#eb743b"
                 data={
                   Array [
                     Object {
@@ -45061,10 +45061,10 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -45085,10 +45085,10 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -45109,10 +45109,10 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -49912,7 +49912,7 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                     "tickValues": 25,
                   }
                 }
-                colors="#EB743B"
+                colors="#eb743b"
                 data={
                   Array [
                     Object {
@@ -51306,7 +51306,7 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                     "border": "2px solid #353070",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "white",
+                    "color": "#fff",
                     "fontWeight": 700,
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
@@ -51328,10 +51328,10 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
@@ -51352,10 +51352,10 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "2px 6px 12px 6px",
                     "outline": "none",
                     "padding": "3px 12px",
