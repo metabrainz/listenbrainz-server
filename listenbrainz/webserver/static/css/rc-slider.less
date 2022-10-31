@@ -56,6 +56,10 @@
   height: 6px;
   background-color: @slider_base_color;
   border-radius: 6px;
+
+  &:hover ~ .rc-slider-handle {
+    border: solid 5px lighten(@orange, 10%);
+  }
 }
 .rc-slider-track {
   position: absolute;
@@ -69,7 +73,6 @@
   height: 3rem;
   margin-top: -12px;
   background-color: @orange;
-  // border: solid 2px @white;
   border-radius: 50%;
   cursor: pointer;
   cursor: -webkit-grab;
@@ -181,6 +184,9 @@
   .rc-slider-rail {
     width: 0.7rem;
     height: 100%;
+    &:hover ~ .rc-slider-handle {
+      border: solid 5px lighten(@orange, 10%);
+    }
   }
   .rc-slider-track {
     bottom: 0;
