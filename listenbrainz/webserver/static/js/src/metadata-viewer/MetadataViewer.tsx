@@ -155,13 +155,14 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const { metadata } = recordingData ?? {};
 
   const artistMBID = first(recordingData?.artist_mbids);
+  const releaseMBID = recordingData?.release_mbid ?? metadata?.release?.mbid;
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
-  if (metadata?.release?.mbid) {
-    if (metadata.release.caa_id) {
-      coverArtSrc = `https://coverartarchive.org/release/${metadata.release.mbid}/${metadata.release.caa_id}-500.jpg`;
+  if (releaseMBID) {
+    if (metadata?.release?.caa_id) {
+      coverArtSrc = `https://coverartarchive.org/release/${releaseMBID}/${metadata.release.caa_id}-500.jpg`;
     } else {
       // Backup if we don't have the CAA ID
-      coverArtSrc = `https://coverartarchive.org/release/${metadata.release.mbid}/front`;
+      coverArtSrc = `https://coverartarchive.org/release/${releaseMBID}/front`;
     }
   }
 
@@ -366,7 +367,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 <TagsComponent tags={metadata?.tag?.release_group} />
                 <OpenInMusicBrainzButton
                   entityType="release"
-                  entityMBID={recordingData?.release_mbid}
+                  entityMBID={releaseMBID}
                 />
               </div>
             </div>
