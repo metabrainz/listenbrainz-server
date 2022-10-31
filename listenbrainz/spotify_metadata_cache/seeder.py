@@ -7,6 +7,7 @@ from listenbrainz.utils import get_fallback_connection_name
 
 
 def get_album_ids():
+    """ Retrieve spotify album ids from new releases for all markets"""
     sp = Spotify(auth_manager=SpotifyClientCredentials(
         client_id=current_app.config["SPOTIFY_CLIENT_ID"],
         client_secret=current_app.config["SPOTIFY_CLIENT_SECRET"]
@@ -26,6 +27,7 @@ def get_album_ids():
 
 
 def submit_album_ids(album_ids):
+    """ Submit album ids to seed spotify metadata cache """
     message = {"spotify_album_ids": list(album_ids)}
     connection = Connection(
         hostname=current_app.config["RABBITMQ_HOST"],
@@ -47,6 +49,7 @@ def submit_album_ids(album_ids):
 
 
 def submit_new_releases_to_cache():
+    """ Query spotify new releases for album ids and submit those to spotify metadata cache """
     current_app.logger.info("Searching new album ids to seed spotify metadata cache")
     album_ids = get_album_ids()
     current_app.logger.info("Found %d album ids", len(album_ids))
