@@ -1,10 +1,8 @@
 import datetime
 
-from flask import current_app
 import psycopg2
 import psycopg2.extras
 import requests
-from werkzeug.exceptions import BadRequest, InternalServerError
 
 
 class CoverArtGenerator:
@@ -54,8 +52,9 @@ class CoverArtGenerator:
                               "this_month": "this month",
                               "this_year": "this year" }
 
-    def __init__(self, dimension, image_size, background="#FFFFFF",
+    def __init__(self, mb_db_connection_str, dimension, image_size, background="#FFFFFF",
                  skip_missing=True, show_caa_image_for_missing_covers=True):
+        self.mb_db_connection_str = mb_db_connection_str
         self.dimension = dimension
         self.image_size = image_size
         self.background = background
@@ -120,7 +119,7 @@ class CoverArtGenerator:
                     WHERE type_id = 1
                       AND release.gid = %s"""
 
-        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn:
+        with psycopg2.connect(self.mb_db_connection_str) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute(query, (release_mbid,))
                 row = curs.fetchone()
@@ -221,7 +220,7 @@ class CoverArtGenerator:
         for addr in addrs:
             x1, y1, x2, y2 = self.calculate_bounding_box(addr)
             if x1 is None:
-                raise BadRequest(f"Invalid address {addr} specified.")
+                raise ValueError(f"Invalid address {addr} specified.")
             tiles.append((x1, y1, x2, y2))
 
         # Now resolve cover art images into URLs and image dimensions
@@ -258,15 +257,15 @@ class CoverArtGenerator:
 
         if time_range not in ['week', 'month', 'quarter', 'half_yearly', 'year', 'all_time',
                               'this_week', 'this_month', 'this_year']:
-            raise BadRequest("Invalid date range given.")
+            raise ValueError("Invalid date range given.")
 
         if entity not in ("artist", "release", "recording"):
-            raise BadRequest("Stats entity must be one of artist, release or recording.")
+            raise ValueError("Stats entity must be one of artist, release or recording.")
 
         url = f"https://api.listenbrainz.org/1/stats/user/{user_name}/{entity}s"
         r = requests.get(url, {"range": time_range, "count": 100})
         if r.status_code != 200:
-            raise BadRequest("Fetching stats for user {user_name} failed: %d" % r.status_code)
+            raise ValueError("Fetching stats for user {user_name} failed: %d" % r.status_code)
 
         data = r.json()["payload"]
         return data[entity + "s"], data[f"total_{entity}_count"]
@@ -277,12 +276,12 @@ class CoverArtGenerator:
 
         releases, _ = self.download_user_stats("release", user_name, time_range)
         if len(releases) == 0:
-            raise BadRequest(f"user {user_name} does not have any releases we can fetch. :(")
+            raise ValueError(f"user {user_name} does not have any releases we can fetch. :(")
 
         release_mbids = [ r["release_mbid"] for r in releases ]  
         images = self.load_images(release_mbids, layout=layout)
         if images is None:
-            raise InternalServerError("Failed to create composite image.")
+            return None, None
 
         return images, releases
 
@@ -293,7 +292,7 @@ class CoverArtGenerator:
 
         artists, total_count = self.download_user_stats("artist", user_name, time_range)
         if len(artists) == 0:
-            raise BadRequest(f"user {user_name} does not have any artists we can fetch. :(")
+            raise ValueError(f"user {user_name} does not have any artists we can fetch. :(")
 
         metadata = { "user_name": user_name,
                      "date": datetime.datetime.now().strftime("%Y-%m-%d"),
@@ -309,12 +308,12 @@ class CoverArtGenerator:
 
         releases, total_count = self.download_user_stats("release", user_name, time_range)
         if len(releases) == 0:
-            raise BadRequest(f"user {user_name} does not have any releases we can fetch. :(")
+            raise ValueError(f"user {user_name} does not have any releases we can fetch. :(")
         release_mbids = [ r["release_mbid"] for r in releases ]  
 
         images = self.load_images(release_mbids)
         if images is None:
-            raise InternalServerError("Failed to create composite image.")
+            return None, None, None
 
         metadata = { "user_name": user_name,
                      "date": datetime.datetime.now().strftime("%Y-%m-%d"), 

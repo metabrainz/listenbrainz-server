@@ -40,5 +40,5 @@
            y="0"
            width="{{ width }}"
            height="{{ height }}"
-           xlink:href="/static/img/cover-art-on-floor.png"/>
+           xlink:href="/static/img/art/cover-art-on-floor.png"/>
 </svg>
