@@ -17,6 +17,7 @@ from data.model.user_cf_recommendations_recording_message import UserRecommendat
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from listenbrainz.db import year_in_music, couchdb
 from listenbrainz.db.fresh_releases import insert_fresh_releases
+from listenbrainz.db.recording_similarity import insert_similar_recordings
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.troi_bot import run_post_recommendation_troi_bot
 
@@ -403,3 +404,7 @@ def handle_listens_per_day(message):
 
 def handle_yearly_listen_counts(message):
     year_in_music.handle_yearly_listen_counts(message["data"])
+
+
+def handle_similar_recordings(message):
+    insert_similar_recordings(message["data"], message["algorithm"])
