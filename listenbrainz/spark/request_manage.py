@@ -357,7 +357,9 @@ def request_similar_users(max_num_users):
 @click.option("--limit", type=int, help="The maximum number of similar recordings to generate per recording"
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
-def request_similar_recordings(days, session, contribution, threshold, limit):
+@click.option("--filter-artist-credit", type=bool, help="Whether to filter tracks by same artists in a listening"
+                                                        " session", required=True)
+def request_similar_recordings(days, session, contribution, threshold, limit, filter_artist_credit):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
         "similarity.recording",
@@ -365,7 +367,8 @@ def request_similar_recordings(days, session, contribution, threshold, limit):
         session=session,
         contribution=contribution,
         threshold=threshold,
-        limit=limit
+        limit=limit,
+        filter_artist_credit=filter_artist_credit
     )
 
 
