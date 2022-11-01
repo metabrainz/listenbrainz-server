@@ -168,4 +168,13 @@ CREATE TABLE background_worker_state (
 );
 COMMENT ON TABLE background_worker_state IS 'This table is used to store miscellaneous data by various background processes or the ListenBrainz webserver. Use it when storing the data is redis is not reliable enough.';
 
+
+CREATE TABLE similarity.recording (
+    mbid0 UUID NOT NULL,
+    mbid1 UUID NOT NULL,
+    metadata JSONB NOT NULL
+
+    CONSTRAINT alphabetical_uuids CHECK (mbid0 <= mbid1)
+);
+
 COMMIT;
