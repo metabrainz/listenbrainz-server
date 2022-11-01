@@ -16,7 +16,7 @@ class CoverArtGenerator:
 
     # This grid tile designs (layouts?) are expressed as a dict with they key as dimension.
     # The value of the dict defines one design, with each cell being able to specify one or
-    # more number of cells. Each string is a list of cells that will be used to define 
+    # more number of cells. Each string is a list of cells that will be used to define
     # the bounding box of these cells. The cover art in question will be placed inside this
     # area.
     GRID_TILE_DESIGNS = {
@@ -34,26 +34,32 @@ class CoverArtGenerator:
             ["0,1,4,5", "10,11,14,15", "2", "3", "6", "7", "8", "9", "12", "13"],
             ["0,1,2,4,5,6,8,9,10", "3", "7", "11", "12", "13", "14", "15"],
         ],
-        5: [
-            ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13",
-             "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"],
-            ["0,1,2,5,6,7,10,11,12", "3,4,8,9", "15,16,20,21", "13", "14", "17", "18", "19", "22", "23", "24"]
-        ]
+        5: [[
+            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
+            "21", "22", "23", "24"
+        ], ["0,1,2,5,6,7,10,11,12", "3,4,8,9", "15,16,20,21", "13", "14", "17", "18", "19", "22", "23", "24"]]
     }
 
     # Take time ranges and give correct english text
-    time_range_to_english = { "week": "last week",
-                              "month": "last month", 
-                              "quarter": "last quarter", 
-                              "half_yearly": "last 6 months",
-                              "year": "last year",
-                              "all_time": "of all time",
-                              "this_week": "this week",
-                              "this_month": "this month",
-                              "this_year": "this year" }
+    time_range_to_english = {
+        "week": "last week",
+        "month": "last month",
+        "quarter": "last quarter",
+        "half_yearly": "last 6 months",
+        "year": "last year",
+        "all_time": "of all time",
+        "this_week": "this week",
+        "this_month": "this month",
+        "this_year": "this year"
+    }
 
-    def __init__(self, mb_db_connection_str, dimension, image_size, background="#FFFFFF",
-                 skip_missing=True, show_caa_image_for_missing_covers=True):
+    def __init__(self,
+                 mb_db_connection_str,
+                 dimension,
+                 image_size,
+                 background="#FFFFFF",
+                 skip_missing=True,
+                 show_caa_image_for_missing_covers=True):
         self.mb_db_connection_str = mb_db_connection_str
         self.dimension = dimension
         self.image_size = image_size
@@ -106,7 +112,6 @@ class CoverArtGenerator:
 
         return None
 
-
     def get_caa_id(self, release_mbid):
         """ Fetch the CAA id for the front image for the given release_mbid """
 
@@ -121,7 +126,7 @@ class CoverArtGenerator:
 
         with psycopg2.connect(self.mb_db_connection_str) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-                curs.execute(query, (release_mbid,))
+                curs.execute(query, (release_mbid, ))
                 row = curs.fetchone()
                 if row:
                     return row["caa_id"]
@@ -141,8 +146,8 @@ class CoverArtGenerator:
 
         x1 = int(x * self.tile_size)
         y1 = int(y * self.tile_size)
-        x2 = int((x+1) * self.tile_size)
-        y2 = int((y+1) * self.tile_size)
+        x2 = int((x + 1) * self.tile_size)
+        y2 = int((y + 1) * self.tile_size)
 
         if x == self.dimension - 1:
             x2 = self.image_size - 1
@@ -163,7 +168,7 @@ class CoverArtGenerator:
             return (None, None, None, None)
 
         for tile in tiles:
-            if tile < 0 or tile >= (self.dimension*self.dimension):
+            if tile < 0 or tile >= (self.dimension * self.dimension):
                 return (None, None, None, None)
 
         for i, tile in enumerate(tiles):
@@ -255,8 +260,9 @@ class CoverArtGenerator:
     def download_user_stats(self, entity, user_name, time_range):
         """ Given a user name, a stats entity and a stats time_range, return the stats dict from LB. """
 
-        if time_range not in ['week', 'month', 'quarter', 'half_yearly', 'year', 'all_time',
-                              'this_week', 'this_month', 'this_year']:
+        if time_range not in [
+                'week', 'month', 'quarter', 'half_yearly', 'year', 'all_time', 'this_week', 'this_month', 'this_year'
+        ]:
             raise ValueError("Invalid date range given.")
 
         if entity not in ("artist", "release", "recording"):
@@ -278,7 +284,7 @@ class CoverArtGenerator:
         if len(releases) == 0:
             raise ValueError(f"user {user_name} does not have any releases we can fetch. :(")
 
-        release_mbids = [ r["release_mbid"] for r in releases ]  
+        release_mbids = [r["release_mbid"] for r in releases]
         images = self.load_images(release_mbids, layout=layout)
         if images is None:
             return None, None
@@ -294,10 +300,12 @@ class CoverArtGenerator:
         if len(artists) == 0:
             raise ValueError(f"user {user_name} does not have any artists we can fetch. :(")
 
-        metadata = { "user_name": user_name,
-                     "date": datetime.datetime.now().strftime("%Y-%m-%d"),
-                     "time_range": self.time_range_to_english[time_range],
-                     "num_artists": total_count }
+        metadata = {
+            "user_name": user_name,
+            "date": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "time_range": self.time_range_to_english[time_range],
+            "num_artists": total_count
+        }
         return artists, metadata
 
     def create_release_stats_cover(self, user_name, time_range):
@@ -305,19 +313,20 @@ class CoverArtGenerator:
             the release stats and metadata about this user/stats. The metadata dict contains:
             user_name, date, time_range and num_releases."""
 
-
         releases, total_count = self.download_user_stats("release", user_name, time_range)
         if len(releases) == 0:
             raise ValueError(f"user {user_name} does not have any releases we can fetch. :(")
-        release_mbids = [ r["release_mbid"] for r in releases ]  
+        release_mbids = [r["release_mbid"] for r in releases]
 
         images = self.load_images(release_mbids)
         if images is None:
             return None, None, None
 
-        metadata = { "user_name": user_name,
-                     "date": datetime.datetime.now().strftime("%Y-%m-%d"), 
-                     "time_range": self.time_range_to_english[time_range],
-                     "num_releases": total_count }
+        metadata = {
+            "user_name": user_name,
+            "date": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "time_range": self.time_range_to_english[time_range],
+            "num_releases": total_count
+        }
 
         return images, releases, metadata

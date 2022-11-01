@@ -4,4 +4,5 @@ art_bp = Blueprint('art_v1', __name__)
 
 @art_bp.route("/")
 def index():
+    """ This page shows of a bit of what can be done with the cover art, as a sort of showcase. """
     return render_template("art/index.html")
