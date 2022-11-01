@@ -12,8 +12,8 @@ from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.decorators import crossdomain
 from brainzutils.ratelimit import ratelimit
 
-
 art_api_bp = Blueprint('art_api_v1', __name__)
+
 
 @art_api_bp.route("/grid/", methods=["POST"])
 @crossdomain
@@ -28,9 +28,7 @@ def cover_art_grid_post():
 
     :param background: The background for the cover art: Must be "transparent", "white" or "black".
     :type background: ``str``
-    :param image_size: The size of the cover art image. Must be between MIN_IMAGE_SIZE and
-                       CoverArtGenerator.MAX_IMAGE_SIZE. See the bottom of this document for the
-                       definition of these values.
+    :param image_size: The size of the cover art image. See constants at the bottom of this document.
     :type image_size: ``int``
     :param dimension: The dimension to use for this grid. A grid of dimension 3 has 3 images across
                       and 3 images down, for a total of 9 images.
@@ -59,21 +57,23 @@ def cover_art_grid_post():
     :statuscode 200: cover art created successfully.
     :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
     :resheader Content-Type: *image/svg+xml*
+
+    See the bottom of this document for constants relating to this method.
     """
 
     r = request.json
 
     if "tiles" in r:
-        cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"],
-                                r["background"], r["skip-missing"], r["show-caa"])
+        cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"], r["background"],
+                                r["skip-missing"], r["show-caa"])
         tiles = r["tiles"]
     else:
         if "layout" in r:
             layout = r["layout"]
         else:
             layout = 0
-        cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"],
-                                r["background"], r["skip-missing"], r["show-caa"], r["layout"])
+        cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"], r["background"],
+                                r["skip-missing"], r["show-caa"], r["layout"])
         tiles = None
 
     err = cac.validate_parameters()
@@ -97,7 +97,9 @@ def cover_art_grid_post():
                            background=r["background"],
                            images=images,
                            width=r["image_size"],
-                           height=r["image_size"]), 200, {'Content-Type': 'image/svg+xml'}
+                           height=r["image_size"]), 200, {
+                               'Content-Type': 'image/svg+xml'
+                           }
 
 
 @art_api_bp.route("/grid-stats/<user_name>/<time_range>/<int:dimension>/<int:layout>/<int:image_size>", methods=["GET"])
@@ -118,16 +120,13 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                    may have image images be of different sizes. See https://art.listenbrainz.org for examples
                    of the available layouts.
     :type layout: ``int``
-    :param image_size: The size of the cover art image. Must be between MIN_IMAGE_SIZE and
-                       CoverArtGenerator.MAX_IMAGE_SIZE. See the bottom of this document for the
-                       definition of these values.
+    :param image_size: The size of the cover art image. See constants at the bottom of this document.
     :type image_size: ``int``
     :statuscode 200: cover art created successfully.
     :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
     :resheader Content-Type: *image/svg+xml*
 
-    The following statistics time_ranges may be used:
-    .. autodata:: data.model.common_stat.ALLOWED_STATISTICS_RANGE
+    See the bottom of this document for constants relating to this method.
     """
 
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], dimension, image_size)
@@ -151,7 +150,9 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                            background=cac.background,
                            images=images,
                            width=image_size,
-                           height=image_size), 200, {'Content-Type': 'image/svg+xml'}
+                           height=image_size), 200, {
+                               'Content-Type': 'image/svg+xml'
+                           }
 
 
 @art_api_bp.route("/<custom_name>/<user_name>/<time_range>/<int:image_size>", methods=["GET"])
@@ -168,16 +169,14 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
     :type user_name: ``str``
     :param time_range: Must be a statistics time range -- see below.
     :type time_range: ``str``
-    :param image_size: The size of the cover art image. Must be between MIN_IMAGE_SIZE and
-                       CoverArtGenerator.MAX_IMAGE_SIZE. See the bottom of this document for the
-                       definition of these values.
+    :param image_size: The size of the cover art image. See constants at the bottom of this document.
     :type image_size: ``int``
     :statuscode 200: cover art created successfully.
     :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
     :resheader Content-Type: *image/svg+xml*
 
-    The following statistics time_ranges may be used:
-    .. autodata:: data.model.common_stat.ALLOWED_STATISTICS_RANGE
+    See the bottom of this document for constants relating to this method.
+
     """
 
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, image_size)
@@ -193,11 +192,13 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         except ValueError as error:
             raise APIBadRequest(error)
 
-        return render_template(f"/art/svg-templates/{custom_name}.svg", 
+        return render_template(f"/art/svg-templates/{custom_name}.svg",
                                artists=artists,
                                width=image_size,
                                height=image_size,
-                               metadata=metadata), 200, {'Content-Type': 'image/svg+xml'}
+                               metadata=metadata), 200, {
+                                   'Content-Type': 'image/svg+xml'
+                               }
 
     if custom_name in ("lps-on-the-floor", "designer-top-10", "designer-top-10-alt"):
         try:
@@ -207,11 +208,13 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         except ValueError as error:
             raise APIBadRequest(error)
 
-        return render_template(f"art/svg-templates/{custom_name}.svg", 
+        return render_template(f"art/svg-templates/{custom_name}.svg",
                                images=images,
                                releases=releases,
                                width=image_size,
                                height=image_size,
-                               metadata=metadata), 200, {'Content-Type': 'image/svg+xml'}
+                               metadata=metadata), 200, {
+                                   'Content-Type': 'image/svg+xml'
+                               }
 
     raise APIBadRequest(f"Unkown custom cover art type {custom_name}")

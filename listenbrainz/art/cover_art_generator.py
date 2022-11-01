@@ -4,14 +4,23 @@ import psycopg2
 import psycopg2.extras
 import requests
 
+#: Minimum image size
+MIN_IMAGE_SIZE = 128
+
+#: Maximum image size
+MAX_IMAGE_SIZE = 1024
+
+#: Minimum dimension
+MIN_DIMENSION = 2
+
+#: Maximum dimension
+MAX_DIMENSION = 5
+
 
 class CoverArtGenerator:
     """ Main engine for generating dynamic cover art. Given a design and data (e.g. stats) generate
         cover art from cover art images or text using the SVG format. """
 
-    # Specify some operating limits
-    MIN_IMAGE_SIZE = 128
-    MAX_IMAGE_SIZE = 1024
     CAA_MISSING_IMAGE = "https://listenbrainz.org/static/img/cover-art-placeholder.jpg"
 
     # This grid tile designs (layouts?) are expressed as a dict with they key as dimension.
@@ -94,15 +103,15 @@ class CoverArtGenerator:
     def validate_parameters(self):
         """ Validate the parameters for the cover art designs. """
 
-        if self.dimension not in (2, 3, 4, 5):
-            return "dimmension must be between 2 and 5, inclusive."
+        if self.dimension not in list(range(MIN_DIMENSION, MAX_DIMENSION + 1)):
+            return "dimmension must be between {MIN_DIMENSION} and {MAX_DIMENSION}, inclusive."
 
         bg_color = self.parse_color_code(self.background)
         if self.background not in ("transparent", "white", "black") and bg_color is None:
             return f"background must be one of transparent, white, black or a color code #rrggbb, not {self.background}"
 
-        if self.image_size < CoverArtGenerator.MIN_IMAGE_SIZE or self.image_size > CoverArtGenerator.MAX_IMAGE_SIZE:
-            return f"image size must be between {self.MIN_IMAGE_SIZE} and {self.MAX_IMAGE_SIZE}, inclusive."
+        if self.image_size < MIN_IMAGE_SIZE or self.image_size > MAX_IMAGE_SIZE:
+            return f"image size must be between {MIN_IMAGE_SIZE} and {MAX_IMAGE_SIZE}, inclusive."
 
         if not isinstance(self.skip_missing, bool):
             return f"option skip-missing must be of type boolean."
