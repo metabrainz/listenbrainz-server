@@ -11,7 +11,7 @@ from listenbrainz_spark.utils import get_listens_from_new_dump
 RECORDINGS_PER_MESSAGE = 10000
 
 
-def build_sessioned_index(listen_table, metadata_table, session, threshold, limit):
+def build_sessioned_index(listen_table, metadata_table, session, max_contribution, threshold, limit):
     # TODO: Handle case of unmatched recordings breaking sessions!
     #  Detect and remove skips!
     return f"""
@@ -38,20 +38,30 @@ def build_sessioned_index(listen_table, metadata_table, session, threshold, limi
                      , recording_mbid
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
-            ), grouped_mbids AS (
-                SELECT IF(s1.recording_mbid < s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid0
+            ), user_grouped_mbids AS (
+                SELECT user_id
+                     , IF(s1.recording_mbid < s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid0
                      , IF(s1.recording_mbid > s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid1
                   FROM sessions s1
                   JOIN sessions s2
                  USING (user_id, session_id)
                  WHERE s1.recording_mbid != s2.recording_mbid
-            ), thresholded_mbids AS (
-                SELECT lexical_mbid0 AS mbid0
+            ), user_contribtion_mbids AS (
+                SELECT user_id
+                     , lexical_mbid0 AS mbid0
                      , lexical_mbid1 AS mbid1
-                     , COUNT(*) AS score
-                  FROM grouped_mbids
-              GROUP BY lexical_mbid0
+                     , LEAST(COUNT(*), {max_contribution}) AS score
+                  FROM user_grouped_mbids
+              GROUP BY user_id
+                     , lexical_mbid0
                      , lexical_mbid1
+            ), thresholded_mbids AS (
+                SELECT mbid0
+                     , mbid1
+                     , score
+                  FROM user_contribtion_mbids
+              GROUP BY mbid0
+                     , mbid1  
                 HAVING score > {threshold}
             ), ranked_mbids AS (
                 SELECT mbid0
@@ -68,12 +78,13 @@ def build_sessioned_index(listen_table, metadata_table, session, threshold, limi
     """
 
 
-def main(days, session, threshold, limit):
+def main(days, session, contribution, threshold, limit):
     """ Generate similar recordings based on user listening sessions.
 
     Args:
         days: the number of days of listens to consider for calculating listening sessions
         session: the max time difference between two listens in a listening session
+        contribution: the max contribution a user's listens can make to a recording pair's similarity score
         threshold: the minimum similarity score for two recordings to be considered similar
         limit: the maximum number of similar recordings to request for a given recording
             (this limit is instructive only, upto 2x number of recordings may be returned)
@@ -89,10 +100,10 @@ def main(days, session, threshold, limit):
     metadata_df = listenbrainz_spark.sql_context.read.json(config.HDFS_CLUSTER_URI + "/mb_metadata_cache.jsonl")
     metadata_df.createOrReplaceTempView(metadata_table)
 
-    query = build_sessioned_index(table, metadata_table, session, threshold, limit)
+    query = build_sessioned_index(table, metadata_table, session, contribution, threshold, limit)
     data = run_query(query).toLocalIterator()
 
-    algorithm = f"session_based_days_{days}_session_{session}_threshold_{threshold}_limit_{limit}"
+    algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}"
 
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]

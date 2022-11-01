@@ -134,6 +134,7 @@
     "params": [
       "days",
       "session",
+      "contribution",
       "threshold",
       "limit"
     ]
