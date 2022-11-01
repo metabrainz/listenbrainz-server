@@ -109,7 +109,7 @@ def main(days, session, contribution, threshold, limit, filter_artist_credit):
     query = build_sessioned_index(table, metadata_table, session, contribution, threshold, limit, filter_artist_credit)
     data = run_query(query).toLocalIterator()
 
-    algorithm = f"session_base+d_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_filter_{filter_artist_credit}"
+    algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_filter_{filter_artist_credit}"
 
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]
