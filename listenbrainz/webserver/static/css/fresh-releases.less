@@ -258,34 +258,18 @@
       }
     }
 
-    @media (max-width: @screen-xs) {
-      grid-template-columns: repeat(1, 1fr);
-      & > .release-card-container {
-        & > .release-coverart {
-          width: 13em;
-          height: 13em;
-        }
-        & > .name-type-container {
-          width: 13em;
-        }
-        & > .release-artist {
-          width: 13em;
-        }
-      }
-    }
-
-    @media (min-width: @screen-xs) and (max-width: 576px) {
+    @media (max-width: 576px) {
       grid-template-columns: repeat(2, 1fr);
       & > .release-card-container {
         & > .release-coverart {
-          width: 12em;
-          height: 12em;
+          width: 11em;
+          height: 11em;
         }
         & > .name-type-container {
-          width: 12em;
+          width: 11em;
         }
         & > .release-artist {
-          width: 12em;
+          width: 11em;
         }
       }
     }
