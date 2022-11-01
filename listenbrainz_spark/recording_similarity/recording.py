@@ -50,7 +50,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                 SELECT user_id
                      , lexical_mbid0 AS mbid0
                      , lexical_mbid1 AS mbid1
-                     , LEAST(COUNT(*), {max_contribution}) AS score
+                     , LEAST(COUNT(*), {max_contribution}) AS part_score
                   FROM user_grouped_mbids
               GROUP BY user_id
                      , lexical_mbid0
@@ -58,7 +58,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
             ), thresholded_mbids AS (
                 SELECT mbid0
                      , mbid1
-                     , score
+                     , SUM(part_score) AS score
                   FROM user_contribtion_mbids
               GROUP BY mbid0
                      , mbid1  
