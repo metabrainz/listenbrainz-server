@@ -6,7 +6,7 @@ a user's instructions on how to composite a cover art grid.
 
 All art endpoints have this root URL for our current production site.
 
-- **ART API Root URL**: ``https://art.listenbrainz.org``
+- **ART API Root URL**: ``https://art-api.listenbrainz.org``
 
 .. note::
     All ListenBrainz services are only available on **HTTPS**!
