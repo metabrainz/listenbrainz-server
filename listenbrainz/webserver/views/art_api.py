@@ -1,4 +1,5 @@
 import datetime
+from uuid import UUID
 
 from flask import Flask, request, render_template, Blueprint, current_app
 import psycopg2

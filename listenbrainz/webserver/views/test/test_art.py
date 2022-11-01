@@ -1,3 +1,4 @@
+import json
 from unittest import mock
 from unittest.mock import patch
 
@@ -59,3 +60,14 @@ class ArtViewsTestCase(IntegrationTestCase):
             self.assert200(resp)
             assert resp.text.startswith("<svg")
             self.assertNotEqual(resp.text.find("ROB"), -1)
+
+    def test_cover_art_grid_post(self):
+        with open("listenbrainz/art/misc/sample_cover_art_grid_post_request.json", "r") as f:
+            post_json = f.read()
+
+        with patch.object(CoverArtGenerator, 'get_caa_id') as mock_get_caa_id:
+            mock_get_caa_id.return_value = 6945
+            resp = self.client.post(url_for('art_api_v1.cover_art_grid_post'), data=post_json, content_type="application/json")
+            self.assert200(resp)
+            assert resp.text.startswith("<svg")
+            self.assertNotEqual(resp.text.find("6945"), -1)
