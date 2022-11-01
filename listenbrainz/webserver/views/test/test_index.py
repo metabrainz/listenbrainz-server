@@ -296,3 +296,7 @@ class IndexViewsTestCase(IntegrationTestCase):
     def test_release_playlist(self):
         resp = self.client.get(url_for('player.load_release', release_mbid="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
         self.assert200(resp)
+
+    def test_000_art_index(self):
+        resp = self.client.get(url_for('art.index'))
+        self.assert200(resp)
