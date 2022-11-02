@@ -6,6 +6,7 @@ import {
   has as _has,
   debounce as _debounce,
   isString,
+  has,
 } from "lodash";
 import {
   searchForSpotifyTrack,
@@ -191,7 +192,16 @@ export default class SpotifyPlayer
         return;
       }
       onTrackNotFound();
-    } catch (errorObject) {
+    } catch (error) {
+      let errorObject = error;
+      try {
+        errorObject = JSON.parse(error);
+      } catch (jsonParseError) {
+        // Ignore JSON parsing error, this might not be a stringified object
+      }
+      if (!has(errorObject, "status")) {
+        handleError(errorObject.message ?? errorObject);
+      }
       if (errorObject.status === 401) {
         // Handle token error and try again if fixed
         this.handleTokenError(
@@ -202,9 +212,7 @@ export default class SpotifyPlayer
       }
       if (errorObject.status === 403) {
         this.handleAccountError();
-        return;
       }
-      handleError(errorObject.message ?? errorObject);
     }
   };
 
