@@ -1178,8 +1178,18 @@ export default class APIService {
     days?: number
   ): Promise<any> => {
     let url = `${this.APIBaseURI}/explore/fresh-releases/`;
-    if (!isUndefined(release_date)) url += `?release_date=${release_date}`;
-    if (!isUndefined(days)) url += `&days=${days}`;
+
+    const queryParams: Array<string> = [];
+    if (release_date) {
+      queryParams.push(`release_date=${release_date}`);
+    }
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
+    if (queryParams.length) {
+      url += `?${queryParams.join("&")}`;
+    }
+
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
