@@ -50,28 +50,28 @@ class CanonicalMusicBrainzData(BulkInsertTable):
                     , rl.gid AS release_mbid
                     , rpr.id AS score
                     , date_year AS year
-                 FROM recording r
-                 JOIN artist_credit ac
+                 FROM musicbrainz.recording r
+                 JOIN musicbrainz.artist_credit ac
                    ON r.artist_credit = ac.id
-                 JOIN artist_credit_name acn
+                 JOIN musicbrainz.artist_credit_name acn
                    ON ac.id = acn.artist_credit
-                 JOIN artist a
+                 JOIN musicbrainz.artist a
                    ON acn.artist = a.id
-                 JOIN track t
+                 JOIN musicbrainz.track t
                    ON t.recording = r.id
-                 JOIN medium m
+                 JOIN musicbrainz.medium m
                    ON m.id = t.medium
-                 JOIN release rl
+                 JOIN musicbrainz.release rl
                    ON rl.id = m.release
                  JOIN mapping.canonical_musicbrainz_data_release_tmp rpr
                    ON rl.id = rpr.release
                  JOIN (SELECT artist_credit, array_agg(gid ORDER BY position) AS artist_mbids
-                         FROM artist_credit_name acn2
-                         JOIN artist a2
+                         FROM musicbrainz.artist_credit_name acn2
+                         JOIN musicbrainz.artist a2
                            ON acn2.artist = a2.id
                      GROUP BY acn2.artist_credit) s
                    ON acn.artist_credit = s.artist_credit
-            LEFT JOIN release_country rc
+            LEFT JOIN musicbrainz.release_country rc
                    ON rc.release = rl.id
              GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name, year
              ORDER BY ac.id, rpr.id
