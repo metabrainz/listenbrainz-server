@@ -1,6 +1,6 @@
 import * as React from "react";
 import { getAlbumArtFromReleaseMBID } from "../utils/utils";
-import { formattedReleaseDate } from "./utils";
+import { formatReleaseDate } from "./utils";
 
 type ReleaseCardProps = {
   releaseDate: string;
@@ -70,7 +70,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
   return (
     <div className="release-card-container">
-      <div className="release-date">{formattedReleaseDate(releaseDate)}</div>
+      <div className="release-date">{formatReleaseDate(releaseDate)}</div>
       <img
         className="release-coverart"
         src={coverartSrc}

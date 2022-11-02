@@ -1,7 +1,7 @@
 import * as React from "react";
 import Slider from "rc-slider";
 import { countBy, debounce, zipObject } from "lodash";
-import { formattedReleaseDate, useMediaQuery } from "./utils";
+import { formatReleaseDate, useMediaQuery } from "./utils";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
@@ -32,7 +32,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       (item: FreshReleaseItem) => item.release_date
     );
     const datesArr = Object.keys(releasesPerDate).map((item) =>
-      formattedReleaseDate(item)
+      formatReleaseDate(item)
     );
     const percentArr = Object.values(releasesPerDate)
       .map((item) => (item / data.length) * 100)
