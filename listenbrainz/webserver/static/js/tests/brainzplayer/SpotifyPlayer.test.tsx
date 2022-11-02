@@ -169,21 +169,13 @@ describe("SpotifyPlayer", () => {
   });
 
   describe("handleTokenError", () => {
-    it("calls handleError and onTrackNotFound if refreshSpotifyToken throws", async () => {
+    it("calls connectSpotifyPlayer", async () => {
       const handleError = jest.fn();
       const onTrackNotFound = jest.fn();
-      const refreshSpotifyToken = jest
-        .fn()
-        .mockRejectedValue(
-          new Error(
-            "'To err is human,' but a human error is nothing to what a computer can do if it tries."
-          )
-        );
       const mockProps = {
         ...props,
         handleError,
         onTrackNotFound,
-        refreshSpotifyToken,
       };
       const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
@@ -192,14 +184,10 @@ describe("SpotifyPlayer", () => {
 
       await instance.handleTokenError(new Error("Test"), () => {});
       expect(instance.handleAccountError).not.toHaveBeenCalled();
-      expect(instance.connectSpotifyPlayer).not.toHaveBeenCalled();
-      expect(instance.props.refreshSpotifyToken).toHaveBeenCalledTimes(1);
-      expect(instance.props.handleError).toHaveBeenCalledTimes(1);
-      expect(instance.props.handleError).toHaveBeenCalledWith(
-        "'To err is human,' but a human error is nothing to what a computer can do if it tries.",
-        "Spotify error"
-      );
-      expect(instance.props.onTrackNotFound).toHaveBeenCalledTimes(1);
+      // we recreate the spotify player and refresh the token all in one go
+      expect(instance.connectSpotifyPlayer).toHaveBeenCalledTimes(1);
+      expect(instance.props.handleError).not.toHaveBeenCalled();
+      expect(instance.props.onTrackNotFound).not.toHaveBeenCalled();
     });
 
     it("calls handleAccountError if wrong tokens error thrown", async () => {
@@ -280,18 +268,24 @@ describe("SpotifyPlayer", () => {
       const endOfTrackPlayerState = {
         ...spotifyPlayerState,
         // This is how we detect the end of a track
+        // See https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-509159445
         paused: true,
         position: 0,
-        previous_tracks: [
-          { id: spotifyPlayerState.track_window.current_track?.id },
-        ],
+        track_window: {
+          ...spotifyPlayerState.track_window,
+          previous_tracks: [
+            {
+              id: spotifyPlayerState.track_window.current_track?.id,
+            } as SpotifyTrack,
+          ],
+        },
       };
       // Spotify has a tendency to send multiple messages in a short burst,
       // and we debounce calls to onTrackEnd
       instance.handlePlayerStateChanged(endOfTrackPlayerState);
       instance.handlePlayerStateChanged(endOfTrackPlayerState);
       instance.handlePlayerStateChanged(endOfTrackPlayerState);
-      expect(instance.props.onTrackEnd).toHaveBeenCalledTimes(1);
+      expect(onTrackEnd).toHaveBeenCalledTimes(1);
     });
 
     it("detects a new track and sends information up", () => {
