@@ -85,12 +85,6 @@ def dump_postgres_db(location, dump_time=datetime.today()):
     current_app.logger.info('Creating dump of canonical metadata data...')
     try:
         dump_location = create_mapping_dump(location, dump_time)
-    except IOError as e:
-        current_app.logger.critical(
-            'IOError while creating canonical metadata dump: %s', str(e), exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
-        return
     except Exception as e:
         current_app.logger.critical(
             'Unable to create canonical metadata dump due to error %s', str(e), exc_info=True)
@@ -142,10 +136,6 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], t
                         arcname=os.path.join(archive_name, "TIMESTAMP"))
                 tar.add(DUMP_LICENSE_FILE_PATH,
                         arcname=os.path.join(archive_name, "COPYING"))
-            except IOError as e:
-                current_app.logger.error(
-                    'IOError while adding dump metadata: %s', str(e), exc_info=True)
-                raise
             except Exception as e:
                 current_app.logger.error(
                     'Exception while adding dump metadata: %s', str(e), exc_info=True)
@@ -165,10 +155,6 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], t
                                 columns=tables[table]['columns'],
                                 table_name=table,
                             )
-                        except IOError as e:
-                            current_app.logger.error(
-                                'IOError while copying table %s', table, exc_info=True)
-                            raise
                         except Exception as e:
                             current_app.logger.error(
                                 'Error while copying table %s: %s', table, str(e), exc_info=True)
@@ -176,8 +162,6 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], t
                     transaction.rollback()
 
             # Add the files to the archive in the order that they are defined in the dump definition.
-            # This is so that when imported into a db with FK constraints added, we import dependent
-            # tables first
             for table, tabledata in tables.items():
                 filename = tabledata['filename']
                 tar.add(os.path.join(archive_tables_dir, table),

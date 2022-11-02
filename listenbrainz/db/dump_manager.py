@@ -32,7 +32,7 @@ from flask import current_app, render_template
 
 from brainzutils.mail import send_mail
 import listenbrainz.db.dump as db_dump
-import listenbrainz.mbid_mapping.mapping.dump as mapping_dump
+from listenbrainz.db import mapping_dump
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.year_in_music import insert_playlists
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
@@ -75,7 +75,7 @@ def create_mapping(location):
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
 
-        mapping_dump.create_public_mapping_dump(dump_path, end_time)
+        mapping_dump.create_mapping_dump(dump_path, end_time)
         expected_num_dumps = 1
 
         try:
