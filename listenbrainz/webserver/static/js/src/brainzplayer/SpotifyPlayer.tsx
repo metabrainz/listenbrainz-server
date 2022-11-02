@@ -89,6 +89,7 @@ export default class SpotifyPlayer
   // Saving the access token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
   private accessToken = "";
+  private authenticationRetries = 0;
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 
@@ -323,16 +324,21 @@ export default class SpotifyPlayer
   ): Promise<void> => {
     if (!isString(error) && error?.message === "Invalid token scopes.") {
       this.handleAccountError();
+      return;
     }
-    const { refreshSpotifyToken, onTrackNotFound } = this.props;
-    try {
-      // Reconnect spotify player; user token will be refreshed in the process
-      this.connectSpotifyPlayer(callbackFunction);
-    } catch (err) {
+    const { onTrackNotFound } = this.props;
+    if (this.authenticationRetries > 5) {
       const { handleError } = this.props;
-      handleError(err.message, "Spotify token error");
+      handleError(
+        isString(error) ? error : error?.message,
+        "Spotify token error"
+      );
       onTrackNotFound();
+      return;
     }
+    this.authenticationRetries += 1;
+    // Reconnect spotify player; user token will be refreshed in the process
+    this.connectSpotifyPlayer(callbackFunction);
   };
 
   handleAccountError = (): void => {
@@ -401,6 +407,7 @@ export default class SpotifyPlayer
       getOAuthToken: async (authCallback) => {
         const userToken = await refreshSpotifyToken();
         this.accessToken = userToken;
+        this.authenticationRetries = 0;
         authCallback(userToken);
       },
       volume: 0.7, // Careful with this, now…
