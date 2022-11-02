@@ -716,9 +716,14 @@ def create_mb_metadata_cache(use_lb_conn: bool):
         Arguments:
             use_lb_conn: whether to use LB conn or not
     """
-
     psycopg2.extras.register_uuid()
-    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
+
+    if use_lb_conn:
+        mb_uri = config.MB_DATABASE_STANDBY_URI or config.MBID_MAPPING_DATABASE_URI
+    else:
+        mb_uri = config.MBID_MAPPING_DATABASE_URI
+
+    with psycopg2.connect(mb_uri) as mb_conn:
         lb_conn = None
         if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
@@ -738,7 +743,12 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
     """ Update the MB metadata cache incrementally """
     psycopg2.extras.register_uuid()
 
-    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
+    if use_lb_conn:
+        mb_uri = config.MB_DATABASE_STANDBY_URI or config.MBID_MAPPING_DATABASE_URI
+    else:
+        mb_uri = config.MBID_MAPPING_DATABASE_URI
+
+    with psycopg2.connect(mb_uri) as mb_conn:
         lb_conn = None
         if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)

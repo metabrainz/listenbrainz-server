@@ -137,8 +137,9 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         Arguments:
             use_lb_conn: whether to use LB conn or not
     """
+    mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
 
-    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
+    with psycopg2.connect(mb_uri) as mb_conn:
 
         lb_conn = None
         if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
