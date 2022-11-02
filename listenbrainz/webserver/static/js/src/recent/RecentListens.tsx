@@ -222,7 +222,7 @@ export default class RecentListens extends React.Component<
                     Boolean(releaseGroupMBID);
 
                   const isListenPersonallyRecommendable = Boolean(
-                    getRecordingMSID(listen)
+                    getRecordingMBID(listen)
                   );
                   // On the Recent page listens should have either an MSID or MBID or both,
                   // so we can assume we can pin them
