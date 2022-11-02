@@ -164,7 +164,12 @@ class BulkInsertTable:
             with conn.cursor() as curs:
                 if "." in self.table_name:
                     schema = self.table_name.split(".")[0]
-                    curs.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
+                    try:
+                        curs.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
+                    # silently ignore schema creation errors because the user in prod
+                    # doesn't have sufficient privileges
+                    except psycopg2.errors.InsufficientPrivilege as err:
+                        pass
 
                 columns = []
                 for name, types in self.get_create_table_columns():
