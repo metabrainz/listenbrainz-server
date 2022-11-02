@@ -57,16 +57,15 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
   }
 
-  async function getCoverArt() {
-    const coverartURL = await getAlbumArtFromReleaseMBID(releaseMBID);
-    if (coverartURL) {
-      setCoverartSrc(coverartURL);
-    }
-  }
-
   React.useEffect(() => {
+    async function getCoverArt() {
+      const coverartURL = await getAlbumArtFromReleaseMBID(releaseMBID);
+      if (coverartURL) {
+        setCoverartSrc(coverartURL);
+      }
+    }
     getCoverArt();
-  }, []);
+  }, [releaseMBID, setCoverartSrc]);
 
   return (
     <div className="release-card-container">
