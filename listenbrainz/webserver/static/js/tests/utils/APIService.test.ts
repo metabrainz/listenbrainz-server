@@ -1411,10 +1411,10 @@ describe("Fresh Releases", () => {
     });
 
     await expect(
-      apiService.fetchSitewideFreshReleases("2022-10-24", 2)
+      apiService.fetchSitewideFreshReleases("2020-12-27", 2)
     ).resolves.toEqual(freshReleasesSitewideData);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/explore/fresh-releases/?release_date=2022-10-24&days=2"
+      "foobar/1/explore/fresh-releases/?release_date=2020-12-27&days=2"
     );
   })
 
@@ -1452,7 +1452,7 @@ describe("Fresh Releases", () => {
       apiService.fetchSitewideFreshReleases("", 50)
     ).resolves.toEqual(response);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/explore/fresh-releases/?release_date=&days=50"
+      "foobar/1/explore/fresh-releases/?days=50"
     );
   })
 })

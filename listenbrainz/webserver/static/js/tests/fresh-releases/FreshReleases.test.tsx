@@ -38,25 +38,18 @@ const mountOptions: { context: GlobalAppContextT } = {
   },
 };
 
-// const release: FreshReleaseItem = {
-//   artist_credit_name: "clipping.",
-//   artist_mbids: ["84ca8fa4-7cca-4948-a90a-cb44db29853d"],
-//   caa_id: 33807384149,
-//   release_date: "2022-10-12",
-//   release_group_mbid: "44ce58e0-6254-4790-8fd8-0b432f3c9db1",
-//   release_group_primary_type: "EP",
-//   release_group_secondary_type: "Remix",
-//   release_mbid: "95ff5c88-06e3-40d2-b8db-f1a03c6450b8",
-//   release_name: "REMXNG 2.4"
-// };
-
 describe("FreshReleases", () => {
   it("renders the page correctly", () => {
+    // This seems to be working.
+    // TODO take forward from here :D
+    const fakeAPIService = new APIService("foo");
+    const mockFetchSitewideFreshReleases = jest.fn()
+    fakeAPIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases
     const wrapper = mount(
-      <GlobalAppContext.Provider value={mountOptions.context}>
+      <GlobalAppContext.Provider value={{...mountOptions.context, APIService: fakeAPIService}}>
         <FreshReleases {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(mockFetchSitewideFreshReleases).toHaveBeenCalled()
   })
 })
