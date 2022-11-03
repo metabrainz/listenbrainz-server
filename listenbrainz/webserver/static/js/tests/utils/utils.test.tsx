@@ -139,18 +139,7 @@ describe("searchForSpotifyTrack", () => {
     ).resolves.toEqual(spotifySearchResponse.tracks.items[0]);
   });
 
-  it("retries if network error / submit fails", async () => {
-    // Overide mock for fetch:
-    window.fetch = jest.fn().mockImplementation(() => {
-      // 1st call will recieve a network error
-      return Promise.reject(new Error("Oh no!"));
-    });
-    await expect(
-      searchForSpotifyTrack("foobar", "import", "vs", "star")
-    ).rejects.toThrow(Error("Oh no!"));
-  });
-
-  it("skips if any other response code is recieved", async () => {
+  it("skips if any other response code is received", async () => {
     // Overide mock for fetch
     window.fetch = jest.fn().mockImplementation(() => {
       return Promise.resolve({
@@ -161,7 +150,7 @@ describe("searchForSpotifyTrack", () => {
     });
     await expect(
       searchForSpotifyTrack("foobar", "import", "vs", "star")
-    ).rejects.toThrow(Error("Not found!"));
+    ).rejects.toThrow(JSON.stringify({ status: 404, message: "Not found!" }));
   });
   it("returns null if no track found in the json response", async () => {
     // Overide mock for fetch
