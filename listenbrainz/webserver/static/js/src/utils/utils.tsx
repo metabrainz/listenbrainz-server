@@ -17,12 +17,11 @@ const searchForSpotifyTrack = async (
   releaseName?: string
 ): Promise<SpotifyTrack | null> => {
   if (!spotifyToken) {
-    throw new Error(
-      JSON.stringify({
-        status: 403,
-        message: "You need to connect to your Spotify account",
-      })
-    );
+    // eslint-disable-next-line no-throw-literal
+    throw {
+      status: 403,
+      message: "You need to connect to your Spotify account",
+    };
   }
   let queryString = `type=track&q=`;
   if (trackName) {
