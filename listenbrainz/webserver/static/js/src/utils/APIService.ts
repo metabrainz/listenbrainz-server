@@ -1174,17 +1174,17 @@ export default class APIService {
   };
 
   fetchSitewideFreshReleases = async (
-    release_date?: string,
-    days?: number
+    days?: number,
+    release_date?: string
   ): Promise<any> => {
     let url = `${this.APIBaseURI}/explore/fresh-releases/`;
 
     const queryParams: Array<string> = [];
-    if (release_date) {
-      queryParams.push(`release_date=${release_date}`);
-    }
     if (days) {
       queryParams.push(`days=${days}`);
+    }
+    if (release_date) {
+      queryParams.push(`release_date=${release_date}`);
     }
     if (queryParams.length) {
       url += `?${queryParams.join("&")}`;
