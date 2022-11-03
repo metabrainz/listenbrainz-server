@@ -45,7 +45,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
     let freshReleases: Array<FreshReleaseItem>;
     try {
       if (pageType === PAGE_TYPE_SITEWIDE) {
-        freshReleases = await APIService.fetchSitewideFreshReleases("", 2);
+        freshReleases = await APIService.fetchSitewideFreshReleases(3);
       } else {
         const userFreshReleases = await APIService.fetchUserFreshReleases(
           currentUser.name
