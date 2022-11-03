@@ -192,13 +192,7 @@ export default class SpotifyPlayer
         return;
       }
       onTrackNotFound();
-    } catch (error) {
-      let errorObject = error;
-      try {
-        errorObject = JSON.parse(error);
-      } catch (jsonParseError) {
-        // Ignore JSON parsing error, this might not be a stringified object
-      }
+    } catch (errorObject) {
       if (!has(errorObject, "status")) {
         handleError(errorObject.message ?? errorObject);
       }
