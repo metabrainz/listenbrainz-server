@@ -134,10 +134,12 @@ declare type SpotifyPlayerTrackWindow = {
 
 declare type SpotifyPlayerSDKState = {
   paused: boolean;
+  loading: boolean;
   position: number;
   duration: number;
   track_window: {
     current_track: SpotifyTrack | null;
+    previous_tracks: SpotifyTrack[];
   };
 };
 
