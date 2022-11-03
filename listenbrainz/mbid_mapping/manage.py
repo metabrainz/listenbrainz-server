@@ -65,7 +65,6 @@ def sync_coverart():
 
 
 @cli.command()
-@click.argument('year', type=int)
 def update_coverart():
     """
         Update the release_color table incrementally. Designed to be called hourly by cron.

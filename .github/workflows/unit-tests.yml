@@ -13,7 +13,6 @@ on:
       - '**.jsx?'
       - '**.tsx?'
       - '**.snap'
-      - 'docker/Dockerfile.webpack'
       - 'docker/docker-compose.spark*.yml'
       - 'docker/prod/**'
       - 'docker/services/**'

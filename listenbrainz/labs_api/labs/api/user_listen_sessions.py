@@ -1,8 +1,6 @@
 from datasethoster import Query
-from flask import current_app
 from markupsafe import Markup
 from sqlalchemy import text
-from sqlalchemy.dialects.postgresql import psycopg2
 
 from listenbrainz import db
 from listenbrainz.db import timescale
@@ -10,6 +8,9 @@ from listenbrainz.db import timescale
 
 class UserListensSessionQuery(Query):
     """ Display sessions of user's listens as sessions for given time period """
+
+    def setup(self):
+        pass
 
     def names(self):
         return "sessions-viewer", "ListenBrainz Session Viewer"
