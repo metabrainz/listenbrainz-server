@@ -261,9 +261,9 @@ export default class SpotifyPlayer
         this.handleAccountError();
         return;
       }
-      if (status === 404) {
-        // Device not found
-        // Wait a second, reconnect and try again
+      if (status === 404 || status >= 500) {
+        // Device not found or server error on the Spotify API
+        // Wait a second, recreate the local Spotify player and try again
         await new Promise((resolve) => {
           setTimeout(resolve, 1000);
         });
