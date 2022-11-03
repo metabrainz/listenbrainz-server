@@ -65,6 +65,9 @@ SPARK_RESULT_QUEUE = "spark_result"
 SPARK_REQUEST_EXCHANGE = "spark_request"
 SPARK_REQUEST_QUEUE = "spark_request"
 
+EXTERNAL_SERVICES_EXCHANGE = "external_services"
+EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = "external_services_spotify_cache"
+
 # Typesense -- this is only needed if you plan to run the Labs API end point for MBID mapping
 TYPESENSE_HOST = "localhost"
 TYPESENSE_PORT = 8108

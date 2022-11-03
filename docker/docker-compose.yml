@@ -112,14 +112,11 @@ services:
   static_builder:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.webpack
+      dockerfile: Dockerfile
+      target: listenbrainz-frontend-dev
     command: npm run build:dev
     volumes:
-      # Mount source front-end files
-      - ../listenbrainz/webserver/static:/code/static:z
-      # We mount this as a sort of shared volume
-      # where we put the compiled output to be served by the service "web"
-      - ../listenbrainz/webserver/static:/static:z
+      - ..:/code:z
 
 # Uncomment the following lines if you want to connect the LB network to a musicbrainz-docker network to access a MB replica
 # TODO: re-comment these before merging this code
