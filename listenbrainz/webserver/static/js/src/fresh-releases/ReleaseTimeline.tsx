@@ -39,6 +39,14 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       .map((_, index, arr) =>
         arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
       );
+
+    /**
+     * We want the timeline dates or marks to start where the grid starts.
+     * So the 0% should always have the first date. Therefore we use unshift(0) here.
+     * With the same logic, we don't want the last date to be at 100% because
+     * that will mean we're at the bottom of the grid.
+     * The last date should start before 100%. That explains the pop().
+     */
     percentArr.unshift(0);
     percentArr.pop();
     const middle = percentArr[Math.floor(percentArr.length / 2)];
