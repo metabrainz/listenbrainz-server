@@ -6,7 +6,7 @@ import {
   has as _has,
   debounce as _debounce,
   isString,
-  difference,
+  has,
 } from "lodash";
 import {
   searchForSpotifyTrack,
@@ -36,7 +36,6 @@ type SpotifyPlayerProps = DataSourceProps & {
 };
 
 type SpotifyPlayerState = {
-  accessToken: string;
   currentSpotifyTrack?: SpotifyTrack;
   durationMs: number;
   trackWindow?: SpotifyPlayerTrackWindow;
@@ -88,17 +87,22 @@ export default class SpotifyPlayer
 
   public name = "spotify";
   public domainName = "spotify.com";
+  // Saving the access token outside of React state , we do not need it for any rendering purposes
+  // and it simplifies some of the closure issues we've had with old tokens.
+  private accessToken = "";
+  private authenticationRetries = 0;
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 
   constructor(props: SpotifyPlayerProps) {
     super(props);
+
+    this.accessToken = props.spotifyUser?.access_token || "";
     this.state = {
-      accessToken: props.spotifyUser?.access_token || "",
       durationMs: 0,
     };
 
-    this.debouncedOnTrackEnd = _debounce(props.onTrackEnd, 500, {
+    this.debouncedOnTrackEnd = _debounce(props.onTrackEnd, 700, {
       leading: true,
       trailing: false,
     });
@@ -175,10 +179,10 @@ export default class SpotifyPlayer
       handleWarning("Not enough info to search on Spotify");
       onTrackNotFound();
     }
-    const { accessToken } = this.state;
+
     try {
       const track = await searchForSpotifyTrack(
-        accessToken,
+        this.accessToken,
         trackName,
         artistName,
         releaseName
@@ -188,7 +192,16 @@ export default class SpotifyPlayer
         return;
       }
       onTrackNotFound();
-    } catch (errorObject) {
+    } catch (error) {
+      let errorObject = error;
+      try {
+        errorObject = JSON.parse(error);
+      } catch (jsonParseError) {
+        // Ignore JSON parsing error, this might not be a stringified object
+      }
+      if (!has(errorObject, "status")) {
+        handleError(errorObject.message ?? errorObject);
+      }
       if (errorObject.status === 401) {
         // Handle token error and try again if fixed
         this.handleTokenError(
@@ -199,9 +212,7 @@ export default class SpotifyPlayer
       }
       if (errorObject.status === 403) {
         this.handleAccountError();
-        return;
       }
-      handleError(errorObject);
     }
   };
 
@@ -209,7 +220,7 @@ export default class SpotifyPlayer
     spotifyURI: string,
     retryCount = 0
   ): Promise<void> => {
-    const { accessToken, device_id } = this.state;
+    const { device_id } = this.state;
     const { handleError } = this.props;
     if (retryCount > 5) {
       handleError("Could not play Spotify track", "Playback error");
@@ -229,33 +240,34 @@ export default class SpotifyPlayer
           body: JSON.stringify({ uris: [spotifyURI] }),
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${this.accessToken}`,
           },
         }
       );
-      let errorMessage;
+      let errorObject;
       if (response.ok) {
         return;
       }
       try {
-        errorMessage = await response.json();
+        errorObject = await response.json();
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(err);
       }
-      if (response.status === 401) {
+      const status = errorObject?.status ?? response.status;
+      if (status === 401) {
         // Handle token error and try again if fixed
         this.handleTokenError(
-          response.statusText,
+          errorObject ?? response.statusText,
           this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1)
         );
         return;
       }
-      if (response.status === 403) {
+      if (status === 403) {
         this.handleAccountError();
         return;
       }
-      if (response.status === 404) {
+      if (status === 404) {
         // Device not found
         // Wait a second, reconnect and try again
         await new Promise((resolve) => {
@@ -266,9 +278,8 @@ export default class SpotifyPlayer
         );
         return;
       }
-      if (!response.ok) {
-        handleError(errorMessage || response);
-      }
+      // catch-all
+      handleError(errorObject?.message ?? response);
     } catch (error) {
       handleError(error.message);
     }
@@ -316,28 +327,26 @@ export default class SpotifyPlayer
   };
 
   handleTokenError = async (
-    error: Error | string,
+    error: Error | string | Spotify.Error,
     callbackFunction: () => void
   ): Promise<void> => {
-    if (
-      error &&
-      typeof error === "object" &&
-      error.message &&
-      error.message === "Invalid token scopes."
-    ) {
+    if (!isString(error) && error?.message === "Invalid token scopes.") {
       this.handleAccountError();
+      return;
     }
-    const { refreshSpotifyToken, onTrackNotFound } = this.props;
-    try {
-      const userToken = await refreshSpotifyToken();
-      this.setState({ accessToken: userToken }, () => {
-        this.connectSpotifyPlayer(callbackFunction);
-      });
-    } catch (err) {
+    const { onTrackNotFound } = this.props;
+    if (this.authenticationRetries > 5) {
       const { handleError } = this.props;
-      handleError(err.message, "Spotify error");
+      handleError(
+        isString(error) ? error : error?.message,
+        "Spotify token error"
+      );
       onTrackNotFound();
+      return;
     }
+    this.authenticationRetries += 1;
+    // Reconnect spotify player; user token will be refreshed in the process
+    this.connectSpotifyPlayer(callbackFunction);
   };
 
   handleAccountError = (): void => {
@@ -395,17 +404,19 @@ export default class SpotifyPlayer
   connectSpotifyPlayer = (callbackFunction?: () => void): void => {
     this.disconnectSpotifyPlayer();
 
-    const { accessToken } = this.state;
-
     if (!window.Spotify) {
       setTimeout(this.connectSpotifyPlayer.bind(this, callbackFunction), 1000);
       return;
     }
+    const { refreshSpotifyToken } = this.props;
 
     this.spotifyPlayer = new window.Spotify.Player({
       name: "ListenBrainz Player",
-      getOAuthToken: (authCallback) => {
-        authCallback(accessToken);
+      getOAuthToken: async (authCallback) => {
+        const userToken = await refreshSpotifyToken();
+        this.accessToken = userToken;
+        this.authenticationRetries = 0;
+        authCallback(userToken);
       },
       volume: 0.7, // Careful with this, now…
     });
@@ -459,7 +470,7 @@ export default class SpotifyPlayer
       paused,
       position,
       duration,
-      track_window: { current_track },
+      track_window: { current_track, previous_tracks },
     } = playerState;
 
     const { currentSpotifyTrack, durationMs } = this.state;
@@ -480,8 +491,14 @@ export default class SpotifyPlayer
       return;
     }
     // How do we accurately detect the end of a song?
-    // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
-    if (position === 0 && paused === true) {
+    // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-509159445
+    // If the current_track (i.e. just finished track) also appears in previous_tracks, we're at the end of that track
+    if (
+      position === 0 &&
+      paused === true &&
+      previous_tracks?.findIndex((track) => track.id === current_track.id) !==
+        -1
+    ) {
       // Track finished or skipped, play next track
       this.debouncedOnTrackEnd();
       return;
