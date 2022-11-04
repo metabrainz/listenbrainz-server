@@ -17,11 +17,14 @@ import ProgressBar from "./ProgressBar";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import MenuOptions from "./MenuOptions";
 import { millisecondsToStr } from "../playlists/utils";
-import { DataSourceType } from "./BrainzPlayer";
+import { DataSourceTypes } from "./BrainzPlayer";
 import ListenControl from "../listens/ListenControl";
+import SpotifyPlayer from "./SpotifyPlayer";
+import YoutubePlayer from "./YoutubePlayer";
+import SoundcloudPlayer from "./SoundcloudPlayer";
 
 type BrainzPlayerUIProps = {
-  currentDataSource: DataSourceType | null;
+  currentDataSource: DataSourceTypes | null;
   playPreviousTrack: () => void;
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
@@ -172,6 +175,22 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
 
   const isPlayingATrack = Boolean(currentListen);
 
+  let trackURL;
+  if (currentListen) {
+    /**
+     * Due to some issue with TypeScript when accessing static methods of an instance when you don't know
+     * which class it is, we have to manually determine the class of the instance and call MyClass.staticMethod().
+     * Neither instance.constructor.staticMethod() nor instance.prototype.constructor.staticMethod() work without issues.
+     * See https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+     */
+    if (currentDataSource instanceof SpotifyPlayer) {
+      trackURL = SpotifyPlayer.getURLFromListen(currentListen);
+    } else if (currentDataSource instanceof YoutubePlayer) {
+      trackURL = YoutubePlayer.getURLFromListen(currentListen);
+    } else if (currentDataSource instanceof SoundcloudPlayer) {
+      trackURL = SoundcloudPlayer.getURLFromListen(currentListen);
+    }
+  }
   return (
     <div id="brainz-player" aria-label="Playback control">
       <ProgressBar
@@ -230,6 +249,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             buttonClassName="data-source-icon"
             icon={currentDataSource.icon as IconDefinition}
             text={`Open in ${currentDataSource.name}`}
+            link={trackURL}
+            anchorTagAttributes={{
+              target: "_blank",
+              rel: "noopener noreferrer",
+            }}
           />
         )}
         <FontAwesomeIcon
