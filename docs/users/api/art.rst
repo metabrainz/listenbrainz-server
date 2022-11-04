@@ -1,12 +1,16 @@
+.. role:: html(code)
+   :language: html
+
+
 Art
 ===
 
 ListenBrainz has a (cover) art infrastructure that creates new cover art from a user's statistics or
 a user's instructions on how to composite a cover art grid.
 
-As these endpoints return SVGs rather than images, you must embed them in an html
-<object data="covert_art_url" type="image/svg+xml"> element* rather than an <img src="covert_art_url"> element.
-Otherwise external resources such as cover art images and fonts will not be loaded and the result will be useless.
+As these endpoints return SVGs rather than images, you must embed them in an html :html:`<object data="covert_art_url" type="image/svg+xml">`
+element rather than an :html:`<img src="covert_art_url">` element. Otherwise external resources such as cover art images
+and fonts will not be loaded and the result will be useless.
 
 See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/object for reference.
 

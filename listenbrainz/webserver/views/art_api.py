@@ -64,17 +64,17 @@ def cover_art_grid_post():
     r = request.json
 
     if "tiles" in r:
-        cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"], r["background"],
-                                r["skip-missing"], r["show-caa"])
         tiles = r["tiles"]
     else:
-        if "layout" in r:
-            layout = r["layout"]
-        else:
-            layout = 0
-        cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"], r["background"],
-                                r["skip-missing"], r["show-caa"])
         tiles = None
+
+    if "layout" in r:
+        layout = r["layout"]
+    else:
+        layout = None
+
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"], r["background"],
+                            r["skip-missing"], r["show-caa"])
 
     err = cac.validate_parameters()
     if err is not None:
@@ -89,7 +89,7 @@ def cover_art_grid_post():
         except ValueError:
             raise APIBadRequest(f"Invalid release_mbid {mbid} specified.")
 
-    images = cac.load_images(r["release_mbids"], tile_addrs=tiles, layout)
+    images = cac.load_images(r["release_mbids"], tile_addrs=tiles, layout=layout)
     if images is None:
         raise APIInternalServerError("Failed to grid cover art SVG")
 
