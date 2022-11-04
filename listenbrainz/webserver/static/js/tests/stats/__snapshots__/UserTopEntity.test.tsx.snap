@@ -56,7 +56,7 @@ exports[`Sitewide Stats UserTopEntity renders corectly when range is invalid 1`]
           <FontAwesomeIcon
             border={false}
             className=""
-            color="#46443A"
+            color="#46433a"
             fixedWidth={false}
             flip={null}
             icon={
@@ -93,7 +93,7 @@ exports[`Sitewide Stats UserTopEntity renders corectly when range is invalid 1`]
             <svg
               aria-hidden="true"
               className="svg-inline--fa fa-link fa-w-16 fa-sm "
-              color="#46443A"
+              color="#46433a"
               data-icon="link"
               data-prefix="fas"
               focusable="false"
@@ -261,7 +261,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
           <FontAwesomeIcon
             border={false}
             className=""
-            color="#46443A"
+            color="#46433a"
             fixedWidth={false}
             flip={null}
             icon={
@@ -298,7 +298,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
             <svg
               aria-hidden="true"
               className="svg-inline--fa fa-link fa-w-16 fa-sm "
-              color="#46443A"
+              color="#46433a"
               data-icon="link"
               data-prefix="fas"
               focusable="false"
@@ -1453,7 +1453,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
           <FontAwesomeIcon
             border={false}
             className=""
-            color="#46443A"
+            color="#46433a"
             fixedWidth={false}
             flip={null}
             icon={
@@ -1490,7 +1490,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
             <svg
               aria-hidden="true"
               className="svg-inline--fa fa-link fa-w-16 fa-sm "
-              color="#46443A"
+              color="#46433a"
               data-icon="link"
               data-prefix="fas"
               focusable="false"
@@ -3267,7 +3267,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
           <FontAwesomeIcon
             border={false}
             className=""
-            color="#46443A"
+            color="#46433a"
             fixedWidth={false}
             flip={null}
             icon={
@@ -3304,7 +3304,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
             <svg
               aria-hidden="true"
               className="svg-inline--fa fa-link fa-w-16 fa-sm "
-              color="#46443A"
+              color="#46433a"
               data-icon="link"
               data-prefix="fas"
               focusable="false"
@@ -5014,7 +5014,7 @@ exports[`User Stats UserTopEntity renders corectly when range is invalid 1`] = `
           <FontAwesomeIcon
             border={false}
             className=""
-            color="#46443A"
+            color="#46433a"
             fixedWidth={false}
             flip={null}
             icon={
@@ -5051,7 +5051,7 @@ exports[`User Stats UserTopEntity renders corectly when range is invalid 1`] = `
             <svg
               aria-hidden="true"
               className="svg-inline--fa fa-link fa-w-16 fa-sm "
-              color="#46443A"
+              color="#46433a"
               data-icon="link"
               data-prefix="fas"
               focusable="false"
@@ -5224,7 +5224,7 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
           <FontAwesomeIcon
             border={false}
             className=""
-            color="#46443A"
+            color="#46433a"
             fixedWidth={false}
             flip={null}
             icon={
@@ -5261,7 +5261,7 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
             <svg
               aria-hidden="true"
               className="svg-inline--fa fa-link fa-w-16 fa-sm "
-              color="#46443A"
+              color="#46433a"
               data-icon="link"
               data-prefix="fas"
               focusable="false"
@@ -6421,7 +6421,7 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
           <FontAwesomeIcon
             border={false}
             className=""
-            color="#46443A"
+            color="#46433a"
             fixedWidth={false}
             flip={null}
             icon={
@@ -6458,7 +6458,7 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
             <svg
               aria-hidden="true"
               className="svg-inline--fa fa-link fa-w-16 fa-sm "
-              color="#46443A"
+              color="#46433a"
               data-icon="link"
               data-prefix="fas"
               focusable="false"
@@ -8240,7 +8240,7 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
           <FontAwesomeIcon
             border={false}
             className=""
-            color="#46443A"
+            color="#46433a"
             fixedWidth={false}
             flip={null}
             icon={
@@ -8277,7 +8277,7 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
             <svg
               aria-hidden="true"
               className="svg-inline--fa fa-link fa-w-16 fa-sm "
-              color="#46443A"
+              color="#46433a"
               data-icon="link"
               data-prefix="fas"
               focusable="false"

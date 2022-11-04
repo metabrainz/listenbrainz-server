@@ -19,6 +19,7 @@ import Loader from "../components/Loader";
 import { getPageProps } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import Card from "../components/Card";
+import { COLOR_WHITE } from "../utils/constants";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
@@ -44,7 +45,7 @@ export default class ColorPlay extends React.Component<
     this.state = {
       colorReleases: [],
       loading: false,
-      gridBackground: "#FFFFFF",
+      gridBackground: COLOR_WHITE,
     };
   }
 
@@ -119,7 +120,7 @@ export default class ColorPlay extends React.Component<
                 lineWidth={70}
                 onColorSelected={this.onColorChanged}
                 spacers={{
-                  colour: "#FFFFFF",
+                  colour: COLOR_WHITE,
                   shadowColor: "grey",
                   shadowBlur: 5,
                 }}
