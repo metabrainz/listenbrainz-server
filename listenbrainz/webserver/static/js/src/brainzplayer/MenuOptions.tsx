@@ -28,9 +28,9 @@ function MenuOptions(props: MenuOptionsProps) {
   let soundcloudURL;
   if (currentListen) {
     recordingMBID = getRecordingMBID(currentListen as Listen);
-    spotifyURL = SpotifyPlayer.getSpotifyURLFromListen(currentListen);
-    youtubeURL = YoutubePlayer.getYoutubeURLFromListen(currentListen);
-    soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(currentListen);
+    spotifyURL = SpotifyPlayer.getURLFromListen(currentListen);
+    youtubeURL = YoutubePlayer.getURLFromListen(currentListen);
+    soundcloudURL = SoundcloudPlayer.getURLFromListen(currentListen);
   }
 
   const toggleDropupMenu = () => {
