@@ -73,7 +73,7 @@ def cover_art_grid_post():
         else:
             layout = 0
         cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"], r["background"],
-                                r["skip-missing"], r["show-caa"], r["layout"])
+                                r["skip-missing"], r["show-caa"])
         tiles = None
 
     err = cac.validate_parameters()
@@ -89,7 +89,7 @@ def cover_art_grid_post():
         except ValueError:
             raise APIBadRequest(f"Invalid release_mbid {mbid} specified.")
 
-    images = cac.load_images(r["release_mbids"], tile_addrs=tiles)
+    images = cac.load_images(r["release_mbids"], tile_addrs=tiles, layout)
     if images is None:
         raise APIInternalServerError("Failed to grid cover art SVG")
 
@@ -192,7 +192,7 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         except ValueError as error:
             raise APIBadRequest(error)
 
-        return render_template(f"/art/svg-templates/{custom_name}.svg",
+        return render_template(f"art/svg-templates/{custom_name}.svg",
                                artists=artists,
                                width=image_size,
                                height=image_size,
