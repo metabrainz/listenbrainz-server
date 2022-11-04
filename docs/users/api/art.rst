@@ -1,7 +1,7 @@
 Art
 ===
 
-ListenBrainz has a (cover) art infrastructure that creates new cover art from a user's statstics or
+ListenBrainz has a (cover) art infrastructure that creates new cover art from a user's statistics or
 a user's instructions on how to composite a cover art grid.
 
 All art endpoints have this root URL for our current production site.
