@@ -16,6 +16,7 @@ import {
   faWindowMaximize,
   faWindowMinimize,
 } from "@fortawesome/free-solid-svg-icons";
+import { faYoutube } from "@fortawesome/free-brands-svg-icons";
 import {
   getArtistName,
   getTrackName,
@@ -110,6 +111,7 @@ export default class YoutubePlayer
 
   public name = "youtube";
   public domainName = "youtube.com";
+  public icon = faYoutube;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 

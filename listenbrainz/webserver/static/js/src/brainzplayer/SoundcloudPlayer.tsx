@@ -1,5 +1,6 @@
 import * as React from "react";
 import { get as _get, throttle as _throttle } from "lodash";
+import { faSoundcloud } from "@fortawesome/free-brands-svg-icons";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
 require("../../lib/soundcloud-player-api");
@@ -63,6 +64,7 @@ export default class SoundcloudPlayer
 
   public name = "soundcloud";
   public domainName = "soundcloud.com";
+  public icon = faSoundcloud;
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   retries = 0;

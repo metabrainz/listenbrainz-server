@@ -8,6 +8,7 @@ import {
   isString,
   has,
 } from "lodash";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import {
   searchForSpotifyTrack,
   loadScriptAsync,
@@ -87,6 +88,7 @@ export default class SpotifyPlayer
 
   public name = "spotify";
   public domainName = "spotify.com";
+  public icon = faSpotify;
   // Saving the access token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
   private accessToken = "";
