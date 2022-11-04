@@ -24,7 +24,9 @@ import UserPageHeading from "../../src/user/UserPageHeading";
 import FollowButton from "../../src/follow/FollowButton";
 import ReportUserButton from "../../src/report-user/ReportUser";
 import ReportUserModal from "../../src/report-user/ReportUserModal";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 
 const user = {
@@ -161,7 +163,7 @@ describe("<UserPageHeading />", () => {
             }),
         })
       );
-      reportUserButton.context.APIService.reportUser = apiCallSpy;
+      (reportUserButton.context as GlobalAppContextT).APIService.reportUser = apiCallSpy;
 
       // Let's pretend we're writing in the textarea
       const reasonInput = reportUserModal.find("#reason").first();
@@ -205,7 +207,7 @@ describe("<UserPageHeading />", () => {
         .mockImplementation(() =>
           Promise.reject(new Error("You cannot report yourself"))
         );
-      reportUserButton.context.APIService.reportUser = apiCallSpy;
+      (reportUserButton.context as GlobalAppContextT).APIService.reportUser = apiCallSpy;
 
       const submitButton = reportUserModal
         .find("button[type='submit']")
