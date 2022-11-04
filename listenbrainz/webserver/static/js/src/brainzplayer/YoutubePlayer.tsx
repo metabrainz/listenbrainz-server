@@ -98,9 +98,7 @@ export default class YoutubePlayer
     return images;
   }
 
-  static getYoutubeURLFromListen(
-    listen: Listen | JSPFTrack
-  ): string | undefined {
+  static getURLFromListen(listen: Listen | JSPFTrack): string | undefined {
     const youtubeId = this.getVideoIDFromListen(listen);
     if (youtubeId) {
       return `https://www.youtube.com/watch?v=${youtubeId}`;
