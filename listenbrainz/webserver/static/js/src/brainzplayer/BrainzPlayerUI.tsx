@@ -17,8 +17,11 @@ import ProgressBar from "./ProgressBar";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import MenuOptions from "./MenuOptions";
 import { millisecondsToStr } from "../playlists/utils";
+import { DataSourceType } from "./BrainzPlayer";
+import ListenControl from "../listens/ListenControl";
 
 type BrainzPlayerUIProps = {
+  currentDataSource: DataSourceType | null;
   playPreviousTrack: () => void;
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
@@ -62,7 +65,12 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
 }
 
 function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
-  const { listenBrainzAPIBaseURI, currentListen, newAlert } = props;
+  const {
+    currentDataSource,
+    listenBrainzAPIBaseURI,
+    currentListen,
+    newAlert,
+  } = props;
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const { currentUser } = React.useContext(GlobalAppContext);
   // const { currentListenFeedback } = this.state;
@@ -217,6 +225,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         />
       </div>
       <div className="actions">
+        {isPlayingATrack && currentDataSource && (
+          <ListenControl
+            buttonClassName="data-source-icon"
+            icon={currentDataSource.icon as IconDefinition}
+            text={`Open in ${currentDataSource.name}`}
+          />
+        )}
         <FontAwesomeIcon
           icon={faHeart}
           title="Love"

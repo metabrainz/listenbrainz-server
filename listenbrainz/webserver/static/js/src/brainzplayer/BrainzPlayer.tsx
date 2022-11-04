@@ -799,6 +799,7 @@ export default class BrainzPlayer extends React.Component<
     return (
       <div>
         <BrainzPlayerUI
+          currentDataSource={this.dataSources[currentDataSourceIndex]?.current}
           playPreviousTrack={this.playPreviousTrack}
           playNextTrack={this.playNextTrack}
           togglePlay={
