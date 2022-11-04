@@ -22,6 +22,7 @@ import ListenControl from "../listens/ListenControl";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
+import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
 
 type BrainzPlayerUIProps = {
   currentDataSource: DataSourceTypes | null;
@@ -81,17 +82,12 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     async function getFeedback() {
       // Get feedback for currentListen
 
-      if (!currentUser?.name) {
+      if (!currentUser?.name || !currentListen) {
         return;
       }
-      const recordingMBID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_mbid"
-      );
-      const recordingMSID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_msid"
-      );
+      const recordingMBID = getRecordingMBID(currentListen as Listen);
+      const recordingMSID = getRecordingMSID(currentListen as Listen);
+
       if (!recordingMBID && !recordingMSID) {
         return;
       }
@@ -123,14 +119,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   async function submitFeedback(score: ListenFeedBack) {
     if (currentUser?.auth_token) {
       setCurrentListenFeedback(score);
-      const recordingMSID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_msid"
-      );
-      const recordingMBID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_mbid"
-      );
+
+      const recordingMSID = getRecordingMSID(currentListen as Listen);
+      const recordingMBID = getRecordingMBID(currentListen as Listen);
 
       try {
         const url = `${listenBrainzAPIBaseURI}/feedback/recording-feedback`;
