@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 
 import {
@@ -922,7 +922,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
     UserFeedPage
   );
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <UserFeedPageWithAlertNotifications
@@ -930,7 +931,6 @@ document.addEventListener("DOMContentLoaded", () => {
           events={events}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });
