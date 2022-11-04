@@ -32,6 +32,7 @@ import { getArtistName, getTrackName } from "../utils/utils";
 
 export type DataSourceType = {
   name: string;
+  icon: IconProp;
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
