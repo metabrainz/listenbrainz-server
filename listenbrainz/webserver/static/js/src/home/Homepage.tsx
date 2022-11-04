@@ -19,7 +19,7 @@
  */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { getPageProps } from "../utils/utils";
@@ -38,11 +38,10 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
-
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <Blog apiUrl={api_url} />
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

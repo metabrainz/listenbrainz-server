@@ -1,4 +1,4 @@
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as React from "react";
 
 import * as Sentry from "@sentry/react";
@@ -165,10 +165,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <UserReports apiUrl={api_url} user={user} />
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { get } from "lodash";
 
 import { faCog, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
@@ -357,7 +357,8 @@ document.addEventListener("DOMContentLoaded", () => {
     youtubeAuth: youtube,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <PlayerPageWithAlertNotifications
@@ -365,7 +366,6 @@ document.addEventListener("DOMContentLoaded", () => {
           playlist={playlist}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

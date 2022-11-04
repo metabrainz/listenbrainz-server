@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as React from "react";
 
 import * as _ from "lodash";
@@ -442,7 +442,8 @@ document.addEventListener("DOMContentLoaded", () => {
     youtubeAuth: youtube,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <UserPinsWithAlertNotifications
@@ -452,7 +453,6 @@ document.addEventListener("DOMContentLoaded", () => {
           profileUrl={profile_url}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });
