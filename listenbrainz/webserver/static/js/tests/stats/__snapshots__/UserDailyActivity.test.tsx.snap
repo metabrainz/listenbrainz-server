@@ -60,7 +60,7 @@ exports[`UserDailyActivity renders corectly when range is invalid 1`] = `
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -97,7 +97,7 @@ exports[`UserDailyActivity renders corectly when range is invalid 1`] = `
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -242,7 +242,7 @@ exports[`UserDailyActivity renders correctly 1`] = `
           <FontAwesomeIcon
             border={false}
             className=""
-            color="#000000"
+            color="#000"
             fixedWidth={false}
             flip={null}
             icon={

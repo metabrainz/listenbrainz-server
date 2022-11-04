@@ -3,6 +3,7 @@ import * as React from "react";
 import { BarTooltipProps, ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
 import { BasicTooltip } from "@nivo/tooltip";
+import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../utils/constants";
 
 export type BarDualToneProps = {
   data: UserListeningActivityData;
@@ -182,7 +183,7 @@ export default function BarDualTone(props: BarDualToneProps) {
       keys={keys}
       groupMode="grouped"
       colors={({ id }) => {
-        return id === "thisRangeCount" ? "#EB743B" : "#353070";
+        return id === "thisRangeCount" ? COLOR_LB_ORANGE : COLOR_LB_BLUE;
       }}
       axisBottom={{
         format:
@@ -217,7 +218,7 @@ export default function BarDualTone(props: BarDualToneProps) {
                       lastRangePeriod.start,
                       lastRangePeriod.end
                     ),
-                    color: "#353070",
+                    color: COLOR_LB_BLUE,
                   },
                   {
                     id: "thisRangeName",
@@ -225,7 +226,7 @@ export default function BarDualTone(props: BarDualToneProps) {
                       thisRangePeriod.start,
                       thisRangePeriod.end
                     ),
-                    color: "#EB743B",
+                    color: COLOR_LB_ORANGE,
                   },
                 ],
                 anchor: "top-right",
