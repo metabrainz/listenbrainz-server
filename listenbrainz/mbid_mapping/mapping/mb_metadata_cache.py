@@ -122,8 +122,11 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         }
         artists_rels = []
         artist_mbids = []
-        for mbid, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
-            data = {}
+        for mbid, ac_name, ac_jp, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
+            data = {
+                "name": ac_name,
+                "join_phrase": ac_jp
+            }
             if begin_year is not None:
                 data["begin_year"] = begin_year
             if end_year is not None:
@@ -245,13 +248,20 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
-                                 , array_agg(jsonb_build_array(a.gid
-                                                              ,a.begin_date_year
-                                                              ,a.end_date_year
-                                                              ,at.name
-                                                              ,ag.name
-                                                              ,ar.name
-                                                              ,artist_links)) AS artist_data
+                                 , jsonb_array_agg(
+                                    jsonb_build_array(
+                                        a.gid
+                                      , acn.name
+                                      , acn.join_phrase
+                                      , a.begin_date_year
+                                      , a.end_date_year
+                                      , at.name
+                                      , ag.name
+                                      , ar.name
+                                      , artist_links
+                                    )
+                                    ORDER BY acn.position
+                                   ) AS artist_data
                               FROM recording r
                               JOIN artist_credit_name acn
                              USING (artist_credit)
