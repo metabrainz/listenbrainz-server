@@ -118,6 +118,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
         artist = {
             "name": row["artist_credit_name"],
+            "artist_credit_id": row["artist_credit_id"],
         }
         artists_rels = []
         artist_mbids = []
@@ -154,7 +155,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             if instrument is not None:
                 rel["instrument"] = instrument
             recording_rels.append(rel)
-            artist_mbids.append(uuid.UUID(artist_mbid))
 
         recording_tags = []
         for tag, count, genre_mbid in row["recording_tags"] or []:
@@ -190,7 +190,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             recording["length"] = row["length"]
 
         return (row["recording_mbid"],
-                list(set(artist_mbids)),
+                artist_mbids,
                 row["release_mbid"],
                 ujson.dumps(recording),
                 ujson.dumps(artist),
@@ -378,6 +378,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                    )
                             SELECT recording_links
                                  , r.name AS recording_name
+                                 , r.artist_credit AS artist_credit_id
                                  , ac.name AS artist_credit_name
                                  , artist_data
                                  , artist_tags
@@ -410,6 +411,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                               {values_join}
                           GROUP BY r.gid
                                  , r.name
+                                 , r.artist_credit
                                  , ac.name
                                  , rd.name
                                  , r.length
