@@ -352,7 +352,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                             SELECT r.gid AS recording_mbid
                                  , rel.name
                                  , rel.release_group
-                                 , rg.release_group_mbid
+                                 , rg.gid AS release_group_mbid
                                  , crr.release_mbid::TEXT
                                  , COALESCE(caa.id, rgca.caa_id) AS caa_id
                               FROM musicbrainz.recording r
