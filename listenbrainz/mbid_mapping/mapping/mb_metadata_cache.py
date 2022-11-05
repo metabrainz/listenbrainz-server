@@ -173,10 +173,11 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             artist_tags.append(tag)
 
         release_group_tags = []
-        for tag, count, release_group_mbid, genre_mbid in row["release_group_tags"] or []:
-            tag = {"tag": tag,
-                   "count": count,
-                   "release_group_mbid": release_group_mbid}
+        for tag, count, genre_mbid in row["release_group_tags"] or []:
+            tag = {
+                "tag": tag,
+                "count": count,
+            }
             if genre_mbid is not None:
                 tag["genre_mbid"] = genre_mbid
             release_group_tags.append(tag)
@@ -298,14 +299,12 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                           GROUP BY r.gid
                    ), release_group_tags AS (
                             SELECT r.gid AS recording_mbid
-                                 , array_agg(jsonb_build_array(t.name, count, rg.gid, g.gid)) AS release_group_tags
+                                 , array_agg(jsonb_build_array(t.name, count, g.gid)) AS release_group_tags
                               FROM recording r
                               JOIN mapping.canonical_release_redirect crr
                                 ON r.gid = crr.recording_mbid
                               JOIN release rel
                                 ON crr.release_mbid = rel.gid
-                              JOIN release_group rg
-                                ON rel.release_group = rg.id
                               JOIN release_group_tag rgt
                                 ON rgt.release_group = rel.release_group
                               JOIN tag t
@@ -314,7 +313,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 ON t.name = g.name
                               {values_join}
                              WHERE count > 0
-                          GROUP BY r.gid, rg.gid
+                          GROUP BY r.gid
                    ), rg_cover_art AS (
                             SELECT DISTINCT ON(rg.id)
                                    rg.id AS release_group
@@ -352,7 +351,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                             SELECT DISTINCT ON (r.gid)
                                    r.gid AS recording_mbid
                                  , rel.name
-                                 , rel.release_group
                                  , rg.gid AS release_group_mbid
                                  , crr.release_mbid::TEXT
                                  , CASE WHEN type_id = 1 AND mime_type != 'application/pdf' THEN caa.id
