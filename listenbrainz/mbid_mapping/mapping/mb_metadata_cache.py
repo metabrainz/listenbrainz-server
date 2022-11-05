@@ -419,7 +419,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , artist_data
                                  , artist_tags
                                  , rd.release_mbid
-                                 , caa_id
+                                 , rd.caa_id
+                                 , rgca.caa_id
                                  , year"""
         return query
 
