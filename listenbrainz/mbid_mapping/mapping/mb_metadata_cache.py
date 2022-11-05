@@ -248,7 +248,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
-                                 , jsonb_array_agg(
+                                 , jsonb_agg(
                                     jsonb_build_array(
                                         a.gid
                                       , acn.name
