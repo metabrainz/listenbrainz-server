@@ -349,7 +349,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , re.date_month
                                  , re.date_day
                    ), release_data AS (
-                            SELECT r.gid AS recording_mbid
+                            SELECT DISTINCT ON (r.gid)
+                                   r.gid AS recording_mbid
                                  , rel.name
                                  , rel.release_group
                                  , rg.gid AS release_group_mbid
@@ -371,6 +372,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                               {values_join}
                              WHERE (type_id = 1 AND mime_type != 'application/pdf')
                                 OR type_id IS NULL
+                          ORDER BY r.gid
+                                 , caa.ordering
                    )
                             SELECT recording_links
                                  , r.name AS recording_name
