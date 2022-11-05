@@ -355,7 +355,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , rel.release_group
                                  , rg.gid AS release_group_mbid
                                  , crr.release_mbid::TEXT
-                                 , COALESCE(caa.id, rgca.caa_id) AS caa_id
+                                 , caa.id AS caa_id
                               FROM musicbrainz.recording r
                               JOIN mapping.canonical_release_redirect crr
                                 ON r.gid = crr.recording_mbid
@@ -367,8 +367,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 ON caa.release = rel.id
                          LEFT JOIN cover_art_archive.cover_art_type cat
                                 ON cat.id = caa.id
-                         LEFT JOIN rg_cover_art rgca
-                                ON rgca.release_group = rel.release_group
                               {values_join}
                              WHERE (type_id = 1 AND mime_type != 'application/pdf')
                                 OR type_id IS NULL
@@ -387,7 +385,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , r.length
                                  , r.gid::TEXT AS recording_mbid
                                  , rd.release_mbid::TEXT
-                                 , rd.caa_id
+                                 , COALESCE(rd.caa_id, rgca.caa_id) AS caa_id
                                  , year
                               FROM recording r
                               JOIN artist_credit ac
@@ -404,6 +402,8 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                 ON rts.recording_mbid = r.gid
                          LEFT JOIN release_data rd
                                 ON rd.recording_mbid = r.gid
+                         LEFT JOIN rg_cover_art rgca
+                                ON rgca.release_group = rd.release_group
                          LEFT JOIN mapping.canonical_musicbrainz_data cmb
                                 ON cmb.recording_mbid = r.gid
                               {values_join}
