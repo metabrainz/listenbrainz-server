@@ -298,7 +298,6 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                           GROUP BY r.gid
                    ), release_group_tags AS (
                             SELECT r.gid AS recording_mbid
-                                 , rg.gid AS release_group_mbid
                                  , array_agg(jsonb_build_array(t.name, count, rg.gid, g.gid)) AS release_group_tags
                               FROM recording r
                               JOIN mapping.canonical_release_redirect crr
@@ -316,27 +315,62 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                               {values_join}
                              WHERE count > 0
                           GROUP BY r.gid, rg.gid
+                   ), rg_cover_art AS (
+                            SELECT DISTINCT ON(rg.id)
+                                   rg.id AS release_group
+                                 , caa.id AS caa_id
+                              FROM musicbrainz.recording r
+                              JOIN mapping.canonical_release_redirect crr
+                                ON r.gid = crr.recording_mbid
+                              JOIN musicbrainz.release rel
+                                ON rel.gid = crr.release_mbid   
+                              JOIN musicbrainz.release_group rg
+                                ON rg.id = rel.release_group
+                         LEFT JOIN (
+                                  SELECT release, date_year, date_month, date_day
+                                    FROM musicbrainz.release_country
+                               UNION ALL
+                                  SELECT release, date_year, date_month, date_day
+                                    FROM musicbrainz.release_unknown_country
+                                 ) re
+                                ON (re.release = rel.id)
+                         FULL JOIN cover_art_archive.release_group_cover_art rgca
+                                ON rgca.release = rel.id
+                         LEFT JOIN cover_art_archive.cover_art caa
+                                ON caa.release = rel.id
+                         LEFT JOIN cover_art_archive.cover_art_type cat
+                                ON cat.id = caa.id
+                              {values_join}
+                             WHERE type_id = 1
+                               AND mime_type != 'application/pdf'
+                          ORDER BY rg.id
+                                 , rgca.release
+                                 , re.date_year
+                                 , re.date_month
+                                 , re.date_day
                    ), release_data AS (
-                            SELECT * FROM (
-                                    SELECT r.gid AS recording_mbid
-                                         , rel.name
-                                         , rel.release_group
-                                         , crr.release_mbid::TEXT
-                                         , caa.id AS caa_id
-                                         , row_number() OVER (partition by recording_mbid ORDER BY ordering) AS rownum
-                                      FROM recording r
-                                      JOIN mapping.canonical_release_redirect crr
-                                        ON r.gid = crr.recording_mbid
-                                      JOIN release rel
-                                        ON crr.release_mbid = rel.gid
-                                 LEFT JOIN cover_art_archive.cover_art caa
-                                        ON caa.release = rel.id
-                                 LEFT JOIN cover_art_archive.cover_art_type cat
-                                        ON cat.id = caa.id
-                                      {values_join}
-                                     WHERE type_id = 1
-                                        OR type_id IS NULL
-                            ) temp where rownum=1
+                            SELECT r.gid AS recording_mbid
+                                 , rel.name
+                                 , rel.release_group
+                                 , rg.release_group_mbid
+                                 , crr.release_mbid::TEXT
+                                 , COALESCE(caa.id, rgca.caa_id) AS caa_id
+                              FROM musicbrainz.recording r
+                              JOIN mapping.canonical_release_redirect crr
+                                ON r.gid = crr.recording_mbid
+                              JOIN musicbrainz.release rel
+                                ON crr.release_mbid = rel.gid
+                              JOIN musicbrainz.release_group rg
+                                ON rel.release_group = rg.id  
+                         LEFT JOIN cover_art_archive.cover_art caa
+                                ON caa.release = rel.id
+                         LEFT JOIN cover_art_archive.cover_art_type cat
+                                ON cat.id = caa.id
+                         LEFT JOIN rg_cover_art rgca
+                                ON rgca.release_group = rel.release_group
+                              {values_join}
+                             WHERE (type_id = 1 AND mime_type != 'application/pdf')
+                                OR type_id IS NULL
                    )
                             SELECT recording_links
                                  , r.name AS recording_name
@@ -346,7 +380,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , recording_tags
                                  , rd.name AS release_name
                                  , release_group_tags
-                                 , release_group_mbid::TEXT
+                                 , rd.release_group_mbid::TEXT
                                  , r.length
                                  , r.gid::TEXT AS recording_mbid
                                  , rd.release_mbid::TEXT
@@ -378,7 +412,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , recording_links
                                  , recording_tags
                                  , release_group_tags
-                                 , release_group_mbid
+                                 , rd.release_group_mbid
                                  , artist_data
                                  , artist_tags
                                  , rd.release_mbid
