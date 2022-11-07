@@ -202,19 +202,19 @@ export default class PersonalRecommendationModal extends React.Component<
                 type="text"
                 className="form-control"
                 onChange={this.searchUsers}
-                placeholder="Search and add users"
+                placeholder="Search and add followers*"
               />
               <SearchDropDown
                 suggestions={suggestions}
                 // eslint-disable-next-line react/jsx-no-bind
                 action={this.addUser}
               />
-              <p>Search and add followers*</p>
+              <p>Leave a message (optional)</p>
               <div className="form-group">
                 <textarea
                   className="form-control"
                   id="blurb-content"
-                  placeholder="Add a message (optional)"
+                  placeholder="You will love this song because..."
                   value={blurbContent}
                   name="blurb-content"
                   rows={4}
