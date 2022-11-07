@@ -1,14 +1,13 @@
 import * as React from "react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export type ListenControlProps = {
   buttonClassName?: string;
   iconClassName?: string;
   action?: (event: React.MouseEvent) => void;
-  icon?: IconDefinition;
+  icon?: IconProp;
   text: string;
   dataToggle?: string;
   dataTarget?: string;
@@ -50,7 +49,7 @@ function ListenControl(props: ListenControlProps) {
         title={title ?? text}
         {...anchorTagAttributes}
       >
-        {icon && <FontAwesomeIcon icon={icon as IconProp} />}
+        {icon && <FontAwesomeIcon icon={icon} />}
         &nbsp;{text}
       </a>
     );

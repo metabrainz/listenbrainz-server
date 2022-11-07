@@ -10,7 +10,6 @@ import {
   debounce,
   cloneDeep,
   omit,
-  get,
 } from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -782,6 +781,7 @@ export default class BrainzPlayer extends React.Component<
       currentDataSourceIndex,
       currentTrackName,
       currentTrackArtist,
+      currentTrackURL,
       playerPaused,
       progressMs,
       durationMs,
@@ -799,7 +799,6 @@ export default class BrainzPlayer extends React.Component<
     return (
       <div>
         <BrainzPlayerUI
-          currentDataSource={this.dataSources[currentDataSourceIndex]?.current}
           playPreviousTrack={this.playPreviousTrack}
           playNextTrack={this.playNextTrack}
           togglePlay={
@@ -813,6 +812,7 @@ export default class BrainzPlayer extends React.Component<
           seekToPositionMs={this.seekToPositionMs}
           listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
           currentListen={currentListen}
+          trackUrl={currentTrackURL}
           newAlert={newAlert}
         >
           <SpotifyPlayer
