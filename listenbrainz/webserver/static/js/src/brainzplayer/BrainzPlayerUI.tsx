@@ -1,6 +1,5 @@
 import * as React from "react";
 import {
-  faCog,
   faFastBackward,
   faFastForward,
   faHeart,
@@ -12,26 +11,23 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { get, isNaN as _isNaN } from "lodash";
+import { isNaN as _isNaN } from "lodash";
 import ProgressBar from "./ProgressBar";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import MenuOptions from "./MenuOptions";
 import { millisecondsToStr } from "../playlists/utils";
-import { DataSourceTypes } from "./BrainzPlayer";
-import ListenControl from "../listens/ListenControl";
-import SpotifyPlayer from "./SpotifyPlayer";
-import YoutubePlayer from "./YoutubePlayer";
-import SoundcloudPlayer from "./SoundcloudPlayer";
 import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
 
 type BrainzPlayerUIProps = {
-  currentDataSource: DataSourceTypes | null;
+  currentDataSourceName?: string;
+  currentDataSourceIcon?: IconProp;
   playPreviousTrack: () => void;
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
   playerPaused: boolean;
   trackName?: string;
   artistName?: string;
+  trackUrl?: string;
   progressMs: number;
   durationMs: number;
   seekToPositionMs: (msTimeCode: number) => void;
@@ -70,9 +66,11 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
 
 function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const {
-    currentDataSource,
+    currentDataSourceName,
+    currentDataSourceIcon,
     listenBrainzAPIBaseURI,
     currentListen,
+    trackUrl,
     newAlert,
   } = props;
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
@@ -166,22 +164,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
 
   const isPlayingATrack = Boolean(currentListen);
 
-  let trackURL;
-  if (currentListen) {
-    /**
-     * Due to some issue with TypeScript when accessing static methods of an instance when you don't know
-     * which class it is, we have to manually determine the class of the instance and call MyClass.staticMethod().
-     * Neither instance.constructor.staticMethod() nor instance.prototype.constructor.staticMethod() work without issues.
-     * See https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
-     */
-    if (currentDataSource instanceof SpotifyPlayer) {
-      trackURL = SpotifyPlayer.getURLFromListen(currentListen);
-    } else if (currentDataSource instanceof YoutubePlayer) {
-      trackURL = YoutubePlayer.getURLFromListen(currentListen);
-    } else if (currentDataSource instanceof SoundcloudPlayer) {
-      trackURL = SoundcloudPlayer.getURLFromListen(currentListen);
-    }
-  }
   return (
     <div id="brainz-player" aria-label="Playback control">
       <ProgressBar
@@ -235,17 +217,19 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         />
       </div>
       <div className="actions">
-        {isPlayingATrack && currentDataSource && (
-          <ListenControl
-            buttonClassName="data-source-icon"
-            icon={currentDataSource.icon as IconDefinition}
-            text={`Open in ${currentDataSource.name}`}
-            link={trackURL}
-            anchorTagAttributes={{
-              target: "_blank",
-              rel: "noopener noreferrer",
-            }}
-          />
+        {isPlayingATrack && currentDataSourceName && (
+          <a
+            href={trackUrl ?? "#"}
+            aria-label={`Open in ${currentDataSourceName}`}
+            title={`Open in ${currentDataSourceName}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FontAwesomeIcon
+              icon={currentDataSourceIcon!}
+              title={currentDataSourceName}
+            />
+          </a>
         )}
         <FontAwesomeIcon
           icon={faHeart}
