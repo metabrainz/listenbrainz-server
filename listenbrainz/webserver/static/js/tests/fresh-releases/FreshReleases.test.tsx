@@ -1,10 +1,13 @@
 import * as React from "react";
+import { act } from 'react-dom/test-utils';
 
 import { mount } from "enzyme";
 import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 
 import FreshReleases from "../../src/fresh-releases/FreshReleases";
+
+import * as freshReleasesSitewideData from "../__mocks__/freshReleasesSitewideData.json"
 
 const freshReleasesProps = {
   "user": {
@@ -38,18 +41,37 @@ const mountOptions: { context: GlobalAppContextT } = {
   },
 };
 
+// From https://github.com/enzymejs/enzyme/issues/2073
+const waitForComponentToPaint = async (wrapper: any) => {
+  await act(async () => {
+    await new Promise(resolve => setTimeout(resolve));
+    wrapper.update();
+  });
+};
+
 describe("FreshReleases", () => {
+
+  beforeAll(() => {
+    mountOptions.context.APIService.fetchSitewideFreshReleases = jest.fn().mockResolvedValue(freshReleasesSitewideData);
+  });
   it("renders the page correctly", () => {
-    // This seems to be working.
-    // TODO take forward from here :D
-    const fakeAPIService = new APIService("foo");
-    const mockFetchSitewideFreshReleases = jest.fn()
-    fakeAPIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases
+    const response = freshReleasesSitewideData
+    const mockFetchSitewideFreshReleases = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 400,
+        json: () => response
+      });
+    })
+    mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases
     const wrapper = mount(
-      <GlobalAppContext.Provider value={{...mountOptions.context, APIService: fakeAPIService}}>
+      <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
         <FreshReleases {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(mockFetchSitewideFreshReleases).toHaveBeenCalled()
+    waitForComponentToPaint(wrapper);
+    expect(mockFetchSitewideFreshReleases).toBeCalled()
+    expect(mockFetchSitewideFreshReleases.mockResolvedValue((response)))
+    expect(wrapper).toMatchSnapshot()
   })
 })
