@@ -1,0 +1,274 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FreshReleases renders the page correctly 1`] = `
+<FreshReleases
+  newAlert={[Function]}
+  profileUrl="/user/chinmaykunkikar/"
+  spotify={
+    Object {
+      "access_token": "access-token",
+      "permission": Array [
+        "streaming",
+        "user-read-email",
+        "user-read-private",
+      ],
+    }
+  }
+  user={
+    Object {
+      "id": 1,
+      "name": "chinmaykunkikar",
+    }
+  }
+  youtube={
+    Object {
+      "api_key": "fake-api-key",
+    }
+  }
+>
+  <h2
+    id="fr-heading"
+  >
+    Fresh Releases
+  </h2>
+  <h3
+    id="fr-subheading"
+  >
+    Discover new music from artists you listen to
+  </h3>
+  <div
+    id="fr-pill-row"
+  >
+    <Pill
+      active={true}
+      onClick={[Function]}
+    >
+      <button
+        onClick={[Function]}
+        style={
+          Object {
+            "background": "#EB743B",
+            "border": "2px solid #EB743B",
+            "borderRadius": "24px",
+            "boxSizing": "border-box",
+            "color": "white",
+            "fontWeight": 700,
+            "margin": "2px 6px 12px 6px",
+            "outline": "none",
+            "padding": "3px 12px",
+          }
+        }
+        type="button"
+      >
+        All Releases
+      </button>
+    </Pill>
+    <Pill
+      active={false}
+      onClick={[Function]}
+    >
+      <button
+        onClick={[Function]}
+        style={
+          Object {
+            "background": "transparent",
+            "border": "2px solid #BBBBBB",
+            "borderRadius": "24px",
+            "boxSizing": "border-box",
+            "color": "#BBBBBB",
+            "margin": "2px 6px 12px 6px",
+            "outline": "none",
+            "padding": "3px 12px",
+          }
+        }
+        type="button"
+      >
+        Releases For You
+      </button>
+    </Pill>
+  </div>
+  <div
+    className="releases-page row"
+  >
+    <div
+      className="spinner-container"
+    >
+      <Loader
+        className=""
+        color="#eb743b"
+        height={100}
+        style={Object {}}
+        timeout={0}
+        type="Grid"
+        visible={true}
+        width={100}
+      >
+        <div
+          aria-busy="true"
+          className=""
+          style={Object {}}
+        >
+          <Grid
+            className=""
+            color="#eb743b"
+            height={100}
+            label="audio-loading"
+            radius={12.5}
+            style={Object {}}
+            timeout={0}
+            type="Grid"
+            visible={true}
+            width={100}
+          >
+            <svg
+              aria-label="audio-loading"
+              fill="#eb743b"
+              height={100}
+              viewBox="0 0 105 105"
+              width={100}
+            >
+              <circle
+                cx="12.5"
+                cy="12.5"
+                r={12.5}
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  begin="0s"
+                  calcMode="linear"
+                  dur="1s"
+                  repeatCount="indefinite"
+                  values="1;.2;1"
+                />
+              </circle>
+              <circle
+                cx="12.5"
+                cy="52.5"
+                r={12.5}
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  begin="100ms"
+                  calcMode="linear"
+                  dur="1s"
+                  repeatCount="indefinite"
+                  values="1;.2;1"
+                />
+              </circle>
+              <circle
+                cx="52.5"
+                cy="12.5"
+                r={12.5}
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  begin="300ms"
+                  calcMode="linear"
+                  dur="1s"
+                  repeatCount="indefinite"
+                  values="1;.2;1"
+                />
+              </circle>
+              <circle
+                cx="52.5"
+                cy="52.5"
+                r={12.5}
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  begin="600ms"
+                  calcMode="linear"
+                  dur="1s"
+                  repeatCount="indefinite"
+                  values="1;.2;1"
+                />
+              </circle>
+              <circle
+                cx="92.5"
+                cy="12.5"
+                r={12.5}
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  begin="800ms"
+                  calcMode="linear"
+                  dur="1s"
+                  repeatCount="indefinite"
+                  values="1;.2;1"
+                />
+              </circle>
+              <circle
+                cx="92.5"
+                cy="52.5"
+                r={12.5}
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  begin="400ms"
+                  calcMode="linear"
+                  dur="1s"
+                  repeatCount="indefinite"
+                  values="1;.2;1"
+                />
+              </circle>
+              <circle
+                cx="12.5"
+                cy="92.5"
+                r={12.5}
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  begin="700ms"
+                  calcMode="linear"
+                  dur="1s"
+                  repeatCount="indefinite"
+                  values="1;.2;1"
+                />
+              </circle>
+              <circle
+                cx="52.5"
+                cy="92.5"
+                r={12.5}
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  begin="500ms"
+                  calcMode="linear"
+                  dur="1s"
+                  repeatCount="indefinite"
+                  values="1;.2;1"
+                />
+              </circle>
+              <circle
+                cx="92.5"
+                cy="92.5"
+                r={12.5}
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  begin="200ms"
+                  calcMode="linear"
+                  dur="1s"
+                  repeatCount="indefinite"
+                  values="1;.2;1"
+                />
+              </circle>
+            </svg>
+          </Grid>
+        </div>
+      </Loader>
+      <div
+        className="text-muted"
+        style={
+          Object {
+            "fontSize": "2rem",
+            "margin": "1rem",
+          }
+        }
+      >
+        Loading Fresh Releases…
+      </div>
+    </div>
+  </div>
+</FreshReleases>
+`;
