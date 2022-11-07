@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`FreshReleases renders the page correctly 1`] = `
+exports[`FreshReleases renders filters, card grid, and timeline components on the page 1`] = `
 <FreshReleases
   newAlert={[Function]}
   profileUrl="/user/chinmaykunkikar/"
@@ -91,184 +91,86 @@ exports[`FreshReleases renders the page correctly 1`] = `
     className="releases-page row"
   >
     <div
-      className="spinner-container"
+      className="filters-main col-xs-12 col-md-1"
     >
-      <Loader
-        className=""
-        color="#eb743b"
-        height={100}
-        style={Object {}}
-        timeout={0}
-        type="Grid"
-        visible={true}
-        width={100}
+      <ReleaseFilters
+        allFilters={Array []}
+        releases={Array []}
+        setFilteredList={[Function]}
       >
         <div
-          aria-busy="true"
-          className=""
-          style={Object {}}
+          id="filters-container"
         >
-          <Grid
-            className=""
-            color="#eb743b"
-            height={100}
-            label="audio-loading"
-            radius={12.5}
-            style={Object {}}
-            timeout={0}
-            type="Grid"
-            visible={true}
-            width={100}
+          <div
+            id="coverart-checkbox"
           >
-            <svg
-              aria-label="audio-loading"
-              fill="#eb743b"
-              height={100}
-              viewBox="0 0 105 105"
-              width={100}
+            <Pill
+              active={false}
+              onClick={[Function]}
+              style={
+                Object {
+                  "margin": "6px",
+                  "padding": "4px 12px",
+                }
+              }
+              type="secondary"
             >
-              <circle
-                cx="12.5"
-                cy="12.5"
-                r={12.5}
+              <button
+                onClick={[Function]}
+                style={
+                  Object {
+                    "background": "transparent",
+                    "border": "2px solid #BBBBBB",
+                    "borderRadius": "24px",
+                    "boxSizing": "border-box",
+                    "color": "#BBBBBB",
+                    "margin": "6px",
+                    "outline": "none",
+                    "padding": "4px 12px",
+                  }
+                }
+                type="button"
               >
-                <animate
-                  attributeName="fill-opacity"
-                  begin="0s"
-                  calcMode="linear"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  values="1;.2;1"
-                />
-              </circle>
-              <circle
-                cx="12.5"
-                cy="52.5"
-                r={12.5}
+                Hide releases without coverart
+              </button>
+            </Pill>
+          </div>
+          <div
+            id="release-filters"
+          >
+            <div
+              id="title-container"
+            >
+              <div
+                className="text-muted"
+                id="type-title"
               >
-                <animate
-                  attributeName="fill-opacity"
-                  begin="100ms"
-                  calcMode="linear"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  values="1;.2;1"
-                />
-              </circle>
-              <circle
-                cx="52.5"
-                cy="12.5"
-                r={12.5}
+                Filters
+              </div>
+              <div
+                aria-hidden="true"
+                className="text-muted"
+                id="clearall-btn-inactive"
+                onClick={[Function]}
+                role="button"
               >
-                <animate
-                  attributeName="fill-opacity"
-                  begin="300ms"
-                  calcMode="linear"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  values="1;.2;1"
-                />
-              </circle>
-              <circle
-                cx="52.5"
-                cy="52.5"
-                r={12.5}
-              >
-                <animate
-                  attributeName="fill-opacity"
-                  begin="600ms"
-                  calcMode="linear"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  values="1;.2;1"
-                />
-              </circle>
-              <circle
-                cx="92.5"
-                cy="12.5"
-                r={12.5}
-              >
-                <animate
-                  attributeName="fill-opacity"
-                  begin="800ms"
-                  calcMode="linear"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  values="1;.2;1"
-                />
-              </circle>
-              <circle
-                cx="92.5"
-                cy="52.5"
-                r={12.5}
-              >
-                <animate
-                  attributeName="fill-opacity"
-                  begin="400ms"
-                  calcMode="linear"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  values="1;.2;1"
-                />
-              </circle>
-              <circle
-                cx="12.5"
-                cy="92.5"
-                r={12.5}
-              >
-                <animate
-                  attributeName="fill-opacity"
-                  begin="700ms"
-                  calcMode="linear"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  values="1;.2;1"
-                />
-              </circle>
-              <circle
-                cx="52.5"
-                cy="92.5"
-                r={12.5}
-              >
-                <animate
-                  attributeName="fill-opacity"
-                  begin="500ms"
-                  calcMode="linear"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  values="1;.2;1"
-                />
-              </circle>
-              <circle
-                cx="92.5"
-                cy="92.5"
-                r={12.5}
-              >
-                <animate
-                  attributeName="fill-opacity"
-                  begin="200ms"
-                  calcMode="linear"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  values="1;.2;1"
-                />
-              </circle>
-            </svg>
-          </Grid>
+                ×
+              </div>
+            </div>
+            <div
+              id="filters-list"
+            />
+          </div>
         </div>
-      </Loader>
-      <div
-        className="text-muted"
-        style={
-          Object {
-            "fontSize": "2rem",
-            "margin": "1rem",
-          }
-        }
-      >
-        Loading Fresh Releases…
-      </div>
+      </ReleaseFilters>
     </div>
+    <div
+      className="col-xs-12 col-md-10"
+      id="release-cards-grid"
+    />
+    <div
+      className="releases-timeline col-xs-12 col-md-1"
+    />
   </div>
 </FreshReleases>
 `;
