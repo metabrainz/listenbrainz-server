@@ -813,6 +813,12 @@ export default class BrainzPlayer extends React.Component<
           listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
           currentListen={currentListen}
           trackUrl={currentTrackURL}
+          currentDataSourceIcon={
+            this.dataSources[currentDataSourceIndex]?.current?.icon
+          }
+          currentDataSourceName={
+            this.dataSources[currentDataSourceIndex]?.current?.name
+          }
           newAlert={newAlert}
         >
           <SpotifyPlayer
