@@ -185,7 +185,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 <span aria-hidden="true">&times;</span>
               </button>
               <h4 className="modal-title" id="PersonalRecommendationModalLabel">
-                Recommend <b>{track_name}</b> to certain follower(s)
+                Recommend <b>{track_name}</b>
               </h4>
             </div>
             <div className="modal-body">
@@ -209,19 +209,12 @@ export default class PersonalRecommendationModal extends React.Component<
                 // eslint-disable-next-line react/jsx-no-bind
                 action={this.addUser}
               />
-              <p>
-                Tell your above chosen followers why are you recommending them{" "}
-                <b>
-                  {" "}
-                  {track_name} by {artist_name}
-                </b>
-                <small> (Optional)</small>
-              </p>
+              <p>Search and add followers*</p>
               <div className="form-group">
                 <textarea
                   className="form-control"
                   id="blurb-content"
-                  placeholder="Let your followers know why you recommended this song"
+                  placeholder="Add a message (optional)"
                   value={blurbContent}
                   name="blurb-content"
                   rows={4}
@@ -232,11 +225,8 @@ export default class PersonalRecommendationModal extends React.Component<
               <small className="character-count">
                 {blurbContent.length} / {this.maxBlurbContentLength}
                 <br />
-                Are the people you want to recommend to not on the drop-down
-                list? Make sure to tell them to follow you by asking them go to
-                your listen page and clicking the button next to your name! And
-                if the names still don&apos;t appear then close the modal and
-                open it again to see the fresh and updated list of followers!
+                *Can’t find a user? Make sure they are following you, and then
+                reopen this modal.
               </small>
             </div>
             <div className="modal-footer">
