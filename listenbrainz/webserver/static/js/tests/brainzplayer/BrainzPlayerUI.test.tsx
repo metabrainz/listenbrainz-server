@@ -9,7 +9,6 @@ import BrainzPlayerUI from "../../src/brainzplayer/BrainzPlayerUI";
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const props = {
-  currentDataSource: null,
   playPreviousTrack: () => {},
   playNextTrack: () => {},
   togglePlay: () => {},
