@@ -225,10 +225,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <FontAwesomeIcon
-              icon={currentDataSourceIcon!}
-              title={currentDataSourceName}
-            />
+            <FontAwesomeIcon icon={currentDataSourceIcon!} />
           </a>
         )}
         <FontAwesomeIcon
