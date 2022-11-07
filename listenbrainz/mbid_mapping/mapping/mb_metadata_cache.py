@@ -112,6 +112,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
             release["mbid"] = row["release_mbid"]
             release["release_group_mbid"] = row["release_group_mbid"]
             release["caa_id"] = row["caa_id"]
+            release["caa_release_mbid"] = row["caa_release_mbid"]
             release["name"] = row["release_name"]
             if row["year"] is not None:
                 release["year"] = row["year"]
@@ -327,6 +328,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                    ), rg_cover_art AS (
                             SELECT DISTINCT ON(rg.id)
                                    rg.id AS release_group
+                                 , rel.gid::TEXT AS caa_release_mbid
                                  , caa.id AS caa_id
                               FROM musicbrainz.recording r
                               JOIN mapping.canonical_release_redirect crr
@@ -358,33 +360,22 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , re.date_month
                                  , re.date_day
                    ), release_data AS (
-                            SELECT DISTINCT ON (r.gid)
-                                   r.gid AS recording_mbid
+                            SELECT r.gid AS recording_mbid
                                  , rel.name
                                  , rg.gid AS release_group_mbid
                                  , crr.release_mbid::TEXT
-                                 , CASE WHEN type_id = 1 AND mime_type != 'application/pdf' THEN caa.id
-                                        ELSE rgca.caa_id
-                                        END AS caa_id
-                                 , CASE WHEN type_id = 1 AND mime_type != 'application/pdf' THEN caa.ordering
-                                        ELSE NULL
-                                        END AS position
+                                 , rgca.caa_id
+                                 , rgca.caa_release_mbid
                               FROM musicbrainz.recording r
                               JOIN mapping.canonical_release_redirect crr
                                 ON r.gid = crr.recording_mbid
                               JOIN musicbrainz.release rel
                                 ON crr.release_mbid = rel.gid
                               JOIN musicbrainz.release_group rg
-                                ON rel.release_group = rg.id  
-                         LEFT JOIN cover_art_archive.cover_art caa
-                                ON caa.release = rel.id
-                         LEFT JOIN cover_art_archive.cover_art_type cat
-                                ON cat.id = caa.id
+                                ON rel.release_group = rg.id
                          LEFT JOIN rg_cover_art rgca
                                 ON rgca.release_group = rel.release_group
                               {values_join}
-                          ORDER BY r.gid
-                                 , position
                    )
                             SELECT recording_links
                                  , r.name AS recording_name
@@ -400,6 +391,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , r.gid::TEXT AS recording_mbid
                                  , rd.release_mbid::TEXT
                                  , rd.caa_id
+                                 , rd.caa_release_mbid
                                  , year
                               FROM recording r
                               JOIN artist_credit ac
@@ -433,6 +425,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , artist_tags
                                  , rd.release_mbid
                                  , rd.caa_id
+                                 , rd.caa_release_mbid
                                  , year"""
         return query
 
