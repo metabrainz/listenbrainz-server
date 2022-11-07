@@ -1,34 +1,36 @@
 import * as React from "react";
-import { act } from 'react-dom/test-utils';
+import { act } from "react-dom/test-utils";
 
 import { mount } from "enzyme";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 
 import FreshReleases from "../../src/fresh-releases/FreshReleases";
 
-import * as freshReleasesSitewideData from "../__mocks__/freshReleasesSitewideData.json"
+import * as freshReleasesSitewideData from "../__mocks__/freshReleasesSitewideData.json";
 
 const freshReleasesProps = {
-  "user": {
-    "name": "chinmaykunkikar",
-    "id": 1
+  user: {
+    name: "chinmaykunkikar",
+    id: 1,
   },
-  "profileUrl": "/user/chinmaykunkikar/",
-  "spotify": {
-    "access_token": "access-token",
-    "permission": ["streaming", "user-read-email", "user-read-private"]
+  profileUrl: "/user/chinmaykunkikar/",
+  spotify: {
+    access_token: "access-token",
+    permission: ["streaming", "user-read-email", "user-read-private"],
   },
-  "youtube": {
-    "api_key": "fake-api-key"
-  }
-}
+  youtube: {
+    api_key: "fake-api-key",
+  },
+};
 
 const { youtube, spotify, user } = freshReleasesProps;
 
 const props = {
   ...freshReleasesProps,
-  newAlert: () => { },
+  newAlert: () => {},
 };
 
 // Create a new instance of GlobalAppContext
@@ -44,34 +46,36 @@ const mountOptions: { context: GlobalAppContextT } = {
 // From https://github.com/enzymejs/enzyme/issues/2073
 const waitForComponentToPaint = async (wrapper: any) => {
   await act(async () => {
-    await new Promise(resolve => setTimeout(resolve));
+    // eslint-disable-next-line no-promise-executor-return
+    await new Promise((resolve) => setTimeout(resolve));
     wrapper.update();
   });
 };
 
 describe("FreshReleases", () => {
-
   beforeAll(() => {
-    mountOptions.context.APIService.fetchSitewideFreshReleases = jest.fn().mockResolvedValue(freshReleasesSitewideData);
+    mountOptions.context.APIService.fetchSitewideFreshReleases = jest
+      .fn()
+      .mockResolvedValue(freshReleasesSitewideData);
   });
-  it("renders the page correctly", () => {
-    const response = freshReleasesSitewideData
+
+  it("renders filters, card grid, and timeline components on the page", async () => {
+    const response = freshReleasesSitewideData;
     const mockFetchSitewideFreshReleases = jest.fn().mockImplementation(() => {
       return Promise.resolve({
         ok: true,
         status: 400,
-        json: () => response
+        json: () => response,
       });
-    })
-    mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases
+    });
+    mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases;
     const wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
         <FreshReleases {...props} />
       </GlobalAppContext.Provider>
     );
-    waitForComponentToPaint(wrapper);
-    expect(mockFetchSitewideFreshReleases).toBeCalled()
-    expect(mockFetchSitewideFreshReleases.mockResolvedValue((response)))
-    expect(wrapper).toMatchSnapshot()
-  })
-})
+    await waitForComponentToPaint(wrapper);
+    expect(mockFetchSitewideFreshReleases).toBeCalled();
+    expect(wrapper).toMatchSnapshot();
+  });
+});
