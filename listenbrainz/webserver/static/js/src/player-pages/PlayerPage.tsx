@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
+
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { get } from "lodash";
@@ -83,7 +85,7 @@ export default class PlayerPage extends React.Component<
     const { currentUser } = this.context;
     const { playlist } = this.state;
     const { track: tracks } = playlist;
-    if (currentUser && tracks) {
+    if (currentUser?.name && tracks) {
       const recordings = mbids ?? tracks.map(getRecordingMBIDFromJSPFTrack);
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
@@ -114,6 +116,30 @@ export default class PlayerPage extends React.Component<
       </>
     );
   }
+
+  savePlaylist = async () => {
+    const { currentUser } = this.context;
+    if (!currentUser?.auth_token) {
+      return;
+    }
+    const { newAlert, playlist } = this.props;
+    try {
+      const newPlaylistId = await this.APIService.createPlaylist(
+        currentUser.auth_token,
+        playlist
+      );
+      newAlert(
+        "success",
+        "Created playlist",
+        <>
+          Created a new public{" "}
+          <a href={`/playlist/${newPlaylistId}`}>instant playlist</a>
+        </>
+      );
+    } catch (error) {
+      newAlert("danger", "Could not save playlist", error.message);
+    }
+  };
 
   loadFeedback = async (mbids?: string[]): Promise<RecordingFeedbackMap> => {
     const { recordingFeedbackMap } = this.state;
@@ -154,18 +180,21 @@ export default class PlayerPage extends React.Component<
   };
 
   getHeader = (): JSX.Element => {
+    const { currentUser } = this.context;
     const { playlist } = this.state;
     const { track: tracks } = playlist;
     const releaseLink =
       tracks?.[0]?.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]
         ?.release_identifier;
     const isPlayerPage = false;
+    const showOptionsMenu =
+      Boolean(releaseLink) || Boolean(currentUser?.auth_token);
     return (
       <div className="playlist-details row">
         <h1 className="title">
           <div>
             {playlist.title ?? "BrainzPlayer"}
-            {isPlayerPage && (
+            {showOptionsMenu && (
               <span className="dropdown pull-right">
                 <button
                   className="btn btn-info dropdown-toggle"
@@ -195,6 +224,18 @@ export default class PlayerPage extends React.Component<
                           rel: "noopener noreferrer",
                         }}
                       />
+                    </li>
+                  )}
+                  {currentUser?.auth_token && (
+                    <li>
+                      <a
+                        id="exportPlaylistToSpotify"
+                        role="button"
+                        href="#"
+                        onClick={this.savePlaylist}
+                      >
+                        Save Playlist
+                      </a>
                     </li>
                   )}
                 </ul>

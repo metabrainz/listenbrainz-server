@@ -139,29 +139,36 @@ describe("searchForSpotifyTrack", () => {
     ).resolves.toEqual(spotifySearchResponse.tracks.items[0]);
   });
 
-  it("retries if network error / submit fails", async () => {
-    // Overide mock for fetch:
-    window.fetch = jest.fn().mockImplementation(() => {
-      // 1st call will recieve a network error
-      return Promise.reject(new Error("Oh no!"));
+  it("throws an error if there is no spotify api token", async () => {
+    let error;
+    try {
+      await searchForSpotifyTrack(undefined, "import", "vs", "star");
+    } catch (err) {
+      error = err;
+    }
+    expect(error).toEqual({
+      status: 403,
+      message: "You need to connect to your Spotify account",
     });
-    await expect(
-      searchForSpotifyTrack("foobar", "import", "vs", "star")
-    ).rejects.toThrow(Error("Oh no!"));
   });
-
-  it("skips if any other response code is recieved", async () => {
+  it("skips if any other response code is received", async () => {
     // Overide mock for fetch
     window.fetch = jest.fn().mockImplementation(() => {
       return Promise.resolve({
         ok: false,
         status: 404,
-        json: () => Promise.resolve({ error: "Not found!" }),
+        // Spotify API returns error body in this format
+        json: () =>
+          Promise.resolve({ error: { status: 404, message: "Not found!" } }),
       });
     });
-    await expect(
-      searchForSpotifyTrack("foobar", "import", "vs", "star")
-    ).rejects.toThrow(Error("Not found!"));
+    let error;
+    try {
+      await searchForSpotifyTrack("foobar", "import", "vs", "star");
+    } catch (err) {
+      error = err;
+    }
+    expect(error).toEqual({ status: 404, message: "Not found!" });
   });
   it("returns null if no track found in the json response", async () => {
     // Overide mock for fetch

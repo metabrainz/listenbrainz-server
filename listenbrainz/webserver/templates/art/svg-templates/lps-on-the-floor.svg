@@ -1,0 +1,44 @@
+<svg version="1.1"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="{{ width }}" height="{{ height }}">
+    <image x="89"
+           y="318"
+           width="195"
+           height="195"
+           xlink:href="{{ images[2].url }}"
+           preserveAspectRatio="xMidYMid slice"
+           transform="rotate(6.1)"/>
+    <image x="17"
+           y="223"
+           width="193"
+           height="193"
+           xlink:href="{{ images[1].url }}"
+           preserveAspectRatio="xMidYMid slice"
+           transform="rotate(-22.4)"/>
+    <image x="189"
+           y="240"
+           width="189"
+           height="189"
+           xlink:href="{{ images[0].url }}"
+           preserveAspectRatio="xMidYMid slice"
+           transform="rotate(-4)"/>
+    <image x="404"
+           y="480"
+           width="198"
+           height="198"
+           xlink:href="{{ images[4].url }}"
+           preserveAspectRatio="xMidYMid slice"
+           transform="rotate(-11.9)"/>
+    <image x="385"
+           y="488"
+           width="202"
+           height="203"
+           xlink:href="{{ images[3].url }}"
+           preserveAspectRatio="xMidYMid slice"
+           transform="rotate(2.2)"/>
+    <image x="0"
+           y="0"
+           width="{{ width }}"
+           height="{{ height }}"
+           xlink:href="/static/img/art/cover-art-on-floor.png"/>
+</svg>

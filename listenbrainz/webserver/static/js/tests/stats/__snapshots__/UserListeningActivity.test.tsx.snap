@@ -55,7 +55,7 @@ exports[`Sitewide Stats UserListeningActivity renders corectly when range is inv
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -92,7 +92,7 @@ exports[`Sitewide Stats UserListeningActivity renders corectly when range is inv
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -249,7 +249,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for all_time 1`]
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -286,7 +286,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for all_time 1`]
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -657,7 +657,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for month 1`] = 
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -694,7 +694,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for month 1`] = 
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -1180,7 +1180,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for month 1`] = 
                           "label": "May 2020",
                         },
                         Object {
-                          "color": "#EB743B",
+                          "color": "#eb743b",
                           "id": "thisRangeName",
                           "label": "June 2020",
                         },
@@ -1290,7 +1290,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for week 1`] = `
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -1327,7 +1327,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for week 1`] = `
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -1531,7 +1531,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for week 1`] = `
                           "label": "Jun 01 - Jun 07",
                         },
                         Object {
-                          "color": "#EB743B",
+                          "color": "#eb743b",
                           "id": "thisRangeName",
                           "label": "Jun 08 - Jun 14",
                         },
@@ -1641,7 +1641,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for year 1`] = `
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -1678,7 +1678,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for year 1`] = `
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -1926,7 +1926,7 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for year 1`] = `
                           "label": "2019",
                         },
                         Object {
-                          "color": "#EB743B",
+                          "color": "#eb743b",
                           "id": "thisRangeName",
                           "label": "2020",
                         },
@@ -2041,7 +2041,7 @@ exports[`User Stats UserListeningActivity renders corectly when range is invalid
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -2078,7 +2078,7 @@ exports[`User Stats UserListeningActivity renders corectly when range is invalid
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -2240,7 +2240,7 @@ exports[`User Stats UserListeningActivity renders correctly for all_time 1`] = `
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -2277,7 +2277,7 @@ exports[`User Stats UserListeningActivity renders correctly for all_time 1`] = `
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -2653,7 +2653,7 @@ exports[`User Stats UserListeningActivity renders correctly for month 1`] = `
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -2690,7 +2690,7 @@ exports[`User Stats UserListeningActivity renders correctly for month 1`] = `
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -3176,7 +3176,7 @@ exports[`User Stats UserListeningActivity renders correctly for month 1`] = `
                           "label": "May 2020",
                         },
                         Object {
-                          "color": "#EB743B",
+                          "color": "#eb743b",
                           "id": "thisRangeName",
                           "label": "June 2020",
                         },
@@ -3291,7 +3291,7 @@ exports[`User Stats UserListeningActivity renders correctly for week 1`] = `
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -3328,7 +3328,7 @@ exports[`User Stats UserListeningActivity renders correctly for week 1`] = `
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -3532,7 +3532,7 @@ exports[`User Stats UserListeningActivity renders correctly for week 1`] = `
                           "label": "Jun 01 - Jun 07",
                         },
                         Object {
-                          "color": "#EB743B",
+                          "color": "#eb743b",
                           "id": "thisRangeName",
                           "label": "Jun 08 - Jun 14",
                         },
@@ -3647,7 +3647,7 @@ exports[`User Stats UserListeningActivity renders correctly for year 1`] = `
               <FontAwesomeIcon
                 border={false}
                 className=""
-                color="#000000"
+                color="#000"
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -3684,7 +3684,7 @@ exports[`User Stats UserListeningActivity renders correctly for year 1`] = `
                 <svg
                   aria-hidden="true"
                   className="svg-inline--fa fa-link fa-w-16 fa-sm "
-                  color="#000000"
+                  color="#000"
                   data-icon="link"
                   data-prefix="fas"
                   focusable="false"
@@ -3932,7 +3932,7 @@ exports[`User Stats UserListeningActivity renders correctly for year 1`] = `
                           "label": "2019",
                         },
                         Object {
-                          "color": "#EB743B",
+                          "color": "#eb743b",
                           "id": "thisRangeName",
                           "label": "2020",
                         },
