@@ -36,6 +36,11 @@ recommendation_schema = StructType([
     ])), nullable=False)
 ])
 
+recording_similarity_schema = StructType([
+    StructField('mbid0', StringType(), nullable=False),
+    StructField('mbid1', StringType(), nullable=False),
+    StructField('partial_similarity', FloatType(), nullable=False)
+])
 
 # schema to contain model parameters.
 model_param_schema = [

@@ -36,6 +36,7 @@ import {
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../playlists/utils";
 import FollowButton from "../follow/FollowButton";
+import { COLOR_LB_ORANGE } from "../utils/constants";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -680,7 +681,7 @@ export default class YearInMusic extends React.Component<
                   to="2021-12-31"
                   data={listensPerDayForGraph as CalendarDatum[]}
                   emptyColor="#eeeeee"
-                  colors={["#bbb7e1", "#6e66cc", "#eea582", "#eb743b"]}
+                  colors={["#bbb7e1", "#6e66cc", "#eea582", COLOR_LB_ORANGE]}
                   monthBorderColor="#eeeeee"
                   dayBorderWidth={2}
                   dayBorderColor="#ffffff"
@@ -741,7 +742,7 @@ export default class YearInMusic extends React.Component<
                   layout="vertical"
                   keys={["songs"]}
                   indexBy="year"
-                  colors="#eb743b"
+                  colors={COLOR_LB_ORANGE}
                   enableLabel={false}
                   axisBottom={{
                     // Round to nearest 5 year mark
