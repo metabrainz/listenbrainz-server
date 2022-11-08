@@ -202,7 +202,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 type="text"
                 className="form-control"
                 onChange={this.searchUsers}
-                placeholder="Search and add followers*"
+                placeholder="Add followers*"
               />
               <SearchDropDown
                 suggestions={suggestions}
@@ -226,7 +226,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 {blurbContent.length} / {this.maxBlurbContentLength}
                 <br />
                 *Can’t find a user? Make sure they are following you, and then
-                reopen this modal.
+                try again.
               </small>
             </div>
             <div className="modal-footer">
