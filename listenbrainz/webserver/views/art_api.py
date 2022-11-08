@@ -15,7 +15,7 @@ from brainzutils.ratelimit import ratelimit
 art_api_bp = Blueprint('art_api_v1', __name__)
 
 
-@art_api_bp.route("/grid/", methods=["POST"])
+@art_api_bp.route("/grid/", methods=["POST"], subdomain="art")
 @crossdomain
 @ratelimit()
 def cover_art_grid_post():
@@ -102,7 +102,9 @@ def cover_art_grid_post():
                            }
 
 
-@art_api_bp.route("/grid-stats/<user_name>/<time_range>/<int:dimension>/<int:layout>/<int:image_size>", methods=["GET"])
+@art_api_bp.route("/grid-stats/<user_name>/<time_range>/<int:dimension>/<int:layout>/<int:image_size>",
+                  methods=["GET"],
+                  subdomain="art")
 @crossdomain
 @ratelimit()
 def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
@@ -155,7 +157,7 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                            }
 
 
-@art_api_bp.route("/<custom_name>/<user_name>/<time_range>/<int:image_size>", methods=["GET"])
+@art_api_bp.route("/<custom_name>/<user_name>/<time_range>/<int:image_size>", methods=["GET"], subdomain="art")
 @crossdomain
 @ratelimit()
 def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
