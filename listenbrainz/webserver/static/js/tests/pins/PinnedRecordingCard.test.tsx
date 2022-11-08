@@ -44,8 +44,6 @@ const expiredPinnedRecording: PinnedRecording = {
 };
 
 const props: PinnedRecordingCardProps = {
-  userName: user.name,
-  className: "",
   pinnedRecording,
   isCurrentUser: true,
   newAlert: () => {},

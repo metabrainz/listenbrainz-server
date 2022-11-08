@@ -1,4 +1,10 @@
 import * as React from "react";
+import {
+  COLOR_LB_BLUE,
+  COLOR_LB_LIGHT_GRAY,
+  COLOR_LB_ORANGE,
+  COLOR_WHITE,
+} from "../utils/constants";
 
 type PillProps = {
   active?: boolean;
@@ -12,9 +18,9 @@ type PillProps = {
 export default function Pill(props: React.PropsWithChildren<PillProps>) {
   const { active, children, type, style: propStyle, ...buttonProps } = props;
 
-  let background = "#EB743B";
+  let background = COLOR_LB_ORANGE;
   if (type === "secondary") {
-    background = "#353070";
+    background = COLOR_LB_BLUE;
   }
 
   let style: React.CSSProperties = {
@@ -30,15 +36,15 @@ export default function Pill(props: React.PropsWithChildren<PillProps>) {
       background,
       border: `2px solid ${background}`,
       fontWeight: 700,
-      color: "white",
+      color: COLOR_WHITE,
       ...style,
       ...propStyle,
     };
   } else {
     style = {
       background: "transparent",
-      border: "2px solid #BBBBBB",
-      color: "#BBBBBB",
+      border: `2px solid ${COLOR_LB_LIGHT_GRAY}`,
+      color: COLOR_LB_LIGHT_GRAY,
       ...style,
       ...propStyle,
     };

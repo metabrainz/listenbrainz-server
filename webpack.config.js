@@ -3,11 +3,7 @@ const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const LessPluginCleanCSS = require("less-plugin-clean-css");
 const StylelintPlugin = require("stylelint-webpack-plugin");
-
-const baseDir = "/static";
-const jsDir = path.join(baseDir, "js");
-const distDir = path.join(baseDir, "dist");
-const cssDir = path.join(baseDir, "css");
+const ESLintPlugin = require("eslint-webpack-plugin");
 
 const es5LibrariesToTranspile = [
   "d3-array",
@@ -25,6 +21,10 @@ const babelExcludeLibrariesRegexp = new RegExp(
 );
 module.exports = function (env, argv) {
   const isProd = argv.mode === "production";
+  const baseDir = "./listenbrainz/webserver/static";
+  const jsDir = path.join(baseDir, "js");
+  const distDir = path.join(baseDir, "dist");
+  const cssDir = path.join(baseDir, "css");
   const plugins = [
     new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
@@ -36,19 +36,17 @@ module.exports = function (env, argv) {
         mode: "write-references",
         memoryLimit: 4096,
       },
-      eslint: {
-        // Starting the path with "**/" because of current dev/prod path discrepancy
-        // In dev we bind-mount the source code to "/code/static" and in prod to "/static"
-        // The "**/" allows us to ignore the folder structure and find source files in whatever CWD we're in.
-        files: "**/js/src/**/*.{ts,tsx,js,jsx}",
-        options: { fix: !isProd },
-      },
     }),
     new StylelintPlugin({
       configFile: ".stylelintrc.js",
+      failOnError: isProd,
       files: "**/static/css/**/*.less",
       fix: !isProd,
       threads: true,
+    }),
+    new ESLintPlugin({
+      files: path.join(jsDir, "src/**/*.{ts,tsx,js,jsx}"),
+      fix: !isProd,
     }),
   ];
   return {
@@ -86,11 +84,20 @@ module.exports = function (env, argv) {
         jsDir,
         "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
       ),
+      selectTimezone: path.resolve(
+        jsDir,
+        "src/user-settings/SelectTimezone.tsx"
+      ),
+      selectTroiPreferences: path.resolve(
+        jsDir,
+        "src/user-settings/SelectTroiPreferences.tsx"
+      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
-      path: distDir,
-      publicPath: `${distDir}/`,
+      path: path.resolve(distDir),
+      // This is for the manifest file used by the server. Files end up in /static folder
+      publicPath: `/static/dist/`,
       clean: true, // Clean the output directory before emit.
     },
     devtool: isProd ? "source-map" : "eval-source-map",
@@ -121,7 +128,11 @@ module.exports = function (env, argv) {
       ],
     },
     resolve: {
-      modules: ["/code/node_modules", path.resolve(baseDir, "node_modules")],
+      modules: [
+        path.resolve("./node_modules"),
+        "/code/node_modules",
+        path.resolve(baseDir, "node_modules"),
+      ],
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
     },
     plugins,

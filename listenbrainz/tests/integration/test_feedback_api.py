@@ -1,7 +1,10 @@
 import json
+from unittest import mock
+
+import requests_mock
 
 from brainzutils import cache
-from flask import url_for
+from flask import url_for, current_app
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
@@ -1052,37 +1055,57 @@ class FeedbackAPITestCase(IntegrationTestCase):
         feedback = data["feedback"]
         self.assertEqual(len(feedback), 6)
 
-        self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[0]["recording_msid"], None)
-        self.assertEqual(feedback[0]["recording_mbid"], inserted_rows[3]["recording_mbid"])
-        self.assertEqual(feedback[0]["score"], inserted_rows[3]["score"])
-
-        self.assertEqual(feedback[1]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[1]["recording_msid"], None)
-        self.assertEqual(feedback[1]["recording_mbid"], inserted_rows[2]["recording_mbid"])
-        self.assertEqual(feedback[1]["score"], inserted_rows[2]["score"])
-
-        self.assertEqual(feedback[2]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[2]["recording_msid"], None)
-        self.assertEqual(feedback[2]["recording_mbid"], non_existing_rec_mbid)
-        self.assertEqual(feedback[2]["score"], 0)
-
-        self.assertEqual(feedback[3]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[3]["recording_msid"], non_existing_rec_msid)
-        self.assertEqual(feedback[3]["recording_mbid"], None)
-        self.assertEqual(feedback[3]["score"], 0)
-
-        self.assertEqual(feedback[4]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[4]["recording_msid"], inserted_rows[0]["recording_msid"])
-        self.assertEqual(feedback[4]["recording_mbid"], None)
-        self.assertEqual(feedback[4]["score"], inserted_rows[0]["score"])
-
-        self.assertEqual(feedback[5]["user_id"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[5]["recording_msid"], inserted_rows[1]["recording_msid"])
-        self.assertEqual(feedback[5]["recording_mbid"], None)
-        self.assertEqual(feedback[5]["score"], inserted_rows[1]["score"])
-
-
+        expected = [
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": None,
+                "recording_mbid": inserted_rows[3]["recording_mbid"],
+                "score": inserted_rows[3]["score"],
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": None,
+                "recording_mbid": inserted_rows[2]["recording_mbid"],
+                "score": inserted_rows[2]["score"],
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": None,
+                "recording_mbid": non_existing_rec_mbid,
+                "score": 0,
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": non_existing_rec_msid,
+                "recording_mbid": None,
+                "score": 0,
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": inserted_rows[0]["recording_msid"],
+                "recording_mbid": None,
+                "score": inserted_rows[0]["score"],
+                "created": None,
+                "track_metadata": None
+            },
+            {
+                "user_id": self.user["musicbrainz_id"],
+                "recording_msid": inserted_rows[1]["recording_msid"],
+                "recording_mbid": None,
+                "score": inserted_rows[1]["score"],
+                "created": None,
+                "track_metadata": None
+            }
+        ]
+        self.assertCountEqual(feedback, expected)
 
     def test_get_feedback_for_recordings_for_user_invalid_user(self):
         """ Test to make sure that the API sends 404 if user does not exist. """
@@ -1157,11 +1180,11 @@ class FeedbackAPITestCase(IntegrationTestCase):
 
         sample_feedback = [
             {
-                "recording_msid": submitted_data[0]["ids"]["recording_msid"],
+                "recording_msid": submitted_data[0],
                 "score": 1
             },
             {
-                "recording_msid": submitted_data[1]["ids"]["recording_msid"],
+                "recording_msid": submitted_data[1],
                 "score": -1
             }
         ]
@@ -1209,3 +1232,48 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(feedback[0]["recording_msid"], inserted_rows[1]["recording_msid"])
         self.assertEqual(feedback[0]["score"], inserted_rows[1]["score"])
         self.assertNotEqual(feedback[0]["created"], "")
+
+    @mock.patch("listenbrainz.domain.lastfm.load_recordings_from_tracks")
+    @requests_mock.Mocker()
+    def test_feedback_import(self, mock_load_recordings, mock_requests):
+        with open(self.path_to_data_file("lastfm_loved_tracks_1.json")) as f:
+            page_1 = json.load(f)
+        with open(self.path_to_data_file("lastfm_loved_tracks_2.json")) as f:
+            page_2 = json.load(f)
+        mock_requests.get(current_app.config["LASTFM_API_URL"], [
+            {"json": page_1, "status_code": 200},
+            {"json": page_1, "status_code": 200},
+            {"json": page_2, "status_code": 200}
+        ])
+        mock_load_recordings.return_value = {
+            "07e81754-518c-4e3b-8671-c5df5643dad0": "7ac86b1a-d183-40ca-9d41-df2d90681ffd",
+            "018dfa9b-7a80-3997-b64e-8520488656a1": "9d0c31ef-257a-41af-9a8c-f28a5cd87467",
+            "2446a9ae-6e63-3273-bfc9-58eed8571d7a": "f53937b3-f6dc-450c-8d57-bbc667d8af23"
+        }
+
+        r = self.client.post(
+            url_for("feedback_api_v1.import_feedback"),
+            data=json.dumps({"service": "lastfm", "user_name": "lucifer"}),
+            headers={"Authorization": f'Token {self.user["auth_token"]}'},
+            content_type="application/json"
+        )
+        self.assert200(r)
+        self.assertDictEqual(r.json, {
+            "total": 8,
+            "inserted": 3,
+            "missing_mbid": 2,
+            "invalid_mbid": 1,
+            "mbid_not_found": 2
+        })
+        r = self.client.get(url_for("feedback_api_v1.get_feedback_for_user", user_name=self.user["musicbrainz_id"]))
+        data = r.json
+        self.assertEqual(data["count"], 3)
+        self.assertEqual(data["total_count"], 3)
+        self.assertEqual(data["offset"], 0)
+        expected_mbids = [
+            "7ac86b1a-d183-40ca-9d41-df2d90681ffd",
+            "9d0c31ef-257a-41af-9a8c-f28a5cd87467",
+            "f53937b3-f6dc-450c-8d57-bbc667d8af23"
+        ]
+        received_mbids = [f["recording_mbid"] for f in data["feedback"]]
+        self.assertCountEqual(expected_mbids, received_mbids)

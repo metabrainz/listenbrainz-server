@@ -13,6 +13,9 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
     delete_listens as ts_delete_listens, \
     delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data
+from listenbrainz.messybrainz import transfer_to_timescale
+from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
+from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
 
 
@@ -23,8 +26,6 @@ def cli():
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '..', 'admin', 'sql')
-MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), '..', 'admin', 'messybrainz', 'sql')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '..', 'admin', 'timescale')
 
@@ -95,65 +96,6 @@ def init_db(force, create_db):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
         print("Done!")
-
-
-@cli.command(name="init_msb_db")
-@click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
-@click.option("--create-db", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
-def init_msb_db(force, create_db):
-    """Initializes database.
-
-    This process involves several steps:
-        1. Table structure is created.
-        2. Primary keys and foreign keys are created.
-        3. Indexes are created.
-    """
-    from listenbrainz import config
-    db.init_db_connection(config.POSTGRES_ADMIN_URI)
-    if force:
-        res = db.run_sql_script_without_transaction(
-            os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
-        if not res:
-            raise Exception(
-                'Failed to drop existing database and user! Exit code: %s' % res)
-
-    if create_db or force:
-        print('PG: Creating user and a database...')
-        res = db.run_sql_script_without_transaction(
-            os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'))
-        if not res:
-            raise Exception(
-                'Failed to create new database and user! Exit code: %s' % res)
-
-    print('PG: Creating database extensions...')
-    res = db.run_sql_script_without_transaction(
-        os.path.join(MSB_ADMIN_SQL_DIR, 'create_extensions.sql'))
-    # Don't raise an exception if the extension already exists
-
-    db.engine.dispose()
-
-#    print('PG: Creating schema...')
-#    exit_code = run_psql_script('create_schema.sql')
-#    if exit_code != 0:
-#        raise Exception('Failed to create database schema! Exit code: %i' % exit_code)
-
-    db.init_db_connection(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
-    print('PG: Creating tables...')
-    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_tables.sql'))
-
-    print('PG: Creating primary and foreign keys...')
-    db.run_sql_script(os.path.join(
-        MSB_ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-    db.run_sql_script(os.path.join(
-        MSB_ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
-
-    print('PG: Creating functions...')
-    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_functions.sql'))
-
-    print('PG: Creating indexes...')
-    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_indexes.sql'))
-
-    print("Done!")
 
 
 @cli.command(name="init_ts_db")
@@ -316,7 +258,7 @@ def submit_release(user, token, releasembid):
             token = user_ob["auth_token"]
             print("token is", token)
     import listenbrainz.misc.submit_release
-    listenbrainz.misc.submit_release.submit_release_impl(token, releaseid, "http://web:7000")
+    listenbrainz.misc.submit_release.submit_release_impl(token, releasembid, "http://web:80")
 
 
 @cli.command(name="notify_yim_users")
@@ -335,3 +277,26 @@ def listen_add_userid():
     app = create_app()
     with app.app_context():
         timescale_fill_userid.fill_userid()
+
+
+@cli.command()
+def msb_transfer_db():
+    """ Transfer MsB tables from MsB DB to TS DB"""
+    with create_app().app_context():
+        transfer_to_timescale.run()
+
+
+@cli.command()
+def run_daily_jams():
+    """ Generate daily playlists for users soon after the new day begins in their timezone. This is an internal LB
+    method and not a core function of troi.
+    """
+    with create_app().app_context():
+        run_daily_jams_troi_bot()
+
+
+@cli.command()
+def run_spotify_metadata_cache_seeder():
+    """ Query spotify new releases api for new releases and submit those to our cache as seeds """
+    with create_app().app_context():
+        submit_new_releases_to_cache()

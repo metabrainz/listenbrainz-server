@@ -1,8 +1,9 @@
 import * as React from "react";
 
-import { ResponsiveBar, Layer } from "@nivo/bar";
-import { BoxLegendSvg, LegendProps } from "@nivo/legends";
+import { BarTooltipProps, ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
+import { BasicTooltip } from "@nivo/tooltip";
+import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../utils/constants";
 
 export type BarDualToneProps = {
   data: UserListeningActivityData;
@@ -18,30 +19,7 @@ export type BarDualToneProps = {
   showLegend?: boolean;
 };
 
-const BarLegend = ({
-  height,
-  legends,
-  width,
-}: {
-  height: number;
-  legends: Array<LegendProps>;
-  width: any;
-}) => (
-  <>
-    {legends.map((legend) => (
-      <BoxLegendSvg
-        key={JSON.stringify(legend.data?.map(({ id }) => id))}
-        {...legend}
-        containerHeight={height}
-        containerWidth={width}
-      />
-    ))}
-  </>
-);
-
-export default function BarDualTone(
-  props: React.PropsWithChildren<BarDualToneProps>
-) {
+export default function BarDualTone(props: BarDualToneProps) {
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
   const rangeMap = {
@@ -50,11 +28,11 @@ export default function BarDualTone(
         day: "2-digit",
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         day: "2-digit",
         month: "short",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["lastRangeCount", "thisRangeCount"],
       itemWidth: 120,
     },
@@ -63,11 +41,11 @@ export default function BarDualTone(
         day: "2-digit",
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         day: "2-digit",
         month: "short",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["lastRangeCount", "thisRangeCount"],
       itemWidth: 120,
     },
@@ -76,11 +54,11 @@ export default function BarDualTone(
         day: "2-digit",
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: !isMobile
         ? ["lastRangeCount", "thisRangeCount"]
         : ["thisRangeCount"],
@@ -91,11 +69,11 @@ export default function BarDualTone(
         day: "2-digit",
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: !isMobile
         ? ["lastRangeCount", "thisRangeCount"]
         : ["thisRangeCount"],
@@ -105,10 +83,10 @@ export default function BarDualTone(
       dateFormat: {
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["lastRangeCount", "thisRangeCount"],
       itemWidth: 70,
     },
@@ -116,17 +94,17 @@ export default function BarDualTone(
       dateFormat: {
         month: "long",
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       legendDateFormat: {
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["lastRangeCount", "thisRangeCount"],
       itemWidth: 70,
     },
     all_time: {
       dateFormat: {
         year: "numeric",
-      },
+      } as Intl.DateTimeFormatOptions,
       keys: ["thisRangeCount"],
       itemWidth: 0,
     },
@@ -165,20 +143,20 @@ export default function BarDualTone(
 
   const { dateFormat, keys, itemWidth } = rangeMap[range] || {};
 
-  const customTooltip = (elem: any) => {
-    const { id, data: datum } = elem;
+  const customTooltip = (elem: BarTooltipProps<UserListeningActivityDatum>) => {
+    const { id, data: datum, color, value } = elem;
 
     let dateString: string;
     let listenCount: number;
     if (id === "lastRangeCount") {
-      const lastRangeDate = new Date(datum.lastRangeTs * 1000);
+      const lastRangeDate = new Date((datum.lastRangeTs ?? 0) * 1000);
       dateString = lastRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
       });
       listenCount = datum.lastRangeCount!;
     } else {
-      const thisRangeDate = new Date(datum.thisRangeTs * 1000);
+      const thisRangeDate = new Date((datum?.thisRangeTs ?? 0) * 1000);
       dateString = thisRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
@@ -186,9 +164,11 @@ export default function BarDualTone(
       listenCount = datum.thisRangeCount!;
     }
     return (
-      <div>
-        {dateString}: <strong>{String(listenCount)} Listens</strong>
-      </div>
+      <BasicTooltip
+        id={dateString}
+        value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
+        color={color}
+      />
     );
   };
 
@@ -203,7 +183,7 @@ export default function BarDualTone(
       keys={keys}
       groupMode="grouped"
       colors={({ id }) => {
-        return id === "thisRangeCount" ? "#EB743B" : "#353070";
+        return id === "thisRangeCount" ? COLOR_LB_ORANGE : COLOR_LB_BLUE;
       }}
       axisBottom={{
         format:
@@ -225,11 +205,7 @@ export default function BarDualTone(
         top: showLegend ? 30 : 20,
       }}
       enableGridY={false}
-      layers={
-        ["grid", "axes", "bars", "markers", "annotations", BarLegend] as Array<
-          Layer
-        >
-      }
+      layers={["grid", "axes", "bars", "markers", "annotations", "legends"]}
       legends={
         showLegend
           ? [
@@ -242,7 +218,7 @@ export default function BarDualTone(
                       lastRangePeriod.start,
                       lastRangePeriod.end
                     ),
-                    color: "#353070",
+                    color: COLOR_LB_BLUE,
                   },
                   {
                     id: "thisRangeName",
@@ -250,7 +226,7 @@ export default function BarDualTone(
                       thisRangePeriod.start,
                       thisRangePeriod.end
                     ),
-                    color: "#EB743B",
+                    color: COLOR_LB_ORANGE,
                   },
                 ],
                 anchor: "top-right",

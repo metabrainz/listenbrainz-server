@@ -14,7 +14,6 @@ const recordingToPin: Listen = {
       release_mbid: "release_mbid",
       recording_msid: "recording_msid",
       recording_mbid: "recording_mbid",
-      artist_msid: "artist_msid",
     },
   },
 };
@@ -33,7 +32,6 @@ const pinnedRecordingFromAPI: PinnedRecording = {
       release_mbid: "release_mbid",
       recording_msid: "recording_msid",
       recording_mbid: "recording_mbid",
-      artist_msid: "artist_msid",
     },
   },
 };

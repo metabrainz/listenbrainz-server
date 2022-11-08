@@ -7,6 +7,7 @@ import APIService from "../utils/APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 import { getEntityLink, isInvalidStatRange } from "./utils";
+import { COLOR_LB_ASPHALT } from "../utils/constants";
 
 export type UserTopEntityProps = {
   range: UserStatsAPIRange;
@@ -131,7 +132,7 @@ export default class UserTopEntity extends React.Component<
             <FontAwesomeIcon
               icon={faLink as IconProp}
               size="sm"
-              color="#46443A"
+              color={COLOR_LB_ASPHALT}
               style={{ marginRight: 20 }}
             />
           </a>

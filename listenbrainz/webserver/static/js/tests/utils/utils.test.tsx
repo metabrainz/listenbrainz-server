@@ -1,5 +1,12 @@
 import * as timeago from "time-ago";
-import { formatWSMessageToListen, preciseTimestamp } from "../../src/utils/utils";
+import {
+  formatWSMessageToListen,
+  preciseTimestamp,
+  searchForSpotifyTrack,
+} from "../../src/utils/utils";
+
+const spotifySearchResponse = require("../__mocks__/spotifySearchResponse.json");
+const spotifySearchEmptyResponse = require("../__mocks__/spotifySearchEmptyResponse.json");
 
 describe("formatWSMessageToListen", () => {
   const mockListen: Listen = {
@@ -97,5 +104,83 @@ describe("preciseTimestamp", () => {
   it("returns itself for invalid date inputs", () => {
     const invalidISO: string = "foo-01-01T01:01:bar";
     expect(preciseTimestamp(invalidISO)).toMatch(invalidISO);
+  });
+});
+
+describe("searchForSpotifyTrack", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(spotifySearchResponse),
+      });
+    });
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await searchForSpotifyTrack("foobar", "import", "vs", "star");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "https://api.spotify.com/v1/search?type=track&q=track:import artist:vs album:star",
+      {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer foobar",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  });
+
+  it("returns the first track from the json response", async () => {
+    await expect(
+      searchForSpotifyTrack("foobar", "import", "vs", "star")
+    ).resolves.toEqual(spotifySearchResponse.tracks.items[0]);
+  });
+
+  it("throws an error if there is no spotify api token", async () => {
+    let error;
+    try {
+      await searchForSpotifyTrack(undefined, "import", "vs", "star");
+    } catch (err) {
+      error = err;
+    }
+    expect(error).toEqual({
+      status: 403,
+      message: "You need to connect to your Spotify account",
+    });
+  });
+  it("skips if any other response code is received", async () => {
+    // Overide mock for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        // Spotify API returns error body in this format
+        json: () =>
+          Promise.resolve({ error: { status: 404, message: "Not found!" } }),
+      });
+    });
+    let error;
+    try {
+      await searchForSpotifyTrack("foobar", "import", "vs", "star");
+    } catch (err) {
+      error = err;
+    }
+    expect(error).toEqual({ status: 404, message: "Not found!" });
+  });
+  it("returns null if no track found in the json response", async () => {
+    // Overide mock for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(spotifySearchEmptyResponse),
+      });
+    });
+    await expect(
+      searchForSpotifyTrack("foobar", "import", "vs", "star")
+    ).resolves.toEqual(null);
   });
 });

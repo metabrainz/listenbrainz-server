@@ -119,9 +119,14 @@ export default class LastFmImporter extends React.Component<
      */
     const { lastfmUsername } = this.state;
     const url = `${this.lastfmURL}?method=user.getinfo&user=${lastfmUsername}&api_key=${this.lastfmKey}&format=json`;
+    let wrong_username = false;
     try {
       const response = await fetch(encodeURI(url));
       const data = await response.json();
+      if (data?.message === "User not found") {
+        wrong_username = true;
+        throw new Error();
+      }
       if ("playcount" in data.user) {
         return Number(data.user.playcount);
       }
@@ -132,7 +137,11 @@ export default class LastFmImporter extends React.Component<
         true
       );
       const error = new Error();
-      error.message = "Something went wrong";
+      if (wrong_username) {
+        error.message = "User not found";
+      } else {
+        error.message = "Something went wrong";
+      }
       throw error;
     }
   }
@@ -213,7 +222,9 @@ export default class LastFmImporter extends React.Component<
           `Failed to fetch page ${page} from ${service} after ${LASTFM_RETRIES} retries: ${err.toString()}`
         );
       }
-      await new Promise((resolve) => setTimeout(resolve, timeout));
+      await new Promise((resolve) => {
+        setTimeout(resolve, timeout);
+      });
       // eslint-disable-next-line no-return-await
       return await this.getPage(page, retries - 1);
     }

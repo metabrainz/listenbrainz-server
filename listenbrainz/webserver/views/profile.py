@@ -17,13 +17,11 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.domain.youtube import YoutubeService, YOUTUBE_SCOPES
 from listenbrainz.webserver import flash
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.forms import TimezoneForm
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
 
@@ -58,28 +56,25 @@ def reset_token():
 @login_required
 def select_timezone():
     pg_timezones = db_usersetting.get_pg_timezone()
-    form = TimezoneForm()
-    form.timezone.choices = [(zone_name, zone_name) for (zone_name, offset) in pg_timezones]
     user_settings = db_usersetting.get(current_user.id)
     user_timezone = user_settings['timezone_name']
-    if form.validate_on_submit():
-        try:
-            update_timezone = str(form.timezone.data)
-            db_usersetting.set_timezone(current_user.id, update_timezone)
-            flash.info("Your timezone has been saved.")
-        except DatabaseException:
-            flash.error("Something went wrong! Unable to update timezone right now.")
-        return redirect(url_for("profile.info"))
-
-    if form.errors:
-        flash.error('Unable to update timezone.')
-        return redirect(url_for('profile.info'))
-
+    props = {
+        "pg_timezones": pg_timezones,
+        "user_timezone": user_timezone,
+    }
     return render_template(
         "profile/selecttimezone.html",
-        user_timezone=user_timezone,
-        pg_timezones=pg_timezones,
-        form=form,
+        props=ujson.dumps(props),
+    )
+
+
+@profile_bp.route("/troi/", methods=["GET", "OPTIONS"])
+@login_required
+def set_troi_prefs():
+    current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
+    return render_template(
+        "profile/troi_prefs.html",
+        props=ujson.dumps({"troi_prefs": current_troi_prefs})
     )
 
 
@@ -122,7 +117,11 @@ def info():
 def import_data():
     """ Displays the import page to user, giving various options """
     user = db_user.get(current_user.id, fetch_email=True)
-    user_has_email = user["email"] is not None
+    # if the flag is turned off (local development) then do not perform email check
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
+        user_has_email = user["email"] is not None
+    else:
+        user_has_email = True
 
     # Return error if LASTFM_API_KEY is not given in config.py
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
@@ -310,9 +309,7 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
     """
     try:
         service = ExternalServiceType[name.upper()]
-        if service == ExternalServiceType.YOUTUBE:
-            return YoutubeService()
-        elif service == ExternalServiceType.SPOTIFY:
+        if service == ExternalServiceType.SPOTIFY:
             return SpotifyService()
         elif service == ExternalServiceType.CRITIQUEBRAINZ:
             return CritiqueBrainzService()
@@ -337,10 +334,6 @@ def music_services_details():
     else:
         current_spotify_permissions = "disable"
 
-    youtube_service = YoutubeService()
-    youtube_user = youtube_service.get_user(current_user.id)
-    current_youtube_permissions = "listen" if youtube_user else "disable"
-
     critiquebrainz_service = CritiqueBrainzService()
     critiquebrainz_user = critiquebrainz_service.get_user(current_user.id)
     current_critiquebrainz_permissions = "review" if critiquebrainz_user else "disable"
@@ -349,8 +342,6 @@ def music_services_details():
         'user/music_services.html',
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
-        youtube_user=youtube_user,
-        current_youtube_permissions=current_youtube_permissions,
         critiquebrainz_user=critiquebrainz_user,
         current_critiquebrainz_permissions=current_critiquebrainz_permissions
     )
@@ -416,10 +407,6 @@ def music_services_disconnect(service_name: str):
                 permissions = SPOTIFY_LISTEN_PERMISSIONS
             if permissions:
                 return redirect(service.get_authorize_url(permissions))
-        elif service_name == 'youtube':
-            action = request.form.get('youtube')
-            if action:
-                return redirect(service.get_authorize_url(YOUTUBE_SCOPES))
         elif service_name == 'critiquebrainz':
             action = request.form.get('critiquebrainz')
             if action:

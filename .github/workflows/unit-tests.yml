@@ -1,4 +1,4 @@
-name: ListenBrainz Unit Tests
+name: ListenBrainz Server Tests
 
 on:
   push:
@@ -13,8 +13,10 @@ on:
       - '**.jsx?'
       - '**.tsx?'
       - '**.snap'
-      - 'docker/Dockerfile.webpack'
       - 'docker/docker-compose.spark*.yml'
+      - 'docker/prod/**'
+      - 'docker/services/**'
+      - 'docker/spark-cluster-config/**'
       - 'docs/**'
       - '**.less'
       - '**.md'
@@ -41,11 +43,11 @@ jobs:
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
       continue-on-error: true
 
+    # by default, docker-compose tries to pull the `listenbrainz` image used by timescale_writer as well.
+    # but this is built locally for the listenbrainz service and reused for timescale writer, hence the pull fails.
+    # to avoid this we specifically mention the services to pull images for here,
     - name: Pull docker images
-      run: docker-compose -f docker/docker-compose.test.yml pull
-
-    - uses: satackey/action-docker-layer-caching@v0.0.11
-      continue-on-error: true
+      run: docker-compose -f docker/docker-compose.test.yml pull lb_db redis rabbitmq couchdb
 
     - name: Run tests
       run: ./test.sh

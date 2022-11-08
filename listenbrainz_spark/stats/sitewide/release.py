@@ -17,10 +17,8 @@ def get_releases(table: str, user_listen_count_limit, top_releases_limit: int = 
                     [
                         {
                             'release_name': str
-                            'release_msid': str,
                             'release_mbid': str,
                             'artist_name': str,
-                            'artist_msid': str,
                             'artist_mbids': list(str),
                             'listen_count': int
                         },
@@ -54,22 +52,34 @@ def get_releases(table: str, user_listen_count_limit, top_releases_limit: int = 
                  , release_mbid
                  , lower(artist_name)
                  , artist_credit_mbids
+        ), entity_count AS (
+            SELECT count(*) AS total_count
+              FROM intermediate_table
+        ), ordered_stats AS (
+            SELECT *
+              FROM intermediate_table
           ORDER BY total_listen_count DESC
              LIMIT {top_releases_limit}
-        )
-        SELECT sort_array(
-                    collect_list(
-                        struct(
-                            total_listen_count AS listen_count
-                          , release_name
-                          , release_mbid
-                          , artist_name
-                          , coalesce(artist_credit_mbids, array()) AS artist_mbids
+        ), grouped_stats AS (
+            SELECT sort_array(
+                        collect_list(
+                            struct(
+                                total_listen_count AS listen_count
+                              , release_name
+                              , release_mbid
+                              , artist_name
+                              , coalesce(artist_credit_mbids, array()) AS artist_mbids
+                            )
                         )
-                    )
-                   , false
-                ) as stats
-          FROM intermediate_table
+                       , false
+                   ) as stats
+              FROM ordered_stats
+        )
+            SELECT total_count
+                 , stats
+              FROM grouped_stats
+              JOIN entity_count  
+                ON TRUE
         """)
 
     return result.toLocalIterator()

@@ -3,8 +3,6 @@
 
 /* eslint-disable camelcase */
 
-import { searchForSpotifyTrack } from "./utils";
-
 export default class SpotifyAPIService {
   static async checkStatus(response: Response) {
     if (response.status >= 200 && response.status < 300) {
@@ -185,34 +183,4 @@ export default class SpotifyAPIService {
 
     return spotifySnapshotId;
   };
-
-  /* eslint-disable no-await-in-loop */
-  searchForSpotifyURIs = async (tracks: JSPFTrack[]): Promise<string[]> => {
-    const tracksCopy = [...tracks];
-    const uris: string[] = [];
-    while (tracksCopy.length > 0) {
-      const track = tracksCopy[0];
-      try {
-        const spotifyTrack = await searchForSpotifyTrack(
-          this.spotifyUser?.access_token,
-          track.title,
-          track.creator,
-          track.album
-        );
-        if (spotifyTrack?.uri) {
-          uris.push(spotifyTrack.uri);
-        }
-        tracksCopy.shift();
-      } catch (error) {
-        if (error.status === 429) {
-          // Too many requests, take a nap before continuing
-          await new Promise((resolve) => setTimeout(resolve, 600));
-        } else {
-          throw error;
-        }
-      }
-    }
-    return uris;
-  };
-  /* eslint-enable no-await-in-loop */
 }

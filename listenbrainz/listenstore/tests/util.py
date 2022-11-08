@@ -13,7 +13,6 @@ TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..',
 
 def generate_data(test_user_id, user_name, from_ts, num_records, inserted_ts=None):
     test_data = []
-    artist_msid = str(uuid.uuid4())
 
     for i in range(num_records):
         if not inserted_ts:
@@ -25,7 +24,6 @@ def generate_data(test_user_id, user_name, from_ts, num_records, inserted_ts=Non
             user_name=user_name,
             user_id=test_user_id,
             timestamp=timestamp,
-            artist_msid=artist_msid,
             recording_msid=str(uuid.uuid4()),
             inserted_timestamp=inserted_timestamp,
             data={

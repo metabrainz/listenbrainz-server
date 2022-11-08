@@ -1,0 +1,39 @@
+[
+  {
+    "release_name": "So Good",
+    "release_mbid": "daa1e865-42d9-46d5-b272-c92c099dbc2d",
+    "artist_credit_name": "Halsey",
+    "artist_mbids": [
+      "3377f3bb-60fc-4403-aea9-7e800612e060"
+    ],
+    "date": "2022-6-9",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": null,
+    "confidence": 3
+  },
+  {
+    "release_name": "Raja Jatt (from the Movie ’Sher Bagga’)",
+    "release_mbid": "a202dc7e-cb61-4ecd-87d0-3bedf597f8cc",
+    "artist_credit_name": "Ammy Virk & Simar Kaur",
+    "artist_mbids": [
+      "b5da230b-f1fc-4822-af88-03f91891fccd",
+      "7803ba53-9ed3-40e4-b6fe-5e76d27eb811"
+    ],
+    "date": "2022-5-27",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": "Soundtrack",
+    "confidence": 2
+  },
+  {
+    "release_name": "nothing has changed",
+    "release_mbid": "5be2dc20-13c7-4d8a-945c-fcf2d1815a98",
+    "artist_credit_name": "sadfem",
+    "artist_mbids": [
+      "28e4d96a-e405-4a43-9b30-baf4f8fa7a29"
+    ],
+    "date": "2022-5-30",
+    "release_group_primary_type": "Single",
+    "release_group_secondary_type": null,
+    "confidence": 1
+  }
+]

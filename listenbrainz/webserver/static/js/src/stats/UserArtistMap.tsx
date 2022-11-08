@@ -9,6 +9,7 @@ import Card from "../components/Card";
 import Loader from "../components/Loader";
 import Choropleth from "./Choropleth";
 import { isInvalidStatRange } from "./utils";
+import { COLOR_BLACK } from "../utils/constants";
 
 export type UserArtistMapProps = {
   range: UserStatsAPIRange;
@@ -225,7 +226,7 @@ export default class UserArtistMap extends React.Component<
                 <FontAwesomeIcon
                   icon={faLink as IconProp}
                   size="sm"
-                  color="#000000"
+                  color={COLOR_BLACK}
                   style={{ marginRight: 20 }}
                 />
               </a>

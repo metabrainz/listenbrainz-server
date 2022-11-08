@@ -1,11 +1,9 @@
 import sqlalchemy
-import json
 from datetime import datetime
 
 from listenbrainz import db
 from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from typing import List
-from listenbrainz.db.exceptions import DatabaseException
 
 
 PINNED_REC_GET_COLUMNS = [
@@ -38,7 +36,7 @@ def pin(pinned_recording: WritablePinnedRecording):
         'created': pinned_recording.created
     }
 
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             UPDATE pinned_recording
                SET pinned_until = NOW()
@@ -51,7 +49,7 @@ def pin(pinned_recording: WritablePinnedRecording):
               RETURNING (id)
             """), args)
 
-        row_id = result.fetchone()["id"]
+        row_id = result.fetchone().id
         pinned_recording.row_id = row_id
         return PinnedRecording.parse_obj(pinned_recording.dict())
 
@@ -67,7 +65,7 @@ def unpin(user_id: int):
             False if no pinned recording belonging to the given user_id was currently pinned.
     """
 
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
             UPDATE pinned_recording
                SET pinned_until = NOW()
@@ -90,7 +88,7 @@ def delete(row_id: int, user_id: int):
             False if the pinned recording for the given row_id and user_id did not exist.
     """
 
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
             DELETE FROM pinned_recording
              WHERE id = :row_id
@@ -120,8 +118,8 @@ def get_current_pin_for_user(user_id: int) -> PinnedRecording:
              WHERE (user_id = :user_id
                AND pinned_until >= NOW())
             """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {'user_id': user_id})
-        row = result.fetchone()
-        return PinnedRecording(**dict(row)) if row else None
+        row = result.mappings().first()
+        return PinnedRecording(**row) if row else None
 
 
 def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[PinnedRecording]:
@@ -149,7 +147,7 @@ def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[Pinn
             'count': count,
             'offset': offset
         })
-        return [PinnedRecording(**dict(row)) for row in result.fetchall()]
+        return [PinnedRecording(**row) for row in result.mappings()]
 
 
 def get_pins_for_user_following(user_id: int, count: int, offset: int) -> List[PinnedRecording]:
@@ -185,7 +183,7 @@ def get_pins_for_user_following(user_id: int, count: int, offset: int) -> List[P
             'count': count,
             'offset': offset
         })
-        return [PinnedRecording(**dict(row)) for row in result.fetchall()]
+        return [PinnedRecording(**row) for row in result.mappings()]
 
 
 def get_pins_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[PinnedRecording]:
@@ -216,7 +214,7 @@ def get_pins_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int)
             "max_ts": datetime.utcfromtimestamp(max_ts),
             "count": count,
         })
-        return [PinnedRecording(**dict(row)) for row in result.fetchall()]
+        return [PinnedRecording(**row) for row in result.mappings()]
 
 
 def get_pin_by_id(row_id: int) -> PinnedRecording:
@@ -234,8 +232,8 @@ def get_pin_by_id(row_id: int) -> PinnedRecording:
         """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {
             "row_id": row_id,
         })
-        row = result.fetchone()
-        return PinnedRecording(**dict(row)) if row else None
+        row = result.mappings().first()
+        return PinnedRecording(**row) if row else None
 
 
 def get_pin_count_for_user(user_id: int) -> int:
@@ -256,5 +254,5 @@ def get_pin_count_for_user(user_id: int) -> int:
         result = connection.execute(sqlalchemy.text(query), {
             'user_id': user_id,
         })
-        count = int(result.fetchone()["value"])
+        count = int(result.fetchone().value)
     return count

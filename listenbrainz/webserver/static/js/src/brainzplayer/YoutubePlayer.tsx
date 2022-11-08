@@ -11,7 +11,11 @@ import {
 
 import Draggable from "react-draggable";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowsAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowsAlt,
+  faWindowMaximize,
+  faWindowMinimize,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   getArtistName,
   getTrackName,
@@ -21,6 +25,7 @@ import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 type YoutubePlayerState = {
   currentListen?: Listen;
+  reduced: boolean;
 };
 
 type YoutubePlayerProps = DataSourceProps & {
@@ -44,7 +49,8 @@ export default class YoutubePlayer
     // although unlikely, might change in the future.
     const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
 
-    const videoIdOrUrl = youtubeId ?? _get(listen, "track_metadata.additional_info.origin_url");
+    const videoIdOrUrl =
+      youtubeId ?? _get(listen, "track_metadata.additional_info.origin_url");
     if (_isString(videoIdOrUrl) && videoIdOrUrl.length) {
       /** Credit for this regular expression goes to Soufiane Sakhi:
        * https://stackoverflow.com/a/61033353/4904467
@@ -106,6 +112,12 @@ export default class YoutubePlayer
   public domainName = "youtube.com";
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
+
+  constructor(props: YoutubePlayerProps) {
+    super(props);
+    this.state = { reduced: false };
+    this.toggleReduceYoutubeWindow = this.toggleReduceYoutubeWindow.bind(this);
+  }
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
@@ -368,8 +380,15 @@ export default class YoutubePlayer
     onTrackNotFound();
   };
 
+  toggleReduceYoutubeWindow() {
+    this.setState((prevState) => {
+      return { reduced: !prevState.reduced };
+    });
+  }
+
   render() {
     const { show } = this.props;
+    const { reduced } = this.state;
     const options: Options = {
       playerVars: {
         autoplay: 1,
@@ -397,10 +416,23 @@ export default class YoutubePlayer
           bottom: -draggableBoundPadding,
         }}
       >
-        <div className={`youtube-wrapper${!show ? " hidden" : ""}`}>
-          <div className="youtube-drag-handle">
+        <div
+          className={`youtube-wrapper${!show ? " hidden" : ""}${
+            reduced ? " reduced" : ""
+          }`}
+        >
+          <button className="btn btn-sm youtube-drag-handle" type="button">
             <FontAwesomeIcon icon={faArrowsAlt} />
-          </div>
+          </button>
+          <button
+            className="btn btn-sm youtube-reduce-button"
+            type="button"
+            onClick={this.toggleReduceYoutubeWindow}
+          >
+            <FontAwesomeIcon
+              icon={reduced ? faWindowMaximize : faWindowMinimize}
+            />
+          </button>
           <YouTube
             className="youtube-player"
             opts={options}

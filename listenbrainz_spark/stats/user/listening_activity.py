@@ -58,7 +58,7 @@ def calculate_listening_activity():
     return result.toLocalIterator()
 
 
-def get_listening_activity(stats_range: str, message_type="user_listening_activity")\
+def get_listening_activity(stats_range: str, message_type="user_listening_activity", database: str = None)\
         -> Iterator[Optional[Dict]]:
     """ Compute the number of listens for a time range compared to the previous range
 
@@ -74,13 +74,13 @@ def get_listening_activity(stats_range: str, message_type="user_listening_activi
     data = calculate_listening_activity()
     messages = create_messages(data=data, stats_range=stats_range,
                                from_date=from_date, to_date=to_date,
-                               message_type=message_type)
+                               message_type=message_type, database=database)
     logger.debug("Done!")
     return messages
 
 
-def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime, message_type) \
-        -> Iterator[Optional[Dict]]:
+def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime,
+                    message_type: str, database: str = None) -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to webserver via RabbitMQ
 
@@ -91,9 +91,18 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
         to_date: The end time of the stats
         message_type: used to decide which handler on LB webserver side should
             handle this message. can be "user_entity" or "year_in_music_listens_per_day"
+        database: the name of the database in which the webserver should store the data
     Returns:
         messages: A list of messages to be sent via RabbitMQ
     """
+    if database is None:
+        database = f"listening_activity_{stats_range}"
+
+    yield {
+        "type": "couchdb_data_start",
+        "database": database
+    }
+
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
 
@@ -117,10 +126,16 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
                 "stats_range": stats_range,
                 "from_ts": from_ts,
                 "to_ts": to_ts,
-                "data": multiple_user_stats
+                "data": multiple_user_stats,
+                "database": database
             })
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
             logger.error(f"ValidationError while calculating {stats_range} listening_activity:", exc_info=True)
             yield None
+
+    yield {
+        "type": "couchdb_data_end",
+        "database": database
+    }

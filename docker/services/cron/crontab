@@ -5,6 +5,9 @@ MAILTO=""
 # Delete pending listens and update our listen counts, timestamps hourly
 0 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py delete_listens_and_update_metadata >> /logs/listen_metadata.log 2>&1
 
+# Generating troi daily playlists runs hourly
+0 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py run-daily-jams >> /logs/troi.log 2>&1
+
 ## Trigger an incremental dump everyday, near noon, far away from whole dump times, again do not block for the lock.
 0 0 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental >> /logs/dumps.log 2>&1
 ## Around 1 hour later, trigger an incremental import into the spark cluster, blocking for the lock in case the dump was not complete
@@ -15,6 +18,9 @@ MAILTO=""
 
 # Dump user feedback before we generate recommendations
 15 2 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
+
+# Run spotify metadata cache seeder
+0 4 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark run-spotify-metadata-cache-seeder >> /logs/spotify_metadata_cache.log 2>&1
 
 # batch up all the spark requests, spaced by 1 minute in order to ensure the correct order
 # Request all statistics

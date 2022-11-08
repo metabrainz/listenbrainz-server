@@ -65,7 +65,70 @@ of tracks like this:
     Track: Never Gonna Give You Up, listened at 1443521965
     Track: Never Gonna Give You Up, listened at 42042042
 
+Lookup MBIDs
+------------
 
+To interact with various ListenBrainz features, you will often need a MBID of
+the recording of a listen. You can use the :ref:`metadata-api` endpoints to
+lookup MBID and additional metadata for the listen using its track name and
+artist name. For instance,
+
+.. include:: ./api_usage_examples/lookup_metadata.py
+   :code: python
+
+Please provide the prompted data to the script to lookup the given track. Currently the release
+argument for a listen is not used, but we plan to support in the near future, so we encourage
+you to start sending release information if you have it.
+
+.. code-block:: json
+
+  {
+      "artist_credit_name": "Ariana Grande",
+      "artist_mbids": [
+          "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"
+      ],
+      "metadata": {
+          "recording": {
+              "rels": [
+                  {
+                      "artist_mbid": "eb811bf7-4c99-4781-84c0-10ba6b8e33b3",
+                      "artist_name": "Carl Falk",
+                      "instrument": "guitar",
+                      "type": "instrument"
+                  },
+                  {
+                      "artist_mbid": "c8af4490-e48a-4f91-aef9-2b1e39369576",
+                      "artist_name": "Savan Kotecha",
+                      "instrument": "background vocals",
+                      "type": "vocal"
+                  },
+                  {
+                      "artist_mbid": "0d33cc88-28ae-44d5-be7e-7a653e518720",
+                      "artist_name": "Jeanette Olsson",
+                      "instrument": "background vocals",
+                      "type": "vocal"
+                  }
+              ]
+          }
+      },
+      "recording_mbid": "9f24c0f7-a644-4074-8fbd-a1dba03de129",
+      "recording_name": "One Last Time",
+      "release_mbid": "be5d97b1-408a-4e95-b924-0a61955048de",
+      "release_name": "My Everything"
+  }
+
+Love/hate feedback
+------------------
+
+To provide love/hate feedback on listens, you need a recording mbid. If you do not
+have a recording mbid, you can look it up using the metadata endpoints. See `Lookup MBIDs`_
+for an example of the same. Here is an example of how to submit love/hate feedback using
+the ListenBrainz API. Refer to :ref:`feedback-api` for more details.
+
+.. include:: ./api_usage_examples/submit_feedback.py
+   :code: python
+
+Please provide the prompted data to the script to submit feedback.
 
 Latest Import
 -------------
@@ -94,5 +157,3 @@ You should see output like this:
 .. code::
 
    User naiveaiguy last imported on 30 11 2017 at 12:23
-
-

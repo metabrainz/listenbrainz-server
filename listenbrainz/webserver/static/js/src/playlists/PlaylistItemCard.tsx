@@ -53,7 +53,7 @@ export default class PlaylistItemCard extends React.Component<
     //   ? millisecondsToStr(track.duration)
     //   : null;
 
-    const thumbnail = canEdit ? (
+    const dragHandle = canEdit ? (
       <div className="drag-handle text-muted">
         <FontAwesomeIcon
           icon={faGripLines as IconProp}
@@ -61,18 +61,17 @@ export default class PlaylistItemCard extends React.Component<
         />
       </div>
     ) : undefined;
-    const additionalMenuItems = (
-      <>
-        {canEdit && (
-          <ListenControl
-            title="Remove from playlist"
-            text="Remove from playlist"
-            icon={faMinusCircle}
-            action={this.removeTrack}
-          />
-        )}
-      </>
-    );
+    let additionalMenuItems;
+    if (canEdit) {
+      additionalMenuItems = [
+        <ListenControl
+          title="Remove from playlist"
+          text="Remove from playlist"
+          icon={faMinusCircle}
+          action={this.removeTrack}
+        />,
+      ];
+    }
     const listen = JSPFTrackToListen(track);
     return (
       <ListenCard
@@ -83,7 +82,10 @@ export default class PlaylistItemCard extends React.Component<
         showUsername={Boolean(listen.user_name)}
         // showTrackLength
         newAlert={newAlert}
-        thumbnail={thumbnail}
+        beforeThumbnailContent={dragHandle}
+        // Empty thumbnail, we can't currently resolve cover art from the info we have
+        // eslint-disable-next-line react/jsx-no-useless-fragment
+        customThumbnail={<></>}
         data-recording-mbid={track.id}
         additionalMenuItems={additionalMenuItems}
         updateFeedbackCallback={updateFeedbackCallback}

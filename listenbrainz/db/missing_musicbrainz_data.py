@@ -37,7 +37,7 @@ def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data:
                    but is not submitted to MusicBrainz.
             source : Source of generation of missing MusicBrainz data.
     """
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO missing_musicbrainz_data (user_id, data, source)
                  VALUES (:user_id, :missing_musicbrainz_data, :source)
@@ -77,20 +77,16 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
             "data": {
                 "missing_musicbrainz_data": [
                     {
-                        "artist_msid": "f26d35e3-5fdd-43cf-8b94-71936451bc07",
                         "artist_name": "Katty Peri"
                         "listened_at": 1588204593,
                         "recording_msid": "568eeea3-9255-4878-9df8-296043344e04",
-                        "release_msid": "8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
                         "release_name": "No Place Is Home",
                         "track_name": "How High"
                     },
                     {
-                        "artist_msid": "f26d35e3-5fdd-43cf-8b94-71936451bc07",
                         "artist_name": "Welshly Arms",
                         "listened_at": 1588204583,
                         "recording_msid": "b911620d-8541-44e5-a0db-977679efb37d",
-                        "release_msid": "8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
                         "release_name": "No Place Is Home",
                         "track_name": "Sanctuary"
                     }
@@ -111,12 +107,12 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
                     'source': source
                 }
         )
-        row = result.fetchone()
+        row = result.mappings().first()
 
     try:
-        return UserMissingMusicBrainzData(**dict(row)) if row else None
+        return UserMissingMusicBrainzData(**row) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting missing musicbrainz data for source "{source}"
                                  for user with user_id: {user_id}. Data: {data}""".format(source=source, user_id=user_id,
-                                 data=ujson.dumps(dict(row)['data'], indent=4)), exc_info=True)
+                                 data=ujson.dumps(row['data'], indent=4)), exc_info=True)
         return None

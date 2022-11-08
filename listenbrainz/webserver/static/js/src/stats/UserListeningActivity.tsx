@@ -9,6 +9,7 @@ import Card from "../components/Card";
 import BarDualTone from "./BarDualTone";
 import Loader from "../components/Loader";
 import { isInvalidStatRange } from "./utils";
+import { COLOR_BLACK } from "../utils/constants";
 
 export type UserListeningActivityProps = {
   range: UserStatsAPIRange;
@@ -44,49 +45,49 @@ export default class UserListeningActivity extends React.Component<
       dateFormat: {
         weekday: "short",
         timeZone: "UTC",
-      },
+      } as Intl.DateTimeFormatOptions,
       perRange: "day",
     },
     this_week: {
       dateFormat: {
         weekday: "short",
         timeZone: "UTC",
-      },
+      } as Intl.DateTimeFormatOptions,
       perRange: "day",
     },
     month: {
       dateFormat: {
         day: "2-digit",
         timeZone: "UTC",
-      },
+      } as Intl.DateTimeFormatOptions,
       perRange: "day",
     },
     this_month: {
       dateFormat: {
         day: "2-digit",
         timeZone: "UTC",
-      },
+      } as Intl.DateTimeFormatOptions,
       perRange: "day",
     },
     year: {
       dateFormat: {
         month: "short",
         timeZone: "UTC",
-      },
+      } as Intl.DateTimeFormatOptions,
       perRange: "month",
     },
     this_year: {
       dateFormat: {
         month: "short",
         timeZone: "UTC",
-      },
+      } as Intl.DateTimeFormatOptions,
       perRange: "month",
     },
     all_time: {
       dateFormat: {
         year: "numeric",
         timeZone: "UTC",
-      },
+      } as Intl.DateTimeFormatOptions,
       perRange: "year",
     },
   };
@@ -410,7 +411,7 @@ export default class UserListeningActivity extends React.Component<
                 <FontAwesomeIcon
                   icon={faLink as IconProp}
                   size="sm"
-                  color="#000000"
+                  color={COLOR_BLACK}
                   style={{ marginRight: 20 }}
                 />
               </a>

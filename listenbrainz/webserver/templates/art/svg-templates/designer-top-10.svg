@@ -1,0 +1,261 @@
+<svg id="svg2" 
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns="http://www.w3.org/2000/svg"
+     version="1.1"
+     xmlns:cc="http://creativecommons.org/ns#"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 924 924"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     height="{{ height }}"
+     width="{{ width }}">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;900');
+    .artist-name {
+      font-weight:500;
+    }
+  </style>
+ <defs id="defs42">
+  <linearGradient id="purple-gradient" y2="2000" gradientUnits="userSpaceOnUse" x2="442" y1="38" x1="13">
+   <stop id="stop4176" stop-color="#00A2CC" offset="0"/>
+   <stop id="stop4178" stop-color="#FF29A5" offset="1"/>
+  </linearGradient>
+  <clipPath id="clip">
+      <use xlink:href="#background"/>
+  </clipPath>
+ </defs>
+ <rect id="background" height="924" fill="url(#purple-gradient)" rx="4" ry="4" width="924" y="0" x="0"/>
+ <g clip-path="url(#clip)" letter-spacing="0em" font-weight="900" font-family="Inter, sans-serif" fill="#FAFF5B">
+  <g font-size="20px">
+   <text id="user_name"><tspan id="tspan6" y="36" x="22">{{ metadata["user_name"]|upper|e }}</tspan></text>
+   <text id="text8"><tspan id="tspan10" y="894" x="22">TOP TEN RELEASES {{ metadata["time_range"]|upper|e }}</tspan></text>
+   <text id="number_of_releases"><tspan id="tspan14" y="894" x="769">{{ metadata["num_releases"] }} RELEASES</tspan></text>
+   <text id="date"><tspan id="tspan18" y="36" x="773">{{ metadata["date"] }}</tspan></text>
+  </g>
+  <g font-size="35px">
+   <text
+     id="artist-1">
+     <tspan
+       x="-7"
+       y="100"
+       id="artist-1-number">1</tspan>
+       <tspan
+       x="40"
+       y="100"
+       id="artist-1-album">{{ releases[0].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="135"
+       class="artist-name"
+       id="artist-1-name">{{ releases[0].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-2">
+     <tspan
+       x="-7"
+       y="180"
+       id="artist-2-number">2</tspan>
+       <tspan
+       x="40"
+       y="180"
+       id="artist-2-album">{{ releases[1].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="215"
+       class="artist-name"
+       id="artist-2-name">{{ releases[1].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-3">
+     <tspan
+       x="-7"
+       y="255"
+       id="artist-3-number">3</tspan>
+       <tspan
+       x="40"
+       y="255"
+       id="artist-3-album">{{ releases[2].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="290"
+       class="artist-name"
+       id="artist-3-name">{{ releases[2].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-4">
+     <tspan
+       x="-7"
+       y="335"
+       id="artist-4-number">4</tspan>
+       <tspan
+       x="40"
+       y="335"
+       id="artist-4-album">{{ releases[3].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="370"
+       class="artist-name"
+       id="artist-4-name">{{ releases[3].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-5">
+     <tspan
+       x="-7"
+       y="415"
+       id="artist-5-number">5</tspan>
+       <tspan
+       x="40"
+       y="415"
+       id="artist-5-album">{{ releases[4].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="450"
+       class="artist-name"
+       id="artist-5-name">{{ releases[4].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-6">
+     <tspan
+       x="-7"
+       y="495"
+       id="artist-6-number">6</tspan>
+       <tspan
+       x="40"
+       y="495"
+       id="artist-6-album">{{ releases[5].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="530"
+       class="artist-name"
+       id="artist-6-name">{{ releases[5].artist_name|upper|e }}</tspan>
+   </text>
+
+   <text
+     id="artist-7">
+     <tspan
+       x="-7"
+       y="575"
+       id="artist-7-number">7</tspan>
+       <tspan
+       x="40"
+       y="575"
+       id="artist-7-album">{{ releases[6].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="610"
+       class="artist-name"
+       id="artist-7-name">{{ releases[6].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-8">
+     <tspan
+       x="-7"
+       y="655"
+       id="artist-8-number">8</tspan>
+       <tspan
+       x="40"
+       y="655"
+       id="artist-8-album">{{ releases[7].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="690"
+       class="artist-name"
+       id="artist-8-name">{{ releases[7].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-9">
+     <tspan
+       x="-7"
+       y="735"
+       id="artist-9-number">9</tspan>
+       <tspan
+       x="40"
+       y="735"
+       id="artist-9-album">{{ releases[8].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="770"
+       class="artist-name"
+       id="artist-9-name">{{ releases[8].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-10">
+     <tspan
+       x="-7"
+       y="815"
+       id="artist-10-number">X</tspan>
+       <tspan
+       x="40"
+       y="815"
+       id="artist-10-album">{{ releases[9].release_name|upper|e }}</tspan>
+     <tspan
+       x="40"
+       y="850"
+       class="artist-name"
+       id="artist-10-name">{{ releases[9].artist_name|upper|e }} </tspan>
+   </text>
+  
+  </g>
+  <g id="lines" stroke="#FAFF5B">
+    <line
+       x1="0"
+       y1="87"
+       x2="925"
+       y2="87"
+       id="line-1" />
+    <line
+       x1="0"
+       y1="168"
+       x2="925"
+       y2="168"
+       id="line-2" />
+    <line
+       x1="0"
+       y1="243"
+       x2="925"
+       y2="243"
+       id="line-3" />
+    <line
+       x1="0"
+       y1="322"
+       x2="925"
+       y2="322"
+       id="line-4" />
+    <line
+       x1="0"
+       y1="402"
+       x2="925"
+       y2="402"
+       id="line-5" />
+    <line
+       x1="0"
+       y1="482"
+       x2="925"
+       y2="482"
+       id="line-6" />
+    <line
+       x1="0"
+       y1="562"
+       x2="925"
+       y2="562"
+       id="line-7" />
+    <line
+       x1="0"
+       y1="642"
+       x2="925"
+       y2="642"
+       id="line-8" />
+    <line
+       x1="0"
+       y1="722"
+       x2="925"
+       y2="722"
+       id="line-9" />
+    <line
+       x1="0"
+       y1="802"
+       x2="925"
+       y2="802"
+       id="line-10" />
+  </g> 
+ </g>
+</svg>

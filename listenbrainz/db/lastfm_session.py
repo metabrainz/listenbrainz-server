@@ -42,13 +42,13 @@ class Session(object):
             })
             row = result.fetchone()
             if row:
-                return Session(row["id"], row["user_id"], row["sid"], row["api_key"], row["ts"])
+                return Session(row.id, row.user_id, row.sid, row.api_key, row.ts)
             return None
 
 
     @staticmethod
     def generate(user_id, sid, api_key):
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             result = connection.execute(text("""
                 INSERT INTO api_compat.session (user_id, sid, api_key)
                      VALUES (:user_id, :sid, :api_key)
@@ -59,7 +59,7 @@ class Session(object):
                 'api_key': api_key
             })
             row = result.fetchone()
-            return Session(row["id"], row["user_id"], row["sid"], row["api_key"], row["ts"])
+            return Session(row.id, row.user_id, row.sid, row.api_key, row.ts)
 
     @staticmethod
     def create(token):

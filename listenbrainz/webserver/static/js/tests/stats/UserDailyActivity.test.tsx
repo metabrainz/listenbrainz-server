@@ -1,7 +1,9 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import UserDailyActivity, { UserDailyActivityProps } from "../../src/stats/UserDailyActivity";
+import UserDailyActivity, {
+  UserDailyActivityProps,
+} from "../../src/stats/UserDailyActivity";
 import APIError from "../../src/utils/APIError";
 import * as userDailyActivityResponse from "../__mocks__/userDailyActivity.json";
 import * as userDailyActivityProcessedData from "../__mocks__/userDailyActivityProcessData.json";
@@ -25,7 +27,7 @@ describe("UserDailyActivity", () => {
     );
 
     wrapper.setState({
-      data: userDailyActivityProcessedData,
+      data: (userDailyActivityProcessedData as unknown) as UserDailyActivityData,
       graphContainerWidth: 1200,
       loading: false,
     });
@@ -184,6 +186,10 @@ describe("processData", () => {
       userDailyActivityResponse as UserDailyActivityResponse
     );
 
+    // Sort results for stable comparison with test fixture
+    result.forEach((day) => {
+      day.data.sort((a, b) => (a.x as number) - (b.x as number));
+    });
     expect(result).toEqual(userDailyActivityProcessedData);
   });
   it("returns an empty array if no payload", () => {
@@ -224,9 +230,12 @@ describe("loadData", () => {
       .mockImplementationOnce(() => Promise.resolve(userDailyActivityResponse));
     await instance.loadData();
 
-    expect(wrapper.state()).toMatchObject({
-      data: userDailyActivityProcessedData,
-      loading: false,
+    expect(wrapper.state().loading).toEqual(false);
+    const { data } = wrapper.state();
+    // Sort results for stable comparison with test fixture
+    data.forEach((day) => {
+      day.data.sort((a, b) => (a.x as number) - (b.x as number));
     });
+    expect(data).toEqual(userDailyActivityProcessedData);
   });
 });

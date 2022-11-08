@@ -6,7 +6,6 @@ import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import ColorWheel from "./ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
-import defaultColors from "./utils/defaultColors";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
@@ -20,6 +19,7 @@ import Loader from "../components/Loader";
 import { getPageProps } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import Card from "../components/Card";
+import { COLOR_WHITE } from "../utils/constants";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
@@ -45,7 +45,7 @@ export default class ColorPlay extends React.Component<
     this.state = {
       colorReleases: [],
       loading: false,
-      gridBackground: "#FFFFFF",
+      gridBackground: COLOR_WHITE,
     };
   }
 
@@ -120,11 +120,10 @@ export default class ColorPlay extends React.Component<
                 lineWidth={70}
                 onColorSelected={this.onColorChanged}
                 spacers={{
-                  colour: "#FFFFFF",
+                  colour: COLOR_WHITE,
                   shadowColor: "grey",
                   shadowBlur: 5,
                 }}
-                colours={defaultColors}
                 preset={false} // You can set this bool depending on whether you have a pre-selected colour in state.
                 presetColor={selectedColorString}
                 animated
@@ -151,6 +150,7 @@ export default class ColorPlay extends React.Component<
               {colorReleases?.map((release, index) => {
                 return (
                   <button
+                    // eslint-disable-next-line react/no-array-index-key
                     key={`${release.release_mbid}-${index}`}
                     onClick={this.selectRelease.bind(this, release)}
                     type="button"

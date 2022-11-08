@@ -18,8 +18,10 @@ Reference
    playlist
    recordings
    statistics
+   metadata
    social
    recommendation
+   art
    misc
 
 

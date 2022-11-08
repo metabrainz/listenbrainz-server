@@ -185,19 +185,17 @@ export default class MissingMBDataPage extends React.Component<
               </div>
               {missingData.map((data, index) => {
                 const additionalActions = (
-                  <>
-                    <ListenControl
-                      buttonClassName="btn btn-sm btn-success"
-                      icon={faPlus}
-                      title="Add missing recording"
-                      text=""
-                      // eslint-disable-next-line react/jsx-no-bind
-                      action={this.submitMissingData.bind(
-                        this,
-                        missingMBDataAsListen[index]
-                      )}
-                    />
-                  </>
+                  <ListenControl
+                    buttonClassName="btn btn-sm btn-success"
+                    icon={faPlus}
+                    title="Add missing recording"
+                    text=""
+                    // eslint-disable-next-line react/jsx-no-bind
+                    action={this.submitMissingData.bind(
+                      this,
+                      missingMBDataAsListen[index]
+                    )}
+                  />
                 );
                 return (
                   <ListenCard

@@ -1,4 +1,3 @@
-import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import ujson
@@ -135,7 +134,6 @@ def profile(user_name):
         "oldest_listen_ts": min_ts_per_user,
         "profile_url": url_for('user.profile', user_name=user_name),
         "userPinnedRecording": pin,
-        "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
     }
@@ -440,7 +438,6 @@ def delete_listens_history(user_id: int):
     """
     timescale_connection._ts.delete(user_id)
     listens_importer.update_latest_listened_at(user_id, ExternalServiceType.LASTFM, 0)
-    db_stats.delete_user_stats(user_id)
 
 
 def logged_in_user_follows_user(user):

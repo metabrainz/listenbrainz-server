@@ -1,5 +1,4 @@
 import sqlalchemy
-from datetime import datetime, timedelta
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 
@@ -18,7 +17,7 @@ def get_pg_timezone():
             SELECT * FROM pg_timezone_names
             ORDER BY name
         """))
-        timezones = [(row["name"], row["utc_offset"]) for row in result.fetchall()]
+        timezones = [(row.name, row.utc_offset) for row in result.fetchall()]
         timezones = standardize_timezone(timezones)
         return timezones
 
@@ -40,12 +39,12 @@ def get(user_id: int):
             """), {
                 "user_id": user_id,
             })
-
-            if result.rowcount:
-                user_setting = dict(result.fetchone())
-                if not user_setting["timezone_name"]:
-                    user_setting["timezone_name"] = DEFAULT_TIMEZONE
-                return user_setting
+            row = result.mappings().first()
+            if row:
+                row = dict(row)
+                if not row["timezone_name"]:
+                    row["timezone_name"] = DEFAULT_TIMEZONE
+                return row
             return {"timezone_name": DEFAULT_TIMEZONE}
         except sqlalchemy.exc.ProgrammingError as err:
             raise DatabaseException(
@@ -59,7 +58,7 @@ def set_timezone(user_id: int, timezone_name: str):
         timezone_name (str): the user selected timezone name
 
     """
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         try:
             connection.execute(sqlalchemy.text("""
                 INSERT INTO user_setting (user_id, timezone_name)
@@ -93,3 +92,27 @@ def standardize_timezone(timezones):
         else:
             result.append((name, str(offset.seconds//3600 - 24) + ":00:00 GMT"))
     return result
+
+
+def update_troi_prefs(user_id: int, export_to_spotify: bool):
+    """ Update troi preferences for the given user """
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO user_setting (user_id, troi)
+                 VALUES (:user_id, jsonb_build_object('export_to_spotify', :export_to_spotify))
+            ON CONFLICT (user_id)
+              DO UPDATE 
+                    SET troi = EXCLUDED.troi
+        """), {"user_id": user_id, "export_to_spotify": export_to_spotify})
+
+
+def get_troi_prefs(user_id: int):
+    """ Retrieve troi preferences for the given user """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT troi
+              FROM user_setting
+             WHERE user_id = :user_id
+        """), {"user_id": user_id})
+        row = result.mappings().first()
+        return dict(row) if row else None

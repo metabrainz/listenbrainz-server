@@ -3,14 +3,11 @@ import datetime
 from typing import List, Optional
 
 import sqlalchemy
-from sqlalchemy.orm import Session
 import ujson
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import timescale as ts
 from listenbrainz.db import user as db_user
-
-from flask import current_app
 
 
 TROI_BOT_USER_ID = 12939
@@ -50,7 +47,7 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
          WHERE pl.mbid = :mbid""")
     with ts.engine.connect() as connection:
         result = connection.execute(query, {"mbid": playlist_id})
-        obj = result.fetchone()
+        obj = result.mappings().first()
         if not obj:
             return None
         obj = dict(obj)
@@ -152,7 +149,8 @@ def _playlist_resultset_to_model(connection, result, load_recordings):
     """
     playlists = []
     user_id_map = {}
-    for row in result:
+    for row in result.mappings():
+        row = dict(row)
         creator_id = row["creator_id"]
         if creator_id not in user_id_map:
             # TODO: Do this lookup in bulk
@@ -160,7 +158,6 @@ def _playlist_resultset_to_model(connection, result, load_recordings):
         created_for_id = row["created_for_id"]
         if created_for_id and created_for_id not in user_id_map:
             user_id_map[created_for_id] = db_user.get(created_for_id)
-        row = dict(row)
         row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
         if created_for_id:
             row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
@@ -333,7 +330,7 @@ def get_collaborators_for_playlists(connection, playlist_ids: List[int]):
     result = connection.execute(query, {"playlist_ids": tuple(playlist_ids)})
     ret = {}
     for row in result.fetchall():
-        ret[row['playlist_id']] = row['collaborator_ids']
+        ret[row.playlist_id] = row.collaborator_ids
     return ret
 
 
@@ -354,12 +351,12 @@ def get_recordings_for_playlists(connection, playlist_ids: List[int]):
     result = connection.execute(query, {"playlist_ids": tuple(playlist_ids)})
     user_id_map = {}
     playlist_recordings_map = collections.defaultdict(list)
-    for row in result:
+    for row in result.mappings():
+        row = dict(row)
         added_by_id = row["added_by_id"]
         if added_by_id not in user_id_map:
             # TODO: Do this lookup in bulk
             user_id_map[added_by_id] = db_user.get(added_by_id)
-        row = dict(row)
         row["added_by"] = user_id_map[added_by_id]["musicbrainz_id"]
         playlist_recording = model_playlist.PlaylistRecording.parse_obj(row)
         playlist_recordings_map[playlist_recording.playlist_id].append(playlist_recording)
@@ -447,11 +444,11 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
                 )
 
             result = connection.execute(query, fields)
-            row = dict(result.fetchone())
-            playlist.id = row['id']
-            playlist.mbid = row['mbid']
-            playlist.created = row['created']
-            playlist.creator = creator['musicbrainz_id']
+            row = result.fetchone()
+            playlist.id = row.id
+            playlist.mbid = row.mbid
+            playlist.created = row.created
+            playlist.creator = creator["musicbrainz_id"]
             playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 0)
 
             if playlist.collaborator_ids:
@@ -502,7 +499,7 @@ def update_playlist(playlist: model_playlist.Playlist):
              , public = :public
          WHERE id = :id
     """)
-    with ts.engine.connect() as connection:
+    with ts.engine.begin() as connection:
         params = playlist.dict(include={'id', 'name', 'description', 'public'})
         connection.execute(query, params)
         # Unconditionally add collaborators, this allows us to delete all collaborators
@@ -566,7 +563,7 @@ def delete_playlist_by_mbid(playlist_mbid: str):
         DELETE FROM playlist.playlist
               WHERE playlist.mbid = :playlist_mbid
     """)
-    with ts.engine.connect() as connection:
+    with ts.engine.begin() as connection:
         result = connection.execute(query, {"playlist_mbid": playlist_mbid})
         return result.rowcount == 1
 
@@ -601,8 +598,8 @@ def insert_recordings(connection, playlist_id: int, recordings: List[model_playl
             # TODO: Do this lookup in bulk
             user_id_map[recording.added_by_id] = db_user.get(recording.added_by_id)
         row = result.fetchone()
-        recording.id = row['id']
-        recording.created = row['created']
+        recording.id = row.id
+        recording.created = row.created
         recording.added_by = user_id_map[recording.added_by_id]["musicbrainz_id"]
         return_recordings.append(model_playlist.PlaylistRecording.parse_obj(recording.dict()))
     return return_recordings
@@ -651,7 +648,7 @@ def delete_recordings_from_playlist(playlist: model_playlist.Playlist, remove_fr
          WHERE playlist_id = :playlist_id
            AND position >= :position
     """)
-    with ts.engine.connect() as connection:
+    with ts.engine.begin() as connection:
         delete_params = {"playlist_id": playlist.id,
                          "position_start": remove_from,
                          "position_end": remove_from+remove_count}
@@ -695,7 +692,7 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
     """)
     if position is None:
         position = len(playlist.recordings)
-    with ts.engine.connect() as connection:
+    with ts.engine.begin() as connection:
         if position < len(playlist.recordings):
             reorder_params = {"playlist_id": playlist.id,
                               "offset": len(recordings),

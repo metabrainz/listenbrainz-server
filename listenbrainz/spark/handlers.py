@@ -2,105 +2,124 @@
     receive from the Spark cluster.
 """
 import json
-from datetime import datetime, timezone, timedelta
 
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
 from pydantic import ValidationError
+from requests import HTTPError
+from sentry_sdk import start_transaction
 
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-from data.model.common_stat import StatRange
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
-from data.model.user_entity import EntityRecord
-from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import year_in_music
+from listenbrainz.db import year_in_music, couchdb
+from listenbrainz.db.fresh_releases import insert_fresh_releases
+from listenbrainz.db.recording_similarity import insert_similar_recordings
 from listenbrainz.db.similar_users import import_user_similarities
-from listenbrainz.spark.troi_bot import run_post_recommendation_troi_bot
+from listenbrainz.troi.troi_bot import run_post_recommendation_troi_bot
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
 
 
-def is_new_user_stats_batch():
-    """ Returns True if this batch of user stats is new, False otherwise
-
-    User stats come in as multiple rabbitmq messages. We only wish to send an email once per batch.
-    So, we check the database and see if the difference between the last time stats were updated
-    and right now is greater than 12 hours.
-    """
-    last_update_ts = db_stats.get_timestamp_for_last_user_stats_update()
-    if last_update_ts is None:
-        last_update_ts = datetime.min.replace(tzinfo=timezone.utc)  # use min datetime value if last_update_ts is None
-
-    return datetime.now(timezone.utc) - last_update_ts > timedelta(minutes=TIME_TO_CONSIDER_STATS_AS_OLD)
-
-
-def notify_user_stats_update(stat_type):
-    if not current_app.config['TESTING']:
-        send_mail(
-            subject="New user stats are being written into the DB - ListenBrainz",
-            text=render_template('emails/user_stats_notification.txt', now=str(datetime.utcnow()), stat_type=stat_type),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
-        )
-
-
-def handle_user_entity(data):
-    """ Take entity stats for a user and save it in the database. """
-    values = [(entry["user_id"], entry["count"], json.dumps(entry["data"])) for entry in data["data"]]
-    db_stats.insert_multiple_user_jsonb_data(
-        data["entity"],
-        data["stats_range"],
-        data["from_ts"],
-        data["to_ts"],
-        values
-    )
-
-
-def _handle_user_activity_stats(stats_type, data):
-    values = [(entry["user_id"], 0, json.dumps(entry["data"])) for entry in data["data"]]
-    db_stats.insert_multiple_user_jsonb_data(
-        stats_type,
-        data["stats_range"],
-        data["from_ts"],
-        data["to_ts"],
-        values
-    )
-
-
-def handle_user_listening_activity(data):
-    """ Take listening activity stats for user and save it in database. """
-    _handle_user_activity_stats("listening_activity", data)
-
-
-def handle_user_daily_activity(data):
-    """ Take daily activity stats for user and save it in database. """
-    _handle_user_activity_stats("daily_activity", data)
-
-
-def handle_sitewide_entity(data):
-    """ Take sitewide entity stats and save it in the database. """
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-
-    stats_range = data['stats_range']
-    entity = data['entity']
-
+def handle_couchdb_data_start(message):
+    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
+    if not match:
+        return
     try:
-        db_stats.insert_sitewide_jsonb_data(entity, StatRange[EntityRecord](**data))
-    except ValidationError:
-        current_app.logger.error(f"""ValidationError while inserting {stats_range} sitewide top {entity}.
-        Data: {json.dumps(data, indent=3)}""", exc_info=True)
+        couchdb.create_database(match[1] + "_" + match[2] + "_" + match[3])
+        if match[1] == "artists":
+            couchdb.create_database("artistmap" + "_" + match[2] + "_" + match[3])
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
-def handle_sitewide_listening_activity(data):
-    db_stats.insert_sitewide_jsonb_data("listening_activity", StatRange[ListeningActivityRecord](**data))
+def handle_couchdb_data_end(message):
+    # database names are of the format, prefix_YYYYMMDD. calculate and pass the prefix to the
+    # method to delete all database of the type except the latest one.
+    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
+    # if the database name does not match pattern, abort to avoid deleting any data inadvertently
+    if not match:
+        return
+    try:
+        _, retained = couchdb.delete_database(match[1] + "_" + match[2])
+        if retained:
+            current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
+                                    f" _LOCK file existed")
+
+        # when new artist stats received, also invalidate old artist map stats
+        if match[1] == "artists":
+            _, retained = couchdb.delete_database("artistmap" + "_" + match[2])
+            if retained:
+                current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
+                                        f" _LOCK file existed")
+
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+
+def _handle_stats(message, stats_type):
+    try:
+        with start_transaction(op="insert", name=f'insert {stats_type} - {message["stats_range"]} stats'):
+            db_stats.insert(
+                message["database"],
+                message["from_ts"],
+                message["to_ts"],
+                message["data"]
+            )
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+
+def handle_user_entity(message):
+    """ Take entity stats for a user and save it in the database. """
+    _handle_stats(message, message["entity"])
+
+
+def handle_user_listening_activity(message):
+    """ Take listening activity stats for user and save it in database. """
+    _handle_stats(message, "listening_activity")
+
+
+def handle_user_daily_activity(message):
+    """ Take daily activity stats for user and save it in database. """
+    _handle_stats(message, "daily_activity")
+
+
+def _handle_sitewide_stats(message, stat_type, has_count=False):
+    try:
+        stats_range = message["stats_range"]
+        databases = couchdb.list_databases(f"{stat_type}_{stats_range}")
+        if not databases:
+            current_app.logger.error(f"No database found to insert {stats_range} sitewide {stat_type} stats")
+            return
+
+        stats = {
+            "data": message["data"]
+        }
+        if has_count:
+            stats["count"] = message["count"]
+
+        db_stats.insert_sitewide_stats(
+            databases[0],
+            message["from_ts"],
+            message["to_ts"],
+            stats
+        )
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+
+def handle_sitewide_entity(message):
+    """ Take sitewide entity stats and save it in the database. """
+    _handle_sitewide_stats(message, message["entity"], has_count=True)
+
+
+def handle_sitewide_listening_activity(message):
+    _handle_sitewide_stats(message, "listening_activity")
 
 
 def handle_dump_imported(data):
@@ -236,6 +255,11 @@ def handle_recommendations(data):
     current_app.logger.debug("Running post recommendation steps for user {}".format(user["musicbrainz_id"]))
 
 
+def handle_fresh_releases(message):
+    try:
+        insert_fresh_releases(message["database"], message["data"])
+    except HTTPError as e:
+        current_app.logger.error(f"{str(e)}. Response: %s", e.response.json(), exc_info=True)
 
 
 def notify_mapping_import(data):
@@ -284,7 +308,6 @@ def cf_recording_recommendations_complete(data):
     Run any troi scripts necessary now that recommendations have been generated and
     send an email to notify recommendations have been generated and are being written into db.
     """
-
     run_post_recommendation_troi_bot()
 
     if current_app.config['TESTING']:
@@ -381,3 +404,7 @@ def handle_listens_per_day(message):
 
 def handle_yearly_listen_counts(message):
     year_in_music.handle_yearly_listen_counts(message["data"])
+
+
+def handle_similar_recordings(message):
+    insert_similar_recordings(message["data"], message["algorithm"])

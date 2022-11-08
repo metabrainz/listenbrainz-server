@@ -4,7 +4,6 @@ from listenbrainz import db
 from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit,
                                                            RecommendationFeedbackDelete)
 from typing import List
-from flask import current_app
 
 
 def insert(feedback_submit: RecommendationFeedbackSubmit):
@@ -16,7 +15,7 @@ def insert(feedback_submit: RecommendationFeedbackSubmit):
             feedback_submit: An object of class RecommendationFeedbackSubmit
     """
 
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO recommendation_feedback (user_id, recording_mbid, rating)
                  VALUES (:user_id, :recording_mbid, :rating)
@@ -38,7 +37,7 @@ def delete(feedback_delete: RecommendationFeedbackDelete):
             feedback_delete: An object of class RecommendationFeedbackDelete
     """
 
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             DELETE FROM recommendation_feedback
              WHERE user_id = :user_id
@@ -82,7 +81,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, rating: str = N
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
-        return [RecommendationFeedbackSubmit(**dict(row)) for row in result.fetchall()]
+        return [RecommendationFeedbackSubmit(**row) for row in result.mappings()]
 
 
 def get_feedback_count_for_user(user_id: int) -> int:
@@ -103,7 +102,7 @@ def get_feedback_count_for_user(user_id: int) -> int:
                 'user_id': user_id,
             }
         )
-        count = int(result.fetchone()["count"])
+        count = int(result.fetchone().count)
 
     return count
 
@@ -135,4 +134,4 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: 
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
-        return [RecommendationFeedbackSubmit(**dict(row)) for row in result.fetchall()]
+        return [RecommendationFeedbackSubmit(**row) for row in result.mappings()]

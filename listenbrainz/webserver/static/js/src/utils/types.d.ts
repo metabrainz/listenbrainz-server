@@ -4,7 +4,6 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "time-ago";
 declare module "debounce-async";
-declare module "react-coverflow";
 
 declare module "react-bs-notifier";
 declare type AlertType = "danger" | "warning" | "success" | "info";
@@ -19,22 +18,23 @@ declare type Alert = {
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {
   artist_mbids?: Array<string> | null;
-  artist_msid?: string | null;
   discnumber?: number | null;
   duration_ms?: number | null;
+  duration?: number | null;
   isrc?: string | null;
-  listening_from?: string | null;
+  listening_from?: string | null; // Deprecated
+  music_service?: string | null;
   recording_mbid?: string | null;
   recording_msid?: string | null;
   release_artist_name?: string | null;
   release_artist_names?: Array<string> | null;
   release_group_mbid?: string | null;
   release_mbid?: string | null;
-  release_msid?: string | null;
   spotify_album_artist_ids?: Array<string> | null;
   spotify_album_id?: string | null;
   spotify_artist_ids?: Array<string> | null;
   spotify_id?: string | null;
+  submission_client?: string | null;
   youtube_id?: string | null;
   origin_url?: string | null;
   tags?: Array<string> | null;
@@ -134,10 +134,12 @@ declare type SpotifyPlayerTrackWindow = {
 
 declare type SpotifyPlayerSDKState = {
   paused: boolean;
+  loading: boolean;
   position: number;
   duration: number;
   track_window: {
     current_track: SpotifyTrack | null;
+    previous_tracks: SpotifyTrack[];
   };
 };
 
@@ -215,7 +217,6 @@ declare type UserArtistsResponse = {
   payload: {
     artists: Array<{
       artist_mbids?: Array<string>;
-      artist_msid?: string;
       artist_name: string;
       listen_count: number;
     }>;
@@ -234,10 +235,8 @@ declare type UserReleasesResponse = {
   payload: {
     releases: Array<{
       artist_mbids?: Array<string>;
-      artist_msid?: string;
       artist_name: string;
       release_mbid?: string;
-      release_msid?: string;
       release_name: string;
       listen_count: number;
     }>;
@@ -256,10 +255,8 @@ declare type UserRecordingsResponse = {
   payload: {
     recordings: Array<{
       artist_mbids?: Array<string>;
-      artist_msid?: string;
       artist_name: string;
       release_mbid?: string;
-      release_msid?: string;
       release_name?: string;
       track_name: string;
       recording_mbid?: string;
@@ -335,8 +332,11 @@ declare type UserListeningActivityDatum = {
 declare type UserListeningActivityData = Array<UserListeningActivityDatum>;
 
 declare type UserDailyActivityDatum = {
-  day: string;
-  [hour: number]: number;
+  id: string;
+  data: Array<{
+    x: string | number;
+    y: number;
+  }>;
 };
 
 declare type UserDailyActivityData = Array<UserDailyActivityDatum>;
@@ -404,9 +404,7 @@ declare type TrackMetadata = {
   release_name?: string;
   recording_mbid?: string;
   recording_msid?: string;
-  artist_msid?: string;
   release_mbid?: string;
-  release_msid?: string;
   additional_info?: AdditionalInfo;
   mbid_mapping?: MbidMapping;
 };
@@ -513,7 +511,7 @@ declare type UserTrackRecommendationMetadata = {
   track_name: string;
   release_name?: string;
   recording_mbid?: string;
-  recording_msid: string;
+  recording_msid?: string;
 };
 
 declare type PinEventMetadata = Listen & {

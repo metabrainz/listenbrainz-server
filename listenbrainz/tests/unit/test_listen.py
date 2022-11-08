@@ -21,9 +21,7 @@ class ListenTestCase(unittest.TestCase):
                     "artist_name": "Majid Jordan",
                     "release_name": "Majid Jordan",
                     'additional_info': {
-                        "artist_msid": "aa6130f2-a12d-47f3-8ffd-d0f71340de1f",
                         "artist_mbids": ["abaa7001-0d80-4e58-be5d-d2d246fd9d87"],
-                        "release_msid": "cf138a00-05d5-4b35-8fce-181efcc15785",
                         'release_mbid': '8294645a-f996-44b6-9060-7f189b9f59f3',
                         "recording_mbid": None,
                         "recording_msid": "db9a7483-a8f4-4a2c-99af-c8ab58850200",
@@ -65,11 +63,6 @@ class ListenTestCase(unittest.TestCase):
         self.assertEqual(listen.data['additional_info']['best_song'],
                          timescale_row['data']['track_metadata']['additional_info']['best_song'])
 
-        # Check msids
-        self.assertEqual(
-            listen.artist_msid, timescale_row['data']['track_metadata']['additional_info']['artist_msid'])
-        self.assertEqual(
-            listen.release_msid, timescale_row['data']['track_metadata']['additional_info']['release_msid'])
         self.assertEqual(listen.data['track_name'], timescale_row['track_name'])
 
         # make sure additional info does not contain stuff like artist names, track names
@@ -81,7 +74,6 @@ class ListenTestCase(unittest.TestCase):
         listen = Listen(
             timestamp=int(time.time()),
             user_name='testuser',
-            artist_msid=str(uuid.uuid4()),
             dedup_tag=3,
             user_id=1,
             data={

@@ -1,11 +1,9 @@
 import errno
 import logging
 import os
-from time import sleep
 from datetime import datetime
 from typing import List
 
-import pika
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import DataFrame, functions
 from pyspark.sql.utils import AnalysisException
@@ -27,13 +25,11 @@ logger = logging.getLogger(__name__)
 # A typical listen is of the form:
 # {
 #   "artist_mbids": [],
-#   "artist_msid": "6276299c-57e9-4014-9fdd-ab9ed800f61d",
 #   "artist_name": "Cake",
 #   "listened_at": "2005-02-28T20:39:08Z",
 #   "recording_msid": "c559b2f8-41ff-4b55-ab3c-0b57d9b85d11",
 #   "recording_mbid": "1750f8ca-410e-4bdc-bf90-b0146cb5ee35",
 #   "release_mbid": "",
-#   "release_msid": null,
 #   "release_name": null,
 #   "tags": [],
 #   "track_name": "Tougher Than It Is"
@@ -55,25 +51,6 @@ def append(df, dest_path):
         df.write.mode('append').parquet(config.HDFS_CLUSTER_URI + dest_path)
     except Py4JJavaError as err:
         raise DataFrameNotAppendedException(err.java_exception, df.schema)
-
-
-def init_rabbitmq(username, password, host, port, vhost, log=logger.error,
-                  heartbeat=None, connection_name="listenbrainz-spark-request-consumer"):
-    while True:
-        try:
-            credentials = pika.PlainCredentials(username, password)
-            connection_parameters = pika.ConnectionParameters(
-                host=host,
-                port=port,
-                virtual_host=vhost,
-                credentials=credentials,
-                heartbeat=heartbeat,
-                client_properties={"connection_name": connection_name}
-            )
-            return pika.BlockingConnection(connection_parameters)
-        except Exception as e:
-            log('Error while connecting to RabbitMQ', exc_info=True)
-            sleep(1)
 
 
 def create_dataframe(row, schema):

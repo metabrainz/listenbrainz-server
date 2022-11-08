@@ -1,12 +1,12 @@
 from operator import itemgetter
 import time
 
-import sqlalchemy
 import psycopg2
 from psycopg2.errors import OperationalError
 from psycopg2.extras import execute_values
 import ujson
 from flask import current_app
+from sqlalchemy import text
 
 from listenbrainz import db
 
@@ -127,7 +127,7 @@ def get_top_similar_users(count: int = 200):
     similar_users = {}
     try:
         with db.engine.connect() as connection:
-            result = connection.execute("""
+            result = connection.execute(text("""
                 SELECT u.musicbrainz_id AS user_name
                      , ou.musicbrainz_id AS other_user_name
                      , value->1 AS similarity -- first element of array is similarity, second is global_similarity
@@ -138,14 +138,14 @@ def get_top_similar_users(count: int = 200):
                     ON j.key::int = ou.id  -- user_name of other user stored in jsonb
                   JOIN "user" u
                    ON r.user_id = u.id -- user_name of the user_id stored directly in column
-            """)
+            """))
             while True:
                 row = result.fetchone()
                 if not row:
                     break
-                user = row["user_name"]
-                other_user = row["other_user_name"]
-                similarity = "%.3f" % row["similarity"]
+                user = row.user_name
+                other_user = row.other_user_name
+                similarity = "%.3f" % row.similarity
                 if user < other_user:
                     similar_users[user + other_user] = (user, other_user, similarity)
                 else:

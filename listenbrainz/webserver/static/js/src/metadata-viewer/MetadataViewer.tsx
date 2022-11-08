@@ -109,12 +109,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         return;
       }
       try {
-        const feedbackArray = await APIService.getFeedbackForUserForMBIDs(
+        const feedbackObject = await APIService.getFeedbackForUserForMBIDs(
           currentUser.name,
           recordingMBID
         );
-        if (feedbackArray.length) {
-          const feedback: any = first(feedbackArray);
+        if (feedbackObject?.feedback?.length) {
+          const feedback: any = first(feedbackObject.feedback);
           setCurrentListenFeedback(feedback.score);
         } else {
           setCurrentListenFeedback(0);
@@ -174,14 +174,14 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const { metadata } = recordingData ?? {};
   const recordingMBID = getNowPlayingRecordingMBID(recordingData, playingNow);
   const artistMBID = first(recordingData?.artist_mbids);
-
+  const releaseMBID = recordingData?.release_mbid ?? metadata?.release?.mbid;
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
-  if (metadata?.release?.mbid) {
-    if (metadata.release.caa_id) {
-      coverArtSrc = `https://coverartarchive.org/release/${metadata.release.mbid}/${metadata.release.caa_id}-500.jpg`;
+  if (releaseMBID) {
+    if (metadata?.release?.caa_id) {
+      coverArtSrc = `https://coverartarchive.org/release/${releaseMBID}/${metadata.release.caa_id}-500.jpg`;
     } else {
       // Backup if we don't have the CAA ID
-      coverArtSrc = `https://coverartarchive.org/release/${metadata.release.mbid}/front`;
+      coverArtSrc = `https://coverartarchive.org/release/${releaseMBID}/front`;
     }
   }
 
@@ -214,7 +214,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     metadata?.recording?.duration ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
 
-  const artist = metadata?.artist?.[0];
+  const artist = metadata?.artist?.artists?.[0];
 
   const supportLinks = pick(artist?.rels, ...supportLinkTypes);
   const lyricsLink = pick(artist?.rels, "lyrics");
@@ -401,7 +401,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 />
                 <OpenInMusicBrainzButton
                   entityType="release"
-                  entityMBID={recordingData?.release_mbid}
+                  entityMBID={releaseMBID}
                 />
               </div>
             </div>

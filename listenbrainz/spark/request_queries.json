@@ -2,17 +2,17 @@
   "stats.user.entity": {
     "name": "stats.user.entity",
     "description": "Entity statistics for all users for the requested stats_range",
-    "params": ["entity", "stats_range"]
+    "params": ["entity", "stats_range", "database"]
   },
   "stats.user.listening_activity": {
     "name": "stats.user.listening_activity",
     "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
-    "params": ["stats_range"]
+    "params": ["stats_range", "database"]
   },
   "stats.user.daily_activity": {
     "name": "stats.user.daily_activity",
     "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
-    "params": ["stats_range"]
+    "params": ["stats_range", "database"]
   },
   "stats.sitewide.entity": {
     "name": "stats.sitewide.entity",
@@ -128,6 +128,16 @@
       "max_num_users"
     ]
   },
+  "similarity.recording": {
+    "name": "similarity.recording",
+    "description": "Generate recording similarity",
+    "params": [
+      "days",
+      "session",
+      "threshold",
+      "limit"
+    ]
+  },
   "year_in_music.similar_users": {
     "name": "year_in_music.similar_users",
     "description": "Generate similar user correlation for Year in Music",
@@ -147,5 +157,10 @@
     "name": "year_in_music.top_stats",
     "description": "Calculate the top artists/recordings/releases stats for the current year for each user",
     "params": ["year"]
+  },
+  "releases.fresh": {
+    "name": "releases.fresh",
+    "description": "Calculate the intersection of fresh releases and user's listening history",
+    "params": ["days", "database"]
   }
 }

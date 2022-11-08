@@ -68,11 +68,11 @@ def load_recordings_from_mapping(mbids: Iterable[str], msids: Iterable[str]) -> 
     """
 
     with timescale.engine.connect() as connection:
-        result = connection.execute(text(query), mbids=tuple(mbids), msids=tuple(msids))
-        rows = result.fetchall()
+        result = connection.execute(text(query), {"mbids": tuple(mbids), "msids": tuple(msids)})
+        rows = result.mappings().all()
 
-        mbid_rows = {row["recording_mbid"]: dict(row) for row in rows if row["recording_mbid"] in mbids}
-        msid_rows = {row["recording_msid"]: dict(row) for row in rows if row["recording_msid"] in msids}
+        mbid_rows = {row["recording_mbid"]: row for row in rows if row["recording_mbid"] in mbids}
+        msid_rows = {row["recording_msid"]: row for row in rows if row["recording_msid"] in msids}
 
         return mbid_rows, msid_rows
 
@@ -106,16 +106,18 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
     _update_items_from_map(mbid_item_map, mapping_mbid_metadata, remaining_item_map)
     _update_items_from_map(msid_item_map, mapping_msid_metadata, remaining_item_map)
 
-    msid_metadatas = load_recordings_from_msids(remaining_item_map.keys())
+    with timescale.engine.begin() as connection:
+        msid_metadatas = load_recordings_from_msids(connection, remaining_item_map.keys())
+
     for metadata in msid_metadatas:
-        msid = metadata["ids"]["recording_msid"]
+        msid = metadata["msid"]
         if msid not in remaining_item_map:
             continue
 
         for item in remaining_item_map[msid]:
             item.track_metadata = {
-                "track_name": metadata["payload"]["title"],
-                "artist_name": metadata["payload"]["artist"],
+                "track_name": metadata["title"],
+                "artist_name": metadata["artist"],
                 "additional_info": {
                     "recording_msid": msid
                 }
@@ -142,9 +144,7 @@ def _update_items_from_map(models: Dict[str, List[ModelT]], metadatas: Dict, rem
                     # in messybrainz either. note that we always submit the msid from website if available so this
                     # case shouldn't occur unless some now playing case is mishandled or someone else uses the api
                     # to submit say a pinned recording with a mbid for which LB has never seen a listen.
-                    # this is difficult to handle and rare, not worth to handle this until it affects someone IMO.
-                    current_app.logger.critical("Couldn't find data for item in mapping and item doesn't have"
-                                                f" msid: {item}")
+                    current_app.logger.info("Couldn't find data for item in mapping and item doesn't have msid: %s", item)
                 continue
 
             metadata = metadatas[_id]

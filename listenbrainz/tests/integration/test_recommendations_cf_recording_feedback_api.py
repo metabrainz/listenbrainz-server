@@ -5,9 +5,7 @@ import listenbrainz.db.recommendations_cf_recording_feedback as db_feedback
 
 from redis import Redis
 from flask import url_for, current_app
-from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit,
-                                                           RecommendationFeedbackDelete,
-                                                           get_allowed_ratings)
+from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
 from listenbrainz.tests.integration import IntegrationTestCase
 
 

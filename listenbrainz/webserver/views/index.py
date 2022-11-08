@@ -1,3 +1,4 @@
+import json
 import locale
 import os
 import requests
@@ -14,7 +15,6 @@ import ujson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash
@@ -93,6 +93,27 @@ def about():
 @index_bp.route("/terms-of-service/")
 def terms_of_service():
     return render_template("index/terms-of-service.html")
+
+
+@index_bp.route("/blog-data/")
+def blog_data():
+    """Proxy to the MetaBrainz blog to get recent posts so that user IP addresses are not leaked to wordpress"""
+
+    cache_key = "blog-feed"
+    cache_blog_expires = 60*60
+    cached_blog = cache.get(cache_key)
+    if cached_blog:
+        return jsonify(cached_blog)
+
+    url = "https://public-api.wordpress.com/rest/v1.1/sites/blog.metabrainz.org/posts/"
+    try:
+        r = requests.get(url, timeout=5)
+        r.raise_for_status()
+        blog_data = r.json()
+        cache.set(cache_key, blog_data, cache_blog_expires)
+        return jsonify(blog_data)
+    except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
+        return jsonify({}), 503
 
 
 @index_bp.route("/current-status/")
@@ -260,16 +281,7 @@ def _get_user_count():
 
 @index_bp.route("/similar-users/")
 def similar_users():
-    """ Show all of the users with the highest similarity in order to make
-        them visible to all of our users. This view can show bugs in the algorithm
-        and spammers as well.
-    """
-
-    similar_users = get_top_similar_users()
-    return render_template(
-        "index/similar-users.html",
-        similar_users=similar_users
-    )
+    return redirect(url_for("explore.similar_users"))
 
 
 @index_bp.route("/listens-offline/")
@@ -289,13 +301,9 @@ def musicbrainz_offline():
 
 @index_bp.route("/huesound/")
 def huesound():
-    """ Hue Sound browse music by color of cover art """
+    """ Redirect to /explore/huesound """
 
-    return render_template(
-        "index/huesound.html",
-        props=ujson.dumps({})
-    )
-
+    return redirect(url_for("explore.huesound"))
 
 @index_bp.route("/statistics/charts/")
 def charts():

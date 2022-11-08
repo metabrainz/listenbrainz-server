@@ -1,9 +1,7 @@
 import logging
-import os
 import random
 from time import time
 
-import psycopg2
 import sqlalchemy
 from brainzutils import cache
 from sqlalchemy import text
@@ -11,9 +9,8 @@ from sqlalchemy import text
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts, timescale
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
-from listenbrainz.listen import Listen
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
-from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, \
+from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, \
     TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
 from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data,\
     recalculate_all_user_data, add_missing_to_listen_users_metadata, update_user_listen_data
@@ -61,7 +58,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                                (recording_msid, recording_mbid, match_type)
                         VALUES ('%s', '%s', 'exact_match')""" % (msid, '076255b4-1575-11ec-ac84-135bf6a670e3')
 
-        with ts.engine.connect() as connection:
+        with ts.engine.begin() as connection:
             connection.execute(sqlalchemy.text(query))
             connection.execute(sqlalchemy.text(join_query))
 
@@ -247,7 +244,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
     def _get_pending_deletes(self):
         with timescale.engine.connect() as connection:
             result = connection.execute(text("SELECT * FROM listen_delete_metadata"))
-            return result.fetchall()
+            return [row._asdict() for row in result.fetchall()]
 
     def _get_count_and_timestamps(self, user_id):
         with timescale.engine.connect() as connection:
@@ -256,8 +253,8 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                     SELECT count, min_listened_at, max_listened_at
                       FROM listen_user_metadata
                      WHERE user_id = :user_id
-                """), user_id=user_id)
-            return dict(**result.fetchone())
+                """), {"user_id": user_id})
+            return result.fetchone()._asdict()
 
     def test_for_empty_timestamps(self):
         """Test newly created user has empty timestamps and count stored in the database."""

@@ -25,7 +25,6 @@
         }
       }
     ],
-    "webSocketsServerUrl": "http://localhost:7082",
     "spotify": {
       "access_token": "access token",
       "permission": ["streaming", "user-read-email", "user-read-private"]

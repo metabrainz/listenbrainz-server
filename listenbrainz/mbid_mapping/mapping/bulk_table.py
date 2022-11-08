@@ -132,6 +132,7 @@ class BulkInsertTable:
             This function will be called after the last row has been sent to process_row, so that
             any flushing/cleanup needed can be completed.
         """
+        return []
 
     def table_exists(self):
         """Check if the table for this bulk inserter exists.
@@ -143,10 +144,9 @@ class BulkInsertTable:
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
-                query = f"""SELECT count(*)
-                            FROM {self.table_name}"""
+                query = f"SELECT 1 FROM {self.table_name} LIMIT 1"
                 curs.execute(query)
-                if curs.fetchone()[0] > 0:
+                if curs.rowcount > 0:
                     return True
                 else:
                     return False
@@ -398,14 +398,16 @@ class BulkInsertTable:
                     total_rows = curs.rowcount
                     log(f"{self.table_name}: fetch {total_rows:,} rows")
                     while True:
-                        row = curs.fetchone()
-                        if not row:
+                        batch = curs.fetchmany(BATCH_SIZE)
+                        if len(batch) == 0:
                             break
 
-                        row_count += 1
-                        total_row_count += 1
-                        result = self.process_row(row)
-                        rows.extend(self._handle_result(result))
+                        for row in batch:
+                            row_count += 1
+                            total_row_count += 1
+                            result = self.process_row(row)
+                            rows.extend(self._handle_result(result))
+
                         if len(rows) >= self.batch_size:
                             insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
                             ins_conn.commit()

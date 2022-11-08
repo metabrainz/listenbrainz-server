@@ -50,17 +50,17 @@ class Token(object):
                           AND api_key = :api_key"""
             params['api_key'] = api_key
 
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             result = connection.execute(text(query), params)
             row = result.fetchone()
             if row:
-                return Token(row['id'], row['user_id'], row['token'], row['api_key'], row['ts'])
+                return Token(row.id, row.user_id, row.token, row.api_key, row.ts)
             return None
 
     @staticmethod
     def generate(api_key):
         token = os.urandom(20).hex()
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             q = """ INSERT INTO api_compat.token (token, api_key) VALUES (:token, :api_key)
                     ON CONFLICT(api_key) DO UPDATE SET token = EXCLUDED.token, ts = EXCLUDED.ts
                 """
@@ -76,7 +76,7 @@ class Token(object):
     def approve(self, user):
         """ Authenticate the token. User has to be present.
         """
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             connection.execute(text("UPDATE api_compat.token SET user_id = :uid WHERE token=:token"),
                                {'uid': User.get_id(user), 'token': self.token})
         self.user = User.load_by_name(user)
@@ -84,5 +84,5 @@ class Token(object):
     def consume(self):
         """ Use token to be able to create a new session.
         """
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             connection.execute(text("DELETE FROM api_compat.token WHERE id=:id"), {'id': self.id})

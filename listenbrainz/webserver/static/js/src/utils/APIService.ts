@@ -1020,7 +1020,7 @@ export default class APIService {
     color: string,
     count?: number
   ): Promise<any> => {
-    let query = `${this.APIBaseURI}/color/${color}`;
+    let query = `${this.APIBaseURI}/explore/color/${color}`;
     if (!isUndefined(count)) query += `?count=${count}`;
     const response = await fetch(query);
     await this.checkStatus(response);
@@ -1120,6 +1120,57 @@ export default class APIService {
     }
 
     const response = await fetch(url.toString());
+    await this.checkStatus(response);
+    return response.json();
+  };
+  
+  resetUserTimezone = async (
+    userToken: string,
+    zonename: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/timezone`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ zonename }),
+    });
+
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  submitTroiPreferences = async (
+    userToken: string,
+    exportToSpotify: boolean
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/troi`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ export_to_spotify: exportToSpotify }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  exportPlaylistToSpotify = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/spotify`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
     await this.checkStatus(response);
     return response.json();
   };

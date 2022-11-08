@@ -8,6 +8,7 @@ import Card from "../components/Card";
 import HeatMap from "./HeatMap";
 import Loader from "../components/Loader";
 import { isInvalidStatRange } from "./utils";
+import { COLOR_BLACK } from "../utils/constants";
 
 export type UserDailyActivityProps = {
   range: UserStatsAPIRange;
@@ -125,16 +126,19 @@ export default class UserDailyActivity extends React.Component<
 
     weekdays.forEach((day) => {
       const dayData = data.payload.daily_activity[day];
-      const hourData: any = {};
+      let hourData: any = [];
 
-      dayData.forEach((elem) => {
+      hourData = dayData.map((elem) => {
         const hour = (elem.hour + tzOffset + 24) % 24;
-        hourData[hour] = elem.listen_count;
+        return {
+          x: hour,
+          y: elem.listen_count,
+        };
       });
 
       result.push({
-        day,
-        ...hourData,
+        id: day,
+        data: hourData,
       });
     });
 
@@ -145,15 +149,18 @@ export default class UserDailyActivity extends React.Component<
       });
     });
 
-    const averageData: any = {};
-    average.forEach((elem, index) => {
+    let averageData: any = [];
+    averageData = average.map((elem, index) => {
       const hour = (index + tzOffset + 24) % 24;
-      averageData[hour] = Math.ceil(elem / 7);
+      return {
+        x: hour,
+        y: Math.ceil(elem / 7),
+      };
     });
 
     result.unshift({
-      day: "Average",
-      ...averageData,
+      id: "Average",
+      data: averageData,
     });
 
     return result;
@@ -194,7 +201,7 @@ export default class UserDailyActivity extends React.Component<
                 <FontAwesomeIcon
                   icon={faLink as IconProp}
                   size="sm"
-                  color="#000000"
+                  color={COLOR_BLACK}
                   style={{ marginRight: 20 }}
                 />
               </a>

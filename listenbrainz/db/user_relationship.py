@@ -33,7 +33,7 @@ def insert(user_0: int, user_1: int, relationship_type: str) -> None:
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO user_relationship (user_0, user_1, relationship_type)
                  VALUES (:user_0, :user_1, :relationship_type)
@@ -56,14 +56,42 @@ def is_following_user(follower: int, followed: int) -> bool:
             "follower": follower,
             "followed": followed,
         })
-        return result.fetchone()['cnt'] > 0
+        return result.fetchone().cnt > 0
+
+
+def multiple_users_by_username_following_user(followed: int, followers: List[str]):
+    '''
+    returns a dictionary, keys being usernames
+    values being boolean
+    '''
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT "user".musicbrainz_id,
+                   bool(
+                       coalesce((
+                        SELECT 't'
+                          FROM user_relationship
+                         WHERE user_1 = :followed
+                           AND user_0 = "user".id
+                           AND relationship_type = 'follow'
+                       ), 'f')
+                   )
+                AS result
+              FROM unnest(:followers) as arr
+             INNER JOIN "user"
+                ON "user".musicbrainz_id = arr
+        """), {
+            "followers": followers,
+            "followed": followed,
+        })
+        return {row.musicbrainz_id: row.result for row in result.fetchall()}
 
 
 def delete(user_0: int, user_1: int, relationship_type: str) -> None:
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             DELETE
               FROM user_relationship
@@ -82,7 +110,7 @@ def get_followers_of_user(user: int) -> List[dict]:
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT "user".musicbrainz_id AS musicbrainz_id
+            SELECT "user".musicbrainz_id AS musicbrainz_id, "user".id as id
               FROM user_relationship
               JOIN "user"
                 ON "user".id = user_0
@@ -92,7 +120,7 @@ def get_followers_of_user(user: int) -> List[dict]:
         """), {
             "followed": user,
         })
-        return [dict(row) for row in result.fetchall()]
+        return result.mappings().all()
 
 
 def get_following_for_user(user: int) -> List[dict]:
@@ -110,19 +138,23 @@ def get_following_for_user(user: int) -> List[dict]:
         """), {
             "user": user,
         })
-        return [dict(row) for row in result.fetchall()]
+        return result.mappings().all()
 
-def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[dict]:
+
+def get_follow_events(user_ids: Tuple[int], min_ts: float, max_ts: float, count: int) -> List[dict]:
     """ Gets a list of follow events for specified users.
 
-    user_ids is a tuple of user row IDs.
+    Args:
+        user_ids: is a tuple of user row IDs.
 
-    Returns a list of dicts of the following format:
-        {
-            user_name_0: str,
-            user_name_1: str,
-            created: datetime,
-        }
+    Returns:
+         a list of dicts of the following format:
+
+            {
+                user_name_0: str,
+                user_name_1: str,
+                created: datetime,
+            }
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -142,4 +174,4 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
             "count": count
         })
 
-        return [dict(row) for row in result.fetchall()]
+        return result.mappings().all()

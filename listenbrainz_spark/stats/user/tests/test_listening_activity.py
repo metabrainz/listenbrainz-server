@@ -16,13 +16,20 @@ class ListeningActivityTestCase(StatsTestCase):
     def test_get_listening_activity(self):
         with open(self.path_to_data_file('user_listening_activity.json')) as f:
             expected = json.load(f)
-        received = list(listening_activity_stats.get_listening_activity('all_time'))
-        self.assertEqual(len(received), len(expected))
-        self.assertEqual(received[0]["type"], expected[0]["type"])
-        self.assertEqual(received[0]["stats_range"], expected[0]["stats_range"])
-        self.assertEqual(received[0]["from_ts"], expected[0]["from_ts"])
-        self.assertEqual(received[0]["to_ts"], expected[0]["to_ts"])
-        self.assertCountEqual(received[0]["data"], expected[0]["data"])
+        messages = list(listening_activity_stats.get_listening_activity('all_time'))
+
+        self.assertEqual(messages[0]["type"], "couchdb_data_start")
+        self.assertEqual(messages[0]["database"], "listening_activity_all_time")
+
+        self.assertEqual(messages[1]["type"], expected[0]["type"])
+        self.assertEqual(messages[1]["stats_range"], expected[0]["stats_range"])
+        self.assertEqual(messages[1]["from_ts"], expected[0]["from_ts"])
+        self.assertEqual(messages[1]["to_ts"], expected[0]["to_ts"])
+        self.assertCountEqual(messages[1]["data"], expected[0]["data"])
+        self.assertCountEqual(messages[1]["database"], "listening_activity_all_time")
+
+        self.assertEqual(messages[2]["type"], "couchdb_data_end")
+        self.assertEqual(messages[2]["database"], "listening_activity_all_time")
 
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.listening_activity.calculate_listening_activity', return_value='activity_table')
@@ -43,7 +50,7 @@ class ListeningActivityTestCase(StatsTestCase):
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='activity_table', stats_range='week',
                                                 from_date=from_date, to_date=to_date,
-                                                message_type='user_listening_activity')
+                                                message_type='user_listening_activity', database=None)
 
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.listening_activity.calculate_listening_activity', return_value='activity_table')
@@ -64,7 +71,7 @@ class ListeningActivityTestCase(StatsTestCase):
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='activity_table', stats_range='month',
                                                 from_date=from_date, to_date=to_date,
-                                                message_type='user_listening_activity')
+                                                message_type='user_listening_activity', database=None)
 
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.listening_activity.calculate_listening_activity', return_value='activity_table')
@@ -85,7 +92,7 @@ class ListeningActivityTestCase(StatsTestCase):
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='activity_table', stats_range='year',
                                                 from_date=from_date, to_date=to_date,
-                                                message_type='user_listening_activity')
+                                                message_type='user_listening_activity', database=None)
 
     @patch("listenbrainz_spark.stats.common.listening_activity.get_latest_listen_ts")
     def test_get_time_range(self, mock_listen_ts):
@@ -99,7 +106,7 @@ class ListeningActivityTestCase(StatsTestCase):
         ]
         step = relativedelta(days=+1)
         fmt = "%d %B %Y"
-        spark_fmt = "d MMMM y"
+        spark_fmt = "dd MMMM y"
 
         mock_listen_ts.return_value = datetime(2021, 1, 5, 2, 3, 0)
         self.assertEqual((quarters[0], quarters[2], step, fmt, spark_fmt), listening_activity_utils.get_time_range("quarter"))
@@ -127,7 +134,7 @@ class ListeningActivityTestCase(StatsTestCase):
 
         step = relativedelta(days=+1)
         fmt = "%A %d %B %Y"
-        spark_fmt = "EEEE d MMMM y"
+        spark_fmt = "EEEE dd MMMM y"
 
         mock_listen_ts.return_value = datetime(2021, 11, 24, 2, 3, 0)
         self.assertEqual(
@@ -153,7 +160,7 @@ class ListeningActivityTestCase(StatsTestCase):
 
         step = relativedelta(days=+1)
         fmt = "%d %B %Y"
-        spark_fmt = "d MMMM y"
+        spark_fmt = "dd MMMM y"
 
         mock_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
         self.assertEqual(

@@ -15,40 +15,38 @@ export type UserListModalEntryProps = {
   ) => void;
 };
 
-const UserListModalEntry = (props: UserListModalEntryProps) => {
+function UserListModalEntry(props: UserListModalEntryProps) {
   const { mode, user, loggedInUserFollowsUser, updateFollowingList } = props;
   const { currentUser } = useContext(GlobalAppContext);
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   return (
-    <>
-      <div key={user.name}>
-        <div>
-          <a
-            href={`/user/${user.name}/reports/?range=month`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {user.name}
-          </a>
-          {isUserLoggedIn && mode === "similar-users" && (
-            <SimilarityScore
-              similarityScore={(user as SimilarUser).similarityScore}
-              user={user}
-              type="compact"
-            />
-          )}
-        </div>
-        {isUserLoggedIn && (
-          <FollowButton
-            type="block"
+    <div key={user.name}>
+      <div>
+        <a
+          href={`/user/${user.name}/`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {user.name}
+        </a>
+        {isUserLoggedIn && mode === "similar-users" && (
+          <SimilarityScore
+            similarityScore={(user as SimilarUser).similarityScore}
             user={user}
-            loggedInUserFollowsUser={loggedInUserFollowsUser}
-            updateFollowingList={updateFollowingList}
+            type="compact"
           />
         )}
       </div>
-    </>
+      {isUserLoggedIn && (
+        <FollowButton
+          type="block"
+          user={user}
+          loggedInUserFollowsUser={loggedInUserFollowsUser}
+          updateFollowingList={updateFollowingList}
+        />
+      )}
+    </div>
   );
-};
+}
 
 export default UserListModalEntry;

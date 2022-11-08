@@ -2,7 +2,6 @@
 
 exports[`PinnedRecordingCard renders correctly 1`] = `
 <PinnedRecordingCard
-  className=""
   isCurrentUser={true}
   newAlert={[Function]}
   pinnedRecording={
@@ -19,7 +18,6 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
     }
   }
   removePinFromPinsList={[Function]}
-  userName="name"
 >
   <ListenCard
     additionalContent={
@@ -33,33 +31,21 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
       </div>
     }
     additionalMenuItems={
-      <React.Fragment>
+      Array [
         <ListenControl
           action={[Function]}
           text="Unpin"
           title="Unpin"
-        />
+        />,
         <ListenControl
           action={[Function]}
           text="Delete Pin"
           title="Delete Pin"
-        />
-      </React.Fragment>
+        />,
+      ]
     }
     className="pinned-recording-card currently-pinned"
-    listen={
-      Object {
-        "listened_at": 1111111111,
-        "track_metadata": Object {
-          "artist_name": "Rick Astley",
-          "track_name": "Never Gonna Give You Up",
-        },
-      }
-    }
-    newAlert={[Function]}
-    showTimestamp={true}
-    showUsername={false}
-    thumbnail={
+    customThumbnail={
       <div
         className="pinned-recording-icon"
       >
@@ -105,6 +91,18 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
         </span>
       </div>
     }
+    listen={
+      Object {
+        "listened_at": 1111111111,
+        "track_metadata": Object {
+          "artist_name": "Rick Astley",
+          "track_name": "Never Gonna Give You Up",
+        },
+      }
+    }
+    newAlert={[Function]}
+    showTimestamp={true}
+    showUsername={false}
   >
     <ForwardRef
       className="listen-card  has-additional-content pinned-recording-card currently-pinned"
@@ -302,6 +300,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
                     aria-label="Unpin"
                     disabled={false}
                     onClick={[Function]}
+                    role="menuitem"
                     title="Unpin"
                     type="button"
                   >
@@ -318,6 +317,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
                     aria-label="Delete Pin"
                     disabled={false}
                     onClick={[Function]}
+                    role="menuitem"
                     title="Delete Pin"
                     type="button"
                   >

@@ -51,7 +51,6 @@ export type ListensProps = {
   latestListenTs: number;
   listens?: Array<Listen>;
   oldestListenTs: number;
-  profileUrl?: string;
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
 } & WithAlertNotificationsInjectedProps;
@@ -194,6 +193,10 @@ export default class Listens extends React.Component<
       this.afterListensFetch
     );
   };
+
+  handlePinnedRecording(pinnedRecording: PinnedRecording) {
+    this.setState({ userPinnedRecording: pinnedRecording });
+  }
 
   connectWebsockets = (): void => {
     this.createWebsocketsConnection();
@@ -391,8 +394,9 @@ export default class Listens extends React.Component<
   };
 
   handleKeyDown = (event: KeyboardEvent) => {
-    if (document.activeElement?.localName === "input") {
-      // Don't allow keyboard navigation if an input is currently in focus
+    const elementName = document.activeElement?.localName;
+    if (elementName && ["input", "textarea"].includes(elementName)) {
+      // Don't allow keyboard navigation if an input or textarea is currently in focus
       return;
     }
     switch (event.key) {
@@ -682,17 +686,21 @@ export default class Listens extends React.Component<
     const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
     const releaseGroupMBID = getReleaseGroupMBID(listen);
     const canDelete =
-      isCurrentUser && Boolean(listenedAt) && Boolean(recordingMSID);
+      isCurrentUser &&
+      (Boolean(listenedAt) || listenedAt === 0) &&
+      Boolean(recordingMSID);
 
     const isListenReviewable =
       Boolean(recordingMBID) ||
       artistMBIDs?.length ||
       Boolean(trackMBID) ||
       Boolean(releaseGroupMBID);
+    const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
 
     /* eslint-disable react/jsx-no-bind */
-    const additionalMenuItems = (
-      <>
+    const additionalMenuItems = [];
+    if (canPin) {
+      additionalMenuItems.push(
         <ListenControl
           text="Pin this recording"
           icon={faThumbtack}
@@ -700,24 +708,28 @@ export default class Listens extends React.Component<
           dataToggle="modal"
           dataTarget="#PinRecordingModal"
         />
-        {isListenReviewable && (
-          <ListenControl
-            text="Write a review"
-            icon={faPencilAlt}
-            action={this.updateRecordingToReview.bind(this, listen)}
-            dataToggle="modal"
-            dataTarget="#CBReviewModal"
-          />
-        )}
-        {canDelete && (
-          <ListenControl
-            text="Delete Listen"
-            icon={faTrashAlt}
-            action={this.deleteListen.bind(this, listen)}
-          />
-        )}
-      </>
-    );
+      );
+    }
+    if (isListenReviewable) {
+      additionalMenuItems.push(
+        <ListenControl
+          text="Write a review"
+          icon={faPencilAlt}
+          action={this.updateRecordingToReview.bind(this, listen)}
+          dataToggle="modal"
+          dataTarget="#CBReviewModal"
+        />
+      );
+    }
+    if (canDelete) {
+      additionalMenuItems.push(
+        <ListenControl
+          text="Delete Listen"
+          icon={faTrashAlt}
+          action={this.deleteListen.bind(this, listen)}
+        />
+      );
+    }
     const shouldBeDeleted = isEqual(deletedListen, listen);
     /* eslint-enable react/jsx-no-bind */
     return (
@@ -747,10 +759,6 @@ export default class Listens extends React.Component<
     if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
-  }
-
-  handlePinnedRecording(pinnedRecording: PinnedRecording) {
-    this.setState({ userPinnedRecording: pinnedRecording });
   }
 
   render() {
@@ -783,7 +791,8 @@ export default class Listens extends React.Component<
     const isOlderButtonDisabled =
       !nextListenTs || nextListenTs <= oldestListenTs;
     const isOldestButtonDisabled =
-      listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
+      listens?.length > 0 &&
+      listens[listens.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
         {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
@@ -792,7 +801,6 @@ export default class Listens extends React.Component<
             {playingNowListen && this.getListenCard(playingNowListen)}
             {userPinnedRecording && (
               <PinnedRecordingCard
-                userName={user.name}
                 pinnedRecording={userPinnedRecording}
                 isCurrentUser={currentUser?.name === user?.name}
                 currentFeedback={userPinnedRecordingFeedback}
@@ -1007,7 +1015,6 @@ document.addEventListener("DOMContentLoaded", () => {
     listens,
     oldest_listen_ts,
     userPinnedRecording,
-    profile_url,
     user,
   } = reactProps;
 
@@ -1042,7 +1049,6 @@ document.addEventListener("DOMContentLoaded", () => {
           listens={listens}
           userPinnedRecording={userPinnedRecording}
           oldestListenTs={oldest_listen_ts}
-          profileUrl={profile_url}
           user={user}
         />
       </GlobalAppContext.Provider>

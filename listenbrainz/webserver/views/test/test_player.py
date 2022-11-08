@@ -1,14 +1,9 @@
 from flask import url_for
 
-from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.webserver.testing import ServerTestCase
+from listenbrainz.tests.integration import IntegrationTestCase
 
 
-class PlayerViewsTestCase(ServerTestCase, DatabaseTestCase):
-
-    def setUp(self):
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+class PlayerViewsTestCase(IntegrationTestCase):
 
     def test_player_get_instant(self):
         resp = self.client.get(url_for('player.load_instant', recording_mbids="97e69767-5d34-4c97-b36a-f3b2b1ef9dae"))

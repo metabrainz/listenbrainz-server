@@ -1,4 +1,5 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.10-20220315
+ARG NODE_VERSION=16-alpine
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
@@ -62,6 +63,38 @@ RUN pip3 install --no-cache-dir -r ./docs/requirements.txt
 COPY . /code/listenbrainz
 
 
+#####################################################################################################
+# NOTE: The javascript files are continously watched and compiled using this image in developement. #
+#####################################################################################################
+FROM node:$NODE_VERSION as listenbrainz-frontend-dev
+
+ARG NODE_VERSION
+
+LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
+      org.label-schema.schema-version="1.0.0-rc1" \
+      org.label-schema.vendor="MetaBrainz Foundation" \
+      org.label-schema.name="ListenBrainz Static Builder" \
+      org.metabrainz.based-on-image="node:$NODE_VERSION"
+
+RUN mkdir /code
+WORKDIR /code
+
+COPY package.json package-lock.json /code/
+RUN npm install
+
+COPY webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.json .eslintrc.js .stylelintrc.js /code/
+
+
+#########################################################################
+# NOTE: The javascript files for production are compiled in this image. #
+#########################################################################
+FROM listenbrainz-frontend-dev as listenbrainz-frontend-prod
+
+# Compile front-end (static) files
+COPY ./listenbrainz/webserver/static /code/listenbrainz/webserver/static
+RUN npm run build:prod
+
+
 ###########################################
 # NOTE: The production image starts here. #
 ###########################################
@@ -72,14 +105,6 @@ FROM listenbrainz-base as listenbrainz-prod
 # /mnt/backup: All dumps
 # /mnt/ftp: Subset of all dumps that are uploaded to
 RUN mkdir /logs /mnt/dumps /mnt/backup /mnt/ftp
-
-# Install NodeJS and front-end dependencies
-RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
-WORKDIR /static
-COPY package.json package-lock.json /static/
-RUN npm install
-
 
 COPY ./docker/run-lb-command /usr/local/bin
 COPY ./docker/lb-startup-common.sh /etc
@@ -139,6 +164,12 @@ COPY ./docker/services/mbid_mapping_writer/mbid_mapping_writer.service /etc/serv
 COPY ./docker/services/mbid_mapping_writer/mbid_mapping_writer.finish /etc/service/mbid_mapping_writer/finish
 RUN touch /etc/service/mbid_mapping_writer/down
 
+# Spotify Metadata Cache
+COPY ./docker/services/spotify_metadata_cache/consul-template-spotify-metadata-cache.conf /etc/consul-template-spotify-metadata-cache.conf
+COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.service /etc/service/spotify_metadata_cache/run
+COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.finish /etc/service/spotify_metadata_cache/finish
+RUN touch /etc/service/spotify_metadata_cache/down
+
 # uwsgi (website)
 COPY ./docker/services/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf
@@ -152,9 +183,14 @@ COPY ./docker/rc.local /etc/rc.local
 COPY ./docker/services/cron/crontab /etc/cron.d/crontab
 RUN chmod 0644 /etc/cron.d/crontab
 
-# Compile front-end (static) files
-COPY webpack.config.js babel.config.js .eslintrc.js .stylelintrc.js tsconfig.json ./listenbrainz/webserver/static /static/
-RUN npm run build:prod
+# copy the compiled js files and statis assets from image to prod
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/robots.txt /static/
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/sound /static/sound
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/fonts /static/fonts
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/img /static/img
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/js/lib /static/js/lib
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/js/info.js /static/js/
+COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/dist /static/dist
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/

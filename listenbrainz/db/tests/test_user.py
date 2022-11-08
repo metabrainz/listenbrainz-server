@@ -41,7 +41,7 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get_or_create(2, 'testlastloginuser')
 
         # set the last login value of the user to 0
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
                    SET last_login = to_timestamp(0)
@@ -103,21 +103,9 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get(user_id)
         self.assertIsNotNone(user)
 
-        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
-            artists_data = ujson.load(f)
-        db_stats.insert_user_jsonb_data(
-            user_id=user_id,
-            stats_type='artists',
-            stats=StatRange[EntityRecord](**artists_data),
-        )
-        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
-        self.assertIsNotNone(user_stats)
-
         db_user.delete(user_id)
         user = db_user.get(user_id)
         self.assertIsNone(user)
-        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
-        self.assertIsNone(user_stats)
 
     def test_delete_when_spotify_import_activated(self):
         user_id = db_user.create(11, 'kishore')
@@ -231,16 +219,18 @@ class UserTestCase(DatabaseTestCase):
         user_id_l = db_user.create(2, "lucifer")
         user_id_r = db_user.create(3, "rob")
 
-        with db.engine.connect() as connection:
+        with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(
                 "INSERT INTO recommendation.similar_user (user_id, similar_users) VALUES (:user_id, :similar_users)"),
-                user_id=searcher_id,
-                similar_users=json.dumps({
-                    str(user_id_c): [0.42, 0.20],
-                    str(user_id_l): [0.61, 0.25],
-                    str(user_id_r): [0.87, 0.43]
-                })
+                {
+                    "user_id": searcher_id,
+                    "similar_users": json.dumps({
+                        str(user_id_c): [0.42, 0.20],
+                        str(user_id_l): [0.61, 0.25],
+                        str(user_id_r): [0.87, 0.43]
+                    })
+                }
             )
 
         results = db_user.search("cif", 10, searcher_id)
-        self.assertEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.0909091, 0.61)])
+        self.assertEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.09090909, 0.61)])

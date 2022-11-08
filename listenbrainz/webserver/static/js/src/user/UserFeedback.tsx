@@ -11,7 +11,7 @@ import {
   faHeartBroken,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
-import { get, clone, has, isNaN } from "lodash";
+import { clone, get, has, isNaN } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
@@ -37,7 +37,6 @@ import ListenControl from "../listens/ListenControl";
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
   totalCount: number;
-  profileUrl?: string;
   user: ListenBrainzUser;
 } & WithAlertNotificationsInjectedProps;
 
@@ -60,15 +59,10 @@ export default class UserFeedback extends React.Component<
   static RecordingMetadataToListenFormat = (
     feedbackItem: FeedbackResponseWithTrackMetadata
   ): Listen => {
-    const listen: Listen = {
+    return {
       listened_at: feedbackItem.created ?? 0,
       track_metadata: { ...feedbackItem.track_metadata },
     };
-    listen.track_metadata.additional_info = {
-      ...listen.track_metadata.additional_info,
-      recording_msid: feedbackItem.recording_msid,
-    };
-    return listen;
   };
 
   private listensTable = React.createRef<HTMLTableElement>();
@@ -127,8 +121,9 @@ export default class UserFeedback extends React.Component<
   }
 
   handleKeyDown = (event: KeyboardEvent) => {
-    if (document.activeElement?.localName === "input") {
-      // Don't allow keyboard navigation if an input is currently in focus
+    const elementName = document.activeElement?.localName;
+    if (elementName && ["input", "textarea"].includes(elementName)) {
+      // Don't allow keyboard navigation if an input or textarea is currently in focus
       return;
     }
     switch (event.key) {
@@ -511,24 +506,24 @@ export default class UserFeedback extends React.Component<
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
                   {listensFromFeedback.map((listen) => {
-                    const additionalMenuItems = (
-                      <>
-                        <ListenControl
-                          title="Pin this recording"
-                          text="Pin this recording"
-                          icon={faThumbtack}
-                          // eslint-disable-next-line react/jsx-no-bind
-                          action={this.updateRecordingToPin.bind(this, listen)}
-                          dataToggle="modal"
-                          dataTarget="#PinRecordingModal"
-                        />
-                      </>
-                    );
+                    const additionalMenuItems = [
+                      <ListenControl
+                        title="Pin this recording"
+                        text="Pin this recording"
+                        icon={faThumbtack}
+                        // eslint-disable-next-line react/jsx-no-bind
+                        action={this.updateRecordingToPin.bind(this, listen)}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
+                      />,
+                    ];
+                    const recording_msid = getRecordingMSID(listen);
+                    const recording_mbid = getRecordingMBID(listen);
                     return (
                       <ListenCard
                         showUsername={false}
                         showTimestamp
-                        key={`${listen.listened_at}`}
+                        key={`${listen.listened_at}-${recording_msid}-${recording_mbid}`}
                         listen={listen}
                         currentFeedback={this.getFeedbackForListen(listen)}
                         updateFeedbackCallback={this.updateFeedback}
@@ -644,7 +639,7 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube,
     sentry_traces_sample_rate,
   } = globalReactProps;
-  const { feedback, feedback_count, profile_url, user } = reactProps;
+  const { feedback, feedback_count, user } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -675,7 +670,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <UserFeedbackWithAlertNotifications
           initialAlerts={optionalAlerts}
           feedback={feedback}
-          profileUrl={profile_url}
           user={user}
           totalCount={feedback_count}
         />

@@ -3,16 +3,16 @@ import sys
 from datetime import date
 
 import click
-import pika
 import ujson
-from flask import current_app
+from kombu import Connection
+from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
-import listenbrainz.utils as utils
+from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
 
-QUERIES_JSON_PATH = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), 'request_queries.json')
+
+QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
 DATAFRAME_JOB_TYPES = ("recommendation_recording", "similar_users")
 
 cli = click.Group()
@@ -63,32 +63,26 @@ def _prepare_query_message(query, **params):
 
 
 def send_request_to_spark_cluster(query, **params):
-    with create_app().app_context():
+    app = create_app()
+    with app.app_context():
         message = _prepare_query_message(query, **params)
-
-        rabbitmq_connection = utils.connect_to_rabbitmq(
-            username=current_app.config['RABBITMQ_USERNAME'],
-            password=current_app.config['RABBITMQ_PASSWORD'],
-            host=current_app.config['RABBITMQ_HOST'],
-            port=current_app.config['RABBITMQ_PORT'],
-            virtual_host=current_app.config['RABBITMQ_VHOST'],
-            error_logger=current_app.logger,
+        connection = Connection(
+            hostname=app.config["RABBITMQ_HOST"],
+            userid=app.config["RABBITMQ_USERNAME"],
+            port=app.config["RABBITMQ_PORT"],
+            password=app.config["RABBITMQ_PASSWORD"],
+            virtual_host=app.config["RABBITMQ_VHOST"],
+            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
         )
-        try:
-            channel = rabbitmq_connection.channel()
-            channel.exchange_declare(
-                exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
-            channel.basic_publish(
-                exchange=current_app.config['SPARK_REQUEST_EXCHANGE'],
-                routing_key='',
-                body=message,
-                properties=pika.BasicProperties(delivery_mode=2,),
-            )
-        except Exception:
-            # this is a relatively non critical part of LB for now, so just log the error and
-            # move ahead
-            current_app.logger.error(
-                'Could not send message to spark cluster: %s', ujson.dumps(message), exc_info=True)
+        producer = connection.Producer()
+        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
+        producer.publish(
+            message,
+            routing_key="",
+            exchange=spark_request_exchange,
+            delivery_mode=PERSISTENT_DELIVERY_MODE,
+            declare=[spark_request_exchange]
+        )
 
 
 @cli.command(name="request_user_stats")
@@ -98,7 +92,8 @@ def send_request_to_spark_cluster(query, **params):
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
               help="Entity for which statistics should be calculated")
-def request_user_stats(type_, range_, entity):
+@click.option("--database", type=str, help="Name of the couchdb database to store data in")
+def request_user_stats(type_, range_, entity, database):
     """ Send a user stats request to the spark cluster
     """
     params = {
@@ -106,6 +101,13 @@ def request_user_stats(type_, range_, entity):
     }
     if type_ == "entity" and entity:
         params["entity"] = entity
+
+    if not database:
+        today = date.today().strftime("%Y%m%d")
+        prefix = entity if type_ == "entity" else type_
+        database = f"{prefix}_{range_}_{today}"
+
+    params["database"] = database
 
     send_request_to_spark_cluster(f"stats.user.{type_}", **params)
 
@@ -242,8 +244,8 @@ def request_missing_mb_data(days):
     send_request_to_spark_cluster('cf.missing_mb_data', days=days)
 
 
-def parse_list(ctx, args):
-    return list(args)
+def parse_list(ctx, param, value):
+    return list(value)
 
 
 @cli.command(name='request_model')
@@ -312,6 +314,16 @@ def request_recording_discovery():
     send_request_to_spark_cluster('cf.recommendations.recording.discovery')
 
 
+@cli.command(name='request_fresh_releases')
+@click.option("--days", type=int, required=False, help="Number of days of listens to consider for artist listening data")
+@click.option("--database", type=str, help="Name of the couchdb database to store data in")
+def request_fresh_releases(database, days):
+    """ Send the cluster a request to generate release radar data. """
+    if not database:
+        database = "fresh_releases_" + date.today().strftime("%Y%m%d")
+    send_request_to_spark_cluster('releases.fresh', database=database, days=days)
+
+
 @cli.command(name='request_import_artist_relation')
 def request_import_artist_relation():
     """ Send the spark cluster a request to import artist relation.
@@ -332,6 +344,20 @@ def request_similar_users(max_num_users):
     """ Send the cluster a request to generate similar users.
     """
     send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
+
+
+@cli.command(name='request_similar_recordings')
+@click.option("--days", type=int, help="The number of days of listens to use.", required=True)
+@click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
+                                          " session.", required=True)
+@click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the"
+                                            " simlarity index.", required=True)
+@click.option("--limit", type=int, help="The maximum number of similar recordings to generate per recording"
+                                        " (the limit is instructive. upto 2x recordings may be returned than"
+                                        " the limit).", required=True)
+def request_similar_recordings(days, session, threshold, limit):
+    """ Send the cluster a request to generate similar recordings index. """
+    send_request_to_spark_cluster('similarity.recording', days=days, session=session, threshold=threshold, limit=limit)
 
 
 @cli.command(name="request_yim_similar_users")

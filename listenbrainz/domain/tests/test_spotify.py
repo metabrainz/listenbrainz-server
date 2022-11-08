@@ -121,7 +121,6 @@ class SpotifyServiceTestCase(IntegrationTestCase):
 
     def test_get_user(self):
         user = self.service.get_user(self.user_id)
-        self.assertIsInstance(user, dict)
         self.assertEqual(user['user_id'], self.user_id)
         self.assertEqual(user['musicbrainz_id'], 'spotify_user')
         self.assertEqual(user['access_token'], 'old-token')

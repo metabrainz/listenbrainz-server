@@ -7,10 +7,18 @@ version: "3.4"
 services:
 
   lb_db:
-    image: timescale/timescaledb:2.2.0-pg11
+    image: timescale/timescaledb:2.6.0-pg12
     command: postgres -F
     environment:
       POSTGRES_PASSWORD: 'postgres'
+
+  couchdb:
+    image: couchdb:3.2.2
+    environment:
+      COUCHDB_USER: listenbrainz
+      COUCHDB_PASSWORD: listenbrainz
+    volumes:
+      - ./couchdb_test.ini:/opt/couchdb/etc/local.ini
 
   redis:
     image: redis:6.2.2
@@ -23,18 +31,29 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
+    image: listenbrainz
     volumes:
       - ..:/code/listenbrainz:z
     environment:
       PYTHONDONTWRITEBYTECODE: 1
+      SQLALCHEMY_WARN_20: 1
     depends_on:
       - redis
       - lb_db
       - rabbitmq
- 
+
+  timescale_writer:
+    image: listenbrainz
+    command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
+    depends_on:
+      - redis
+      - lb_db
+      - rabbitmq
+
   frontend_tester:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.webpack
+      dockerfile: Dockerfile
+      target: listenbrainz-frontend-dev
     volumes:
-      - ../listenbrainz/webserver/static:/code/static:z
+      - ../listenbrainz/webserver/static:/code/listenbrainz/webserver/static:z

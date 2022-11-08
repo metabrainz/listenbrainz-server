@@ -1,7 +1,7 @@
 from datetime import datetime
 from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
-    IntegerType, LongType, DoubleType, DecimalType
+    IntegerType, LongType
 
 listens_new_schema = StructType([
     StructField('listened_at', TimestampType(), nullable=False),
@@ -15,6 +15,17 @@ listens_new_schema = StructType([
     StructField('artist_credit_mbids', ArrayType(StringType()), nullable=True),
 ])
 
+fresh_releases_schema = StructType([
+    StructField('release_date', StringType(), nullable=False),
+    StructField('artist_credit_name', StringType(), nullable=False),
+    StructField('artist_mbids', ArrayType(StringType()), nullable=False),
+    StructField('release_name', StringType(), nullable=False),
+    StructField('release_mbid', StringType(), nullable=False),
+    StructField('release_group_mbid', StringType(), nullable=False),
+    StructField('release_group_primary_type', StringType(), nullable=True),
+    StructField('release_group_secondary_type', StringType(), nullable=True),
+    StructField('caa_id', LongType(), nullable=True)
+])
 
 recommendation_schema = StructType([
     StructField('user_id', IntegerType(), nullable=False),
@@ -25,6 +36,11 @@ recommendation_schema = StructType([
     ])), nullable=False)
 ])
 
+recording_similarity_schema = StructType([
+    StructField('mbid0', StringType(), nullable=False),
+    StructField('mbid1', StringType(), nullable=False),
+    StructField('partial_similarity', FloatType(), nullable=False)
+])
 
 # schema to contain model parameters.
 model_param_schema = [

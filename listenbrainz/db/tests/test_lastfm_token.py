@@ -25,7 +25,7 @@ class TestAPICompatTokenClass(DatabaseTestCase):
             result = connection.execute(text('SELECT * FROM "user" WHERE id = :id'),
                                         {"id": uid})
             row = result.fetchone()
-            self.user = User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
+            self.user = User(row.id, row.created, row.musicbrainz_id, row.auth_token)
 
     def tearDown(self):
         super(TestAPICompatTokenClass, self).tearDown()

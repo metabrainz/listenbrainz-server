@@ -31,6 +31,7 @@ from pydantic import ValidationError
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsData,
                                                                   UserRecommendationsJson)
 
+
 def get_timestamp_for_last_recording_recommended():
     """ Get the time when recommendation_cf_recording table was last updated
     """
@@ -41,7 +42,7 @@ def get_timestamp_for_last_recording_recommended():
             """)
         )
         row = result.fetchone()
-        return row['created_ts'] if row else None
+        return row.created_ts if row else None
 
 
 def insert_user_recommendation(user_id: int, recommendations: UserRecommendationsJson):
@@ -51,7 +52,7 @@ def insert_user_recommendation(user_id: int, recommendations: UserRecommendation
             user_id (int): row id of the user.
             recommendations (dict): User recommendations.
     """
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO recommendation.cf_recording (user_id, recording_mbid)
                  VALUES (:user_id, :recommendation)
@@ -95,11 +96,11 @@ def get_user_recommendation(user_id):
                     'user_id': user_id
                 }
         )
-        row = result.fetchone()
+        row = result.mappings().first()
 
     try:
-        return UserRecommendationsData(**dict(row)) if row else None
+        return UserRecommendationsData(**row) if row else None
     except ValidationError:
-        current_app.logger.error("""ValidationError when getting recommendations for user with user_id: {user_id}. Data: {data}"""
-                                 .format(user_id=user_id, data=ujson.dumps(dict(row)['recording_mbid'], indent=4)), exc_info=True)
+        current_app.logger.error(f"ValidationError when getting recommendations for user with user_id: {user_id}."
+                                 f" Data: {ujson.dumps(row)}", exc_info=True)
         return None

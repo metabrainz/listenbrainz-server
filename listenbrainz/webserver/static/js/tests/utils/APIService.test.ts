@@ -887,7 +887,6 @@ describe("recommendTrackToFollowers", () => {
           release_mbid: "release_mbid",
           recording_msid: "recording_msid",
           recording_mbid: "recording_mbid",
-          artist_msid: "artist_msid",
         },
       },
     };
@@ -1325,5 +1324,76 @@ describe("unhideFeedEvent", () => {
         1337
       )
     ).resolves.toEqual(200);
+  });
+});
+
+describe("resetUserTimezone", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.resetUserTimezone("foobar", "America/Denver");
+    expect(window.fetch).toHaveBeenCalledWith("foobar/1/settings/timezone", {
+      method: "POST",
+      headers: {
+        Authorization: "Token foobar",
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        zonename: "America/Denver",
+      }),
+    });
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.resetUserTimezone("foobar", "America/Denver");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the response code if successful", async () => {
+    await expect(
+      apiService.resetUserTimezone("foobar", "America/Denver")
+    ).resolves.toEqual(200);
+  });
+});
+
+describe("exportPlaylistToSpotify", () => {
+  it("calls fetch with correct parameters, calls checkStatus and returns exported playlist url", async () => {
+    const response = {
+      external_url: "https://open.spotify.com/playlist/33DUxaq2HQI7PDFODpFWJV",
+    };
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(response),
+      });
+    });
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+    await expect(
+      apiService.exportPlaylistToSpotify("auth", "bar")
+    ).resolves.toEqual(response);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/playlist/bar/export/spotify",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token auth",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+      }
+    );
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 });

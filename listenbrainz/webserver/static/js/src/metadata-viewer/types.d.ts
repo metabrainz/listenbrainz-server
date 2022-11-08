@@ -32,7 +32,10 @@ declare type ReleaseGroupTag = EntityTag & {
 };
 
 declare type ListenMetadata = {
-  artist?: Array<MusicBrainzArtist>;
+  artist?: {
+    name?: string;
+    artists?: Array<MusicBrainzArtist>;
+  };
   recording?: {
     rels?: Array<MusicBrainzRecordingRel>;
     duration?: number;

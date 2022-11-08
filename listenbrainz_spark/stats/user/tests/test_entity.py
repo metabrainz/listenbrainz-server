@@ -1,5 +1,4 @@
 import json
-import uuid
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -24,7 +23,8 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 9)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='week',
-                                                from_date=from_date, to_date=to_date, message_type="user_entity")
+                                                from_date=from_date, to_date=to_date, message_type="user_entity",
+                                                database=None)
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
@@ -35,7 +35,8 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='month',
-                                                from_date=from_date, to_date=to_date, message_type="user_entity")
+                                                from_date=from_date, to_date=to_date, message_type="user_entity",
+                                                database=None)
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
@@ -46,7 +47,8 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 1, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='year',
-                                                from_date=from_date, to_date=to_date, message_type="user_entity")
+                                                from_date=from_date, to_date=to_date, message_type="user_entity",
+                                                database=None)
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
@@ -57,7 +59,8 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 9, 12, 22, 43)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='all_time',
-                                                from_date=from_date, to_date=to_date, message_type="user_entity")
+                                                from_date=from_date, to_date=to_date, message_type="user_entity",
+                                                database=None)
 
     def test_skip_incorrect_artists_stats(self):
         """ Test to check if entries with incorrect data is skipped for top user artists """
@@ -67,11 +70,13 @@ class UserEntityTestCase(StatsTestCase):
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
             'user_id': 1,
-            'artists': data
+            'artists': data,
+            'artists_count': 3
         }
 
         messages = entity.create_messages([mock_result], 'artists', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
+        next(messages)  # skip couchdb database create message
         received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
@@ -85,11 +90,13 @@ class UserEntityTestCase(StatsTestCase):
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
             'user_id': 1,
-            'releases': data
+            'releases': data,
+            'releases_count': 3
         }
 
         messages = entity.create_messages([mock_result], 'releases', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
+        next(messages)  # skip couchdb database create message
         received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped
@@ -103,11 +110,13 @@ class UserEntityTestCase(StatsTestCase):
         mock_result = MagicMock()
         mock_result.asDict.return_value = {
             'user_id': 1,
-            'recordings': data
+            'recordings': data,
+            'recordings_count': 4
         }
 
         messages = entity.create_messages([mock_result], 'recordings', 'all_time',
                                           datetime.now(), datetime.now(), "user_entity")
+        next(messages)  # skip couchdb database create message
         received_list = next(messages)["data"][0]["data"]
 
         # Only the first entry in file is valid, all others must be skipped

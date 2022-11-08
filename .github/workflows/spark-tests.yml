@@ -5,6 +5,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ '*' ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
     paths:
       - 'listenbrainz_spark/**'
       - 'requirements_spark.txt'
@@ -34,9 +35,6 @@ jobs:
 
     - name: Pull spark base docker image
       run: docker pull metabrainz/listenbrainz-spark-base:latest
-
-    - uses: satackey/action-docker-layer-caching@v0.0.11
-      continue-on-error: true
 
     - name: Build spark containers
       run: ./test.sh spark -b

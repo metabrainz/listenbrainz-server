@@ -1,12 +1,15 @@
 from brainzutils.ratelimit import ratelimit
+from brainzutils import musicbrainz_db
 from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db.model.feedback import Feedback
+
+from listenbrainz.domain import lastfm
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APINotFound
+from listenbrainz.webserver.errors import APINotFound, APIBadRequest, APIServiceUnavailable
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import _parse_int_arg, log_raise_400, is_valid_uuid, \
     DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list, \
@@ -118,6 +121,7 @@ def get_feedback_for_user(user_name):
         "total_count": total_count,
         "offset": offset
     })
+
 
 @feedback_api_bp.route("/recording/<recording_mbid>/get-feedback-mbid", methods=["GET"])
 @crossdomain
@@ -258,3 +262,23 @@ def get_feedback_for_recordings_for_user(user_name):
     return jsonify({
         "feedback": feedback,
     })
+
+
+@feedback_api_bp.route("/import", methods=["POST", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def import_feedback():
+    """ Import feedback from external service. """
+    user = validate_auth_header()
+    data = request.json
+
+    if "service" not in data:
+        raise APIBadRequest("missing service")
+    if "user_name" not in data:
+        raise APIBadRequest("missing last.fm user name")
+
+    if data["service"] == "lastfm":
+        counts = lastfm.import_feedback(user["id"], data["user_name"])
+        return jsonify(counts)
+
+    return APIBadRequest(f"Service {data['service']} is not supported for feedback import.")

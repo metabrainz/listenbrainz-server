@@ -12,7 +12,7 @@ on:
       - '**.snap'
       - '**.less'
       - '**.json'
-      - 'docker/Dockerfile.webpack'
+      - 'docker/Dockerfile'
       - 'docker/docker-compose.test.yml'
       - 'test.sh'
 
@@ -35,12 +35,6 @@ jobs:
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
       continue-on-error: true
 
-    - name: Pull docker images
-      run: docker-compose -f docker/docker-compose.test.yml pull
-
-    - uses: satackey/action-docker-layer-caching@v0.0.11
-      continue-on-error: true
-
     # We do not use this to install node but only to register problem matchers
     # so that eslint annotations work.
     - name: Setup Node.js environment to enable annotations
@@ -52,16 +46,9 @@ jobs:
     - name: Run frontend tests
       run: ./test.sh fe
 
-    # We run eslint inside a docker container, the frontend sources are mounted
-    # as a volume at /code/static. Therefore, the file name in the eslint output
-    # has file paths beginning with /code/static. As a result, Github Actions is
-    # unable to display those inline with code. To fix, this the output of eslint
-    # is piped to sed which replaces /code/static with listenbrainz/webserver/static .
-    # Finally, piping eats up the exit status so we exit manually with the correct status.
     - name: Run linter
       run: |
-        ./test.sh fe -f | sed 's/\/code\/static/listenbrainz\/webserver\/static/g'
-        exit "${PIPESTATUS[0]}"
+        ./test.sh fe -f
       if: ${{ always() }}
 
     - name: Run type checker

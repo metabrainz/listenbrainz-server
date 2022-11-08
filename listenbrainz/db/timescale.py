@@ -1,11 +1,10 @@
+from typing import Optional
 
 import sqlalchemy
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import time
 import psycopg2
-
-from listenbrainz import config
 
 # The schema version of the timescale database (tables created
 # from ./admin/timescale/create-tables.sql). This includes user playlists
@@ -15,7 +14,7 @@ from listenbrainz import config
 # public dump
 SCHEMA_VERSION_TIMESCALE = 7
 
-engine = None
+engine: Optional[sqlalchemy.engine.Engine] = None
 
 DUMP_DEFAULT_THREAD_COUNT = 4
 
@@ -42,24 +41,24 @@ def init_db_connection(connect_str):
 
 
 def run_sql_script(sql_file_path):
-    with open(sql_file_path) as sql:
-        with engine.connect() as connection:
-            connection.execute(sql.read())
+    with open(sql_file_path) as sql, engine.begin() as connection:
+        connection.execute(text(sql.read()))
 
 
 def run_sql_script_without_transaction(sql_file_path):
-    with open(sql_file_path) as sql:
-        connection = engine.connect()
+    with open(sql_file_path) as sql, engine.connect() as connection:
         connection.connection.set_isolation_level(0)
         lines = sql.read().splitlines()
         retries = 0
         while True:
             try:
-                for line in lines:
-                    # TODO: Not a great way of removing comments. The alternative is to catch
-                    # the exception sqlalchemy.exc.ProgrammingError "can't execute an empty query"
-                    if line and not line.startswith("--"):
-                        connection.execute(line)
+                # no-op because of isolation level setup above but adding to suppress SQLAlchemy autocommit warnings
+                with connection.begin():
+                    for line in lines:
+                        # TODO: Not a great way of removing comments. The alternative is to catch
+                        # the exception sqlalchemy.exc.ProgrammingError "can't execute an empty query"
+                        if line and not line.startswith("--"):
+                            connection.execute(text(line))
                 break
             except sqlalchemy.exc.ProgrammingError as e:
                 print("Error: {}".format(e))
@@ -73,5 +72,4 @@ def run_sql_script_without_transaction(sql_file_path):
                 continue
             finally:
                 connection.connection.set_isolation_level(1)
-                connection.close()
         return True

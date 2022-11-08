@@ -114,6 +114,18 @@ TYPESENSE_PORT = 80
 {{end}}
 TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
+{{if service "couchdb-listenbrainz"}}
+{{with index (service "couchdb-listenbrainz") 0}}
+COUCHDB_HOST = "{{.Address}}"
+COUCHDB_PORT = {{.Port}}
+{{end}}
+{{else}}
+COUCHDB_HOST = "localhost"
+COUCHDB_PORT = 5984
+{{end}}
+COUCHDB_USER = "listenbrainz"
+COUCHDB_ADMIN_KEY = '''{{template "KEY" "couchdb_admin_key"}}'''
+
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
@@ -151,12 +163,15 @@ UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
 WEBSOCKETS_QUEUE = '''{{template "KEY" "websockets_queue"}}'''
 PLAYING_NOW_EXCHANGE = '''{{template "KEY" "playing_now_exchange"}}'''
 PLAYING_NOW_QUEUE = '''{{template "KEY" "playing_now_queue"}}'''
+SPOTIFY_METADATA_QUEUE = '''{{template "KEY" "spotify_metadata_queue"}}'''
 
 SPARK_RESULT_EXCHANGE = '''{{template "KEY" "spark_result_exchange"}}'''
 SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
 SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''
 SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
 
+EXTERNAL_SERVICES_EXCHANGE = '''{{template "KEY" "external_services_exchange"}}'''
+EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = '''{{template "KEY" "external_services_spotify_cache"}}'''
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
 MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
@@ -223,12 +238,8 @@ CRITIQUEBRAINZ_CLIENT_ID = '''{{template "KEY" "critiquebrainz/client_id"}}'''
 CRITIQUEBRAINZ_CLIENT_SECRET = '''{{template "KEY" "critiquebrainz/client_secret"}}'''
 CRITIQUEBRAINZ_REDIRECT_URI = '''{{template "KEY" "critiquebrainz/redirect_uri"}}'''
 
-
 # YOUTUBE
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
-YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
-YOUTUBE_CONFIG = {{template "KEY_JSON" "youtube/credentials"}}
-
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -245,7 +256,6 @@ SMTP_PORT = "SERVICEDOESNOTEXIST_listenbrainz-org.exim-relay"
 {{end}}
 
 MAIL_FROM_DOMAIN = '''{{template "KEY" "mail_from_domain"}}'''
-WEBSOCKETS_SERVER_URL = '''{{template "KEY" "websockets_server_url"}}'''
 
 SESSION_REMEMBER_ME_DURATION = 365
 
