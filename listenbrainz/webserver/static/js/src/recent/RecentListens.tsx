@@ -29,6 +29,7 @@ import {
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
+import SimpleModal from "../utils/SimpleModal";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -313,17 +314,20 @@ document.addEventListener("DOMContentLoaded", () => {
     RecentListens
   );
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
     critiquebrainzAuth: critiquebrainz,
+    modal: modalRef,
   };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <RecentListensWithAlertNotifications
           initialAlerts={optionalAlerts}

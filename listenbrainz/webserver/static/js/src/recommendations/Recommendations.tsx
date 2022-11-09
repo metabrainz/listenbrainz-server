@@ -26,6 +26,7 @@ import {
 } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
+import SimpleModal from "../utils/SimpleModal";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -371,11 +372,13 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url || `${window.location.origin}/1`
   );
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
   const RecommendationsWithAlertNotifications = withAlertNotifications(
@@ -384,6 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationsWithAlertNotifications
           initialAlerts={optionalAlerts}
