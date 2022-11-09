@@ -39,6 +39,7 @@ class WritablePlaylistRecording(PlaylistRecording):
     playlist_id: NonNegativeInt = None
     position: NonNegativeInt = None
     created: datetime.datetime = None
+    additional_metadata: Optional[Dict] = None
     added_by: str = None
 
 
@@ -64,8 +65,8 @@ class Playlist(BaseModel):
     copied_from_id: Optional[NonNegativeInt]
     # If the playlist was created by a bot, the user for who this playlist was created
     created_for_id: Optional[NonNegativeInt]
-    # If the playlist was created by a bot, some freeform data about it
-    algorithm_metadata: Optional[Dict]
+    # to store extra data about the playlist
+    additional_metadata: Optional[Dict]
     # The users who have permission to collaborate on this playlist
     # TODO: Because the id list isn't an FK to a table, we can't guarantee that these values
     #  actually exist. There's no agreement between collaborator_ids and collaborators.

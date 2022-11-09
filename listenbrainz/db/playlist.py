@@ -39,7 +39,7 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
              , pl.last_updated
              , pl.copied_from_id
              , pl.created_for_id
-             , pl.algorithm_metadata
+             , pl.additional_metadata
              , copy.mbid as copied_from_mbid
           FROM playlist.playlist AS pl
      LEFT JOIN playlist.playlist AS copy
@@ -112,7 +112,7 @@ def get_playlists_for_user(user_id: int,
              , pl.last_updated
              , pl.copied_from_id
              , pl.created_for_id
-             , pl.algorithm_metadata
+             , pl.additional_metadata
              , copy.mbid as copied_from_mbid
           FROM playlist.playlist AS pl
      LEFT JOIN playlist.playlist AS copy
@@ -212,7 +212,7 @@ def get_playlists_created_for_user(user_id: int,
              , pl.last_updated
              , pl.copied_from_id
              , pl.created_for_id
-             , pl.algorithm_metadata
+             , pl.additional_metadata
              , copy.mbid as copied_from_mbid
           FROM playlist.playlist AS pl
      LEFT JOIN playlist.playlist AS copy
@@ -274,7 +274,7 @@ def get_playlists_collaborated_on(user_id: int,
              , pl.last_updated
              , pl.copied_from_id
              , pl.created_for_id
-             , pl.algorithm_metadata
+             , pl.additional_metadata
              , copy.mbid as copied_from_mbid
           FROM playlist.playlist AS pl
      LEFT JOIN playlist.playlist AS copy
@@ -374,7 +374,7 @@ def _remove_old_collaborative_playlists(connection, creator_id: int, created_for
     """
     del_query = sqlalchemy.text("""DELETE FROM playlist.playlist
                                          WHERE creator_id = :creator_id
-                                           AND algorithm_metadata->>'source_patch' = :source_patch
+                                           AND additional_metadata->>'source_patch' = :source_patch
                                            AND created_for_id = :created_for_id""")
     connection.execute(del_query, {"creator_id": creator_id,
                                    "created_for_id": created_for_id,
@@ -415,19 +415,19 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
                                      , public
                                      , copied_from_id
                                      , created_for_id
-                                     , algorithm_metadata)
+                                     , additional_metadata)
                                VALUES (:creator_id
                                      , :name
                                      , :description
                                      , :public
                                      , :copied_from_id
                                      , :created_for_id
-                                     , :algorithm_metadata)
+                                     , :additional_metadata)
                              RETURNING id, mbid, created
     """)
     fields = playlist.dict(include={'creator_id', 'name', 'description', 'public',
                                     'copied_from_id', 'created_for_id'})
-    fields["algorithm_metadata"] = ujson.dumps(playlist.algorithm_metadata or {})
+    fields["additional_metadata"] = ujson.dumps(playlist.additional_metadata or {})
 
     with ts.engine.connect() as connection:
         with connection.begin():
@@ -435,12 +435,12 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
             # old collaborative playlists in the same transaction as creating new playlists, it needs to
             # to be here.
             if playlist.creator_id == TROI_BOT_USER_ID and playlist.created_for_id is not None and \
-                    playlist.algorithm_metadata is not None and "source_patch" in playlist.algorithm_metadata:
+                    playlist.additional_metadata is not None and "source_patch" in playlist.additional_metadata:
                 _remove_old_collaborative_playlists(
                     connection,
                     playlist.creator_id,
                     playlist.created_for_id,
-                    playlist.algorithm_metadata["source_patch"]
+                    playlist.additional_metadata["source_patch"]
                 )
 
             result = connection.execute(query, fields)
