@@ -205,7 +205,7 @@ PRIVATE_TABLES_TIMESCALE = {
         'last_updated',
         'copied_from_id',
         'created_for_id',
-        'algorithm_metadata',
+        'additional_metadata',
     ),
     'playlist.playlist_recording': (
         'id',
