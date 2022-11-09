@@ -17,6 +17,9 @@ import {
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import hljs from "highlight.js/lib/core";
+import json from "highlight.js/lib/languages/json";
+import { sanitize } from "dompurify";
 import {
   getArtistLink,
   getTrackLink,
@@ -38,6 +41,8 @@ import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import { millisecondsToStr } from "../playlists/utils";
+
+hljs.registerLanguage("json", json);
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -483,6 +488,10 @@ export default class ListenCard extends React.Component<
                       icon={faCode}
                       action={() => {
                         const stringifiedJSON = JSON.stringify(listen, null, 4);
+                        const highlightedJSON = hljs.highlight(
+                          stringifiedJSON,
+                          { language: "json" }
+                        ).value;
                         modal?.current?.updateModal(
                           <pre>
                             <code
