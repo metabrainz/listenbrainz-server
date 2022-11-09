@@ -1,0 +1,201 @@
+<svg id="svg2" 
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns="http://www.w3.org/2000/svg"
+     version="1.1"
+     xmlns:cc="http://creativecommons.org/ns#"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 924 924"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     height="{{ height }}"
+     width="{{ width }}">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;900');
+    .artist-name {
+      font-weight:500;
+    }
+  </style>
+ <defs id="defs42">
+  <linearGradient id="gradient" x1="-588.5" y1="-729" x2="1241.5" y2="1235" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#006D39"/>
+    <stop offset="0.274676" stop-color="#0A3A2A"/>
+    <stop offset="0.647633" stop-color="#0F2223"/>
+    <stop offset="1" stop-color="#111820"/>
+  </linearGradient>
+  <clipPath id="clip">
+      <use xlink:href="#background"/>
+  </clipPath>
+ </defs>
+ <rect id="background" height="924" fill="url(#gradient)" rx="4" ry="4" width="924" y="0" x="0"/>
+ <g clip-path="url(#clip)" letter-spacing="0em" font-weight="900" font-family="Inter, sans-serif" fill="#006D39">
+  <rect width="770" height="770" x="77" y="77" stroke="#006D39" fill="none"/>
+  <g font-size="20px">
+   <text id="user_name"><tspan id="tspan6" y="36" x="22">{{ metadata["user_name"]|upper|e }}</tspan></text>
+   <text id="text8"><tspan id="tspan10" y="894" x="22">TOP TEN RELEASES {{ metadata["time_range"]|upper|e }}</tspan></text>
+   <text id="number_of_releases"><tspan id="tspan14" y="894" x="769">{{ metadata["num_releases"] }} RELEASES</tspan></text>
+   <text id="date"><tspan id="tspan18" y="36" x="773">{{ metadata["date"] }}</tspan></text>
+  </g>
+  <g font-size="23px">
+   <text
+     id="artist-1">
+     <tspan
+       x="130"
+       y="230"
+       id="artist-1-number">1</tspan>
+       <tspan
+       x="175"
+       y="230"
+       id="artist-1-album">{{ releases[0].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="253"
+       class="artist-name"
+       id="artist-1-name">{{ releases[0].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-2">
+     <tspan
+       x="130"
+       y="280"
+       id="artist-2-number">2</tspan>
+       <tspan
+       x="175"
+       y="280"
+       id="artist-2-album">{{ releases[1].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="303"
+       class="artist-name"
+       id="artist-2-name">{{ releases[1].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-3">
+     <tspan
+       x="130"
+       y="330"
+       id="artist-3-number">3</tspan>
+       <tspan
+       x="175"
+       y="330"
+       id="artist-3-album">{{ releases[2].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="353"
+       class="artist-name"
+       id="artist-3-name">{{ releases[2].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-4">
+     <tspan
+       x="130"
+       y="380"
+       id="artist-4-number">4</tspan>
+       <tspan
+       x="175"
+       y="380"
+       id="artist-4-album">{{ releases[3].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="403"
+       class="artist-name"
+       id="artist-4-name">{{ releases[3].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-5">
+     <tspan
+       x="130"
+       y="430"
+       id="artist-5-number">5</tspan>
+       <tspan
+       x="175"
+       y="430"
+       id="artist-5-album">{{ releases[4].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="453"
+       class="artist-name"
+       id="artist-5-name">{{ releases[4].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-6">
+     <tspan
+       x="130"
+       y="480"
+       id="artist-6-number">6</tspan>
+       <tspan
+       x="175"
+       y="480"
+       id="artist-6-album">{{ releases[5].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="503"
+       class="artist-name"
+       id="artist-6-name">{{ releases[5].artist_name|upper|e }}</tspan>
+   </text>
+
+   <text
+     id="artist-7">
+     <tspan
+       x="130"
+       y="530"
+       id="artist-7-number">7</tspan>
+       <tspan
+       x="175"
+       y="530"
+       id="artist-7-album">{{ releases[6].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="553"
+       class="artist-name"
+       id="artist-7-name">{{ releases[6].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-8">
+     <tspan
+       x="130"
+       y="580"
+       id="artist-8-number">8</tspan>
+       <tspan
+       x="175"
+       y="580"
+       id="artist-8-album">{{ releases[7].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="603"
+       class="artist-name"
+       id="artist-8-name">{{ releases[7].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-9">
+     <tspan
+       x="130"
+       y="630"
+       id="artist-9-number">9</tspan>
+       <tspan
+       x="175"
+       y="630"
+       id="artist-9-album">{{ releases[8].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="653"
+       class="artist-name"
+       id="artist-9-name">{{ releases[8].artist_name|upper|e }}</tspan>
+   </text>
+   <text
+     id="artist-10">
+     <tspan
+       x="130"
+       y="680"
+       id="artist-10-number">X</tspan>
+       <tspan
+       x="175"
+       y="680"
+       id="artist-10-album">{{ releases[9].release_name|upper|e }}</tspan>
+     <tspan
+       x="175"
+       y="703"
+       class="artist-name"
+       id="artist-10-name">{{ releases[9].artist_name|upper|e }}</tspan>
+   </text>  
+  </g>
+ </g>
+</svg>

@@ -28,7 +28,7 @@ def get_test_data():
             "extension": {
                 PLAYLIST_EXTENSION_URI: {
                     "public": True,
-                    "algorithm_metadata": {"give_you_up": "never"}
+                    "additional_metadata": {"give_you_up": "never"}
                 }
             },
             "track": [
@@ -111,7 +111,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
-        self.assertNotIn("algorithm_metadata", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
+        self.assertNotIn("additional_metadata", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
         try:
             dateutil.parser.isoparse(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["last_modified_at"])
         except ValueError:
@@ -140,8 +140,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["created_for"], self.user["musicbrainz_id"])
         self.assertEqual(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["algorithm_metadata"],
-                         playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["algorithm_metadata"])
+                         [PLAYLIST_EXTENSION_URI]["additional_metadata"],
+                         playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"])
 
         # Try to submit a playlist on a different users's behalf without the right perms
         # (a user must be part of config. APPROVED_PLAYLIST_BOTS to be able to create playlists

@@ -1,0 +1,39 @@
+<svg id="svg2" 
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns="http://www.w3.org/2000/svg"
+     version="1.1"
+     xmlns:cc="http://creativecommons.org/ns#"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 924 924"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     height="{{ height }}"
+     width="{{ width }}">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
+  </style>
+ <defs id="defs42">
+  <linearGradient id="purple-gradient" y2="1580" gradientUnits="userSpaceOnUse" x2="442" y1="38" x1="13">
+   <stop id="stop4176" stop-color="#9b3361" offset="0"/>
+   <stop id="stop4178" stop-color="#a76798" offset="1"/>
+  </linearGradient>
+  <clipPath id="clip">
+      <use xlink:href="#background"/>
+  </clipPath>
+ </defs>
+ <rect id="background" height="924" fill="url(#purple-gradient)" rx="4" ry="4" width="924" y="0" x="0"/>
+ <g clip-path="url(#clip)" letter-spacing="0em" font-weight="900" font-family="Inter, sans-serif" fill="#321529">
+  <g font-size="20px">
+   <text id="user_name"><tspan id="tspan6" y="36" x="22">{{ metadata["user_name"]|upper|e }}</tspan></text>
+   <text id="text8"><tspan id="tspan10" y="894" x="22">TOP FIVE ARTISTS {{ metadata["time_range"]|upper|e }}</tspan></text>
+   <text id="number_of_artists"><tspan id="tspan14" y="894" x="769">{{ metadata["num_artists"] }} ARTISTS</tspan></text>
+   <text id="date"><tspan id="tspan18" y="36" x="773">{{ metadata["date"] }}</tspan></text>
+  </g>
+  <g font-size="186px">
+   <text id="artist_1"><tspan id="tspan22" y="211" x="-20">{{ artists[0].artist_name|upper|e }}</tspan></text>
+   <text id="artist_2"><tspan id="tspan26" y="375" x="-20">{{ artists[1].artist_name|upper|e }}</tspan></text>
+   <text id="artist_3"><tspan id="tspan30" y="534" x="-20">{{ artists[2].artist_name|upper|e }}</tspan></text>
+   <text id="artist_4"><tspan id="tspan34" y="692" x="-20">{{ artists[3].artist_name|upper|e }}</tspan></text>
+   <text id="artist_5"><tspan id="tspan38" y="849" x="-20">{{ artists[4].artist_name|upper|e }}</tspan></text>
+  </g>
+ </g>
+</svg>

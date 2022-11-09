@@ -9,6 +9,7 @@ import Card from "../components/Card";
 import BarDualTone from "./BarDualTone";
 import Loader from "../components/Loader";
 import { isInvalidStatRange } from "./utils";
+import { COLOR_BLACK } from "../utils/constants";
 
 export type UserListeningActivityProps = {
   range: UserStatsAPIRange;
@@ -410,7 +411,7 @@ export default class UserListeningActivity extends React.Component<
                 <FontAwesomeIcon
                   icon={faLink as IconProp}
                   size="sm"
-                  color="#000000"
+                  color={COLOR_BLACK}
                   style={{ marginRight: 20 }}
                 />
               </a>

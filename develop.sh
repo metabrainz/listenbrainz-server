@@ -16,6 +16,16 @@ else
 fi
 
 
+if [[ -f .env ]]; then
+    . .env
+    if [ -z $STATIC_BUILD_USER ]; then
+        echo STATIC_BUILD_USER=$(id -u) >> .env
+    fi
+else
+    echo STATIC_BUILD_USER=$(id -u) >> .env
+fi
+
+
 function invoke_docker_compose {
     exec $DOCKER_COMPOSE_CMD -f docker/docker-compose.yml \
                 -p listenbrainz \
