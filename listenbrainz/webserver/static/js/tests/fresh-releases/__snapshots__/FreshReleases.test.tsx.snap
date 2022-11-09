@@ -47,11 +47,11 @@ exports[`FreshReleases renders filters, card grid, and timeline components on th
         onClick={[Function]}
         style={
           Object {
-            "background": "#EB743B",
-            "border": "2px solid #EB743B",
+            "background": "#eb743b",
+            "border": "2px solid #eb743b",
             "borderRadius": "24px",
             "boxSizing": "border-box",
-            "color": "white",
+            "color": "#fff",
             "fontWeight": 700,
             "margin": "2px 6px 12px 6px",
             "outline": "none",
@@ -72,10 +72,10 @@ exports[`FreshReleases renders filters, card grid, and timeline components on th
         style={
           Object {
             "background": "transparent",
-            "border": "2px solid #BBBBBB",
+            "border": "2px solid #8d8d8d",
             "borderRadius": "24px",
             "boxSizing": "border-box",
-            "color": "#BBBBBB",
+            "color": "#8d8d8d",
             "margin": "2px 6px 12px 6px",
             "outline": "none",
             "padding": "3px 12px",
@@ -120,10 +120,10 @@ exports[`FreshReleases renders filters, card grid, and timeline components on th
                 style={
                   Object {
                     "background": "transparent",
-                    "border": "2px solid #BBBBBB",
+                    "border": "2px solid #8d8d8d",
                     "borderRadius": "24px",
                     "boxSizing": "border-box",
-                    "color": "#BBBBBB",
+                    "color": "#8d8d8d",
                     "margin": "6px",
                     "outline": "none",
                     "padding": "4px 12px",
