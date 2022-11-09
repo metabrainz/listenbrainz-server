@@ -29,6 +29,7 @@ import { getPageProps } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
 import ErrorBoundary from "../utils/ErrorBoundary";
+import SimpleModal from "../utils/SimpleModal";
 
 export type PlayerPageProps = {
   playlist: JSPFObject;
@@ -350,16 +351,19 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url || `${window.location.origin}/1`
   );
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <PlayerPageWithAlertNotifications
           initialAlerts={optionalAlerts}

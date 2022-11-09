@@ -48,6 +48,7 @@ import {
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
+import SimpleModal from "../utils/SimpleModal";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -911,12 +912,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
   );
-
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
@@ -925,6 +927,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <UserFeedPageWithAlertNotifications
           initialAlerts={optionalAlerts}
