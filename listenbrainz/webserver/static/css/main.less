@@ -17,13 +17,17 @@
 @import "musicbrainz-entity-icons.less";
 @import "preferences.less";
 
-@import "highlight.js/styles/github.css";
-
 @icon-font-path: "/static/fonts/";
 
 @pager-border-radius: @border-radius-base;
 // Height of the BrainzPlayer component (fixed at the bottom of the page)
 @brainzplayer-height: 60px;
+
+@import (inline, css) "highlight.js/styles/github.css";
+pre code.hljs {
+  max-height: 50vh;
+  overflow-y: scroll;
+}
 
 body {
   // Leave some space for BrainzPlayer
