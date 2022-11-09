@@ -8,6 +8,7 @@ import Card from "../components/Card";
 import HeatMap from "./HeatMap";
 import Loader from "../components/Loader";
 import { isInvalidStatRange } from "./utils";
+import { COLOR_BLACK } from "../utils/constants";
 
 export type UserDailyActivityProps = {
   range: UserStatsAPIRange;
@@ -200,7 +201,7 @@ export default class UserDailyActivity extends React.Component<
                 <FontAwesomeIcon
                   icon={faLink as IconProp}
                   size="sm"
-                  color="#000000"
+                  color={COLOR_BLACK}
                   style={{ marginRight: 20 }}
                 />
               </a>

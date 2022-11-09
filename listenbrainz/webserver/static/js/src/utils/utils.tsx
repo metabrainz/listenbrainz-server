@@ -6,6 +6,7 @@ import { Rating } from "react-simple-star-rating";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
+import NamePill from "../personal-recommendations/NamePill";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
@@ -17,12 +18,11 @@ const searchForSpotifyTrack = async (
   releaseName?: string
 ): Promise<SpotifyTrack | null> => {
   if (!spotifyToken) {
-    throw new Error(
-      JSON.stringify({
-        status: 403,
-        message: "You need to connect to your Spotify account",
-      })
-    );
+    // eslint-disable-next-line no-throw-literal
+    throw {
+      status: 403,
+      message: "You need to connect to your Spotify account",
+    };
   }
   let queryString = `type=track&q=`;
   if (trackName) {
@@ -47,12 +47,7 @@ const searchForSpotifyTrack = async (
   );
   const responseBody = await response.json();
   if (!response.ok) {
-    throw new Error(
-      JSON.stringify({
-        status: response.status,
-        message: responseBody.error,
-      })
-    );
+    throw responseBody.error;
   }
   // Valid response
   const tracks: SpotifyTrack[] = _.get(responseBody, "tracks.items");
@@ -626,6 +621,23 @@ export function feedReviewEventToListen(
   };
 }
 
+export function personalRecommendationEventToListen(
+  eventMetadata: UserTrackPersonalRecommendationMetadata
+): BaseListenFormat {
+  return {
+    listened_at: -1,
+    track_metadata: {
+      track_name: eventMetadata.track_name,
+      artist_name: eventMetadata.artist_name,
+      release_name: eventMetadata.release_name ?? "",
+      additional_info: {
+        recording_mbid: eventMetadata.recording_mbid,
+        recording_msid: eventMetadata.recording_msid,
+      },
+    },
+  };
+}
+
 export function getReviewEventContent(
   eventMetadata: CritiqueBrainzReview
 ): JSX.Element {
@@ -652,6 +664,26 @@ export function getReviewEventContent(
             size={20}
             iconsCount={5}
           />
+        </div>
+      )}
+      {additionalContent}
+    </>
+  );
+}
+
+export function getPersonalRecommendationEventContent(
+  eventMetadata: UserTrackPersonalRecommendationMetadata,
+  isCreator: Boolean
+): JSX.Element {
+  const additionalContent = getAdditionalContent(eventMetadata);
+  return (
+    <>
+      {isCreator && (
+        <div className="sent-to">
+          Sent to:{" "}
+          {eventMetadata.users.map((userName) => {
+            return <NamePill title={userName} />;
+          })}
         </div>
       )}
       {additionalContent}

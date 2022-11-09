@@ -6,10 +6,10 @@ exports[`Pill renders correctly for inactive 1`] = `
     style={
       Object {
         "background": "transparent",
-        "border": "2px solid #BBBBBB",
+        "border": "2px solid #8d8d8d",
         "borderRadius": "24px",
         "boxSizing": "border-box",
-        "color": "#BBBBBB",
+        "color": "#8d8d8d",
         "margin": "2px 6px 12px 6px",
         "outline": "none",
         "padding": "3px 12px",
@@ -28,11 +28,11 @@ exports[`Pill renders correctly for primary active 1`] = `
   <button
     style={
       Object {
-        "background": "#EB743B",
-        "border": "2px solid #EB743B",
+        "background": "#eb743b",
+        "border": "2px solid #eb743b",
         "borderRadius": "24px",
         "boxSizing": "border-box",
-        "color": "white",
+        "color": "#fff",
         "fontWeight": 700,
         "margin": "2px 6px 12px 6px",
         "outline": "none",
@@ -56,7 +56,7 @@ exports[`Pill renders correctly for secondary active 1`] = `
         "border": "2px solid #353070",
         "borderRadius": "24px",
         "boxSizing": "border-box",
-        "color": "white",
+        "color": "#fff",
         "fontWeight": 700,
         "margin": "2px 6px 12px 6px",
         "outline": "none",

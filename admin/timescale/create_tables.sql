@@ -40,7 +40,7 @@ CREATE TABLE playlist.playlist (
     last_updated timestamp with time zone default now() not null,
     copied_from_id int, -- id of another playlist
     created_for_id int,
-    algorithm_metadata jsonb
+    additional_metadata jsonb
 );
 
 CREATE TABLE playlist.playlist_recording (
@@ -49,7 +49,8 @@ CREATE TABLE playlist.playlist_recording (
     position int not null,
     mbid uuid not null,
     added_by_id int not null,  -- int, but not an fk because it's in the wrong database
-    created timestamp with time zone default now() not null
+    created timestamp with time zone default now() not null,
+    additional_metadata jsonb
 );
 
 CREATE TABLE playlist.playlist_collaborator (

@@ -10,7 +10,6 @@ import {
   debounce,
   cloneDeep,
   omit,
-  get,
 } from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -32,6 +31,7 @@ import { getArtistName, getTrackName } from "../utils/utils";
 
 export type DataSourceType = {
   name: string;
+  icon: IconProp;
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
@@ -781,6 +781,7 @@ export default class BrainzPlayer extends React.Component<
       currentDataSourceIndex,
       currentTrackName,
       currentTrackArtist,
+      currentTrackURL,
       playerPaused,
       progressMs,
       durationMs,
@@ -811,6 +812,13 @@ export default class BrainzPlayer extends React.Component<
           seekToPositionMs={this.seekToPositionMs}
           listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
           currentListen={currentListen}
+          trackUrl={currentTrackURL}
+          currentDataSourceIcon={
+            this.dataSources[currentDataSourceIndex]?.current?.icon
+          }
+          currentDataSourceName={
+            this.dataSources[currentDataSourceIndex]?.current?.name
+          }
           newAlert={newAlert}
         >
           <SpotifyPlayer

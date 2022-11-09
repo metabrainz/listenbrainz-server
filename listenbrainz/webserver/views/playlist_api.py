@@ -1,4 +1,3 @@
-
 import datetime
 from uuid import UUID
 
@@ -114,8 +113,8 @@ def serialize_jspf(playlist: Playlist):
         extension['created_for'] = playlist.created_for
     if playlist.collaborators:
         extension['collaborators'] = playlist.collaborators
-    if playlist.algorithm_metadata:
-        extension['algorithm_metadata'] = playlist.algorithm_metadata
+    if playlist.additional_metadata:
+        extension['additional_metadata'] = playlist.additional_metadata
 
     pl["extension"] = {PLAYLIST_EXTENSION_URI: extension}
 
@@ -293,12 +292,12 @@ def create_playlist():
     if description is not None and user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
         description = _filter_description_html(description)
 
-    # Check to see if the submitted playlist has algorithm_metadata defined and the current user an approved
+    # Check to see if the submitted playlist has additional_metadata defined and the current user an approved
     # playlist submitter; if so, load the metadata from the JSPF playlist and add to the new playlist
-    algorithm_metadata = None
+    additional_metadata = None
     if user["musicbrainz_id"] in current_app.config["APPROVED_PLAYLIST_BOTS"]:
         try:
-            algorithm_metadata = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["algorithm_metadata"]
+            additional_metadata = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"]
         except KeyError:
             pass
 
@@ -308,7 +307,7 @@ def create_playlist():
                                 collaborator_ids=collaborator_ids,
                                 collaborators=collaborators,
                                 public=public,
-                                algorithm_metadata=algorithm_metadata)
+                                additional_metadata=additional_metadata)
 
     if data["playlist"].get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:

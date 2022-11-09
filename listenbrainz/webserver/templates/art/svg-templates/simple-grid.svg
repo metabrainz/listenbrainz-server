@@ -1,0 +1,16 @@
+<svg version="1.1"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 {{ width }} {{ height }}"
+     width="{{ width }}"
+     height="{{ height }}">
+
+     <rect id="background" fill="{{ background }}" x="0" ry="0" width="{{ width }}" height="{{ height}}"/>
+     {% for image in images %}
+        <image x="{{ image.x }}"
+               y="{{ image.y }}"
+               width="{{ image.width }}"
+               height="{{ image.height }}" 
+               preserveAspectRatio="xMidYMid slice"
+               xlink:href="{{ image.url }}"/>
+     {% endfor %}
+</svg>

@@ -729,7 +729,7 @@ exports[`BarDualTone renders correctly for month 1`] = `
                 "label": "May 2020",
               },
               Object {
-                "color": "#EB743B",
+                "color": "#eb743b",
                 "id": "thisRangeName",
                 "label": "June 2020",
               },
@@ -944,7 +944,7 @@ exports[`BarDualTone renders correctly for week 1`] = `
                 "label": "Jun 01 - Jun 07",
               },
               Object {
-                "color": "#EB743B",
+                "color": "#eb743b",
                 "id": "thisRangeName",
                 "label": "Jun 08 - Jun 14",
               },
@@ -1203,7 +1203,7 @@ exports[`BarDualTone renders correctly for year 1`] = `
                 "label": "January 2019",
               },
               Object {
-                "color": "#EB743B",
+                "color": "#eb743b",
                 "id": "thisRangeName",
                 "label": "January 2020",
               },

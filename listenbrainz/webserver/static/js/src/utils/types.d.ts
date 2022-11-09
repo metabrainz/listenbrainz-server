@@ -514,6 +514,12 @@ declare type UserTrackRecommendationMetadata = {
   recording_msid?: string;
 };
 
+/** For recommending a track personally from the front-end */
+declare type UserTrackPersonalRecommendationMetadata = UserTrackRecommendationMetadata & {
+  blurb_content: string;
+  users: Array<string>;
+};
+
 declare type PinEventMetadata = Listen & {
   blurb_content?: string;
 };
@@ -531,6 +537,7 @@ type EventTypeT =
   | "stop_follow"
   | "block_follow"
   | "notification"
+  | "personal_recording_recommendation"
   | "critiquebrainz_review";
 
 type UserRelationshipEventMetadata = {
@@ -549,6 +556,7 @@ type EventMetadata =
   | UserRelationshipEventMetadata
   | PinEventMetadata
   | NotificationEventMetadata
+  | UserTrackPersonalRecommendationMetadata
   | CritiqueBrainzReview;
 
 type TimelineEvent = {
