@@ -1,5 +1,4 @@
-from psycopg2.extensions import JSONB
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from listenbrainz.model import db
 from listenbrainz.webserver.admin import AdminModelView
