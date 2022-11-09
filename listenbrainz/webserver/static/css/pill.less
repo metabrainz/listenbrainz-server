@@ -1,0 +1,27 @@
+.pill {
+  display: inline-block;
+  background-color: @blue;
+  border-radius: 100px;
+  margin: 2px 2px 5px 2px;
+  > div {
+    display: flex;
+    margin: 5px;
+    // We want pills to be always 32px height or more
+    // Texts are 10px, hence minimum height of 22px here
+    min-height: 22px;
+    span {
+      color: @white;
+      margin-top: auto;
+      margin-bottom: auto;
+      margin-left: 6px;
+      margin-right: 6px;
+      font-style: normal;
+    }
+    button {
+      background-color: @blue;
+      color: @white;
+      border: none;
+      border-radius: 100px;
+    }
+  }
+}
