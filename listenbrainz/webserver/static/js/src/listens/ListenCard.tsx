@@ -502,7 +502,7 @@ export default class ListenCard extends React.Component<
                               }}
                             />
                           </pre>,
-                          undefined,
+                          "Inspect listen",
                           <>
                             <button
                               type="button"
