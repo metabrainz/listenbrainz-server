@@ -8,6 +8,7 @@ import {
   isString,
   has,
 } from "lodash";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import {
   searchForSpotifyTrack,
   loadScriptAsync,
@@ -81,12 +82,25 @@ export default class SpotifyPlayer
       (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
       (isString(musicService) &&
         musicService.toLowerCase() === "spotify.com") ||
-      Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
+      Boolean(SpotifyPlayer.getURLFromListen(listen))
     );
   };
 
+  static getURLFromListen(listen: Listen | JSPFTrack): string | undefined {
+    const spotifyId = _get(listen, "track_metadata.additional_info.spotify_id");
+    if (spotifyId) {
+      return spotifyId;
+    }
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && /open\.spotify\.com\/track\//.test(originURL)) {
+      return originURL;
+    }
+    return undefined;
+  }
+
   public name = "spotify";
   public domainName = "spotify.com";
+  public icon = faSpotify;
   // Saving the access token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
   private accessToken = "";
@@ -127,22 +141,8 @@ export default class SpotifyPlayer
     this.disconnectSpotifyPlayer();
   }
 
-  static getSpotifyURLFromListen(
-    listen: Listen | JSPFTrack
-  ): string | undefined {
-    const spotifyId = _get(listen, "track_metadata.additional_info.spotify_id");
-    if (spotifyId) {
-      return spotifyId;
-    }
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (originURL && /open\.spotify\.com\/track\//.test(originURL)) {
-      return originURL;
-    }
-    return undefined;
-  }
-
   static getSpotifyTrackIDFromListen(listen: Listen | JSPFTrack): string {
-    const spotifyId = SpotifyPlayer.getSpotifyURLFromListen(listen);
+    const spotifyId = SpotifyPlayer.getURLFromListen(listen);
     if (!spotifyId) {
       return "";
     }
@@ -297,7 +297,7 @@ export default class SpotifyPlayer
     if (!show) {
       return;
     }
-    if (SpotifyPlayer.getSpotifyURLFromListen(listen)) {
+    if (SpotifyPlayer.getURLFromListen(listen)) {
       this.playSpotifyURI(
         SpotifyPlayer.getSpotifyUriFromListen(listen as Listen)
       );
