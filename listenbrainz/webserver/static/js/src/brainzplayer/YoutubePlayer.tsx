@@ -16,6 +16,7 @@ import {
   faWindowMaximize,
   faWindowMinimize,
 } from "@fortawesome/free-solid-svg-icons";
+import { faYoutube } from "@fortawesome/free-brands-svg-icons";
 import {
   getArtistName,
   getTrackName,
@@ -97,9 +98,7 @@ export default class YoutubePlayer
     return images;
   }
 
-  static getYoutubeURLFromListen(
-    listen: Listen | JSPFTrack
-  ): string | undefined {
+  static getURLFromListen(listen: Listen | JSPFTrack): string | undefined {
     const youtubeId = this.getVideoIDFromListen(listen);
     if (youtubeId) {
       return `https://www.youtube.com/watch?v=${youtubeId}`;
@@ -110,6 +109,7 @@ export default class YoutubePlayer
 
   public name = "youtube";
   public domainName = "youtube.com";
+  public icon = faYoutube;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
