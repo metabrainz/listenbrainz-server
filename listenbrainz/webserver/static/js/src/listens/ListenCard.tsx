@@ -6,16 +6,17 @@ import {
   faPlay,
   faCommentDots,
   faExternalLinkAlt,
+  faCode,
+  faCopy,
 } from "@fortawesome/free-solid-svg-icons";
-import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
 import {
   faSoundcloud,
   faSpotify,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   getArtistLink,
   getTrackLink,
@@ -245,6 +246,7 @@ export default class ListenCard extends React.Component<
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
     const { additionalActions } = this.props;
+    const { modal } = this.context;
 
     const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
@@ -476,6 +478,47 @@ export default class ListenCard extends React.Component<
                       />
                     )}
                     {additionalMenuItems}
+                    <ListenControl
+                      text="Inspect listen"
+                      icon={faCode}
+                      action={() => {
+                        const stringifiedJSON = JSON.stringify(listen, null, 4);
+                        modal?.current?.updateModal(
+                          <pre>
+                            <code
+                              className="hljs"
+                              // eslint-disable-next-line react/no-danger
+                              dangerouslySetInnerHTML={{
+                                __html: sanitize(highlightedJSON),
+                              }}
+                            />
+                          </pre>,
+                          undefined,
+                          <>
+                            <button
+                              type="button"
+                              className="btn btn-info"
+                              onClick={async () => {
+                                await navigator.clipboard.writeText(
+                                  stringifiedJSON
+                                );
+                              }}
+                            >
+                              <FontAwesomeIcon icon={faCopy} /> Copy
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-default"
+                              data-dismiss="modal"
+                            >
+                              Close
+                            </button>
+                          </>
+                        );
+                      }}
+                      dataToggle="modal"
+                      dataTarget="#SimpleModal"
+                    />
                   </ul>
                 </>
               )}
