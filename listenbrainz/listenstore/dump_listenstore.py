@@ -339,7 +339,7 @@ class DumpListenStore:
         -- setting multiple columns at once.
                      SELECT listened_at
                           , user_id
-                          , artist_credit_id
+                          , (artist_data->'artist_credit_id')::INT AS artist_credit_id
                           , artist_mbids::TEXT[] AS m_artist_credit_mbids
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
                           -- here and let psycopg2 adapt it to a python list which is what we want anyway
