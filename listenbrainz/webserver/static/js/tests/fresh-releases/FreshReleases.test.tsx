@@ -8,8 +8,10 @@ import GlobalAppContext, {
 import APIService from "../../src/utils/APIService";
 
 import FreshReleases from "../../src/fresh-releases/FreshReleases";
+import ReleaseFilters from "../../src/fresh-releases/ReleaseFilters";
 
-import * as freshReleasesSitewideData from "../__mocks__/freshReleasesSitewideData.json";
+import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
+import * as sitewideFilters from "../__mocks__/freshReleasesSitewideFilters.json";
 
 const freshReleasesProps = {
   user: {
@@ -56,11 +58,11 @@ describe("FreshReleases", () => {
   beforeAll(() => {
     mountOptions.context.APIService.fetchSitewideFreshReleases = jest
       .fn()
-      .mockResolvedValue(freshReleasesSitewideData);
+      .mockResolvedValue(sitewideData);
   });
 
   it("renders filters, card grid, and timeline components on the page", async () => {
-    const response = freshReleasesSitewideData;
+    const response = sitewideData;
     const mockFetchSitewideFreshReleases = jest.fn().mockImplementation(() => {
       return Promise.resolve({
         ok: true,
@@ -77,5 +79,22 @@ describe("FreshReleases", () => {
     await waitForComponentToPaint(wrapper);
     expect(mockFetchSitewideFreshReleases).toBeCalled();
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders filters correctly", async () => {
+    const setFilteredList = jest.fn();
+
+    const wrapper = mount(
+      <ReleaseFilters
+        allFilters={sitewideFilters}
+        releases={sitewideData}
+        setFilteredList={setFilteredList}
+      />
+    );
+
+    await waitForComponentToPaint(wrapper);
+    expect(wrapper).toMatchSnapshot();
+    wrapper.find("#filters-item-0").simulate("click");
+    expect(setFilteredList).toBeCalled();
   });
 });
