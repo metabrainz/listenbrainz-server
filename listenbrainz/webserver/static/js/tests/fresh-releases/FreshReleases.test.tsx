@@ -78,7 +78,8 @@ describe("FreshReleases", () => {
     );
     await waitForComponentToPaint(wrapper);
     expect(mockFetchSitewideFreshReleases).toBeCalled();
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(ReleaseFilters)).toHaveLength(1);
+    expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("renders filters correctly", async () => {
@@ -93,7 +94,7 @@ describe("FreshReleases", () => {
     );
 
     await waitForComponentToPaint(wrapper);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.html()).toMatchSnapshot();
     wrapper.find("#filters-item-0").simulate("click");
     expect(setFilteredList).toBeCalled();
   });
