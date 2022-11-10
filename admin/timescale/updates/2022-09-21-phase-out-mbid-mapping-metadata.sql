@@ -26,10 +26,6 @@ CREATE UNIQUE INDEX mb_metadata_cache_idx_recording_mbid ON mapping.mb_metadata_
 CREATE INDEX mb_metadata_cache_idx_artist_mbids ON mapping.mb_metadata_cache USING gin(artist_mbids);
 CREATE INDEX mb_metadata_cache_idx_dirty ON mapping.mb_metadata_cache (dirty);
 
-ALTER TABLE mbid_mapping
-    ADD CONSTRAINT mbid_mapping_mb_metadata_cache_recording_mbid_foreign_key
-    FOREIGN KEY (recording_mbid)
-    REFERENCES mapping.mb_metadata_cache (recording_mbid)
-    ON DELETE CASCADE;
+-- no FK because mb_metadata_cache is rebuilt from scratch at regular intervals
 
 COMMIT;
