@@ -13,9 +13,9 @@ ALTER TABLE playlist.playlist_collaborator
     ON DELETE CASCADE;
 
 ALTER TABLE mbid_mapping
-    ADD CONSTRAINT mbid_mapping_mb_metadata_cache_recording_mbid_foreign_key
+    ADD CONSTRAINT mbid_mapping_recording_mbid_foreign_key
     FOREIGN KEY (recording_mbid)
-    REFERENCES mapping.mb_metadata_cache (recording_mbid)
+    REFERENCES mbid_mapping_metadata (recording_mbid)
     ON DELETE CASCADE;
 
 COMMIT;
