@@ -1,4 +1,5 @@
 import * as React from "react";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 import { getAlbumArtFromReleaseMBID } from "../utils/utils";
 import { formatReleaseDate } from "./utils";
 
@@ -70,11 +71,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   return (
     <div className="release-card-container">
       <div className="release-date">{formatReleaseDate(releaseDate)}</div>
-      <img
+      <LazyLoadImage
         className="release-coverart"
         src={coverartSrc}
         alt={`${releaseName} by ${artistCreditName}`}
-        loading="lazy"
+        placeholderSrc={COVERART_PLACEHOLDER}
       />
       <div className="name-type-container">
         <div className="release-name" title={releaseName}>
