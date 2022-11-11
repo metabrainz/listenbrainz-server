@@ -14,8 +14,8 @@ module.exports = {
         useBuiltIns: "usage",
         corejs: { version: "3.26", proposals: true },
         targets: {
-          node: "12",
-          browsers: ["> 0.2% and not dead", "firefox >= 44"],
+          node: "16",
+          browsers: ["> 0.2%", "last 2 versions", "not dead", "Firefox ESR"],
         },
       },
     ],
