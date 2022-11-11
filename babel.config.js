@@ -12,7 +12,7 @@ module.exports = {
       "@babel/preset-env",
       {
         useBuiltIns: "usage",
-        corejs: { version: "3.9", proposals: true },
+        corejs: { version: "3.26", proposals: true },
         targets: {
           node: "12",
           browsers: ["> 0.2% and not dead", "firefox >= 44"],
