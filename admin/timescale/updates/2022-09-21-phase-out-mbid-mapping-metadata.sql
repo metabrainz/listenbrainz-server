@@ -27,5 +27,6 @@ CREATE INDEX mb_metadata_cache_idx_artist_mbids ON mapping.mb_metadata_cache USI
 CREATE INDEX mb_metadata_cache_idx_dirty ON mapping.mb_metadata_cache (dirty);
 
 -- no FK because mb_metadata_cache is rebuilt from scratch at regular intervals
-
+-- drop FK from mbid_mapping_metadata because the table is no longer used in development or test
+ALTER TABLE mbid_mapping DROP CONSTRAINT mbid_mapping_recording_mbid_foreign_key;
 COMMIT;
