@@ -51,7 +51,7 @@
     "@sentry/react": "^6.13.3",
     "@sentry/tracing": "^6.13.3",
     "clean-css": "^4.2.1",
-    "core-js": "^3.9.1",
+    "core-js": "^3.26.0",
     "d3-array": "~2.3.3",
     "d3-format": "^1.4.4",
     "d3-scale": "^3.2.1",
