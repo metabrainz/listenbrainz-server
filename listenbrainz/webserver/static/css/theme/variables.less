@@ -2,16 +2,22 @@
 // Colors
 // ------
 
+// ListenBrainz colors
+@blue: #353070;
+@orange: #eb743b;
+@white: #ffffff;
+@light: #c0cfb2;
+@dark: #053b47;
+
+// gray colors
+@gray: @asphalt;
 @gray-darker: darken(@gray, 30%);
 @gray-dark: darken(@gray, 15%);
-@gray: @asphalt;
 @gray-light: darken(@gray-lighter, 15%);
 @gray-lighter: lighten(@cafe-con-leche, 6%);
 
-@orange: #eb743b;
 @purple: #ba478f;
 @green: #5aa854;
-@blue: #4e7ec2;
 @turquoise: #36b5b2;
 @yellow: #ea9d11;
 @red: #c64040;
@@ -66,7 +72,7 @@
 // Iconography
 // -----------
 
-@icon-font-path: "../fonts/";
+@icon-font-path: "../../fonts/";
 @icon-font-name: "glyphicons-halflings-regular";
 
 // ----------
@@ -82,12 +88,12 @@
 @padding-small-vertical: 5px;
 @padding-small-horizontal: 10px;
 
-@line-height-large: 1.33;
+@line-height-large: 1.3333333; // extra decimals for Win 8.1 Chrome;
 @line-height-small: 1.5;
 
-@border-radius-base: 2px;
-@border-radius-large: 4px;
-@border-radius-small: 1px;
+@border-radius-base: 4px;
+@border-radius-large: 6px;
+@border-radius-small: 3px;
 
 @component-active-bg: @brand-primary;
 
@@ -112,7 +118,7 @@
 // Buttons
 // -------
 
-@btn-font-weight: 400;
+@btn-font-weight: normal;
 
 @btn-default-color: @white;
 @btn-default-bg: lighten(@asphalt, 13%);
@@ -140,9 +146,6 @@
 
 @btn-link-disabled-color: @gray-light;
 
-@btn-border-width: 3px;
-@btn-border-radius: @border-radius-base / 2;
-
 // -----
 // Forms
 // -----
@@ -152,7 +155,7 @@
 
 @input-color: @gray;
 @input-border: @gray-light;
-@input-border-radius: @border-radius-base;
+// @input-border-radius: @border-radius-base;
 @input-border-focus: @blue;
 
 @input-color-placeholder: lighten(@gray, 20%);
@@ -195,40 +198,8 @@
 
 @dropdown-caret-color: @gray-darker;
 
-// COMPONENT VARIABLES
-// --------------------------------------------------
-
-// Z-index master list
-// -------------------------
-// Used for a bird's eye view of components dependent on the z-axis
-// Try to avoid customizing these :)
-
-@zindex-navbar: 1000;
-@zindex-dropdown: 1000;
-@zindex-popover: 1010;
-@zindex-tooltip: 1030;
-@zindex-navbar-fixed: 1030;
-@zindex-modal-background: 1040;
-@zindex-modal: 1050;
-
 // Media queries breakpoints
 // --------------------------------------------------
-
-// Extra small screen / phone
-@screen-xs: 480px;
-@screen-phone: @screen-xs;
-
-// Small screen / tablet
-@screen-sm: 768px;
-@screen-tablet: @screen-sm;
-
-// Medium screen / desktop
-@screen-md: 992px;
-@screen-desktop: @screen-md;
-
-// Large screen / wide desktop
-@screen-lg: 1200px;
-@screen-lg-desktop: @screen-lg;
 
 // So media queries don't overlap when required, provide a maximum
 @screen-xs-max: (@screen-sm - 1);
@@ -559,10 +530,3 @@
 
 // Horizontal forms & lists
 @component-offset-horizontal: 180px;
-
-// Container sizes
-@container-tablet: ((720px + @grid-gutter-width)); // Small screen / tablet
-@container-desktop: ((940px + @grid-gutter-width)); // Medium screen / desktop
-@container-lg-desktop: (
-  (1140px + @grid-gutter-width)
-); // Large screen / wide desktop
