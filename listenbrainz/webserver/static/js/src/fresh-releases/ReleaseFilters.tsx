@@ -71,7 +71,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
           onClick={() => setCoverartOnly(!coverartOnly)}
           style={{
             padding: "4px 12px",
-            margin: "6px",
+            margin: "unset",
           }}
         >
           Hide releases without coverart
