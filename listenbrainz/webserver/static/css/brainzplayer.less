@@ -1,8 +1,8 @@
-@listenbrainz-blue: #353070;
+@listenbrainz-blue: @blue;
 @primary-color: @listenbrainz-blue;
 @love-color: #c62828;
-@hate-color: #353070;
-@dark-color: #053b47;
+@hate-color: @blue;
+@dark-color: @dark;
 @brainzplayer-height: 60px;
 @brainzplayer-padding: 0px;
 @cover-art-size: @brainzplayer-height - @brainzplayer-padding*2;
@@ -198,7 +198,7 @@
       cursor: pointer;
       color: #8d8d8d;
       &:hover {
-        color: #46433a;
+        color: @asphalt;
       }
       &.disabled {
         pointer-events: none;
@@ -299,7 +299,7 @@
     border-radius: 4px;
     padding: 10px 0px;
     width: 260px;
-    color: #46433a;
+    color: @asphalt;
 
     //From Bootstrap styles
     top: auto;
@@ -329,7 +329,7 @@
 
       &:hover {
         color: @white-background;
-        background-color: #eb743b;
+        background-color: @orange;
       }
     }
   }
