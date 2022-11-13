@@ -102,12 +102,14 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
           </h3>
           <div id="fr-pill-row">
             <Pill
+              id="sitewide-releases"
               onClick={() => setPageType(PAGE_TYPE_SITEWIDE)}
               active={pageType === PAGE_TYPE_SITEWIDE}
             >
               All Releases
             </Pill>
             <Pill
+              id="user-releases"
               onClick={() => setPageType(PAGE_TYPE_USER)}
               active={pageType === PAGE_TYPE_USER}
             >
