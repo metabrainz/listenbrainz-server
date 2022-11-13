@@ -2,7 +2,7 @@ import ujson
 from flask import Blueprint, render_template, current_app
 
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
-from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping
+from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mbids
 from listenbrainz.webserver.views.user import _get_user
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
@@ -148,7 +148,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                 }
     """
     mbids = [r['recording_mbid'] for r in mbids_and_ratings_list]
-    data, _ = load_recordings_from_mapping(mbids=mbids, msids=[])
+    data = load_recordings_from_mbids(mbids=mbids)
 
     recommendations = []
 

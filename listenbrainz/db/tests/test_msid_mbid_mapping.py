@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy import text
 
 from listenbrainz import messybrainz
-from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping, fetch_track_metadata_for_items, MsidMbidModel
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items, MsidMbidModel, load_recordings_from_mbids
 from listenbrainz.db.testing import TimescaleTestCase
 from listenbrainz.db import timescale as ts
 
@@ -115,21 +115,20 @@ class MappingTestCase(TimescaleTestCase):
 
     def test_load_recordings_from_mapping(self):
         recordings = self.insert_recordings()
-        expected_mbid_map = {
+        expected = {
             recordings[0]["recording_mbid"]: recordings[0],
             recordings[1]["recording_mbid"]: recordings[1]
         }
-        expected_msid_map = {
-            recordings[3]["recording_msid"]: recordings[3]
-        }
-        mbid_map, msid_map = load_recordings_from_mapping(
-            mbids=[recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]],
-            msids=[recordings[2]["recording_msid"], recordings[3]["recording_msid"]]
-        )
-        self.assertEqual(expected_msid_map, msid_map)
-        self.assertEqual(expected_mbid_map, mbid_map)
+        with ts.engine.connect() as connection:
+            received = load_recordings_from_mbids(
+                connection,
+                [recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]]
+            )
+        self.maxDiff = None
+        self.assertEqual(expected, received)
 
     def test_fetch_track_metadata_for_items(self):
+        self.maxDiff = None
         recordings = self.insert_recordings()
         models = [
             # these recordings test we find mapping metadata from mbids
