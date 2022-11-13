@@ -11,6 +11,7 @@ import FreshReleases from "../../src/fresh-releases/FreshReleases";
 import ReleaseFilters from "../../src/fresh-releases/ReleaseFilters";
 
 import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
+import * as userData from "../__mocks__/freshReleasesUserData.json";
 import * as sitewideFilters from "../__mocks__/freshReleasesSitewideFilters.json";
 
 const freshReleasesProps = {
@@ -55,19 +56,10 @@ const waitForComponentToPaint = async (wrapper: any) => {
 };
 
 describe("FreshReleases", () => {
-  beforeAll(() => {
-    mountOptions.context.APIService.fetchSitewideFreshReleases = jest
-      .fn()
-      .mockResolvedValue(sitewideData);
-  });
-
   it("renders filters, card grid, and timeline components on the page", async () => {
-    const response = sitewideData;
     const mockFetchSitewideFreshReleases = jest.fn().mockImplementation(() => {
       return Promise.resolve({
-        ok: true,
-        status: 400,
-        json: () => response,
+        json: () => sitewideData,
       });
     });
     mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases;
@@ -80,6 +72,26 @@ describe("FreshReleases", () => {
     expect(mockFetchSitewideFreshReleases).toBeCalled();
     expect(wrapper.find(ReleaseFilters)).toHaveLength(1);
     expect(wrapper.html()).toMatchSnapshot();
+  });
+
+  it("renders user fresh releases page correctly", async () => {
+    const mockFetchUserFreshReleases = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        json: () => userData,
+      });
+    });
+    mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
+    const wrapper = mount(
+      <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
+        <FreshReleases {...props} />
+      </GlobalAppContext.Provider>
+    );
+    await waitForComponentToPaint(wrapper);
+
+    // TODO set pageType to "user" before uncommenting the following code
+
+    // expect(mockFetchUserFreshReleases).toBeCalled();
+    // expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("renders filters correctly", async () => {
