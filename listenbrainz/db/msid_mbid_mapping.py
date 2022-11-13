@@ -49,7 +49,7 @@ def load_recordings_from_mbids(connection, mbids: Iterable[str]) -> dict:
              , artist_data->>'name' AS artist
              , recording_data->>'name' AS title
              , release_data->>'name' AS release
-             , (release_data->>'caa_id')::int
+             , (release_data->>'caa_id')::bigint
              , release_data->>'caa_release_mbid'
           FROM mbid_mapping m
           JOIN mapping.mb_metadata_cache mbc
