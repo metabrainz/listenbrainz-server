@@ -237,7 +237,6 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
-        self.assertEqual(result[0].recording_msid, self.sample_feedback_with_metadata[0]["recording_msid"])
         self.assertEqual(result[0].score, self.sample_feedback_with_metadata[0]["score"])
         self.assertEqual(result[0].track_metadata["artist_name"], "Portishead")
         self.assertEqual(result[0].track_metadata["track_name"], "Strangers")

@@ -115,6 +115,8 @@ class MappingTestCase(TimescaleTestCase):
 
     def test_load_recordings_from_mapping(self):
         recordings = self.insert_recordings()
+        del recordings[0]["recording_msid"]
+        del recordings[1]["recording_msid"]
         expected = {
             recordings[0]["recording_mbid"]: recordings[0],
             recordings[1]["recording_mbid"]: recordings[1]
@@ -124,7 +126,8 @@ class MappingTestCase(TimescaleTestCase):
                 connection,
                 [recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]]
             )
-        self.maxDiff = None
+        print(expected)
+        print(received)
         self.assertEqual(expected, received)
 
     def test_fetch_track_metadata_for_items(self):
@@ -151,7 +154,7 @@ class MappingTestCase(TimescaleTestCase):
             self.assertEqual(metadata["track_name"], recording["title"])
             self.assertEqual(metadata["artist_name"], recording["artist"])
 
-            if idx == 2 or idx == 4:  # these recordings are only present in MsB
+            if 2 <= idx <= 4:  # these recordings are only present in MsB
                 continue
 
             self.assertEqual(metadata["release_name"], recording["release"])
