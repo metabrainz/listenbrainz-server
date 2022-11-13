@@ -67,8 +67,9 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
     def insert_test_data_with_metadata(self, user_id):
         """ Insert test data with metadata into the database """
         msid = msb_db.insert_all_in_transaction([self.sample_recording])[0]
-
+        mbid = "2f3d422f-8890-41a1-9762-fbe16f107c31"
         self.sample_feedback_with_metadata[0]["recording_msid"] = msid
+        self.sample_feedback_with_metadata[0]["recording_mbid"] = mbid
 
         query = """INSERT INTO mapping.mb_metadata_cache
                                (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
@@ -90,14 +91,13 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
                         VALUES (:msid, :mbid, :match_type, now())"""
 
         with ts.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(query),
-                               {"msid": msid, "mbid": "2f3d422f-8890-41a1-9762-fbe16f107c31", "match_type": "exact_match"})
+            connection.execute(sqlalchemy.text(query), {"msid": msid, "mbid": mbid, "match_type": "exact_match"})
 
         for fb in self.sample_feedback_with_metadata:
             db_feedback.insert(
                 Feedback(
                     user_id=user_id,
-                    recording_msid=fb["recording_msid"],
+                    recording_mbid=fb["recording_mbid"],
                     score=fb["score"]
                 )
             )
