@@ -49,6 +49,8 @@ def load_recordings_from_mbids(connection, mbids: Iterable[str]) -> dict:
              , artist_data->>'name' AS artist
              , recording_data->>'name' AS title
              , release_data->>'name' AS release
+             , (release_data->>'caa_id')::int
+             , release_data->>'caa_release_mbid'
           FROM mbid_mapping m
           JOIN mapping.mb_metadata_cache mbc
          USING (recording_mbid)
@@ -127,6 +129,11 @@ def _update_mbid_items(models: dict[str, list[ModelT]], metadatas: dict, remaini
                     "artist_mbids": metadata["artist_mbids"]
                 }
             }
+
+            if metadata["caa_id"]:
+                item.track_metadata["additional_info"]["caa_id"] = metadata["caa_id"]
+                item.track_metadata["additional_info"]["caa_release_mbid"] = metadata["caa_release_mbid"]
+
             if item.recording_msid:
                 item.track_metadata["additional_info"]["recording_msid"] = item.recording_msid
 

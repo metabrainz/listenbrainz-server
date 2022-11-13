@@ -156,8 +156,6 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   const artistMBID = first(recordingData?.artist_mbids);
   const releaseMBID = recordingData?.release_mbid ?? metadata?.release?.mbid;
-  const CAAReleaseMBID = metadata?.release?.caa_release_mbid;
-  const CAAID = metadata?.release?.caa_id;
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
   if (CAAReleaseMBID && CAAID) {
     // Bypass the Cover Art Archive redirect since we have the info to directly fetch from archive.org

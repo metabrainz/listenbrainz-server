@@ -27,6 +27,12 @@ class MappingTestCase(TimescaleTestCase):
     def insert_recording_in_mapping(self, recording, match_type):
         with ts.engine.begin() as connection:
             if match_type == "exact_match":
+
+                release_data = {"name": recording["release"]}
+                if recording["caa_id"]:
+                    release_data["caa_id"] = recording["caa_id"]
+                    release_data["caa_release_mbid"] = recording["caa_release_mbid"]
+
                 connection.execute(text("""
                     INSERT INTO mapping.mb_metadata_cache
                             (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
@@ -37,7 +43,7 @@ class MappingTestCase(TimescaleTestCase):
                     "release_mbid": recording["release_mbid"],
                     "recording_data": json.dumps({"name": recording["title"]}),
                     "artist_data": json.dumps({"name": recording["artist"]}),
-                    "release_data": json.dumps({"name": recording["release"]}),
+                    "release_data": json.dumps(release_data),
                     "tag_data": json.dumps({"artist": [], "recording": [], "release_group": []})
                 })
 
@@ -61,7 +67,9 @@ class MappingTestCase(TimescaleTestCase):
                 "release": "Batman Returns",
                 "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"],
                 "artist": "Danny Elfman",
-                "title": "The Final Confrontation, Part 1"
+                "title": "The Final Confrontation, Part 1",
+                "caa_release_mbid": "a2589025-8517-45ab-9d64-fe927ba087b1-3151246737",
+                "caa_id": 3151246737
             },
             {
                 "recording_mbid": "c5bfd98d-ccde-4cf3-8abb-63fad1b6065a",
