@@ -75,8 +75,8 @@ fetchMock.mockIf(
     return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
   }
 );
-let wrapper: ReactWrapper<any, any, any> | undefined;
 describe("Listens page", () => {
+  let wrapper: ReactWrapper<any, any, any> | undefined;
   beforeEach(() => {
     wrapper = undefined;
   });
