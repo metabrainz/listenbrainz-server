@@ -19,7 +19,7 @@
  */
 
 import * as React from "react";
-import { mount, shallow } from "enzyme";
+import { mount, ReactWrapper, shallow } from "enzyme";
 import UserPageHeading from "../../src/user/UserPageHeading";
 import FollowButton from "../../src/follow/FollowButton";
 import ReportUserButton from "../../src/report-user/ReportUser";
@@ -28,6 +28,7 @@ import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
+import { waitForComponentToPaint } from "../test-utils";
 
 const user = {
   id: 1,
@@ -47,9 +48,22 @@ const globalContext: GlobalAppContextT = {
   currentUser: loggedInUser,
 };
 
-describe("<UserPageHeading />", () => {
+describe("UserPageHeading", () => {
+  let wrapper: ReactWrapper<any, any, any> | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   it("renders the name of the user", () => {
-    const wrapper = shallow(
+    const shallowWrapper = shallow(
       <UserPageHeading
         user={user}
         loggedInUser={loggedInUser}
@@ -57,12 +71,12 @@ describe("<UserPageHeading />", () => {
         alreadyReportedUser={false}
       />
     );
-    expect(wrapper.contains("followed_user")).toBeTruthy();
+    expect(shallowWrapper.contains("followed_user")).toBeTruthy();
   });
 
   it("does not render the FollowButton component if no loggedInUser", () => {
     // server sends an empty object in case no user is logged in
-    const wrapper = shallow(
+    const shallowWrapper = shallow(
       <UserPageHeading
         user={user}
         loggedInUser={{} as ListenBrainzUser}
@@ -70,11 +84,11 @@ describe("<UserPageHeading />", () => {
         alreadyReportedUser={false}
       />
     );
-    expect(wrapper.find(FollowButton)).toHaveLength(0);
+    expect(shallowWrapper.find(FollowButton)).toHaveLength(0);
   });
 
   it("does not render the FollowButton component if the loggedInUser is looking at their own page", () => {
-    const wrapper = shallow(
+    const shallowWrapper = shallow(
       <UserPageHeading
         user={user}
         loggedInUser={user}
@@ -82,11 +96,11 @@ describe("<UserPageHeading />", () => {
         alreadyReportedUser={false}
       />
     );
-    expect(wrapper.find(FollowButton)).toHaveLength(0);
+    expect(shallowWrapper.find(FollowButton)).toHaveLength(0);
   });
 
   it("renders the FollowButton component with the correct props if the loggedInUser and the user are different", () => {
-    const wrapper = shallow(
+    const shallowWrapper = shallow(
       <UserPageHeading
         user={user}
         loggedInUser={loggedInUser}
@@ -94,7 +108,7 @@ describe("<UserPageHeading />", () => {
         alreadyReportedUser={false}
       />
     );
-    const followButton = wrapper.find(FollowButton).at(0);
+    const followButton = shallowWrapper.find(FollowButton).at(0);
     expect(followButton.props()).toEqual({
       type: "icon-only",
       user: { id: 1, name: "followed_user" },
@@ -105,7 +119,7 @@ describe("<UserPageHeading />", () => {
   describe("ReportUser", () => {
     it("does not render a ReportUserButton nor ReportUserModal components if user is not logged in", () => {
       // server sends an empty object in case no user is logged in
-      const wrapper = shallow(
+      const shallowWrapper = shallow(
         <UserPageHeading
           user={user}
           loggedInUser={{} as ListenBrainzUser}
@@ -114,12 +128,12 @@ describe("<UserPageHeading />", () => {
         />
       );
 
-      expect(wrapper.find(ReportUserButton)).toHaveLength(0);
-      expect(wrapper.find(ReportUserModal)).toHaveLength(0);
+      expect(shallowWrapper.find(ReportUserButton)).toHaveLength(0);
+      expect(shallowWrapper.find(ReportUserModal)).toHaveLength(0);
     });
 
     it("renders the ReportUserButton and ReportUserModal components with the correct props inside the UserPageHeading", () => {
-      const wrapper = mount(
+      wrapper = mount(
         <UserPageHeading
           user={user}
           loggedInUser={loggedInUser}
@@ -141,7 +155,7 @@ describe("<UserPageHeading />", () => {
     });
 
     it("allows to report a user using the ReportUserModal", async () => {
-      const wrapper = mount(
+      wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
           <ReportUserButton user={user} alreadyReported={false} />
         </GlobalAppContext.Provider>
@@ -177,8 +191,7 @@ describe("<UserPageHeading />", () => {
         .first();
       submitButton.simulate("click");
 
-      // Clear async queue
-      await new Promise((resolve) => setImmediate(resolve));
+      await waitForComponentToPaint(wrapper);
 
       expect(apiCallSpy).toHaveBeenCalledWith(
         "followed_user",
@@ -190,7 +203,7 @@ describe("<UserPageHeading />", () => {
     });
 
     it("displays a user firendly message in the button text in case of error", async () => {
-      const wrapper = mount(
+      wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
           <ReportUserButton user={user} alreadyReported={false} />
         </GlobalAppContext.Provider>
@@ -214,8 +227,7 @@ describe("<UserPageHeading />", () => {
         .first();
       submitButton.simulate("click");
 
-      // Clear async queue
-      await new Promise((resolve) => setImmediate(resolve));
+      await waitForComponentToPaint(wrapper);
 
       expect(apiCallSpy).toHaveBeenCalledWith("followed_user", "");
       expect(wrapper.state("reported")).toBeFalsy();
