@@ -53,7 +53,7 @@ declare type MbidMapping = {
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
-  artists: Array<MbidMappingAritst>;
+  artists?: Array<MbidMappingAritst>;
   caa_id?: number;
   caa_release_mbid?: string;
 };
