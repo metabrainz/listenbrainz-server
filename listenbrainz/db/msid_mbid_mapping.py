@@ -51,9 +51,7 @@ def load_recordings_from_mbids(connection, mbids: Iterable[str]) -> dict:
              , release_data->>'name' AS release
              , (release_data->>'caa_id')::bigint AS caa_id
              , release_data->>'caa_release_mbid' AS caa_release_mbid
-          FROM mbid_mapping m
-          JOIN mapping.mb_metadata_cache mbc
-         USING (recording_mbid)
+          FROM mapping.mb_metadata_cache mbc
          WHERE recording_mbid IN :mbids
     """
 
