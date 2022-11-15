@@ -91,7 +91,7 @@ def load_recordings_from_mbids(connection, mbids: Iterable[str]) -> dict:
                 "join_phrase": join_phrase
             })
         data["artists"] = artists
-        row[recording_mbid] = data
+        rows[recording_mbid] = data
 
     return rows
 

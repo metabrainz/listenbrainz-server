@@ -1,5 +1,7 @@
 /** Main entities */
 declare type MusicBrainzArtist = {
+  name: string;
+  join_phrase: string;
   area: string;
   begin_year: number;
   rels: { [key: string]: string };
