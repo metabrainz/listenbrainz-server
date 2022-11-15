@@ -29,7 +29,7 @@ class MappingTestCase(TimescaleTestCase):
             if match_type == "exact_match":
 
                 release_data = {"name": recording["release"]}
-                if recording["caa_id"]:
+                if recording.get("caa_id"):
                     release_data["caa_id"] = recording["caa_id"]
                     release_data["caa_release_mbid"] = recording["caa_release_mbid"]
 
