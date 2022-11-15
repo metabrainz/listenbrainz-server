@@ -242,8 +242,8 @@ class TimescaleListenStore:
                         , mm.recording_mbid
                         , mbc.release_mbid
                         , mbc.artist_mbids
-                        , (mbc.release_data->>'caa_id')::bigint
-                        , mbc.release_data->>'caa_release_mbid'
+                        , (mbc.release_data->>'caa_id')::bigint AS caa_id
+                        , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
                      FROM listen
                 LEFT JOIN mbid_mapping mm
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
@@ -372,8 +372,8 @@ class TimescaleListenStore:
                                     , mm.recording_mbid
                                     , mbc.release_mbid
                                     , mbc.artist_mbids
-                                    , (mbc.release_data->>'caa_id')::bigint
-                                    , mbc.release_data->>'caa_release_mbid'
+                                    , (mbc.release_data->>'caa_id')::bigint AS caa_id
+                                    , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
                                     , row_number() OVER (PARTITION BY user_id ORDER BY listened_at DESC) AS rownum
                                 FROM listen l
                            LEFT JOIN mbid_mapping mm
