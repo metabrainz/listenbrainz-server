@@ -166,7 +166,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     // Backup if we don't have the CAA ID.
     // Try fetching using CAA release MBID and fall back on Release MBID
     coverArtSrc = `https://coverartarchive.org/release/${
-      CAAReleaseMBID ?? releaseMBID
+      releaseMBID ?? CAAReleaseMBID
     }/front`;
   }
 
