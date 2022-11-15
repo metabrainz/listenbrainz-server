@@ -77,7 +77,9 @@ class MappingTestCase(TimescaleTestCase):
                 "release": "Random Is Resistance",
                 "artist_mbids": ["797bcf41-0e02-431d-ab99-020e1cb3d0fd"],
                 "artist": "Rotersand",
-                "title": "A Number and a Name"
+                "title": "A Number and a Name",
+                "caa_id": None,
+                "caa_release_mbid": None
             },
             {
                 "artist": "James S.A. Corey",
@@ -134,8 +136,6 @@ class MappingTestCase(TimescaleTestCase):
                 connection,
                 [recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]]
             )
-        print(expected)
-        print(received)
         self.assertEqual(expected, received)
 
     def test_fetch_track_metadata_for_items(self):
