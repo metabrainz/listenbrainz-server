@@ -3,6 +3,7 @@ import { mount, ReactWrapper } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
 import { io } from "socket.io-client";
+import { act } from "react-dom/test-utils";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
@@ -116,7 +117,9 @@ describe("Listens page", () => {
       const instance = wrapper.instance();
       instance.connectWebsockets = jest.fn();
 
-      instance.componentDidMount();
+      act(() => {
+        instance.componentDidMount();
+      });
 
       expect(instance.connectWebsockets).toHaveBeenCalledTimes(1);
     });
@@ -130,7 +133,9 @@ describe("Listens page", () => {
       });
       instance.context.APIService.getUserListenCount = spy;
       expect(wrapper.state("listenCount")).toBeUndefined();
-      await instance.componentDidMount();
+      await act(async () => {
+        await instance.componentDidMount();
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledWith(user.name);
@@ -146,7 +151,9 @@ describe("Listens page", () => {
       const instance = wrapper.instance();
       instance.loadFeedback = jest.fn();
 
-      instance.componentDidMount();
+      act(() => {
+        instance.componentDidMount();
+      });
 
       expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
     });
@@ -168,8 +175,9 @@ describe("Listens page", () => {
         instance.context.APIService,
         "getFeedbackForUserForRecordings"
       );
-
-      instance.componentDidMount();
+      act(() => {
+        instance.componentDidMount();
+      });
 
       expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
       expect(APIFeedbackSpy).not.toHaveBeenCalled();
@@ -183,7 +191,9 @@ describe("Listens page", () => {
     it("calls io with correct parameters", () => {
       wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
-      instance.createWebsocketsConnection();
+      act(() => {
+        instance.createWebsocketsConnection();
+      });
 
       expect(io).toHaveBeenCalled();
 
@@ -221,7 +231,9 @@ describe("Listens page", () => {
         }
       );
       instance.receiveNewListen = jest.fn();
-      instance.addWebsocketsHandlers();
+      act(() => {
+        instance.addWebsocketsHandlers();
+      });
 
       expect(instance.receiveNewListen).toHaveBeenCalledWith(
         JSON.stringify(recentListensPropsOneListen.listens[0])
@@ -241,7 +253,9 @@ describe("Listens page", () => {
         }
       });
       instance.receiveNewPlayingNow = jest.fn();
-      instance.addWebsocketsHandlers();
+      act(() => {
+        instance.addWebsocketsHandlers();
+      });
 
       expect(instance.receiveNewPlayingNow).toHaveBeenCalledWith(
         recentListensPropsPlayingNow.listens[0]
@@ -277,7 +291,9 @@ describe("Listens page", () => {
       );
       const instance = wrapper.instance();
 
-      instance.receiveNewListen(JSON.stringify(mockListen));
+      await act(() => {
+        instance.receiveNewListen(JSON.stringify(mockListen));
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
@@ -285,12 +301,16 @@ describe("Listens page", () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
-      wrapper.setState({
-        listens: JSON.parse(
-          JSON.stringify(recentListensPropsTooManyListens.listens)
-        ),
+      await act(() => {
+        wrapper!.setState({
+          listens: JSON.parse(
+            JSON.stringify(recentListensPropsTooManyListens.listens)
+          ),
+        });
       });
-      instance.receiveNewListen(JSON.stringify(mockListen));
+      await act(() => {
+        instance.receiveNewListen(JSON.stringify(mockListen));
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
@@ -306,7 +326,9 @@ describe("Listens page", () => {
         recentListensPropsOneListen.listens
       );
       result.unshift(mockListen);
-      instance.receiveNewListen(JSON.stringify(mockListen));
+      await act(() => {
+        instance.receiveNewListen(JSON.stringify(mockListen));
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state("listens")).toHaveLength(result.length);
@@ -356,7 +378,9 @@ describe("Listens page", () => {
       expect(wrapper.state("listens")).toEqual(result);
       expect(wrapper.state("playingNowListen")).toEqual(firstPlayingNow);
 
-      await instance.receiveNewPlayingNow(mockListenOne);
+      await act(async () => {
+        await instance.receiveNewPlayingNow(mockListenOne);
+      });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state("listens")).toEqual(result);
       expect(wrapper.state("playingNowListen")).toEqual(mockListenOne);
@@ -375,7 +399,9 @@ describe("Listens page", () => {
 
       expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
 
-      instance.updateRecordingToPin(recordingToPin);
+      await act(() => {
+        instance.updateRecordingToPin(recordingToPin);
+      });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
     });
@@ -400,7 +426,9 @@ describe("Listens page", () => {
       );
 
       const listenToDelete = props.listens[0];
-      await instance.deleteListen(listenToDelete);
+      await act(async () => {
+        await instance.deleteListen(listenToDelete);
+      });
       await waitForComponentToPaint(wrapper, 1000);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -441,7 +469,9 @@ describe("Listens page", () => {
 
       expect(instance.state.deletedListen).toEqual(null);
       const listenToDelete = props.listens[0];
-      await instance.deleteListen(listenToDelete);
+      await act(async () => {
+        await instance.deleteListen(listenToDelete);
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(0);
@@ -481,7 +511,9 @@ describe("Listens page", () => {
 
       expect(instance.state.deletedListen).toEqual(null);
       const listenToDelete = props.listens[0];
-      await instance.deleteListen(listenToDelete);
+      await act(async () => {
+        await instance.deleteListen(listenToDelete);
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(0);
@@ -505,7 +537,9 @@ describe("Listens page", () => {
       spy.mockImplementation(() => Promise.resolve(500));
 
       const listenToDelete = props.listens[0];
-      await instance.deleteListen(listenToDelete);
+      await act(async () => {
+        await instance.deleteListen(listenToDelete);
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -536,7 +570,9 @@ describe("Listens page", () => {
       });
 
       const listenToDelete = props.listens[0];
-      await instance.deleteListen(listenToDelete);
+      await act(async () => {
+        await instance.deleteListen(listenToDelete);
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(newAlertMock).toHaveBeenCalledWith(
@@ -554,8 +590,9 @@ describe("Listens page", () => {
       const recordingToReview = props.listens[1];
 
       expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
-
-      instance.updateRecordingToReview(recordingToReview);
+      await act(() => {
+        instance.updateRecordingToReview(recordingToReview);
+      });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
     });
@@ -572,15 +609,15 @@ describe("Listens page", () => {
       it("does nothing if there is no older listens timestamp", async () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
-
-        wrapper.setState({ nextListenTs: undefined });
-
+        await act(() => {
+          wrapper!.setState({ nextListenTs: undefined });
+        });
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         instance.context.APIService.getListensForUser = spy;
 
-        // react-dom 'act' sandwich otherwise test doesn't pass
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickOlder();
+        await act(() => {
+          instance.handleClickOlder();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("loading")).toBeFalsy();
@@ -590,8 +627,9 @@ describe("Listens page", () => {
       it("calls the API to get older listens", async () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
-
-        wrapper.setState({ nextListenTs: 1586450000 });
+        await act(() => {
+          wrapper!.setState({ nextListenTs: 1586450000 });
+        });
         const expectedListensArray = [
           {
             track_metadata: {
@@ -607,9 +645,9 @@ describe("Listens page", () => {
           .mockImplementation(() => Promise.resolve(expectedListensArray));
         instance.context.APIService.getListensForUser = spy;
 
-        // react-dom 'act' sandwich otherwise test doesn't pass
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickOlder();
+        await act(() => {
+          instance.handleClickOlder();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(spy).toHaveBeenCalledWith(user.name, undefined, 1586450000);
@@ -620,15 +658,16 @@ describe("Listens page", () => {
       it("sets nextListenTs to undefined if it receives no listens from API", async () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
-
-        wrapper.setState({ nextListenTs: 1586450000 });
+        await act(() => {
+          wrapper!.setState({ nextListenTs: 1586450000 });
+        });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         instance.context.APIService.getListensForUser = spy;
 
-        // react-dom 'act' sandwich otherwise test doesn't pass
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickOlder();
+        await act(() => {
+          instance.handleClickOlder();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(spy).toHaveBeenCalledWith(user.name, undefined, 1586450000);
@@ -641,9 +680,11 @@ describe("Listens page", () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
 
-        // Random nextListenTs to ensure that is the value set in browser history
-        wrapper.setProps({ latestListenTs: 1586623524 });
-        wrapper.setState({ listens: [], nextListenTs: 1586440600 });
+        await act(() => {
+          // Random nextListenTs to ensure that is the value set in browser history
+          wrapper!.setProps({ latestListenTs: 1586623524 });
+          wrapper!.setState({ listens: [], nextListenTs: 1586440600 });
+        });
 
         const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
           return Promise.resolve(listens);
@@ -651,8 +692,9 @@ describe("Listens page", () => {
         instance.context.APIService.getListensForUser = spy;
         const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickOlder();
+        await act(() => {
+          instance.handleClickOlder();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("listens")).toEqual(listens);
@@ -674,7 +716,9 @@ describe("Listens page", () => {
 
       it("disables 'next' pagination if returned less listens than expected", async () => {
         wrapper = mount<Listens>(<Listens {...props} />);
-        wrapper.setState({ nextListenTs: 1586440539 });
+        await act(() => {
+          wrapper!.setState({ nextListenTs: 1586440539 });
+        });
         const instance = wrapper.instance();
 
         const expectedListensArray = [
@@ -694,9 +738,9 @@ describe("Listens page", () => {
         instance["APIService"].getListensForUser = spy;
         instance.getFeedback = jest.fn();
 
-        // react-dom 'act' sandwich otherwise test doesn't pass
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickOlder();
+        await act(() => {
+          instance.handleClickOlder();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("loading")).toBeFalsy();
@@ -711,15 +755,16 @@ describe("Listens page", () => {
       it("does nothing if there is no newer listens timestamp", async () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
-
-        wrapper.setState({ previousListenTs: undefined });
+        await act(() => {
+          wrapper!.setState({ previousListenTs: undefined });
+        });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         instance.context.APIService.getListensForUser = spy;
 
-        // react-dom 'act' sandwich otherwise test doesn't pass
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickNewer();
+        await act(() => {
+          instance.handleClickNewer();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("loading")).toBeFalsy();
@@ -729,7 +774,9 @@ describe("Listens page", () => {
       it("calls the API to get older listens", async () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
-        wrapper.setState({ previousListenTs: 123456 });
+        await act(() => {
+          wrapper!.setState({ previousListenTs: 123456 });
+        });
 
         const expectedListensArray = [
           {
@@ -746,9 +793,9 @@ describe("Listens page", () => {
           .mockImplementation(() => Promise.resolve(expectedListensArray));
         instance.context.APIService.getListensForUser = spy;
 
-        // react-dom 'act' sandwich otherwise test doesn't pass
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickNewer();
+        await act(() => {
+          instance.handleClickNewer();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("listens")).toEqual(expectedListensArray);
@@ -759,15 +806,16 @@ describe("Listens page", () => {
       it("sets nextListenTs to undefined if it receives no listens from API", async () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
-
-        wrapper.setState({ previousListenTs: 123456 });
+        await act(() => {
+          wrapper!.setState({ previousListenTs: 123456 });
+        });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         instance.context.APIService.getListensForUser = spy;
 
-        // react-dom 'act' sandwich otherwise test doesn't pass
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickNewer();
+        await act(() => {
+          instance.handleClickNewer();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("loading")).toBeFalsy();
@@ -778,9 +826,10 @@ describe("Listens page", () => {
       it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
-
-        wrapper.setProps({ latestListenTs: 1586623524 });
-        wrapper.setState({ previousListenTs: 123456 });
+        await act(() => {
+          wrapper!.setProps({ latestListenTs: 1586623524 });
+          wrapper!.setState({ previousListenTs: 123456 });
+        });
 
         const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
           return Promise.resolve(listens);
@@ -788,9 +837,9 @@ describe("Listens page", () => {
         instance.context.APIService.getListensForUser = spy;
         const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
-        // react-dom 'act' sandwich otherwise test doesn't pass
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickNewer();
+        await act(() => {
+          instance.handleClickNewer();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("listens")).toEqual(listens);
@@ -808,7 +857,9 @@ describe("Listens page", () => {
       it("disables pagination if returned less listens than expected", async () => {
         wrapper = mount<Listens>(<Listens {...props} />);
         const instance = wrapper.instance();
-        wrapper.setState({ previousListenTs: 123456 });
+        await act(() => {
+          wrapper!.setState({ previousListenTs: 123456 });
+        });
 
         const expectedListensArray = [
           {
@@ -826,9 +877,9 @@ describe("Listens page", () => {
         // eslint-disable-next-line dot-notation
         instance["APIService"].getListensForUser = spy;
 
-        // react-dom 'act' sandwich otherwise test doesn't pass
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickNewer();
+        await act(() => {
+          instance.handleClickNewer();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("listens")).toEqual(expectedListensArray);
@@ -843,25 +894,28 @@ describe("Listens page", () => {
       it("does nothing if last listens is the oldest", async () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
-
-        wrapper.setState({
-          listens: [
-            {
-              track_metadata: {
-                artist_name: "Beyonc\u00e9, Frank Ocean",
-                track_name: "Superpower (feat. Frank Ocean)",
-                release_name: "BEYONC\u00c9 [Platinum Edition]",
+        await act(() => {
+          wrapper!.setState({
+            listens: [
+              {
+                track_metadata: {
+                  artist_name: "Beyonc\u00e9, Frank Ocean",
+                  track_name: "Superpower (feat. Frank Ocean)",
+                  release_name: "BEYONC\u00c9 [Platinum Edition]",
+                },
+                listened_at: 123456,
               },
-              listened_at: 123456,
-            },
-          ],
+            ],
+          });
+          wrapper!.setProps({ oldestListenTs: 123456 });
         });
-        wrapper.setProps({ oldestListenTs: 123456 });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         instance.context.APIService.getListensForUser = spy;
 
-        await instance.handleClickOldest();
+        await act(() => {
+          instance.handleClickOldest();
+        });
         await waitForComponentToPaint(wrapper);
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
@@ -897,7 +951,9 @@ describe("Listens page", () => {
         instance.context.APIService.getListensForUser = spy;
         const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
-        await instance.handleClickOldest();
+        await act(() => {
+          instance.handleClickOldest();
+        });
         await waitForComponentToPaint(wrapper);
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).toHaveBeenCalledWith(user.name, 1586440535);
@@ -917,25 +973,28 @@ describe("Listens page", () => {
       it("does nothing if first listens is the newest", async () => {
         wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
-
-        wrapper.setState({
-          listens: [
-            {
-              track_metadata: {
-                artist_name: "Beyonc\u00e9, Frank Ocean",
-                track_name: "Superpower (feat. Frank Ocean)",
-                release_name: "BEYONC\u00c9 [Platinum Edition]",
+        await act(() => {
+          wrapper!.setState({
+            listens: [
+              {
+                track_metadata: {
+                  artist_name: "Beyonc\u00e9, Frank Ocean",
+                  track_name: "Superpower (feat. Frank Ocean)",
+                  release_name: "BEYONC\u00c9 [Platinum Edition]",
+                },
+                listened_at: 123456,
               },
-              listened_at: 123456,
-            },
-          ],
+            ],
+          });
+          wrapper!.setProps({ latestListenTs: 123456 });
         });
-        wrapper.setProps({ latestListenTs: 123456 });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         instance.context.APIService.getListensForUser = spy;
 
-        await instance.handleClickNewest();
+        await act(() => {
+          instance.handleClickNewest();
+        });
         await waitForComponentToPaint(wrapper);
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
@@ -970,8 +1029,9 @@ describe("Listens page", () => {
           .mockImplementation(() => Promise.resolve(newestListen));
         instance.context.APIService.getListensForUser = spy;
         const scrollSpy = jest.spyOn(instance, "afterListensFetch");
-
-        await instance.handleClickNewest();
+        await act(() => {
+          instance.handleClickNewest();
+        });
         await waitForComponentToPaint(wrapper);
         expect(spy).toHaveBeenCalledWith(user.name);
         expect(wrapper.state("listens")).toEqual(newestListen);
@@ -1003,8 +1063,9 @@ describe("Listens page", () => {
         newAlert: props.newAlert,
         onSuccessfulPin: expect.any(Function),
       });
-
-      instance.updateRecordingToPin(recordingToPin);
+      await act(() => {
+        instance.updateRecordingToPin(recordingToPin);
+      });
       await waitForComponentToPaint(wrapper);
 
       pinRecordingModal = wrapper.find(PinRecordingModal).first();
@@ -1034,7 +1095,9 @@ describe("Listens page", () => {
         newAlert: props.newAlert,
       });
 
-      instance.updateRecordingToPin(listen);
+      await act(() => {
+        instance.updateRecordingToPin(listen);
+      });
       await waitForComponentToPaint(wrapper);
 
       cbReviewModal = wrapper.find(CBReviewModal).first();
