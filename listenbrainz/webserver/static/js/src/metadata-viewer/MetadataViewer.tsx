@@ -156,14 +156,17 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   const artistMBID = first(recordingData?.artist_mbids);
   const releaseMBID = recordingData?.release_mbid ?? metadata?.release?.mbid;
+  const CAAReleaseMBID = metadata?.release?.caa_release_mbid;
+  const CAAID = metadata?.release?.caa_id;
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
-  if (releaseMBID) {
-    if (metadata?.release?.caa_id) {
-      coverArtSrc = `https://coverartarchive.org/release/${releaseMBID}/${metadata.release.caa_id}-500.jpg`;
-    } else {
-      // Backup if we don't have the CAA ID
-      coverArtSrc = `https://coverartarchive.org/release/${releaseMBID}/front`;
-    }
+  if (CAAReleaseMBID && CAAID) {
+    coverArtSrc = `https://coverartarchive.org/release/${CAAReleaseMBID}/${CAAID}-500.jpg`;
+  } else {
+    // Backup if we don't have the CAA ID.
+    // Try fetching using CAA release MBID and fall back on Release MBID
+    coverArtSrc = `https://coverartarchive.org/release/${
+      CAAReleaseMBID ?? releaseMBID
+    }/front`;
   }
 
   const flattenedRecRels: MusicBrainzRecordingRel[] =
