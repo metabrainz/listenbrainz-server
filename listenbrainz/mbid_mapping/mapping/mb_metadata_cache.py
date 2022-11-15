@@ -328,15 +328,19 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                    ), rg_cover_art AS (
                             SELECT DISTINCT ON(rg.id)
                                    rg.id AS release_group
-                                 , rel.gid::TEXT AS caa_release_mbid
+                                 , caa_rel.gid::TEXT AS caa_release_mbid
                                  , caa.id AS caa_id
                               FROM musicbrainz.recording r
                               JOIN mapping.canonical_release_redirect crr
                                 ON r.gid = crr.recording_mbid
-                              JOIN musicbrainz.release rel
-                                ON rel.gid = crr.release_mbid   
+                                -- need to join twice to release, once to get the canonical release group of the recording
+                                -- and then to find the preferred cover art release for that release group
+                              JOIN musicbrainz.release crr_rel
+                                ON crr_rel.gid = crr.release_mbid   
                               JOIN musicbrainz.release_group rg
-                                ON rg.id = rel.release_group
+                                ON rg.id = crr_rel.release_group
+                              JOIN musicbrainz.release caa_rel
+                                ON rg.id = caa_rel.release_group
                          LEFT JOIN (
                                   SELECT release, date_year, date_month, date_day
                                     FROM musicbrainz.release_country
@@ -344,11 +348,11 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                   SELECT release, date_year, date_month, date_day
                                     FROM musicbrainz.release_unknown_country
                                  ) re
-                                ON (re.release = rel.id)
+                                ON (re.release = caa_rel.id)
                          FULL JOIN cover_art_archive.release_group_cover_art rgca
-                                ON rgca.release = rel.id
+                                ON rgca.release = caa_rel.id
                          LEFT JOIN cover_art_archive.cover_art caa
-                                ON caa.release = rel.id
+                                ON caa.release = caa_rel.id
                          LEFT JOIN cover_art_archive.cover_art_type cat
                                 ON cat.id = caa.id
                               {values_join}
