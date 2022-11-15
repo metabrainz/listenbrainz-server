@@ -56,7 +56,7 @@ def load_recordings_from_mbids(connection, mbids: Iterable[str]) -> dict:
           FROM mapping.mb_metadata_cache mbc
   JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
             ON TRUE
-         WHERE recording_mbid IN ('78194fbe-3bcd-4afe-b4a6-7a97711c325f')
+         WHERE recording_mbid IN :mbids
       GROUP BY recording_mbid
              , release_mbid
              , artist_mbids
