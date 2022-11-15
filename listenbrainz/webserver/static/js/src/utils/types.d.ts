@@ -43,10 +43,17 @@ interface AdditionalInfo {
   work_mbids?: Array<string> | null;
 }
 
+declare type MbidMappingAritst = {
+  artist_mbid: string;
+  artist_credit_name: string;
+  join_phrase: string;
+};
+
 declare type MbidMapping = {
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
+  artists: Array<MbidMappingAritst>;
   caa_id?: number;
   caa_release_mbid?: string;
 };

@@ -158,6 +158,25 @@ const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
   _.get(listen, "creator", "");
 
 const getArtistLink = (listen: Listen) => {
+  const artists = listen.track_metadata.mbid_mapping?.artists;
+  if (artists) {
+    return (
+      <>
+        {artists.map((artist) => (
+          <>
+            <a
+              href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {artist.artist_credit_name}
+            </a>
+            {artist.join_phrase}
+          </>
+        ))}
+      </>
+    );
+  }
   const artistName = getArtistName(listen);
   const artistMbids = getArtistMBIDs(listen);
   const firstArtist = _.first(artistMbids);
