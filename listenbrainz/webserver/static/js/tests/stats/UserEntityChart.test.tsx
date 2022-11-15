@@ -1,6 +1,7 @@
 import * as React from "react";
-import { mount } from "enzyme";
+import { mount, ReactWrapper } from "enzyme";
 
+import { act } from "react-dom/test-utils";
 import UserEntityChart from "../../src/stats/UserEntityChart";
 import APIError from "../../src/utils/APIError";
 import APIService from "../../src/utils/APIService";
@@ -10,6 +11,7 @@ import * as userReleasesResponse from "../__mocks__/userReleases.json";
 import * as userReleasesProcessDataOutput from "../__mocks__/userReleasesProcessData.json";
 import * as userRecordingsResponse from "../__mocks__/userRecordings.json";
 import * as userRecordingsProcessDataOutput from "../__mocks__/userRecordingsProcessData.json";
+import { waitForComponentToPaint } from "../test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -49,81 +51,101 @@ describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
+  let wrapper: ReactWrapper<any, any, any> | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   describe("UserEntityChart Page", () => {
-    it("renders correctly for artists", () => {
+    it("renders correctly for artists", async () => {
       // We don't need to call componentDidMount during "mount" because we are
       // passing the data manually, so mock the implementation once.
       jest
         .spyOn(UserEntityChart.prototype, "componentDidMount")
         .mockImplementationOnce((): any => {});
 
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
-
-      wrapper.setState({
-        data: userArtistsProcessDataOutput as UserEntityData,
-        startDate: new Date(0),
-        endDate: new Date(10),
-        maxListens: 70,
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
+      await act(() => {
+        wrapper!.setState({
+          data: userArtistsProcessDataOutput as UserEntityData,
+          startDate: new Date(0),
+          endDate: new Date(10),
+          maxListens: 70,
+        });
       });
-      wrapper.update();
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
 
-    it("renders correctly for releases", () => {
+    it("renders correctly for releases", async () => {
       // We don't need to call componentDidMount during "mount" because we are
       // passing the data manually, so mock the implementation once.
       jest
         .spyOn(UserEntityChart.prototype, "componentDidMount")
         .mockImplementationOnce((): any => {});
 
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
 
-      wrapper.setState({
-        data: userReleasesProcessDataOutput as UserEntityData,
-        startDate: new Date(0),
-        endDate: new Date(10),
-        maxListens: 26,
+      await act(() => {
+        wrapper!.setState({
+          data: userReleasesProcessDataOutput as UserEntityData,
+          startDate: new Date(0),
+          endDate: new Date(10),
+          maxListens: 26,
+        });
       });
-      wrapper.update();
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
 
-    it("renders correctly for recording", () => {
+    it("renders correctly for recording", async () => {
       // We don't need to call componentDidMount during "mount" because we are
       // passing the data manually, so mock the implementation once.
       jest
         .spyOn(UserEntityChart.prototype, "componentDidMount")
         .mockImplementationOnce((): any => {});
 
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
 
-      wrapper.setState({
-        data: userRecordingsProcessDataOutput as UserEntityData,
-        startDate: new Date(0),
-        endDate: new Date(10),
-        maxListens: 26,
+      await act(() => {
+        wrapper!.setState({
+          data: userRecordingsProcessDataOutput as UserEntityData,
+          startDate: new Date(0),
+          endDate: new Date(10),
+          maxListens: 26,
+        });
       });
-      wrapper.update();
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
 
-    it("renders correctly if stats are not calculated", () => {
+    it("renders correctly if stats are not calculated", async () => {
       jest
         .spyOn(UserEntityChart.prototype, "componentDidMount")
         .mockImplementationOnce((): any => {});
 
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
-      wrapper.setState({
-        hasError: true,
-        errorMessage: "Statistics for the user have not been calculated",
-        entity: "artist",
-        range: "all_time",
-        currPage: 1,
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
+      await act(() => {
+        wrapper!.setState({
+          hasError: true,
+          errorMessage: "Statistics for the user have not been calculated",
+          entity: "artist",
+          range: "all_time",
+          currPage: 1,
+        });
       });
-      wrapper.update();
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -131,7 +153,7 @@ describe.each([
 
   describe("componentDidMount", () => {
     it('adds event listener for "popstate" event', () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -139,13 +161,15 @@ describe.each([
       const spy = jest.spyOn(window, "addEventListener");
       spy.mockImplementationOnce(() => {});
       instance.syncStateWithURL = jest.fn();
-      instance.componentDidMount();
+      act(() => {
+        instance.componentDidMount();
+      });
 
       expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
     });
 
     it('adds event listener for "resize" event', () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -154,13 +178,15 @@ describe.each([
       spy.mockImplementationOnce(() => {});
       instance.syncStateWithURL = jest.fn();
       instance.handleResize = jest.fn();
-      instance.componentDidMount();
+      act(() => {
+        instance.componentDidMount();
+      });
 
       expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
     });
 
     it("calls getURLParams once", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -169,13 +195,15 @@ describe.each([
         return { page: 1, range: "all_time", entity: "artist" };
       });
       instance.syncStateWithURL = jest.fn();
-      instance.componentDidMount();
+      act(() => {
+        instance.componentDidMount();
+      });
 
       expect(instance.getURLParams).toHaveBeenCalledTimes(1);
     });
 
     it("calls replaceState with correct parameters", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -183,7 +211,9 @@ describe.each([
       const spy = jest.spyOn(window.history, "replaceState");
       spy.mockImplementationOnce(() => {});
       instance.syncStateWithURL = jest.fn();
-      instance.componentDidMount();
+      act(() => {
+        instance.componentDidMount();
+      });
 
       expect(spy).toHaveBeenCalledWith(
         null,
@@ -193,13 +223,15 @@ describe.each([
     });
 
     it("calls syncStateWithURL", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
 
       instance.syncStateWithURL = jest.fn();
-      instance.componentDidMount();
+      act(() => {
+        instance.componentDidMount();
+      });
 
       expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
     });
@@ -207,7 +239,7 @@ describe.each([
 
   describe("componentWillUnmount", () => {
     it('removes "popstate" event listener', () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -221,7 +253,7 @@ describe.each([
     });
 
     it('removes "resize" event listener', () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -237,7 +269,7 @@ describe.each([
 
   describe("changePage", () => {
     it("calls setURLParams with correct parameters", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -250,7 +282,7 @@ describe.each([
     });
 
     it("calls syncStateWithURL once", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -265,7 +297,7 @@ describe.each([
 
   describe("changeRange", () => {
     it("calls setURLParams with correct parameters", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -278,7 +310,7 @@ describe.each([
     });
 
     it("calls syncStateWithURL once", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -293,7 +325,7 @@ describe.each([
 
   describe("changeEntity", () => {
     it("calls setURLParams with correct parameters", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -305,7 +337,7 @@ describe.each([
     });
 
     it("calls syncStateWithURL once", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -319,7 +351,7 @@ describe.each([
 
   describe("getInitData", () => {
     it("gets data correctly for artist", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -349,7 +381,7 @@ describe.each([
     });
 
     it("gets data correctly for release", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -379,7 +411,7 @@ describe.each([
     });
 
     it("gets data correctly for recording", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -411,7 +443,7 @@ describe.each([
 
   describe("getData", () => {
     it("calls getUserEntity with correct parameters", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -435,12 +467,13 @@ describe.each([
 
   describe("processData", () => {
     it("processes data correctly for top artists", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
-
-      wrapper.setState({ entity: "artist" });
+      act(() => {
+        wrapper!.setState({ entity: "artist" });
+      });
 
       expect(
         instance.processData(userArtistsResponse as UserArtistsResponse, 1)
@@ -448,12 +481,13 @@ describe.each([
     });
 
     it("processes data correctly for top releases", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
-
-      wrapper.setState({ entity: "release" });
+      act(() => {
+        wrapper!.setState({ entity: "release" });
+      });
 
       expect(
         instance.processData(userReleasesResponse as UserReleasesResponse, 1)
@@ -461,12 +495,13 @@ describe.each([
     });
 
     it("processes data correctly for top recordings", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
-
-      wrapper.setState({ entity: "recording" });
+      act(() => {
+        wrapper!.setState({ entity: "recording" });
+      });
 
       expect(
         instance.processData(
@@ -476,7 +511,7 @@ describe.each([
       ).toEqual(userRecordingsProcessDataOutput);
     });
     it("returns an empty array if no payload", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -490,7 +525,7 @@ describe.each([
 
   describe("syncStateWithURL", () => {
     it("sets state correctly", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -536,7 +571,7 @@ describe.each([
     });
 
     it("sets state correctly if stats haven't been calculated", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -561,7 +596,7 @@ describe.each([
     });
 
     it("sets state correctly if range is incorrect", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -582,7 +617,7 @@ describe.each([
     });
 
     it("sets state correctly if entity is incorrect", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -603,7 +638,7 @@ describe.each([
     });
 
     it("sets state correctly if page is incorrect", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -623,7 +658,7 @@ describe.each([
       });
     });
     it("throws error if fetch fails", async () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -638,7 +673,7 @@ describe.each([
 
   describe("getURLParams", () => {
     it("gets default parameters if none are provided in the URL", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -651,7 +686,7 @@ describe.each([
     });
 
     it("gets parameters if provided in the URL", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
@@ -669,7 +704,7 @@ describe.each([
 
   describe("setURLParams", () => {
     it("sets URL parameters", () => {
-      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
