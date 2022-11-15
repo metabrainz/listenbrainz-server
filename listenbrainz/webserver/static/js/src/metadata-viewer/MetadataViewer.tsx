@@ -160,7 +160,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const CAAID = metadata?.release?.caa_id;
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
   if (CAAReleaseMBID && CAAID) {
-    coverArtSrc = `https://coverartarchive.org/release/${CAAReleaseMBID}/${CAAID}-500.jpg`;
+    // Bypass the Cover Art Archive redirect since we have the info to directly fetch from archive.org
+    coverArtSrc = `https://archive.org/download/mbid-${CAAReleaseMBID}/mbid-${CAAReleaseMBID}-${CAAID}_thumb500.jpg`;
   } else {
     // Backup if we don't have the CAA ID.
     // Try fetching using CAA release MBID and fall back on Release MBID
