@@ -475,7 +475,7 @@ const getAlbumArtFromListenMetadata = async (
   /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
-  const releaseMBID = listen.track_metadata.additional_info?.release_mbid;
+  const userSubmittedReleaseMBID = listen.track_metadata.additional_info?.release_mbid;
   if (releaseMBID) {
     try {
       const CAAResponse = await fetchWithRetry(
