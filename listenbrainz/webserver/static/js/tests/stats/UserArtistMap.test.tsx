@@ -1,6 +1,7 @@
 import * as React from "react";
-import { mount, shallow } from "enzyme";
+import { ReactWrapper, mount, shallow, ShallowWrapper } from "enzyme";
 
+import { act } from "react-dom/test-utils";
 import UserArtistMap, {
   UserArtistMapProps,
 } from "../../src/stats/UserArtistMap";
@@ -8,6 +9,7 @@ import APIError from "../../src/utils/APIError";
 import * as userArtistMapResponse from "../__mocks__/userArtistMap.json";
 import * as userArtistMapProcessedDataArtist from "../__mocks__/userArtistMapProcessDataArtist.json";
 import * as userArtistMapProcessedDataListen from "../__mocks__/userArtistMapProcessDataListen.json";
+import { waitForComponentToPaint } from "../test-utils";
 
 const userProps: UserArtistMapProps = {
   user: {
@@ -26,28 +28,46 @@ describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
+  let wrapper:
+    | ReactWrapper<any, any, any>
+    | ShallowWrapper<any, any, any>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   describe("UserArtistMap", () => {
-    it("renders correctly", () => {
-      const wrapper = shallow<UserArtistMap>(
+    it("renders correctly", async () => {
+      wrapper = shallow<UserArtistMap>(
         <UserArtistMap {...{ ...props, range: "all_time" }} />
       );
-
-      wrapper.setState({
-        selectedMetric: "artist",
-        data: userArtistMapProcessedDataArtist,
-        graphContainerWidth: 1200,
-        loading: false,
+      await act(() => {
+        wrapper!.setState({
+          selectedMetric: "artist",
+          data: userArtistMapProcessedDataArtist,
+          graphContainerWidth: 1200,
+          loading: false,
+        });
       });
-      wrapper.update();
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
 
-    it("renders corectly when range is invalid", () => {
-      const wrapper = mount<UserArtistMap>(<UserArtistMap {...props} />);
-
-      wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      wrapper.update();
+    it("renders corectly when range is invalid", async () => {
+      wrapper = mount<UserArtistMap>(<UserArtistMap {...props} />);
+      await act(() => {
+        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+      });
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -55,7 +75,7 @@ describe.each([
 
   describe("componentDidMount", () => {
     it('adds event listener for "resize" event', () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(window, "addEventListener");
@@ -67,7 +87,7 @@ describe.each([
     });
 
     it('calls "handleResize" once', () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       instance.handleResize = jest.fn();
@@ -78,11 +98,13 @@ describe.each([
   });
 
   describe("componentDidUpdate", () => {
-    it("it sets correct state if range is incorrect", () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+    it("it sets correct state if range is incorrect", async () => {
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
 
-      wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      wrapper.update();
+      await act(() => {
+        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+      });
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state()).toMatchObject({
         loading: false,
@@ -91,13 +113,15 @@ describe.each([
       });
     });
 
-    it("calls loadData once if range is valid", () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+    it("calls loadData once if range is valid", async () => {
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       instance.loadData = jest.fn();
-      wrapper.setProps({ range: "month" });
-      wrapper.update();
+      await act(() => {
+        wrapper!.setProps({ range: "month" });
+      });
+      await waitForComponentToPaint(wrapper);
 
       expect(instance.loadData).toHaveBeenCalledTimes(1);
     });
@@ -105,7 +129,7 @@ describe.each([
 
   describe("componentWillUnmount", () => {
     it('removes event listener for "resize" event', () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(window, "removeEventListener");
@@ -119,7 +143,7 @@ describe.each([
 
   describe("getData", () => {
     it("calls getUserArtistMap with correct params", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(instance.APIService, "getUserArtistMap");
@@ -133,7 +157,7 @@ describe.each([
     });
 
     it("sets state correctly if data is not calculated", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(instance.APIService, "getUserArtistMap");
@@ -142,7 +166,10 @@ describe.each([
         status: 204,
       } as Response;
       spy.mockImplementation(() => Promise.reject(noContentError));
-      await instance.getData();
+      await act(async () => {
+        await instance.getData();
+      });
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state()).toMatchObject({
         loading: false,
@@ -152,7 +179,7 @@ describe.each([
     });
 
     it("throws error", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(instance.APIService, "getUserArtistMap");
@@ -168,7 +195,7 @@ describe.each([
 
   describe("processData", () => {
     it("processes data correctly for all_time", () => {
-      const wrapper = shallow<UserArtistMap>(
+      wrapper = shallow<UserArtistMap>(
         <UserArtistMap {...{ ...props, range: "all_time" }} />
       );
       const instance = wrapper.instance();
@@ -182,7 +209,7 @@ describe.each([
     });
 
     it("processes data correctly for listen", () => {
-      const wrapper = shallow<UserArtistMap>(
+      wrapper = shallow<UserArtistMap>(
         <UserArtistMap {...{ ...props, range: "all_time" }} />
       );
       const instance = wrapper.instance();
@@ -195,7 +222,7 @@ describe.each([
       expect(result).toEqual(userArtistMapProcessedDataListen);
     });
     it("returns an empty array if no payload", () => {
-      const wrapper = shallow<UserArtistMap>(
+      wrapper = shallow<UserArtistMap>(
         <UserArtistMap {...{ ...props, range: "all_time" }} />
       );
       const instance = wrapper.instance();
@@ -211,26 +238,32 @@ describe.each([
   });
 
   describe("changeSelectedMetric", () => {
-    it('sets state correctly for "artist"', () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+    it('sets state correctly for "artist"', async () => {
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       instance.rawData = userArtistMapResponse as UserArtistMapResponse;
 
-      instance.changeSelectedMetric("artist");
+      await act(async () => {
+        instance.changeSelectedMetric("artist");
+      });
+      await waitForComponentToPaint(wrapper);
       expect(wrapper.state()).toMatchObject({
         data: userArtistMapProcessedDataArtist,
         selectedMetric: "artist",
       });
     });
 
-    it('sets state correctly for "listen"', () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+    it('sets state correctly for "listen"', async () => {
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       instance.rawData = userArtistMapResponse as UserArtistMapResponse;
 
-      instance.changeSelectedMetric("listen");
+      await act(async () => {
+        instance.changeSelectedMetric("listen");
+      });
+      await waitForComponentToPaint(wrapper);
       expect(wrapper.state()).toMatchObject({
         data: userArtistMapProcessedDataListen,
         selectedMetric: "listen",
@@ -240,24 +273,31 @@ describe.each([
 
   describe("loadData", () => {
     it("calls getData once", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
-      instance.getData = jest.fn();
+      const spy = jest.fn();
+      instance.getData = spy;
       instance.processData = jest.fn();
-      await instance.loadData();
+      await act(async () => {
+        await instance.loadData();
+      });
+      await waitForComponentToPaint(wrapper);
 
-      expect(instance.getData).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledTimes(1);
     });
 
     it("set state correctly", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
       const instance = wrapper.instance();
 
       instance.getData = jest
         .fn()
         .mockImplementationOnce(() => Promise.resolve(userArtistMapResponse));
-      await instance.loadData();
+      await act(async () => {
+        await instance.loadData();
+      });
+      await waitForComponentToPaint(wrapper);
 
       expect(instance.rawData).toMatchObject(userArtistMapResponse);
 
