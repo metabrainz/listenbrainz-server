@@ -15,7 +15,7 @@ from brainzutils.ratelimit import ratelimit
 
 art_api_bp = Blueprint('art_api_v1', __name__)
 
-ART_API_SUBDOMAIN = "api" if os.environ.get("FLASK_ENV", "development") != "development" else ""
+ART_API_SUBDOMAIN = "api" if os.environ.get("DEPLOY_ENV", "") != "" else ""
 
 
 @art_api_bp.route("/grid/", methods=["POST"], subdomain=ART_API_SUBDOMAIN)
