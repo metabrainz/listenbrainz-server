@@ -275,7 +275,7 @@ class UserViewsTestCase(IntegrationTestCase):
                           , '{"name": "The Final Confrontation, Part 1", "rels": [], "length": 312000}'
                           , '{"name": "Danny Elfman", "artist_credit_id": 204, "artists": [{"area": "United States", "rels": {"youtube": "https://www.youtube.com/channel/UCjhIy2xUURhJvN0S7s_ztuw", "wikidata": "https://www.wikidata.org/wiki/Q193338", "streaming": "https://music.apple.com/gb/artist/486493", "free streaming": "https://www.deezer.com/artist/760", "social network": "https://www.instagram.com/dannyelfman/", "official homepage": "https://www.dannyelfman.com/", "purchase for download": "https://itunes.apple.com/us/artist/id486493"}, "type": "Person", "gender": "Male", "begin_year": 1953}]}'
                           , '{"artist": [], "recording": [], "release_group": []}'
-                          , '{"mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6", "name": "Danny Elfman & Tim Burton 25th Anniversary Music Box", "year": 2011, "caa_id": 1081592107, "release_group_mbid": null}'
+                          , '{"mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6", "name": "Danny Elfman & Tim Burton 25th Anniversary Music Box", "year": 2011}'
                           , 'f'
                            );
 
