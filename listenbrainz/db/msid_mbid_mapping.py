@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from typing import Iterable, Dict, List, TypeVar
 from typing import Optional, Tuple
@@ -112,8 +113,8 @@ def _update_mbid_items(models: dict[str, list[ModelT]], metadatas: dict, remaini
                     # in messybrainz either. note that we always submit the msid from website if available so this
                     # case shouldn't occur unless some now playing case is mishandled or someone else uses the api
                     # to submit say a pinned recording with a mbid for which LB has never seen a listen.
-                    current_app.logger.info("Couldn't find data for item in mapping and item doesn't have msid: %s",
-                                            item)
+                    current_app.logger.warning("Couldn't find data for item in mapping and item doesn't have"
+                                               " msid: %s", item)
                 continue
 
             item.track_metadata = {
