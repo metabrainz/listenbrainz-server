@@ -475,11 +475,12 @@ const getAlbumArtFromListenMetadata = async (
   /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
-  const userSubmittedReleaseMBID = listen.track_metadata.additional_info?.release_mbid;
-  if (releaseMBID) {
+  const userSubmittedReleaseMBID =
+    listen.track_metadata.additional_info?.release_mbid;
+  if (userSubmittedReleaseMBID) {
     try {
       const CAAResponse = await fetchWithRetry(
-        `https://coverartarchive.org/release/${releaseMBID}`,
+        `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
         {
           retries: 4,
           retryOn: [429],
@@ -509,7 +510,7 @@ const getAlbumArtFromListenMetadata = async (
           // the link to the underlying archive.org resource directly
           // Also see https://github.com/metabrainz/listenbrainz-server/commit/9e40ad440d0b280b6c53d13e804f911657469c8b
           const { id } = frontImage;
-          return generateAlbumArtThumbnailLink(id, releaseMBID);
+          return generateAlbumArtThumbnailLink(id, userSubmittedReleaseMBID);
         }
 
         // No front image? Fallback to whatever the first image is
@@ -519,7 +520,7 @@ const getAlbumArtFromListenMetadata = async (
     } catch (error) {
       // eslint-disable-next-line no-console
       console.warn(
-        `Couldn't fetch Cover Art Archive entry for ${releaseMBID}`,
+        `Couldn't fetch Cover Art Archive entry for ${userSubmittedReleaseMBID}`,
         error
       );
     }
