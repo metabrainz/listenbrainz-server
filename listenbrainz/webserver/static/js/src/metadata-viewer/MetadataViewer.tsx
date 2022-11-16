@@ -155,19 +155,19 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const { metadata } = recordingData ?? {};
 
   const artistMBID = first(recordingData?.artist_mbids);
-  const releaseMBID = recordingData?.release_mbid ?? metadata?.release?.mbid;
+  const userSubmittedReleaseMBID =
+    playingNow?.track_metadata?.additional_info?.release_mbid;
   const CAAReleaseMBID = metadata?.release?.caa_release_mbid;
   const CAAID = metadata?.release?.caa_id;
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
-  if (CAAReleaseMBID && CAAID) {
+
+  // try fetching cover art using user submitted release mbid first
+  if (userSubmittedReleaseMBID) {
+    coverArtSrc = `https://coverartarchive.org/release/${userSubmittedReleaseMBID}/front`;
+  } else if (CAAReleaseMBID && CAAID) {
+    // if user didn't submit a release mbid but mapper has a match, try using that
     // Bypass the Cover Art Archive redirect since we have the info to directly fetch from archive.org
     coverArtSrc = `https://archive.org/download/mbid-${CAAReleaseMBID}/mbid-${CAAReleaseMBID}-${CAAID}_thumb500.jpg`;
-  } else if (releaseMBID || CAAReleaseMBID) {
-    // Backup if we don't have the CAA ID.
-    // Try fetching using CAA release MBID and fall back on Release MBID
-    coverArtSrc = `https://coverartarchive.org/release/${
-      releaseMBID ?? CAAReleaseMBID
-    }/front`;
   }
 
   const flattenedRecRels: MusicBrainzRecordingRel[] =
@@ -203,6 +203,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   const supportLinks = pick(artist?.rels, ...supportLinkTypes);
   const lyricsLink = pick(artist?.rels, "lyrics");
+
+  const releaseMBID =
+    userSubmittedReleaseMBID ??
+    recordingData?.release_mbid ??
+    metadata?.release?.mbid;
 
   let rightSideContent;
   if (!playingNow) {
