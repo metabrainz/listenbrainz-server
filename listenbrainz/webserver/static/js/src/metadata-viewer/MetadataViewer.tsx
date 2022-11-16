@@ -162,7 +162,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   if (CAAReleaseMBID && CAAID) {
     // Bypass the Cover Art Archive redirect since we have the info to directly fetch from archive.org
     coverArtSrc = `https://archive.org/download/mbid-${CAAReleaseMBID}/mbid-${CAAReleaseMBID}-${CAAID}_thumb500.jpg`;
-  } else {
+  } else if (releaseMBID || CAAReleaseMBID) {
     // Backup if we don't have the CAA ID.
     // Try fetching using CAA release MBID and fall back on Release MBID
     coverArtSrc = `https://coverartarchive.org/release/${
