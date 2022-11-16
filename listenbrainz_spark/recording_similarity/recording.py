@@ -14,14 +14,14 @@ RECORDINGS_PER_MESSAGE = 10000
 def build_sessioned_index(listen_table, metadata_table, session, max_contribution, threshold, limit, _filter):
     # TODO: Handle case of unmatched recordings breaking sessions!
     #  Detect and remove skips!
-    filter_artist_credit = "AND NOT arrays_overlap(s1.artist_mbids, s2.artist_mbids)" if _filter else ""
+    filter_artist_credit = "AND s1.artist_credit_id != s2.artist_credit_id" if _filter else ""
     return f"""
             WITH listens AS (
                  SELECT user_id
-                      , BIGINT(listened_at)
+                      , BIGINT(listened_at) AS listened_at
                       , CAST(COALESCE(recording_data.length / 1000, 180) AS BIGINT) AS duration
                       , recording_mbid
-                      , artist_mbids
+                      , artist_credit_id
                    FROM {listen_table} l
               LEFT JOIN {metadata_table} mbc
                   USING (recording_mbid)
@@ -31,7 +31,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                      , listened_at
                      , listened_at - LAG(listened_at, 1) OVER w - LAG(duration, 1) OVER w AS difference
                      , recording_mbid
-                     , artist_mbids
+                     , artist_credit_id
                   FROM listens
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), sessions AS (
@@ -39,7 +39,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                      -- spark doesn't support window aggregate functions with FILTER clause
                      , COUNT_IF(difference > {session}) OVER w AS session_id
                      , recording_mbid
-                     , artist_mbids
+                     , artist_credit_id
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), user_grouped_mbids AS (
