@@ -1,24 +1,16 @@
-import datetime
-import os
 from uuid import UUID
 
-from flask import Flask, request, render_template, Blueprint, current_app
-import psycopg2
-import psycopg2.extras
-from psycopg2.errors import OperationalError
-import requests
+from brainzutils.ratelimit import ratelimit
+from flask import request, render_template, Blueprint, current_app
 
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.decorators import crossdomain
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 
 art_api_bp = Blueprint('art_api_v1', __name__)
 
-ART_API_SUBDOMAIN = "api" if os.environ.get("DEPLOY_ENV", "") != "" else ""
 
-
-@art_api_bp.route("/grid/", methods=["POST"], subdomain=ART_API_SUBDOMAIN)
+@art_api_bp.route("/grid/", methods=["POST"])
 @crossdomain
 @ratelimit()
 def cover_art_grid_post():
@@ -106,8 +98,7 @@ def cover_art_grid_post():
 
 
 @art_api_bp.route("/grid-stats/<user_name>/<time_range>/<int:dimension>/<int:layout>/<int:image_size>",
-                  methods=["GET"],
-                  subdomain=ART_API_SUBDOMAIN)
+                  methods=["GET"])
 @crossdomain
 @ratelimit()
 def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
@@ -160,7 +151,7 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                            }
 
 
-@art_api_bp.route("/<custom_name>/<user_name>/<time_range>/<int:image_size>", methods=["GET"], subdomain=ART_API_SUBDOMAIN)
+@art_api_bp.route("/<custom_name>/<user_name>/<time_range>/<int:image_size>", methods=["GET"])
 @crossdomain
 @ratelimit()
 def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
