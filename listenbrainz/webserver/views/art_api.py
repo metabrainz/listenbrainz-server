@@ -204,7 +204,9 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         except ValueError as error:
             raise APIBadRequest(error)
 
+        cover_art_on_floor_url = f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/cover-art-on-floor.png'
         return render_template(f"art/svg-templates/{custom_name}.svg",
+                               cover_art_on_floor_url=cover_art_on_floor_url,
                                images=images,
                                releases=releases,
                                width=image_size,
