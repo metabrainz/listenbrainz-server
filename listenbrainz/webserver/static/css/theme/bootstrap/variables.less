@@ -203,6 +203,14 @@
 @pager-active-color:                   @pagination-active-color;
 
 
+//== Jumbotron
+//
+//##
+
+@jumbotron-font-size:            ceil((@font-size-base * 1.5));
+@jumbotron-heading-font-size:    ceil((@font-size-base * 4.5));
+
+
 //== Form states and alerts
 //
 //## Define colors for form feedback states and, by default, alerts.
@@ -250,6 +258,24 @@
 //** Variable for setting rounded corners on progress bar.
 @progress-border-radius:      @border-radius-base;
 
+
+//== List group
+//
+//##
+
+//** Text color for content within active list items
+@list-group-active-text-color:  lighten(@list-group-active-bg, 40%);
+
+//** Text color of disabled list items
+@list-group-disabled-color:      @gray-light;
+//** Background color of disabled list items
+@list-group-disabled-bg:         @gray-lighter;
+//** Text color for content within disabled list items
+@list-group-disabled-text-color: @list-group-disabled-color;
+
+@list-group-link-hover-color:   @list-group-link-color;
+
+
 //== Panels
 //
 //##
@@ -283,6 +309,25 @@
 //##
 
 @well-border:                 darken(@well-bg, 7%);
+
+
+//== Breadcrumbs
+//
+//##
+
+@breadcrumb-padding-vertical:   8px;
+@breadcrumb-padding-horizontal: 15px;
+//** Textual separator for between breadcrumb elements
+@breadcrumb-separator:          "/";
+
+
+//== Code
+//
+//##
+
+@kbd-color:                   #fff;
+@kbd-bg:                      #333;
+
 
 //== Type
 //
