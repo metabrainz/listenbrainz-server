@@ -365,6 +365,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , re.date_year
                                  , re.date_month
                                  , re.date_day
+                                 , caa.ordering
                    ), release_data AS (
                             SELECT r.gid AS recording_mbid
                                  , rel.name
