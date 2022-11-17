@@ -241,17 +241,34 @@ class TimescaleListenStore:
                         , data
                         , mm.recording_mbid
                         , mbc.release_mbid
-                        , mbc.artist_mbids
+                        , mbc.artist_mbids::TEXT[]
                         , (mbc.release_data->>'caa_id')::bigint AS caa_id
                         , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
+                        , array_agg(artist->>'name' ORDER BY position) AS ac_names
+                        , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
                      FROM listen
                 LEFT JOIN mbid_mapping mm
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
                 LEFT JOIN mapping.mb_metadata_cache mbc
                        ON mm.recording_mbid = mbc.recording_mbid
+        LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
+                       ON TRUE
                     WHERE user_id = :user_id
                       AND listened_at > :from_ts
                       AND listened_at < :to_ts
+                 GROUP BY listened_at
+                        , track_name
+                        , user_id
+                        , created
+                        , data
+                        , mm.recording_mbid
+                        , release_mbid
+                        , artist_mbids
+                        , artist_data->>'name'
+                        , recording_data->>'name'
+                        , release_data->>'name'
+                        , release_data->>'caa_id'
+                        , release_data->>'caa_release_mbid'
                  ORDER BY listened_at """ + ORDER_TEXT[order] + " LIMIT :limit"
 
         if from_ts and to_ts:
@@ -320,6 +337,8 @@ class TimescaleListenStore:
                         recording_mbid=result.recording_mbid,
                         release_mbid=result.release_mbid,
                         artist_mbids=result.artist_mbids,
+                        ac_names=result.ac_names,
+                        ac_join_phrases=result.ac_join_phrases,
                         user_name=user["musicbrainz_id"],
                         caa_id=result.caa_id,
                         caa_release_mbid=result.caa_release_mbid
@@ -371,15 +390,19 @@ class TimescaleListenStore:
                                     , data
                                     , mm.recording_mbid
                                     , mbc.release_mbid
-                                    , mbc.artist_mbids
+                                    , mbc.artist_mbids::TEXT[]
                                     , (mbc.release_data->>'caa_id')::bigint AS caa_id
                                     , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
+                                    , array_agg(artist->>'name' ORDER BY position) AS ac_names
+                                    , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
                                     , row_number() OVER (PARTITION BY user_id ORDER BY listened_at DESC) AS rownum
                                 FROM listen l
                            LEFT JOIN mbid_mapping mm
                                   ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
                            LEFT JOIN mapping.mb_metadata_cache mbc
                                   ON mm.recording_mbid = mbc.recording_mbid
+                   LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
+                                  ON TRUE
                                WHERE {filters}
                             GROUP BY user_id
                                    , listened_at
@@ -414,6 +437,8 @@ class TimescaleListenStore:
                     recording_mbid=result.recording_mbid,
                     release_mbid=result.release_mbid,
                     artist_mbids=result.artist_mbids,
+                    ac_names=result.ac_names,
+                    ac_join_phrases=result.ac_join_phrases,
                     user_name=user_name,
                     caa_id=result.caa_id,
                     caa_release_mbid=result.caa_release_mbid

@@ -51,13 +51,49 @@ def load_recordings_from_mbids(connection, mbids: Iterable[str]) -> dict:
              , release_data->>'name' AS release
              , (release_data->>'caa_id')::bigint AS caa_id
              , release_data->>'caa_release_mbid' AS caa_release_mbid
+             , array_agg(artist->>'name' ORDER BY position) AS ac_names
+             , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
           FROM mapping.mb_metadata_cache mbc
+  JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
+            ON TRUE
          WHERE recording_mbid IN :mbids
+      GROUP BY recording_mbid
+             , release_mbid
+             , artist_mbids
+             , artist_data->>'name'
+             , recording_data->>'name'
+             , release_data->>'name'
+             , release_data->>'caa_id'
+             , release_data->>'caa_release_mbid'
     """
 
     result = connection.execute(text(query), {"mbids": tuple(mbids)})
-    rows = result.mappings().all()
-    return {row["recording_mbid"]: row for row in rows}
+
+    rows = {}
+    for row in result.all():
+        recording_mbid = row.recording_mbid
+        data = {
+            "recording_mbid": row.recording_mbid,
+            "release_mbid": row.release_mbid,
+            "artist_mbids": row.artist_mbids,
+            "artist": row.artist,
+            "title": row.title,
+            "release": row.release,
+            "caa_id": row.caa_id,
+            "caa_release_mbid": row.caa_release_mbid
+        }
+
+        artists = []
+        for (mbid, name, join_phrase) in zip(row.artist_mbids, row.ac_names, row.ac_join_phrases):
+            artists.append({
+                "artist_mbid": mbid,
+                "artist_credit_name": name,
+                "join_phrase": join_phrase
+            })
+        data["artists"] = artists
+        rows[recording_mbid] = data
+
+    return rows
 
 
 ModelT = TypeVar('ModelT', bound=MsidMbidModel)
@@ -124,7 +160,8 @@ def _update_mbid_items(models: dict[str, list[ModelT]], metadatas: dict, remaini
                 "additional_info": {
                     "recording_mbid": metadata["recording_mbid"],
                     "release_mbid": metadata["release_mbid"],
-                    "artist_mbids": metadata["artist_mbids"]
+                    "artist_mbids": metadata["artist_mbids"],
+                    "artists": metadata["artists"]
                 }
             }
 
