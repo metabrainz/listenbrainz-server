@@ -234,12 +234,21 @@ class TimescaleListenStore:
             to_ts = max_user_ts + 1
 
         window_size = DEFAULT_FETCH_WINDOW
-        query = """SELECT listened_at, track_name, user_id, created, data, mm.recording_mbid, release_mbid, artist_mbids
+        query = """SELECT listened_at
+                        , track_name
+                        , user_id
+                        , created
+                        , data
+                        , mm.recording_mbid
+                        , mbc.release_mbid
+                        , mbc.artist_mbids
+                        , (mbc.release_data->>'caa_id')::bigint AS caa_id
+                        , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
                      FROM listen
-          FULL OUTER JOIN mbid_mapping mm
+                LEFT JOIN mbid_mapping mm
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
-          FULL OUTER JOIN mbid_mapping_metadata m
-                       ON mm.recording_mbid = m.recording_mbid
+                LEFT JOIN mapping.mb_metadata_cache mbc
+                       ON mm.recording_mbid = mbc.recording_mbid
                     WHERE user_id = :user_id
                       AND listened_at > :from_ts
                       AND listened_at < :to_ts
@@ -311,7 +320,9 @@ class TimescaleListenStore:
                         recording_mbid=result.recording_mbid,
                         release_mbid=result.release_mbid,
                         artist_mbids=result.artist_mbids,
-                        user_name=user["musicbrainz_id"]
+                        user_name=user["musicbrainz_id"],
+                        caa_id=result.caa_id,
+                        caa_release_mbid=result.caa_release_mbid
                     ))
 
                     if len(listens) == limit:
@@ -353,16 +364,35 @@ class TimescaleListenStore:
         filters = " AND ".join(filters_list)
 
         query = f"""SELECT * FROM (
-                              SELECT listened_at, track_name, user_id, created, data, mm.recording_mbid, release_mbid, artist_mbids,
-                                     row_number() OVER (partition by user_id ORDER BY listened_at DESC) AS rownum
+                               SELECT listened_at
+                                    , track_name
+                                    , user_id
+                                    , created
+                                    , data
+                                    , mm.recording_mbid
+                                    , mbc.release_mbid
+                                    , mbc.artist_mbids
+                                    , (mbc.release_data->>'caa_id')::bigint AS caa_id
+                                    , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
+                                    , row_number() OVER (PARTITION BY user_id ORDER BY listened_at DESC) AS rownum
                                 FROM listen l
-                     FULL OUTER JOIN mbid_mapping m
-                                  ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = m.recording_msid
-                     FULL OUTER JOIN mbid_mapping_metadata mm
-                                  ON mm.recording_mbid = m.recording_mbid
+                           LEFT JOIN mbid_mapping mm
+                                  ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+                           LEFT JOIN mapping.mb_metadata_cache mbc
+                                  ON mm.recording_mbid = mbc.recording_mbid
                                WHERE {filters}
-                            GROUP BY user_id, listened_at, track_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
-                            ORDER BY listened_at DESC) tmp
+                            GROUP BY user_id
+                                   , listened_at
+                                   , track_name
+                                   , created
+                                   , data
+                                   , mm.recording_mbid
+                                   , mbc.release_mbid
+                                   , mbc.artist_mbids
+                                   , mbc.release_data->>'caa_id'
+                                   , mbc.release_data->>'caa_release_mbid'
+                            ORDER BY listened_at DESC
+                            ) tmp
                                WHERE rownum <= :per_user_limit
                             ORDER BY listened_at DESC   
                                LIMIT :limit"""
@@ -384,7 +414,9 @@ class TimescaleListenStore:
                     recording_mbid=result.recording_mbid,
                     release_mbid=result.release_mbid,
                     artist_mbids=result.artist_mbids,
-                    user_name=user_name
+                    user_name=user_name,
+                    caa_id=result.caa_id,
+                    caa_release_mbid=result.caa_release_mbid
                 ))
         return listens
 

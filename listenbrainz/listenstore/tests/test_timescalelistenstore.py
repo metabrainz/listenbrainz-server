@@ -44,19 +44,23 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
     def _insert_mapping_metadata(self, msid):
         """ Insert mapping test data into the mapping tables """
 
-        query = """INSERT INTO mbid_mapping_metadata
-                               (recording_mbid, release_mbid, release_name, artist_credit_id, 
-                                artist_mbids, artist_credit_name, recording_name)
-                        VALUES ('076255b4-1575-11ec-ac84-135bf6a670e3',
-                                '1fd178b4-1575-11ec-b98a-d72392cd8c97',
-                                'release_name',
-                                65,
-                                '{6a221fda-2200-11ec-ac7d-dfa16a57158f}'::UUID[],
-                                'artist name', 'recording name')"""
+        query = """
+            INSERT INTO mapping.mb_metadata_cache
+               (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                VALUES ('2f3d422f-8890-41a1-9762-fbe16f107c31'
+                      , '{8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11}'::UUID[]
+                      , '76df3287-6cda-33eb-8e9a-044b5e15ffdd'
+                      , '{"name": "Strangers", "rels": [], "length": 291160}'
+                      , '{"name": "Portishead", "artist_credit_id": 204, "artists": [{"area": "United Kingdom", "rels": {"lyrics": "https://muzikum.eu/en/122-6105/portishead/lyrics.html", "youtube": "https://www.youtube.com/user/portishead1002", "wikidata": "https://www.wikidata.org/wiki/Q191352", "streaming": "https://tidal.com/artist/27441", "free streaming": "https://www.deezer.com/artist/1069", "social network": "https://www.facebook.com/portishead", "official homepage": "http://www.portishead.co.uk/", "purchase for download": "https://www.junodownload.com/artists/Portishead/releases/"}, "type": "Group", "begin_year": 1991}]}'
+                      , '{"artist": [], "recording": [], "release_group": []}'
+                      , '{"mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd", "name": "Dummy"}'
+                      , 'f'
+                       )
+        """
 
         join_query = """INSERT INTO mbid_mapping
                                (recording_msid, recording_mbid, match_type)
-                        VALUES ('%s', '%s', 'exact_match')""" % (msid, '076255b4-1575-11ec-ac84-135bf6a670e3')
+                        VALUES ('%s', '%s', 'exact_match')""" % (msid, '2f3d422f-8890-41a1-9762-fbe16f107c31')
 
         with ts.engine.begin() as connection:
             connection.execute(sqlalchemy.text(query))
@@ -144,9 +148,9 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self._insert_mapping_metadata("c7a41965-9f1e-456c-8b1d-27c0f0dde280")
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, from_ts=1400000000, limit=1)
         self.assertEqual(len(listens), 1)
-        self.assertEqual(listens[0].data["mbid_mapping"]["artist_mbids"], ['6a221fda-2200-11ec-ac7d-dfa16a57158f'])
-        self.assertEqual(listens[0].data["mbid_mapping"]["release_mbid"], '1fd178b4-1575-11ec-b98a-d72392cd8c97')
-        self.assertEqual(listens[0].data["mbid_mapping"]["recording_mbid"], '076255b4-1575-11ec-ac84-135bf6a670e3')
+        self.assertEqual(listens[0].data["mbid_mapping"]["artist_mbids"], ['8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11'])
+        self.assertEqual(listens[0].data["mbid_mapping"]["release_mbid"], '76df3287-6cda-33eb-8e9a-044b5e15ffdd')
+        self.assertEqual(listens[0].data["mbid_mapping"]["recording_mbid"], '2f3d422f-8890-41a1-9762-fbe16f107c31')
 
     def test_get_listen_count_for_user(self):
         uid = random.randint(2000, 1 << 31)

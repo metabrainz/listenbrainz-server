@@ -47,6 +47,8 @@ declare type MbidMapping = {
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
+  caa_id?: number;
+  caa_release_mbid?: string;
 };
 
 declare type BaseListenFormat = {

@@ -1,9 +1,10 @@
+import json
 import uuid
 
 from sqlalchemy import text
 
 from listenbrainz import messybrainz
-from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mapping, fetch_track_metadata_for_items, MsidMbidModel
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items, MsidMbidModel, load_recordings_from_mbids
 from listenbrainz.db.testing import TimescaleTestCase
 from listenbrainz.db import timescale as ts
 
@@ -26,12 +27,25 @@ class MappingTestCase(TimescaleTestCase):
     def insert_recording_in_mapping(self, recording, match_type):
         with ts.engine.begin() as connection:
             if match_type == "exact_match":
+
+                release_data = {"name": recording["release"]}
+                if recording.get("caa_id"):
+                    release_data["caa_id"] = recording["caa_id"]
+                    release_data["caa_release_mbid"] = recording["caa_release_mbid"]
+
                 connection.execute(text("""
-                    INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
-                                                       artist_mbids, artist_credit_name, recording_name)
-                     VALUES (:artist_credit_id, :recording_mbid ::UUID, :release_mbid ::UUID, :release,
-                             :artist_mbids ::UUID[], :artist, :title)
-                """), recording)
+                    INSERT INTO mapping.mb_metadata_cache
+                            (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                     VALUES (:recording_mbid ::UUID, :artist_mbids ::UUID[], :release_mbid ::UUID, :recording_data, :artist_data, :tag_data, :release_data, 'f')
+                """), {
+                    "recording_mbid": recording["recording_mbid"],
+                    "artist_mbids": recording["artist_mbids"],
+                    "release_mbid": recording["release_mbid"],
+                    "recording_data": json.dumps({"name": recording["title"]}),
+                    "artist_data": json.dumps({"name": recording["artist"]}),
+                    "release_data": json.dumps(release_data),
+                    "tag_data": json.dumps({"artist": [], "recording": [], "release_group": []})
+                })
 
             connection.execute(
                 text("""
@@ -48,22 +62,24 @@ class MappingTestCase(TimescaleTestCase):
     def insert_recordings(self):
         recordings = [
             {
-                "artist_credit_id": 204,
                 "recording_mbid": "00000737-3a59-4499-b30a-31fe2464555d",
                 "release_mbid": "a2589025-8517-45ab-9d64-fe927ba087b1",
                 "release": "Batman Returns",
                 "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"],
                 "artist": "Danny Elfman",
-                "title": "The Final Confrontation, Part 1"
+                "title": "The Final Confrontation, Part 1",
+                "caa_release_mbid": "a2589025-8517-45ab-9d64-fe927ba087b1-3151246737",
+                "caa_id": 3151246737
             },
             {
-                "artist_credit_id": 133549,
                 "recording_mbid": "c5bfd98d-ccde-4cf3-8abb-63fad1b6065a",
                 "release_mbid": "5da4af04-d796-4d07-801d-a878e83dea48",
                 "release": "Random Is Resistance",
                 "artist_mbids": ["797bcf41-0e02-431d-ab99-020e1cb3d0fd"],
                 "artist": "Rotersand",
-                "title": "A Number and a Name"
+                "title": "A Number and a Name",
+                "caa_id": None,
+                "caa_release_mbid": None
             },
             {
                 "artist": "James S.A. Corey",
@@ -71,7 +87,6 @@ class MappingTestCase(TimescaleTestCase):
                 "release": None
             },
             {
-                "artist_credit_id": 347,
                 "recording_mbid": "67bcde07-bfb1-4b30-88ba-6b995ec04123",
                 "release_mbid": "27280632-fa33-3801-a5b1-081ed0b65bb3",
                 "release": "Year Zero",
@@ -88,14 +103,12 @@ class MappingTestCase(TimescaleTestCase):
         submitted = messybrainz.insert_all_in_transaction(recordings)
         # data sent to msb cannot contain nulls but we want it when inserting in mapping
         recordings[2].update(**{
-            "artist_credit_id": None,
             "recording_mbid": None,
             "release_mbid": None,
             "release": None,
             "artist_mbids": None,
         })
         recordings[4].update(**{
-            "artist_credit_id": None,
             "recording_mbid": None,
             "release_mbid": None,
             "release": None,
@@ -108,27 +121,25 @@ class MappingTestCase(TimescaleTestCase):
             else:
                 match_type = "exact_match"
             self.insert_recording_in_mapping(recordings[idx], match_type)
-            # artist_credit_id is not retrieved, remove from dict after submitting
-            del recordings[idx]["artist_credit_id"]
         return recordings
 
     def test_load_recordings_from_mapping(self):
         recordings = self.insert_recordings()
-        expected_mbid_map = {
+        del recordings[0]["recording_msid"]
+        del recordings[1]["recording_msid"]
+        expected = {
             recordings[0]["recording_mbid"]: recordings[0],
             recordings[1]["recording_mbid"]: recordings[1]
         }
-        expected_msid_map = {
-            recordings[3]["recording_msid"]: recordings[3]
-        }
-        mbid_map, msid_map = load_recordings_from_mapping(
-            mbids=[recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]],
-            msids=[recordings[2]["recording_msid"], recordings[3]["recording_msid"]]
-        )
-        self.assertEqual(expected_msid_map, msid_map)
-        self.assertEqual(expected_mbid_map, mbid_map)
+        with ts.engine.connect() as connection:
+            received = load_recordings_from_mbids(
+                connection,
+                [recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]]
+            )
+        self.assertEqual(expected, received)
 
     def test_fetch_track_metadata_for_items(self):
+        self.maxDiff = None
         recordings = self.insert_recordings()
         models = [
             # these recordings test we find mapping metadata from mbids
@@ -151,7 +162,7 @@ class MappingTestCase(TimescaleTestCase):
             self.assertEqual(metadata["track_name"], recording["title"])
             self.assertEqual(metadata["artist_name"], recording["artist"])
 
-            if idx == 2 or idx == 4:  # these recordings are only present in MsB
+            if 2 <= idx <= 4:  # these recordings are only present in MsB
                 continue
 
             self.assertEqual(metadata["release_name"], recording["release"])
