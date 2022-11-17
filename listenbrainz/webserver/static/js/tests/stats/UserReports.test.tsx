@@ -1,7 +1,10 @@
 import * as React from "react";
-import { shallow } from "enzyme";
+import { shallow, ShallowWrapper } from "enzyme";
 
-import UserReports, { UserReportsProps } from "../../src/stats/UserReports";
+import UserReports, {
+  UserReportsProps,
+  UserReportsState,
+} from "../../src/stats/UserReports";
 
 const userProps: UserReportsProps = {
   user: {
@@ -18,9 +21,24 @@ describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
+  let wrapper:
+    | ShallowWrapper<UserReportsProps, UserReportsState, UserReports>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   describe("UserReports", () => {
     it("renders without crashing", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -28,7 +46,7 @@ describe.each([
 
   describe("ComponentDidMount", () => {
     it('adds event listener for "popstate" event', () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(window, "addEventListener");
@@ -40,7 +58,7 @@ describe.each([
     });
 
     it("calls getURLParams once", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       instance.getURLParams = jest.fn();
@@ -51,7 +69,7 @@ describe.each([
     });
 
     it("calls replaceState with correct parameters", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(window.history, "replaceState");
@@ -64,7 +82,7 @@ describe.each([
     });
 
     it("calls syncStateWithURL", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       instance.syncStateWithURL = jest.fn();
@@ -76,7 +94,7 @@ describe.each([
 
   describe("componentWillUnmount", () => {
     it('removes "popstate" event listener', () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(window, "removeEventListener");
@@ -90,7 +108,7 @@ describe.each([
 
   describe("changeRange", () => {
     it("calls setURLParams with correct parameters", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       instance.setURLParams = jest.fn();
@@ -101,7 +119,7 @@ describe.each([
     });
 
     it("calls syncStateWithURL once", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       instance.syncStateWithURL = jest.fn();
@@ -113,7 +131,7 @@ describe.each([
 
   describe("syncStateWithUrl", () => {
     it("calls getURLParams once", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       instance.getURLParams = jest.fn();
@@ -123,7 +141,7 @@ describe.each([
     });
 
     it("sets state correcty", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       instance.getURLParams = jest.fn().mockImplementationOnce(() => "month");
@@ -135,7 +153,7 @@ describe.each([
 
   describe("getURLParams", () => {
     it("gets default parameters if none are provided in the URL", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       window.location = {
@@ -147,7 +165,7 @@ describe.each([
     });
 
     it("gets parameters if provided in the URL", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       window.location = {
@@ -161,7 +179,7 @@ describe.each([
 
   describe("setURLParams", () => {
     it("sets URL parameters", () => {
-      const wrapper = shallow<UserReports>(<UserReports {...props} />);
+      wrapper = shallow<UserReports>(<UserReports {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(window.history, "pushState");
