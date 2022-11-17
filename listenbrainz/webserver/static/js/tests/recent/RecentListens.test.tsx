@@ -1,7 +1,7 @@
 /* eslint-disable jest/no-disabled-tests */
 
 import * as React from "react";
-import { mount } from "enzyme";
+import { mount, ReactWrapper } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
 import GlobalAppContext, {
@@ -12,9 +12,13 @@ import APIServiceClass from "../../src/utils/APIService";
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
 
-import RecentListens from "../../src/recent/RecentListens";
+import RecentListens, {
+  RecentListensProps,
+  RecentListensState,
+} from "../../src/recent/RecentListens";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
+import { waitForComponentToPaint } from "../test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -75,6 +79,21 @@ fetchMock.mockIf(
 );
 
 describe("Recentlistens", () => {
+  let wrapper:
+    | ReactWrapper<RecentListensProps, RecentListensState, RecentListens>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   it("renders the page correctly", () => {
     // Datepicker component uses current time at load as max date,
     // and PinnedRecordingModal component uses current time at load to display recording unpin date,
@@ -85,7 +104,7 @@ describe("Recentlistens", () => {
       .mockImplementation(() => mockDate.getTime());
 
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    const wrapper = mount<RecentListens>(
+    wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <RecentListens {...props} />
       </GlobalAppContext.Provider>
@@ -93,97 +112,98 @@ describe("Recentlistens", () => {
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
   });
-});
+  describe("updateRecordingToPin", () => {
+    it("sets the recordingToPin in the state", async () => {
+      wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
 
-describe("updateRecordingToPin", () => {
-  it("sets the recordingToPin in the state", async () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
+      const instance = wrapper.instance();
+      const recordingToPin = props.listens[1];
 
-    const instance = wrapper.instance();
-    const recordingToPin = props.listens[1];
+      expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
 
-    expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
-
-    instance.updateRecordingToPin(recordingToPin);
-    expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
-  });
-});
-
-describe("updateRecordingToReview", () => {
-  it("sets the recordingToReview in the state", async () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
-    const instance = wrapper.instance();
-    const recordingToReview = props.listens[1];
-
-    expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
-
-    instance.updateRecordingToReview(recordingToReview);
-    expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
-  });
-});
-
-describe("pinRecordingModal", () => {
-  it("renders the PinRecordingModal component with the correct props", async () => {
-    const wrapper = mount<RecentListens>(
-      <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-    const recordingToPin = props.listens[0];
-    let pinRecordingModal = wrapper.find(PinRecordingModal).first();
-
-    // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
-    expect(pinRecordingModal.props()).toEqual({
-      recordingToPin: props.listens[0],
-      newAlert: props.newAlert,
-      onSuccessfulPin: expect.any(Function),
-    });
-
-    instance.updateRecordingToPin(recordingToPin);
-    wrapper.update();
-
-    pinRecordingModal = wrapper.find(PinRecordingModal).first();
-    expect(pinRecordingModal.props()).toEqual({
-      recordingToPin,
-      newAlert: props.newAlert,
-      onSuccessfulPin: expect.any(Function),
+      instance.updateRecordingToPin(recordingToPin);
+      await waitForComponentToPaint(wrapper);
+      expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
     });
   });
-});
 
-describe("CBReviewModal", () => {
-  it("renders the CBReviewModal component with the correct props", async () => {
-    const wrapper = mount<RecentListens>(
-      <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-    const listen = props.listens[0];
-    let cbReviewModal = wrapper.find(CBReviewModal).first();
+  describe("updateRecordingToReview", () => {
+    it("sets the recordingToReview in the state", async () => {
+      wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
+      const instance = wrapper.instance();
+      const recordingToReview = props.listens[1];
 
-    // recentListens renders CBReviewModal with listens[0] as listen by default
-    expect(cbReviewModal.props()).toEqual({
-      isCurrentUser: true,
-      listen: props.listens[0],
-      newAlert: props.newAlert,
+      expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
+
+      instance.updateRecordingToReview(recordingToReview);
+      await waitForComponentToPaint(wrapper);
+      expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
     });
+  });
 
-    instance.updateRecordingToPin(listen);
-    wrapper.update();
+  describe("pinRecordingModal", () => {
+    it("renders the PinRecordingModal component with the correct props", async () => {
+      wrapper = mount<RecentListens>(
+        <GlobalAppContext.Provider value={mountOptions.context}>
+          <RecentListens {...props} />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.instance();
+      const recordingToPin = props.listens[0];
+      let pinRecordingModal = wrapper.find(PinRecordingModal).first();
 
-    cbReviewModal = wrapper.find(CBReviewModal).first();
-    expect(cbReviewModal.props()).toEqual({
-      isCurrentUser: true,
-      listen,
-      newAlert: props.newAlert,
+      // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
+      expect(pinRecordingModal.props()).toEqual({
+        recordingToPin: props.listens[0],
+        newAlert: props.newAlert,
+        onSuccessfulPin: expect.any(Function),
+      });
+
+      instance.updateRecordingToPin(recordingToPin);
+      await waitForComponentToPaint(wrapper);
+
+      pinRecordingModal = wrapper.find(PinRecordingModal).first();
+      expect(pinRecordingModal.props()).toEqual({
+        recordingToPin,
+        newAlert: props.newAlert,
+        onSuccessfulPin: expect.any(Function),
+      });
+    });
+  });
+
+  describe("CBReviewModal", () => {
+    it("renders the CBReviewModal component with the correct props", async () => {
+      wrapper = mount<RecentListens>(
+        <GlobalAppContext.Provider value={mountOptions.context}>
+          <RecentListens {...props} />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.instance();
+      const listen = props.listens[0];
+      let cbReviewModal = wrapper.find(CBReviewModal).first();
+
+      // recentListens renders CBReviewModal with listens[0] as listen by default
+      expect(cbReviewModal.props()).toEqual({
+        isCurrentUser: true,
+        listen: props.listens[0],
+        newAlert: props.newAlert,
+      });
+
+      instance.updateRecordingToPin(listen);
+      await waitForComponentToPaint(wrapper);
+
+      cbReviewModal = wrapper.find(CBReviewModal).first();
+      expect(cbReviewModal.props()).toEqual({
+        isCurrentUser: true,
+        listen,
+        newAlert: props.newAlert,
+      });
     });
   });
 });
