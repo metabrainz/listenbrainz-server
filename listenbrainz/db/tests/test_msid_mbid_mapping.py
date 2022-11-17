@@ -33,6 +33,12 @@ class MappingTestCase(TimescaleTestCase):
                     release_data["caa_id"] = recording["caa_id"]
                     release_data["caa_release_mbid"] = recording["caa_release_mbid"]
 
+                artists = [
+                    {"name": a["artist_credit_name"], "join_phrase": a["join_phrase"]}
+                    for a in recording["artists"]
+                ]
+                artist_data = {"name": recording["artist"], "artists": artists}
+
                 connection.execute(text("""
                     INSERT INTO mapping.mb_metadata_cache
                             (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
@@ -42,7 +48,7 @@ class MappingTestCase(TimescaleTestCase):
                     "artist_mbids": recording["artist_mbids"],
                     "release_mbid": recording["release_mbid"],
                     "recording_data": json.dumps({"name": recording["title"]}),
-                    "artist_data": json.dumps({"name": recording["artist"]}),
+                    "artist_data": json.dumps(artist_data),
                     "release_data": json.dumps(release_data),
                     "tag_data": json.dumps({"artist": [], "recording": [], "release_group": []})
                 })
@@ -67,6 +73,13 @@ class MappingTestCase(TimescaleTestCase):
                 "release": "Batman Returns",
                 "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"],
                 "artist": "Danny Elfman",
+                "artists": [
+                    {
+                        "artist_credit_name": "Danny Elfman",
+                        "join_phrase": "",
+                        "artist_mbid": "5b24fbab-c58f-4c37-a59d-ab232e2d98c4"
+                    }
+                ],
                 "title": "The Final Confrontation, Part 1",
                 "caa_release_mbid": "a2589025-8517-45ab-9d64-fe927ba087b1-3151246737",
                 "caa_id": 3151246737
@@ -77,6 +90,13 @@ class MappingTestCase(TimescaleTestCase):
                 "release": "Random Is Resistance",
                 "artist_mbids": ["797bcf41-0e02-431d-ab99-020e1cb3d0fd"],
                 "artist": "Rotersand",
+                "artists": [
+                    {
+                        "artist_credit_name": "Rotersand",
+                        "join_phrase": "",
+                        "artist_mbid": "797bcf41-0e02-431d-ab99-020e1cb3d0fd"
+                    }
+                ],
                 "title": "A Number and a Name",
                 "caa_id": None,
                 "caa_release_mbid": None
@@ -92,6 +112,13 @@ class MappingTestCase(TimescaleTestCase):
                 "release": "Year Zero",
                 "artist_mbids": ["b7ffd2af-418f-4be2-bdd1-22f8b48613da"],
                 "artist": "Nine Inch Nails",
+                "artists": [
+                    {
+                        "artist_credit_name": "Nine Inch Nails",
+                        "join_phrase": "",
+                        "artist_mbid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da"
+                    }
+                ],
                 "title": "The Warning"
             },
             {
@@ -170,6 +197,7 @@ class MappingTestCase(TimescaleTestCase):
             self.assertEqual(metadata["additional_info"]["recording_msid"], recording["recording_msid"])
             self.assertEqual(metadata["additional_info"]["release_mbid"], recording["release_mbid"])
             self.assertEqual(metadata["additional_info"]["artist_mbids"], recording["artist_mbids"])
+            self.assertEqual(metadata["additional_info"]["artists"], recording["artists"])
 
     def test_fetch_track_metadata_for_items_with_same_mbid(self):
         recording = self.insert_recordings()[0]
@@ -187,4 +215,5 @@ class MappingTestCase(TimescaleTestCase):
             self.assertEqual(metadata["additional_info"]["recording_msid"], recording["recording_msid"])
             self.assertEqual(metadata["additional_info"]["release_mbid"], recording["release_mbid"])
             self.assertEqual(metadata["additional_info"]["artist_mbids"], recording["artist_mbids"])
+            self.assertEqual(metadata["additional_info"]["artists"], recording["artists"])
 

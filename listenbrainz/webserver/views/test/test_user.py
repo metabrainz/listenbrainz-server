@@ -273,7 +273,7 @@ class UserViewsTestCase(IntegrationTestCase):
                           , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'::UUID[]
                           , '607cc05a-e462-4f39-91b5-e9322544e0a6'
                           , '{"name": "The Final Confrontation, Part 1", "rels": [], "length": 312000}'
-                          , '{"name": "Danny Elfman", "artist_credit_id": 204, "artists": [{"area": "United States", "rels": {"youtube": "https://www.youtube.com/channel/UCjhIy2xUURhJvN0S7s_ztuw", "wikidata": "https://www.wikidata.org/wiki/Q193338", "streaming": "https://music.apple.com/gb/artist/486493", "free streaming": "https://www.deezer.com/artist/760", "social network": "https://www.instagram.com/dannyelfman/", "official homepage": "https://www.dannyelfman.com/", "purchase for download": "https://itunes.apple.com/us/artist/id486493"}, "type": "Person", "gender": "Male", "begin_year": 1953}]}'
+                          , '{"name": "Danny Elfman", "artist_credit_id": 204, "artists": [{"area": "United States", "rels": {"youtube": "https://www.youtube.com/channel/UCjhIy2xUURhJvN0S7s_ztuw", "wikidata": "https://www.wikidata.org/wiki/Q193338", "streaming": "https://music.apple.com/gb/artist/486493", "free streaming": "https://www.deezer.com/artist/760", "social network": "https://www.instagram.com/dannyelfman/", "official homepage": "https://www.dannyelfman.com/", "purchase for download": "https://itunes.apple.com/us/artist/id486493"}, "type": "Person", "gender": "Male", "begin_year": 1953, "name": "Danny Elfman", "join_phrase": ""}]}'
                           , '{"artist": [], "recording": [], "release_group": []}'
                           , '{"mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6", "name": "Danny Elfman & Tim Burton 25th Anniversary Music Box", "year": 2011}'
                           , 'f'
@@ -308,7 +308,14 @@ class UserViewsTestCase(IntegrationTestCase):
                 "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
                 "recording_mbid": "1fe669c9-5a2b-4dcb-9e95-77480d1e732e",
                 "release_mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6",
-                "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"]
+                "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"],
+                "artists": [
+                    {
+                        "artist_credit_name": "Danny Elfman",
+                        "join_phrase": "",
+                        "artist_mbid": "5b24fbab-c58f-4c37-a59d-ab232e2d98c4"
+                    }
+                ]
             }
         }
 
