@@ -4,6 +4,7 @@ import { ReactWrapper, mount, shallow, ShallowWrapper } from "enzyme";
 import { act } from "react-dom/test-utils";
 import UserArtistMap, {
   UserArtistMapProps,
+  UserArtistMapState,
 } from "../../src/stats/UserArtistMap";
 import APIError from "../../src/utils/APIError";
 import * as userArtistMapResponse from "../__mocks__/userArtistMap.json";
@@ -29,8 +30,8 @@ describe.each([
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
   let wrapper:
-    | ReactWrapper<any, any, any>
-    | ShallowWrapper<any, any, any>
+    | ReactWrapper<UserArtistMapProps, UserArtistMapState, UserArtistMap>
+    | ShallowWrapper<UserArtistMapProps, UserArtistMapState, UserArtistMap>
     | undefined;
   beforeEach(() => {
     wrapper = undefined;

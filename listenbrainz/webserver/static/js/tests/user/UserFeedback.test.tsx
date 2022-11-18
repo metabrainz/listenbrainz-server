@@ -3,7 +3,10 @@ import { mount, ReactWrapper } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { act } from "react-dom/test-utils";
-import UserFeedback, { UserFeedbackProps } from "../../src/user/UserFeedback";
+import UserFeedback, {
+  UserFeedbackProps,
+  UserFeedbackState,
+} from "../../src/user/UserFeedback";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
@@ -81,7 +84,9 @@ const fakeDateNow = jest
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 describe("UserFeedback", () => {
-  let wrapper: ReactWrapper<any, any, any> | undefined;
+  let wrapper:
+    | ReactWrapper<UserFeedbackProps, UserFeedbackState, UserFeedback>
+    | undefined;
   beforeEach(() => {
     wrapper = undefined;
   });

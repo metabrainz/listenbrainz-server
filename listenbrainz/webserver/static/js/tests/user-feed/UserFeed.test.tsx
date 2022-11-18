@@ -23,7 +23,10 @@ import { mount, ReactWrapper } from "enzyme";
 import * as timeago from "time-ago";
 import { sortBy } from "lodash";
 import { act } from "react-dom/test-utils";
-import UserFeedPage from "../../src/user-feed/UserFeed";
+import UserFeedPage, {
+  UserFeedPageProps,
+  UserFeedPageState,
+} from "../../src/user-feed/UserFeed";
 import UserSocialNetwork from "../../src/follow/UserSocialNetwork";
 import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 import * as timelineProps from "../__mocks__/timelineProps.json";
@@ -46,7 +49,9 @@ const GlobalContextMock = {
 };
 
 describe("UserFeed", () => {
-  let wrapper: ReactWrapper<any, any, any> | undefined;
+  let wrapper:
+    | ReactWrapper<UserFeedPageProps, UserFeedPageState, UserFeedPage>
+    | undefined;
   beforeEach(() => {
     wrapper = undefined;
   });

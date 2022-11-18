@@ -3,6 +3,7 @@ import { mount, ReactWrapper } from "enzyme";
 
 import UserDailyActivity, {
   UserDailyActivityProps,
+  UserDailyActivityState,
 } from "../../src/stats/UserDailyActivity";
 import APIError from "../../src/utils/APIError";
 import * as userDailyActivityResponse from "../__mocks__/userDailyActivity.json";
@@ -21,7 +22,13 @@ const props: UserDailyActivityProps = {
 Date.prototype.getTimezoneOffset = () => -330;
 
 describe("UserDailyActivity", () => {
-  let wrapper: ReactWrapper<any, any, any> | undefined;
+  let wrapper:
+    | ReactWrapper<
+        UserDailyActivityProps,
+        UserDailyActivityState,
+        UserDailyActivity
+      >
+    | undefined;
   beforeEach(() => {
     wrapper = undefined;
   });

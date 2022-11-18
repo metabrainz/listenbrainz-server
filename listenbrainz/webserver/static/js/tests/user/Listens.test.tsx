@@ -14,7 +14,7 @@ import * as recentListensPropsTooManyListens from "../__mocks__/recentListensPro
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
-import Listens, { ListensProps } from "../../src/user/Listens";
+import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 import { waitForComponentToPaint } from "../test-utils";
@@ -77,7 +77,7 @@ fetchMock.mockIf(
   }
 );
 describe("Listens page", () => {
-  let wrapper: ReactWrapper<any, any, any> | undefined;
+  let wrapper: ReactWrapper<ListensProps, ListensState, Listens> | undefined;
   beforeEach(() => {
     wrapper = undefined;
   });
