@@ -1,5 +1,5 @@
 import * as React from "react";
-import { mount } from "enzyme";
+import { mount, ReactWrapper } from "enzyme";
 import {
   faAngry,
   faFrown,
@@ -13,6 +13,7 @@ import {
   faGrinStars as faGrinStarsRegular,
 } from "@fortawesome/free-regular-svg-icons";
 
+import { act } from "react-dom/test-utils";
 import RecommendationFeedbackComponent, {
   RecommendationFeedbackComponentProps,
 } from "../../src/listens/RecommendationFeedbackComponent";
@@ -56,10 +57,29 @@ const globalProps = {
 };
 
 describe("Recommendation feedback", () => {
+  let wrapper:
+    | ReactWrapper<
+        RecommendationFeedbackComponentProps,
+        {},
+        RecommendationFeedbackComponent
+      >
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   describe("submitRecommendationFeedback", () => {
     it("calls API, calls updateFeedbackCallback correctly", async () => {
       const updateFeedbackSpy = jest.fn();
-      const wrapper = mount<RecommendationFeedbackComponent>(
+      wrapper = mount<RecommendationFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
           <RecommendationFeedbackComponent
             {...props}
@@ -73,7 +93,9 @@ describe("Recommendation feedback", () => {
         .spyOn(instance.context.APIService, "submitRecommendationFeedback")
         .mockImplementation(() => Promise.resolve(200));
 
-      await instance.submitRecommendationFeedback("hate");
+      await act(async () => {
+        await instance.submitRecommendationFeedback("hate");
+      });
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("baz", "yyyy", "hate");
@@ -84,7 +106,7 @@ describe("Recommendation feedback", () => {
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
       const updateFeedbackSpy = jest.fn();
-      const wrapper = mount<RecommendationFeedbackComponent>(
+      wrapper = mount<RecommendationFeedbackComponent>(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
@@ -104,8 +126,9 @@ describe("Recommendation feedback", () => {
         "submitRecommendationFeedback"
       );
       spy.mockImplementation(() => Promise.resolve(200));
-
-      instance.submitRecommendationFeedback("hate");
+      await act(() => {
+        instance.submitRecommendationFeedback("hate");
+      });
       expect(spy).toHaveBeenCalledTimes(0);
       expect(updateFeedbackSpy).toHaveBeenCalledTimes(0);
       expect(wrapper.exists(".recommendation-controls")).toEqual(false);
@@ -113,7 +136,7 @@ describe("Recommendation feedback", () => {
 
     it("doesn't call updateFeedback if status code is not 200", async () => {
       const updateFeedbackSpy = jest.fn();
-      const wrapper = mount<RecommendationFeedbackComponent>(
+      wrapper = mount<RecommendationFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
           <RecommendationFeedbackComponent
             {...props}
@@ -129,8 +152,9 @@ describe("Recommendation feedback", () => {
         "submitRecommendationFeedback"
       );
       spy.mockImplementation(() => Promise.resolve(500));
-
-      instance.submitRecommendationFeedback("hate");
+      await act(() => {
+        instance.submitRecommendationFeedback("hate");
+      });
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("baz", "yyyy", "hate");
@@ -143,7 +167,7 @@ describe("Recommendation feedback", () => {
       const updateFeedbackSpy = jest.fn();
       const newAlertSpy = jest.fn();
 
-      const wrapper = mount<RecommendationFeedbackComponent>(
+      wrapper = mount<RecommendationFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
           <RecommendationFeedbackComponent
             {...props}
@@ -162,8 +186,9 @@ describe("Recommendation feedback", () => {
       spy.mockImplementation(() => {
         throw new Error("my error message");
       });
-
-      instance.submitRecommendationFeedback("dislike");
+      await act(() => {
+        instance.submitRecommendationFeedback("dislike");
+      });
       expect(newAlertSpy).toHaveBeenCalledTimes(1);
       expect(newAlertSpy).toHaveBeenCalledWith(
         "danger",
@@ -190,7 +215,7 @@ describe("Recommendation feedback", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'Hate' ", async () => {
-    const wrapper = mount<RecommendationFeedbackComponent>(
+    wrapper = mount<RecommendationFeedbackComponent>(
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationFeedbackComponent {...props} currentFeedback="hate" />
       </GlobalAppContext.Provider>
@@ -231,7 +256,7 @@ describe("Recommendation feedback", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'dislike' ", async () => {
-    const wrapper = mount<RecommendationFeedbackComponent>(
+    wrapper = mount<RecommendationFeedbackComponent>(
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationFeedbackComponent {...props} currentFeedback="dislike" />
       </GlobalAppContext.Provider>
@@ -270,7 +295,7 @@ describe("Recommendation feedback", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'like' ", async () => {
-    const wrapper = mount<RecommendationFeedbackComponent>(
+    wrapper = mount<RecommendationFeedbackComponent>(
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationFeedbackComponent {...props} currentFeedback="like" />
       </GlobalAppContext.Provider>
@@ -309,7 +334,7 @@ describe("Recommendation feedback", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'Love' ", async () => {
-    const wrapper = mount<RecommendationFeedbackComponent>(
+    wrapper = mount<RecommendationFeedbackComponent>(
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationFeedbackComponent {...props} currentFeedback="love" />
       </GlobalAppContext.Provider>
