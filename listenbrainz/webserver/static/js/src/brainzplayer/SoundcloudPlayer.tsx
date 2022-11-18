@@ -49,7 +49,7 @@ type ProgressEvent = {
   relativePosition: number;
 };
 
-type SoundcloudPlayerState = {
+export type SoundcloudPlayerState = {
   currentSoundId?: number;
 };
 
