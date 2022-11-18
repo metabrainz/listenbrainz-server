@@ -2,7 +2,10 @@ import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 
 import { act } from "react-dom/test-utils";
-import UserEntityChart from "../../src/stats/UserEntityChart";
+import UserEntityChart, {
+  UserEntityChartProps,
+  UserEntityChartState,
+} from "../../src/stats/UserEntityChart";
 import APIError from "../../src/utils/APIError";
 import APIService from "../../src/utils/APIService";
 import * as userArtistsResponse from "../__mocks__/userArtists.json";
@@ -51,7 +54,9 @@ describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
-  let wrapper: ReactWrapper<any, any, any> | undefined;
+  let wrapper:
+    | ReactWrapper<UserEntityChartProps, UserEntityChartState, UserEntityChart>
+    | undefined;
   beforeEach(() => {
     wrapper = undefined;
   });
@@ -525,36 +530,39 @@ describe.each([
 
   describe("syncStateWithURL", () => {
     it("sets state correctly", async () => {
+      jest
+        .spyOn(UserEntityChart.prototype, "componentDidMount")
+        .mockImplementationOnce((): any => {});
       wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
+      await waitForComponentToPaint(wrapper);
 
-      jest.spyOn(instance, "getURLParams").mockImplementationOnce(() => ({
+      instance.getURLParams = jest.fn().mockReturnValue({
         page: 1,
         range: "all_time",
         entity: "artist",
-      }));
-      jest.spyOn(instance, "getInitData").mockImplementationOnce(() =>
-        Promise.resolve({
-          startDate: new Date(0),
-          endDate: new Date(10),
-          totalPages: 2,
-          maxListens: 100,
-          entityCount: 50,
-        })
-      );
+      });
+      jest.spyOn(instance, "getInitData").mockResolvedValue({
+        startDate: new Date(0),
+        endDate: new Date(10),
+        totalPages: 2,
+        maxListens: 100,
+        entityCount: 50,
+      });
       jest
-        .spyOn(instance, "getData")
-        .mockImplementationOnce(() =>
-          Promise.resolve(userArtistsResponse as UserArtistsResponse)
-        );
+        .spyOn(instance.context.APIService, "getUserEntity")
+        .mockResolvedValue(userArtistsResponse as UserArtistsResponse);
       jest
         .spyOn(instance, "processData")
-        .mockImplementationOnce(
+        .mockImplementation(
           () => userArtistsProcessDataOutput as UserEntityData
         );
-      await instance.syncStateWithURL();
+
+      await act(async () => {
+        await instance.syncStateWithURL();
+      });
 
       expect(instance.state).toMatchObject({
         data: userArtistsProcessDataOutput,
@@ -571,6 +579,9 @@ describe.each([
     });
 
     it("sets state correctly if stats haven't been calculated", async () => {
+      jest
+        .spyOn(UserEntityChart.prototype, "componentDidMount")
+        .mockImplementationOnce((): any => {});
       wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
@@ -583,7 +594,9 @@ describe.each([
         return Promise.reject(error);
       });
 
-      await instance.syncStateWithURL();
+      await act(async () => {
+        await instance.syncStateWithURL();
+      });
       expect(instance.state).toMatchObject({
         currPage: 1,
         range: "all_time",
@@ -596,6 +609,9 @@ describe.each([
     });
 
     it("sets state correctly if range is incorrect", async () => {
+      jest
+        .spyOn(UserEntityChart.prototype, "componentDidMount")
+        .mockImplementationOnce((): any => {});
       wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
@@ -605,7 +621,9 @@ describe.each([
         return { range: "invalid_range", entity: "artist", page: 1 };
       });
 
-      await instance.syncStateWithURL();
+      await act(async () => {
+        await instance.syncStateWithURL();
+      });
       expect(instance.state).toMatchObject({
         currPage: 1,
         range: "invalid_range",
@@ -617,6 +635,9 @@ describe.each([
     });
 
     it("sets state correctly if entity is incorrect", async () => {
+      jest
+        .spyOn(UserEntityChart.prototype, "componentDidMount")
+        .mockImplementationOnce((): any => {});
       wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
@@ -626,7 +647,9 @@ describe.each([
         return { range: "all_time", entity: "invalid_entity", page: 1 };
       });
 
-      await instance.syncStateWithURL();
+      await act(async () => {
+        await instance.syncStateWithURL();
+      });
       expect(instance.state).toMatchObject({
         currPage: 1,
         range: "all_time",
@@ -638,6 +661,9 @@ describe.each([
     });
 
     it("sets state correctly if page is incorrect", async () => {
+      jest
+        .spyOn(UserEntityChart.prototype, "componentDidMount")
+        .mockImplementationOnce((): any => {});
       wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
@@ -647,7 +673,9 @@ describe.each([
         return { range: "all_time", entity: "artist", page: 1.5 };
       });
 
-      await instance.syncStateWithURL();
+      await act(async () => {
+        await instance.syncStateWithURL();
+      });
       expect(instance.state).toMatchObject({
         currPage: 1.5,
         range: "all_time",
@@ -662,12 +690,15 @@ describe.each([
         context: GlobalContextMock,
       });
       const instance = wrapper.instance();
-
+      const mockError = Error("failed");
       instance.getInitData = jest
         .fn()
-        .mockImplementationOnce(() => Promise.reject(Error("failed")));
-
-      await expect(instance.syncStateWithURL()).rejects.toThrowError("failed");
+        .mockImplementationOnce(() => Promise.reject(mockError));
+      const spy = jest.spyOn(console, "error");
+      await act(async () => {
+        await instance.syncStateWithURL();
+      });
+      expect(spy).toHaveBeenCalledWith(mockError);
     });
   });
 
