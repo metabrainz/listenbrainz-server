@@ -42,7 +42,7 @@ services:
     volumes:
       - rabbitmq:/var/lib/rabbitmq:z
     ports:
-      - "15672:15672"
+      - "127.0.0.1:25672:15672"
 
   web:
     build:
