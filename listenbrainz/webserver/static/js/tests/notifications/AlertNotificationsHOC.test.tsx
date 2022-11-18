@@ -1,6 +1,8 @@
 import * as React from "react";
 import { shallow, mount } from "enzyme";
+import { act } from "react-dom/test-utils";
 import { withAlertNotifications } from "../../src/notifications/AlertNotificationsHOC";
+import { waitForComponentToPaint } from "../test-utils";
 
 const fakeComponent = function FakeComponent() {
   return <div />;
@@ -60,10 +62,11 @@ describe("AlertNotifications higher-order component", () => {
     expect(
       wrapper.find(".alert").at(2).contains("Time for *us* to hit the bar")
     ).toBeTruthy();
+    wrapper.unmount();
   });
 
   describe("newAlert", () => {
-    it("creates a new alert", () => {
+    it("creates a new alert", async () => {
       const WrappedComponent = withAlertNotifications(fakeComponent);
       const wrapper = shallow<React.ComponentType>(<WrappedComponent />);
       const instance = wrapper.instance();
@@ -71,6 +74,7 @@ describe("AlertNotifications higher-order component", () => {
       expect(wrapper.state().alerts).toEqual([]);
 
       (instance as any).newAlert("warning", "Test", "foobar");
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state().alerts).toEqual([
         {
@@ -82,7 +86,7 @@ describe("AlertNotifications higher-order component", () => {
         },
       ]);
     });
-    it("doesn't create a new alert but increments count if passed same alert", () => {
+    it("doesn't create a new alert but increments count if passed same alert", async () => {
       const WrappedComponent = withAlertNotifications(fakeComponent);
       const wrapper = shallow<React.ComponentType>(<WrappedComponent />);
       const instance = wrapper.instance();
@@ -90,6 +94,7 @@ describe("AlertNotifications higher-order component", () => {
       expect(wrapper.state().alerts).toEqual([]);
 
       (instance as any).newAlert("warning", "Test", "foobar");
+      await waitForComponentToPaint(wrapper);
       expect(wrapper.state().alerts).toEqual([
         {
           id: 0,
@@ -100,6 +105,7 @@ describe("AlertNotifications higher-order component", () => {
         },
       ]);
       (instance as any).newAlert("danger", "test", <p>foobar</p>);
+      await waitForComponentToPaint(wrapper);
       expect(wrapper.state().alerts).toEqual([
         {
           id: 0,
@@ -116,7 +122,9 @@ describe("AlertNotifications higher-order component", () => {
         },
       ]);
       (instance as any).newAlert("warning", "Test", "foobar");
+      await waitForComponentToPaint(wrapper);
       (instance as any).newAlert("warning", "Test", "foobar");
+      await waitForComponentToPaint(wrapper);
       expect(wrapper.state().alerts).toEqual([
         {
           id: 0,
@@ -132,8 +140,9 @@ describe("AlertNotifications higher-order component", () => {
           message: <p>foobar</p>,
         },
       ]);
+      wrapper.unmount();
     });
-    it("creates a new alert from child component", () => {
+    it("creates a new alert from child component", async () => {
       const WrappedComponent = withAlertNotifications(fakeComponent);
       const wrapper = shallow<React.ComponentType>(<WrappedComponent />);
       const instance = wrapper.instance();
@@ -144,15 +153,19 @@ describe("AlertNotifications higher-order component", () => {
       expect(childComponent).toBeDefined();
 
       expect(childComponent.props().newAlert).toBeDefined();
-      childComponent.props().newAlert("warning", "Test", "foobar");
+      await act(() => {
+        childComponent.props().newAlert("warning", "Test", "foobar");
+      });
+      await waitForComponentToPaint(wrapper);
       expect(wrapper.state().alerts).toEqual([
         { id: 0, type: "warning", headline: "Test", message: "foobar" },
       ]);
+      wrapper.unmount();
     });
   });
 
   describe("onAlertDismissed", () => {
-    it("deletes an alert", () => {
+    it("deletes an alert", async () => {
       const WrappedComponent = withAlertNotifications(fakeComponent);
       const wrapper = mount<React.ComponentType>(<WrappedComponent />);
       const instance = wrapper.instance();
@@ -169,18 +182,22 @@ describe("AlertNotifications higher-order component", () => {
         headline: "test",
         message: <p>foobar</p>,
       } as Alert;
-      wrapper.setState({
-        alerts: [alert1, alert2],
+      await act(() => {
+        wrapper.setState({
+          alerts: [alert1, alert2],
+        });
       });
       expect(wrapper.state().alerts).toEqual([alert1, alert2]);
 
       (instance as any).onAlertDismissed(alert1);
+      await waitForComponentToPaint(wrapper);
       expect(wrapper.state().alerts).toEqual([alert2]);
 
       // Click on the close (x) button
       expect(wrapper.find(".alert").at(0).childAt(0).type()).toEqual("button");
       wrapper.find(".alert").at(0).childAt(0).simulate("click");
       expect(wrapper.state().alerts).toEqual([]);
+      wrapper.unmount();
     });
   });
 });
