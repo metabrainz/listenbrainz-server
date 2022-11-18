@@ -2,7 +2,9 @@ import * as React from "react";
 import { mount } from "enzyme";
 
 import { faHeart } from "@fortawesome/free-solid-svg-icons";
-import ListenControl, { ListenControlProps } from "../../src/listens/ListenControl";
+import ListenControl, {
+  ListenControlProps,
+} from "../../src/listens/ListenControl";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -19,5 +21,6 @@ describe("ListenCountCard", () => {
   it("renders correctly", () => {
     const wrapper = mount(<ListenControl {...props} />);
     expect(wrapper).toMatchSnapshot();
+    wrapper.unmount();
   });
 });
