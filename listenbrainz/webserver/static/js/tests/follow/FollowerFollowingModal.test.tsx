@@ -20,9 +20,12 @@
 
 import * as React from "react";
 import { mount } from "enzyme";
+import { act } from "react-dom/test-utils";
 import FollowerFollowingModal from "../../src/follow/FollowerFollowingModal";
 import APIService from "../../src/utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 
 const props = {
   user: { name: "foobar" },
@@ -47,11 +50,12 @@ describe("<FollowerFollowingModal />", () => {
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
+    wrapper.unmount();
   });
 });
 
 describe("updateMode()", () => {
-  it("updates the mode correctly", () => {
+  it("updates the mode correctly", async () => {
     const wrapper = mount<FollowerFollowingModal>(
       <GlobalAppContext.Provider value={globalContext}>
         <FollowerFollowingModal {...props} />
@@ -63,11 +67,16 @@ describe("updateMode()", () => {
     expect(instance.state.activeMode).toEqual("following");
 
     // does nothing if the same mode as the current mode is passed
-    instance.updateMode("following");
+    await act(() => {
+      instance.updateMode("following");
+    });
     expect(instance.state.activeMode).toEqual("following");
 
     // updates the mode correctly
-    instance.updateMode("follower");
+    await act(() => {
+      instance.updateMode("follower");
+    });
     expect(instance.state.activeMode).toEqual("follower");
+    wrapper.unmount();
   });
 });
