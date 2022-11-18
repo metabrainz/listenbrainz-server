@@ -13,6 +13,7 @@ describe("LastFmImporterModal", () => {
   it("renders", () => {
     const wrapper = mount(<LastFMImporterModal {...props} />);
     expect(wrapper.html()).toMatchSnapshot();
+    wrapper.unmount();
   });
 
   it("close button is disabled/enabled based upon props", () => {
@@ -24,5 +25,6 @@ describe("LastFmImporterModal", () => {
     // Test if close button is enabled
     wrapper.setProps({ disable: false });
     expect(wrapper.find("button").props().disabled).toBe(false);
+    wrapper.unmount();
   });
 });
