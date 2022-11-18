@@ -1,6 +1,7 @@
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
+import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 
+import { act } from "react-dom/test-utils";
 import UserDailyActivity, {
   UserDailyActivityProps,
   UserDailyActivityState,
@@ -8,6 +9,7 @@ import UserDailyActivity, {
 import APIError from "../../src/utils/APIError";
 import * as userDailyActivityResponse from "../__mocks__/userDailyActivity.json";
 import * as userDailyActivityProcessedData from "../__mocks__/userDailyActivityProcessData.json";
+import { waitForComponentToPaint } from "../test-utils";
 
 const props: UserDailyActivityProps = {
   user: {
@@ -28,6 +30,11 @@ describe("UserDailyActivity", () => {
         UserDailyActivityState,
         UserDailyActivity
       >
+    | ShallowWrapper<
+        UserDailyActivityProps,
+        UserDailyActivityState,
+        UserDailyActivity
+      >
     | undefined;
   beforeEach(() => {
     wrapper = undefined;
@@ -41,26 +48,28 @@ describe("UserDailyActivity", () => {
       wrapper.unmount();
     }
   });
-  it("renders correctly", () => {
-    wrapper = mount<UserDailyActivity>(
+  it("renders correctly", async () => {
+    wrapper = shallow<UserDailyActivity>(
       <UserDailyActivity {...{ ...props, range: "all_time" }} />
     );
-
-    wrapper.setState({
-      data: (userDailyActivityProcessedData as unknown) as UserDailyActivityData,
-      graphContainerWidth: 1200,
-      loading: false,
+    await act(async () => {
+      wrapper!.setState({
+        data: (userDailyActivityProcessedData as unknown) as UserDailyActivityData,
+        graphContainerWidth: 1200,
+        loading: false,
+      });
     });
-    wrapper.update();
 
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders corectly when range is invalid", () => {
+  it("renders corectly when range is invalid", async () => {
     wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
 
-    wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-    wrapper.update();
+    await act(async () => {
+      wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+    });
+    await waitForComponentToPaint(wrapper);
 
     expect(wrapper).toMatchSnapshot();
   });
@@ -89,11 +98,11 @@ describe("UserDailyActivity", () => {
   });
 
   describe("componentDidUpdate", () => {
-    it("it sets correct state if range is incorrect", () => {
+    it("it sets correct state if range is incorrect", async () => {
       wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
-
-      wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      wrapper.update();
+      await act(async () => {
+        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+      });
 
       expect(wrapper.state()).toMatchObject({
         loading: false,
@@ -102,13 +111,14 @@ describe("UserDailyActivity", () => {
       });
     });
 
-    it("calls loadData once if range is valid", () => {
+    it("calls loadData once if range is valid", async () => {
       wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
       const instance = wrapper.instance();
 
       instance.loadData = jest.fn();
-      wrapper.setProps({ range: "month" });
-      wrapper.update();
+      await act(async () => {
+        wrapper!.setProps({ range: "month" });
+      });
 
       expect(instance.loadData).toHaveBeenCalledTimes(1);
     });
@@ -137,7 +147,10 @@ describe("UserDailyActivity", () => {
       spy.mockImplementation(() =>
         Promise.resolve(userDailyActivityResponse as UserDailyActivityResponse)
       );
-      const result = await instance.getData();
+      let result;
+      await act(async () => {
+        result = await instance.getData();
+      });
 
       expect(spy).toHaveBeenCalledWith("foobar", "week");
       expect(result).toEqual(userDailyActivityResponse);
@@ -153,7 +166,9 @@ describe("UserDailyActivity", () => {
         status: 204,
       } as Response;
       spy.mockImplementation(() => Promise.reject(noContentError));
-      await instance.getData();
+      await act(async () => {
+        await instance.getData();
+      });
 
       expect(wrapper.state()).toMatchObject({
         loading: false,
@@ -214,7 +229,9 @@ describe("UserDailyActivity", () => {
 
       instance.getData = jest.fn();
       instance.processData = jest.fn();
-      await instance.loadData();
+      await act(async () => {
+        await instance.loadData();
+      });
 
       expect(instance.getData).toHaveBeenCalledTimes(1);
     });
@@ -228,7 +245,9 @@ describe("UserDailyActivity", () => {
         .mockImplementationOnce(() =>
           Promise.resolve(userDailyActivityResponse)
         );
-      await instance.loadData();
+      await act(async () => {
+        await instance.loadData();
+      });
 
       expect(wrapper.state().loading).toEqual(false);
       const { data } = wrapper.state();
