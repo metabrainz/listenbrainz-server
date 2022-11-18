@@ -4,7 +4,10 @@ import { act } from "react-dom/test-utils";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
 
-import SelectTimezone from "../../src/user-settings/SelectTimezone";
+import SelectTimezone, {
+  SelectTimezoneProps,
+  SelectTimezoneState,
+} from "../../src/user-settings/SelectTimezone";
 import { waitForComponentToPaint } from "../test-utils";
 
 const user_timezone = "America/New_York";
@@ -31,7 +34,9 @@ const props = {
 };
 
 describe("User settings", () => {
-  let wrapper: ReactWrapper<any, any, any> | undefined;
+  let wrapper:
+    | ReactWrapper<SelectTimezoneProps, SelectTimezoneState, SelectTimezone>
+    | undefined;
   beforeEach(() => {
     wrapper = undefined;
   });

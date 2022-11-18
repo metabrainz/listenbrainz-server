@@ -61,11 +61,11 @@ export enum EventType {
   REVIEW = "critiquebrainz_review",
 }
 
-type UserFeedPageProps = {
+export type UserFeedPageProps = {
   events: TimelineEvent[];
 } & WithAlertNotificationsInjectedProps;
 
-type UserFeedPageState = {
+export type UserFeedPageState = {
   nextEventTs?: number;
   previousEventTs?: number;
   earliestEventTs?: number;

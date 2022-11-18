@@ -8,7 +8,7 @@ import * as getFeedbackByMsidResponse from "../__mocks__/getFeedbackByMsidRespon
 import * as getMultipleFeedbackResponse from "../__mocks__/getMultipleFeedbackResponse.json";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
-import Listens, { ListensProps } from "../../src/user/Listens";
+import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
 import { waitForComponentToPaint } from "../test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
@@ -59,7 +59,7 @@ fetchMock.mockIf(
   }
 );
 describe("ListensControls", () => {
-  let wrapper: ReactWrapper<any, any, any> | undefined;
+  let wrapper: ReactWrapper<ListensProps, ListensState, Listens> | undefined;
   beforeEach(() => {
     wrapper = undefined;
   });
