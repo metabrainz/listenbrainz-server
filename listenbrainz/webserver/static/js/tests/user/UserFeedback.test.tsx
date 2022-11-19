@@ -327,13 +327,15 @@ describe("UserFeedback", () => {
       .mockResolvedValue(200);
     const updateFeedbackSpy = jest.spyOn(instance, "updateFeedback");
 
-    instance.setState({
-      recordingMsidFeedbackMap: {
-        ...instance.state.recordingMsidFeedbackMap,
-        "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
-      },
+    await act(() => {
+      instance.setState({
+        recordingMsidFeedbackMap: {
+          ...instance.state.recordingMsidFeedbackMap,
+          "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
+        },
+      });
     });
-    await waitForComponentToPaint(wrapper);
+
     expect(instance.state.recordingMsidFeedbackMap).toEqual({
       "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
     });

@@ -96,42 +96,41 @@ describe("CBReviewModal", () => {
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
+    const submitReviewToCBSpy = jest.fn();
+    instance.context.APIService.submitReviewToCB = submitReviewToCBSpy;
     await act(async () => {
       await instance.componentDidMount();
     });
 
+    await waitForComponentToPaint(wrapper);
     // check review state is set to default
     expect(wrapper.state("textContent")).toEqual("");
     expect(wrapper.state("acceptLicense")).toEqual(false);
 
-    await waitForComponentToPaint(wrapper);
-    // simulate writing in the textInput area
+    const textInputArea = wrapper.find("#review-text").first();
+    const checkbox = wrapper.find("#acceptLicense").first();
     await act(() => {
-      const textInputArea = wrapper!.find("#review-text").first();
+      // simulate writing in the textInput area
       textInputArea.simulate("change", {
         target: { value: "This review text is more than 25 characters..." },
       });
-    });
-    await waitForComponentToPaint(wrapper);
-    // simulate checking the accept license box
-    await act(() => {
-      const checkbox = wrapper!.find("#acceptLicense").first();
+      // simulate checking the accept license box
       checkbox.simulate("change", {
         target: { checked: true, type: "checkbox", name: "acceptLicense" },
       });
     });
-    await waitForComponentToPaint(wrapper);
+
     expect(wrapper.state("loading")).toEqual(false);
+    expect(wrapper.state("textContent")).toEqual(
+      "This review text is more than 25 characters..."
+    );
+    expect(wrapper.state("acceptLicense")).toEqual(true);
 
     await act(() => {
       // Simulate submiting the form
       wrapper!.find("form").simulate("submit");
     });
-    expect(wrapper.state("textContent")).toEqual(
-      "This review text is more than 25 characters..."
-    );
-    expect(wrapper.state("acceptLicense")).toEqual(true);
-    expect(wrapper.state("loading")).toEqual(true);
+    expect(submitReviewToCBSpy).toHaveBeenCalled();
   });
   describe("componentDidUpdate", () => {
     it("resets the state if the listen prop has changed", async () => {
@@ -325,6 +324,10 @@ describe("CBReviewModal", () => {
     });
 
     it("does nothing if entityToReview is null", async () => {
+      // Prevent normal call of componentDidMount which sets entityToReview based on listen
+      jest
+        .spyOn(CBReviewModal.prototype, "componentDidMount")
+        .mockImplementationOnce((): any => {});
       wrapper = mount<CBReviewModal>(
         <GlobalAppContext.Provider value={globalProps}>
           <CBReviewModal {...props} />
@@ -343,7 +346,6 @@ describe("CBReviewModal", () => {
       await act(async () => {
         await instance.submitReviewToCB();
       });
-      await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state("entityToReview")).toEqual(null);
       expect(spy).not.toHaveBeenCalled();
