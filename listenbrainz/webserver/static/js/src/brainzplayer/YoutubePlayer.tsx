@@ -23,12 +23,12 @@ import {
 } from "../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
-type YoutubePlayerState = {
+export type YoutubePlayerState = {
   currentListen?: Listen;
   reduced: boolean;
 };
 
-type YoutubePlayerProps = DataSourceProps & {
+export type YoutubePlayerProps = DataSourceProps & {
   youtubeUser?: YoutubeUser;
   refreshYoutubeToken: () => Promise<string>;
 };
