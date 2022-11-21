@@ -183,8 +183,6 @@ describe("PlaylistPage", () => {
       );
     });
 
-    await waitForComponentToPaint(wrapper);
-
     expect(APISpy).toHaveBeenCalledWith(
       "merde-a-celui-qui-lit",
       "https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546",
