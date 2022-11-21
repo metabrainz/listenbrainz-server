@@ -14,13 +14,6 @@ and fonts will not be loaded and the result will be useless.
 
 See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/object for reference.
 
-All art endpoints have this root URL for our current production site.
-
-- **ART API Root URL**: ``https://art-api.listenbrainz.org``
-
-.. note::
-    All ListenBrainz services are only available on **HTTPS**!
-
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
    :blueprints: art_api_v1
    :include-empty-docstring:

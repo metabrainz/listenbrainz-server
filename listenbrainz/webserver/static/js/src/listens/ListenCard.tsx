@@ -249,9 +249,9 @@ export default class ListenCard extends React.Component<
     const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
     const releaseMBID = getReleaseMBID(listen);
-    const spotifyURL = SpotifyPlayer.getSpotifyURLFromListen(listen);
-    const youtubeURL = YoutubePlayer.getYoutubeURLFromListen(listen);
-    const soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(listen);
+    const spotifyURL = SpotifyPlayer.getURLFromListen(listen);
+    const youtubeURL = YoutubePlayer.getURLFromListen(listen);
+    const soundcloudURL = SoundcloudPlayer.getURLFromListen(listen);
 
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);

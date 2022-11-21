@@ -130,36 +130,29 @@ def submit_recording(connection, recording, artist, release=None, track_number=N
     return str(msid)
 
 
-def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str | uuid.UUID]):
+def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str]) -> dict[str, dict]:
     """ Returns data for a recordings corresponding to a given list of MessyBrainz IDs.
     msids not found in the database are omitted from the returned dict (usually indicates the msid
     is wrong because data is not deleted from MsB).
 
     Args:
-        messybrainz_ids (list [uuid]): the MessyBrainz IDs of the recordings to fetch data for
+        messybrainz_ids: the MessyBrainz IDs of the recordings to fetch data for
 
     Returns:
-        list [dict]: a list of the recording data for the recordings in the order of the given MSIDs.
+        : a list of the recording data for the recordings in the order of the given MSIDs.
     """
     if not messybrainz_ids:
         return {}
 
-    messybrainz_ids = [str(msid) for msid in messybrainz_ids]
-
-    query = text("""
-        SELECT DISTINCT gid::TEXT AS msid, recording AS title, artist_credit AS artist, release, track_number, duration
-                   FROM messybrainz.submissions
-                  WHERE gid IN :msids 
-    """)
-    result = connection.execute(query, {"msids": tuple(messybrainz_ids)})
-    msid_recording_map = {x["msid"]: dict(x) for x in result.mappings()}
-
-    # match results to every given msid so the list is returned in the same order
-    results = []
-    for msid in messybrainz_ids:
-        if msid not in msid_recording_map:
-            continue
-        row = msid_recording_map[msid]
-        results.append(row)
-
-    return results
+    query = """
+        SELECT gid::TEXT AS msid
+             , recording AS title
+             , artist_credit AS artist
+             , release
+             , track_number
+             , duration
+          FROM messybrainz.submissions
+         WHERE gid IN :msids 
+    """
+    result = connection.execute(text(query), {"msids": tuple(messybrainz_ids)})
+    return {row["msid"]: row for row in result.mappings().all()}

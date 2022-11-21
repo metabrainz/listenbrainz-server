@@ -22,7 +22,7 @@ class Playlist(db.Model):
     last_updated = db.Column(db.DateTime(timezone=True), nullable=False)
     copied_from_id = db.Column(db.Integer)
     created_for_id = db.Column(db.Integer)
-    algorithm_metadata = db.Column(JSONB)
+    additional_metadata = db.Column(JSONB)
 
     recordings = db.relationship("PlaylistRecording", backref="playlist")
 
@@ -46,4 +46,4 @@ class PlaylistAdminView(AdminModelView):
     ]
     column_searchable_list = columns_without_jsonb
     column_filters = columns_without_jsonb
-    column_list = columns_without_jsonb + ["recordings", "algorithm_metadata"]
+    column_list = columns_without_jsonb + ["recordings", "additional_metadata"]
