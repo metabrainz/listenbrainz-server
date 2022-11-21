@@ -6,7 +6,7 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz import webserver
-from listenbrainz.db import timescale as ts
+from listenbrainz.db import timescale as ts, do_not_recommend
 from listenbrainz.listenstore import timescale_fill_userid
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
@@ -307,3 +307,13 @@ def update_msid_tables():
     """ Scan tables using msids to find matching mbids from mapping tables and update them. """
     with create_app().app_context():
         update_msids_from_mapping.run_all_updates()
+
+
+@cli.command()
+def clear_expired_do_not_recommends():
+    """ Delete expired do not recommend entries from database """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Starting process to clean up expired do not recommends")
+        do_not_recommend.clear_expired()
+        app.logger.info("Completed process to clean up expired do not recommends")

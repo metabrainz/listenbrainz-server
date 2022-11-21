@@ -16,3 +16,5 @@ CREATE TYPE stats_range_type AS ENUM ('week', 'month', 'quarter', 'half_yearly',
     'this_week', 'this_month', 'this_year');
 
 CREATE TYPE user_stats_type AS ENUM('artists', 'releases', 'recordings', 'daily_activity', 'listening_activity', 'artist_map');
+
+CREATE TYPE do_not_recommend_entity_type AS ENUM ('artist', 'release', 'release_group', 'recording');
