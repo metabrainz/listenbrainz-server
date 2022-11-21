@@ -2715,7 +2715,7 @@
 				"creator": "ListenBrainz Troi",
 				"extension": {
 					"https://musicbrainz.org/doc/jspf#playlist": {
-						"algorithm_metadata": {"source_patch": "top-discoveries-for-year"},
+						"additional_metadata": {"algorithm_metadata": {"source_patch": "top-discoveries-for-year"}},
 						"public": true
 					}
 				},
@@ -2780,7 +2780,7 @@
 				"creator": "ListenBrainz Troi",
 				"extension": {
 					"https://musicbrainz.org/doc/jspf#playlist": {
-						"algorithm_metadata": {"source_patch": "top-missed-recordings-for-year"},
+						"additional_metadata": {"algorithm_metadata": {"source_patch": "top-missed-recordings-for-year"}},
 						"public": true
 					}
 				},
@@ -2845,7 +2845,7 @@
 				"creator": "ListenBrainz Troi",
 				"extension": {
 					"https://musicbrainz.org/doc/jspf#playlist": {
-						"algorithm_metadata": {"source_patch": "top-new-recordings-for-year"},
+						"additional_metadata": {"algorithm_metadata": {"source_patch": "top-new-recordings-for-year"}},
 						"public": true
 					}
 				},
@@ -2910,7 +2910,7 @@
 				"creator": "ListenBrainz Troi",
 				"extension": {
 					"https://musicbrainz.org/doc/jspf#playlist": {
-						"algorithm_metadata": {"source_patch": "top-recordings-for-year"},
+						"additional_metadata": {"algorithm_metadata": {"source_patch": "top-recordings-for-year"}},
 						"public": true
 					}
 				},

@@ -86,14 +86,16 @@ class DataTestCase(TimescaleTestCase):
         with timescale.engine.begin() as connection:
             title, artist, release = recording["title"], recording["artist"], recording["release"]
             recording_msid = messybrainz.submit_recording(connection, title, artist, release)
-            result = messybrainz.load_recordings_from_msids(connection, [recording_msid])[0]
+            result = messybrainz.load_recordings_from_msids(connection, [recording_msid])
             self.assertDictEqual(result, {
-                "msid": recording_msid,
-                "title": title,
-                "artist": artist,
-                "release": release,
-                "duration": None,
-                "track_number": None
+                recording_msid: {
+                    "msid": recording_msid,
+                    "title": title,
+                    "artist": artist,
+                    "release": release,
+                    "duration": None,
+                    "track_number": None
+                }
             })
 
     def test_get_msid_duplicates(self):
@@ -135,11 +137,15 @@ class DataTestCase(TimescaleTestCase):
         msids = messybrainz.insert_all_in_transaction(submissions)
         with timescale.engine.begin() as conn:
             received = messybrainz.load_recordings_from_msids(conn, msids)
+
         submissions[0]['track_number'] = None
         submissions[0]['duration'] = None
-
         submissions[0]['msid'] = msids[0]
         submissions[1]['msid'] = msids[1]
 
-        self.assertListEqual(submissions, received)
+        expected = {
+            msids[0]: submissions[0],
+            msids[1]: submissions[1]
+        }
 
+        self.assertDictEqual(expected, received)

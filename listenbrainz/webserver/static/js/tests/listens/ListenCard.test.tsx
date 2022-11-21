@@ -117,6 +117,13 @@ describe("ListenCard", () => {
           release_mbid: "foo",
           recording_mbid: "bar",
           artist_mbids: ["foobar"],
+          artists: [
+            {
+              artist_mbid: "foobar",
+              artist_credit_name: "Moondog",
+              join_phrase: "",
+            },
+          ],
         },
       },
       user_name: "test",

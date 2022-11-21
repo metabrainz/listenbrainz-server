@@ -8,14 +8,37 @@ MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host=
 {{end}}
 {{end}}
 
+SQLALCHEMY_DATABASE_URI = ""
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = ""
+POSTGRES_ADMIN_URI = ""
+MB_DATABASE_MASTER_URI = ""
+
 {{if service "pgbouncer-master"}}
 {{with index (service "pgbouncer-master") 0}}
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
-POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
+POSTGRES_ADMIN_URI = "postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
+MB_DATABASE_MASTER_URI = "postgresql://mbid_mapper@{{.Address}}:{{.Port}}/musicbrainz_db"
 {{end}}
 {{else}}
 SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+POSTGRES_ADMIN_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+MB_DATABASE_MASTER_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+{{end}}
+
+MB_DATABASE_STANDBY_URI = ""
+
+{{if service "pgbouncer-slave"}}
+{{with index (service "pgbouncer-slave") 0}}
+MB_DATABASE_STANDBY_URI = "postgresql://mbid_mapper@{{.Address}}:{{.Port}}/musicbrainz_db"
+{{end}}
+{{else if service "pgbouncer-master"}}
+{{with index (service "pgbouncer-master") 0}}
+MB_DATABASE_STANDBY_URI = "postgresql://mbid_mapper@{{.Address}}:{{.Port}}/musicbrainz_db"
+{{end}}
+{{else}}
+MB_DATABASE_STANDBY_URI = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
 {{end}}
 
 SQLALCHEMY_TIMESCALE_URI = ""
