@@ -122,8 +122,9 @@ describe("UserPins", () => {
           wrapper!.setState({ maxPage: 1 });
         });
 
-        await instance.handleClickOlder();
-        await waitForComponentToPaint(wrapper);
+        await act(async () => {
+          await instance.handleClickOlder();
+        });
 
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
@@ -142,8 +143,9 @@ describe("UserPins", () => {
         const getPinsFromAPISpy = jest.spyOn(instance, "getPinsFromAPI");
 
         // second page is fetchable
-        await instance.handleClickOlder();
-        await waitForComponentToPaint(wrapper);
+        await act(async () => {
+          await instance.handleClickOlder();
+        });
 
         expect(getPinsFromAPISpy).toHaveBeenCalledWith(2);
         expect(apiSpy).toHaveBeenCalledWith(props.user.name, 25, 25);
@@ -165,16 +167,18 @@ describe("UserPins", () => {
         const spy = jest.fn().mockImplementation(() => {});
         instance.getPinsFromAPI = spy;
 
-        await instance.handleClickNewer();
-        await waitForComponentToPaint(wrapper);
+        await act(async () => {
+          await instance.handleClickNewer();
+        });
 
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
         await act(() => {
           wrapper!.setState({ page: 2 });
         });
-        await instance.handleClickNewer();
-        await waitForComponentToPaint(wrapper);
+        await act(async () => {
+          await instance.handleClickNewer();
+        });
         expect(spy).toHaveBeenCalled();
       });
 
@@ -190,10 +194,12 @@ describe("UserPins", () => {
           .mockImplementationOnce(() => Promise.resolve(APIPinsPageTwo))
           .mockImplementationOnce(() => Promise.resolve(APIPins));
         instance.context.APIService.getPinsForUser = apiSpy;
-        await instance.handleClickOlder();
-        await waitForComponentToPaint(wrapper);
-        await instance.handleClickNewer();
-        await waitForComponentToPaint(wrapper);
+        await act(async () => {
+          await instance.handleClickOlder();
+        });
+        await act(async () => {
+          await instance.handleClickNewer();
+        });
 
         expect(getPinsFromAPISpy).toHaveBeenCalledWith(2);
         expect(apiSpy).toHaveBeenNthCalledWith(2, props.user.name, 0, 25);
@@ -219,8 +225,9 @@ describe("UserPins", () => {
       expect(wrapper.state("pins")).toHaveLength(25);
 
       const expectedNewFirstPin = props.pins[1];
-      instance.removePinFromPinsList(props.pins[0]);
-      await waitForComponentToPaint(wrapper);
+      await act(() => {
+        instance.removePinFromPinsList(props.pins[0]);
+      });
 
       expect(wrapper.state("pins")).toHaveLength(24);
       expect(wrapper.state("pins")[0].recording_msid).toEqual(

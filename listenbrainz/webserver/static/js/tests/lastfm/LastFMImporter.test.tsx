@@ -1,6 +1,7 @@
 import * as React from "react";
 import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 import fetchMock from "jest-fetch-mock";
+import { act } from "react-dom/test-utils";
 import LastFmImporter, {
   LASTFM_RETRIES,
   ImporterState,
@@ -13,6 +14,7 @@ import * as getInfoNoPlayCount from "../__mocks__/getInfoNoPlayCount.json";
 // Output for the mock data
 import * as encodeScrobbleOutput from "../__mocks__/encodeScrobbleOutput.json";
 import * as lastFMPrivateUser from "../__mocks__/lastFMPrivateUser.json";
+import { waitForComponentToPaint } from "../test-utils";
 
 jest.useFakeTimers();
 const props = {
@@ -504,8 +506,10 @@ describe("LastFMImporter", () => {
 
     it("submit button is disabled when input is empty", () => {
       wrapper = shallow(<LastFmImporter {...props} />);
-      // Make sure that the input is empty
-      wrapper.setState({ lastfmUsername: "" });
+      act(() => {
+        // Make sure that the input is empty
+        wrapper!.setState({ lastfmUsername: "" });
+      });
 
       // Test if button is disabled
       expect(wrapper.find('button[type="submit"]').props().disabled).toBe(true);

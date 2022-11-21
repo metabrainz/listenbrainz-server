@@ -1,6 +1,7 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
+import { act } from "react-dom/test-utils";
 import LastFMImporterModal from "../../src/lastfm/LastFMImporterModal";
 
 const props = {
@@ -16,14 +17,18 @@ describe("LastFmImporterModal", () => {
     wrapper.unmount();
   });
 
-  it("close button is disabled/enabled based upon props", () => {
+  it("close button is disabled/enabled based upon props", async () => {
     const wrapper = shallow(<LastFMImporterModal {...props} />);
     // Test if close button is disabled
-    wrapper.setProps({ disable: true });
+    await act(() => {
+      wrapper.setProps({ disable: true });
+    });
     expect(wrapper.find("button").props().disabled).toBe(true);
 
     // Test if close button is enabled
-    wrapper.setProps({ disable: false });
+    await act(() => {
+      wrapper.setProps({ disable: false });
+    });
     expect(wrapper.find("button").props().disabled).toBe(false);
     wrapper.unmount();
   });

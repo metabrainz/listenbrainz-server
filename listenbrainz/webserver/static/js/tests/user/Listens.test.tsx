@@ -1011,7 +1011,9 @@ describe("Listens page", () => {
         };
         const extraProps = { ...props, listens: [listen] };
         wrapper = mount<Listens>(<Listens {...extraProps} />, mountOptions);
-        wrapper.setProps({ latestListenTs: 123456 });
+        await act(() => {
+          wrapper!.setProps({ latestListenTs: 123456 });
+        });
         const instance = wrapper.instance();
 
         const newestListen = [

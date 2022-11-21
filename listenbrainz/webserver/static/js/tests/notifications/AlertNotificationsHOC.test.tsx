@@ -72,8 +72,9 @@ describe("AlertNotifications higher-order component", () => {
       const instance = wrapper.instance();
 
       expect(wrapper.state().alerts).toEqual([]);
-
-      (instance as any).newAlert("warning", "Test", "foobar");
+      await act(() => {
+        (instance as any).newAlert("warning", "Test", "foobar");
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state().alerts).toEqual([
@@ -92,8 +93,9 @@ describe("AlertNotifications higher-order component", () => {
       const instance = wrapper.instance();
 
       expect(wrapper.state().alerts).toEqual([]);
-
-      (instance as any).newAlert("warning", "Test", "foobar");
+      await act(() => {
+        (instance as any).newAlert("warning", "Test", "foobar");
+      });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state().alerts).toEqual([
         {
@@ -104,7 +106,9 @@ describe("AlertNotifications higher-order component", () => {
           count: undefined,
         },
       ]);
-      (instance as any).newAlert("danger", "test", <p>foobar</p>);
+      await act(() => {
+        (instance as any).newAlert("danger", "test", <p>foobar</p>);
+      });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state().alerts).toEqual([
         {
@@ -121,9 +125,12 @@ describe("AlertNotifications higher-order component", () => {
           message: <p>foobar</p>,
         },
       ]);
-      (instance as any).newAlert("warning", "Test", "foobar");
-      await waitForComponentToPaint(wrapper);
-      (instance as any).newAlert("warning", "Test", "foobar");
+      await act(() => {
+        (instance as any).newAlert("warning", "Test", "foobar");
+      });
+      await act(() => {
+        (instance as any).newAlert("warning", "Test", "foobar");
+      });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state().alerts).toEqual([
         {
@@ -188,8 +195,9 @@ describe("AlertNotifications higher-order component", () => {
         });
       });
       expect(wrapper.state().alerts).toEqual([alert1, alert2]);
-
-      (instance as any).onAlertDismissed(alert1);
+      await act(() => {
+        (instance as any).onAlertDismissed(alert1);
+      });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state().alerts).toEqual([alert2]);
 

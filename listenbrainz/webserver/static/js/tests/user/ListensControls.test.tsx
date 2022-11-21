@@ -2,6 +2,7 @@ import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 
+import { act } from "react-dom/test-utils";
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsThreeListens from "../__mocks__/recentListensPropsThreeListens.json";
 import * as getFeedbackByMsidResponse from "../__mocks__/getFeedbackByMsidResponse.json";
@@ -87,7 +88,10 @@ describe("ListensControls", () => {
       // eslint-disable-next-line dot-notation
       instance["APIService"].getFeedbackForUserForRecordings = spy;
 
-      const result = await instance.getFeedback();
+      let result;
+      await act(async () => {
+        result = await instance.getFeedback();
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -116,9 +120,9 @@ describe("ListensControls", () => {
       });
       // eslint-disable-next-line dot-notation
       instance["APIService"].getFeedbackForUserForRecordings = spy;
-
-      const result = await instance.getFeedback();
-      await waitForComponentToPaint(wrapper);
+      await act(async () => {
+        await instance.getFeedback();
+      });
 
       expect(spy).toHaveBeenCalledTimes(0);
     });
@@ -144,9 +148,10 @@ describe("ListensControls", () => {
         .mockImplementationOnce(() =>
           Promise.resolve(getMultipleFeedbackResponse.feedback)
         );
+      await act(async () => {
+        await instance.loadFeedback();
+      });
 
-      await instance.loadFeedback();
-      await waitForComponentToPaint(wrapper);
       expect(wrapper.state("recordingMsidFeedbackMap")).toMatchObject({
         "f730bec5-d243-478e-ae46-2c47770ca1f0": 1,
         "d90876b7-1e0f-4b25-8a83-be210804cdd1": 1,
@@ -179,7 +184,12 @@ describe("ListensControls", () => {
         "9541592c-0102-4b94-93cc-ee0f3cf83d64": 1,
         "55215be2-094c-4c38-a0da-2a83863ee804": -1,
       };
-      wrapper.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
+      await act(async () => {
+        wrapper!.setState({
+          recordingMsidFeedbackMap,
+          recordingMbidFeedbackMap,
+        });
+      });
       await waitForComponentToPaint(wrapper);
 
       const instance = wrapper.instance();
@@ -202,9 +212,10 @@ describe("ListensControls", () => {
       );
 
       const instance = wrapper.instance();
-
-      const res = await instance.getFeedbackForListen(listens[0]);
-      await waitForComponentToPaint(wrapper);
+      let res;
+      await act(async () => {
+        res = await instance.getFeedbackForListen(listens[0]);
+      });
 
       expect(res).toEqual(0);
     });
@@ -223,15 +234,16 @@ describe("ListensControls", () => {
       const recordingMsidFeedbackMap: RecordingFeedbackMap = {
         "973e5620-829d-46dd-89a8-760d87076287": 0,
       };
-      wrapper.setState({ recordingMsidFeedbackMap });
-
-      await instance.updateFeedback(
-        "873e5620-829d-46dd-89a8-760d87076287",
-        1,
-        "973e5620-829d-46dd-89a8-760d87076287"
-      );
-
-      await waitForComponentToPaint(wrapper);
+      await act(async () => {
+        wrapper!.setState({ recordingMsidFeedbackMap });
+      });
+      await act(async () => {
+        await instance.updateFeedback(
+          "873e5620-829d-46dd-89a8-760d87076287",
+          1,
+          "973e5620-829d-46dd-89a8-760d87076287"
+        );
+      });
 
       expect(wrapper.state("recordingMsidFeedbackMap")).toMatchObject({
         "973e5620-829d-46dd-89a8-760d87076287": 1,
@@ -251,10 +263,12 @@ describe("ListensControls", () => {
       );
 
       const instance = wrapper.instance();
-      wrapper.setState({ listens: props.listens as Listen[] });
-      instance.removeListenFromListenList(props.listens?.[0] as Listen);
-
-      await waitForComponentToPaint(wrapper);
+      await act(async () => {
+        wrapper!.setState({ listens: props.listens as Listen[] });
+      });
+      await act(async () => {
+        instance.removeListenFromListenList(props.listens?.[0] as Listen);
+      });
       expect(wrapper.state("listens")).toMatchObject([]);
     });
   });

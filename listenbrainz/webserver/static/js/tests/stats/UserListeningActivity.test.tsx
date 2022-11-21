@@ -1,6 +1,7 @@
 import * as React from "react";
 import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 
+import { act } from "react-dom/test-utils";
 import UserListeningActivity, {
   UserListeningActivityProps,
   UserListeningActivityState,
@@ -39,7 +40,11 @@ describe.each([
         UserListeningActivityState,
         UserListeningActivity
       >
-    | ShallowWrapper<any, any, any>
+    | ShallowWrapper<
+        UserListeningActivityProps,
+        UserListeningActivityState,
+        UserListeningActivity
+      >
     | undefined;
   beforeEach(() => {
     wrapper = undefined;
@@ -58,15 +63,15 @@ describe.each([
       wrapper = mount<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
-
-      wrapper.setState({
-        data: userListeningActivityProcessedDataWeek,
-        thisRangePeriod: { start: 1591574400, end: 1592092800 },
-        lastRangePeriod: { start: 1590969600, end: 1591488000 },
-        totalListens: 70,
-        avgListens: 10,
+      await act(async () => {
+        wrapper!.setState({
+          data: userListeningActivityProcessedDataWeek,
+          thisRangePeriod: { start: 1591574400, end: 1592092800 },
+          lastRangePeriod: { start: 1590969600, end: 1591488000 },
+          totalListens: 70,
+          avgListens: 10,
+        });
       });
-      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -75,15 +80,15 @@ describe.each([
       wrapper = mount<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "month" }} />
       );
-
-      wrapper.setState({
-        data: userListeningActivityProcessedDataMonth,
-        thisRangePeriod: { start: 1590969600 },
-        lastRangePeriod: { start: 1588291200 },
-        totalListens: 70,
-        avgListens: 10,
+      await act(async () => {
+        wrapper!.setState({
+          data: userListeningActivityProcessedDataMonth,
+          thisRangePeriod: { start: 1590969600 },
+          lastRangePeriod: { start: 1588291200 },
+          totalListens: 70,
+          avgListens: 10,
+        });
       });
-      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -92,15 +97,15 @@ describe.each([
       wrapper = mount<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "year" }} />
       );
-
-      wrapper.setState({
-        data: userListeningActivityProcessedDataYear,
-        thisRangePeriod: { start: 1577836800 },
-        lastRangePeriod: { start: 1546300800 },
-        totalListens: 70,
-        avgListens: 10,
+      await act(async () => {
+        wrapper!.setState({
+          data: userListeningActivityProcessedDataYear,
+          thisRangePeriod: { start: 1577836800 },
+          lastRangePeriod: { start: 1546300800 },
+          totalListens: 70,
+          avgListens: 10,
+        });
       });
-      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -110,14 +115,15 @@ describe.each([
         <UserListeningActivity {...{ ...props, range: "all_time" }} />
       );
 
-      wrapper.setState({
-        data: userListeningActivityProcessedDataAllTime,
-        thisRangePeriod: {},
-        lastRangePeriod: {},
-        totalListens: 70,
-        avgListens: 10,
+      await act(async () => {
+        wrapper!.setState({
+          data: userListeningActivityProcessedDataAllTime,
+          thisRangePeriod: {},
+          lastRangePeriod: {},
+          totalListens: 70,
+          avgListens: 10,
+        });
       });
-      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -126,8 +132,9 @@ describe.each([
       wrapper = mount<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
-
-      wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
+      await act(async () => {
+        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
@@ -139,8 +146,9 @@ describe.each([
       wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
-
-      wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
+      await act(async () => {
+        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state()).toMatchObject({
@@ -157,8 +165,9 @@ describe.each([
       const instance = wrapper.instance();
 
       instance.loadData = jest.fn();
-      wrapper.setProps({ range: "month" });
-      await waitForComponentToPaint(wrapper);
+      await act(async () => {
+        wrapper!.setProps({ range: "month" });
+      });
 
       expect(instance.loadData).toHaveBeenCalledTimes(1);
     });
@@ -177,7 +186,9 @@ describe.each([
           userListeningActivityResponseWeek as UserListeningActivityResponse
         )
       );
-      await instance.getData();
+      await act(async () => {
+        await instance.getData();
+      });
 
       expect(spy).toHaveBeenCalledWith(props?.user?.name, "week");
     });
@@ -194,7 +205,9 @@ describe.each([
         status: 204,
       } as Response;
       spy.mockImplementation(() => Promise.reject(noContentError));
-      await instance.getData();
+      await act(async () => {
+        await instance.getData();
+      });
 
       expect(wrapper.state()).toMatchObject({
         loading: false,
@@ -302,7 +315,7 @@ describe.each([
       expect(result).toEqual(userListeningActivityProcessedDataYear);
     });
 
-    it("processes data correctly for all_time", () => {
+    it("processes data correctly for all_time", async () => {
       wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "all_time" }} />
       );
@@ -314,21 +327,25 @@ describe.each([
           userListeningActivityResponseAllTime.payload.to_ts * 1000
         ).getFullYear()
       );
-
-      const result = instance.processData(
-        userListeningActivityResponseAllTime as UserListeningActivityResponse
-      );
+      let result;
+      await act(async () => {
+        result = instance.processData(
+          userListeningActivityResponseAllTime as UserListeningActivityResponse
+        );
+      });
 
       expect(result).toEqual(userListeningActivityProcessedDataAllTime);
     });
-    it("returns an empty array if no payload", () => {
+    it("returns an empty array if no payload", async () => {
       wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "year" }} />
       );
       const instance = wrapper.instance();
-
-      // When stats haven't been calculated, processData is called with an empty object
-      const result = instance.processData({} as UserListeningActivityResponse);
+      let result;
+      await act(async () => {
+        // When stats haven't been calculated, processData is called with an empty object
+        result = instance.processData({} as UserListeningActivityResponse);
+      });
 
       expect(result).toEqual([]);
     });
@@ -343,7 +360,9 @@ describe.each([
 
       instance.getData = jest.fn();
       instance.processData = jest.fn();
-      await instance.loadData();
+      await act(async () => {
+        await instance.loadData();
+      });
 
       expect(instance.getData).toHaveBeenCalledTimes(1);
     });
@@ -360,7 +379,9 @@ describe.each([
           Promise.resolve(userListeningActivityResponseWeek)
         );
 
-      await instance.loadData();
+      await act(async () => {
+        await instance.loadData();
+      });
 
       expect(wrapper.state()).toMatchObject({
         data: userListeningActivityProcessedDataWeek,

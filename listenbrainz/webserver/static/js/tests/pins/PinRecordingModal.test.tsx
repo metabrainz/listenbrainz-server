@@ -105,8 +105,9 @@ describe("PinRecordingModal", () => {
       spy.mockImplementation(() =>
         Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
       );
-
-      await instance.submitPinRecording();
+      await act(async () => {
+        await instance.submitPinRecording();
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -141,7 +142,9 @@ describe("PinRecordingModal", () => {
 
       // submitPinRecording and check that blurbContent was reset
       const setStateSpy = jest.spyOn(instance, "setState");
-      await instance.submitPinRecording();
+      await act(async () => {
+        await instance.submitPinRecording();
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(setStateSpy).toHaveBeenCalledTimes(1);
@@ -169,7 +172,9 @@ describe("PinRecordingModal", () => {
         Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
       );
 
-      await instance.submitPinRecording();
+      await act(async () => {
+        await instance.submitPinRecording();
+      });
       await waitForComponentToPaint(wrapper);
       expect(spy).toHaveBeenCalledTimes(0);
     });
@@ -192,7 +197,9 @@ describe("PinRecordingModal", () => {
         throw error;
       });
 
-      instance.submitPinRecording();
+      await act(async () => {
+        await instance.submitPinRecording();
+      });
       await waitForComponentToPaint(wrapper);
       expect(instance.handleError).toHaveBeenCalledTimes(1);
       expect(instance.handleError).toHaveBeenCalledWith(

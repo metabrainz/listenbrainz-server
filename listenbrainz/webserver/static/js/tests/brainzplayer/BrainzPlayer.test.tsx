@@ -595,7 +595,9 @@ describe("BrainzPlayer", () => {
         wrapper!.setState({ isActivated: true });
       });
       instance.playNextTrack = jest.fn();
-      instance.failedToPlayTrack();
+      await act(async () => {
+        instance.failedToPlayTrack();
+      });
       expect(instance.playNextTrack).toHaveBeenCalledTimes(1);
     });
 
@@ -613,7 +615,9 @@ describe("BrainzPlayer", () => {
       });
       instance.playNextTrack = jest.fn();
       instance.playListen = jest.fn();
-      instance.failedToPlayTrack();
+      await act(async () => {
+        instance.failedToPlayTrack();
+      });
       expect(instance.playNextTrack).not.toHaveBeenCalled();
       expect(instance.playListen).toHaveBeenCalledWith(listen, 1);
     });
@@ -638,7 +642,9 @@ describe("BrainzPlayer", () => {
       const playNextTrackSpy = jest.spyOn(instance, "playNextTrack");
       instance.playListen = jest.fn();
       instance.handleWarning = jest.fn();
-      instance.failedToPlayTrack();
+      await act(async () => {
+        instance.failedToPlayTrack();
+      });
       expect(instance.handleWarning).not.toHaveBeenCalled();
       expect(playNextTrackSpy).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledTimes(1);
@@ -835,13 +841,17 @@ describe("BrainzPlayer", () => {
         },
       };
       // After 15 seconds
-      await instance.checkProgressAndSubmitListen();
+      await act(async () => {
+        await instance.checkProgressAndSubmitListen();
+      });
       expect(fetchMock.mock.calls).toHaveLength(0);
       // And now after 30 seconds
       await act(async () => {
         instance.setState({ continuousPlaybackTime: 30001 });
       });
-      await instance.checkProgressAndSubmitListen();
+      await act(async () => {
+        await instance.checkProgressAndSubmitListen();
+      });
 
       expect(fetchMock.mock.calls).toHaveLength(1);
 

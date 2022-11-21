@@ -345,7 +345,9 @@ describe("UserFeed", () => {
         });
         instance.context.APIService.getFeedForUser = spy;
 
-        await instance.handleClickOlder();
+        await act(async () => {
+          await instance.handleClickOlder();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("events")).toEqual(sortedEvents);
@@ -376,7 +378,9 @@ describe("UserFeed", () => {
         });
         expect(wrapper.state("previousEventTs")).toBeUndefined();
 
-        await instance.handleClickNewer();
+        await act(async () => {
+          await instance.handleClickNewer();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("loading")).toBeFalsy();
@@ -413,7 +417,9 @@ describe("UserFeed", () => {
           .mockImplementation(() => Promise.resolve(expectedEventsArray));
         instance.context.APIService.getFeedForUser = spy;
 
-        await instance.handleClickNewer();
+        await act(async () => {
+          await instance.handleClickNewer();
+        });
         await waitForComponentToPaint(wrapper);
 
         expect(wrapper.state("events")).toEqual(expectedEventsArray);
@@ -436,18 +442,16 @@ describe("UserFeed", () => {
         const instance = wrapper.instance();
 
         await act(() => {
-          wrapper?.setState({ previousEventTs: 123456 });
+          wrapper!.setState({ previousEventTs: 123456 });
         });
-        wrapper.setState({ previousEventTs: 123456 });
-
         expect(wrapper.state("previousEventTs")).toEqual(123456);
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
 
         instance.context.APIService.getFeedForUser = spy;
-
-        await instance.handleClickNewer();
-        await waitForComponentToPaint(wrapper);
+        await act(async () => {
+          await instance.handleClickNewer();
+        });
 
         expect(wrapper.state("loading")).toBeFalsy();
         expect(wrapper.state("previousEventTs")).toBeUndefined();
@@ -461,9 +465,10 @@ describe("UserFeed", () => {
           </GlobalAppContext.Provider>
         );
         await waitForComponentToPaint(wrapper);
+
         const instance = wrapper.instance();
         await act(() => {
-          wrapper?.setState({ previousEventTs: 123456 });
+          wrapper!.setState({ previousEventTs: 123456 });
         });
         expect(wrapper.state("previousEventTs")).toEqual(123456);
 
@@ -476,9 +481,9 @@ describe("UserFeed", () => {
 
         const nextEventTs = sortedEvents[props.events.length - 1].created;
         const previousEventTs = sortedEvents[0].created;
-
-        await instance.handleClickNewer();
-        await waitForComponentToPaint(wrapper);
+        await act(async () => {
+          await instance.handleClickNewer();
+        });
 
         expect(wrapper.state("events")).toEqual(sortedEvents);
         expect(wrapper.state("loading")).toBeFalsy();

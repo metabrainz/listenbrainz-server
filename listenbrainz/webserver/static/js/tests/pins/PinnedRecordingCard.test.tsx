@@ -138,7 +138,9 @@ describe("PinnedRecordingCard", () => {
 
       expect(wrapper.state("currentlyPinned")).toBeTruthy();
 
-      await instance.unpinRecording();
+      await act(async () => {
+        await instance.unpinRecording();
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -167,7 +169,9 @@ describe("PinnedRecordingCard", () => {
       spy.mockImplementation(() => Promise.resolve(200));
 
       expect(wrapper.state("currentlyPinned")).toBeTruthy();
-      await instance.unpinRecording();
+      await act(async () => {
+        await instance.unpinRecording();
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(0);
@@ -192,7 +196,9 @@ describe("PinnedRecordingCard", () => {
       spy.mockImplementation(() => Promise.resolve(200));
 
       expect(wrapper.state("currentlyPinned")).toBeTruthy();
-      await instance.unpinRecording();
+      await act(async () => {
+        await instance.unpinRecording();
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(0);
@@ -212,7 +218,9 @@ describe("PinnedRecordingCard", () => {
       spy.mockImplementation(() => Promise.resolve(201));
 
       expect(wrapper.state("currentlyPinned")).toBeTruthy();
-      await instance.unpinRecording();
+      await act(async () => {
+        await instance.unpinRecording();
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalled();
@@ -235,7 +243,9 @@ describe("PinnedRecordingCard", () => {
         throw error;
       });
 
-      await instance.unpinRecording();
+      await act(async () => {
+        await instance.unpinRecording();
+      });
       await waitForComponentToPaint(wrapper);
       expect(instance.handleError).toHaveBeenCalledTimes(1);
       expect(instance.handleError).toHaveBeenCalledWith(
@@ -261,7 +271,9 @@ describe("PinnedRecordingCard", () => {
       expect(wrapper.state("isDeleted")).toBeFalsy();
       expect(wrapper.state("currentlyPinned")).toBeTruthy();
 
-      await instance.deletePin(pinnedRecording);
+      await act(async () => {
+        await instance.deletePin(pinnedRecording);
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -291,7 +303,9 @@ describe("PinnedRecordingCard", () => {
       spy.mockImplementation(() => Promise.resolve(200));
 
       expect(wrapper.state("isDeleted")).toBeFalsy();
-      await instance.deletePin(pinnedRecording);
+      await act(async () => {
+        await instance.deletePin(pinnedRecording);
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(0);
@@ -316,7 +330,9 @@ describe("PinnedRecordingCard", () => {
       spy.mockImplementation(() => Promise.resolve(200));
 
       expect(wrapper.state("isDeleted")).toBeFalsy();
-      await instance.deletePin(pinnedRecording);
+      await act(async () => {
+        await instance.deletePin(pinnedRecording);
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalledTimes(0);
@@ -336,7 +352,9 @@ describe("PinnedRecordingCard", () => {
       spy.mockImplementation(() => Promise.resolve(201));
 
       expect(wrapper.state("isDeleted")).toBeFalsy();
-      await instance.deletePin(pinnedRecording);
+      await act(async () => {
+        await instance.deletePin(pinnedRecording);
+      });
       await waitForComponentToPaint(wrapper);
 
       expect(spy).toHaveBeenCalled();
@@ -359,7 +377,9 @@ describe("PinnedRecordingCard", () => {
         throw error;
       });
 
-      await instance.deletePin(pinnedRecording);
+      await act(async () => {
+        await instance.deletePin(pinnedRecording);
+      });
       await waitForComponentToPaint(wrapper);
       expect(instance.handleError).toHaveBeenCalledTimes(1);
       expect(instance.handleError).toHaveBeenCalledWith(

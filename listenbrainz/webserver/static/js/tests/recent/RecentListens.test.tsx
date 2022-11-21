@@ -4,6 +4,7 @@ import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
+import { act } from "react-dom/test-utils";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
@@ -123,8 +124,9 @@ describe("Recentlistens", () => {
       const recordingToPin = props.listens[1];
 
       expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
-
-      instance.updateRecordingToPin(recordingToPin);
+      await act(() => {
+        instance.updateRecordingToPin(recordingToPin);
+      });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
     });
@@ -140,8 +142,9 @@ describe("Recentlistens", () => {
       const recordingToReview = props.listens[1];
 
       expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
-
-      instance.updateRecordingToReview(recordingToReview);
+      await act(() => {
+        instance.updateRecordingToReview(recordingToReview);
+      });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
     });
@@ -164,8 +167,9 @@ describe("Recentlistens", () => {
         newAlert: props.newAlert,
         onSuccessfulPin: expect.any(Function),
       });
-
-      instance.updateRecordingToPin(recordingToPin);
+      await act(() => {
+        instance.updateRecordingToPin(recordingToPin);
+      });
       await waitForComponentToPaint(wrapper);
 
       pinRecordingModal = wrapper.find(PinRecordingModal).first();
@@ -194,8 +198,9 @@ describe("Recentlistens", () => {
         listen: props.listens[0],
         newAlert: props.newAlert,
       });
-
-      instance.updateRecordingToPin(listen);
+      await act(() => {
+        instance.updateRecordingToPin(listen);
+      });
       await waitForComponentToPaint(wrapper);
 
       cbReviewModal = wrapper.find(CBReviewModal).first();
