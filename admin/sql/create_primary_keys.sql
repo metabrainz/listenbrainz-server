@@ -34,4 +34,6 @@ ALTER TABLE release_color ADD CONSTRAINT release_color_pkey PRIMARY KEY (id);
 
 ALTER TABLE user_setting ADD CONSTRAINT user_setting_pkey PRIMARY KEY (id);
 
+ALTER TABLE recommendation.do_not_recommend ADD CONSTRAINT rec_do_not_recommend_pkey PRIMARY KEY (id);
+
 COMMIT;
