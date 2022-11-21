@@ -39,8 +39,8 @@ def run_daily_jams_troi_bot():
         try:
             run_daily_jams(user, existing_urls.get(user["id"], None), service)
             # Add others here
-        except Exception as err:
-            current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user["musicbrainz_id"], str(err)))
+        except Exception:
+            current_app.logger.error(f"Cannot create daily-jams for user {user['musicbrainz_id']}:", exc_info=True)
             continue
 
 
@@ -138,7 +138,8 @@ def run_daily_jams(user, existing_url, service):
 
     if user["export_to_spotify"]:
         spotify = _get_spotify_details(user["id"], service)
-        spotify["existing_urls"] = [existing_url]
+        if existing_url:
+            spotify["existing_urls"] = [existing_url]
         args["spotify"] = spotify
 
     playlist = generate_playlist(DailyJamsPatch(), args)
