@@ -85,15 +85,29 @@ class UserListensSessionQuery(Query):
                      , recording_mbid
                   FROM listens
                 WINDOW w AS (ORDER BY listened_at)
-            ), sessions AS (
+            ), detect_skips AS (
                 SELECT listened_at
                      , duration
                      , difference
-                     , COUNT(*) FILTER ( WHERE difference > :threshold ) OVER (ORDER BY listened_at) AS session_id
+                     -- a 30s leeway to allow for difference in track length in MB and other services or any issue
+                     -- in timestamping
+                     , LEAD(difference, 1) OVER w < -30 AS skipped
                      , artist_name
                      , track_name
                      , recording_mbid
                   FROM ordered
+                WINDOW w AS (ORDER BY listened_at)
+            ), sessions AS (
+                SELECT listened_at
+                     , duration
+                     , difference
+                     , skipped
+                     , COUNT(*) FILTER ( WHERE difference > :threshold ) OVER w AS session_id
+                     , artist_name
+                     , track_name
+                     , recording_mbid
+                  FROM detect_skips
+                WINDOW w AS (ORDER BY listened_at)
             )
                 SELECT session_id
                      , jsonb_agg(
@@ -101,6 +115,7 @@ class UserListensSessionQuery(Query):
                                 'listened_at', to_char(to_timestamp(listened_at), 'YYYY-MM-DD HH24:MI:SS')
                               , 'duration', duration  
                               , 'difference', difference
+                              , 'skipped', skipped
                               , 'artist_name', artist_name
                               , 'track_name', track_name
                               , 'recording_mbid', recording_mbid
@@ -119,7 +134,8 @@ class UserListensSessionQuery(Query):
                 })
                 results.append({
                     "type": "dataset",
-                    "columns": ["listened_at", "duration", "difference", "artist_name", "track_name", "recording_mbid"],
+                    "columns": ["listened_at", "duration", "difference", "skipped",
+                                "artist_name", "track_name", "recording_mbid"],
                     "data": row["data"]
                 })
         return results
