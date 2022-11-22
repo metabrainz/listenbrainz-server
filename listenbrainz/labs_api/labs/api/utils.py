@@ -90,36 +90,33 @@ def get_recordings_from_mbids(mbids):
         curs.execute(query, tuple(args))
 
         # Build an index of all the fetched recordings
-        recording_index = {}
-        while True:
-            row = curs.fetchone()
-            if not row:
-                break
+        recording_index = {row['recording_mbid']: dict(row) for row in curs.fetchall()}
 
-            recording_index[row['recording_mbid']] = dict(row)
+        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, ts_conn.cursor() as ts_curs:
+            _, canonical_index, _ = resolve_canonical_mbids(ts_curs, redirected_mbids)
 
         # Finally collate all the results, ensuring that we have one entry with original_recording_mbid for each
         # input argument
         output = []
         for mbid in mbids:
+            redirected_mbid = index.get(mbid, mbid)
             try:
-                r = dict(recording_index[mbid])
+                r = dict(recording_index[redirected_mbid])
+                r['[artist_credit_mbids]'] = [ac_mbid for ac_mbid in r['artist_credit_mbids']]
+                del r['artist_credit_mbids']
+                r['original_recording_mbid'] = inverse_index.get(mbid, mbid)
+                r['canonical_recording_mbid'] = canonical_index.get(redirected_mbid, redirected_mbid)
+                output.append(r)
             except KeyError:
-                try:
-                    r = dict(recording_index[index[mbid]])
-                except KeyError:
-                    output.append({'recording_mbid': None,
-                                   'recording_name': None,
-                                   'length': None,
-                                   'comment': None,
-                                   'artist_credit_id': None,
-                                   'artist_credit_name': None,
-                                   '[artist_credit_mbids]': None,
-                                   'original_recording_mbid': mbid})
-                    continue
-
-            r['[artist_credit_mbids]'] = [ac_mbid for ac_mbid in r['artist_credit_mbids']]
-            del r['artist_credit_mbids']
-            r['original_recording_mbid'] = inverse_index.get(mbid, mbid)
-            output.append(r)
+                output.append({
+                    'recording_mbid': None,
+                    'recording_name': None,
+                    'length': None,
+                    'comment': None,
+                    'artist_credit_id': None,
+                    'artist_credit_name': None,
+                    '[artist_credit_mbids]': None,
+                    'canonical_recording_mbid': canonical_index.get(redirected_mbid, redirected_mbid),
+                    'original_recording_mbid': mbid
+                })
     return output
