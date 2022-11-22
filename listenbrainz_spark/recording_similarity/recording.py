@@ -11,7 +11,7 @@ from listenbrainz_spark.utils import get_listens_from_new_dump
 RECORDINGS_PER_MESSAGE = 10000
 
 
-def build_sessioned_index(listen_table, metadata_table, session, max_contribution, threshold, limit, _filter):
+def build_sessioned_index(listen_table, metadata_table, session, max_contribution, threshold, limit, _filter, skip_threshold):
     # TODO: Handle case of unmatched recordings breaking sessions!
     #  Detect and remove skips!
     filter_artist_credit = "AND NOT arrays_overlap(s1.artist_mbids, s2.artist_mbids)" if _filter else ""
@@ -38,6 +38,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                 SELECT user_id
                      -- spark doesn't support window aggregate functions with FILTER clause
                      , COUNT_IF(difference > {session}) OVER w AS session_id
+                     , LEAD(difference, 1) OVER w < {skip_threshold} AS skipped
                      , recording_mbid
                      , artist_mbids
                   FROM ordered
@@ -50,6 +51,8 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                   JOIN sessions s2
                  USING (user_id, session_id)
                  WHERE s1.recording_mbid != s2.recording_mbid
+                   AND NOT s1.skipped
+                   AND NOT s2.skipped
                        {filter_artist_credit}
             ), user_contribtion_mbids AS (
                 SELECT user_id
@@ -83,7 +86,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
     """
 
 
-def main(days, session, contribution, threshold, limit, filter_artist_credit):
+def main(days, session, contribution, threshold, limit, filter_artist_credit, skip):
     """ Generate similar recordings based on user listening sessions.
 
     Args:
@@ -94,6 +97,9 @@ def main(days, session, contribution, threshold, limit, filter_artist_credit):
         limit: the maximum number of similar recordings to request for a given recording
             (this limit is instructive only, upto 2x number of recordings may be returned)
         filter_artist_credit: whether to filter out tracks by same artist from a listening session
+        skip: the minimum threshold in seconds to mark a listen as skipped. we cannot just mark a negative difference
+            as skip because there may be a difference in track length in MB and music services and also issues in
+            timestamping listens.
     """
     to_date = datetime.combine(date.today(), time.min)
     from_date = to_date + timedelta(days=-days)
@@ -106,10 +112,11 @@ def main(days, session, contribution, threshold, limit, filter_artist_credit):
     metadata_df = listenbrainz_spark.sql_context.read.json(config.HDFS_CLUSTER_URI + "/mb_metadata_cache.jsonl")
     metadata_df.createOrReplaceTempView(metadata_table)
 
-    query = build_sessioned_index(table, metadata_table, session, contribution, threshold, limit, filter_artist_credit)
+    skip_threshold = -skip
+    query = build_sessioned_index(table, metadata_table, session, contribution, threshold, limit, filter_artist_credit, skip_threshold)
     data = run_query(query).toLocalIterator()
 
-    algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_filter_{filter_artist_credit}"
+    algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_filter_{filter_artist_credit}_skip_{skip}"
 
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]
