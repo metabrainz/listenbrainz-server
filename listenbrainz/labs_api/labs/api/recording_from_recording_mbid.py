@@ -21,7 +21,7 @@ class RecordingFromRecordingMBIDQuery(Query):
 
     def outputs(self):
         return ['recording_mbid', 'recording_name', 'length', 'comment', 'artist_credit_id',
-                'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid']
+                'artist_credit_name', '[artist_credit_mbids]', 'canonical_recording_mbid', 'original_recording_mbid']
 
     def fetch(self, params, offset=-1, count=-1):
         if not current_app.config["MB_DATABASE_URI"]:
