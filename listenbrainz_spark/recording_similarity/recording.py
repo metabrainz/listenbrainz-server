@@ -43,16 +43,21 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                      , artist_mbids
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
+            ), sessions_filtered AS (
+                SELECT user_id
+                     , session_id
+                     , recording_mbid
+                     , artist_mbids
+                  FROM sessions
+                 WHERE NOT skipped    
             ), user_grouped_mbids AS (
                 SELECT user_id
                      , IF(s1.recording_mbid < s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid0
                      , IF(s1.recording_mbid > s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid1
-                  FROM sessions s1
-                  JOIN sessions s2
+                  FROM sessions_filtered s1
+                  JOIN sessions_filtered s2
                  USING (user_id, session_id)
                  WHERE s1.recording_mbid != s2.recording_mbid
-                   AND NOT s1.skipped
-                   AND NOT s2.skipped
                        {filter_artist_credit}
             ), user_contribtion_mbids AS (
                 SELECT user_id
