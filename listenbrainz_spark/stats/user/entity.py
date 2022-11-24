@@ -16,7 +16,7 @@ from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
-from listenbrainz_spark.utils import get_listens_from_new_dump, read_files_from_HDFS
+from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
-    listens_df = get_listens_from_new_dump(from_date, to_date)
+    listens_df = get_listens_from_dump(from_date, to_date)
     table = f"user_{entity}_{stats_range}"
     listens_df.createOrReplaceTempView(table)
 

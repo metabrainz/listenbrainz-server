@@ -11,7 +11,7 @@ from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.sitewide.artist import get_artists
 from listenbrainz_spark.stats.sitewide.recording import get_recordings
 from listenbrainz_spark.stats.sitewide.release import get_releases
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 from pydantic import ValidationError
 
 
@@ -48,7 +48,7 @@ def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEnt
     logger.debug(f"Calculating sitewide_{entity}_{stats_range}...")
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
-    listens_df = get_listens_from_new_dump(from_date, to_date)
+    listens_df = get_listens_from_dump(from_date, to_date)
     table_name = f"sitewide_{entity}_{stats_range}"
     listens_df.createOrReplaceTempView(table_name)
 

@@ -9,7 +9,7 @@ from data.model.common_stat_spark import StatMessage
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.common.listening_activity import setup_time_range
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 from pyspark.sql.types import (StringType, StructField, StructType,
                                TimestampType)
 
@@ -77,7 +77,7 @@ def get_listening_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     """
     logger.debug(f"Calculating listening_activity_{stats_range}")
     from_date, to_date, _, _, spark_date_format = setup_time_range(stats_range)
-    get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
+    get_listens_from_dump(from_date, to_date).createOrReplaceTempView("listens")
     data = calculate_listening_activity(spark_date_format)
     messages = create_messages(data=data, stats_range=stats_range, from_date=from_date, to_date=to_date)
     logger.debug("Done!")

@@ -10,7 +10,7 @@ import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection, utils, config
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 from listenbrainz_spark.hdfs.utils import delete_dir
 from listenbrainz_spark.hdfs.utils import path_exists
 from listenbrainz_spark.hdfs.utils import hdfs_walk
@@ -90,4 +90,4 @@ class SparkNewTestCase(unittest.TestCase):
 
     @classmethod
     def get_all_test_listens(cls):
-        return get_listens_from_new_dump(cls.begin_date, cls.end_date)
+        return get_listens_from_dump(cls.begin_date, cls.end_date)

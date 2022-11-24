@@ -13,7 +13,7 @@ from data.model.common_stat_spark import UserStatRecords, StatMessage
 from data.model.user_daily_activity import DailyActivityRecord
 from listenbrainz_spark.stats import run_query, get_dates_for_stats_range
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 from pyspark.sql.functions import collect_list, sort_array, struct
 
 
@@ -70,7 +70,7 @@ def get_daily_activity(stats_range: str, database: str = None) -> Iterator[Optio
     logger.debug(f"Calculating daily_activity_{stats_range}")
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
-    get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
+    get_listens_from_dump(from_date, to_date).createOrReplaceTempView("listens")
     data = calculate_daily_activity()
     messages = create_messages(data=data, stats_range=stats_range, from_date=from_date,
                                to_date=to_date, database=database)

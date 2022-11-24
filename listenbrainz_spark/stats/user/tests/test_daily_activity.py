@@ -35,7 +35,7 @@ class DailyActivityTestCase(StatsTestCase):
         self.assertEqual(messages[2]["type"], "couchdb_data_end")
         self.assertEqual(messages[2]["database"], "daily_activity_all_time")
 
-    @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
+    @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
     @patch('listenbrainz_spark.stats.user.daily_activity.create_messages')
     def test_get_daily_activity_week(self, mock_create_messages, _, mock_get_listens):
@@ -47,7 +47,7 @@ class DailyActivityTestCase(StatsTestCase):
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='week',
                                                 from_date=from_date, to_date=to_date, database=None)
 
-    @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
+    @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
     @patch('listenbrainz_spark.stats.user.daily_activity.create_messages')
     def test_get_daily_activity_month(self, mock_create_messages, _, mock_get_listens):
@@ -59,7 +59,7 @@ class DailyActivityTestCase(StatsTestCase):
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='month',
                                                 from_date=from_date, to_date=to_date, database=None)
 
-    @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
+    @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
     @patch('listenbrainz_spark.stats.user.daily_activity.create_messages')
     def test_get_daily_activity_year(self, mock_create_messages, _, mock_get_listens):
@@ -71,7 +71,7 @@ class DailyActivityTestCase(StatsTestCase):
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='year',
                                                 from_date=from_date, to_date=to_date, database=None)
 
-    @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
+    @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
     @patch('listenbrainz_spark.stats.user.daily_activity.create_messages')
     def test_get_daily_activity_all_time(self, mock_create_messages, _, mock_get_listens):

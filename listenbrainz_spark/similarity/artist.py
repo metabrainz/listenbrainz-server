@@ -5,7 +5,7 @@ from more_itertools import chunked
 import listenbrainz_spark
 from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 
 
 RECORDINGS_PER_MESSAGE = 10000
@@ -113,7 +113,7 @@ def main(days, session, contribution, threshold, limit, filter_artist_credit, sk
     table = "artist_similarity_listens"
     metadata_table = "mb_metadata_cache"
 
-    get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView(table)
+    get_listens_from_dump(from_date, to_date).createOrReplaceTempView(table)
 
     metadata_df = listenbrainz_spark.sql_context.read.json(config.HDFS_CLUSTER_URI + "/mb_metadata_cache.jsonl")
     metadata_df.createOrReplaceTempView(metadata_table)
