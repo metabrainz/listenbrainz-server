@@ -9,6 +9,7 @@ from troi.patches.recs_to_playlist import RecommendationsToPlaylistPatch
 from troi.patches.daily_jams import DailyJamsPatch
 
 from listenbrainz import db
+from listenbrainz.db import timescale
 from listenbrainz.db.playlist import TROI_BOT_USER_ID, TROI_BOT_DEBUG_USER_ID
 from listenbrainz.db.user import get_by_mb_id
 from listenbrainz.db.user_relationship import get_followers_of_user
@@ -32,13 +33,14 @@ def run_daily_jams_troi_bot():
     """ Top level function called hourly to generate daily jams playlists for users """
     # Now generate daily jams (and other in the future) for users who follow troi bot
     users = get_users_for_daily_jams()
+    existing_urls = get_existing_daily_jams_urls([x["id"] for x in users])
     service = SpotifyService()
     for user in users:
         try:
-            run_daily_jams(user, service)
+            run_daily_jams(user, existing_urls.get(user["id"], None), service)
             # Add others here
-        except Exception as err:
-            current_app.logger.error("Cannot create daily-jams for user %s. (%s)" % (user["musicbrainz_id"], str(err)))
+        except Exception:
+            current_app.logger.error(f"Cannot create daily-jams for user {user['musicbrainz_id']}:", exc_info=True)
             continue
 
 
@@ -64,6 +66,22 @@ def get_users_for_daily_jams():
             "export_preference": SPOTIFY_EXPORT_PREFERENCE
         })
         return result.mappings().all()
+
+
+def get_existing_daily_jams_urls(user_ids: list[int]):
+    """ Retrieve urls of the existing spotify playlists of daily jams users """
+    query = """
+        SELECT DISTINCT ON (created_for_id)
+               created_for_id
+             , additional_metadata->'external_urls'->>'spotify' AS spotify_url
+          FROM playlist.playlist
+         WHERE additional_metadata->'algorithm_metadata'->>'source_patch' = 'daily-jams'
+           AND created_for_id = ANY(:user_ids)
+      ORDER BY created_for_id, created DESC
+    """
+    with timescale.engine.connect() as conn:
+        results = conn.execute(text(query), {"user_ids": user_ids})
+        return {r.created_for_id: r.spotify_url for r in results}
 
 
 def make_playlist_from_recommendations(user):
@@ -106,7 +124,7 @@ def _get_spotify_details(user_id, service):
     return None
 
 
-def run_daily_jams(user, service):
+def run_daily_jams(user, existing_url, service):
     """  Run the daily-jams patch to create the daily playlist for the given user. """
     token = current_app.config["WHITELISTED_AUTH_TOKENS"][0]
     username = user["musicbrainz_id"]
@@ -120,6 +138,8 @@ def run_daily_jams(user, service):
 
     if user["export_to_spotify"]:
         spotify = _get_spotify_details(user["id"], service)
+        if existing_url:
+            spotify["existing_urls"] = [existing_url]
         args["spotify"] = spotify
 
     playlist = generate_playlist(DailyJamsPatch(), args)
