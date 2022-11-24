@@ -1,5 +1,7 @@
 /** Main entities */
 declare type MusicBrainzArtist = {
+  name: string;
+  join_phrase: string;
   area: string;
   begin_year: number;
   rels: { [key: string]: string };
@@ -42,6 +44,7 @@ declare type ListenMetadata = {
   };
   release?: {
     caa_id: ?number;
+    caa_release_mbid: ?string;
     mbid?: string;
     year?: number;
   };

@@ -267,28 +267,29 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_user_pins(self):
         with timescale.engine.begin() as connection:
             connection.execute(text("""
-                INSERT INTO mbid_mapping_metadata (artist_credit_id, recording_mbid, release_mbid, release_name,
-                                                   artist_mbids, artist_credit_name, recording_name)
-                 VALUES (
-                      204
-                    , '00000737-3a59-4499-b30a-31fe2464555d'
-                    , '5b24fbab-c58f-4c37-a59d-ab232e2d98c4'
-                    , 'Batman Returns'
-                    , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'
-                    , 'Danny Elfman'
-                    , 'The Final Confrontation, Part 1'
-                );
+                INSERT INTO mapping.mb_metadata_cache
+                                   (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                    VALUES ('1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
+                          , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'::UUID[]
+                          , '607cc05a-e462-4f39-91b5-e9322544e0a6'
+                          , '{"name": "The Final Confrontation, Part 1", "rels": [], "length": 312000}'
+                          , '{"name": "Danny Elfman", "artist_credit_id": 204, "artists": [{"area": "United States", "rels": {"youtube": "https://www.youtube.com/channel/UCjhIy2xUURhJvN0S7s_ztuw", "wikidata": "https://www.wikidata.org/wiki/Q193338", "streaming": "https://music.apple.com/gb/artist/486493", "free streaming": "https://www.deezer.com/artist/760", "social network": "https://www.instagram.com/dannyelfman/", "official homepage": "https://www.dannyelfman.com/", "purchase for download": "https://itunes.apple.com/us/artist/id486493"}, "type": "Person", "gender": "Male", "begin_year": 1953, "name": "Danny Elfman", "join_phrase": ""}]}'
+                          , '{"artist": [], "recording": [], "release_group": []}'
+                          , '{"mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6", "name": "Danny Elfman & Tim Burton 25th Anniversary Music Box", "year": 2011}'
+                          , 'f'
+                           );
+
                 INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
                  VALUES (
                     'b7ffd2af-418f-4be2-bdd1-22f8b48613da'
-                  , '00000737-3a59-4499-b30a-31fe2464555d'
+                  , '1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
                   , 'exact_match'
                 );
             """))
 
         pinned_rec = {
             "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
-            "recording_mbid": "00000737-3a59-4499-b30a-31fe2464555d",
+            "recording_mbid": "1fe669c9-5a2b-4dcb-9e95-77480d1e732e",
             "blurb_content": "Amazing first recording"
         }
         response = self.client.post(
@@ -302,12 +303,19 @@ class UserViewsTestCase(IntegrationTestCase):
         submitted_pin["track_metadata"] = {
             "track_name": "The Final Confrontation, Part 1",
             "artist_name": "Danny Elfman",
-            "release_name": "Batman Returns",
+            "release_name": "Danny Elfman & Tim Burton 25th Anniversary Music Box",
             "additional_info": {
                 "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
-                "recording_mbid": "00000737-3a59-4499-b30a-31fe2464555d",
-                "release_mbid": "5b24fbab-c58f-4c37-a59d-ab232e2d98c4",
-                "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"]
+                "recording_mbid": "1fe669c9-5a2b-4dcb-9e95-77480d1e732e",
+                "release_mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6",
+                "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"],
+                "artists": [
+                    {
+                        "artist_credit_name": "Danny Elfman",
+                        "join_phrase": "",
+                        "artist_mbid": "5b24fbab-c58f-4c37-a59d-ab232e2d98c4"
+                    }
+                ]
             }
         }
 
