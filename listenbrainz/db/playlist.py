@@ -374,7 +374,7 @@ def _remove_old_collaborative_playlists(connection, creator_id: int, created_for
     """
     del_query = sqlalchemy.text("""DELETE FROM playlist.playlist
                                          WHERE creator_id = :creator_id
-                                           AND additional_metadata->>'source_patch' = :source_patch
+                                           AND additional_metadata->'algorithm_metadata'->>'source_patch' = :source_patch
                                            AND created_for_id = :created_for_id""")
     connection.execute(del_query, {"creator_id": creator_id,
                                    "created_for_id": created_for_id,

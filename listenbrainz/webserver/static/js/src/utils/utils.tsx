@@ -158,6 +158,25 @@ const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
   _.get(listen, "creator", "");
 
 const getArtistLink = (listen: Listen) => {
+  const artists = listen.track_metadata.mbid_mapping?.artists;
+  if (artists) {
+    return (
+      <>
+        {artists.map((artist) => (
+          <>
+            <a
+              href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {artist.artist_credit_name}
+            </a>
+            {artist.join_phrase}
+          </>
+        ))}
+      </>
+    );
+  }
   const artistName = getArtistName(listen);
   const artistMbids = getArtistMBIDs(listen);
   const firstArtist = _.first(artistMbids);
@@ -446,12 +465,19 @@ const pinnedRecordingToListen = (pinnedRecording: PinnedRecording): Listen => {
   };
 };
 
-const getAlbumArtFromReleaseMBID = async (
+const generateAlbumArtThumbnailLink = (
+  caaId: number | string,
   releaseMBID: string
+): string => {
+  return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb250.jpg`;
+};
+
+const getAlbumArtFromReleaseMBID = async (
+  userSubmittedReleaseMBID: string
 ): Promise<string | undefined> => {
   try {
     const CAAResponse = await fetchWithRetry(
-      `https://coverartarchive.org/release/${releaseMBID}`,
+      `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
       {
         retries: 4,
         retryOn: [429],
@@ -481,7 +507,7 @@ const getAlbumArtFromReleaseMBID = async (
         // the link to the underlying archive.org resource directly
         // Also see https://github.com/metabrainz/listenbrainz-server/commit/9e40ad440d0b280b6c53d13e804f911657469c8b
         const { id } = frontImage;
-        return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${id}_thumb250.jpg`;
+        return generateAlbumArtThumbnailLink(id, userSubmittedReleaseMBID);
       }
 
       // No front image? Fallback to whatever the first image is
@@ -491,7 +517,7 @@ const getAlbumArtFromReleaseMBID = async (
   } catch (error) {
     // eslint-disable-next-line no-console
     console.warn(
-      `Couldn't fetch Cover Art Archive entry for ${releaseMBID}`,
+      `Couldn't fetch Cover Art Archive entry for ${userSubmittedReleaseMBID}`,
       error
     );
   }
@@ -518,9 +544,18 @@ const getAlbumArtFromListenMetadata = async (
     return images?.[0].src;
   }
   /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
-  const releaseMBID = getReleaseMBID(listen);
-  if (releaseMBID) getAlbumArtFromReleaseMBID(releaseMBID);
-
+  // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
+  // to query CAA for user submitted mbids.
+  const userSubmittedReleaseMBID =
+    listen.track_metadata.additional_info?.release_mbid;
+  if (userSubmittedReleaseMBID)
+    getAlbumArtFromReleaseMBID(userSubmittedReleaseMBID);
+  // user submitted release mbids not found, check if there is a match from mbid mapper.
+  const caaId = listen.track_metadata.mbid_mapping?.caa_id;
+  const caaReleaseMbid = listen.track_metadata.mbid_mapping?.caa_release_mbid;
+  if (caaId && caaReleaseMbid) {
+    return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
+  }
   return undefined;
 };
 
