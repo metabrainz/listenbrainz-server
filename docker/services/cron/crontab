@@ -32,6 +32,9 @@ MAILTO=""
 # Calculate user similarity
 3 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
 
+# Request user fresh releases daily
+0 3 * * * root /usr/local/bin/python /code/listenbrainz/manage.py request_fresh_releases --days 30 >> /logs/fresh_releases 2>&1
+
 ## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
 0 4 1,15 * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/dumps.log 2>&1
 ## Around 24 hours later, trigger a full import into the spark cluster, and this time wait for the lock, in case the dump hasn't finished.
