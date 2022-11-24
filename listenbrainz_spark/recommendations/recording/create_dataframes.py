@@ -46,7 +46,7 @@ from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
 from listenbrainz_spark.recommendations.dataframe_utils import (get_dataframe_id,
                                                                 save_dataframe,
                                                                 get_dates_to_train_data)
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 
 logger = logging.getLogger(__name__)
 
@@ -303,7 +303,7 @@ def calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold
     metadata['to_date'] = to_date
     metadata['from_date'] = from_date
 
-    complete_listens_df = get_listens_from_new_dump(from_date, to_date)
+    complete_listens_df = get_listens_from_dump(from_date, to_date)
     logger.info(f'Listen count from {from_date} to {to_date}: {complete_listens_df.count()}')
 
     logger.info('Discarding listens without mbids...')

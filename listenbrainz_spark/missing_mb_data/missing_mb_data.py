@@ -2,7 +2,7 @@ import logging
 
 from listenbrainz_spark.recommendations.dataframe_utils import get_dates_to_train_data
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ def main(days: int):
     """
     logger.info('Fetching listens to find missing MB data...')
     to_date, from_date = get_dates_to_train_data(days)
-    listens_df = get_listens_from_new_dump(from_date, to_date)
+    listens_df = get_listens_from_dump(from_date, to_date)
     listens_df.createOrReplaceTempView("missing_mb_listens")
 
     missing_musicbrainz_data_itr = get_missing_mb_data()
