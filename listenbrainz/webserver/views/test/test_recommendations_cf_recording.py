@@ -1,4 +1,6 @@
 import uuid
+from unittest import mock
+
 import ujson
 import listenbrainz.db.user as db_user
 from datetime import datetime
@@ -248,8 +250,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         received_props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(expected_props, received_props)
 
-
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording.load_recordings_from_mapping')
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording.load_recordings_from_mbids')
     def test_get_playable_recommendations_list(self, mock_load):
         mbids_and_ratings = [
             {
@@ -283,13 +284,13 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 "recording_mbid": "2c8412f0-9353-48a2-aedb-1ad8dac9498f",
                 "title": "Sun’s Coming Up"
             }
-        }, {}
+        }
 
         received_recommendations = recommendations_cf_recording._get_playable_recommendations_list(mbids_and_ratings)
-        mock_load.assert_called_with(mbids=[
-            "03f1b16a-af43-4cd7-b22c-d2991bf011a3",
-            "2c8412f0-9353-48a2-aedb-1ad8dac9498f"
-        ], msids=[])
+        mock_load.assert_called_with(
+            mock.ANY,
+            ["03f1b16a-af43-4cd7-b22c-d2991bf011a3", "2c8412f0-9353-48a2-aedb-1ad8dac9498f"]
+        )
 
         expected_recommendations = [
             {

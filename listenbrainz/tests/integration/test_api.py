@@ -525,6 +525,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('Value for duration is invalid, should be a positive integer.',
                          response.json['error'])
 
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration"] = 5345029000
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for duration is too large, max permitted value is 2073600', response.json['error'])
+
+        del payload["payload"][0]["track_metadata"]["additional_info"]["duration"]
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_ms"] = 53450290000
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for duration_ms is too large, max permitted value is 2073600000', response.json['error'])
+
     def test_valid_duration(self):
         """ Test for valid submission in which a listen contains a valid duration_ms field
             in additional_info

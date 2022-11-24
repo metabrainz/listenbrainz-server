@@ -43,6 +43,12 @@ MAX_ITEMS_PER_GET = 100
 #: The default number of listens returned in a single GET request.
 DEFAULT_ITEMS_PER_GET = 25
 
+#: The max permitted value of duration field - 24 days
+MAX_DURATION_LIMIT = 24 * 24 * 60 * 60
+
+#: The max permitted value of duration_ms field - 24 days
+MAX_DURATION_MS_LIMIT = MAX_DURATION_LIMIT * 1000
+
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 
@@ -207,9 +213,8 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         if 'duration' in listen['track_metadata']['additional_info'] and 'duration_ms' in listen['track_metadata']['additional_info']:
             raise ListenValidationError("JSON document should not contain both duration and duration_ms.", listen)
         # check duration validity
-        duration_key = ["duration", "duration_ms"]
-        for key in duration_key:
-            validate_duration_field(listen, key)
+        validate_duration_field(listen, "duration", MAX_DURATION_LIMIT)
+        validate_duration_field(listen, "duration_ms", MAX_DURATION_MS_LIMIT)
 
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
@@ -271,7 +276,8 @@ def log_raise_400(msg, data=""):
     raise APIBadRequest(msg)
 
 
-def validate_duration_field(listen, key):
+def validate_duration_field(listen, key, max_value):
+    """ Check that the duration field is valid positive integer but less than the max permitted value """
     additional_info = listen["track_metadata"]["additional_info"]
     if key in additional_info:
         duration = additional_info[key]
@@ -282,6 +288,8 @@ def validate_duration_field(listen, key):
             value = int(duration)
             if value <= 0:
                 raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)
+            if value > max_value:
+                raise ListenValidationError(f"Value for {key} is too large, max permitted value is {max_value}", listen)
             additional_info[key] = value
         except (ValueError, TypeError):
             raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)

@@ -84,6 +84,24 @@ ALTER TABLE mbid_mapping_metadata
     ADD CONSTRAINT mbid_mapping_metadata_artist_mbids_check
     CHECK ( array_ndims(artist_mbids) = 1 );
 
+-- this table is defined in listenbrainz/mbid_mapping/mapping/mb_metadata_cache.py and created in production
+-- there. this definition is only for tests and local development. remember to keep both in sync.
+CREATE TABLE mapping.mb_metadata_cache (
+    dirty               BOOLEAN DEFAULT FALSE,
+    recording_mbid      UUID NOT NULL,
+    artist_mbids        UUID[] NOT NULL,
+    release_mbid        UUID,
+    recording_data      JSONB NOT NULL,
+    artist_data         JSONB NOT NULL,
+    tag_data            JSONB NOT NULL,
+    release_data        JSONB NOT NULL
+);
+
+-- postgres does not enforce dimensionality of arrays. add explicit check to avoid regressions (once burnt, twice shy!).
+ALTER TABLE mapping.mb_metadata_cache
+    ADD CONSTRAINT mb_metadata_cache_artist_mbids_check
+    CHECK ( array_ndims(artist_mbids) = 1 );
+
 -- the various mapping columns should only be null if the match_type is no_match, otherwise the columns should be
 -- non null. we have had bugs where we completely forgot to insert values for a column and it went unchecked because
 -- it is not possible to mark the column as NOT NULL. however, we can use this constraint to enforce the NOT NULL

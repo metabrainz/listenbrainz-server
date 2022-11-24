@@ -42,7 +42,14 @@
             "830e5c4e-6b7d-431d-86ab-00c751281dc5"
           ],
           "recording_mbid": "9541592c-0102-4b94-93cc-ee0f3cf83d64",
-          "release_mbid": "eff7949b-9440-4bae-9f09-b723a4710858"
+          "release_mbid": "eff7949b-9440-4bae-9f09-b723a4710858",
+          "artists": [
+            {
+              "artist_mbid": "830e5c4e-6b7d-431d-86ab-00c751281dc5",
+              "artist_credit_name": "5 Seconds of Summer",
+              "join_phrase": ""
+            }
+          ]
         },
         "release_name": "Youngblood (Deluxe)",
         "track_name": "Youngblood"
@@ -63,7 +70,14 @@
             "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"
           ],
           "recording_mbid": "9f24c0f7-a644-4074-8fbd-a1dba03de129",
-          "release_mbid": "be5d97b1-408a-4e95-b924-0a61955048de"
+          "release_mbid": "be5d97b1-408a-4e95-b924-0a61955048de",
+          "artists": [
+            {
+              "artist_mbid": "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387",
+              "artist_credit_name": "Ariana Grande",
+              "join_phrase": ""
+            }
+          ]
         },
         "release_name": "My Everything (Deluxe)",
         "track_name": "One Last Time"
@@ -109,7 +123,19 @@
               "1d81a1be-1b66-427d-9335-c777a259eadb"
             ],
             "recording_mbid": "55215be2-094c-4c38-a0da-2a83863ee804",
-            "release_mbid": "e300b42d-18cc-401e-990c-118fb4822bff"
+            "release_mbid": "e300b42d-18cc-401e-990c-118fb4822bff",
+            "artists": [
+              {
+                "artist_mbid": "61231ba8-ef93-4620-b58b-b0efa4edbdb6",
+                "artist_credit_name": "Ofenbach",
+                "join_phrase": " , "
+              },
+              {
+                "artist_mbid": "1d81a1be-1b66-427d-9335-c777a259eadb",
+                "artist_credit_name": "Lagique",
+                "join_phrase": ""
+              }
+            ]
           },
           "release_name": "Wasted Love (feat. Lagique)",
           "track_name": "Wasted Love (feat. Lagique)"

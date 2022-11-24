@@ -187,6 +187,9 @@ export default class UserPins extends React.Component<
           recording_mbids += `${item.recording_mbid},`;
         }
       });
+      if (!recording_msids && !recording_mbids) {
+        return [];
+      }
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,

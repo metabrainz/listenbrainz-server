@@ -134,8 +134,10 @@
     "params": [
       "days",
       "session",
+      "contribution",
       "threshold",
-      "limit"
+      "limit",
+      "filter_artist_credit"
     ]
   },
   "year_in_music.similar_users": {
