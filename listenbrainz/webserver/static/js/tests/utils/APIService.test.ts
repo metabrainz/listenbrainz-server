@@ -2,6 +2,7 @@ import APIService from "../../src/utils/APIService";
 
 const feedProps = require("../__mocks__/feedProps.json");
 const pinProps = require("../__mocks__/pinProps.json");
+const freshReleasesSitewideData = require("../__mocks__/freshReleasesSitewideData.json");
 
 const apiService = new APIService("foobar");
 
@@ -1397,3 +1398,61 @@ describe("exportPlaylistToSpotify", () => {
     expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("Fresh Releases", () => {
+
+  it("calls fetch with correct params, and returns a successful response", async () => {
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(freshReleasesSitewideData)
+      });
+    });
+
+    await expect(
+      apiService.fetchSitewideFreshReleases(2, "2020-12-27")
+    ).resolves.toEqual(freshReleasesSitewideData);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/explore/fresh-releases/?days=2&release_date=2020-12-27"
+    );
+  })
+
+  it("shows error response if date is not in YYYY-MM-DD format", async () => {
+    const response = { code: 400, error: "Cannot parse date. Must be in YYYY-MM-DD format." }
+    
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 400,
+        json: () => response
+      });
+    });
+
+    await expect(
+      apiService.fetchSitewideFreshReleases(undefined,"12-31-1988")
+    ).resolves.toEqual(response);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/explore/fresh-releases/?release_date=12-31-1988"
+    );
+  })
+
+  it("shows error response if days are not between 1 and 30", async () => {
+    const response = { code: 400, error: "days must be between 1 and 30." }
+    
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 400,
+        json: () => response
+      });
+    });
+
+    await expect(
+      apiService.fetchSitewideFreshReleases(50)
+    ).resolves.toEqual(response);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/explore/fresh-releases/?days=50"
+    );
+  })
+})

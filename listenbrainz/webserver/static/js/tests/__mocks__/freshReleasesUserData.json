@@ -1,0 +1,583 @@
+{
+    "payload": {
+        "releases": [
+            {
+                "artist_credit_name": "Red Hot Chili Peppers",
+                "artist_mbids": [
+                    "8bfac288-ccc5-448d-9573-c33ea2aa5c30"
+                ],
+                "caa_id": 33452361896,
+                "confidence": 216,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "8352fb0a-6150-42a2-94a8-8db876dffe76",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": null,
+                "release_mbid": "a2225115-891b-4f6b-a795-f2b7a68d0bcb",
+                "release_name": "Return of the Dream Canteen"
+            },
+            {
+                "artist_credit_name": "Vipin Patwa & Shankar Mahadevan",
+                "artist_mbids": [
+                    "a893081e-3d84-442f-b8de-d7694393865c",
+                    "bdbafa57-cf3f-4b7e-b956-fb6e0071ecd4"
+                ],
+                "caa_id": 33834582833,
+                "confidence": 91,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "a6e22b3e-d3fe-42af-a9da-fb45156be571",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": "Soundtrack",
+                "release_mbid": "5b2c8f92-5567-479f-8262-a00a7f8724b1",
+                "release_name": "Vande Mataram (From \u201cCode Name Tiranga\u201d)"
+            },
+            {
+                "artist_credit_name": "Green Day",
+                "artist_mbids": [
+                    "084308bd-1654-436f-ba03-df6697104e19"
+                ],
+                "caa_id": 33824585077,
+                "confidence": 53,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "6fda0e3f-84eb-4145-ac01-03900c800199",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "6b3ff898-8886-4a7b-8144-8e5763780440",
+                "release_name": "You Irritate Me (demo)"
+            },
+            {
+                "artist_credit_name": "Pav Dharia",
+                "artist_mbids": [
+                    "4d096beb-8752-4712-b548-55d6e66e3426"
+                ],
+                "caa_id": 33817852037,
+                "confidence": 48,
+                "release_date": "2022-10-13",
+                "release_group_mbid": "9b5e3d2e-58fb-48a8-afce-d6a94c217736",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "ccf3ad22-7128-471d-9d68-27da19a24b3b",
+                "release_name": "Duawan"
+            },
+            {
+                "artist_credit_name": "Queen",
+                "artist_mbids": [
+                    "0383dadf-2a4e-4d10-a46a-e9e041da8eb3"
+                ],
+                "caa_id": 33813499854,
+                "confidence": 44,
+                "release_date": "2022-10-13",
+                "release_group_mbid": "864047ec-7005-4ca0-bcdf-52c5b28f4bcb",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "1ff94a0f-950e-448b-935c-9218740ca778",
+                "release_name": "Face It Alone"
+            },
+            {
+                "artist_credit_name": "Kimbra",
+                "artist_mbids": [
+                    "fad2875e-ba81-4637-b859-4684622dcb1c"
+                ],
+                "caa_id": null,
+                "confidence": 22,
+                "release_date": "2022-10-21",
+                "release_group_mbid": "df6e33ff-a9a6-4a18-81d1-4a019572df7a",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "06a68bdd-c42b-48e5-8459-264f31b1d65b",
+                "release_name": "A RECKONING"
+            },
+            {
+                "artist_credit_name": "Pritam & Arijit Singh",
+                "artist_mbids": [
+                    "52db98c1-0cc9-4aab-9f2d-ea8d359234f3",
+                    "ed3f4831-e3e0-4dc0-9381-f5649e9df221"
+                ],
+                "caa_id": 33765427910,
+                "confidence": 21,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "bb195beb-95e3-40c3-b160-4677cc39b739",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": "Soundtrack",
+                "release_mbid": "4c3e85bb-a6fa-4ba5-8c78-be5853e75833",
+                "release_name": "Rasiya Reprise (From \u201cBrahmastra\u201d)"
+            },
+            {
+                "artist_credit_name": "Charlie Puth",
+                "artist_mbids": [
+                    "525f1f1c-03f0-4bc8-8dfd-e7521f87631b"
+                ],
+                "caa_id": 32971636683,
+                "confidence": 21,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "e1fe2431-b5aa-4aed-890c-cef0fdbbaca7",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": null,
+                "release_mbid": "f1df0b2e-d00c-4686-810d-1f633ecb4aee",
+                "release_name": "CHARLIE"
+            },
+            {
+                "artist_credit_name": "Deep Purple",
+                "artist_mbids": [
+                    "79491354-3d83-40e3-9d8e-7592d58d790a"
+                ],
+                "caa_id": 33808494718,
+                "confidence": 17,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "5315a1bb-e037-4dea-9ea7-f497b8c940bb",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Live",
+                "release_mbid": "410ed3da-0392-4344-b1e9-ee6cb48dc05c",
+                "release_name": "Live in Hong Kong 2001"
+            },
+            {
+                "artist_credit_name": "Deep Purple",
+                "artist_mbids": [
+                    "79491354-3d83-40e3-9d8e-7592d58d790a"
+                ],
+                "caa_id": 33809050561,
+                "confidence": 17,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "afcf8f0a-ca1a-4651-8ede-fcb2385d4c4a",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Live",
+                "release_mbid": "26514cad-731b-49b0-89a2-18f244647b46",
+                "release_name": "Live in Tokyo 2001"
+            },
+            {
+                "artist_credit_name": "Young the Giant",
+                "artist_mbids": [
+                    "7fe96b15-5608-430e-ad25-77a01353c5d9"
+                ],
+                "caa_id": 33783969641,
+                "confidence": 17,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "f6d61657-5276-41ff-859d-610dd4b6c25a",
+                "release_group_primary_type": "EP",
+                "release_group_secondary_type": null,
+                "release_mbid": "28c2c3eb-b302-4637-849a-cb0959ad1916",
+                "release_name": "ACT III: BATTLE"
+            },
+            {
+                "artist_credit_name": "Arctic Monkeys",
+                "artist_mbids": [
+                    "ada7a83c-e3e1-40f1-93f9-3e73dbc9298a"
+                ],
+                "caa_id": 33863924890,
+                "confidence": 13,
+                "release_date": "2022-10-18",
+                "release_group_mbid": "7b6a727a-fd38-4d4d-ae39-ba8391cba5a8",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "9500aade-b992-4391-b63d-ac48e6925ed1",
+                "release_name": "I Ain't Quite Where I Think I Am"
+            },
+            {
+                "artist_credit_name": "Hans Zimmer, Adam Lukas & James Everingham",
+                "artist_mbids": [
+                    "c45ad97f-116e-4ca9-a97e-feef5ebac767",
+                    "cdf6a8e2-0bb3-4627-8983-d2d3839f7542",
+                    "e6de1f3b-6484-491c-88dd-6d619f142abc"
+                ],
+                "caa_id": 33796085084,
+                "confidence": 13,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "3ce5d728-6551-4897-90d2-d0310923b86f",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": null,
+                "release_mbid": "df5f930f-f9ef-4e39-8f89-17f5034a11fd",
+                "release_name": "Frozen Planet II (Original Television Soundtrack)"
+            },
+            {
+                "artist_credit_name": "Hans Zimmer",
+                "artist_mbids": [
+                    "e6de1f3b-6484-491c-88dd-6d619f142abc"
+                ],
+                "caa_id": 33763187787,
+                "confidence": 13,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "0a7a3704-85f5-48c7-b4ce-c93a3d862eae",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": "Live",
+                "release_mbid": "ddf24806-c813-43b1-882d-e51152a29868",
+                "release_name": "The Last Samurai Suite"
+            },
+            {
+                "artist_credit_name": "Ti\u00ebsto \u00d7 Black Eyed Peas",
+                "artist_mbids": [
+                    "aabb1d9f-be12-45b3-a84d-a1fc3e8181fd",
+                    "d5be5333-4171-427e-8e12-732087c6b78e"
+                ],
+                "caa_id": 33763444373,
+                "confidence": 13,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "652934f4-b95e-4845-8b2d-72bf7b09fb64",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "b4f3a486-aef2-456d-9b15-06d4d5d7eea2",
+                "release_name": "Pump It Louder"
+            },
+            {
+                "artist_credit_name": "Arctic Monkeys",
+                "artist_mbids": [
+                    "ada7a83c-e3e1-40f1-93f9-3e73dbc9298a"
+                ],
+                "caa_id": 33381564513,
+                "confidence": 13,
+                "release_date": "2022-10-21",
+                "release_group_mbid": "249d7049-7d56-497b-abfe-464e3c535daf",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": null,
+                "release_mbid": "d6d1140f-5b4f-422e-a8b0-a8c43732701f",
+                "release_name": "The Car"
+            },
+            {
+                "artist_credit_name": "Carly Rae Jepsen feat. Rufus Wainwright",
+                "artist_mbids": [
+                    "09887aa7-226e-4ecc-9a0c-02d2ae5777e1",
+                    "78e46ae5-9bfd-433b-be3f-19e993d67ecc"
+                ],
+                "caa_id": null,
+                "confidence": 12,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "d5823046-6bb9-4c30-8fde-50de712494aa",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "1e981fea-35ca-474e-9078-3916e72869a2",
+                "release_name": "The Loneliest Time"
+            },
+            {
+                "artist_credit_name": "Mot\u00f6rhead",
+                "artist_mbids": [
+                    "57961a97-3796-4bf7-9f02-a985a8979ae9"
+                ],
+                "caa_id": 33836396118,
+                "confidence": 10,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "51bb5879-8ba1-40ee-a205-9a604345189f",
+                "release_group_primary_type": "EP",
+                "release_group_secondary_type": "Compilation",
+                "release_mbid": "403a79a8-0cbd-4a6c-b694-39a2cbd6dc75",
+                "release_name": "Mot\u00f6r\u2010ween"
+            },
+            {
+                "artist_credit_name": "Beethoven; Dover Quartet",
+                "artist_mbids": [
+                    "1f9df192-a621-4f54-8850-2c5373b7eac9",
+                    "75282900-30ce-49d7-bc07-925c8bac11b1"
+                ],
+                "caa_id": 33837282222,
+                "confidence": 8,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "3914e321-44ed-4d35-8078-00450c940a99",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": null,
+                "release_mbid": "205b9c35-bb8a-4074-aa93-f06f09c56345",
+                "release_name": "Complete String Quartets, Volume 3: The Late Quartets"
+            },
+            {
+                "artist_credit_name": "blink\u2010182",
+                "artist_mbids": [
+                    "0743b15a-3c32-48c8-ad58-cb325350befa"
+                ],
+                "caa_id": 33848947492,
+                "confidence": 8,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "6d4fcd6e-bf60-455b-999d-47a6ff2f8f84",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "cfa9fe1a-dd26-4167-b8d5-08cef4f14717",
+                "release_name": "Edging"
+            },
+            {
+                "artist_credit_name": "Beethoven, Stravinsky; Vilde Frang, Deutsche Kammerphilharmonie Bremen, Pekka Kuusisto",
+                "artist_mbids": [
+                    "1f9df192-a621-4f54-8850-2c5373b7eac9",
+                    "79bf9915-6328-4813-8ecb-d7fec7da0272",
+                    "8f844284-3b50-4695-b795-e15495fdef23",
+                    "c278de2c-9696-4fdf-a919-0781cd945e2c",
+                    "e1ee04bc-e6de-43e0-99d1-c491c3d66620"
+                ],
+                "caa_id": 33850650407,
+                "confidence": 8,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "fcac0033-077c-4273-aabb-7f4cb24bf065",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": null,
+                "release_mbid": "d6709127-57a4-4dda-9c5a-30acda5c2326",
+                "release_name": "Violin Concertos"
+            },
+            {
+                "artist_credit_name": "Pritam",
+                "artist_mbids": [
+                    "52db98c1-0cc9-4aab-9f2d-ea8d359234f3"
+                ],
+                "caa_id": 33753890252,
+                "confidence": 4,
+                "release_date": "2022-10-06",
+                "release_group_mbid": "d96ac5ab-76e9-4467-b02d-5822c6b4c2f2",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Soundtrack",
+                "release_mbid": "d8ec11cb-ac29-497f-82fa-19ea9fff274c",
+                "release_name": "Brahmastra (Original Motion Picture Soundtrack)"
+            },
+            {
+                "artist_credit_name": "Flo Rida",
+                "artist_mbids": [
+                    "4593d49a-7f67-46ba-9ec0-126bd676286f"
+                ],
+                "caa_id": 33806083243,
+                "confidence": 4,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "eb3f9fd3-d9e9-4e98-829a-e021ddeb0614",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "c85346a9-ecae-474a-b625-aec1aaa26471",
+                "release_name": "High Heels"
+            },
+            {
+                "artist_credit_name": "Florence + the Machine",
+                "artist_mbids": [
+                    "5fee3020-513b-48c2-b1f7-4681b01db0c6"
+                ],
+                "caa_id": 33827447735,
+                "confidence": 4,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "11df81f1-d13e-442f-9585-13299624975d",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Live",
+                "release_mbid": "27dd50ed-1446-4f14-8cda-23fe2f476ccc",
+                "release_name": "Dance Fever (live at Madison Square Garden)"
+            },
+            {
+                "artist_credit_name": "Men I Trust",
+                "artist_mbids": [
+                    "25ab7547-a4d2-480b-b028-c7f3497bc858"
+                ],
+                "caa_id": 33812589003,
+                "confidence": 2,
+                "release_date": "2022-10-12",
+                "release_group_mbid": "b8fe02b0-38e3-48cb-a0c4-6d84bf988709",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "10f56fe5-2b56-4009-b29a-fb6f9b932bc7",
+                "release_name": "Girl"
+            },
+            {
+                "artist_credit_name": "Bonobo",
+                "artist_mbids": [
+                    "9a709693-b4f8-4da9-8cc1-038c911a61be"
+                ],
+                "caa_id": null,
+                "confidence": 2,
+                "release_date": "2022-10-19",
+                "release_group_mbid": "a94b5bbf-8d63-4587-9f4d-834118808983",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "3d205a95-2f37-4801-9056-4077b14b6a26",
+                "release_name": "Defender"
+            },
+            {
+                "artist_credit_name": "Artbat, David Guetta & Idris Elba",
+                "artist_mbids": [
+                    "302bd7b9-d012-4360-897a-93b00c855680",
+                    "b3c7c6d6-5907-45a8-b589-1ec2572be4fd",
+                    "f812b317-6cd1-4083-9798-b6a4e5f97400"
+                ],
+                "caa_id": 33821014227,
+                "confidence": 2,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "7e60eb94-8693-45ce-9cf4-d7052fb33bf2",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "19a5f597-8273-4693-a482-139dcb2c3a14",
+                "release_name": "It\u2019s Ours"
+            },
+            {
+                "artist_credit_name": "Robbie Williams",
+                "artist_mbids": [
+                    "db4624cf-0e44-481e-a9dc-2142b833ec2f"
+                ],
+                "caa_id": 33827220185,
+                "confidence": 1,
+                "release_date": "2022-10-13",
+                "release_group_mbid": "cd8f0ae6-d105-4278-be3d-5b721e79a648",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "30d69d76-bb7a-4262-b3b9-e49488fa8b09",
+                "release_name": "Life Thru a Lens (rehearsal recording, spring 1997)"
+            },
+            {
+                "artist_credit_name": "Michael Giacchino",
+                "artist_mbids": [
+                    "150e14bd-915d-4574-b574-f77dd7ea72ad"
+                ],
+                "caa_id": 33786598830,
+                "confidence": 1,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "50c1f9d3-a653-43e6-ab1e-59db3cbeacd8",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Soundtrack",
+                "release_mbid": "d31bdc81-2ad9-4f68-8473-617541f499dd",
+                "release_name": "Marvel Studios\u2019 Werewolf By Night (Original Soundtrack)"
+            },
+            {
+                "artist_credit_name": "Vianney feat. Ed Sheeran",
+                "artist_mbids": [
+                    "6270c326-e810-476a-bc90-8ab0ba5de61d",
+                    "b8a7c51f-362c-4dcb-a259-bc6e0095f0a6"
+                ],
+                "caa_id": 33798545224,
+                "confidence": 1,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "feaa496c-be5e-43ce-9853-870f19b55d4b",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "b6693f58-48b8-40ea-affa-3ba442cad5b1",
+                "release_name": "Call on Me"
+            },
+            {
+                "artist_credit_name": "Boston Pops Orchestra & John Williams",
+                "artist_mbids": [
+                    "53b106e7-0cc6-42cc-ac95-ed8d30a3a98e",
+                    "cba412a5-4f8d-4999-827a-92b63e112892"
+                ],
+                "caa_id": 33849107560,
+                "confidence": 1,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "4bddae29-8888-4f01-a321-6f2259018f07",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "ae8c614e-616f-44f4-bc32-e403e0eaf8cb",
+                "release_name": "The Christmas Song (Chestnuts Roasting)"
+            },
+            {
+                "artist_credit_name": "Benj Pasek, Justin Paul & Shawn Mendes",
+                "artist_mbids": [
+                    "1550d91e-6b59-4790-aa61-56097bf2876e",
+                    "6f9d4b59-e6bb-405b-97b8-accdb02b820f",
+                    "b7d92248-97e3-4450-8057-6fe06738f735"
+                ],
+                "caa_id": 33703851007,
+                "confidence": 1,
+                "release_date": "2022-10-07",
+                "release_group_mbid": "805f23ef-cf6c-4ef0-88b2-b6ddc0bf0a84",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Soundtrack",
+                "release_mbid": "350d33dd-a6ae-41c3-b6a2-3de423159c77",
+                "release_name": "Lyle, Lyle, Crocodile: Original Motion Picture Soundtrack"
+            },
+            {
+                "artist_credit_name": "Backstreet Boys",
+                "artist_mbids": [
+                    "2f569e60-0a1b-4fb9-95a4-3dc1525d1aad"
+                ],
+                "caa_id": 33494873934,
+                "confidence": 1,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "03658184-999b-40b1-8945-dec89db671e9",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": null,
+                "release_mbid": "cf419ac6-de61-46d7-a30e-5e2aba048505",
+                "release_name": "A Very Backstreet Christmas"
+            },
+            {
+                "artist_credit_name": "Nicki Minaj & Skeng feat. Spice, Destra Garcia, Patrice Roberts, Lady Leshurr, Pamputtae, Dovey Magnum, Lisa Mercedez & London Hill",
+                "artist_mbids": [
+                    "1036b808-f58c-4a3e-b461-a2c4492ecf1b",
+                    "256711cb-35af-4578-96bf-a2429f33317d",
+                    "2ceb2877-f978-4c19-9c66-82d207ea5711",
+                    "3a524baa-9327-4bef-9a12-208b691f834e",
+                    "52774301-185b-41e0-bcea-f7057278f266",
+                    "610c3ea7-52a8-4c9c-80d3-d569ee829847",
+                    "786b867f-dac7-40ce-ad6c-c367f1b7853c",
+                    "96e675d3-2639-4d22-9ffa-c3e5463b23c2",
+                    "9bcbf327-72bf-4a66-a6ad-5e990565c16e",
+                    "ad0bd7eb-fe4f-44e5-addb-037775f0ea87"
+                ],
+                "caa_id": 33754654559,
+                "confidence": 1,
+                "release_date": "2022-10-06",
+                "release_group_mbid": "2b5788fb-de0d-4684-8348-7064278bde8c",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": "Remix",
+                "release_mbid": "25d7902c-37f7-4b23-91d7-3d981d30a0a7",
+                "release_name": "Likkle Miss (THE FINE NINE REMIX)"
+            },
+            {
+                "artist_credit_name": "girl in red",
+                "artist_mbids": [
+                    "4ae429fe-735c-4968-8253-a591421b1bd0"
+                ],
+                "caa_id": 33843809863,
+                "confidence": 1,
+                "release_date": "2022-10-14",
+                "release_group_mbid": "6e509f85-8727-4ee5-9ce5-491fce37d472",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": null,
+                "release_mbid": "49c64d26-1789-488e-b338-c5c3390c061c",
+                "release_name": "October Passed Me By"
+            },
+            {
+                "artist_credit_name": "Tove Lo",
+                "artist_mbids": [
+                    "56756959-1e78-429c-b897-e1d056cb0225"
+                ],
+                "caa_id": 32830138577,
+                "confidence": 1,
+                "release_date": "2022-10-13",
+                "release_group_mbid": "97d87cf8-6be0-439b-87a3-9c128bfee2cc",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": null,
+                "release_mbid": "313a8c33-fd75-4119-882c-8924339a09b7",
+                "release_name": "Dirt Femme"
+            },
+            {
+                "artist_credit_name": "B Praak & Jaani",
+                "artist_mbids": [
+                    "9d7cac94-79ac-48e9-8be9-dcdcbb00e3df",
+                    "de3b9c7b-d5c5-4d89-b020-0a0d2fe8069a"
+                ],
+                "caa_id": 33809309983,
+                "confidence": 1,
+                "release_date": "2022-10-12",
+                "release_group_mbid": "bd479463-b92c-4a87-abf0-c94d15797456",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": "Soundtrack",
+                "release_mbid": "cf71cdc8-2f0b-4159-9d33-3f1a0a0df924",
+                "release_name": "Aa Chaliye (From \u201cHoneymoon\u201d)"
+            },
+            {
+                "artist_credit_name": "B Praak, Jaani, Gippy Grewal & Shipra Goyal",
+                "artist_mbids": [
+                    "11427e08-33b5-4955-a727-61960570a186",
+                    "460b03d7-1c83-4672-8c77-fa4b041b9640",
+                    "9d7cac94-79ac-48e9-8be9-dcdcbb00e3df",
+                    "de3b9c7b-d5c5-4d89-b020-0a0d2fe8069a"
+                ],
+                "caa_id": 33860737905,
+                "confidence": 1,
+                "release_date": "2022-10-18",
+                "release_group_mbid": "91966576-dd4e-4bfc-af05-95035888832c",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": "Soundtrack",
+                "release_mbid": "699297f4-6b8c-441f-aa12-db9ae90e7259",
+                "release_name": "Hypnotize (From \u201cHoneymoon\u201d)"
+            },
+            {
+                "artist_credit_name": "Madonna",
+                "artist_mbids": [
+                    "79239441-bfd5-4981-a70c-55c3f15c1287"
+                ],
+                "caa_id": 33874784825,
+                "confidence": 1,
+                "release_date": "2022-10-20",
+                "release_group_mbid": "47c76473-f276-4c3b-b6eb-d0ec1904d195",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": "Remix",
+                "release_mbid": "e92ad33d-c247-47f2-90e8-0e1eb9c01fd4",
+                "release_name": "Bad Girl / Fever"
+            }
+        ],
+        "user_id": "test"
+    }
+}

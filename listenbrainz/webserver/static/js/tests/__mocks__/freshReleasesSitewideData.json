@@ -1,0 +1,2642 @@
+[
+    {
+        "artist_credit_name": "をとは",
+        "artist_mbids": [
+            "404670b2-bb19-4be8-862b-fe465a6e2a79"
+        ],
+        "caa_id": 34021497287,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "24225190-eb36-4972-9907-9b22e1d19d99",
+        "release_group_primary_type": "EP",
+        "release_mbid": "09786531-f473-4fa2-a64d-788a647ea21c",
+        "release_name": "めいどのみやげ"
+    },
+    {
+        "artist_credit_name": "Achint & Mikey McCleary",
+        "artist_mbids": [
+            "4d6947a9-b2b4-4f36-b33d-5323e5570c06",
+            "ddf71a40-5148-4b8d-83d5-4f2fda23f431"
+        ],
+        "caa_id": 34026663688,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "c7df49b8-510d-4634-8d06-644afad617fa",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Soundtrack",
+        "release_mbid": "689653af-46c0-4d11-90d2-adf1dda36915",
+        "release_name": "Monica, O My Darling (Music from the Netflix Film)"
+    },
+    {
+        "artist_credit_name": "Adeline Yeo (HP)",
+        "artist_mbids": [
+            "baca10cc-e249-4969-a27f-6503955ae7b5"
+        ],
+        "caa_id": 33137471417,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "8add4348-8618-4b97-9316-1d356454c953",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Soundtrack",
+        "release_mbid": "440e2fcd-9bbd-4f8a-aeb1-bf658d98ed21",
+        "release_name": "Helicopter Gun Fighter"
+    },
+    {
+        "artist_credit_name": "Areal Kollen",
+        "artist_mbids": [
+            "6aedd326-5af9-4ed0-aa73-9f0e6edc9de4"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "b19c3601-20fd-43ee-8caa-cad25ba0eee3",
+        "release_group_primary_type": "Single",
+        "release_mbid": "b7806d72-9bed-4c0f-ab89-b0490e6f21f0",
+        "release_name": "Black Hawk Down 2"
+    },
+    {
+        "artist_credit_name": "Beats by Mr. Jay",
+        "artist_mbids": [
+            "69b2f79f-e19d-4c44-9a2e-725581ec30e9"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "8610a240-e352-4309-8cc5-f6301854d3f0",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Demo",
+        "release_mbid": "4ceda762-8cb1-48d3-a28b-7b7c2720efb8",
+        "release_name": "100"
+    },
+    {
+        "artist_credit_name": "Cold Frequenz",
+        "artist_mbids": [
+            "0559dcba-2d64-43cb-8c33-fb13af1cd014"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "0b4b4fe8-2b30-49cb-bc59-527a02f34b6e",
+        "release_group_primary_type": "Album",
+        "release_mbid": "b599ad48-0368-4d09-b4c9-89c0dd292ba1",
+        "release_name": "Programmed for Violence"
+    },
+    {
+        "artist_credit_name": "Electric Yawn",
+        "artist_mbids": [
+            "a03a9d90-0d4f-4f92-bd99-6d4640e04bb0"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "78709a06-f0a6-49c6-a87f-740fc22a900b",
+        "release_group_primary_type": "Album",
+        "release_mbid": "3f59468b-906c-489e-97f2-c24b09b1a471",
+        "release_name": "YTINASNiNSIGHT"
+    },
+    {
+        "artist_credit_name": "Ella Es Tan Cargosa & Lula Bertoldi",
+        "artist_mbids": [
+            "4daeca58-4aa6-4a1c-8d7c-8d38bd128ad1",
+            "8bbee743-ce59-4411-ae3f-fe2bbc9acc17"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "883710cc-62b3-4185-a340-33e6e2c78d75",
+        "release_group_primary_type": "Single",
+        "release_mbid": "a1609858-ae14-489c-b585-d4a616aaab6d",
+        "release_name": "Fui"
+    },
+    {
+        "artist_credit_name": "Horned Garden's Princess",
+        "artist_mbids": [
+            "067e7dc3-b528-4d1b-97f3-58f199ea9e18"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "88971593-e86a-4ee8-80cf-635192f02536",
+        "release_group_primary_type": "EP",
+        "release_mbid": "a662577f-32ec-4719-803c-f71be29c8efc",
+        "release_name": "Шаурма с олениной 06.11.22"
+    },
+    {
+        "artist_credit_name": "Kadeshiaa",
+        "artist_mbids": [
+            "f2ab90bd-1bc1-4394-a2af-7f977fe44dc1"
+        ],
+        "caa_id": 34035418719,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "3a30b85b-589f-46e1-89c9-2ae3a0fd367c",
+        "release_group_primary_type": "Album",
+        "release_mbid": "e3e9bbb4-d0d3-409f-b0c7-3efbaf196935",
+        "release_name": "SUCCESS STREET (PART ONE)"
+    },
+    {
+        "artist_credit_name": "milky✱heart",
+        "artist_mbids": [
+            "c2c87d64-aded-4810-9cd5-bda0aba6d554"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "e5781dd8-54f3-4300-9235-5670882188a6",
+        "release_group_primary_type": "EP",
+        "release_mbid": "df0f802d-be83-4c32-ad3f-2fae0342fcfd",
+        "release_name": "✱ bang! EP ✱"
+    },
+    {
+        "artist_credit_name": "mulpHia",
+        "artist_mbids": [
+            "6594f523-9ae5-40ba-95ed-3598d7ffd9cc"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "7e1eb593-85ed-4627-9e2a-8e649b56b9af",
+        "release_group_primary_type": "Album",
+        "release_mbid": "9b99de65-dac8-4f86-ab5a-d02ad67af002",
+        "release_name": "NOKTURNO 3"
+    },
+    {
+        "artist_credit_name": "Proteus",
+        "artist_mbids": [
+            "f3b73f46-9009-4ec7-aae1-bdcb3ced1683"
+        ],
+        "caa_id": 33997684680,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "7138e035-550f-4dc1-9488-0585ef15b313",
+        "release_group_primary_type": "Album",
+        "release_mbid": "c945bda3-39f2-4a4a-910a-be4823865c08",
+        "release_name": "Prometheia I: Arrival"
+    },
+    {
+        "artist_credit_name": "ReddyBeats",
+        "artist_mbids": [
+            "af29ba0a-af76-4566-8603-bb468846b1b1"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "0272a162-f51c-466f-bd22-87e5d9210050",
+        "release_group_primary_type": "Album",
+        "release_mbid": "86c4bab9-4380-4ceb-8a80-173042d53c78",
+        "release_name": "Raleigh BLVD"
+    },
+    {
+        "artist_credit_name": "Silvxrsurfxr",
+        "artist_mbids": [
+            "660ed857-58a9-4164-9e8f-7a47717d7b4f"
+        ],
+        "caa_id": 34022478351,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "57f20f31-1bbd-47e5-90bf-b82253dceb30",
+        "release_group_primary_type": "EP",
+        "release_mbid": "362b842c-8ddd-4a98-9470-03eaa7ba152b",
+        "release_name": "WAVES"
+    },
+    {
+        "artist_credit_name": "Various Artists",
+        "artist_mbids": [
+            "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "b3123aeb-d7df-4450-9072-19def57fca0f",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Live",
+        "release_mbid": "3b710095-6d39-4482-a644-8d66a4c5aa8e",
+        "release_name": "我们的歌第四季 第7期"
+    },
+    {
+        "artist_credit_name": "結束バンド",
+        "artist_mbids": [
+            "c1b0fe0a-779d-43ed-b193-4370f0d0f88f"
+        ],
+        "caa_id": 34013382620,
+        "release_date": "2022-11-06",
+        "release_group_mbid": "40afb369-8230-494f-8507-def48bc53f22",
+        "release_group_primary_type": "Single",
+        "release_mbid": "d23933d6-b48b-4e05-b8ac-e08fdf8fcc9a",
+        "release_name": "ギターと孤独と蒼い惑星"
+    },
+    {
+        "artist_credit_name": "𝔇𝔍 6YRథ్‌٣٣A ЗАО",
+        "artist_mbids": [
+            "a7e0d7da-579d-42b6-aea0-306eb0847784"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "8af193df-7626-4218-8ff1-52839d564ba4",
+        "release_group_primary_type": "Other",
+        "release_group_secondary_type": "DJ-mix",
+        "release_mbid": "7489ff13-8568-45cd-97d9-427fcfdff980",
+        "release_name": "5454"
+    },
+    {
+        "artist_credit_name": "Acidgvrl",
+        "artist_mbids": [
+            "264ab4d8-9b83-4c37-8c2a-a3fcdc11e6f0"
+        ],
+        "caa_id": 33814975890,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "68d0f2a5-5024-4457-9bc1-4eb0e1e42ead",
+        "release_group_primary_type": "EP",
+        "release_mbid": "a987f825-1332-4c41-88ae-6f7ec58c7a5b",
+        "release_name": "H A N G O V E R (A International Backrooms Broadcast)"
+    },
+    {
+        "artist_credit_name": "Acidgvrl & Swimswim",
+        "artist_mbids": [
+            "264ab4d8-9b83-4c37-8c2a-a3fcdc11e6f0",
+            "a20bb9b4-c36a-42de-9e19-20cf5cb09896"
+        ],
+        "caa_id": 34033195364,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "52449789-ce9e-4633-99db-ebc4f07d0d11",
+        "release_group_primary_type": "Single",
+        "release_mbid": "f8602853-3723-4b7b-b3f8-f8e7ad444d69",
+        "release_name": "BREAKCORE DRUGS"
+    },
+    {
+        "artist_credit_name": "Armaan Malik & Rochak Kohli",
+        "artist_mbids": [
+            "1424c238-6c25-4871-a40d-25205a5e44e0",
+            "50fd3c55-9c32-490c-bfd5-679208483901"
+        ],
+        "caa_id": 34034974160,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "8a435bd2-08bd-4e3a-bc39-3a1a45ab2223",
+        "release_group_primary_type": "Single",
+        "release_mbid": "7af3fae0-cf3e-482a-a734-830c67ff26ae",
+        "release_name": "Bas Tujhse Pyaar Ho"
+    },
+    {
+        "artist_credit_name": "A.R. Rahman",
+        "artist_mbids": [
+            "e0bba708-bdd3-478d-84ea-c706413bedab"
+        ],
+        "caa_id": 34029976795,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "9db61155-1575-4241-9539-d6be07e07abf",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Soundtrack",
+        "release_mbid": "72818c0a-4457-4a8c-834f-b2e1567ce56e",
+        "release_name": "Mili (Original Motion Picture Soundtrack)"
+    },
+    {
+        "artist_credit_name": "Comfortless",
+        "artist_mbids": [
+            "7e292908-1518-4c02-a32d-c3a35dd4c66c"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "278b18f6-0ba7-4cdc-9193-96669dcbecbf",
+        "release_group_primary_type": "Single",
+        "release_mbid": "22d411b5-70f1-48fc-ade3-d4f4ec4c22c1",
+        "release_name": "Bliss"
+    },
+    {
+        "artist_credit_name": "Dafydd Iwan",
+        "artist_mbids": [
+            "012f4bf6-4040-42c9-a7d0-6e72463d1f65"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "9f5f046f-8c24-4d72-bc34-b2fa137275a0",
+        "release_group_primary_type": "Single",
+        "release_mbid": "f30e54ad-2fbe-442a-a5cf-549ffcd12637",
+        "release_name": "Yma O Hyd - Cwpan Y Byd"
+    },
+    {
+        "artist_credit_name": "Dissecting Table",
+        "artist_mbids": [
+            "b32ab40f-624d-4b25-883c-841facc93201"
+        ],
+        "caa_id": 33822256460,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "c9e5fe0e-325c-4ce8-ab48-180a5f196561",
+        "release_group_primary_type": "Album",
+        "release_mbid": "8e2d929c-2c0e-4ff0-a8e4-f18f630b00b6",
+        "release_name": "Disorder of My Mind"
+    },
+    {
+        "artist_credit_name": "DJ Farenhait",
+        "artist_mbids": [
+            "cb43d4b2-d0ea-43db-8ebe-7e5836be7533"
+        ],
+        "caa_id": 34040561025,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "7b5c7f3c-a77e-4bd8-96bd-fefa6e2ab8b7",
+        "release_group_primary_type": "Single",
+        "release_mbid": "82b8932d-6631-40f0-a2f5-804229ff338d",
+        "release_name": "DJ Farenhait Ft Behrooz - Irane Man"
+    },
+    {
+        "artist_credit_name": "EPiraten",
+        "artist_mbids": [
+            "1aa9e6c8-2fc7-4ef0-bf8d-490a80b80f0c"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "2ee4e19d-53f6-49b1-9ace-f289146868d3",
+        "release_group_primary_type": "EP",
+        "release_mbid": "eb928bc0-939f-4a52-8449-48a37440533e",
+        "release_name": "Topography"
+    },
+    {
+        "artist_credit_name": "Heather Woods Broderick",
+        "artist_mbids": [
+            "4247ed92-acd8-4c8c-8632-46b70e5a572f"
+        ],
+        "caa_id": 34041119377,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "62535062-282d-4029-a660-e63711d7b62a",
+        "release_group_primary_type": "Single",
+        "release_mbid": "f262cc16-ca2e-4f59-af11-001eb013f65f",
+        "release_name": "Blood Run Through Me (Single Edit)"
+    },
+    {
+        "artist_credit_name": "Imogen Heap & Dan O’Neill",
+        "artist_mbids": [
+            "328d146c-79f1-4eb6-9e40-8ee5710c14e5",
+            "c564e953-b4ce-4bfb-9c71-96d8339eaf48"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "b954064e-4365-429f-ae81-a835365be35e",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Soundtrack",
+        "release_mbid": "ea23d745-1e11-49c3-bc8d-7f878fe0b080",
+        "release_name": "Chordata Bytes I"
+    },
+    {
+        "artist_credit_name": "In Flames",
+        "artist_mbids": [
+            "31745282-b1ea-4d62-939f-226b14d68e7c"
+        ],
+        "caa_id": 34027258229,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "b59c6d77-215b-4039-ae49-7253af198941",
+        "release_group_primary_type": "Single",
+        "release_mbid": "ae41bb3d-049b-4b49-b874-793ec4c9736e",
+        "release_name": "Foregone, Pt. 2"
+    },
+    {
+        "artist_credit_name": "Ingrates",
+        "artist_mbids": [
+            "3c27ddfe-8ee4-4dac-b525-94b27c17ce9a"
+        ],
+        "caa_id": 34038440252,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "60743e3c-edfb-4916-8152-8ddfe5dc8111",
+        "release_group_primary_type": "Single",
+        "release_mbid": "a86cc1f8-2013-455b-bf36-5ffc63a40edd",
+        "release_name": "Don't Be a Stranger b/w I Don't Care"
+    },
+    {
+        "artist_credit_name": "Jasmine Sandlas",
+        "artist_mbids": [
+            "443cc907-c40e-467d-9dcc-dfcc69222101"
+        ],
+        "caa_id": 34033025281,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "e98fcc28-d390-4a3f-b242-8672b686ea29",
+        "release_group_primary_type": "Single",
+        "release_mbid": "4b136177-c863-40e4-aa4b-2d5616fa480d",
+        "release_name": "Jee Jeha Karda"
+    },
+    {
+        "artist_credit_name": "Kaylene Sc@r & Eazyvibe",
+        "artist_mbids": [
+            "8aea14f9-e045-4de9-b6d0-da88c224276a",
+            "ea2966d9-d617-44f3-bc1a-238c03452744"
+        ],
+        "caa_id": 34036541250,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "5e6debfe-4101-4c4c-9965-4525ae1db8dc",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Remix",
+        "release_mbid": "5ff6ca03-567f-4774-928d-ecb349079990",
+        "release_name": "Life Without You (No Left Turn remix)"
+    },
+    {
+        "artist_credit_name": "Laibach",
+        "artist_mbids": [
+            "c779e090-909f-4403-a90e-c1d08cdbb719"
+        ],
+        "caa_id": 34032457534,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "918a722f-c81f-4f90-aff4-aa73c0ea4938",
+        "release_group_primary_type": "Single",
+        "release_mbid": "e9cf05b6-f3e7-4390-a3d9-4cfa1b48d5f9",
+        "release_name": "THE FUTURE"
+    },
+    {
+        "artist_credit_name": "Levi Batkin",
+        "artist_mbids": [
+            "4fbb5ec1-e63c-4fe4-8c36-65c57527bf60"
+        ],
+        "caa_id": 33993652608,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "61362e5c-2933-46ac-9cda-8b47c18ad1a2",
+        "release_group_primary_type": "Single",
+        "release_mbid": "2ee492e1-d271-4a43-b593-4234ef7efcbe",
+        "release_name": "Past Life"
+    },
+    {
+        "artist_credit_name": "Madi Diaz, S.G. Goodman & Joy Oladokun",
+        "artist_mbids": [
+            "a03c3296-fc11-4fcf-b378-fa602e30a7e9",
+            "a2abdca1-2041-45b9-8d01-e34fdef7922f",
+            "ecfda98e-4675-4326-979d-04ea3ce5667b"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "9d13ddd3-e50c-4074-b26d-2d2dd122dfb6",
+        "release_group_primary_type": "Single",
+        "release_mbid": "f65b405a-3642-48f0-8aba-9e65c4978785",
+        "release_name": "Be Careful"
+    },
+    {
+        "artist_credit_name": "MIKROMETRIK",
+        "artist_mbids": [
+            "ad362680-6725-4ed5-8a22-578428747635"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "4dad217c-8791-4580-ad1d-0e6b497c4114",
+        "release_group_primary_type": "Album",
+        "release_mbid": "fc646f27-aab5-41be-95d6-ed9200bc11f2",
+        "release_name": "REC 2020"
+    },
+    {
+        "artist_credit_name": "Polite Bureaux",
+        "artist_mbids": [
+            "d4b44b5d-b6d2-4ba5-8859-e2ec4b159139"
+        ],
+        "caa_id": 31491162427,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "303c6998-8992-4664-84e8-99365e951761",
+        "release_group_primary_type": "Album",
+        "release_mbid": "e89f5a4c-414d-40e6-8a04-c788f06f5f43",
+        "release_name": "Except Your Skint"
+    },
+    {
+        "artist_credit_name": "Qeta",
+        "artist_mbids": [
+            "68c4481e-e7d0-497e-afe8-60479657b1d1"
+        ],
+        "caa_id": 34028527824,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "41d17579-dbfc-4e99-b196-ec51f50a4dfc",
+        "release_group_primary_type": "EP",
+        "release_mbid": "3d63ba23-f55d-4ccb-9661-cc30ea26ba33",
+        "release_name": "Iridom"
+    },
+    {
+        "artist_credit_name": "RARA",
+        "artist_mbids": [
+            "c50c8901-36cc-4e21-92b5-5ed8d229e740"
+        ],
+        "caa_id": 34041402220,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "d90428a3-78e2-44f5-89aa-61d286149d40",
+        "release_group_primary_type": "Single",
+        "release_mbid": "c5913d14-0ede-4f13-81fc-be3d07df143e",
+        "release_name": "Agonía"
+    },
+    {
+        "artist_credit_name": "Rifti Beats",
+        "artist_mbids": [
+            "b7ab4824-5529-492b-aaf3-4854339c302b"
+        ],
+        "caa_id": 34031457147,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "efd8353f-dfe2-434f-87b3-36d28b4c1de8",
+        "release_group_primary_type": "Single",
+        "release_mbid": "81a2d67a-668e-4071-85ec-40f686583706",
+        "release_name": "Chainsaw Man Opening"
+    },
+    {
+        "artist_credit_name": "Risto",
+        "artist_mbids": [
+            "9cef683d-f2c9-4d92-b934-17431bc8ccd3"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "cdfd0e86-5dc5-4a42-af50-e486cf59f4d5",
+        "release_group_primary_type": "Single",
+        "release_mbid": "f499b693-1209-4f52-b207-86eefe996cc8",
+        "release_name": "Beton"
+    },
+    {
+        "artist_credit_name": "Robyn Miller",
+        "artist_mbids": [
+            "429b1f22-860e-43eb-9f15-3fe44b643e1f"
+        ],
+        "caa_id": 34033703631,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "61350bb3-8970-4fd6-8417-97a5092b7372",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Soundtrack",
+        "release_mbid": "126f0be4-2d2d-402b-a332-67966417d09e",
+        "release_name": "Lost Tracks, Pt. I - Myst"
+    },
+    {
+        "artist_credit_name": "savogy",
+        "artist_mbids": [
+            "fcb0b1a4-eeda-4611-bcc5-739535276687"
+        ],
+        "caa_id": 34037554843,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "78d0445f-7ab8-4729-80de-9f1a7a048f1d",
+        "release_group_primary_type": "Single",
+        "release_mbid": "62c6b3b5-4a58-4f13-a8e0-b09ce3062d8d",
+        "release_name": "Place"
+    },
+    {
+        "artist_credit_name": "Taylor Swift feat. Bleachers",
+        "artist_mbids": [
+            "20244d07-534f-4eff-b4d4-930878889970",
+            "58e235fc-f6ea-4614-9ed4-9855a5665ae1"
+        ],
+        "caa_id": 34034715271,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "fc11fb8a-ba3b-459c-8a99-0509a89acd7c",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Remix",
+        "release_mbid": "75334caf-6088-43bf-b95a-a2c2fe0f0c03",
+        "release_name": "Anti‐Hero"
+    },
+    {
+        "artist_credit_name": "The OC Jazz Collective",
+        "artist_mbids": [
+            "0618d8a9-3b75-47e2-9039-322c909c2edd"
+        ],
+        "caa_id": 34033418498,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "c11b1437-2922-49f5-b277-041348c0755a",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Remix",
+        "release_mbid": "f3c398ef-79d9-4e83-adc2-d5e00305540c",
+        "release_name": "Mode Seven: A Jazz Tribute to the SNES"
+    },
+    {
+        "artist_credit_name": "Tiger Moth Tales",
+        "artist_mbids": [
+            "b82b0f22-c47d-42d6-9672-f329b206ea89"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "c55ee903-63f0-452a-8d91-359715741241",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Live",
+        "release_mbid": "cdfa0087-b89a-49e5-bbd8-d021dcc648d6",
+        "release_name": "A Visit To Oxfordshire"
+    },
+    {
+        "artist_credit_name": "Yagya",
+        "artist_mbids": [
+            "b33ad139-56b1-4f16-b778-1386030c061e"
+        ],
+        "caa_id": 34031267238,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "0bf92c7f-3ba4-4b57-af40-305d0f6012de",
+        "release_group_primary_type": "Single",
+        "release_mbid": "9fa9c45e-3a6a-44f9-9176-66c014895017",
+        "release_name": "MOA118"
+    },
+    {
+        "artist_credit_name": "yeyts.",
+        "artist_mbids": [
+            "569480ef-e0fe-4ccb-aea2-0fe2375866bb"
+        ],
+        "caa_id": 34049050975,
+        "release_date": "2022-11-07",
+        "release_group_mbid": "920c155f-59c5-4f87-a066-8f4de05c3d81",
+        "release_group_primary_type": "Single",
+        "release_mbid": "8cc37395-52d9-4f73-a369-855339977fd0",
+        "release_name": "All ’Bout All"
+    },
+    {
+        "artist_credit_name": "Aleksi Perälä",
+        "artist_mbids": [
+            "a913c0de-d77e-424e-9ba5-c8872793512b"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "f6da4f4d-d7c7-47a5-b401-d23f4bade86e",
+        "release_mbid": "614570b9-f4f9-4819-b203-ac0b8a07189b",
+        "release_name": "UNITY IIII III"
+    },
+    {
+        "artist_credit_name": "Alkilith",
+        "artist_mbids": [
+            "0c231847-a382-41ed-ba18-397a4e592b4c"
+        ],
+        "caa_id": 34041096309,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "7c7173d5-a11b-451d-a9f2-df4f824c7882",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Compilation",
+        "release_mbid": "14a36adf-d68f-4058-a1ba-a99ba5c8798a",
+        "release_name": "Beneath the Fells I-III Compilation"
+    },
+    {
+        "artist_credit_name": "Amberian Dawn",
+        "artist_mbids": [
+            "466097fa-c858-4006-8140-d7f419d47ea2"
+        ],
+        "caa_id": 34045757833,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "7ce8405a-a930-4ef1-95e4-449502868404",
+        "release_group_primary_type": "Single",
+        "release_mbid": "ca93656a-8fcf-40e5-87f9-1cf3b42868bf",
+        "release_name": "Gimme! Gimme! Gimme! (A Man After Midnight)"
+    },
+    {
+        "artist_credit_name": "Comfortless",
+        "artist_mbids": [
+            "7e292908-1518-4c02-a32d-c3a35dd4c66c"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "d6c47b3b-c2ca-4dfa-a237-96ca8eb312e3",
+        "release_group_primary_type": "Single",
+        "release_mbid": "38545fef-c13c-4b41-af2d-76f1c7e829fc",
+        "release_name": "☢️NukaBass☢️"
+    },
+    {
+        "artist_credit_name": "Curtis Macdonald",
+        "artist_mbids": [
+            "273e85b8-09a0-4b12-a0a6-3ad1285d4feb"
+        ],
+        "caa_id": 33867720993,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "9973fe92-c05d-4a27-892d-ccb9f0dbe659",
+        "release_group_primary_type": "Single",
+        "release_mbid": "011ec9c7-3b6b-461a-95f4-09bca3a90f48",
+        "release_name": "Hold onto Hope"
+    },
+    {
+        "artist_credit_name": "De Corbul Destinul",
+        "artist_mbids": [
+            "42bd2b63-6719-4933-956c-68d0ca33fb9f"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "4d1866f0-147c-4039-978d-a24efca60a04",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Remix",
+        "release_mbid": "f0bd70e9-7378-4355-97e9-26701fbd5378",
+        "release_name": "Hai Bucato La Mia Vita (Adriano Celentano interpretation)"
+    },
+    {
+        "artist_credit_name": "De Corbul Destinul",
+        "artist_mbids": [
+            "42bd2b63-6719-4933-956c-68d0ca33fb9f"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "b1b62556-4003-46bb-af18-d1dcce108d6e",
+        "release_group_primary_type": "Album",
+        "release_mbid": "3529f94a-fce1-4d77-b079-ff6ecf715428",
+        "release_name": "Uno De Los Grande Sexo"
+    },
+    {
+        "artist_credit_name": "En Paz Me Acostaré",
+        "artist_mbids": [
+            "7c25b8fb-01aa-4691-bc9a-a344d321896c"
+        ],
+        "caa_id": 34048443056,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "576c090b-a177-49d5-9540-3a4c228dc5df",
+        "release_group_primary_type": "Album",
+        "release_mbid": "862586ff-0a5b-4453-b7a7-27dd6f56b34b",
+        "release_name": "Navidad"
+    },
+    {
+        "artist_credit_name": "Ethnic Heritage Ensemble",
+        "artist_mbids": [
+            "0549bca5-c2fe-419c-842f-942a9a88bd1f"
+        ],
+        "caa_id": 34037528928,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "d51ea764-2f5a-4369-bd40-87d6990ea1af",
+        "release_group_primary_type": "Album",
+        "release_mbid": "f2e95ca4-7a1c-486d-bdbf-a9d06466421e",
+        "release_name": "Spirit Gatherer • Tribute to Don Cherry"
+    },
+    {
+        "artist_credit_name": "Feral",
+        "artist_mbids": [
+            "e1133850-f9d9-4b37-96d8-9f4edcd7a0e8"
+        ],
+        "caa_id": 33777350813,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "43e1e723-151a-4b3c-a4a6-77adcf51e208",
+        "release_group_primary_type": "EP",
+        "release_mbid": "a0df4394-18c7-4081-a3e4-6b328d00ce47",
+        "release_name": "Crossroads"
+    },
+    {
+        "artist_credit_name": "Hello Meteor",
+        "artist_mbids": [
+            "f835c755-d70b-42d8-a979-01f67c3c47e8"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "977ebcc7-3cde-412f-9f7a-1d129106369b",
+        "release_mbid": "1a712dda-466b-497b-8000-888539a9de80",
+        "release_name": "Seven Hour Sunset"
+    },
+    {
+        "artist_credit_name": "Imperium Dekadenz",
+        "artist_mbids": [
+            "b48171f3-f0ff-4fa9-b760-4c898b96f71e"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "b1541001-42b0-49e8-a487-9402972e3e3d",
+        "release_group_primary_type": "Single",
+        "release_mbid": "b0b43c83-84fb-4f5a-9630-6c162a3f504f",
+        "release_name": "Memories... A Raging River"
+    },
+    {
+        "artist_credit_name": "Inva//id",
+        "artist_mbids": [
+            "058534fc-e9b6-4e2a-a2cf-2f894c54bec5"
+        ],
+        "caa_id": 34044717522,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "e1e736e6-b796-40fd-879d-5604fb76ae70",
+        "release_group_primary_type": "Single",
+        "release_mbid": "29749d12-1a67-406e-9df0-a4d983762c20",
+        "release_name": "The Cruel Division"
+    },
+    {
+        "artist_credit_name": "Israel García",
+        "artist_mbids": [
+            "ca472f3c-46ab-4d10-b9ec-54ccc74b82e6"
+        ],
+        "caa_id": 34048729298,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "5ef0cda7-7ba5-4412-b764-77195a9c79f8",
+        "release_mbid": "50c1ac57-5db4-49ce-b48e-abef9aac9d11",
+        "release_name": "Cantad Alegres"
+    },
+    {
+        "artist_credit_name": "Jesse Cassettes",
+        "artist_mbids": [
+            "b2c931a9-a711-4c9a-b444-43a7b79d481b"
+        ],
+        "caa_id": 34045232916,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "433f46af-4079-4493-aea2-a90069e0c239",
+        "release_group_primary_type": "Single",
+        "release_mbid": "c89a2034-71da-4dc9-90f4-dc0d0dd80017",
+        "release_name": "Luxury Mind"
+    },
+    {
+        "artist_credit_name": "Kunas",
+        "artist_mbids": [
+            "186ca609-aa8f-4c9a-ad94-a70b6b7d3b21"
+        ],
+        "caa_id": 33989741793,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "4f6c5daa-e64e-4efd-9fdc-1e3fcd9340b1",
+        "release_group_primary_type": "Single",
+        "release_mbid": "5d6dc212-6c24-4c06-a562-7d7e99438d2e",
+        "release_name": "Wings / For You"
+    },
+    {
+        "artist_credit_name": "Moonchild Sanelly & Theology HD",
+        "artist_mbids": [
+            "2f75ab54-9326-4e4b-835c-db38fe0de988",
+            "6c8e7ee8-88f2-42d6-a991-be6273ed5d91"
+        ],
+        "caa_id": 34040987578,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "54d931ac-0e6f-4d08-b6fc-658e986056d5",
+        "release_group_primary_type": "Single",
+        "release_mbid": "3caf3984-2741-44ba-bcf4-e3e45786d5cf",
+        "release_name": "Kokokokoko"
+    },
+    {
+        "artist_credit_name": "Night Shop",
+        "artist_mbids": [
+            "ee0c5086-9be6-4a7a-a5a9-c382c7ca3d1a"
+        ],
+        "caa_id": 34040880659,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "5b96e7ea-697f-4b4d-bb74-2a368a16e7c6",
+        "release_group_primary_type": "Single",
+        "release_mbid": "207bed32-4f72-4f33-88aa-a86bddf80a55",
+        "release_name": "Harness"
+    },
+    {
+        "artist_credit_name": "Raul Hurtado",
+        "artist_mbids": [
+            "f9b2a5ea-c378-439e-8ae4-d48a938711b3"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "7b18d40d-dcd7-4418-a2d4-c7ee33ba389e",
+        "release_group_primary_type": "Single",
+        "release_mbid": "0dc42b49-ebd2-4721-9669-418e5071e41b",
+        "release_name": "Time for Battle"
+    },
+    {
+        "artist_credit_name": "Sciolism",
+        "artist_mbids": [
+            "a1f043dd-329c-405b-8442-4a226a43fcdb"
+        ],
+        "caa_id": 34041110880,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "8204ad04-d93a-4fac-8605-dd8045d70eeb",
+        "release_group_primary_type": "Album",
+        "release_mbid": "197ddc0b-5ccf-4d93-bf75-62e0fcca2147",
+        "release_name": "Sacred Nothingness"
+    },
+    {
+        "artist_credit_name": "Sidhu Moose Wala",
+        "artist_mbids": [
+            "119a6864-622b-4e6c-8aab-a422080530c6"
+        ],
+        "caa_id": 34035575283,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "3402f968-6eff-4d08-9b44-3907fdba82d1",
+        "release_group_primary_type": "Single",
+        "release_mbid": "5d195f27-eb0d-42ad-bbeb-f26a9cbab1b2",
+        "release_name": "Vaar"
+    },
+    {
+        "artist_credit_name": "Teenage Sequence",
+        "artist_mbids": [
+            "6d97cf63-1138-4c14-ad68-d36e496e7931"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "a1cabfeb-795c-4bd1-975b-9c2271291698",
+        "release_group_primary_type": "Single",
+        "release_mbid": "15cb3b73-4607-4b40-8704-8e55dff2f519",
+        "release_name": "D.I.S Connect"
+    },
+    {
+        "artist_credit_name": "The Escape",
+        "artist_mbids": [
+            "c93be895-f1f8-406b-9864-e0f16a6c36e7"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "2f222cf5-7421-48db-8a92-516e3270da3a",
+        "release_group_primary_type": "Album",
+        "release_mbid": "855f1372-c17e-4349-a9e3-aef5f907161c",
+        "release_name": "House of Mind"
+    },
+    {
+        "artist_credit_name": "The Escape",
+        "artist_mbids": [
+            "c93be895-f1f8-406b-9864-e0f16a6c36e7"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "e180b085-4bcb-431e-847f-2f3763669bd6",
+        "release_group_primary_type": "Album",
+        "release_mbid": "98a0194d-87ff-4bc7-81ac-0fe1ec1f2fdd",
+        "release_name": "Manderley"
+    },
+    {
+        "artist_credit_name": "The Pistil Cosmos",
+        "artist_mbids": [
+            "25b7007c-ff0b-4639-a13e-4cd8e9aab1ad"
+        ],
+        "caa_id": 34037648068,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "ee260d95-944d-4b2c-aaf5-7dbdd7055644",
+        "release_group_primary_type": "EP",
+        "release_mbid": "d8fd8cb8-c497-4f0c-b602-49babd5238ba",
+        "release_name": "Half Wing Bee"
+    },
+    {
+        "artist_credit_name": "(un)familiar.",
+        "artist_mbids": [
+            "4bd19273-a8b2-478e-845d-656addf706f5"
+        ],
+        "caa_id": 34040338583,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "27694f84-0081-454c-9882-f067820a3785",
+        "release_group_primary_type": "Single",
+        "release_mbid": "7ec96582-4185-44cb-a398-64589046697f",
+        "release_name": "reddit drumkit"
+    },
+    {
+        "artist_credit_name": "Unt",
+        "artist_mbids": [
+            "82c318e6-61b6-431f-91e4-ad8c539f9fb1"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "541720c2-7a1c-4cb0-90e5-fbdb2a069470",
+        "release_mbid": "c704b7d6-83c9-4998-86e9-b6e9d5005287",
+        "release_name": "Clips of Perspective"
+    },
+    {
+        "artist_credit_name": "Vantage",
+        "artist_mbids": [
+            "725ce65e-bdb7-4134-bc4d-2999fb2bf88e"
+        ],
+        "caa_id": 34047456513,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "9bf8c4da-c021-4cc2-ab86-e84ba9b748a9",
+        "release_group_primary_type": "EP",
+        "release_mbid": "749ee9bf-9a2d-405e-988a-6ab73cdc30df",
+        "release_name": "Skyline Digital"
+    },
+    {
+        "artist_credit_name": "Various Artists",
+        "artist_mbids": [
+            "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "bfb52ae6-8c3f-4d38-953a-00aa94975b2c",
+        "release_group_primary_type": "EP",
+        "release_mbid": "b06239c4-c7ca-430f-a59b-e89fc0ed472f",
+        "release_name": "PAI DUI MUSIC SOUND: VOLUME 1"
+    },
+    {
+        "artist_credit_name": "Vishal Mishra",
+        "artist_mbids": [
+            "0090ccac-cad8-482d-8260-c1aa8b908c48"
+        ],
+        "caa_id": 34037991646,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "983a015d-eb2d-4b08-a958-e21b3ff6d16d",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Soundtrack",
+        "release_mbid": "aba8989b-02dc-444a-adfb-c1873dd59e7a",
+        "release_name": "Nazar Andaaz"
+    },
+    {
+        "artist_credit_name": "XoArK",
+        "artist_mbids": [
+            "0e27a8be-3835-47ca-86bd-2b30363cebe7"
+        ],
+        "caa_id": 34039762328,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "a610ae7a-6cf7-46d0-be15-c4cdadd65a65",
+        "release_group_primary_type": "Album",
+        "release_mbid": "70ce59f9-ae49-4580-b663-28ae0a706fd5",
+        "release_name": "d0cFtecERG9H8-dr-G80~o62Shaq"
+    },
+    {
+        "artist_credit_name": "Хаски",
+        "artist_mbids": [
+            "02761fb1-8db3-4df4-8d43-6defb0e17abf"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-08",
+        "release_group_mbid": "d07506ae-1143-4e32-86a7-cc113b2ae315",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Remix",
+        "release_mbid": "8aec7e9b-799d-4daf-a381-fc0429ee0aaa",
+        "release_name": "Люцифер (Comfortless rework)"
+    },
+    {
+        "artist_credit_name": "えのぐ",
+        "artist_mbids": [
+            "57452363-2e27-4e5b-9142-3ad1e91872ba"
+        ],
+        "caa_id": 34039319410,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "aa444cbd-6063-4fd9-b652-127d48750b25",
+        "release_group_primary_type": "Album",
+        "release_mbid": "c29e1a77-104b-4e4b-a0f3-842a243560eb",
+        "release_name": "なら、真っ白から始めよう。"
+    },
+    {
+        "artist_credit_name": "シーズ",
+        "artist_mbids": [
+            "304373de-26df-4673-80dc-26a9798dae13"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "72fe7d03-2fcd-438e-be82-1a741bee7293",
+        "release_group_primary_type": "Single",
+        "release_mbid": "6f0d4980-f4a9-4fc8-8975-aa0977b01dc5",
+        "release_name": "THE IDOLM@STER SHINY COLORS PANOR@MA WING 08"
+    },
+    {
+        "artist_credit_name": "わいわいわい",
+        "artist_mbids": [
+            "56c44ec1-a065-4007-ad8b-8f2e4b3223d8"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "e45bd2fd-547f-4f98-a556-2069d8ee1159",
+        "release_group_primary_type": "Single",
+        "release_mbid": "6fd9738e-cbd0-4c7c-a91b-ff7ee4411ed9",
+        "release_name": "わーいわいわい わいわいわい!"
+    },
+    {
+        "artist_credit_name": "さよならポニーテール",
+        "artist_mbids": [
+            "a8c6ef99-6a24-4c68-83e5-35aa1eca32fa"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "d2ccf174-bc8a-44a2-8f59-23f3d3a0b532",
+        "release_group_primary_type": "Single",
+        "release_mbid": "f0b63af4-b4be-40ab-8ebe-80f475993b58",
+        "release_name": "とおい明日"
+    },
+    {
+        "artist_credit_name": "Acidgvrl",
+        "artist_mbids": [
+            "264ab4d8-9b83-4c37-8c2a-a3fcdc11e6f0"
+        ],
+        "caa_id": 33861750520,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "6b8b2cfc-b2dc-4845-ac12-f557dc69f5ec",
+        "release_group_primary_type": "Single",
+        "release_mbid": "12a248d4-faae-45f7-b46d-cf8c9d63d6cc",
+        "release_name": "THANK YOU! (Porter Robinson x Goodbye to a World Remix)"
+    },
+    {
+        "artist_credit_name": "Blue Rumble",
+        "artist_mbids": [
+            "b273c7f5-5e18-4bbd-b9b6-f80987ed97ae"
+        ],
+        "caa_id": 33595965304,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "47fdf2d1-2066-471e-a98b-be1181530a32",
+        "release_group_primary_type": "Single",
+        "release_mbid": "1765e52d-e179-4704-ad53-d7ae4195cdda",
+        "release_name": "Blue Lightning / Brasas"
+    },
+    {
+        "artist_credit_name": "Brenda Tremolaterra",
+        "artist_mbids": [
+            "4cbff576-0cf0-4f75-a73e-5d3b4f7dc254"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "d12f8e7b-cdd0-408c-8d6a-57803534a650",
+        "release_group_primary_type": "Single",
+        "release_mbid": "1911bf94-6d73-40cc-b5d8-d85562abeabd",
+        "release_name": "Tú tienes el control"
+    },
+    {
+        "artist_credit_name": "CURE97",
+        "artist_mbids": [
+            "64c1a118-822a-4f23-96d7-d4626a47a9be"
+        ],
+        "caa_id": 34048062848,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "9a013e95-0b6f-439a-b2a5-cdea64cb7aec",
+        "release_group_primary_type": "Single",
+        "release_mbid": "0ac2f245-552b-488f-a1da-0c040cdd914c",
+        "release_name": "POWER"
+    },
+    {
+        "artist_credit_name": "Dunosaur",
+        "artist_mbids": [
+            "17982671-8d69-4485-a839-42ac737ab2e8"
+        ],
+        "caa_id": 34047923461,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "b00b31f2-949e-4e43-953b-270cedf62cd8",
+        "release_group_primary_type": "EP",
+        "release_mbid": "7ac3e026-f88e-438d-84d9-7c5072809e86",
+        "release_name": "Dinosaurus Rox"
+    },
+    {
+        "artist_credit_name": "envy",
+        "artist_mbids": [
+            "8c4519da-59e7-44b5-868d-350dffb30b51"
+        ],
+        "caa_id": 33932346214,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "4591d3f0-25c0-4163-9381-c6daaa70b01d",
+        "release_group_primary_type": "Single",
+        "release_mbid": "ccac6e01-c739-4886-b149-f33f28100316",
+        "release_name": "Seimei"
+    },
+    {
+        "artist_credit_name": "Floating Points",
+        "artist_mbids": [
+            "69d9c5ba-7bba-4cb7-ab32-8ccc48ad4f97"
+        ],
+        "caa_id": 34046780466,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "ac163988-4403-4766-ab81-7f72d46e47be",
+        "release_group_primary_type": "EP",
+        "release_mbid": "882bf7af-d168-4884-a990-8165bc11b654",
+        "release_name": "Someone Close"
+    },
+    {
+        "artist_credit_name": "Fury Weekend feat. Ollie Wride",
+        "artist_mbids": [
+            "46eb90e8-ce30-4439-8834-20d25469193b",
+            "7f36c662-11e4-4ab6-bb8a-6dcedbbf64f2"
+        ],
+        "caa_id": 34047491489,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "cb8d7255-6119-4c8c-8810-220037f8b6a7",
+        "release_group_primary_type": "Single",
+        "release_mbid": "887dfe9e-88c6-46a7-8c47-fcee10a378ad",
+        "release_name": "Soul Survivor"
+    },
+    {
+        "artist_credit_name": "GRMLN",
+        "artist_mbids": [
+            "d9d5be31-20fe-4c99-894e-f4bd05f49aaa"
+        ],
+        "caa_id": 34048769643,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "3fd5bd70-5170-4d52-9533-664ff81e4372",
+        "release_group_primary_type": "Single",
+        "release_mbid": "2e5fbc0f-3335-47c6-a790-14511cb83021",
+        "release_name": "Dark Moon"
+    },
+    {
+        "artist_credit_name": "Juha Kujanpää",
+        "artist_mbids": [
+            "e1862b06-8f40-48fa-a4f8-d99060cda1b6"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "dc42d13a-dcf2-42d2-b5a5-9ebc2aa08340",
+        "release_group_primary_type": "Album",
+        "release_mbid": "3bf15959-2ef8-43cc-8304-6caddcde2e3e",
+        "release_name": "Old Ways, New Ways"
+    },
+    {
+        "artist_credit_name": "Leyla Blue",
+        "artist_mbids": [
+            "0a6b0c51-6c3a-4e08-9093-b8950b414b2e"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "8bf6768d-e86e-4f47-a803-4167f7d30bf3",
+        "release_group_primary_type": "Single",
+        "release_mbid": "4eb8c20e-288e-466b-af41-8b566a31b170",
+        "release_name": "Jane Doe"
+    },
+    {
+        "artist_credit_name": "Lolahol",
+        "artist_mbids": [
+            "c51e41a6-5d40-4bf0-bcf8-13172f43a13e"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "da4fa27d-8055-42b4-a9f8-36c402928a16",
+        "release_group_primary_type": "EP",
+        "release_mbid": "b69a65fa-b116-40e5-8bda-0bccb25719ab",
+        "release_name": "Go"
+    },
+    {
+        "artist_credit_name": "Louis Tomlinson",
+        "artist_mbids": [
+            "6d390061-b3cd-4db3-b905-e56b7f5357fd"
+        ],
+        "caa_id": 34048302532,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "ca0118aa-ebf1-4322-849f-240a1e0115cf",
+        "release_group_primary_type": "Single",
+        "release_mbid": "0ac93f74-c69f-4991-a4b1-ffe7d249ec68",
+        "release_name": "Silver Tongues"
+    },
+    {
+        "artist_credit_name": "more eaze",
+        "artist_mbids": [
+            "e0abc23a-daa1-47d4-b153-aaf1b6574cae"
+        ],
+        "caa_id": 33478995439,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "4aa7deb6-0897-40ee-b5d5-74a88a673b85",
+        "release_group_primary_type": "Album",
+        "release_mbid": "b02ddb27-7f10-4ccc-8210-057188a4bac8",
+        "release_name": "Strawberry Season"
+    },
+    {
+        "artist_credit_name": "Mother Mother",
+        "artist_mbids": [
+            "69681b02-05b8-4685-80cb-e98983b7a96f"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "30a2727d-2c70-4f2e-b2a3-5798b3cde946",
+        "release_group_primary_type": "Single",
+        "release_mbid": "8f3f6b62-6f04-44ef-a7ed-31acbd6f1e39",
+        "release_name": "Cry Christmas"
+    },
+    {
+        "artist_credit_name": "MyGO!!!!!",
+        "artist_mbids": [
+            "be91faa6-5277-4b73-b97c-10786db10598"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "4b45f56e-5a9f-49e1-aa2d-53c04c82472b",
+        "release_group_primary_type": "Single",
+        "release_mbid": "9428d220-d518-47d0-8b81-2d092b4f0be9",
+        "release_name": "迷星叫"
+    },
+    {
+        "artist_credit_name": "O.S.T.R.",
+        "artist_mbids": [
+            "99acd557-c4e2-4086-9be9-85f57184dadc"
+        ],
+        "caa_id": 34048560577,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "cc65c545-db2f-4721-8d4a-9afe6c9e1f65",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Mixtape/Street",
+        "release_mbid": "eaa44667-c57e-41a4-ac63-cf4ba51cad54",
+        "release_name": "042 Requiem"
+    },
+    {
+        "artist_credit_name": "Sam A La Bamalot & Subp Yao",
+        "artist_mbids": [
+            "8fa67ed7-a4ac-4f49-a71c-cbc3c57a653d",
+            "a2e76e5a-8c84-4847-a250-585ec9bbf027"
+        ],
+        "caa_id": 34047021247,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "8e310eae-7ae0-487b-9712-6de9ac8d5e7a",
+        "release_group_primary_type": "Single",
+        "release_mbid": "6604bd73-0a5a-4888-9ec0-db6c412979ca",
+        "release_name": "Archy // Time Flies"
+    },
+    {
+        "artist_credit_name": "Sega Bodega",
+        "artist_mbids": [
+            "2b3130ac-2f9f-4dc3-a266-453b25183ddf"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "71f6e337-59aa-48fa-ab7a-624ed03fd0ae",
+        "release_group_primary_type": "Single",
+        "release_mbid": "1ef3d76a-906a-4fcb-90e1-4fd81e76861a",
+        "release_name": "Kepko"
+    },
+    {
+        "artist_credit_name": "SEVENTEEN",
+        "artist_mbids": [
+            "e04d239e-9fa8-49b3-b9b7-9e439c3cb1d1"
+        ],
+        "caa_id": 33885714517,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "9f2de70d-3b12-4eeb-8532-e5cf047dd6f4",
+        "release_group_primary_type": "EP",
+        "release_mbid": "cd7f7b65-70c0-4a5a-8787-f901dcf176e5",
+        "release_name": "DREAM"
+    },
+    {
+        "artist_credit_name": "Sunfruits",
+        "artist_mbids": [
+            "c21a3572-0080-4ef6-8734-b8868c1bad76"
+        ],
+        "caa_id": 34041250256,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "37b2db14-8dd5-414e-8bbe-7e451e1c1573",
+        "release_group_primary_type": "Single",
+        "release_mbid": "0e29dd85-1f90-429a-9ce9-7d6757437873",
+        "release_name": "Believe It All"
+    },
+    {
+        "artist_credit_name": "syudou",
+        "artist_mbids": [
+            "cc4515ea-696e-4d27-8138-8bb7d83f7d86"
+        ],
+        "caa_id": 34039579358,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "16ada62f-9ea6-475b-ae6a-cfbdd0870c7b",
+        "release_group_primary_type": "Single",
+        "release_mbid": "2d4f6884-a4a1-4590-8c9d-b09cb7880077",
+        "release_name": "インザバックルーム"
+    },
+    {
+        "artist_credit_name": "TOOBOE",
+        "artist_mbids": [
+            "8b157ad6-58fe-4536-9c81-39f6f7914280"
+        ],
+        "caa_id": 33979223776,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "9a0b7272-4678-494c-b632-ec6cfd75d016",
+        "release_group_primary_type": "EP",
+        "release_mbid": "8bd63dcc-c14f-40d4-8466-713952f50bf9",
+        "release_name": "錠剤"
+    },
+    {
+        "artist_credit_name": "Un Corazón",
+        "artist_mbids": [
+            "e82120fc-097e-494c-833b-c7ce2a7f04b4"
+        ],
+        "caa_id": 34048940485,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "53b1e9f2-1065-42df-9e3a-6939b9789544",
+        "release_group_primary_type": "Single",
+        "release_mbid": "a0d0f0a0-03f7-40a7-9517-4d7d8559cb16",
+        "release_name": "X SIEMPRE (Acústico)"
+    },
+    {
+        "artist_credit_name": "Venus VNR",
+        "artist_mbids": [
+            "d4b50c71-30e3-48f5-9e48-4c2d2d344389"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "c6d65590-6a1a-42d0-9378-03280d9e8950",
+        "release_group_primary_type": "Album",
+        "release_mbid": "46588136-a534-45b9-ba2a-5d71accc0d28",
+        "release_name": "Anomalie"
+    },
+    {
+        "artist_credit_name": "YOASOBI",
+        "artist_mbids": [
+            "df6c619f-4334-43e2-8b6a-4a32af1e4f85"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "9b1f1282-66dd-4e02-8318-b1cf8a8cb788",
+        "release_group_primary_type": "Single",
+        "release_mbid": "e72bd26c-69fa-4b07-8c9c-669d0b9e8482",
+        "release_name": "The Blessing"
+    },
+    {
+        "artist_credit_name": "ŹOOĻ",
+        "artist_mbids": [
+            "51ebae67-101d-4f10-be6d-1231b57433b6"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "272f5ee5-9943-4b9d-a692-d6e3e77056ad",
+        "release_group_primary_type": "Single",
+        "release_mbid": "38ae8b61-20d6-4967-9cc4-ca6fb75bb7f9",
+        "release_name": "IMPERIAL CHAIN"
+    },
+    {
+        "artist_credit_name": "佐咲紗花",
+        "artist_mbids": [
+            "da331d79-0068-4fa9-aba2-8dfb9e47a2de"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "6e946c01-5afa-41e0-a420-6b0a4eb3dba6",
+        "release_group_primary_type": "Single",
+        "release_mbid": "b4bfb44d-b7a6-4176-b2a9-120381aa6d96",
+        "release_name": "Never the Fever!!"
+    },
+    {
+        "artist_credit_name": "傅菁",
+        "artist_mbids": [
+            "c4f06a86-01fc-4eb3-bf49-08a6017298d9"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "b5797c15-4320-4c06-be19-5a685d14a135",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Soundtrack",
+        "release_mbid": "e59b8759-c728-4c1b-9e7a-edc0ae4323e0",
+        "release_name": "愿卿安"
+    },
+    {
+        "artist_credit_name": "植松伸夫",
+        "artist_mbids": [
+            "92bb085a-2924-4479-b627-181a1835d2f5"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "4a20d932-0ac5-422b-a655-c82925acadbe",
+        "release_group_primary_type": "Album",
+        "release_mbid": "dc2b6247-da2e-495d-a17c-51d36c389087",
+        "release_name": "Modulation - FINAL FANTASY Arrangement Album"
+    },
+    {
+        "artist_credit_name": "永塚拓馬",
+        "artist_mbids": [
+            "1ffae607-1be8-4a80-8625-acdc9ea183df"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "6308ea01-754e-4474-8afa-42eb51387a79",
+        "release_group_primary_type": "EP",
+        "release_mbid": "f2a3fc1f-f40a-40d0-b329-08cdaa2f4000",
+        "release_name": "Jewel"
+    },
+    {
+        "artist_credit_name": "遊佐こずえ（CV：花谷麻妃）, 双葉杏（CV：五十嵐裕美）, 多田李衣菜（CV：青木瑠璃子）, 木村夏樹（CV：安野希世乃）",
+        "artist_mbids": [
+            "33fd76ca-0472-4853-bdff-f505f2e2208c",
+            "34438792-01d5-483c-ac1d-dba7391fd23a",
+            "472a451f-1b2d-42e6-b9bf-d0d6853abd73",
+            "4b1c579b-3ad2-4ec0-b801-9abc1fa2d9ee",
+            "8b1b9362-ccc7-4a7f-a784-cfc480d9011e",
+            "90fafb7c-114a-47e4-8c37-34af89dbcdd4",
+            "ba84f8af-10e7-44cb-951f-ba13f0bae0b7",
+            "ffc69d78-ebf8-4b6d-8a3e-d92b72ae9677"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-09",
+        "release_group_mbid": "f62cbff0-479a-4951-86e9-7f596c7e8a6b",
+        "release_group_primary_type": "Single",
+        "release_mbid": "bcbd32d6-74cb-45e7-b1f1-1b90c5cda12f",
+        "release_name": "THE IDOLM@STER CINDERELLA GIRLS STARLIGHT MASTER R/LOCK ON! 10 まほうのまくら"
+    },
+    {
+        "artist_credit_name": "Ava Max",
+        "artist_mbids": [
+            "add5f522-25df-41c4-815e-0ca9f60b83e4"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-10",
+        "release_group_mbid": "a7f73d84-6c98-42ae-9d33-e7faf0570971",
+        "release_group_primary_type": "Single",
+        "release_mbid": "dcc48293-8c70-4104-9c63-8dc1f27a913b",
+        "release_name": "Weapons"
+    },
+    {
+        "artist_credit_name": "GUSTAVOEGATOTV",
+        "artist_mbids": [
+            "cd9a1eea-97bf-43aa-9035-efd6b5151527"
+        ],
+        "caa_id": 33833224608,
+        "release_date": "2022-11-10",
+        "release_group_mbid": "07132e81-feb2-45ce-b893-55039cae0be1",
+        "release_group_primary_type": "Single",
+        "release_mbid": "9930ac95-72e0-4084-977d-544323359952",
+        "release_name": "Pista"
+    },
+    {
+        "artist_credit_name": "Leni Oppenheimer",
+        "artist_mbids": [
+            "39904c69-062f-4347-a94f-02ebfe2d695c"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-10",
+        "release_group_mbid": "3fb63b7c-b991-4b7b-abce-ec689307f51e",
+        "release_group_primary_type": "Single",
+        "release_mbid": "219444fc-8823-464f-96b7-ec7998668e3a",
+        "release_name": "Thousand Faces"
+    },
+    {
+        "artist_credit_name": "The Book of Seth",
+        "artist_mbids": [
+            "338e4c67-d676-4401-8e0f-b0012899d01d"
+        ],
+        "caa_id": 33797643059,
+        "release_date": "2022-11-10",
+        "release_group_mbid": "ccd4a2aa-da50-4d13-87da-de233560ce0f",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Demo",
+        "release_mbid": "41371659-4cba-4dfc-9113-c3873cf6b1a3",
+        "release_name": "The Battle of Sancre Tor"
+    },
+    {
+        "artist_credit_name": "잠비나이",
+        "artist_mbids": [
+            "74c9db5a-cece-4381-afa8-a5f381901487"
+        ],
+        "caa_id": 34002766560,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "bb062f46-d42f-43da-b72f-2f6cfcc23ae9",
+        "release_group_primary_type": "EP",
+        "release_mbid": "b05c4028-a9c2-4fa3-97ee-90353a9defb9",
+        "release_name": "Apparition"
+    },
+    {
+        "artist_credit_name": "Action/Adventure",
+        "artist_mbids": [
+            "91011921-c32a-41eb-a1f4-16789f1af499"
+        ],
+        "caa_id": 34019339589,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "d3311e8b-b5e3-4412-8e10-447e11a0b65d",
+        "release_group_primary_type": "Album",
+        "release_mbid": "9c6032de-0ae6-440d-b56e-3d9d8e763a1f",
+        "release_name": "Imposter Syndrome"
+    },
+    {
+        "artist_credit_name": "Actress",
+        "artist_mbids": [
+            "973321d1-9565-4214-a6ef-a77f1890c294"
+        ],
+        "caa_id": 33812859521,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "c0da7652-33f0-4599-8b70-28d94cee6e0e",
+        "release_group_primary_type": "EP",
+        "release_mbid": "e35a693a-8379-418b-b1fd-f3e9d35759ee",
+        "release_name": "Dummy Corporation"
+    },
+    {
+        "artist_credit_name": "Anthony McGill, Pacifica Quartet",
+        "artist_mbids": [
+            "2414cfd6-cc1d-46b0-92bf-4bd2c5dcc3ba",
+            "50589c98-a42e-4750-8604-659d0d9f4329"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "ac3af246-260d-4b02-8577-ce432e07b14d",
+        "release_group_primary_type": "Album",
+        "release_mbid": "c00c102c-8b7b-43f1-b1dd-29999cb9c552",
+        "release_name": "American Stories"
+    },
+    {
+        "artist_credit_name": "Bad Colours",
+        "artist_mbids": [
+            "9896f201-6fd6-4e29-b392-4d3c0a8a489f"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "1131c59c-8791-4251-a1c7-02e3bfc5470f",
+        "release_group_primary_type": "Album",
+        "release_mbid": "5efbf524-a439-442c-a490-ec4ead306a3b",
+        "release_name": "Always With U"
+    },
+    {
+        "artist_credit_name": "BARK",
+        "artist_mbids": [
+            "11d40fcc-3035-49f3-a135-69a6cdbc53bf"
+        ],
+        "caa_id": 34049035524,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "23d98881-443c-4cd2-bb2d-fd5b6f1242bf",
+        "release_group_primary_type": "Album",
+        "release_mbid": "c9665049-a9b9-41dd-9755-b2be78332f0d",
+        "release_name": "Rambler of Aeons"
+    },
+    {
+        "artist_credit_name": "Bill Frisell",
+        "artist_mbids": [
+            "a21318db-f228-4a4d-8bce-6947a62985a5"
+        ],
+        "caa_id": 33919795111,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "e8eea776-5a03-4d4d-9991-6991b0fe5a99",
+        "release_group_primary_type": "Album",
+        "release_mbid": "d37d88b3-2956-4757-98db-eaa15813b466",
+        "release_name": "Four"
+    },
+    {
+        "artist_credit_name": "Black Eyed Peas",
+        "artist_mbids": [
+            "d5be5333-4171-427e-8e12-732087c6b78e"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "7c5476cc-597a-4d8b-bc55-c0e21ca23ab9",
+        "release_group_primary_type": "Album",
+        "release_mbid": "e51fd6e8-f7ae-43b8-8104-42e9d8065c1d",
+        "release_name": "ELEVATION"
+    },
+    {
+        "artist_credit_name": "Bright Eyes",
+        "artist_mbids": [
+            "78f797e3-4913-4026-aad0-1cd858bd735b"
+        ],
+        "caa_id": 33559041121,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "6989d50a-ab8b-4a74-8947-17bce9c6af4d",
+        "release_group_primary_type": "EP",
+        "release_mbid": "9070d8c3-088b-4448-9d67-29cf9dd22a0b",
+        "release_name": "Digital Ash in a Digital Urn: A Companion"
+    },
+    {
+        "artist_credit_name": "Bright Eyes",
+        "artist_mbids": [
+            "78f797e3-4913-4026-aad0-1cd858bd735b"
+        ],
+        "caa_id": 33559082250,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "9c7e7079-66db-40b3-a305-d9fcdee7ad68",
+        "release_group_primary_type": "EP",
+        "release_mbid": "471bf890-fb57-422b-b7df-6e3739f56b04",
+        "release_name": "I’m Wide Awake, It’s Morning: A Companion"
+    },
+    {
+        "artist_credit_name": "Bright Eyes",
+        "artist_mbids": [
+            "78f797e3-4913-4026-aad0-1cd858bd735b"
+        ],
+        "caa_id": 33559112440,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "662ca286-8102-4e78-bb3d-737f5b3acacd",
+        "release_group_primary_type": "EP",
+        "release_mbid": "376e708f-c9b1-4910-b8a0-86b37a524490",
+        "release_name": "LIFTED or the Story Is in the Soil, Keep Your Ear to the Ground: A Companion"
+    },
+    {
+        "artist_credit_name": "Brownbone",
+        "artist_mbids": [
+            "54b48f38-9137-4fc9-9418-f0863e967b95"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "ac239b9a-3a3b-43b4-b35b-f4f5688854dd",
+        "release_group_primary_type": "Single",
+        "release_mbid": "ae13cf9e-33e4-4b91-b734-2663d4246651",
+        "release_name": "CopyCat"
+    },
+    {
+        "artist_credit_name": "Bruce Springsteen",
+        "artist_mbids": [
+            "70248960-cb53-4ea4-943a-edb18f7d336f"
+        ],
+        "caa_id": 33693497103,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "d6c1b942-edc7-4bca-bd34-6c43760272af",
+        "release_group_primary_type": "Album",
+        "release_mbid": "e05ba741-17ab-49de-8f66-3768aaa54f30",
+        "release_name": "Only the Strong Survive"
+    },
+    {
+        "artist_credit_name": "Cass McCombs & Weak Signal",
+        "artist_mbids": [
+            "c213f661-70a8-42aa-b858-62f5bd2d72e9",
+            "d96d7879-fdd7-4ad6-86e0-c14f2c5bbeac"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "e5f7535a-09ba-44e5-933f-790f8c86cebf",
+        "release_group_primary_type": "Single",
+        "release_mbid": "bfecc431-30b3-4a6b-be91-58f5078ae917",
+        "release_name": "Vacation From Thought / Give It Back"
+    },
+    {
+        "artist_credit_name": "CD Ghost",
+        "artist_mbids": [
+            "42e55357-3812-4cca-a4b6-ef02449458ab"
+        ],
+        "caa_id": 33743970842,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "afb7d66c-1455-4d07-b195-bffa5311c616",
+        "release_group_primary_type": "Album",
+        "release_mbid": "bd65b422-1053-4b93-82c8-042a02c020f9",
+        "release_name": "Night Music"
+    },
+    {
+        "artist_credit_name": "Chancha Vía Circuito",
+        "artist_mbids": [
+            "22c82e36-c32c-4206-8a49-6d350cce992f"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "1af6eba1-4e32-4821-ad2c-09a76d1dd30b",
+        "release_group_primary_type": "Album",
+        "release_mbid": "41005244-1e91-4533-92b4-56e1f679618b",
+        "release_name": "La Estrella"
+    },
+    {
+        "artist_credit_name": "Chelsea Grin",
+        "artist_mbids": [
+            "b0acce58-e847-4c9e-bd09-a204b965e74a"
+        ],
+        "caa_id": 33280899682,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "7fa319d9-36f9-4a7b-bdd7-6991d4436451",
+        "release_group_primary_type": "Album",
+        "release_mbid": "120890a7-8658-4e64-9d86-d366031057e5",
+        "release_name": "Suffer in Hell"
+    },
+    {
+        "artist_credit_name": "Christine and the Queens",
+        "artist_mbids": [
+            "9c90ffbf-b137-4dee-bfcc-b8010787840d"
+        ],
+        "caa_id": 33885471758,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "1557d6eb-216f-451d-a90b-378e292d5742",
+        "release_group_primary_type": "Album",
+        "release_mbid": "17c94fba-387d-4510-bbb6-4ce08cf25279",
+        "release_name": "Redcar les adorables étoiles (prologue)"
+    },
+    {
+        "artist_credit_name": "Crystagella",
+        "artist_mbids": [
+            "936787fb-a6f3-4765-9a0c-cfe9e4bc26c4"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "14685dd3-c2ef-4470-80a7-c5d8843f302c",
+        "release_group_primary_type": "Single",
+        "release_mbid": "e50ff764-ae7e-40c1-8ceb-e709e065a849",
+        "release_name": "Hue"
+    },
+    {
+        "artist_credit_name": "Darren Deac",
+        "artist_mbids": [
+            "45efcf62-9d4e-432a-a924-e86e8f214c37"
+        ],
+        "caa_id": 34013265061,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "859c3718-40c4-40f7-ba0b-de7bed77b9e4",
+        "release_group_primary_type": "Single",
+        "release_mbid": "9e028d09-acbe-4a63-be82-c3644e0da605",
+        "release_name": "We Praise Him"
+    },
+    {
+        "artist_credit_name": "DIRTYRXNIN",
+        "artist_mbids": [
+            "9773c8d0-f6f5-42a8-b414-0fa9cfad3800"
+        ],
+        "caa_id": 34023481926,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "a187e196-bddd-4492-a975-54df058c8d6a",
+        "release_group_primary_type": "Single",
+        "release_mbid": "c7d41285-6a0b-49b3-8697-33650f1fac08",
+        "release_name": "Everglow"
+    },
+    {
+        "artist_credit_name": "Dream Unending",
+        "artist_mbids": [
+            "8d89ea47-51cc-47d2-a0aa-7f027ec91a1f"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "dc0acfc8-4b2a-4a9d-9b03-c95e2604e358",
+        "release_group_primary_type": "Album",
+        "release_mbid": "127f58ae-f5d7-4b39-943b-6044a18262da",
+        "release_name": "Song of Salvation"
+    },
+    {
+        "artist_credit_name": "Drowse",
+        "artist_mbids": [
+            "dfd30131-6725-4051-bded-c3c418bb57e2"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "26f3bfe0-827d-4d25-8c24-013d5f7b2f00",
+        "release_group_primary_type": "Album",
+        "release_mbid": "b9cdf1b3-5fe1-488d-8cd8-260e78555fd6",
+        "release_name": "Wane Into It"
+    },
+    {
+        "artist_credit_name": "Drudkh",
+        "artist_mbids": [
+            "469eb232-7163-47a8-96a3-8c82d24b2888"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "9b804fb0-9d02-4dcd-ab44-b812783fe40e",
+        "release_group_primary_type": "Album",
+        "release_mbid": "f42c9a2f-e110-4ce2-b763-9d5d01a02cc0",
+        "release_name": "Всі належать ночі"
+    },
+    {
+        "artist_credit_name": "dumb",
+        "artist_mbids": [
+            "f3a1e1a1-b6f6-42f9-bd92-5d7ceaec2484"
+        ],
+        "caa_id": 33817447856,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "40f3ff8e-17a6-4577-81a2-e98063bae9c9",
+        "release_group_primary_type": "Album",
+        "release_mbid": "18f6e57c-00cf-4cdc-9ada-e4373db8c0b3",
+        "release_name": "Pray 4 Tomorrow"
+    },
+    {
+        "artist_credit_name": "Duval Timothy",
+        "artist_mbids": [
+            "7c8278d1-f605-4879-a213-a5e89f785501"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "e006ba65-06ad-4b2f-b922-446f03e1f4d1",
+        "release_group_primary_type": "Album",
+        "release_mbid": "22d4e6e6-3ea7-4ae5-aa8d-b3ded2880fb6",
+        "release_name": "Meeting with a Judas Tree"
+    },
+    {
+        "artist_credit_name": "Dysgnostic",
+        "artist_mbids": [
+            "51ec6086-4fe4-45cf-ab09-196c5c22d8d6"
+        ],
+        "caa_id": 33390290531,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "a1751f0e-c3f5-43a2-90bd-edd6948487f5",
+        "release_group_primary_type": "Album",
+        "release_mbid": "e3a63d48-2cc7-456c-be36-5caa514839ec",
+        "release_name": "Scar Echoes"
+    },
+    {
+        "artist_credit_name": "El-Tron",
+        "artist_mbids": [
+            "8838e692-4227-41df-a0f3-8d7273e6a468"
+        ],
+        "caa_id": 33980332890,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "3f4df4ba-e427-4fe0-b10f-f60efe854702",
+        "release_group_primary_type": "Single",
+        "release_mbid": "a2b775f8-637f-47db-8fe3-33fbed4e0548",
+        "release_name": "In My Mind"
+    },
+    {
+        "artist_credit_name": "Epica",
+        "artist_mbids": [
+            "21985b14-1b0d-44fe-b357-310b29bba510"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "476752c9-d33e-443a-b028-4cd06b52cedf",
+        "release_group_primary_type": "EP",
+        "release_mbid": "b80b9dd9-0841-4e9b-93d0-aa7b7e66d9c5",
+        "release_name": "The Alchemy Project"
+    },
+    {
+        "artist_credit_name": "Estrangement",
+        "artist_mbids": [
+            "fc1e1ae3-8853-45b5-9287-a36f30c1ab7d"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "8932edad-bbc8-45ac-8f49-1f3ae2c6e9e6",
+        "release_group_primary_type": "Album",
+        "release_mbid": "5969502f-fa0f-401b-9a57-aa14da9c00df",
+        "release_name": "Disfigurementality"
+    },
+    {
+        "artist_credit_name": "FaltyDL",
+        "artist_mbids": [
+            "094825f4-824e-4ab9-9739-75b3d2328509"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "f8a6d0e0-d3d9-430d-a5bb-b71c521721fa",
+        "release_group_primary_type": "Album",
+        "release_mbid": "3c8817ea-b52e-449a-894e-b5033e97f28c",
+        "release_name": "A Nurse to My Patience"
+    },
+    {
+        "artist_credit_name": "FJØRT",
+        "artist_mbids": [
+            "bcb478f4-dbf9-4bc8-823e-bec7986d652b"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "756d1c75-c8bc-46be-a8e5-2a67fa1f715a",
+        "release_group_primary_type": "Album",
+        "release_mbid": "602bfdf8-d49d-4445-b618-1e2d82eaf6a5",
+        "release_name": "Nichts"
+    },
+    {
+        "artist_credit_name": "Flaminia & VSK",
+        "artist_mbids": [
+            "5650b676-c836-435d-a264-0ab31e7ea164",
+            "c21611d8-6d67-440a-87d6-8ace23128f17"
+        ],
+        "caa_id": 34002203372,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "cefd6a9e-49d2-456f-ac22-fe5b1e436769",
+        "release_group_primary_type": "EP",
+        "release_mbid": "f501cebd-4ba8-43b1-9690-00d84535751e",
+        "release_name": "47032"
+    },
+    {
+        "artist_credit_name": "FORAGEMON",
+        "artist_mbids": [
+            "69d010f7-0eb3-49b2-8f3f-bc2875d58cfb"
+        ],
+        "caa_id": 34023455533,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "fbed25f3-e0b4-4b60-95ae-6dd1cd2f8d79",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Remix",
+        "release_mbid": "829e5edf-c449-40b9-9687-19f8b96e48a0",
+        "release_name": "Jdnk (Remix)"
+    },
+    {
+        "artist_credit_name": "FreqGen",
+        "artist_mbids": [
+            "d9720724-8110-4c7d-9912-fd2c56900a6a"
+        ],
+        "caa_id": 33331662851,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "2e0701bf-b268-4e1c-a365-15f20870f738",
+        "release_group_primary_type": "Album",
+        "release_mbid": "65d92cbe-9b60-4e23-bfaa-4b1c4bd06a01",
+        "release_name": "Future 1990s"
+    },
+    {
+        "artist_credit_name": "Furi Helium",
+        "artist_mbids": [
+            "57af92bd-3d74-4660-87a7-8335e768b0d4"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "7517e7d4-a3d7-45ff-b9c0-e234d27585ff",
+        "release_group_primary_type": "Album",
+        "release_mbid": "1ba9256f-1a91-46c5-aaaa-d60c82b2775f",
+        "release_name": "Far From Sanity"
+    },
+    {
+        "artist_credit_name": "Gli Alberi",
+        "artist_mbids": [
+            "cd39be50-d82d-4a04-9bb0-8dabc7c61d5f"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "03f5f8cf-2b65-463f-89d4-b6ed429e1e1f",
+        "release_group_primary_type": "Single",
+        "release_mbid": "d977016d-b365-4789-ad45-ac7ad374945a",
+        "release_name": "Sindrome del Terzo Uomo"
+    },
+    {
+        "artist_credit_name": "Gold Panda",
+        "artist_mbids": [
+            "bfbccd40-1a06-4ee7-b24d-b2f8cc714fa9"
+        ],
+        "caa_id": 33980013179,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "6d408289-59c9-4c38-9f24-3e2a19e28936",
+        "release_group_primary_type": "Album",
+        "release_mbid": "6a8eadff-268d-4d11-9b5d-43985aa1de5e",
+        "release_name": "The Work"
+    },
+    {
+        "artist_credit_name": "Gordon Koang",
+        "artist_mbids": [
+            "cea8ee3c-06d8-4eee-bb55-cea258ac44da"
+        ],
+        "caa_id": 34002940271,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "b324bb3a-1b4e-433d-97df-c32bfa5757fd",
+        "release_group_primary_type": "Album",
+        "release_mbid": "35e97387-6cfa-4439-a876-fb03dd7895b9",
+        "release_name": "Community"
+    },
+    {
+        "artist_credit_name": "Grasp Logic",
+        "artist_mbids": [
+            "8fa5c408-78d1-4cc0-a280-5c565b3b072c"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "c40b3eb1-11be-4728-a2ca-d9efbd0fd7d5",
+        "release_group_primary_type": "EP",
+        "release_mbid": "84b020d1-4351-43e9-a166-ded3cb6af2e1",
+        "release_name": "TR4M V2"
+    },
+    {
+        "artist_credit_name": "Guns N’ Roses",
+        "artist_mbids": [
+            "eeb1195b-f213-4ce1-b28c-8565211f8e43"
+        ],
+        "caa_id": 33702233426,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "f44e0a41-5aa2-4960-90f9-45c4ebe7dd32",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Compilation",
+        "release_mbid": "fb457b64-78da-4671-87fb-f40e3e724322",
+        "release_name": "Use Your Illusion"
+    },
+    {
+        "artist_credit_name": "Haavard",
+        "artist_mbids": [
+            "f42bdf99-1789-475d-9ff7-ac1b8ac8b2d4"
+        ],
+        "caa_id": 33328104894,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "ccd0d6f1-a68c-477c-9e1b-056ae1381f48",
+        "release_group_primary_type": "Album",
+        "release_mbid": "28046732-f286-4fe8-875b-62811fee61ad",
+        "release_name": "Haavard"
+    },
+    {
+        "artist_credit_name": "Happy Daggers",
+        "artist_mbids": [
+            "2dba1a52-075b-400b-a9b1-819143496a62"
+        ],
+        "caa_id": 33867057305,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "cc009830-36a1-4d89-af94-77376e9062e1",
+        "release_group_primary_type": "Single",
+        "release_mbid": "e74bdfa5-22ad-4f8a-8d8a-8e6285832744",
+        "release_name": "Turn It Up"
+    },
+    {
+        "artist_credit_name": "Helge Lien & Knut Hem",
+        "artist_mbids": [
+            "41c37961-2a58-471e-94c4-6a227c52a787",
+            "e90f3fdf-100b-4fab-8e0f-64eabb6bba44"
+        ],
+        "caa_id": 33944600081,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "dfebb8d2-1641-4d65-8abe-8059be86b685",
+        "release_group_primary_type": "Album",
+        "release_mbid": "8571f885-0d56-46e6-8473-ebe19dafbe46",
+        "release_name": "Villingsberg"
+    },
+    {
+        "artist_credit_name": "Homeboy Sandman",
+        "artist_mbids": [
+            "65eaa552-1149-4b42-888e-6d6e4affdbff"
+        ],
+        "caa_id": 33910488478,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "82f732a7-b6f7-4816-9cbf-4ed0485938cd",
+        "release_group_primary_type": "Album",
+        "release_mbid": "81bc6db4-b830-4b6b-aad6-501a1307adc9",
+        "release_name": "Still Champion"
+    },
+    {
+        "artist_credit_name": "I’ve",
+        "artist_mbids": [
+            "9eea0562-cb2c-4a61-8587-a6abcb2e6396"
+        ],
+        "caa_id": 33952282565,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "52857904-46e3-40eb-b9f5-21da007dd1a7",
+        "release_group_primary_type": "Album",
+        "release_mbid": "c4a72efb-4202-4c4e-8ec3-c300dbfdcef9",
+        "release_name": "I've Member's Concept Compilation ALBUM vol,02 SUMMER END GROOVE"
+    },
+    {
+        "artist_credit_name": "Jazzrausch Bigband",
+        "artist_mbids": [
+            "079afcf6-5bf8-421c-b65b-9264dee16090"
+        ],
+        "caa_id": 33968507331,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "6941ca12-3a2a-404c-863e-65daeed697a6",
+        "release_group_primary_type": "Album",
+        "release_mbid": "6ec81230-458f-4268-bbc4-bfb6c945cb66",
+        "release_name": "Alle Jahre wieder!"
+    },
+    {
+        "artist_credit_name": "Joe Jonas × Khalid",
+        "artist_mbids": [
+            "28737730-ec70-4da5-89c5-77ac13c5c34d",
+            "79e1bb77-fd8b-42ab-8043-892af5370f0b"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "81a03dab-4158-4d5e-84d8-c54a20f1a875",
+        "release_group_primary_type": "Single",
+        "release_group_secondary_type": "Soundtrack",
+        "release_mbid": "1dbbb909-e377-4adb-bab6-0e98d483626c",
+        "release_name": "Not Alone (from the motion picture Devotion)"
+    },
+    {
+        "artist_credit_name": "John Moods",
+        "artist_mbids": [
+            "be4b027a-f9d6-4cb4-87ee-6f98a5680fd5"
+        ],
+        "caa_id": 33720799642,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "d3316e81-fc5e-4b78-80fa-cbfd98824e0c",
+        "release_group_primary_type": "Album",
+        "release_mbid": "a2d89d99-fee2-4a96-aed2-dbaed694c6e0",
+        "release_name": "The Great Design"
+    },
+    {
+        "artist_credit_name": "Jordana",
+        "artist_mbids": [
+            "267a9b25-c50b-4f6b-a84d-62a68aab437d"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "49b317a6-d379-4c57-899f-f2b067374e2e",
+        "release_group_primary_type": "EP",
+        "release_mbid": "f6f862f0-eae6-4ba1-a27a-352e82f0a6a5",
+        "release_name": "I'm Doing Well, Thanks for Asking"
+    },
+    {
+        "artist_credit_name": "Jordin Sparks",
+        "artist_mbids": [
+            "5508631d-697f-4839-a669-06637e5bcb90"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "701aa5ae-7a95-496a-917d-613c9bb569bf",
+        "release_group_primary_type": "Single",
+        "release_mbid": "5432730f-b9d7-4512-a378-abddeb9884a7",
+        "release_name": "Stop This Feeling"
+    },
+    {
+        "artist_credit_name": "Kampfar",
+        "artist_mbids": [
+            "41b9a72e-c0dc-412d-a041-609cb43642df"
+        ],
+        "caa_id": 33391158786,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "7c965aa3-03bc-4ffe-b797-a449976a0a06",
+        "release_group_primary_type": "Album",
+        "release_mbid": "2525075f-6768-4f89-b25d-80edcea53431",
+        "release_name": "Til Klovers Takt"
+    },
+    {
+        "artist_credit_name": "Kim Petras",
+        "artist_mbids": [
+            "54fc0558-12b5-4854-9d57-9441bcd73a72"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "4f7e52b4-5e65-455b-b106-f5e091ed6b81",
+        "release_group_primary_type": "Single",
+        "release_mbid": "01e9a9da-eb6e-44df-8c3a-76eaa738a39c",
+        "release_name": "If Jesus Was a Rockstar"
+    },
+    {
+        "artist_credit_name": "Kx5 feat. James French",
+        "artist_mbids": [
+            "7862071b-6aeb-43f1-a9bc-f9b659cd8b22",
+            "9c57432d-484f-4181-b73d-f78dbb7a63be"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "756d9414-bcfb-4490-8fcd-a92abba23d05",
+        "release_group_primary_type": "Single",
+        "release_mbid": "15b03d17-4822-4258-95f8-1e9b01463bab",
+        "release_name": "Avalanche (extended mix)"
+    },
+    {
+        "artist_credit_name": "Larkin Poe",
+        "artist_mbids": [
+            "ec5436c4-c44a-47f5-a640-da8d376a3871"
+        ],
+        "caa_id": 33937083264,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "54268582-6f02-4321-80cc-e7ad73c2970f",
+        "release_group_primary_type": "Album",
+        "release_mbid": "193c6803-697c-420c-b5d3-d6a6c6d383b1",
+        "release_name": "Blood Harmony"
+    },
+    {
+        "artist_credit_name": "Leatherwolf",
+        "artist_mbids": [
+            "7c7f850e-65ca-48ca-899a-cabe2a2cc783"
+        ],
+        "caa_id": 33895767579,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "0bf21225-0a4d-46f0-927c-49963ca1f473",
+        "release_group_primary_type": "Album",
+        "release_mbid": "474ab9ee-48ef-4791-ba0e-14933c589173",
+        "release_name": "Kill the Hunted"
+    },
+    {
+        "artist_credit_name": "LM SAJO",
+        "artist_mbids": [
+            "7cb4ca27-b933-45d9-a67e-e7d8c1cc5e92"
+        ],
+        "caa_id": 33948252401,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "260c502e-432a-46a6-9d24-ab7c055f85cc",
+        "release_group_primary_type": "Album",
+        "release_mbid": "b213df16-5e53-4dcd-b28f-88f8f409f675",
+        "release_name": "Untitled - Part 1"
+    },
+    {
+        "artist_credit_name": "Louis Tomlinson",
+        "artist_mbids": [
+            "6d390061-b3cd-4db3-b905-e56b7f5357fd"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "352ea153-ff8d-4ba3-9cbd-30eabdd1bb4d",
+        "release_group_primary_type": "Album",
+        "release_mbid": "ad78e51f-9626-450a-960b-5c79cd719f67",
+        "release_name": "Faith in the Future"
+    },
+    {
+        "artist_credit_name": "L.S. Dunes",
+        "artist_mbids": [
+            "5bd58bb8-7afc-4664-9b7e-77a687e00137"
+        ],
+        "caa_id": 33399366668,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "c5b21a97-839e-469d-a91a-b3cac90959bd",
+        "release_group_primary_type": "Album",
+        "release_mbid": "cb47702a-5115-4d2a-924a-58e95aefb509",
+        "release_name": "Past Lives"
+    },
+    {
+        "artist_credit_name": "Malist",
+        "artist_mbids": [
+            "4879fad2-feca-4fe9-b9d9-e032213c6c85"
+        ],
+        "caa_id": 33875743480,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "b64a39e2-e0f9-4be9-9e5c-52d89a10cef8",
+        "release_group_primary_type": "Album",
+        "release_mbid": "228c56b9-3440-4402-b146-4b2e8f007322",
+        "release_name": "As I Become Darkness"
+    },
+    {
+        "artist_credit_name": "Mark Sheeky",
+        "artist_mbids": [
+            "712e576e-e2d3-44d7-947a-28947be685e1"
+        ],
+        "caa_id": 33693694157,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "44641987-4b29-47ec-83e9-6a4673d87f53",
+        "release_group_primary_type": "EP",
+        "release_mbid": "9c2958b7-d82b-4d1b-a515-3992b290e0e7",
+        "release_name": "Heart of Snow"
+    },
+    {
+        "artist_credit_name": "MGMT",
+        "artist_mbids": [
+            "c485632c-b784-4ee9-8ea1-c5fb365681fc"
+        ],
+        "caa_id": 33997021579,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "3bba570c-45bd-4346-9baa-a968871d1d4a",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Live",
+        "release_mbid": "16317fa2-7382-42e2-a39f-cbdc4dcc0ea1",
+        "release_name": "11•11•11"
+    },
+    {
+        "artist_credit_name": "Mister Strange",
+        "artist_mbids": [
+            "790a1bda-4b98-4733-88ec-c541a918efea"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "4af93870-866c-49f0-9fd6-773420ca4997",
+        "release_group_primary_type": "EP",
+        "release_mbid": "4a1dd0ac-7a65-49da-be6c-8dbc70a66cdb",
+        "release_name": "Nothing at All"
+    },
+    {
+        "artist_credit_name": "Nicolas Bougaïeff",
+        "artist_mbids": [
+            "69700f44-98c4-47b6-8a61-1e0b858d645a"
+        ],
+        "caa_id": 33383274454,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "4427c6b1-bfee-417a-814e-6745ec7f37df",
+        "release_group_primary_type": "Album",
+        "release_mbid": "36a580b3-c052-4367-bb01-0da29e015951",
+        "release_name": "Begin Within"
+    },
+    {
+        "artist_credit_name": "Our 11th Hour",
+        "artist_mbids": [
+            "583945ab-8a58-4ef3-aeb2-3b86e22a634b"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "33717aa2-02c7-4ecb-b02b-028fac43d699",
+        "release_group_primary_type": "Album",
+        "release_mbid": "0be17fa4-625e-4b1b-a0eb-89635ac40aa8",
+        "release_name": "Of Halos & Hand Grenades"
+    },
+    {
+        "artist_credit_name": "Phoxjaw",
+        "artist_mbids": [
+            "7f5f6efa-015f-4f0f-8fbe-3d8b85514be8"
+        ],
+        "caa_id": 33371637037,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "343c11de-9fbb-4ef0-88a3-dd94932e11ce",
+        "release_group_primary_type": "Album",
+        "release_mbid": "a8d47272-115b-4eb9-9da2-43172848f242",
+        "release_name": "notverynicecream"
+    },
+    {
+        "artist_credit_name": "Plaid",
+        "artist_mbids": [
+            "7e54d133-2525-4bc0-ae94-65584145a386"
+        ],
+        "caa_id": 33826641797,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "62a00165-6e7a-47b0-8272-431ac5ca6c36",
+        "release_group_primary_type": "Album",
+        "release_mbid": "f53776e9-728e-4a3c-bfc8-048fc00d32e2",
+        "release_name": "Feorm Falorx"
+    },
+    {
+        "artist_credit_name": "RADWIMPS & 陣内一真",
+        "artist_mbids": [
+            "6f500293-7396-4903-b4fd-118127d06f9e",
+            "c9c59c75-f51b-4e38-bc15-b3a036f4d0ad"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "575df7d0-d1a1-4ca0-82dd-6ef4a1f03f4e",
+        "release_group_primary_type": "Album",
+        "release_mbid": "69009395-214f-4625-9fc4-139bcef9d413",
+        "release_name": "すずめの戸締まり"
+    },
+    {
+        "artist_credit_name": "Rat Cage",
+        "artist_mbids": [
+            "c934ac11-753f-4055-9fcb-124219243e44"
+        ],
+        "caa_id": 34003514436,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "b83f8701-15f1-48f6-8707-e70b5bc5fa84",
+        "release_group_primary_type": "Single",
+        "release_mbid": "439da426-29a1-41a0-a2ee-2282b5416678",
+        "release_name": "In The Shadow Of The Bomb"
+    },
+    {
+        "artist_credit_name": "Razzie",
+        "artist_mbids": [
+            "96d4103b-d4d4-429d-a33d-3dbddcde8fcf"
+        ],
+        "caa_id": 34038890385,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "db43a750-c902-4dba-a65e-47874311751e",
+        "release_group_primary_type": "Single",
+        "release_mbid": "a8489abd-0fc8-4163-bd3c-2f1e0acc9ca2",
+        "release_name": "Eden"
+    },
+    {
+        "artist_credit_name": "Remina",
+        "artist_mbids": [
+            "dd668cdd-e366-4345-bfe7-7c7070dfda93"
+        ],
+        "caa_id": 33762645599,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "be796e30-42f9-4926-b331-5a1fdb301c36",
+        "release_group_primary_type": "Album",
+        "release_mbid": "99f1e63b-cf91-482d-80fa-a9583f68aa92",
+        "release_name": "Strata"
+    },
+    {
+        "artist_credit_name": "Roanoke",
+        "artist_mbids": [
+            "33c94edd-1ea8-4553-b620-7a2210173992"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "45765056-7bf4-4c23-b5b4-013f8fac7410",
+        "release_group_primary_type": "EP",
+        "release_mbid": "f2c71d39-2cbd-4a6a-8e71-711a2d39b37b",
+        "release_name": "Wolf Motel"
+    },
+    {
+        "artist_credit_name": "Robb Johnson",
+        "artist_mbids": [
+            "3158521c-d6b5-45b0-849b-738f38ce6628"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "a71e1089-894d-4052-bc09-5b31668d27a2",
+        "release_group_primary_type": "Album",
+        "release_mbid": "19dfc983-2c5d-4c93-bc7d-d27a59be32b3",
+        "release_name": "Minimum Wages / Bodger: My Part in His Downfall"
+    },
+    {
+        "artist_credit_name": "Roderick Newport",
+        "artist_mbids": [
+            "5869d92f-83b1-43c6-bebc-dcf9bd5500aa"
+        ],
+        "caa_id": 33814734593,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "252ece86-8989-4960-a075-5541688d93c1",
+        "release_group_primary_type": "Single",
+        "release_mbid": "34d57779-4d0c-4941-aad5-1e6fac9b65ee",
+        "release_name": "Snowy Christmas Night"
+    },
+    {
+        "artist_credit_name": "Sarathy Korwar",
+        "artist_mbids": [
+            "90adc9e6-e622-447f-a61c-da0f2d9300a8"
+        ],
+        "caa_id": 33935562709,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "e725f103-4782-42e2-87f1-268657445967",
+        "release_group_primary_type": "Album",
+        "release_mbid": "87e34299-ad9a-4a79-80ed-b433c5c92189",
+        "release_name": "Kalak"
+    },
+    {
+        "artist_credit_name": "S.C.A.B.",
+        "artist_mbids": [
+            "ed75bcdd-2f7c-4ace-87be-e289968f0926"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "7eb9a2dc-9ca7-4022-bba8-fb238bbd80d0",
+        "release_group_primary_type": "Album",
+        "release_mbid": "58f01292-9cc6-484f-8786-55e8cfd7c857",
+        "release_name": "S.C.A.B."
+    },
+    {
+        "artist_credit_name": "Seething Akira",
+        "artist_mbids": [
+            "a3a5bfdc-2dfc-4356-a98c-f0400b106661"
+        ],
+        "caa_id": 33894866953,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "d8eaed94-4e21-43ab-9779-ed47a464e342",
+        "release_mbid": "3286c348-f22b-4b0b-83ce-15791d19120c",
+        "release_name": "Nozomi"
+    },
+    {
+        "artist_credit_name": "Smut",
+        "artist_mbids": [
+            "884e4620-077c-4e4f-be21-15fb5bf24469"
+        ],
+        "caa_id": 33508294240,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "bc1dffed-3527-426d-804a-25175b504f63",
+        "release_group_primary_type": "Album",
+        "release_mbid": "3f4bd110-9ac8-4b4b-9a5d-d8f3f577c33c",
+        "release_name": "How the Light Felt"
+    },
+    {
+        "artist_credit_name": "STR4TA",
+        "artist_mbids": [
+            "e24a3b2a-60d4-4b0e-a1c8-faa0b94a14b4"
+        ],
+        "caa_id": 33935513029,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "14a3be88-960b-438b-88e0-f60f54f9c281",
+        "release_group_primary_type": "Album",
+        "release_mbid": "6be4ee74-a633-4546-9b50-88dfd67c496d",
+        "release_name": "STR4TASFEAR"
+    },
+    {
+        "artist_credit_name": "The Catburgers",
+        "artist_mbids": [
+            "42d6082c-65d6-43a9-961a-49d8cd510980"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "a1024aea-5bb1-44c7-b8a4-5c77ab4d64a8",
+        "release_group_primary_type": "EP",
+        "release_mbid": "81013e5a-fea7-4861-b8f6-c204e0350b77",
+        "release_name": "Dreamworld Sessions"
+    },
+    {
+        "artist_credit_name": "The Cherry Blues Project",
+        "artist_mbids": [
+            "87546615-6344-4829-8f8d-6dafcf65e3df"
+        ],
+        "caa_id": 33929416336,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "ad2cdea5-243c-4f3c-bb44-a981f17315c6",
+        "release_group_primary_type": "Album",
+        "release_mbid": "d893461c-ecfa-4b59-9570-68b97e3732ae",
+        "release_name": "Gasoline Stations"
+    },
+    {
+        "artist_credit_name": "The Third-Rates",
+        "artist_mbids": [
+            "f962c6d7-2823-4d38-86ec-3815a79d1e25"
+        ],
+        "caa_id": 34008972632,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "7cfa2650-a59f-46ff-9ae7-fa8805f624ae",
+        "release_group_primary_type": "Single",
+        "release_mbid": "63e909c6-2a03-4cf4-97fb-8627a8e77782",
+        "release_name": "Escape From The City"
+    },
+    {
+        "artist_credit_name": "The Trashmen",
+        "artist_mbids": [
+            "1f190f39-89cc-426f-ac40-56c31ebf306f"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "b56ae690-d5b5-4b3a-bfd4-ef86471567fd",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Compilation",
+        "release_mbid": "338d16bb-db96-4bab-8d97-7c6be428db5c",
+        "release_name": "The Best of the Trashmen"
+    },
+    {
+        "artist_credit_name": "Thys & Two Fingers",
+        "artist_mbids": [
+            "0df8708d-97c0-4107-958d-7a948c4f77bc",
+            "89d21333-d040-4602-9dac-b565651f5a92"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "79a4fdf6-9225-4fd1-b694-84004bb82226",
+        "release_group_primary_type": "Single",
+        "release_mbid": "dedcc993-5f10-489c-a42f-931c0a2029a9",
+        "release_name": "Hodo"
+    },
+    {
+        "artist_credit_name": "Twilight Force",
+        "artist_mbids": [
+            "9de7fc7a-b03f-4d97-9629-a3f65829de72"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "c7e786a3-b86d-4201-b836-3e40a888a6db",
+        "release_group_primary_type": "Single",
+        "release_mbid": "434f7108-fb1b-4f56-8167-48d73be3a3e8",
+        "release_name": "Twilight Force"
+    },
+    {
+        "artist_credit_name": "Various Artists",
+        "artist_mbids": [
+            "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "caa_id": 33798567480,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "5b0de392-41e3-4e25-a887-d45257742d38",
+        "release_group_primary_type": "Album",
+        "release_mbid": "63fadd35-c3a5-46f3-85da-6768362c124e",
+        "release_name": "DDD100"
+    },
+    {
+        "artist_credit_name": "Various Artists",
+        "artist_mbids": [
+            "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "caa_id": 33203918826,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "ba636f11-da25-421f-b840-93a5a74e196a",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Compilation",
+        "release_mbid": "4eed2558-5e1c-4a86-8bf8-2a2420b89e59",
+        "release_name": "Life Moves Pretty Fast: The John Hughes Mixtapes"
+    },
+    {
+        "artist_credit_name": "Various Artists",
+        "artist_mbids": [
+            "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "585b019c-a2d8-499d-8353-a4b21ad3a42b",
+        "release_group_primary_type": "Album",
+        "release_mbid": "f11b4705-263b-478d-8cbf-bc2bf63fb772",
+        "release_name": "Live Forever: A Tribute to Billy Joe Shaver"
+    },
+    {
+        "artist_credit_name": "Various Artists",
+        "artist_mbids": [
+            "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "caa_id": 33876766057,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "a12773c8-34e8-483e-9cb6-3155c763de96",
+        "release_group_primary_type": "Album",
+        "release_group_secondary_type": "Compilation",
+        "release_mbid": "23d75691-f313-4ab8-88fa-d44ba32dfab3",
+        "release_name": "NOW That’s What I Call a Massive 80s Party"
+    },
+    {
+        "artist_credit_name": "Verra Cruz",
+        "artist_mbids": [
+            "f21bf31e-5d0f-4173-9a2b-40c76db9ff0f"
+        ],
+        "caa_id": 33998364959,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "a0d134b1-aab6-457c-9069-6e90b8262840",
+        "release_group_primary_type": "Single",
+        "release_mbid": "bedb010e-9955-4a45-96aa-8e3d10f0cdfe",
+        "release_name": "The World Is Crashing In"
+    },
+    {
+        "artist_credit_name": "Warhaus",
+        "artist_mbids": [
+            "d9fccd7c-a14c-4c1a-8a3b-17d05b2f549c"
+        ],
+        "caa_id": 33591165288,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "3af3d2e7-de2c-4f93-affb-dfdf75a5d8cc",
+        "release_group_primary_type": "Album",
+        "release_mbid": "47ae0ed2-2b53-4b83-8806-4a671bbe7322",
+        "release_name": "Ha Ha Heartbreak"
+    },
+    {
+        "artist_credit_name": "Wesley",
+        "artist_mbids": [
+            "10f3c172-866f-4806-87cb-ab3971df3615"
+        ],
+        "caa_id": 33774795920,
+        "release_date": "2022-11-11",
+        "release_group_mbid": "024f04f0-9459-4060-8322-f3595a124017",
+        "release_group_primary_type": "Album",
+        "release_mbid": "d4f6622b-0bc7-4b6a-bcec-39f4b1c92892",
+        "release_name": "Glows in the Dark"
+    },
+    {
+        "artist_credit_name": "El Baguette",
+        "artist_mbids": [
+            "9a82b907-e9a6-432b-9486-87dd044b8796"
+        ],
+        "caa_id": 33891674450,
+        "release_date": "2022-11-12",
+        "release_group_mbid": "115decf3-dce9-42ca-bc29-df2ef3d621b9",
+        "release_group_primary_type": "Album",
+        "release_mbid": "3917ae76-a57c-4a83-95c1-5de8235263ef",
+        "release_name": "La Recette"
+    },
+    {
+        "artist_credit_name": "GAKHED",
+        "artist_mbids": [
+            "714e1275-54b8-41f6-b57b-80963c06e2a0"
+        ],
+        "caa_id": null,
+        "release_date": "2022-11-12",
+        "release_group_mbid": "a80818ec-ba6b-49e7-a092-c5c08d39ecf3",
+        "release_group_primary_type": "Album",
+        "release_mbid": "8524c8fe-7dd6-4d0d-b478-0241f484bbf4",
+        "release_name": "SUBLIMINAL TEARS"
+    },
+    {
+        "artist_credit_name": "Hungry March Band",
+        "artist_mbids": [
+            "6cb5dcf5-a060-4d5a-9446-72e151d6c5c6"
+        ],
+        "caa_id": 33890141437,
+        "release_date": "2022-11-12",
+        "release_group_mbid": "0fe3eb2c-71ad-42b4-8195-54186ce22781",
+        "release_group_primary_type": "Album",
+        "release_mbid": "54ac8ecb-d590-40fa-932c-513cf5d62eb6",
+        "release_name": "On The Waterfront"
+    }
+]
