@@ -8,6 +8,7 @@ from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
 from listenbrainz.labs_api.labs.api.explain_mbid_mapping import ExplainMBIDMappingQuery
 from listenbrainz.labs_api.labs.api.recording_search import RecordingSearchQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
+from listenbrainz.labs_api.labs.api.similar_artists import SimilarArtistsViewerQuery
 from listenbrainz.labs_api.labs.api.similar_recordings import SimilarRecordingsViewerQuery
 from listenbrainz.labs_api.labs.api.spotify.spotify_mbid_lookup import SpotifyIdFromMBIDQuery
 from listenbrainz.labs_api.labs.api.spotify.spotify_metadata_lookup import SpotifyIdFromMetadataQuery
@@ -27,6 +28,7 @@ register_query(SpotifyIdFromMetadataQuery())
 register_query(SpotifyIdFromMBIDQuery())
 register_query(UserListensSessionQuery())
 register_query(SimilarRecordingsViewerQuery())
+register_query(SimilarArtistsViewerQuery())
 
 app = create_app()
 load_config(app)

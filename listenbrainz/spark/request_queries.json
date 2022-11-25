@@ -141,6 +141,19 @@
       "skip"
     ]
   },
+  "similarity.artist": {
+    "name": "similarity.artist",
+    "description": "Generate artist similarity",
+    "params": [
+      "days",
+      "session",
+      "contribution",
+      "threshold",
+      "limit",
+      "filter_artist_credit",
+      "skip"
+    ]
+  },
   "year_in_music.similar_users": {
     "name": "year_in_music.similar_users",
     "description": "Generate similar user correlation for Year in Music",
