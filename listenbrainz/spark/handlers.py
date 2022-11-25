@@ -408,3 +408,7 @@ def handle_yearly_listen_counts(message):
 
 def handle_similar_recordings(message):
     similarity.insert("recording", message["data"], message["algorithm"])
+
+
+def handle_similar_artists(message):
+    similarity.insert("artist", message["data"], message["algorithm"])
