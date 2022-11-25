@@ -39,12 +39,14 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                      -- spark doesn't support window aggregate functions with FILTER clause
                      , COUNT_IF(difference > {session}) OVER w AS session_id
                      , LEAD(difference, 1) OVER w < {skip_threshold} AS skipped
+                     , artist_credit_id
                      , artist_mbid
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), sessions_filtered AS (
                 SELECT user_id
                      , session_id
+                     , artist_credit_id
                      , artist_mbid
                   FROM sessions
                  WHERE NOT skipped    
