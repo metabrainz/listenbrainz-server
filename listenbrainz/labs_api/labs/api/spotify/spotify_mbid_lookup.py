@@ -61,7 +61,7 @@ class SpotifyIdFromMBIDQuery(Query):
             mbids.append(param["[recording_mbid]"])
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, conn.cursor() as curs:
-            redirected_mbids, redirect_index, _ = resolve_redirect_mbids(curs, mbids)
+            redirected_mbids, redirect_index, _ = resolve_redirect_mbids(curs, "recording", mbids)
 
         with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn, conn.cursor() as curs:
             canonical_mbids, canonical_index, _ = resolve_canonical_mbids(curs, redirected_mbids)
