@@ -5,10 +5,9 @@ from psycopg2.sql import SQL, Identifier
 
 def _resolve_mbids_helper(curs, query, mbids):
     """ Helper to extract common code for resolving redirect and canonical mbids """
-    execute_values(curs, query, [(mbid,) for mbid in mbids], page_size=len(mbids))
-
+    result = execute_values(curs, query, [(mbid,) for mbid in mbids], fetch=True)
     index, inverse_index = {}, {}
-    for row in curs.fetchall():
+    for row in result:
         old_mbid = row[0]
         new_mbid = row[1]
         index[old_mbid] = new_mbid
