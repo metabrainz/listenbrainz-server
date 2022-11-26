@@ -2,6 +2,7 @@ import psycopg2
 from datasethoster import Query
 from flask import current_app
 from markupsafe import Markup
+from psycopg2.extras import execute_values
 
 from listenbrainz.db import similarity
 from listenbrainz.labs_api.labs.api.utils import resolve_redirect_mbids
@@ -45,8 +46,8 @@ class SimilarArtistsViewerQuery(Query):
                 JOIN mbids m
                   ON a.gid = m.gid::UUID
         """
-        mb_curs.execute(query, tuple((mbid,) for mbid in redirected_mbids))
-        metadata_idx = {row["artist_mbid"]: row for row in mb_curs.fetchall()}
+        result = execute_values(mb_curs, query, [(mbid,) for mbid in redirected_mbids], fetch=True)
+        metadata_idx = {row["artist_mbid"]: row for row in result}
 
         metadata = []
         for mbid in mbids:
@@ -85,7 +86,7 @@ class SimilarArtistsViewerQuery(Query):
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
                 ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
 
-            references = self.get_artists_dataset(mb_curs, ts_curs, artist_mbids)
+            references = self.get_artists_dataset(mb_curs, artist_mbids)
             results = [{"type": "markup", "data": Markup("<p><b>Reference artist</b></p>")}]
             results.append(references)
 
