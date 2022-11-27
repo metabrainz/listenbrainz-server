@@ -83,7 +83,7 @@ def add_do_not_recommend():
 
     Currently, the supported entity types are ``artist``, ``release``, ``release_group`` and ``recording``. The ``until``
     key in the json body is optional. If absent, the don't recommend entry will be added forever. If present, it should
-    be an epoch timestamp in seconds denoting the time till which the entity should not be recommended.
+    be an utc timestamp in seconds denoting the time till which the entity should not be recommended.
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: feedback accepted.
