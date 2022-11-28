@@ -9,17 +9,18 @@ from listenbrainz_spark.utils import get_listens_from_new_dump
 
 
 RECORDINGS_PER_MESSAGE = 10000
+# the duration value in seconds to use for track whose duration data in not available in MB
+DEFAULT_TRACK_LENGTH = 180
 
 
 def build_sessioned_index(listen_table, metadata_table, session, max_contribution, threshold, limit, _filter, skip_threshold):
     # TODO: Handle case of unmatched recordings breaking sessions!
-    #  Detect and remove skips!
     filter_artist_credit = "AND NOT arrays_overlap(s1.artist_mbids, s2.artist_mbids)" if _filter else ""
     return f"""
             WITH listens AS (
                  SELECT user_id
                       , BIGINT(listened_at)
-                      , CAST(COALESCE(recording_data.length / 1000, 180) AS BIGINT) AS duration
+                      , CAST(COALESCE(recording_data.length / 1000, {DEFAULT_TRACK_LENGTH}) AS BIGINT) AS duration
                       , recording_mbid
                       , artist_mbids
                    FROM {listen_table} l

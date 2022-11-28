@@ -5,6 +5,9 @@ from sqlalchemy import text
 from listenbrainz import db
 from listenbrainz.db import timescale
 
+SESSION_SKIP_THRESHOLD = 30
+DEFAULT_TRACK_LENGTH = 180
+
 
 class UserListensSessionQuery(Query):
     """ Display sessions of user's listens as sessions for given time period """
@@ -53,7 +56,7 @@ class UserListensSessionQuery(Query):
                     }
                 ]
 
-        query = """
+        query = f"""
             WITH listens AS (
                  SELECT listened_at
                       , COALESCE(mmm.artist_credit_name, l.data->'track_metadata'->>'artist_name') AS artist_name
@@ -63,7 +66,7 @@ class UserListensSessionQuery(Query):
                             (mbc.recording_data->>'length')::INT / 1000
                           , (l.data->'track_metadata'->'additional_info'->>'duration')::INT
                           , (l.data->'track_metadata'->'additional_info'->>'duration_ms')::INT / 1000
-                          , 180 -- default track length to 3 minutes
+                          , {DEFAULT_TRACK_LENGTH}
                         ) AS duration
                    FROM listen l
               LEFT JOIN mbid_mapping mm
@@ -91,7 +94,7 @@ class UserListensSessionQuery(Query):
                      , difference
                      -- a 30s leeway to allow for difference in track length in MB and other services or any issue
                      -- in timestamping
-                     , LEAD(difference, 1) OVER w < -30 AS skipped
+                     , LEAD(difference, 1) OVER w < -{SESSION_SKIP_THRESHOLD} AS skipped
                      , artist_name
                      , track_name
                      , recording_mbid
