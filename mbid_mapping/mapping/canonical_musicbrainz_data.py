@@ -9,6 +9,7 @@ from mapping.custom_sorts import create_custom_sort_tables
 from mapping.bulk_table import BulkInsertTable
 from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
 from mapping.canonical_recording_release_redirect import CanonicalRecordingReleaseRedirect
+from mapping.canonical_release_redirect import CanonicalReleaseRedirect
 from mapping.canonical_musicbrainz_data_release import CanonicalMusicBrainzDataRelease
 import config
 
@@ -148,6 +149,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         # Setup all the needed objects
         can = CanonicalRecordingRedirect(mb_conn, lb_conn)
         can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, lb_conn)
+        can_rel = CanonicalReleaseRedirect(mb_conn, lb_conn)
         releases = CanonicalMusicBrainzDataRelease(mb_conn)
         mapping = CanonicalMusicBrainzData(mb_conn, lb_conn)
         mapping.add_additional_bulk_table(can)
@@ -157,6 +159,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         releases.run(no_swap=True)
         mapping.run(no_swap=True)
         can_rec_rel.run(no_swap=True)
+        can_rel.run(no_swap=True)
 
         # Now swap everything into production in a single transaction
         log("canonical_musicbrainz_data: Swap into production")
@@ -165,6 +168,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
+            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             mb_conn.commit()
             lb_conn.commit()
             lb_conn.close()
@@ -173,6 +177,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             can.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             mb_conn.commit()
 
         log("canonical_musicbrainz_data: done done done!")
