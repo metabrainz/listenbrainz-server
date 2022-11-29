@@ -65,6 +65,14 @@ PUBLIC_TABLES_MAPPING = {
             'canonical_recording_mbid',
             'canonical_release_mbid'
         )
+    },
+    'mapping.canonical_release_redirect': {
+        'filename': 'canonical_release_redirect.csv',
+        'columns': (
+            'release_mbid',
+            'canonical_release_mbid',
+            'release_group_mbid'
+        )
     }
 }
 
