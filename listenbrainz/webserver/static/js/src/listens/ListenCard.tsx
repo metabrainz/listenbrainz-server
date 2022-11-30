@@ -419,62 +419,86 @@ export default class ListenCard extends React.Component<
                     className="dropdown-menu dropdown-menu-right"
                     aria-labelledby="listenControlsDropdown"
                   >
-                    {recordingMBID && (
-                      <ListenControl
-                        icon={faExternalLinkAlt}
-                        title="Open in MusicBrainz"
-                        text="Open in MusicBrainz"
-                        link={`https://musicbrainz.org/recording/${recordingMBID}`}
-                        anchorTagAttributes={{
-                          target: "_blank",
-                          rel: "noopener noreferrer",
-                        }}
-                      />
-                    )}
-                    {spotifyURL && (
-                      <ListenControl
-                        icon={faSpotify}
-                        title="Open in Spotify"
-                        text="Open in Spotify"
-                        link={spotifyURL}
-                        anchorTagAttributes={{
-                          target: "_blank",
-                          rel: "noopener noreferrer",
-                        }}
-                      />
-                    )}
-                    {youtubeURL && (
-                      <ListenControl
-                        icon={faYoutube}
-                        title="Open in YouTube"
-                        text="Open in YouTube"
-                        link={youtubeURL}
-                        anchorTagAttributes={{
-                          target: "_blank",
-                          rel: "noopener noreferrer",
-                        }}
-                      />
-                    )}
-                    {soundcloudURL && (
-                      <ListenControl
-                        icon={faSoundcloud}
-                        title="Open in Soundcloud"
-                        text="Open in Soundcloud"
-                        link={soundcloudURL}
-                        anchorTagAttributes={{
-                          target: "_blank",
-                          rel: "noopener noreferrer",
-                        }}
-                      />
-                    )}
-                    {enableRecommendButton && (
-                      <ListenControl
-                        icon={faCommentDots}
-                        title="Recommend to my followers"
-                        text="Recommend to my followers"
-                        action={this.recommendListenToFollowers}
-                      />
-                    )}
+                    <ListenControl
+                      icon={faExternalLinkAlt}
+                      title="Open in MusicBrainz"
+                      text="Open in MusicBrainz"
+                      buttonClassName={recordingMBID ? undefined : "un-active"}
+                      link={
+                        recordingMBID
+                          ? `https://musicbrainz.org/recording/${recordingMBID}`
+                          : undefined
+                      }
+                      anchorTagAttributes={
+                        recordingMBID
+                          ? {
+                              target: "_blank",
+                              rel: "noopener noreferrer",
+                            }
+                          : undefined
+                      }
+                    />
+
+                    <ListenControl
+                      icon={faSpotify}
+                      title="Open in Spotify"
+                      text="Open in Spotify"
+                      buttonClassName={spotifyURL ? undefined : "un-active"}
+                      link={spotifyURL || undefined}
+                      anchorTagAttributes={
+                        spotifyURL
+                          ? {
+                              target: "_blank",
+                              rel: "noopener noreferrer",
+                            }
+                          : undefined
+                      }
+                    />
+                    <ListenControl
+                      icon={faYoutube}
+                      title="Open in YouTube"
+                      text="Open in YouTube"
+                      buttonClassName={youtubeURL ? undefined : "un-active"}
+                      link={youtubeURL || undefined}
+                      anchorTagAttributes={
+                        youtubeURL
+                          ? {
+                              target: "_blank",
+                              rel: "noopener noreferrer",
+                            }
+                          : undefined
+                      }
+                    />
+
+                    <ListenControl
+                      icon={faSoundcloud}
+                      title="Open in Soundcloud"
+                      text="Open in Soundcloud"
+                      buttonClassName={soundcloudURL ? undefined : "un-active"}
+                      link={soundcloudURL || undefined}
+                      anchorTagAttributes={
+                        soundcloudURL
+                          ? {
+                              target: "_blank",
+                              rel: "noopener noreferrer",
+                            }
+                          : undefined
+                      }
+                    />
+
+                    <ListenControl
+                      icon={faCommentDots}
+                      title="Recommend to my followers"
+                      text="Recommend to my followers"
+                      buttonClassName={
+                        enableRecommendButton ? undefined : "un-active"
+                      }
+                      action={
+                        enableRecommendButton
+                          ? this.recommendListenToFollowers
+                          : undefined
+                      }
+                    />
                     {additionalMenuItems}
                   </ul>
                 </>

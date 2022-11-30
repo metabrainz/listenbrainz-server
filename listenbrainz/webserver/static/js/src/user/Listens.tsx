@@ -710,48 +710,60 @@ export default class Listens extends React.Component<
 
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
-    if (canPersonallyRecommend) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Personally recommend"
-          icon={faPaperPlane}
-          action={this.updateRecordingToPersonallyRecommend.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#PersonalRecommendationModal"
-        />
-      );
-    }
-    if (canPin) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Pin this recording"
-          icon={faThumbtack}
-          action={this.updateRecordingToPin.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#PinRecordingModal"
-        />
-      );
-    }
-    if (isListenReviewable) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Write a review"
-          icon={faPencilAlt}
-          action={this.updateRecordingToReview.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#CBReviewModal"
-        />
-      );
-    }
-    if (canDelete) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Delete Listen"
-          icon={faTrashAlt}
-          action={this.deleteListen.bind(this, listen)}
-        />
-      );
-    }
+
+    additionalMenuItems.push(
+      <ListenControl
+        text="Personally recommend"
+        buttonClassName={canPersonallyRecommend ? undefined : "un-active"}
+        icon={faPaperPlane}
+        action={
+          canPersonallyRecommend
+            ? this.updateRecordingToPersonallyRecommend.bind(this, listen)
+            : undefined
+        }
+        dataToggle={canPersonallyRecommend ? "modal" : undefined}
+        dataTarget={
+          canPersonallyRecommend ? "#PersonalRecommendationModal" : undefined
+        }
+      />
+    );
+
+    additionalMenuItems.push(
+      <ListenControl
+        text="Pin this recording"
+        buttonClassName={canPin ? undefined : "un-active"}
+        icon={faThumbtack}
+        action={
+          canPin ? this.updateRecordingToPin.bind(this, listen) : undefined
+        }
+        dataToggle={canPin ? "modal" : undefined}
+        dataTarget={canPin ? "#PinRecordingModal" : undefined}
+      />
+    );
+
+    additionalMenuItems.push(
+      <ListenControl
+        text="Write a review"
+        buttonClassName={isListenReviewable ? undefined : "un-active"}
+        icon={faPencilAlt}
+        action={
+          isListenReviewable
+            ? this.updateRecordingToReview.bind(this, listen)
+            : undefined
+        }
+        dataToggle={isListenReviewable ? "modal" : undefined}
+        dataTarget={isListenReviewable ? "#CBReviewModal" : undefined}
+      />
+    );
+
+    additionalMenuItems.push(
+      <ListenControl
+        text="Delete Listen"
+        buttonClassName={canDelete ? undefined : "un-active"}
+        icon={faTrashAlt}
+        action={canDelete ? this.deleteListen.bind(this, listen) : undefined}
+      />
+    );
     const shouldBeDeleted = isEqual(deletedListen, listen);
     /* eslint-enable react/jsx-no-bind */
     return (
