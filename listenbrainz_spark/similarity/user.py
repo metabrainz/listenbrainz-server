@@ -54,12 +54,17 @@ def threshold_similar_users(similar_table: str, user_table: str, max_num_users: 
         max_num_users other users.
     """
     query = f"""
-        WITH intermediate AS (
+        WITH similar_users AS (
+            SELECT i AS spark_user_id
+                 , j AS other_spark_user_id
+                 , value AS score
+              FROM {similar_table}
+        ), intermediate AS (
             SELECT u1.user_id AS user_id
                  , u2.user_id AS other_user_id
                  , su.score / (max(su.score) OVER w - min(su.score) OVER w) AS local_similarity
                  , su.score AS global_similarity
-              FROM {similar_table} su
+              FROM similar_users su
               JOIN {user_table} u1
                 ON su.spark_user_id = u1.spark_user_id
               JOIN {user_table} u2
