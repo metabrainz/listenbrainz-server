@@ -123,20 +123,8 @@ def describe_listencount_transformer(use_transformed_listencounts):
                 <th>Transformed Listencount</th>
             </tr>
             <tr>
-                <td>0</td>
-                <td>0</td>
-            </tr>
-            <tr>
-                <td>1</td>
-                <td>20</td>
-            </tr>
-            <tr>
-                <td>2 &lt;= x &lt;= 20</td>
-                <td>x + 20</td>
-            </tr>
-            <tr>
-                <td> &gt; 20</td>
-                <td>50</td>
+                <td>x</td>
+                <td>int(√x)</td>
             </tr>
         </table>
     """)
@@ -173,12 +161,7 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
             SELECT spark_user_id
                  , recording_id
                  , playcount
-                 , float(
-                    CASE
-                        WHEN playcount = 0 THEN 0
-                        WHEN playcount = 1 THEN {ONE_PLAYCOUNT_CONFIDENCE}
-                        ELSE {ZERO_POINT} + LEAST(playcount, 20)
-                    END) AS transformed_listencount
+                 , int(sqrt(playcount)) AS transformed_listencount
               FROM playcounts
     """)
 
