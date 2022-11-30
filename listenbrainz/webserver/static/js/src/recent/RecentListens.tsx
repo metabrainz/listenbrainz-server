@@ -236,32 +236,54 @@ export default class RecentListens extends React.Component<
                       dataTarget="#PinRecordingModal"
                     />,
                   ];
-                  if (isListenReviewable) {
-                    additionalMenuItems.push(
-                      <ListenControl
-                        text="Write a review"
-                        icon={faPencilAlt}
-                        action={this.updateRecordingToReview.bind(this, listen)}
-                        dataToggle="modal"
-                        dataTarget="#CBReviewModal"
-                      />
-                    );
-                  }
 
-                  if (isListenPersonallyRecommendable) {
-                    additionalMenuItems.push(
-                      <ListenControl
-                        text="Personally recommend"
-                        icon={faPaperPlane}
-                        action={this.updateRecordingToPersonallyRecommend.bind(
-                          this,
-                          listen
-                        )}
-                        dataToggle="modal"
-                        dataTarget="#PersonalRecommendationModal"
-                      />
-                    );
-                  }
+                  additionalMenuItems.push(
+                    <ListenControl
+                      text="Write a review"
+                      buttonClassName={
+                        isListenReviewable ? undefined : "un-active"
+                      }
+                      icon={faPencilAlt}
+                      action={
+                        isListenReviewable
+                          ? this.updateRecordingToReview.bind(this, listen)
+                          : undefined
+                      }
+                      dataToggle={isListenReviewable ? "modal" : undefined}
+                      dataTarget={
+                        isListenReviewable ? "#CBReviewModal" : undefined
+                      }
+                    />
+                  );
+
+                  additionalMenuItems.push(
+                    <ListenControl
+                      text="Personally recommend"
+                      buttonClassName={
+                        isListenPersonallyRecommendable
+                          ? undefined
+                          : "un-active"
+                      }
+                      icon={faPaperPlane}
+                      action={
+                        isListenPersonallyRecommendable
+                          ? this.updateRecordingToPersonallyRecommend.bind(
+                              this,
+                              listen
+                            )
+                          : undefined
+                      }
+                      dataToggle={
+                        isListenPersonallyRecommendable ? "modal" : undefined
+                      }
+                      dataTarget={
+                        isListenPersonallyRecommendable
+                          ? "#PersonalRecommendationModal"
+                          : undefined
+                      }
+                    />
+                  );
+
                   /* eslint-enable react/jsx-no-bind */
                   return (
                     <ListenCard

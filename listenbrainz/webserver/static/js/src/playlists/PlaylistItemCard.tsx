@@ -62,16 +62,16 @@ export default class PlaylistItemCard extends React.Component<
       </div>
     ) : undefined;
     let additionalMenuItems;
-    if (canEdit) {
-      additionalMenuItems = [
-        <ListenControl
-          title="Remove from playlist"
-          text="Remove from playlist"
-          icon={faMinusCircle}
-          action={this.removeTrack}
-        />,
-      ];
-    }
+
+    additionalMenuItems = [
+      <ListenControl
+        title="Remove from playlist"
+        buttonClassName={canEdit ? undefined : "un-active"}
+        text="Remove from playlist"
+        icon={faMinusCircle}
+        action={canEdit ? this.removeTrack : undefined}
+      />,
+    ];
     const listen = JSPFTrackToListen(track);
     return (
       <ListenCard
