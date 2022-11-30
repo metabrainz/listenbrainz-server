@@ -12,7 +12,7 @@ from pyspark.sql.functions import struct, collect_list
 import listenbrainz_spark
 from listenbrainz_spark import SparkSessionNotInitializedException, utils, path
 from listenbrainz_spark.exceptions import PathNotFoundException, FileNotFetchedException
-
+from listenbrainz_spark.stats import run_query
 
 logger = logging.getLogger(__name__)
 
@@ -48,78 +48,55 @@ def create_messages(similar_users_df: DataFrame) -> dict:
     }
 
 
-def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[int, int, float]]:
+def threshold_similar_users(similar_table: str, user_table: str, max_num_users: int) -> DataFrame:
     """ Determine the minimum and maximum values in the matriz, scale
         the result to the range of [0.0 - 1.0] and limit each user to max of
         max_num_users other users.
     """
-    rows, cols = matrix.shape
-    similar_users = list()
-
-    # Calculate the global similarity scale
-    global_max_similarity = None
-    global_min_similarity = None
-    for x in range(rows):
-        row = []
-
-        # Calculate the minimum and maximum values for a user
-        for y in range(cols):
-
-            # Spark sometimes returns nan values and the way to get rid of them is to
-            # cast to a float and discard values that are non a number
-            value = float(matrix[x, y])
-            if x == y or math.isnan(value):
-                continue
-
-            if global_max_similarity is None:
-                global_max_similarity = value
-                global_min_similarity = value
-
-            global_max_similarity = max(value, global_max_similarity)
-            global_min_similarity = min(value, global_min_similarity)
-
-    global_similarity_range = global_max_similarity - global_min_similarity
-
-    for x in range(rows):
-        row = []
-        max_similarity = None
-        min_similarity = None
-
-        # Calculate the minimum and maximum values for a user
-        for y in range(cols):
-
-            # Spark sometimes returns nan values and the way to get rid of them is to
-            # cast to a float and discard values that are non a number
-            value = float(matrix[x, y])
-            if x == y or math.isnan(value):
-                continue
-
-            if max_similarity is None:
-                max_similarity = value
-                min_similarity = value
-
-            max_similarity = max(value, max_similarity)
-            min_similarity = min(value, min_similarity)
-
-        if max_similarity is not None and min_similarity is not None:
-            # Now apply the scale factor and flatten the results for a user
-            similarity_range = max_similarity - min_similarity
-            for y in range(cols):
-                value = float(matrix[x, y])
-                if x == y or math.isnan(value):
-                    continue
-
-                row.append((x,
-                            y,
-                            (value - min_similarity) / similarity_range,
-                            (value - global_min_similarity) / global_similarity_range))
-
-            similar_users.extend(sorted(row, key = itemgetter(2), reverse = True)[:max_num_users])
-
-    return similar_users
+    query = f"""
+        WITH intermediate AS (
+            SELECT u1.user_id AS user_id
+                 , u2.user_id AS other_user_id
+                 , su.score / (max(su.score) OVER w - min(su.score) OVER w) AS local_similarity
+                 , su.score AS global_similarity
+              FROM {similar_table} su
+              JOIN {user_table} u1
+                ON su.spark_user_id = u1.spark_user_id
+              JOIN {user_table} u2
+                ON su.other_spark_user_id = u2.spark_user_id
+            WINDOW w AS (PARTITION BY u1.user_id ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+        ), threshold AS (
+            SELECT user_id
+                 , other_user_id
+                 , local_similarity
+                 , global_similarity
+                 , row_number() OVER w AS rnum
+              FROM intermediate
+            WINDOW w AS (PARTITION BY user_id ORDER BY local_similarity DESC)
+        )   SELECT user_id
+                 , array_sort(
+                        collect_list(
+                            struct(
+                                other_user_id
+                              , local_similarity
+                              , global_similarity
+                            )
+                        )
+                     , (left, right) -> CASE
+                                        WHEN left.local_similarity > right.local_similarity THEN -1
+                                        WHEN left.local_similarity < right.local_similarity THEN  1
+                                        ELSE 0
+                                        END
+                        -- sort in descending order of local similarity              
+                   ) AS similar_users
+              FROM threshold
+             WHERE rnum <= {max_num_users}
+          GROUP BY user_id
+     """
+    return run_query(query)
 
 
-def get_vectors_df(playcounts_df):
+def get_users_matrix(playcounts_df):
     """
     Each row of playcounts_df has the following columns: recording_id, spark_user_id and a play count denoting how many times
     a user has played that recording. However, the correlation matrix requires a dataframe having a column of user
@@ -136,54 +113,33 @@ def get_vectors_df(playcounts_df):
     tuple_mapped_rdd = playcounts_df.rdd.map(lambda x: MatrixEntry(x["recording_id"], x["spark_user_id"], x["playcount"]))
     coordinate_matrix = CoordinateMatrix(tuple_mapped_rdd)
     indexed_row_matrix = coordinate_matrix.toIndexedRowMatrix()
-    vectors_mapped_rdd = indexed_row_matrix.rows.map(lambda r: (r.index, r.vector.asML()))
-    return listenbrainz_spark.session.createDataFrame(vectors_mapped_rdd, ['index', 'vector'])
+    return indexed_row_matrix
 
 
 def get_similar_users_df(max_num_users: int):
     logger.info('Start generating similar user matrix')
-    try:
-        listenbrainz_spark.init_spark_session('User Similarity')
-    except SparkSessionNotInitializedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
+    listenbrainz_spark.init_spark_session('User Similarity')
 
-    try:
-        playcounts_df = utils.read_files_from_HDFS(path.USER_SIMILARITY_PLAYCOUNTS_DATAFRAME)
-        users_df = utils.read_files_from_HDFS(path.USER_SIMILARITY_USERS_DATAFRAME)
-    except PathNotFoundException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-    except FileNotFetchedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
+    similar_table = "user_similarity_matrix"
+    user_table = "user_similarity_users"
 
-    vectors_df = get_vectors_df(playcounts_df)
+    playcounts_df = utils.read_files_from_HDFS(path.USER_SIMILARITY_PLAYCOUNTS_DATAFRAME)
+    users_df = utils.read_files_from_HDFS(path.USER_SIMILARITY_USERS_DATAFRAME)
+    users_df.createOrReplaceTempView(user_table)
 
-    similarity_matrix = Correlation.corr(vectors_df, 'vector', 'pearson').first()['pearson(vector)'].toArray()
-    similar_users = threshold_similar_users(similarity_matrix, max_num_users)
-
-    # Due to an unresolved bug in Spark (https://issues.apache.org/jira/browse/SPARK-10925), we cannot join twice on
-    # the same dataframe. Hence, we create a modified dataframe with the columns renamed.
-    other_users_df = users_df\
-        .withColumnRenamed('spark_user_id', 'other_spark_user_id')\
-        .withColumnRenamed('user_id', 'other_user_id')
-
-    similar_users_df = listenbrainz_spark.session.createDataFrame(
-        similar_users,
-        ['spark_user_id', 'other_spark_user_id', 'similarity', 'global_similarity']
-    )\
-        .join(users_df, 'spark_user_id', 'inner')\
-        .join(other_users_df, 'other_spark_user_id', 'inner')\
-        .select('user_id', struct('other_user_id', 'similarity', 'global_similarity').alias('similar_user'))\
-        .groupBy('user_id')\
-        .agg(collect_list('similar_user').alias('similar_users'))
+    user_matrix = get_users_matrix(playcounts_df)
+    similarity_matrix = user_matrix.columnSimilarities()
+    similarity_matrix\
+        .entries\
+        .toDF()\
+        .createOrReplaceTempView(similar_table)
+    similar_users = threshold_similar_users(similar_table, user_table, max_num_users)
 
     logger.info('Finishing generating similar user matrix')
 
-    return similar_users_df
+    return similar_users
 
 
 def main(max_num_users: int):
-    similar_users_df = get_similar_users_df(max_num_users)
-    return create_messages(similar_users_df)
+    similar_users = get_similar_users_df(max_num_users)
+    return create_messages(similar_users)
