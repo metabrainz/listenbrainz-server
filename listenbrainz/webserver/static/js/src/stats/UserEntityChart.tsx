@@ -46,7 +46,7 @@ export type UserEntityChartState = {
   listenContainerHeight?: number;
   hasError: boolean;
   errorMessage: string;
-  Terminology: string;
+  terminology: string;
 };
 
 export default class UserEntityChart extends React.Component<
@@ -76,7 +76,7 @@ export default class UserEntityChart extends React.Component<
       loading: false,
       hasError: false,
       errorMessage: "",
-      Terminology: "",
+      terminology: "",
     };
 
     this.listenContainer = React.createRef();
@@ -269,19 +269,19 @@ export default class UserEntityChart extends React.Component<
 
     if (entity == "artist") {
       this.setState({
-        Terminology: "artist",
+        terminology: "artist",
       });
     }
 
     if (entity == "release") {
       this.setState({
-        Terminology: "album",
+        terminology: "album",
       });
     }
 
     if (entity == "recording") {
       this.setState({
-        Terminology: "track",
+        terminology: "track",
       });
     }
 
@@ -447,7 +447,7 @@ export default class UserEntityChart extends React.Component<
       listenContainerHeight,
       hasError,
       errorMessage,
-      Terminology,
+      terminology,
     } = this.state;
     const { APIService } = this.context;
     const { newAlert } = this.props;
@@ -493,7 +493,7 @@ export default class UserEntityChart extends React.Component<
                 <h3>
                   Top{" "}
                   <span style={{ textTransform: "capitalize" }}>
-                    {Terminology ? `${Terminology}s` : ""}
+                    {terminology ? `${terminology}s` : ""}
                   </span>{" "}
                   of {range !== "all_time" ? "the" : ""}
                   <span className="dropdown" style={{ fontSize: 22 }}>
@@ -554,7 +554,7 @@ export default class UserEntityChart extends React.Component<
                 <div className="row">
                   <div className="col-xs-12">
                     <h4 style={{ textTransform: "capitalize" }}>
-                      {Terminology} count - <b>{entityCount}</b>
+                      {terminology} count - <b>{entityCount}</b>
                     </h4>
                   </div>
                 </div>

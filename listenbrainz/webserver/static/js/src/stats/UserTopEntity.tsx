@@ -14,7 +14,7 @@ export type UserTopEntityProps = {
   entity: Entity;
   user?: ListenBrainzUser;
   apiUrl: string;
-  newTerminology: string;
+  terminology: string;
 };
 
 export type UserTopEntityState = {
@@ -95,7 +95,7 @@ export default class UserTopEntity extends React.Component<
   };
 
   render() {
-    const { entity, range, user, newTerminology } = this.props;
+    const { entity, range, user, terminology } = this.props;
     const { data, loading, hasError, errorMessage } = this.state;
 
     let statsUrl;
@@ -106,7 +106,7 @@ export default class UserTopEntity extends React.Component<
     }
     statsUrl += `/charts?range=${range}&entity=${entity}`;
 
-    const entityTextOnCard = `${newTerminology}s`;
+    const entityTextOnCard = `${terminology}s`;
 
     return (
       <Card
