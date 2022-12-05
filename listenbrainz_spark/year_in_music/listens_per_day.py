@@ -30,6 +30,12 @@ def calculate_listens_per_day(year):
     listens.createOrReplaceTempView("listens")
 
     data = calculate_listening_activity()
-    return create_messages(data=data, stats_range="year_in_music",
-                           from_date=from_date, to_date=to_date,
-                           message_type="year_in_music_listens_per_day")
+    stats = create_messages(data=data, stats_range="year_in_music", from_date=from_date,
+                            to_date=to_date, message_type="year_in_music_listens_per_day")
+    for message in stats:
+        # yim stats are stored in postgres instead of couchdb so drop those messages for yim
+        if message["type"] == "couchdb_data_start" or message["type"] == "couchdb_data_end":
+            continue
+
+        message["year"] = year
+        yield message
