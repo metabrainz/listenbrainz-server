@@ -521,7 +521,7 @@ def year_in_music(user_name):
         "user/year-in-music.html",
         user_name=user_name,
         props=ujson.dumps({
-            "data": get_year_in_music(user.id),
+            "data": get_year_in_music(user.id, 2021),
             "user": {
                 "id": user.id,
                 "name": user.musicbrainz_id,

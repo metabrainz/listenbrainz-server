@@ -206,6 +206,7 @@ ALTER TABLE statistics.sitewide ADD CONSTRAINT stats_range_uniq UNIQUE (stats_ra
 
 CREATE TABLE statistics.year_in_music (
     user_id     INTEGER NOT NULL, -- FK to "user".id
+    year        SMALLINT NOT NULL,
     data        JSONB
 );
 

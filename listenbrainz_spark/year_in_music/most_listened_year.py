@@ -8,6 +8,7 @@ def get_most_listened_year(year):
     data = run_query(_get_releases_with_date()).collect()
     yield {
         "type": "most_listened_year",
+        "year": year,
         "data": data[0]["all_user_yearly_counts"]
     }
 

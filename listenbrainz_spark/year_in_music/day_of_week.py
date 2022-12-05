@@ -32,5 +32,6 @@ def get_day_of_week(year):
     data = run_query(query).collect()
     yield {
         "type": "day_of_week",
+        "year": year,
         "data": data[0]["all_users_weekday"]
     }
