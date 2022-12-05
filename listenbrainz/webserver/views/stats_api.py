@@ -897,7 +897,7 @@ def year_in_music(user_name: str):
     return jsonify({
         "payload": {
             "user_name": user_name,
-            "data": get_year_in_music(user["id"]) or {}
+            "data": get_year_in_music(user["id"], 2021) or {}
         }
     })
 

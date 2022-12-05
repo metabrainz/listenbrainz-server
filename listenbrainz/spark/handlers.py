@@ -355,7 +355,7 @@ def handle_similar_users(message):
 
 
 def handle_similar_users_year_end(message):
-    year_in_music.insert_similar_users(message["data"])
+    year_in_music.insert_similar_users(message["year"], message["data"])
 
 
 def handle_new_releases_of_top_artists(message):
@@ -364,23 +364,23 @@ def handle_new_releases_of_top_artists(message):
     user = db_user.get(user_id)
     if not user:
         return
-    year_in_music.insert_new_releases_of_top_artists(user_id, message["data"])
+    year_in_music.insert_new_releases_of_top_artists(user_id, message["year"], message["data"])
 
 
 def handle_most_prominent_color(message):
-    year_in_music.insert_most_prominent_color(message["data"])
+    year_in_music.insert_most_prominent_color(message["year"], message["data"])
 
 
 def handle_day_of_week(message):
-    year_in_music.insert_day_of_week(message["data"])
+    year_in_music.insert_day_of_week(message["year"], message["data"])
 
 
 def handle_most_listened_year(message):
-    year_in_music.insert_most_listened_year(message["data"])
+    year_in_music.insert_most_listened_year(message["year"], message["data"])
 
 
 def handle_top_stats(message):
-    year_in_music.handle_top_stats(message["entity"], message["data"])
+    year_in_music.handle_top_stats(message["entity"], message["year"], message["data"])
 
     # for top_releases, look up cover art
     if message["entity"] == "releases":
@@ -391,7 +391,7 @@ def handle_top_stats(message):
                 return
             release_mbids = [rel["release_mbid"] for rel in user_data["data"] if "release_mbid" in rel]
             coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
-            year_in_music.handle_coverart(user_data["user_id"], "top_releases_coverart", coverart)
+            year_in_music.handle_coverart(user_data["user_id"], message["year"], "top_releases_coverart", coverart)
 
 
 def handle_listens_per_day(message):
@@ -399,11 +399,11 @@ def handle_listens_per_day(message):
     user = db_user.get(user_id)
     if not user:
         return
-    year_in_music.handle_listens_per_day(user_id, message["data"])
+    year_in_music.handle_listens_per_day(user_id, message["year"], message["data"])
 
 
 def handle_yearly_listen_counts(message):
-    year_in_music.handle_yearly_listen_counts(message["data"])
+    year_in_music.handle_yearly_listen_counts(message["year"], message["data"])
 
 
 def handle_similar_recordings(message):
