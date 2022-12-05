@@ -14,6 +14,7 @@ def get_new_releases_of_top_artists(year):
         data = entry.asDict(recursive=True)
         yield NewReleasesStat(
             type="new_releases_of_top_artists",
+            year=year,
             user_id=data["user_id"],
             data=data["new_releases"]
         ).dict(exclude_none=True)

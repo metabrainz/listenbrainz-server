@@ -10,6 +10,7 @@ def get_most_prominent_color(year):
     all_user_colors = run_query(_get_most_prominent_color()).collect()
     yield {
         "type": "most_prominent_color",
+        "year": year,
         "data": all_user_colors[0]["all_users_colors"]
     }
 

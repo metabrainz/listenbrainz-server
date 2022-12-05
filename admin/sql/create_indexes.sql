@@ -62,4 +62,6 @@ CREATE UNIQUE INDEX caa_id_ndx_release_color ON release_color (caa_id);
 
 CREATE UNIQUE INDEX user_id_ndx_user_setting ON user_setting (user_id);
 
+CREATE UNIQUE INDEX user_id_year_in_music_uniq_idx ON statistics.year_in_music (user_id, year);
+
 COMMIT;
