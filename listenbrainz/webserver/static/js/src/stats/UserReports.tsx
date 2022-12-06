@@ -110,6 +110,7 @@ export default class UserReports extends React.Component<
                   entity="artist"
                   apiUrl={apiUrl}
                   user={user}
+                  terminology="artist"
                 />
               </ErrorBoundary>
             </div>
@@ -120,6 +121,7 @@ export default class UserReports extends React.Component<
                   entity="release"
                   apiUrl={apiUrl}
                   user={user}
+                  terminology="album"
                 />
               </ErrorBoundary>
             </div>
@@ -130,6 +132,7 @@ export default class UserReports extends React.Component<
                   entity="recording"
                   apiUrl={apiUrl}
                   user={user}
+                  terminology="track"
                 />
               </ErrorBoundary>
             </div>

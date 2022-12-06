@@ -70,7 +70,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                 }
                 type="button"
               >
-                Releases
+                Albums
               </button>
             </Pill>
             <Pill
@@ -94,7 +94,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                 }
                 type="button"
               >
-                Recordings
+                Tracks
               </button>
             </Pill>
           </div>
@@ -6045,7 +6045,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                 }
                 type="button"
               >
-                Releases
+                Albums
               </button>
             </Pill>
             <Pill
@@ -6069,7 +6069,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                 }
                 type="button"
               >
-                Recordings
+                Tracks
               </button>
             </Pill>
           </div>
@@ -18963,7 +18963,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                 }
                 type="button"
               >
-                Releases
+                Albums
               </button>
             </Pill>
             <Pill
@@ -18987,7 +18987,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                 }
                 type="button"
               >
-                Recordings
+                Tracks
               </button>
             </Pill>
           </div>
@@ -25214,7 +25214,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                 }
                 type="button"
               >
-                Releases
+                Albums
               </button>
             </Pill>
             <Pill
@@ -25238,7 +25238,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                 }
                 type="button"
               >
-                Recordings
+                Tracks
               </button>
             </Pill>
           </div>
@@ -25258,9 +25258,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                     "textTransform": "capitalize",
                   }
                 }
-              >
-                artists
-              </span>
+              />
                
               of 
               <span
@@ -26275,7 +26273,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                 }
                 type="button"
               >
-                Releases
+                Albums
               </button>
             </Pill>
             <Pill
@@ -26299,7 +26297,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                 }
                 type="button"
               >
-                Recordings
+                Tracks
               </button>
             </Pill>
           </div>
@@ -32256,7 +32254,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                 }
                 type="button"
               >
-                Releases
+                Albums
               </button>
             </Pill>
             <Pill
@@ -32280,7 +32278,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                 }
                 type="button"
               >
-                Recordings
+                Tracks
               </button>
             </Pill>
           </div>
@@ -45180,7 +45178,7 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                 }
                 type="button"
               >
-                Releases
+                Albums
               </button>
             </Pill>
             <Pill
@@ -45204,7 +45202,7 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                 }
                 type="button"
               >
-                Recordings
+                Tracks
               </button>
             </Pill>
           </div>
@@ -51437,7 +51435,7 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                 }
                 type="button"
               >
-                Releases
+                Albums
               </button>
             </Pill>
             <Pill
@@ -51461,7 +51459,7 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                 }
                 type="button"
               >
-                Recordings
+                Tracks
               </button>
             </Pill>
           </div>
@@ -51481,9 +51479,7 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                     "textTransform": "capitalize",
                   }
                 }
-              >
-                artists
-              </span>
+              />
                
               of 
               <span
