@@ -83,6 +83,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
             apiUrl="foobar"
             entity="artist"
             range="week"
+            terminology="artist"
           />
         </ErrorBoundary>
       </div>
@@ -94,6 +95,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
             apiUrl="foobar"
             entity="release"
             range="week"
+            terminology="album"
           />
         </ErrorBoundary>
       </div>
@@ -105,6 +107,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
             apiUrl="foobar"
             entity="recording"
             range="week"
+            terminology="track"
           />
         </ErrorBoundary>
       </div>
@@ -211,6 +214,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
             apiUrl="foobar"
             entity="artist"
             range="week"
+            terminology="artist"
             user={
               Object {
                 "name": "test_user",
@@ -227,6 +231,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
             apiUrl="foobar"
             entity="release"
             range="week"
+            terminology="album"
             user={
               Object {
                 "name": "test_user",
@@ -243,6 +248,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
             apiUrl="foobar"
             entity="recording"
             range="week"
+            terminology="track"
             user={
               Object {
                 "name": "test_user",

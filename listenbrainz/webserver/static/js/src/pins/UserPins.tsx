@@ -299,7 +299,7 @@ export default class UserPins extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8 col-md-offset-2">
-            <h3>Pinned Recordings</h3>
+            <h3>Pinned Tracks</h3>
 
             {pins.length === 0 && (
               <>

@@ -181,7 +181,7 @@ describe("<UserFeed />", () => {
     );
     const recEvent = wrapper.find("#timeline > ul >li").at(11);
     const description = recEvent.find(".event-description-text");
-    expect(description.text()).toEqual("jdaok pinned a recording");
+    expect(description.text()).toEqual("jdaok pinned a track");
     const content = recEvent.find(".event-content");
     expect(content.exists()).toBeTruthy();
     expect(content.children()).toHaveLength(1);

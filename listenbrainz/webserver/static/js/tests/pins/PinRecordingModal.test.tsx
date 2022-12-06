@@ -168,7 +168,7 @@ describe("submitPinRecording", () => {
     expect(instance.handleError).toHaveBeenCalledTimes(1);
     expect(instance.handleError).toHaveBeenCalledWith(
       error,
-      "Error while pinning recording"
+      "Error while pinning track"
     );
   });
 });
