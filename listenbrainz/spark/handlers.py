@@ -355,7 +355,7 @@ def handle_similar_users(message):
 
 
 def handle_similar_users_year_end(message):
-    year_in_music.insert_similar_users(message["year"], message["data"])
+    year_in_music.insert("similar_users", message["year"], message["data"])
 
 
 def handle_new_releases_of_top_artists(message):
@@ -368,15 +368,15 @@ def handle_new_releases_of_top_artists(message):
 
 
 def handle_most_prominent_color(message):
-    year_in_music.insert_most_prominent_color(message["year"], message["data"])
+    year_in_music.insert("most_prominent_color", message["year"], message["data"])
 
 
 def handle_day_of_week(message):
-    year_in_music.insert_day_of_week(message["year"], message["data"])
+    year_in_music.insert("day_of_week", message["year"], message["data"])
 
 
 def handle_most_listened_year(message):
-    year_in_music.insert_most_listened_year(message["year"], message["data"])
+    year_in_music.insert("most_listened_year", message["year"], message["data"])
 
 
 def handle_top_stats(message):
@@ -403,7 +403,7 @@ def handle_listens_per_day(message):
 
 
 def handle_yearly_listen_counts(message):
-    year_in_music.handle_yearly_listen_counts(message["year"], message["data"])
+    year_in_music.insert("total_listen_count", message["year"], message["data"])
 
 
 def handle_similar_recordings(message):
