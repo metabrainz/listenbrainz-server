@@ -267,19 +267,19 @@ export default class UserEntityChart extends React.Component<
     this.setState({ loading: true });
     const { page, range, entity } = this.getURLParams();
 
-    if (entity == "artist") {
+    if (entity === "artist") {
       this.setState({
         terminology: "artist",
       });
     }
 
-    if (entity == "release") {
+    if (entity === "release") {
       this.setState({
         terminology: "album",
       });
     }
 
-    if (entity == "recording") {
+    if (entity === "recording") {
       this.setState({
         terminology: "track",
       });
