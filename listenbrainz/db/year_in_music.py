@@ -9,6 +9,7 @@ import ujson
 from flask import current_app, render_template
 from psycopg2.extras import execute_values
 from brainzutils import musicbrainz_db
+from psycopg2.sql import SQL, Literal
 
 from listenbrainz.db.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
@@ -36,7 +37,7 @@ from listenbrainz.db.user_timeline_event import create_user_notification_event
 # total_listen_count
 
 
-def get_year_in_music(user_id, year):
+def get(user_id, year):
     """ Get year in music data for requested user """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -44,6 +45,28 @@ def get_year_in_music(user_id, year):
         """), {"user_id": user_id, "year": year})
         row = result.fetchone()
         return row["data"] if row else None
+
+
+def insert(key, year, data):
+    connection = db.engine.raw_connection()
+    query = SQL("""
+        INSERT INTO statistics.year_in_music(user_id, year, data)
+             SELECT "user".id
+                  , {year}
+                  , jsonb_build_object({key}, value)
+               FROM (VALUES %s) AS t(user_id, value)
+               JOIN "user"
+                 ON "user".id = user_id
+        ON CONFLICT (user_id, year)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+    """).format(year=Literal(year), key=Literal(key))
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, ujson.loads(data).items())
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error(f"Error while inserting {key}:", exc_info=True)
 
 
 def insert_new_releases_of_top_artists(user_id, year, data):
@@ -56,111 +79,22 @@ def insert_new_releases_of_top_artists(user_id, year, data):
         """), {"user_id": user_id, "year": year, "data": ujson.dumps(data)})
 
 
-def insert_most_prominent_color(year, data):
-    connection = db.engine.raw_connection()
-    query = """
-        INSERT INTO statistics.year_in_music(user_id, year, data)
-             SELECT "user".id
-                  , year
-                  , jsonb_build_object('most_prominent_color', color)
-               FROM (VALUES %s) AS t(user_id, year, color)
-               JOIN "user"
-                 ON "user".id = user_id
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-        """
-    user_colors = ujson.loads(data)
-    try:
-        with connection.cursor() as cursor:
-            execute_values(cursor, query, [(k, year, v) for k, v in user_colors.items()])
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting most prominent colors:", exc_info=True)
-
-
-def insert_similar_users(year, data):
-    connection = db.engine.raw_connection()
-    query = """
-        INSERT INTO statistics.year_in_music(user_id, year, data)
-             SELECT "user".id
-                  , jsonb_build_object('similar_users', similar_users::jsonb)
-               FROM (VALUES %s) AS t(user_id, year, similar_users)
-               JOIN "user"
-                 ON "user".id = user_id
-        ON CONFLICT (user_id)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-        """
-    similar_users = [(k, year, ujson.dumps(v)) for k, v in data.items()]
-    try:
-        with connection.cursor() as cursor:
-            execute_values(cursor, query, similar_users)
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting similar users:", exc_info=True)
-
-
-def insert_day_of_week(year, data):
-    connection = db.engine.raw_connection()
-    query = """
-        INSERT INTO statistics.year_in_music(user_id, year, data)
-             SELECT "user".id
-                  , jsonb_build_object('day_of_week', weekday)
-               FROM (VALUES %s) AS t(user_id, year, weekday)
-               JOIN "user"
-                 ON "user".id = user_id
-        ON CONFLICT (user_id)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-        """
-    user_weekdays = ujson.loads(data)
-    try:
-        with connection.cursor() as cursor:
-            execute_values(cursor, query, [(k, year, v) for k, v in user_weekdays.items()])
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting day of week:", exc_info=True)
-
-
-def insert_most_listened_year(year, data):
-    connection = db.engine.raw_connection()
-    query = """
-        INSERT INTO statistics.year_in_music(user_id, year, data)
-             SELECT "user".id
-                  , jsonb_build_object('most_listened_year', yearly_counts::jsonb)
-               FROM (VALUES %s) AS t(user_id, year, yearly_counts)
-               JOIN "user"
-                 ON "user".id = user_id
-        ON CONFLICT (user_id)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-        """
-    user_listened_years = [(k, year, ujson.dumps(v)) for k, v in ujson.loads(data).items()]
-    try:
-        with connection.cursor() as cursor:
-            execute_values(cursor, query, user_listened_years)
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting most_listened_year:", exc_info=True)
-
-
 def handle_top_stats(entity, year, data):
     connection = db.engine.raw_connection()
-    query = """
+    query = SQL("""
         INSERT INTO statistics.year_in_music (user_id, year, data)
              SELECT "user".id
-                  , jsonb_build_object(%s, top_stats::jsonb)
-               FROM (VALUES %%s) AS t(user_name, year, top_stats)
+                  , {year}
+                  , jsonb_build_object({key}, top_stats::jsonb)
+               FROM (VALUES %s) AS t(user_name, top_stats)
                JOIN "user"
                  ON "user".musicbrainz_id = user_name
-        ON CONFLICT (user_id)
+        ON CONFLICT (user_id, year)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-    """
+    """).format(key=Literal(f"top_{entity}"), year=year)
     try:
         with connection.cursor() as cursor:
-            query = cursor.mogrify(query, (f"top_{entity}",))
-            values = [(user["musicbrainz_id"], year, ujson.dumps(user["data"])) for user in data]
+            values = [(user["musicbrainz_id"], ujson.dumps(user["data"])) for user in data]
             execute_values(cursor, query, values)
         connection.commit()
     except psycopg2.errors.OperationalError:
@@ -178,28 +112,6 @@ def handle_listens_per_day(user_id, year, data):
         """), {"user_id": user_id, "year": year, "data": ujson.dumps(data)})
 
 
-def handle_yearly_listen_counts(year, data):
-    connection = db.engine.raw_connection()
-    query = """
-        INSERT INTO statistics.year_in_music(user_id, year, data)
-             SELECT "user".id
-                  , jsonb_build_object('total_listen_count', listen_count)
-               FROM (VALUES %s) AS t(user_id, year, listen_count)
-               JOIN "user"
-                 ON "user".id = user_id
-        ON CONFLICT (user_id)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-        """
-    user_listen_counts = ujson.loads(data)
-    try:
-        with connection.cursor() as cursor:
-            execute_values(cursor, query, [(k, year, v) for k, v in user_listen_counts.items()])
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting most prominent colors:", exc_info=True)
-
-
 def insert_playlists(year, troi_patch_slug, import_file):
     connection = db.engine.raw_connection()
     query = """
@@ -209,7 +121,7 @@ def insert_playlists(year, troi_patch_slug, import_file):
                FROM (VALUES %s) AS t(user_name, year, playlists)
                JOIN "user"
                  ON "user".musicbrainz_id = user_name
-        ON CONFLICT (user_id)
+        ON CONFLICT (user_id, year)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """
 

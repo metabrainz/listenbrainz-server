@@ -3,7 +3,7 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import ujson
 
 from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
-from flask_login import current_user, login_required
+from flask_login import current_user
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
@@ -14,7 +14,7 @@ from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_creat
     get_playlists_collaborated_on
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
-from listenbrainz.db.year_in_music import get_year_in_music
+from listenbrainz.db import year_in_music
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.errors import APIBadRequest
@@ -521,7 +521,7 @@ def year_in_music(user_name):
         "user/year-in-music.html",
         user_name=user_name,
         props=ujson.dumps({
-            "data": get_year_in_music(user.id, 2021),
+            "data": year_in_music.get(user.id, 2021),
             "user": {
                 "id": user.id,
                 "name": user.musicbrainz_id,
