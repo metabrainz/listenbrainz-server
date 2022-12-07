@@ -188,15 +188,10 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                     'recording_mbid': row['recording_mbid'],
                     'artist_mbids': row['artist_mbids'],
                     'release_mbid' : row['release_mbid'],
+                    'caa_id' : row['caa_id'],
+                    'caa_release_mbid' : row['caa_release_mbid']
                 }
             }
         })
-
-
-        if row["caa_id"] : 
-            recommendations.append['track_metadata']['additional_info']['caa_id'] = row['caa_id']
-
-        if row["caa_release_mbid"] : 
-            recommendations.append['track_metadata']['additional_info']['caa_release_mbid'] = row['caa_release_mbid']
 
     return recommendations
