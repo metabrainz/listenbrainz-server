@@ -63,16 +63,6 @@ const mountOptionsWithoutUser: { context: GlobalAppContextT } = {
   },
 };
 
-// from https://github.com/kentor/flush-promises/blob/46f58770b14fb74ce1ff27da00837c7e722b9d06/index.js
-const scheduler =
-  typeof setImmediate === "function" ? setImmediate : setTimeout;
-
-function flushPromises() {
-  return new Promise(function flushPromisesPromise(resolve) {
-    scheduler(resolve, 0);
-  });
-}
-
 const mockDate = new Date("2021-05-19");
 const fakeDateNow = jest
   .spyOn(global.Date, "now")
@@ -163,7 +153,7 @@ describe("UserFeedback", () => {
         .filter(Boolean)
         .join(",")
     );
-    // await flushPromises();
+
     expect(instance.state.recordingMsidFeedbackMap).toEqual({
       "some-uuid": 1,
       "some-other-uuid": -1,
@@ -188,7 +178,6 @@ describe("UserFeedback", () => {
     await waitForComponentToPaint(wrapper);
     expect(getFeedbackSpy).toHaveBeenCalledTimes(1);
 
-    // await flushPromises();
     expect(apiGetFeedbackSpy).not.toHaveBeenCalled();
   });
 
