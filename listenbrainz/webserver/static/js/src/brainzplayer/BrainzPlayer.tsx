@@ -65,7 +65,7 @@ export type DataSourceProps = {
   ) => void;
 };
 
-type BrainzPlayerProps = {
+export type BrainzPlayerProps = {
   listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
@@ -77,7 +77,7 @@ type BrainzPlayerProps = {
   listenBrainzAPIBaseURI: string;
 };
 
-type BrainzPlayerState = {
+export type BrainzPlayerState = {
   currentListen?: Listen | JSPFTrack;
   currentDataSourceIndex: number;
   currentTrackName: string;

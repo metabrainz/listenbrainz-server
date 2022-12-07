@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* Used in jest.config.js */
 import * as Enzyme from "enzyme";
-import * as Adapter from "enzyme-adapter-react-16";
+import Adapter from "@cfaester/enzyme-adapter-react-18";
 import { enableFetchMocks } from "jest-fetch-mock";
 
 Enzyme.configure({ adapter: new Adapter() });

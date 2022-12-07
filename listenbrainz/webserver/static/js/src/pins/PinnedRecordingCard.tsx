@@ -37,7 +37,7 @@ export type PinnedRecordingCardProps = {
   ) => void;
 };
 
-type PinnedRecordingCardState = {
+export type PinnedRecordingCardState = {
   currentlyPinned?: Boolean;
   isDeleted: Boolean;
 };
