@@ -786,8 +786,9 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
 
 
 def cleanup_mbid_mapping_table():
-    """ Find msids which are mapped to mbids that are now absent from mb_metadata_cache because
-     those have been merged (redirects) or deleted from MB. """
+    """ Find msids which are mapped to mbids that are now absent from mb_metadata_cache
+     because those have been merged (redirects) or deleted from MB and flag such msids
+     to be re-mapped by the mbid mapping writer."""
     query = """
         UPDATE mbid_mapping mm
            SET last_updated = 'epoch'
