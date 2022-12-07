@@ -136,7 +136,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
 
 
 
-            if caa_id and caa_release_mbid or release_mbid and record_mbid are avialable then:
+            if caa_id and caa_release_mbid or release_mbid and recording_mbid are available then:
 
                 
             Returns:
