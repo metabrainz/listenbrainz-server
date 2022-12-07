@@ -311,6 +311,9 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.recommendations_cf_recording_api import recommendations_cf_recording_api_bp
     app.register_blueprint(recommendations_cf_recording_api_bp, url_prefix=API_PREFIX+'/cf/recommendation')
 
+    from listenbrainz.webserver.views.do_not_recommend_api import do_not_recommend_api_bp
+    app.register_blueprint(do_not_recommend_api_bp, url_prefix=API_PREFIX)
+
     from listenbrainz.webserver.views.social_api import social_api_bp
     app.register_blueprint(social_api_bp, url_prefix=API_PREFIX)
 

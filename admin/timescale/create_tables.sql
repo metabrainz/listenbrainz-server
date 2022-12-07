@@ -192,8 +192,12 @@ CREATE TABLE similarity.recording (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     metadata JSONB NOT NULL
+);
 
-    CONSTRAINT alphabetical_uuids CHECK (mbid0 <= mbid1)
+CREATE TABLE similarity.artist (
+    mbid0 UUID NOT NULL,
+    mbid1 UUID NOT NULL,
+    metadata JSONB NOT NULL
 );
 
 COMMIT;

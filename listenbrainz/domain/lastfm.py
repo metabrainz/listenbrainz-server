@@ -14,19 +14,22 @@ from listenbrainz.webserver.errors import APINotFound
 
 def bulk_insert_loved_tracks(user_id: int, feedback: list[tuple[int, str]]):
     """ Insert loved tracks imported from LFM into feedback table """
-    # DO NOTHING because we can only import loved tracks.
-    # if a user has imported something before from last.fm then the score doesn't change.
-    # if the user has unloved a track on last.fm, we won't receive it this time so can't
-    # remove it from feedback in any case.
-    query = """
+    # delete existing feedback for given mbids and then import new in same transaction
+    delete_query = """
+               WITH entries(user_id, recording_mbid) AS (VALUES %s)
+        DELETE FROM recording_feedback rf
+              USING entries e
+              WHERE e.user_id = rf.user_id
+                AND e.recording_mbid::uuid = rf.recording_mbid
+    """
+    insert_query = """
         INSERT INTO recording_feedback (user_id, created, recording_mbid, score)
              VALUES %s
-        ON CONFLICT (user_id, recording_mbid)
-         DO NOTHING
     """
     connection = db.engine.raw_connection()
     with connection.cursor() as cursor:
-        execute_values(cursor, query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
+        execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
+        execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
     connection.commit()
 
 

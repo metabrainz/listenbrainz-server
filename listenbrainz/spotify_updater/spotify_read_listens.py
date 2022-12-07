@@ -16,7 +16,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, \
     ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService
-from listenbrainz.webserver.errors import APIBadRequest
+from listenbrainz.webserver.errors import APIBadRequest, ListenValidationError
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT, \
     LISTEN_TYPE_PLAYING_NOW
@@ -267,7 +267,7 @@ def parse_and_validate_spotify_plays(plays, listen_type):
 
         try:
             listens.append(validate_listen(listen, listen_type))
-        except APIBadRequest:
+        except ListenValidationError:
             pass
     return listens, latest_listen_ts
 

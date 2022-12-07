@@ -229,7 +229,7 @@ export default class RecentListens extends React.Component<
                   /* eslint-disable react/jsx-no-bind */
                   const additionalMenuItems = [
                     <ListenControl
-                      text="Pin this recording"
+                      text="Pin this track"
                       icon={faThumbtack}
                       action={this.updateRecordingToPin.bind(this, listen)}
                       dataToggle="modal"

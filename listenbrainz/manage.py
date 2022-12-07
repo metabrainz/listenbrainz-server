@@ -6,14 +6,14 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz import webserver
-from listenbrainz.db import timescale as ts
+from listenbrainz.db import timescale as ts, do_not_recommend
 from listenbrainz.listenstore import timescale_fill_userid
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
     delete_listens as ts_delete_listens, \
     delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data
-from listenbrainz.messybrainz import transfer_to_timescale
+from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
 from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
@@ -300,3 +300,20 @@ def run_spotify_metadata_cache_seeder():
     """ Query spotify new releases api for new releases and submit those to our cache as seeds """
     with create_app().app_context():
         submit_new_releases_to_cache()
+
+
+@cli.command()
+def update_msid_tables():
+    """ Scan tables using msids to find matching mbids from mapping tables and update them. """
+    with create_app().app_context():
+        update_msids_from_mapping.run_all_updates()
+
+
+@cli.command()
+def clear_expired_do_not_recommends():
+    """ Delete expired do not recommend entries from database """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Starting process to clean up expired do not recommends")
+        do_not_recommend.clear_expired()
+        app.logger.info("Completed process to clean up expired do not recommends")

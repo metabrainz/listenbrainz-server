@@ -724,7 +724,7 @@ export default class Listens extends React.Component<
     if (canPin) {
       additionalMenuItems.push(
         <ListenControl
-          text="Pin this recording"
+          text="Pin this track"
           icon={faThumbtack}
           action={this.updateRecordingToPin.bind(this, listen)}
           dataToggle="modal"

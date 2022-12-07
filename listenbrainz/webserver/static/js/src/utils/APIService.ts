@@ -1191,4 +1191,36 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  fetchSitewideFreshReleases = async (
+    days?: number,
+    release_date?: string
+  ): Promise<any> => {
+    let url = `${this.APIBaseURI}/explore/fresh-releases/`;
+
+    const queryParams: Array<string> = [];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
+    if (release_date) {
+      queryParams.push(`release_date=${release_date}`);
+    }
+    if (queryParams.length) {
+      url += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  fetchUserFreshReleases = async (username: string): Promise<any> => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+    const url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
 }

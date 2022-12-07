@@ -97,14 +97,14 @@ export default class PinnedRecordingCard extends React.Component<
           this.setState({ currentlyPinned: false });
           newAlert(
             "success",
-            `You unpinned a recording.`,
+            `You unpinned a track.`,
             `${getArtistName(pinnedRecording)} - ${getTrackName(
               pinnedRecording
             )}`
           );
         }
       } catch (error) {
-        this.handleError(error, "Error while unpinning recording");
+        this.handleError(error, "Error while unpinning track");
       }
     }
   };

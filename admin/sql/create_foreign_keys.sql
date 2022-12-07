@@ -84,6 +84,12 @@ ALTER TABLE recommendation.recommender_session
     REFERENCES recommendation.recommender (id)
     ON DELETE CASCADE;
 
+ALTER TABLE recommendation.do_not_recommend
+    ADD CONSTRAINT do_not_recommend_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 ALTER TABLE user_timeline_event
     ADD CONSTRAINT user_timeline_event_user_foreign_key
     FOREIGN KEY (user_id)
