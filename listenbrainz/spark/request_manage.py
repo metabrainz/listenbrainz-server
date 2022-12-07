@@ -359,7 +359,8 @@ def request_similar_users(max_num_users):
                                         " the limit).", required=True)
 @click.option("--filter-artist-credit", type=bool, help="Whether to filter tracks by same artists in a listening"
                                                         " session", required=True)
-def request_similar_recordings(days, session, contribution, threshold, limit, filter_artist_credit):
+@click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
+def request_similar_recordings(days, session, contribution, threshold, limit, filter_artist_credit, skip):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
         "similarity.recording",
@@ -368,7 +369,36 @@ def request_similar_recordings(days, session, contribution, threshold, limit, fi
         contribution=contribution,
         threshold=threshold,
         limit=limit,
-        filter_artist_credit=filter_artist_credit
+        filter_artist_credit=filter_artist_credit,
+        skip=skip
+    )
+
+
+@cli.command(name='request_similar_artists')
+@click.option("--days", type=int, help="The number of days of listens to use.", required=True)
+@click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
+                                          " session.", required=True)
+@click.option("--contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
+                                               " score of a artist pair.", required=True)
+@click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the"
+                                            " simlarity index.", required=True)
+@click.option("--limit", type=int, help="The maximum number of similar artists to generate per artist"
+                                        " (the limit is instructive. upto 2x artists may be returned than"
+                                        " the limit).", required=True)
+@click.option("--filter-artist-credit", type=bool, help="Whether to filter artists in session if they appear on the"
+                                                        " same artist credit", required=True)
+@click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
+def request_similar_artists(days, session, contribution, threshold, limit, filter_artist_credit, skip):
+    """ Send the cluster a request to generate similar artists index. """
+    send_request_to_spark_cluster(
+        "similarity.artist",
+        days=days,
+        session=session,
+        contribution=contribution,
+        threshold=threshold,
+        limit=limit,
+        filter_artist_credit=filter_artist_credit,
+        skip=skip
     )
 
 

@@ -16,6 +16,7 @@ const userProps: UserTopEntityProps = {
   range: "week",
   entity: "artist",
   apiUrl: "foobar",
+  terminology: "artist",
   user: {
     name: "test_user",
   },
@@ -25,6 +26,7 @@ const sitewideProps: UserTopEntityProps = {
   range: "week",
   entity: "artist",
   apiUrl: "foobar",
+  terminology : "artist",
 };
 
 describe.each([

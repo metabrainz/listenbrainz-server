@@ -1,7 +1,7 @@
 from datetime import date, datetime, time
 
 from listenbrainz_spark.recommendations.recording.create_dataframes import calculate_dataframes
-from listenbrainz_spark.user_similarity import user_similarity
+from listenbrainz_spark.similarity import user
 
 
 def get_similar_users(year):

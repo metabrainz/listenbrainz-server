@@ -58,13 +58,13 @@ export default class PinRecordingModal extends React.Component<
         const { data } = response;
         newPin = data;
       } catch (error) {
-        this.handleError(error, "Error while pinning recording");
+        this.handleError(error, "Error while pinning track");
         return;
       }
 
       newAlert(
         "success",
-        `You pinned a recording!`,
+        `You pinned a track!`,
         `${getArtistName(recordingToPin)} - ${getTrackName(recordingToPin)}`
       );
       this.setState({ blurbContent: "" });
@@ -127,7 +127,7 @@ export default class PinRecordingModal extends React.Component<
                 <span aria-hidden="true">&times;</span>
               </button>
               <h4 className="modal-title" id="PinRecordingModalLabel">
-                Pin This Recording to Your Profile
+                Pin This Track to Your Profile
               </h4>
             </div>
             <div className="modal-body">
@@ -143,7 +143,7 @@ export default class PinRecordingModal extends React.Component<
                 <textarea
                   className="form-control"
                   id="blurb-content"
-                  placeholder="Let your followers know why you are showcasing this recording..."
+                  placeholder="Let your followers know why you are showcasing this track..."
                   value={blurbContent}
                   name="blurb-content"
                   onChange={this.handleBlurbInputChange}
@@ -156,8 +156,8 @@ export default class PinRecordingModal extends React.Component<
                 {blurbContent.length} / {this.maxBlurbContentLength}
               </small>
               <small>
-                Pinning this recording will replace any recording currently
-                pinned. <br />
+                Pinning this track will replace any track currently pinned.{" "}
+                <br />
                 <b>
                   {track_name} by {artist_name}
                 </b>{" "}
@@ -179,7 +179,7 @@ export default class PinRecordingModal extends React.Component<
                 onClick={this.submitPinRecording}
                 data-dismiss="modal"
               >
-                Pin Recording
+                Pin Track
               </button>
             </div>
           </form>

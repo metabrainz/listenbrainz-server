@@ -17,7 +17,9 @@ def export_to_spotify(lb_token, spotify_token, playlist_mbid, is_public):
             "is_collaborative": False
         },
         "upload": True,
-        "echo": False
+        "echo": False,
+        "min_recordings": 1
     }
     playlist = generate_playlist(TransferPlaylistPatch(), args)
-    return playlist.playlists[0].external_urls[0]
+    metadata = playlist.playlists[0].additional_metadata
+    return metadata["external_urls"]["spotify"]

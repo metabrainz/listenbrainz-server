@@ -150,7 +150,7 @@ export default class UserFeedPage extends React.Component<
       case EventType.LIKE:
         return "added a track to their favorites";
       case EventType.RECORDING_PIN:
-        return "pinned a recording";
+        return "pinned a track";
       case EventType.REVIEW: {
         review = event.metadata as CritiqueBrainzReview;
         return `reviewed ${UserFeedPage.getReviewEntityName(

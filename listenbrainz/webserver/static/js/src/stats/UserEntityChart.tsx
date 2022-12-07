@@ -46,6 +46,7 @@ export type UserEntityChartState = {
   listenContainerHeight?: number;
   hasError: boolean;
   errorMessage: string;
+  terminology: string;
 };
 
 export default class UserEntityChart extends React.Component<
@@ -75,6 +76,7 @@ export default class UserEntityChart extends React.Component<
       loading: false,
       hasError: false,
       errorMessage: "",
+      terminology: "",
     };
 
     this.listenContainer = React.createRef();
@@ -264,6 +266,25 @@ export default class UserEntityChart extends React.Component<
   syncStateWithURL = async (): Promise<void> => {
     this.setState({ loading: true });
     const { page, range, entity } = this.getURLParams();
+
+    if (entity === "artist") {
+      this.setState({
+        terminology: "artist",
+      });
+    }
+
+    if (entity === "release") {
+      this.setState({
+        terminology: "album",
+      });
+    }
+
+    if (entity === "recording") {
+      this.setState({
+        terminology: "track",
+      });
+    }
+
     // Check that the given page is an integer
     if (!Number.isInteger(page)) {
       this.setState({
@@ -426,6 +447,7 @@ export default class UserEntityChart extends React.Component<
       listenContainerHeight,
       hasError,
       errorMessage,
+      terminology,
     } = this.state;
     const { APIService } = this.context;
     const { newAlert } = this.props;
@@ -455,14 +477,14 @@ export default class UserEntityChart extends React.Component<
                   type="secondary"
                   onClick={() => this.changeEntity("release")}
                 >
-                  Releases
+                  Albums
                 </Pill>
                 <Pill
                   active={entity === "recording"}
                   type="secondary"
                   onClick={() => this.changeEntity("recording")}
                 >
-                  Recordings
+                  Tracks
                 </Pill>
               </div>
             </div>
@@ -471,7 +493,7 @@ export default class UserEntityChart extends React.Component<
                 <h3>
                   Top{" "}
                   <span style={{ textTransform: "capitalize" }}>
-                    {entity ? `${entity}s` : ""}
+                    {terminology ? `${terminology}s` : ""}
                   </span>{" "}
                   of {range !== "all_time" ? "the" : ""}
                   <span className="dropdown" style={{ fontSize: 22 }}>
@@ -532,7 +554,7 @@ export default class UserEntityChart extends React.Component<
                 <div className="row">
                   <div className="col-xs-12">
                     <h4 style={{ textTransform: "capitalize" }}>
-                      {entity} count - <b>{entityCount}</b>
+                      {terminology} count - <b>{entityCount}</b>
                     </h4>
                   </div>
                 </div>

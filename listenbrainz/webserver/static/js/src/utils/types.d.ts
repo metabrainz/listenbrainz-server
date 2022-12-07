@@ -618,6 +618,7 @@ type CoverArtArchiveEntry = {
     large: string;
   };
 };
+
 type CoverArtArchiveResponse = {
   images: CoverArtArchiveEntry[];
   release: string; // Full MB URL i.e "http://musicbrainz.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd"
@@ -644,4 +645,24 @@ type MissingMBData = {
   listened_at: string;
   recording_name: string;
   release_name?: string;
+};
+
+type FreshReleaseItem = {
+  artist_credit_name: string;
+  artist_mbids: Array<string>;
+  caa_id: number | null;
+  confidence?: number;
+  release_date: string;
+  release_group_mbid: string;
+  release_group_primary_type?: string;
+  release_group_secondary_type?: string;
+  release_mbid: string;
+  release_name: string;
+};
+
+type UserFreshReleasesResponse = {
+  payload: {
+    releases: Array<FreshReleaseItem>;
+    user_id: string;
+  };
 };
