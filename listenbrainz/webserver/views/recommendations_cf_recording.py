@@ -136,14 +136,15 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
 
 
 
-            if caa_id and caa_release_mbid are avialable then:
+            if caa_id and caa_release_mbid or record_mbid are avialable then:
 
                 
             Returns:
                 'track_metadata' : {
                     'additional_info' : {
                         'caa_id' : "demo caa id",
-                        'caa_release_mbid' : "demo caa release allbum mbid"
+                        'caa_release_mbid' : "demo caa release album mbid"
+                        'release_mbid' : "demo release mbid"
                     }
                 }
 
@@ -185,7 +186,8 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                 'release_name': row['release'],
                 'additional_info': {
                     'recording_mbid': row['recording_mbid'],
-                    'artist_mbids': row['artist_mbids']
+                    'artist_mbids': row['artist_mbids'],
+                    'release_mbid' : row['release_mbid'],
                 }
             }
         })
