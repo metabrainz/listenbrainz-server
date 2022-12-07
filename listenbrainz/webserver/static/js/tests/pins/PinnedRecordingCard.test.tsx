@@ -151,7 +151,7 @@ describe("PinnedRecordingCard", () => {
       expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
       expect(instance.props.newAlert).toHaveBeenCalledWith(
         "success",
-        "You unpinned a recording.",
+        "You unpinned a track.",
         "Rick Astley - Never Gonna Give You Up"
       );
     });
@@ -250,7 +250,7 @@ describe("PinnedRecordingCard", () => {
       expect(instance.handleError).toHaveBeenCalledTimes(1);
       expect(instance.handleError).toHaveBeenCalledWith(
         error,
-        "Error while unpinning recording"
+        "Error while unpinning track"
       );
     });
   });
