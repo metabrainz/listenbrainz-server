@@ -163,13 +163,18 @@ class BulkInsertTable:
         try:
             with conn.cursor() as curs:
                 if "." in self.table_name:
+                    # the savepoint is needed because otherwise the transaction will be aborted
+                    # if a privilege error occurs
+                    savepoint = "try_creating_schema"
                     schema = self.table_name.split(".")[0]
                     try:
+                        curs.execute(f"SAVEPOINT {savepoint}")
                         curs.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
+                        curs.execute(f"RELEASE SAVEPOINT {savepoint}")
                     # silently ignore schema creation errors because the user in prod
                     # doesn't have sufficient privileges
                     except psycopg2.errors.InsufficientPrivilege as err:
-                        pass
+                        curs.execute(f"ROLLBACK TO SAVEPOINT {savepoint}")
 
                 columns = []
                 for name, types in self.get_create_table_columns():
