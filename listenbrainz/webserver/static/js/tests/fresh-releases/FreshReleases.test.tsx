@@ -65,7 +65,7 @@ describe("FreshReleases", () => {
       wrapper.unmount();
     }
   });
-  it.only("renders filters, card grid, and timeline components on the page", async () => {
+  it("renders filters, card grid, and timeline components on the page", async () => {
     const mockFetchSitewideFreshReleases = jest.fn().mockResolvedValue({
       json: () => sitewideData,
     });
