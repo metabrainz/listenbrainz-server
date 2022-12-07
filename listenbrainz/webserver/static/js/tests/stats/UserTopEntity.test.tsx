@@ -1,18 +1,22 @@
 import * as React from "react";
-import { mount, shallow } from "enzyme";
+import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 
+import { act } from "react-dom/test-utils";
 import APIError from "../../src/utils/APIError";
 import UserTopEntity, {
   UserTopEntityProps,
+  UserTopEntityState,
 } from "../../src/stats/UserTopEntity";
 import * as userArtists from "../__mocks__/userArtists.json";
 import * as userReleases from "../__mocks__/userReleases.json";
 import * as userRecordings from "../__mocks__/userRecordings.json";
+import { waitForComponentToPaint } from "../test-utils";
 
 const userProps: UserTopEntityProps = {
   range: "week",
   entity: "artist",
   apiUrl: "foobar",
+  terminology: "artist",
   user: {
     name: "test_user",
   },
@@ -22,70 +26,92 @@ const sitewideProps: UserTopEntityProps = {
   range: "week",
   entity: "artist",
   apiUrl: "foobar",
+  terminology : "artist",
 };
 
 describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
+  let wrapper:
+    | ReactWrapper<UserTopEntityProps, UserTopEntityState, UserTopEntity>
+    | ShallowWrapper<UserTopEntityProps, UserTopEntityState, UserTopEntity>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   describe("UserTopEntity", () => {
-    it("renders correctly for artist", () => {
-      const wrapper = mount<UserTopEntity>(<UserTopEntity {...props} />);
-
-      wrapper.setState({
-        data: userArtists as UserArtistsResponse,
-        loading: false,
+    it("renders correctly for artist", async () => {
+      wrapper = mount<UserTopEntity>(<UserTopEntity {...props} />);
+      await act(() => {
+        wrapper!.setState({
+          data: userArtists as UserArtistsResponse,
+          loading: false,
+        });
       });
-      wrapper.update();
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
 
-    it("renders correctly for release", () => {
-      const wrapper = mount<UserTopEntity>(
+    it("renders correctly for release", async () => {
+      wrapper = mount<UserTopEntity>(
         <UserTopEntity {...{ ...props, entity: "release" }} />
       );
-
-      wrapper.setState({
-        data: userReleases as UserReleasesResponse,
-        loading: false,
+      await act(() => {
+        wrapper!.setState({
+          data: userReleases as UserReleasesResponse,
+          loading: false,
+        });
       });
-      wrapper.update();
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
 
-    it("renders correctly for recording", () => {
-      const wrapper = mount<UserTopEntity>(
+    it("renders correctly for recording", async () => {
+      wrapper = mount<UserTopEntity>(
         <UserTopEntity {...{ ...props, entity: "recording" }} />
       );
-
-      wrapper.setState({
-        data: userRecordings as UserRecordingsResponse,
-        loading: false,
+      await act(() => {
+        wrapper!.setState({
+          data: userRecordings as UserRecordingsResponse,
+          loading: false,
+        });
       });
-      wrapper.update();
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
 
-    it("renders corectly when range is invalid", () => {
-      const wrapper = mount<UserTopEntity>(<UserTopEntity {...props} />);
-
-      wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      wrapper.setState({ loading: false });
-      wrapper.update();
+    it("renders corectly when range is invalid", async () => {
+      wrapper = mount<UserTopEntity>(<UserTopEntity {...props} />);
+      await act(() => {
+        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+        wrapper!.setState({ loading: false });
+      });
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
     });
   });
 
   describe("componentDidUpdate", () => {
-    it("it sets correct state if range is incorrect", () => {
-      const wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
-
-      wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      wrapper.update();
+    it("it sets correct state if range is incorrect", async () => {
+      wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
+      await act(() => {
+        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+      });
+      await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state()).toMatchObject({
         loading: false,
@@ -94,13 +120,15 @@ describe.each([
       });
     });
 
-    it("calls loadData once if range is valid", () => {
-      const wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
+    it("calls loadData once if range is valid", async () => {
+      wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
       const instance = wrapper.instance();
 
       instance.loadData = jest.fn();
-      wrapper.setProps({ range: "month" });
-      wrapper.update();
+      await act(() => {
+        wrapper!.setProps({ range: "month" });
+      });
+      await waitForComponentToPaint(wrapper);
 
       expect(instance.loadData).toHaveBeenCalledTimes(1);
     });
@@ -108,7 +136,7 @@ describe.each([
 
   describe("loadData", () => {
     it("calls getData once", async () => {
-      const wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
+      wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
       const instance = wrapper.instance();
 
       instance.getData = jest
@@ -120,7 +148,7 @@ describe.each([
     });
 
     it("set state correctly", async () => {
-      const wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
+      wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
       const instance = wrapper.instance();
 
       instance.getData = jest
@@ -137,7 +165,7 @@ describe.each([
 
   describe("getData", () => {
     it("calls getUserEntity with correct params", async () => {
-      const wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
+      wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(instance.APIService, "getUserEntity");
@@ -154,7 +182,7 @@ describe.each([
     });
 
     it("sets state correctly if data is not calculated", async () => {
-      const wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
+      wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(instance.APIService, "getUserEntity");
@@ -173,7 +201,7 @@ describe.each([
     });
 
     it("throws error", async () => {
-      const wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
+      wrapper = shallow<UserTopEntity>(<UserTopEntity {...props} />);
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(instance.APIService, "getUserEntity");

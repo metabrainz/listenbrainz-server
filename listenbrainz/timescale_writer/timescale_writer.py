@@ -40,7 +40,14 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         self.metric_submission_time = monotonic() + METRIC_UPDATE_INTERVAL
 
     def get_consumers(self, _, channel):
-        return [Consumer(channel, queues=[self.incoming_queue], on_message=lambda x: self.callback(x))]
+        return [
+            Consumer(
+                channel,
+                queues=[self.incoming_queue],
+                on_message=lambda x: self.callback(x),
+                prefetch_count=500
+            )
+        ]
 
     def callback(self, message: Message):
         listens = ujson.loads(message.body)

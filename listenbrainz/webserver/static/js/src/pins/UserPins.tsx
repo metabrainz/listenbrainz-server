@@ -188,6 +188,9 @@ export default class UserPins extends React.Component<
           recording_mbids += `${item.recording_mbid},`;
         }
       });
+      if (!recording_msids && !recording_mbids) {
+        return [];
+      }
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
@@ -297,7 +300,7 @@ export default class UserPins extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8 col-md-offset-2">
-            <h3>Pinned Recordings</h3>
+            <h3>Pinned Tracks</h3>
 
             {pins.length === 0 && (
               <>

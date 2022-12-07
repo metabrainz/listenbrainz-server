@@ -1,7 +1,4 @@
-import uuid
-from datetime import datetime
-
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from listenbrainz.model import db
 from listenbrainz.webserver.admin import AdminModelView
@@ -18,6 +15,7 @@ class PlaylistRecording(db.Model):
     mbid = db.Column(UUID(as_uuid=True), nullable=False)
     added_by_id = db.Column(db.Integer, nullable=False)
     created = db.Column(db.DateTime(timezone=True), nullable=False)
+    additional_metadata = db.Column(JSONB)
 
     def __str__(self):
         return str(self.mbid)

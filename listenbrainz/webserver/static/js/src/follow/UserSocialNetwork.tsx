@@ -15,7 +15,7 @@ export type UserSocialNetworkProps = {
   ) => void;
 };
 
-type UserSocialNetworkState = {
+export type UserSocialNetworkState = {
   followerList: Array<string>;
   followingList: Array<string>;
   currentUserFollowingList: Array<string>;

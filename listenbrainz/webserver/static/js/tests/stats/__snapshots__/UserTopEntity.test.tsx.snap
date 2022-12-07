@@ -5,6 +5,7 @@ exports[`Sitewide Stats UserTopEntity renders corectly when range is invalid 1`]
   apiUrl="foobar"
   entity="artist"
   range="invalid_range"
+  terminology="artist"
 >
   <ForwardRef
     style={
@@ -210,6 +211,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
   apiUrl="foobar"
   entity="artist"
   range="week"
+  terminology="artist"
 >
   <ForwardRef
     style={
@@ -1402,6 +1404,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
   apiUrl="foobar"
   entity="recording"
   range="week"
+  terminology="artist"
 >
   <ForwardRef
     style={
@@ -1435,7 +1438,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
         }
       >
         Top 
-        recordings
+        artists
       </h3>
       <h4
         style={
@@ -3216,6 +3219,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
   apiUrl="foobar"
   entity="release"
   range="week"
+  terminology="artist"
 >
   <ForwardRef
     style={
@@ -3249,7 +3253,7 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
         }
       >
         Top 
-        releases
+        artists
       </h3>
       <h4
         style={
@@ -4958,6 +4962,7 @@ exports[`User Stats UserTopEntity renders corectly when range is invalid 1`] = `
   apiUrl="foobar"
   entity="artist"
   range="invalid_range"
+  terminology="artist"
   user={
     Object {
       "name": "test_user",
@@ -5168,6 +5173,7 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
   apiUrl="foobar"
   entity="artist"
   range="week"
+  terminology="artist"
   user={
     Object {
       "name": "test_user",
@@ -6365,6 +6371,7 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
   apiUrl="foobar"
   entity="recording"
   range="week"
+  terminology="artist"
   user={
     Object {
       "name": "test_user",
@@ -6403,7 +6410,7 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
         }
       >
         Top 
-        recordings
+        artists
       </h3>
       <h4
         style={
@@ -8184,6 +8191,7 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
   apiUrl="foobar"
   entity="release"
   range="week"
+  terminology="artist"
   user={
     Object {
       "name": "test_user",
@@ -8222,7 +8230,7 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
         }
       >
         Top 
-        releases
+        artists
       </h3>
       <h4
         style={

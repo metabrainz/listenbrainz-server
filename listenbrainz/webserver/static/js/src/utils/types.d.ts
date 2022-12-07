@@ -43,10 +43,19 @@ interface AdditionalInfo {
   work_mbids?: Array<string> | null;
 }
 
+declare type MbidMappingArtist = {
+  artist_mbid: string;
+  artist_credit_name: string;
+  join_phrase: string;
+};
+
 declare type MbidMapping = {
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
+  artists?: Array<MbidMappingArtist>;
+  caa_id?: number;
+  caa_release_mbid?: string;
 };
 
 declare type BaseListenFormat = {
@@ -514,6 +523,12 @@ declare type UserTrackRecommendationMetadata = {
   recording_msid?: string;
 };
 
+/** For recommending a track personally from the front-end */
+declare type UserTrackPersonalRecommendationMetadata = UserTrackRecommendationMetadata & {
+  blurb_content: string;
+  users: Array<string>;
+};
+
 declare type PinEventMetadata = Listen & {
   blurb_content?: string;
 };
@@ -531,6 +546,7 @@ type EventTypeT =
   | "stop_follow"
   | "block_follow"
   | "notification"
+  | "personal_recording_recommendation"
   | "critiquebrainz_review";
 
 type UserRelationshipEventMetadata = {
@@ -549,6 +565,7 @@ type EventMetadata =
   | UserRelationshipEventMetadata
   | PinEventMetadata
   | NotificationEventMetadata
+  | UserTrackPersonalRecommendationMetadata
   | CritiqueBrainzReview;
 
 type TimelineEvent = {
@@ -601,6 +618,7 @@ type CoverArtArchiveEntry = {
     large: string;
   };
 };
+
 type CoverArtArchiveResponse = {
   images: CoverArtArchiveEntry[];
   release: string; // Full MB URL i.e "http://musicbrainz.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd"
@@ -627,4 +645,24 @@ type MissingMBData = {
   listened_at: string;
   recording_name: string;
   release_name?: string;
+};
+
+type FreshReleaseItem = {
+  artist_credit_name: string;
+  artist_mbids: Array<string>;
+  caa_id: number | null;
+  confidence?: number;
+  release_date: string;
+  release_group_mbid: string;
+  release_group_primary_type?: string;
+  release_group_secondary_type?: string;
+  release_mbid: string;
+  release_name: string;
+};
+
+type UserFreshReleasesResponse = {
+  payload: {
+    releases: Array<FreshReleaseItem>;
+    user_id: string;
+  };
 };

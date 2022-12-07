@@ -30,7 +30,9 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_top_stats,
                                          handle_listens_per_day,
                                          handle_yearly_listen_counts,
-                                         handle_fresh_releases, handle_similar_recordings)
+                                         handle_fresh_releases,
+                                         handle_similar_recordings,
+                                         handle_similar_artists)
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
@@ -60,6 +62,7 @@ response_handler_map = {
     'similar_users': handle_similar_users,
     'similar_users_year_end': handle_similar_users_year_end,
     'similar_recordings': handle_similar_recordings,
+    'similar_artists': handle_similar_artists,
     'year_in_music_top_stats': handle_top_stats,
     'year_in_music_listens_per_day': handle_listens_per_day,
     'year_in_music_listen_count': handle_yearly_listen_counts,
