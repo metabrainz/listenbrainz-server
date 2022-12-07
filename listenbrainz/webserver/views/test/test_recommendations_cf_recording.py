@@ -273,7 +273,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 "release": "Random Is Resistance",
                 "recording_mbid": "03f1b16a-af43-4cd7-b22c-d2991bf011a3",
                 "artist": "Rotersand",
-                "title": "One More Hour"
+                "title": "One More Hour",
+                "caa_id": 25414187159,
+                "caa_release_mbid": "c51e3d19-8080-4faa-9f5d-3e8714343543"
             },
             "2c8412f0-9353-48a2-aedb-1ad8dac9498f": {
                 "artist_mbids": ["63aa26c3-d59b-4da4-84ac-716b54f1ef4d"],
@@ -282,7 +284,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 "release_mbid": "27280632-fa33-3801-a5b1-081ed0b65bb3",
                 "release": "Year Zero",
                 "recording_mbid": "2c8412f0-9353-48a2-aedb-1ad8dac9498f",
-                "title": "Sun’s Coming Up"
+                "title": "Sun’s Coming Up",
+                "caa_id": 33734215643,
+                "caa_release_mbid": "169d9fb9-bc65-423b-9c44-2d177a329b48"
             }
         }
 
@@ -301,7 +305,10 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                     'release_name': 'Random Is Resistance',
                     'additional_info': {
                         'recording_mbid': '03f1b16a-af43-4cd7-b22c-d2991bf011a3',
-                        'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d']
+                        'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d'],
+                        'release_mbid' : '5da4af04-d796-4d07-801d-a878e83dea48',
+                        'caa_id' : 25414187159,
+                        'caa_release_mbid' : 'c51e3d19-8080-4faa-9f5d-3e8714343543'
                     }
                 }
             },
@@ -313,7 +320,10 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                     'release_name': 'Year Zero',
                     'additional_info': {
                             'recording_mbid': '2c8412f0-9353-48a2-aedb-1ad8dac9498f',
-                            'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d']
+                            'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d'],
+                            'release_mbid' : '27280632-fa33-3801-a5b1-081ed0b65bb3',
+                            'caa_id' : 33734215643,
+                            'caa_release_mbid' : '169d9fb9-bc65-423b-9c44-2d177a329b48'
                     }
                 }
             }
