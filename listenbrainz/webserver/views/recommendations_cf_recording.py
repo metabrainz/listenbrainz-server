@@ -133,6 +133,24 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
         Args:
             mbids_and_ratings_list: Contains recording mbid and corresponding score.
 
+
+
+
+            if caa_id and caa_release_mbid are avialable then:
+
+                
+            Returns:
+                'track_metadata' : {
+                    'additional_info' : {
+                        'caa_id' : "demo caa id",
+                        'caa_release_mbid' : "demo caa rlease allbum mbid"
+                    }
+                }
+
+                That means to render cover art caa id to be present in metadata is compulsory otherwise it will render default image in frontend.
+
+
+
         Returns:
             recommendations: list of recommendations of the format
                 {
@@ -171,5 +189,12 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                 }
             }
         })
+
+
+        if row["caa_id"] : 
+            recommendations.append['track_metadata']['additional_info']['caa_id'] = row['caa_id']
+
+        if row["caa_release_mbid"] : 
+            recommendations.append['track_metadata']['additional_info']['caa_release_mbid'] = row['caa_release_mbid']
 
     return recommendations
