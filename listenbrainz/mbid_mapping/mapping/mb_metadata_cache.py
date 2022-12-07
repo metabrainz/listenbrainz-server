@@ -783,3 +783,22 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
         update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp)
 
         log("mb metadata cache: incremental update completed")
+
+
+def cleanup_mbid_mapping_table():
+    """ Find msids which are mapped to mbids that are now absent from mb_metadata_cache
+     because those have been merged (redirects) or deleted from MB and flag such msids
+     to be re-mapped by the mbid mapping writer."""
+    query = """
+        UPDATE mbid_mapping mm
+           SET last_updated = 'epoch'
+         WHERE NOT EXISTS(
+                SELECT 1
+                  FROM mapping.mb_metadata_cache mbc
+                 WHERE mbc.recording_mbid = mm.recording_mbid 
+         )
+    """
+    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn, lb_conn.cursor() as lb_curs:
+        lb_curs.execute(query)
+        log(f"mbid mapping: invalidated {lb_curs.row_count} rows")
+        lb_conn.commit()
