@@ -1,8 +1,12 @@
 import * as React from "react";
-import { mount } from "enzyme";
+import { mount, ReactWrapper } from "enzyme";
 
 import { omit, set } from "lodash";
-import ListenCard, { ListenCardProps } from "../../src/listens/ListenCard";
+import { act } from "react-dom/test-utils";
+import ListenCard, {
+  ListenCardProps,
+  ListenCardState,
+} from "../../src/listens/ListenCard";
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
@@ -46,8 +50,23 @@ const globalProps = {
 };
 
 describe("ListenCard", () => {
+  let wrapper:
+    | ReactWrapper<ListenCardProps, ListenCardState, ListenCard>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   it("renders correctly", () => {
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    wrapper = mount<ListenCard>(<ListenCard {...props} />);
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -68,7 +87,7 @@ describe("ListenCard", () => {
       },
       user_name: "test",
     };
-    const wrapper = mount<ListenCard>(
+    wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, listen: playingNowListen }} />
     );
 
@@ -81,7 +100,7 @@ describe("ListenCard", () => {
 
   it("should render timestamp using preciseTimestamp", () => {
     const preciseTimestamp = jest.spyOn(utils, "preciseTimestamp");
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    wrapper = mount<ListenCard>(<ListenCard {...props} />);
     expect(preciseTimestamp).toHaveBeenCalledTimes(1);
 
     expect(wrapper).toMatchSnapshot();
@@ -98,11 +117,18 @@ describe("ListenCard", () => {
           release_mbid: "foo",
           recording_mbid: "bar",
           artist_mbids: ["foobar"],
+          artists: [
+            {
+              artist_mbid: "foobar",
+              artist_credit_name: "Moondog",
+              join_phrase: "",
+            },
+          ],
         },
       },
       user_name: "test",
     };
-    const wrapper = mount<ListenCard>(
+    wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, listen: differentListen }} />
     );
     expect(
@@ -114,20 +140,22 @@ describe("ListenCard", () => {
   });
 
   it("should render a play button", () => {
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     const playButton = wrapper.find(".play-button");
     expect(playButton).toHaveLength(1);
     expect(playButton.props().onClick).toEqual(instance.playListen);
   });
 
-  it("should send an event to BrainzPlayer when playListen is called", () => {
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+  it("should send an event to BrainzPlayer when playListen is called", async () => {
+    wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     const postMessageSpy = jest.spyOn(window, "postMessage");
     expect(postMessageSpy).not.toHaveBeenCalled();
 
-    instance.playListen();
+    await act(() => {
+      instance.playListen();
+    });
 
     expect(postMessageSpy).toHaveBeenCalledWith(
       { brainzplayer_event: "play-listen", payload: props.listen },
@@ -135,19 +163,22 @@ describe("ListenCard", () => {
     );
   });
 
-  it("should do nothing when playListen is called on currently playing listen", () => {
+  it("should do nothing when playListen is called on currently playing listen", async () => {
     const postMessageSpy = jest.spyOn(window, "postMessage");
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
-    instance.setState({ isCurrentlyPlaying: true });
-
-    instance.playListen();
+    await act(() => {
+      instance.setState({ isCurrentlyPlaying: true });
+    });
+    await act(() => {
+      instance.playListen();
+    });
 
     expect(postMessageSpy).not.toHaveBeenCalled();
   });
 
   it("should render the formatted duration_ms if present in the listen metadata", () => {
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const durationElement = wrapper.find('[title="Duration"]');
     expect(durationElement).toBeDefined();
     expect(durationElement.text()).toEqual("2:03");
@@ -159,7 +190,7 @@ describe("ListenCard", () => {
       "track_metadata.additional_info.duration_ms"
     );
     set(listenWithDuration, "track_metadata.additional_info.duration", 142);
-    const wrapper = mount<ListenCard>(
+    wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, listen: listenWithDuration }} />
     );
     const durationElement = wrapper.find('[title="Duration"]');
@@ -169,12 +200,13 @@ describe("ListenCard", () => {
 
   describe("handleError", () => {
     it("calls newAlert", async () => {
-      const wrapper = mount<ListenCard>(
+      wrapper = mount<ListenCard>(
         <ListenCard {...{ ...props, newAlert: jest.fn() }} />
       );
       const instance = wrapper.instance();
-
-      instance.handleError("error");
+      await act(() => {
+        instance.handleError("error");
+      });
 
       expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
       expect(instance.props.newAlert).toHaveBeenCalledWith(
@@ -187,7 +219,7 @@ describe("ListenCard", () => {
 
   describe("recommendTrackToFollowers", () => {
     it("calls API, and creates a new alert on success", async () => {
-      const wrapper = mount<ListenCard>(
+      wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <ListenCard {...{ ...props, newAlert: jest.fn() }} />
         </GlobalAppContext.Provider>
@@ -200,7 +232,9 @@ describe("ListenCard", () => {
       );
       spy.mockImplementation(() => Promise.resolve(200));
 
-      await instance.recommendListenToFollowers();
+      await act(async () => {
+        await instance.recommendListenToFollowers();
+      });
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("test", "baz", {
@@ -216,7 +250,7 @@ describe("ListenCard", () => {
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
-      const wrapper = mount<ListenCard>(
+      wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
@@ -233,13 +267,14 @@ describe("ListenCard", () => {
         "recommendTrackToFollowers"
       );
       spy.mockImplementation(() => Promise.resolve(200));
-
-      instance.recommendListenToFollowers();
+      await act(() => {
+        instance.recommendListenToFollowers();
+      });
       expect(spy).toHaveBeenCalledTimes(0);
     });
 
     it("calls handleError if error is returned", async () => {
-      const wrapper = mount<ListenCard>(
+      wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <ListenCard {...props} />
         </GlobalAppContext.Provider>
@@ -256,7 +291,9 @@ describe("ListenCard", () => {
         throw error;
       });
 
-      instance.recommendListenToFollowers();
+      await act(() => {
+        instance.recommendListenToFollowers();
+      });
       expect(instance.handleError).toHaveBeenCalledTimes(1);
       expect(instance.handleError).toHaveBeenCalledWith(
         error,

@@ -16,12 +16,6 @@ MAILTO=""
 # After the daily dumping is done, make sure everything turned out ok, otherwise mail the observability list.
 0 2 * * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py dump check_dump_ages >> /logs/dumps.log 2>&1
 
-# Dump user feedback before we generate recommendations
-15 2 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
-
-# Run spotify metadata cache seeder
-0 4 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark run-spotify-metadata-cache-seeder >> /logs/spotify_metadata_cache.log 2>&1
-
 # batch up all the spark requests, spaced by 1 minute in order to ensure the correct order
 # Request all statistics
 0 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_all_stats >> /logs/stats.log 2>&1
@@ -32,7 +26,22 @@ MAILTO=""
 # Calculate user similarity
 3 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
 
+# Dump user feedback before we generate recommendations
+15 2 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
+
+# Request user fresh releases daily
+0 3 * * * root /usr/local/bin/python /code/listenbrainz/manage.py request_fresh_releases --days 30 >> /logs/fresh_releases 2>&1
+
+# Run spotify metadata cache seeder
+0 4 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark run-spotify-metadata-cache-seeder >> /logs/spotify_metadata_cache.log 2>&1
+
 ## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
 0 4 1,15 * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/dumps.log 2>&1
 ## Around 24 hours later, trigger a full import into the spark cluster, and this time wait for the lock, in case the dump hasn't finished.
 0 4 2,16 * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full >> /logs/dumps.log 2>&1
+
+# run job to update msids with mapped mbids daily
+0 6 * * * root /usr/local/bin/python /code/listenbrainz/manage.py update-msid-tables >> /logs/msid-updater.log 2>&1
+
+# run weekly cron job to remove expired do not recommends
+0 8 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py clear-expired-do-not-recommends >> /logs/do_not_recommend.log 2>&1

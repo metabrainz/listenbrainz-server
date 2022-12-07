@@ -1,5 +1,6 @@
 import * as React from "react";
 import { get as _get, throttle as _throttle } from "lodash";
+import { faSoundcloud } from "@fortawesome/free-brands-svg-icons";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
 require("../../lib/soundcloud-player-api");
@@ -49,7 +50,7 @@ type ProgressEvent = {
   relativePosition: number;
 };
 
-type SoundcloudPlayerState = {
+export type SoundcloudPlayerState = {
   currentSoundId?: number;
 };
 
@@ -61,8 +62,19 @@ export default class SoundcloudPlayer
     return !!originURL && /soundcloud\.com/.test(originURL);
   }
 
+  static getURLFromListen = (
+    listen: Listen | JSPFTrack
+  ): string | undefined => {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && /soundcloud\.com/.test(originURL)) {
+      return originURL;
+    }
+    return undefined;
+  };
+
   public name = "soundcloud";
   public domainName = "soundcloud.com";
+  public icon = faSoundcloud;
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   retries = 0;
@@ -129,16 +141,6 @@ export default class SoundcloudPlayer
       // eslint-disable-next-line no-empty
     } catch (error) {}
   }
-
-  static getSoundcloudURLFromListen = (
-    listen: Listen | JSPFTrack
-  ): string | undefined => {
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (originURL && /soundcloud\.com/.test(originURL)) {
-      return originURL;
-    }
-    return undefined;
-  };
 
   onReady = (): void => {
     if (!this.soundcloudPlayer) {

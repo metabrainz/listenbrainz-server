@@ -110,27 +110,29 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         with ts.engine.begin() as connection:
             query = """
-                INSERT INTO mbid_mapping_metadata
-                            (recording_mbid, release_mbid, release_name, artist_credit_id,
-                             artist_mbids, artist_credit_name, recording_name)
-                     VALUES ('076255b4-1575-11ec-ac84-135bf6a670e3',
-                            '1fd178b4-1575-11ec-b98a-d72392cd8c97',
-                            'Dummy',
-                            65,
-                            '{6a221fda-2200-11ec-ac7d-dfa16a57158f}'::UUID[],
-                            'Portishead', 'Strangers')
+                    INSERT INTO mapping.mb_metadata_cache
+                               (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                        VALUES ('2f3d422f-8890-41a1-9762-fbe16f107c31'
+                              , '{8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11}'::UUID[]
+                              , '76df3287-6cda-33eb-8e9a-044b5e15ffdd'
+                              , '{"name": "Strangers", "rels": [], "length": 291160}'
+                              , '{"name": "Portishead", "artist_credit_id": 204, "artists": [{"area": "United Kingdom", "rels": {"lyrics": "https://muzikum.eu/en/122-6105/portishead/lyrics.html", "youtube": "https://www.youtube.com/user/portishead1002", "wikidata": "https://www.wikidata.org/wiki/Q191352", "streaming": "https://tidal.com/artist/27441", "free streaming": "https://www.deezer.com/artist/1069", "social network": "https://www.facebook.com/portishead", "official homepage": "http://www.portishead.co.uk/", "purchase for download": "https://www.junodownload.com/artists/Portishead/releases/"}, "type": "Group", "begin_year": 1991, "name": "Portishead", "join_phrase": ""}]}'
+                              , '{"artist": [], "recording": [], "release_group": []}'
+                              , '{"mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd", "name": "Dummy"}'
+                              , 'f'
+                               )
             """
             connection.execute(sqlalchemy.text(query))
 
             query = """INSERT INTO mbid_mapping
                                    (recording_msid, recording_mbid, match_type, last_updated)
-                            VALUES (:msid, '076255b4-1575-11ec-ac84-135bf6a670e3', 'exact_match', now())"""
+                            VALUES (:msid, '2f3d422f-8890-41a1-9762-fbe16f107c31', 'exact_match', now())"""
             connection.execute(sqlalchemy.text(query), {"msid": msids[0]})
 
         pinned_recs = [
             {
                 "recording_msid": msids[0],
-                "recording_mbid": "076255b4-1575-11ec-ac84-135bf6a670e3",
+                "recording_mbid": "2f3d422f-8890-41a1-9762-fbe16f107c31",
                 "blurb_content": "Awesome recordings with mapped data"
             },
             {
@@ -174,9 +176,16 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             "artist_name": "Portishead",
             "release_name": "Dummy",
             "additional_info": {
-                "recording_mbid": "076255b4-1575-11ec-ac84-135bf6a670e3",
-                "release_mbid": "1fd178b4-1575-11ec-b98a-d72392cd8c97",
-                "artist_mbids": ["6a221fda-2200-11ec-ac7d-dfa16a57158f"],
+                "recording_mbid": "2f3d422f-8890-41a1-9762-fbe16f107c31",
+                "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
+                "artist_mbids": ["8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"],
+                "artists": [
+                    {
+                        "artist_credit_name": "Portishead",
+                        "join_phrase": "",
+                        "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+                    }
+                ],
                 "recording_msid": msids[0]
             }
         })

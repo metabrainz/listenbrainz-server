@@ -510,7 +510,7 @@ export default class UserFeedback extends React.Component<
                     const additionalMenuItems = [
                       <ListenControl
                         title="Pin this recording"
-                        text="Pin this recording"
+                        text="Pin this track"
                         icon={faThumbtack}
                         // eslint-disable-next-line react/jsx-no-bind
                         action={this.updateRecordingToPin.bind(this, listen)}

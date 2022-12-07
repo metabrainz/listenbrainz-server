@@ -47,6 +47,7 @@ export type UserEntityChartState = {
   listenContainerHeight?: number;
   hasError: boolean;
   errorMessage: string;
+  terminology: string;
 };
 
 export default class UserEntityChart extends React.Component<
@@ -76,6 +77,7 @@ export default class UserEntityChart extends React.Component<
       loading: false,
       hasError: false,
       errorMessage: "",
+      terminology: "",
     };
 
     this.listenContainer = React.createRef();
@@ -145,21 +147,21 @@ export default class UserEntityChart extends React.Component<
 
     if (entity === "artist") {
       data = data as UserArtistsResponse;
-      maxListens = data.payload.artists[0].listen_count;
+      maxListens = data.payload.artists?.[0]?.listen_count;
       totalPages = Math.ceil(
         data.payload.total_artist_count / this.ROWS_PER_PAGE
       );
       entityCount = data.payload.total_artist_count;
     } else if (entity === "release") {
       data = data as UserReleasesResponse;
-      maxListens = data.payload.releases[0].listen_count;
+      maxListens = data.payload.releases?.[0]?.listen_count;
       totalPages = Math.ceil(
         data.payload.total_release_count / this.ROWS_PER_PAGE
       );
       entityCount = data.payload.total_release_count;
     } else if (entity === "recording") {
       data = data as UserRecordingsResponse;
-      maxListens = data.payload.recordings[0].listen_count;
+      maxListens = data.payload.recordings?.[0]?.listen_count;
       totalPages = Math.ceil(
         data.payload.total_recording_count / this.ROWS_PER_PAGE
       );
@@ -211,7 +213,7 @@ export default class UserEntityChart extends React.Component<
     }
     if (entity === "artist") {
       result = (data as UserArtistsResponse).payload.artists
-        .map((elem, idx: number) => {
+        ?.map((elem, idx: number) => {
           const entityMBID = elem.artist_mbids
             ? elem.artist_mbids[0]
             : undefined;
@@ -227,7 +229,7 @@ export default class UserEntityChart extends React.Component<
         .reverse();
     } else if (entity === "release") {
       result = (data as UserReleasesResponse).payload.releases
-        .map((elem, idx: number) => {
+        ?.map((elem, idx: number) => {
           return {
             id: idx.toString(),
             entity: elem.release_name,
@@ -242,7 +244,7 @@ export default class UserEntityChart extends React.Component<
         .reverse();
     } else if (entity === "recording") {
       result = (data as UserRecordingsResponse).payload.recordings
-        .map((elem, idx: number) => {
+        ?.map((elem, idx: number) => {
           return {
             id: idx.toString(),
             entity: elem.track_name,
@@ -265,6 +267,25 @@ export default class UserEntityChart extends React.Component<
   syncStateWithURL = async (): Promise<void> => {
     this.setState({ loading: true });
     const { page, range, entity } = this.getURLParams();
+
+    if (entity === "artist") {
+      this.setState({
+        terminology: "artist",
+      });
+    }
+
+    if (entity === "release") {
+      this.setState({
+        terminology: "album",
+      });
+    }
+
+    if (entity === "recording") {
+      this.setState({
+        terminology: "track",
+      });
+    }
+
     // Check that the given page is an integer
     if (!Number.isInteger(page)) {
       this.setState({
@@ -332,7 +353,7 @@ export default class UserEntityChart extends React.Component<
           entity,
         });
       } else {
-        throw error;
+        console.error(error);
       }
     }
   };
@@ -427,6 +448,7 @@ export default class UserEntityChart extends React.Component<
       listenContainerHeight,
       hasError,
       errorMessage,
+      terminology,
     } = this.state;
     const { APIService } = this.context;
     const { newAlert } = this.props;
@@ -456,14 +478,14 @@ export default class UserEntityChart extends React.Component<
                   type="secondary"
                   onClick={() => this.changeEntity("release")}
                 >
-                  Releases
+                  Albums
                 </Pill>
                 <Pill
                   active={entity === "recording"}
                   type="secondary"
                   onClick={() => this.changeEntity("recording")}
                 >
-                  Recordings
+                  Tracks
                 </Pill>
               </div>
             </div>
@@ -472,7 +494,7 @@ export default class UserEntityChart extends React.Component<
                 <h3>
                   Top{" "}
                   <span style={{ textTransform: "capitalize" }}>
-                    {entity ? `${entity}s` : ""}
+                    {terminology ? `${terminology}s` : ""}
                   </span>{" "}
                   of {range !== "all_time" ? "the" : ""}
                   <span className="dropdown" style={{ fontSize: 22 }}>
@@ -533,7 +555,7 @@ export default class UserEntityChart extends React.Component<
                 <div className="row">
                   <div className="col-xs-12">
                     <h4 style={{ textTransform: "capitalize" }}>
-                      {entity} count - <b>{entityCount}</b>
+                      {terminology} count - <b>{entityCount}</b>
                     </h4>
                   </div>
                 </div>

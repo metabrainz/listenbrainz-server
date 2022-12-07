@@ -1,8 +1,9 @@
-from flask import Flask, render_template, Blueprint
+from flask import render_template, Blueprint, current_app
 
 art_bp = Blueprint('art', __name__)
+
 
 @art_bp.route("/")
 def index():
     """ This page shows of a bit of what can be done with the cover art, as a sort of showcase. """
-    return render_template("art/index.html")
+    return render_template("art/index.html", api_url=current_app.config["API_URL"])

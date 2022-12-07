@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { mount } from "enzyme";
+import { act } from "react-dom/test-utils";
 import { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
@@ -45,22 +46,25 @@ describe("ColorPlay", () => {
     const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
     // const instance = wrapper.instance();
     expect(wrapper.find(ColorWheel)).toHaveLength(1);
+    wrapper.unmount();
   });
 
-  it("contains a BrainzPlayer instance when a release is selected", () => {
+  it("contains a BrainzPlayer instance when a release is selected", async () => {
     const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
 
     expect(wrapper.state("selectedRelease")).toBeUndefined();
     expect(wrapper.find(BrainzPlayer)).toHaveLength(0);
 
-    wrapper.setState({ selectedRelease: release });
+    await act(() => {
+      wrapper.setState({ selectedRelease: release });
+    });
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
+    wrapper.unmount();
   });
-});
-
-describe("selectRelease", () => {
+  // xdescribe("selectRelease", () => {
   // it("selects the particular release and starts playing it in brainzplayer", async () => {
   //   const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
   //   const instance = wrapper.instance();
+  // });
   // });
 });

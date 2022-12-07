@@ -1,9 +1,16 @@
 import * as React from "react";
-import { mount, shallow } from "enzyme";
+import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 
-import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
+import { act } from "react-dom/test-utils";
+import SpotifyPlayer, {
+  SpotifyPlayerProps,
+  SpotifyPlayerState,
+} from "../../src/brainzplayer/SpotifyPlayer";
 import APIService from "../../src/utils/APIService";
-import { DataSourceTypes } from "../../src/brainzplayer/BrainzPlayer";
+import {
+  DataSourceProps,
+  DataSourceTypes,
+} from "../../src/brainzplayer/BrainzPlayer";
 
 const props = {
   spotifyUser: {
@@ -35,6 +42,22 @@ const props = {
 };
 
 describe("SpotifyPlayer", () => {
+  let wrapper:
+    | ReactWrapper<SpotifyPlayerProps, SpotifyPlayerState, SpotifyPlayer>
+    | ShallowWrapper<SpotifyPlayerProps, SpotifyPlayerState, SpotifyPlayer>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   const permissionsErrorMessage = (
     <p>
       In order to play music with Spotify, you will need a Spotify Premium
@@ -49,11 +72,11 @@ describe("SpotifyPlayer", () => {
   );
   it("renders", () => {
     window.fetch = jest.fn();
-    const wrapper = mount(<SpotifyPlayer {...props} />);
+    wrapper = mount(<SpotifyPlayer {...props} />);
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("should play from spotify_id if it exists on the listen", () => {
+  it("should play from spotify_id if it exists on the listen", async () => {
     const spotifyListen: Listen = {
       listened_at: 0,
       track_metadata: {
@@ -64,13 +87,15 @@ describe("SpotifyPlayer", () => {
         },
       },
     };
-    const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...props} />);
+    wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...props} />);
     const instance = wrapper.instance();
 
     instance.playSpotifyURI = jest.fn();
     instance.searchAndPlayTrack = jest.fn();
     // play listen should extract the spotify track ID
-    instance.playListen(spotifyListen);
+    await act(() => {
+      instance.playListen(spotifyListen);
+    });
     expect(instance.playSpotifyURI).toHaveBeenCalledTimes(1);
     expect(instance.playSpotifyURI).toHaveBeenCalledWith(
       "spotify:track:surprise!"
@@ -89,7 +114,7 @@ describe("SpotifyPlayer", () => {
       expect(SpotifyPlayer.hasPermissions(mockProps.spotifyUser)).toEqual(
         false
       );
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
         instance,
@@ -106,7 +131,7 @@ describe("SpotifyPlayer", () => {
       expect(SpotifyPlayer.hasPermissions(mockProps.spotifyUser)).toEqual(
         false
       );
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledTimes(1);
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
@@ -130,7 +155,7 @@ describe("SpotifyPlayer", () => {
         onInvalidateDataSource,
         spotifyUser,
       };
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
 
       expect.assertions(2);
@@ -156,7 +181,7 @@ describe("SpotifyPlayer", () => {
         spotifyUser,
         checkSpotifyToken,
       };
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
 
       instance.handleAccountError();
@@ -177,7 +202,7 @@ describe("SpotifyPlayer", () => {
         handleError,
         onTrackNotFound,
       };
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
       instance.handleAccountError = jest.fn();
       instance.connectSpotifyPlayer = jest.fn();
@@ -191,7 +216,7 @@ describe("SpotifyPlayer", () => {
     });
 
     it("calls handleAccountError if wrong tokens error thrown", async () => {
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...props} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...props} />);
       const instance = wrapper.instance();
       instance.handleAccountError = jest.fn();
 
@@ -229,40 +254,45 @@ describe("SpotifyPlayer", () => {
         previous_tracks: [],
       },
     };
-    it("calls onPlayerPausedChange if player paused state changes", () => {
+    it("calls onPlayerPausedChange if player paused state changes", async () => {
       const onPlayerPausedChange = jest.fn();
       const mockProps = { ...props, onPlayerPausedChange };
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
-
-      instance.handlePlayerStateChanged(spotifyPlayerState);
+      await act(() => {
+        instance.handlePlayerStateChanged(spotifyPlayerState);
+      });
       expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(true);
       onPlayerPausedChange.mockClear();
 
-      // Emulate the prop change that the call to onPlayerPausedChange would have done
-      wrapper.setProps({ playerPaused: true });
+      await act(() => {
+        // Emulate the prop change that the call to onPlayerPausedChange would have done
+        wrapper!.setProps({ playerPaused: true });
+        instance.handlePlayerStateChanged(spotifyPlayerState);
+      });
 
-      instance.handlePlayerStateChanged(spotifyPlayerState);
       expect(instance.props.onPlayerPausedChange).not.toHaveBeenCalled();
       onPlayerPausedChange.mockClear();
-
-      instance.handlePlayerStateChanged({
-        ...spotifyPlayerState,
-        paused: false,
+      await act(() => {
+        instance.handlePlayerStateChanged({
+          ...spotifyPlayerState,
+          paused: false,
+        });
       });
       expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(false);
     });
 
-    it("detects the end of a track", () => {
+    it("detects the end of a track", async () => {
       const onTrackEnd = jest.fn();
       const mockProps = { ...props, onTrackEnd };
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
-
-      instance.handlePlayerStateChanged(spotifyPlayerState);
-      instance.handlePlayerStateChanged(spotifyPlayerState);
+      await act(() => {
+        instance.handlePlayerStateChanged(spotifyPlayerState);
+        instance.handlePlayerStateChanged(spotifyPlayerState);
+      });
       expect(instance.props.onTrackEnd).not.toHaveBeenCalled();
 
       const endOfTrackPlayerState = {
@@ -288,17 +318,19 @@ describe("SpotifyPlayer", () => {
       expect(onTrackEnd).toHaveBeenCalledTimes(1);
     });
 
-    it("detects a new track and sends information up", () => {
+    it("detects a new track and sends information up", async () => {
       const onTrackInfoChange = jest.fn();
       const mockProps = { ...props, onTrackInfoChange };
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
 
       expect(wrapper.state("durationMs")).toEqual(0);
       expect(wrapper.state("currentSpotifyTrack")).toBeUndefined();
-      instance.handlePlayerStateChanged({
-        ...spotifyPlayerState,
-        duration: 1234,
+      await act(() => {
+        instance.handlePlayerStateChanged({
+          ...spotifyPlayerState,
+          duration: 1234,
+        });
       });
 
       expect(instance.props.onTrackInfoChange).toHaveBeenCalledTimes(1);
@@ -317,21 +349,25 @@ describe("SpotifyPlayer", () => {
       );
     });
 
-    it("updates track duration and progress", () => {
+    it("updates track duration and progress", async () => {
       const onProgressChange = jest.fn();
       const onDurationChange = jest.fn();
       const mockProps = { ...props, onProgressChange, onDurationChange };
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
+      wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
 
       expect(wrapper.state("durationMs")).toEqual(0);
-      // First let it detect a track change
-      instance.handlePlayerStateChanged({ ...spotifyPlayerState });
-      // Then change duration and position
-      instance.handlePlayerStateChanged({
-        ...spotifyPlayerState,
-        duration: 1234,
-        position: 123,
+      await act(() => {
+        // First let it detect a track change
+        instance.handlePlayerStateChanged({ ...spotifyPlayerState });
+      });
+      await act(() => {
+        // Then change duration and position
+        instance.handlePlayerStateChanged({
+          ...spotifyPlayerState,
+          duration: 1234,
+          position: 123,
+        });
       });
 
       expect(instance.props.onDurationChange).toHaveBeenCalledTimes(1);
@@ -342,10 +378,12 @@ describe("SpotifyPlayer", () => {
       onDurationChange.mockClear();
       onProgressChange.mockClear();
 
-      instance.handlePlayerStateChanged({
-        ...spotifyPlayerState,
-        duration: 1234,
-        position: 125,
+      await act(() => {
+        instance.handlePlayerStateChanged({
+          ...spotifyPlayerState,
+          duration: 1234,
+          position: 125,
+        });
       });
       expect(instance.props.onDurationChange).not.toHaveBeenCalled();
       expect(wrapper.state("durationMs")).toEqual(1234);

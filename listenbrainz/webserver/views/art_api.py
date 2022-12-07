@@ -1,16 +1,11 @@
-import datetime
 from uuid import UUID
 
-from flask import Flask, request, render_template, Blueprint, current_app
-import psycopg2
-import psycopg2.extras
-from psycopg2.errors import OperationalError
-import requests
+from brainzutils.ratelimit import ratelimit
+from flask import request, render_template, Blueprint, current_app
 
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.decorators import crossdomain
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 
 art_api_bp = Blueprint('art_api_v1', __name__)
 
@@ -102,7 +97,8 @@ def cover_art_grid_post():
                            }
 
 
-@art_api_bp.route("/grid-stats/<user_name>/<time_range>/<int:dimension>/<int:layout>/<int:image_size>", methods=["GET"])
+@art_api_bp.route("/grid-stats/<user_name>/<time_range>/<int:dimension>/<int:layout>/<int:image_size>",
+                  methods=["GET"])
 @crossdomain
 @ratelimit()
 def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
@@ -208,7 +204,9 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         except ValueError as error:
             raise APIBadRequest(error)
 
+        cover_art_on_floor_url = f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/cover-art-on-floor.png'
         return render_template(f"art/svg-templates/{custom_name}.svg",
+                               cover_art_on_floor_url=cover_art_on_floor_url,
                                images=images,
                                releases=releases,
                                width=image_size,

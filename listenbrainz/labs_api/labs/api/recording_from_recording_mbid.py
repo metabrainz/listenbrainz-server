@@ -2,7 +2,7 @@ import psycopg2.extras
 from datasethoster import Query
 from flask import current_app
 
-from listenbrainz.labs_api.labs.api.utils import get_recordings_from_mbids
+from listenbrainz.labs_api.labs.api import utils
 
 psycopg2.extras.register_uuid()
 
@@ -21,14 +21,18 @@ class RecordingFromRecordingMBIDQuery(Query):
 
     def outputs(self):
         return ['recording_mbid', 'recording_name', 'length', 'comment', 'artist_credit_id',
-                'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid']
+                'artist_credit_name', '[artist_credit_mbids]', 'canonical_recording_mbid', 'original_recording_mbid']
 
     def fetch(self, params, offset=-1, count=-1):
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 
         mbids = [p['[recording_mbid]'] for p in params]
-        output = get_recordings_from_mbids(mbids)
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+                mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
+                ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+            output = utils.get_recordings_from_mbids(mb_curs, ts_curs, mbids)
 
         # Ideally offset and count should be handled by the postgres query itself, but the 1:1 relationship
         # of what the user requests and what we need to fetch is no longer true, so we can't easily use LIMIT/OFFSET.

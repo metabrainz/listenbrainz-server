@@ -3,9 +3,9 @@ import { mount } from "enzyme";
 
 import Loader from "../../src/components/Loader";
 
-const ChildComponent = () => {
+function ChildComponent() {
   return <div>Child Component</div>;
-};
+}
 
 describe("Loader", () => {
   it('renders loader when "isLoading" is true', () => {
@@ -16,6 +16,7 @@ describe("Loader", () => {
     );
 
     expect(wrapper).toMatchSnapshot();
+    wrapper.unmount();
   });
 
   it('renders child component when "isLoading" is false', () => {
@@ -26,5 +27,6 @@ describe("Loader", () => {
     );
 
     expect(wrapper).toMatchSnapshot();
+    wrapper.unmount();
   });
 });

@@ -84,6 +84,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
       ),
+      freshReleases: path.resolve(
+        jsDir,
+        "src/fresh-releases/FreshReleases.tsx"
+      ),
       selectTimezone: path.resolve(
         jsDir,
         "src/user-settings/SelectTimezone.tsx"

@@ -6,7 +6,11 @@ import * as Sentry from "@sentry/react";
 import { get } from "lodash";
 
 import { Integrations } from "@sentry/tracing";
-import { faPencilAlt, faThumbtack } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPencilAlt,
+  faThumbtack,
+  faPaperPlane,
+} from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -30,6 +34,7 @@ import {
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import SimpleModal from "../utils/SimpleModal";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -40,6 +45,7 @@ export interface RecentListensState {
   listenCount?: number;
   recordingToPin?: Listen;
   recordingToReview?: Listen;
+  recordingToPersonallyRecommend: Listen;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
 }
@@ -57,6 +63,7 @@ export default class RecentListens extends React.Component<
       listens: props.listens || [],
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
+      recordingToPersonallyRecommend: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
     };
@@ -68,6 +75,12 @@ export default class RecentListens extends React.Component<
 
   updateRecordingToPin = (recordingToPin: Listen) => {
     this.setState({ recordingToPin });
+  };
+
+  updateRecordingToPersonallyRecommend = (
+    recordingToPersonallyRecommend: Listen
+  ) => {
+    this.setState({ recordingToPersonallyRecommend });
   };
 
   updateRecordingToReview = (recordingToReview: Listen) => {
@@ -175,7 +188,12 @@ export default class RecentListens extends React.Component<
   };
 
   render() {
-    const { listens, recordingToPin, recordingToReview } = this.state;
+    const {
+      listens,
+      recordingToPin,
+      recordingToReview,
+      recordingToPersonallyRecommend,
+    } = this.state;
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
 
@@ -203,12 +221,16 @@ export default class RecentListens extends React.Component<
                     artistMBIDs?.length ||
                     Boolean(trackMBID) ||
                     Boolean(releaseGroupMBID);
+
+                  const isListenPersonallyRecommendable = Boolean(
+                    getRecordingMBID(listen)
+                  );
                   // On the Recent page listens should have either an MSID or MBID or both,
                   // so we can assume we can pin them
                   /* eslint-disable react/jsx-no-bind */
                   const additionalMenuItems = [
                     <ListenControl
-                      text="Pin this recording"
+                      text="Pin this track"
                       icon={faThumbtack}
                       action={this.updateRecordingToPin.bind(this, listen)}
                       dataToggle="modal"
@@ -223,6 +245,21 @@ export default class RecentListens extends React.Component<
                         action={this.updateRecordingToReview.bind(this, listen)}
                         dataToggle="modal"
                         dataTarget="#CBReviewModal"
+                      />
+                    );
+                  }
+
+                  if (isListenPersonallyRecommendable) {
+                    additionalMenuItems.push(
+                      <ListenControl
+                        text="Personally recommend"
+                        icon={faPaperPlane}
+                        action={this.updateRecordingToPersonallyRecommend.bind(
+                          this,
+                          listen
+                        )}
+                        dataToggle="modal"
+                        dataTarget="#PersonalRecommendationModal"
                       />
                     );
                   }
@@ -262,6 +299,10 @@ export default class RecentListens extends React.Component<
               <CBReviewModal
                 listen={recordingToReview}
                 isCurrentUser
+                newAlert={newAlert}
+              />
+              <PersonalRecommendationModal
+                recordingToPersonallyRecommend={recordingToPersonallyRecommend}
                 newAlert={newAlert}
               />
             </>

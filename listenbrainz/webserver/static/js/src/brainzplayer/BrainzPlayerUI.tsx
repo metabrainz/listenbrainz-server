@@ -1,6 +1,5 @@
 import * as React from "react";
 import {
-  faCog,
   faFastBackward,
   faFastForward,
   faHeart,
@@ -12,19 +11,23 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { get, isNaN as _isNaN } from "lodash";
+import { isNaN as _isNaN } from "lodash";
 import ProgressBar from "./ProgressBar";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import MenuOptions from "./MenuOptions";
 import { millisecondsToStr } from "../playlists/utils";
+import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
 
 type BrainzPlayerUIProps = {
+  currentDataSourceName?: string;
+  currentDataSourceIcon?: IconProp;
   playPreviousTrack: () => void;
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
   playerPaused: boolean;
   trackName?: string;
   artistName?: string;
+  trackUrl?: string;
   progressMs: number;
   durationMs: number;
   seekToPositionMs: (msTimeCode: number) => void;
@@ -62,7 +65,14 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
 }
 
 function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
-  const { listenBrainzAPIBaseURI, currentListen, newAlert } = props;
+  const {
+    currentDataSourceName,
+    currentDataSourceIcon,
+    listenBrainzAPIBaseURI,
+    currentListen,
+    trackUrl,
+    newAlert,
+  } = props;
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const { currentUser } = React.useContext(GlobalAppContext);
   // const { currentListenFeedback } = this.state;
@@ -70,17 +80,12 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     async function getFeedback() {
       // Get feedback for currentListen
 
-      if (!currentUser?.name) {
+      if (!currentUser?.name || !currentListen) {
         return;
       }
-      const recordingMBID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_mbid"
-      );
-      const recordingMSID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_msid"
-      );
+      const recordingMBID = getRecordingMBID(currentListen as Listen);
+      const recordingMSID = getRecordingMSID(currentListen as Listen);
+
       if (!recordingMBID && !recordingMSID) {
         return;
       }
@@ -112,14 +117,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   async function submitFeedback(score: ListenFeedBack) {
     if (currentUser?.auth_token) {
       setCurrentListenFeedback(score);
-      const recordingMSID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_msid"
-      );
-      const recordingMBID = get(
-        currentListen,
-        "track_metadata.additional_info.recording_mbid"
-      );
+
+      const recordingMSID = getRecordingMSID(currentListen as Listen);
+      const recordingMBID = getRecordingMBID(currentListen as Listen);
 
       try {
         const url = `${listenBrainzAPIBaseURI}/feedback/recording-feedback`;
@@ -217,6 +217,17 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         />
       </div>
       <div className="actions">
+        {isPlayingATrack && currentDataSourceName && (
+          <a
+            href={trackUrl ?? "#"}
+            aria-label={`Open in ${currentDataSourceName}`}
+            title={`Open in ${currentDataSourceName}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FontAwesomeIcon icon={currentDataSourceIcon!} />
+          </a>
+        )}
         <FontAwesomeIcon
           icon={faHeart}
           title="Love"

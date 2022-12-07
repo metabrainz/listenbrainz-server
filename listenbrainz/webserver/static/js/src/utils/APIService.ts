@@ -1140,6 +1140,25 @@ export default class APIService {
     return response.status;
   };
 
+  submitPersonalRecommendation = async (
+    userToken: string,
+    userName: string,
+    metadata: UserTrackPersonalRecommendationMetadata
+  ) => {
+    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recommend-personal`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ metadata }),
+    });
+
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   submitTroiPreferences = async (
     userToken: string,
     exportToSpotify: boolean
@@ -1169,6 +1188,38 @@ export default class APIService {
         "Content-Type": "application/json;charset=UTF-8",
       },
     });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  fetchSitewideFreshReleases = async (
+    days?: number,
+    release_date?: string
+  ): Promise<any> => {
+    let url = `${this.APIBaseURI}/explore/fresh-releases/`;
+
+    const queryParams: Array<string> = [];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
+    if (release_date) {
+      queryParams.push(`release_date=${release_date}`);
+    }
+    if (queryParams.length) {
+      url += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  fetchUserFreshReleases = async (username: string): Promise<any> => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+    const url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+    const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
