@@ -136,7 +136,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
 
 
 
-            if caa_id and caa_release_mbid or record_mbid are avialable then:
+            if caa_id and caa_release_mbid or release_mbid and record_mbid are avialable then:
 
                 
             Returns:
@@ -148,7 +148,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                     }
                 }
 
-                That means to render cover art caa id to be present in metadata is compulsory otherwise it will render default image in frontend.
+                These changes are done because to show cover art of a particular listen its recording_mbid and then its release_mbid, caa_id , caa_release_mbid are needed in order to perform the frontend logic in utils.tsx and render it on frontend of the web app.
 
 
 
