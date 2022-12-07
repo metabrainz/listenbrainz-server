@@ -143,7 +143,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                 'track_metadata' : {
                     'additional_info' : {
                         'caa_id' : "demo caa id",
-                        'caa_release_mbid' : "demo caa rlease allbum mbid"
+                        'caa_release_mbid' : "demo caa release allbum mbid"
                     }
                 }
 
