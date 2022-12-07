@@ -76,7 +76,7 @@ export type ListenCardProps = {
   additionalActions?: JSX.Element;
 };
 
-type ListenCardState = {
+export type ListenCardState = {
   isCurrentlyPlaying: boolean;
   thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };

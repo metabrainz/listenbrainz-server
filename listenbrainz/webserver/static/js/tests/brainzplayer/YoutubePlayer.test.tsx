@@ -1,7 +1,11 @@
 import * as React from "react";
-import { mount, shallow } from "enzyme";
+import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 
-import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
+import { act } from "react-dom/test-utils";
+import YoutubePlayer, {
+  YoutubePlayerProps,
+  YoutubePlayerState,
+} from "../../src/brainzplayer/YoutubePlayer";
 import { DataSourceTypes } from "../../src/brainzplayer/BrainzPlayer";
 import APIService from "../../src/utils/APIService";
 
@@ -34,9 +38,25 @@ const props = {
 };
 
 describe("YoutubePlayer", () => {
+  let wrapper:
+    | ReactWrapper<YoutubePlayerProps, YoutubePlayerState, YoutubePlayer>
+    | ShallowWrapper<YoutubePlayerProps, YoutubePlayerState, YoutubePlayer>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   it("renders", () => {
     window.fetch = jest.fn();
-    const wrapper = mount(<YoutubePlayer {...props} />);
+    wrapper = mount(<YoutubePlayer {...props} />);
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -52,14 +72,16 @@ describe("YoutubePlayer", () => {
         playVideo: jest.fn(),
       } as any, // Cheating, shhh don't tell anyone.
     };
-    it("calls onPlayerPausedChange if player paused state changes", () => {
+    it("calls onPlayerPausedChange if player paused state changes", async () => {
       const onPlayerPausedChange = jest.fn();
       const onProgressChange = jest.fn();
       const mockProps = { ...props, onPlayerPausedChange, onProgressChange };
-      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+      wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
       const instance = wrapper.instance();
 
-      instance.handlePlayerStateChanged(youtubePlayerState);
+      await act(() => {
+        instance.handlePlayerStateChanged(youtubePlayerState);
+      });
       expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(true);
       expect(instance.props.onProgressChange).toHaveBeenCalledTimes(1);
@@ -67,26 +89,29 @@ describe("YoutubePlayer", () => {
       onPlayerPausedChange.mockClear();
       onProgressChange.mockClear();
 
-      instance.handlePlayerStateChanged({ ...youtubePlayerState, data: 1 });
+      await act(() => {
+        instance.handlePlayerStateChanged({ ...youtubePlayerState, data: 1 });
+      });
       expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(false);
       expect(instance.props.onProgressChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onProgressChange).toHaveBeenCalledWith(3000);
     });
 
-    it("detects the end of a track", () => {
+    it("detects the end of a track", async () => {
       const onTrackEnd = jest.fn();
       const onProgressChange = jest.fn();
       const mockProps = { ...props, onTrackEnd, onProgressChange };
-      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+      wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
       const instance = wrapper.instance();
-
-      instance.handlePlayerStateChanged({ ...youtubePlayerState, data: 0 });
+      await act(() => {
+        instance.handlePlayerStateChanged({ ...youtubePlayerState, data: 0 });
+      });
       expect(instance.props.onTrackEnd).toHaveBeenCalledTimes(1);
       expect(instance.props.onProgressChange).not.toHaveBeenCalled();
     });
 
-    it("detects a new track, sends information and duration up and autoplays", () => {
+    it("detects a new track, sends information and duration up and autoplays", async () => {
       const onTrackInfoChange = jest.fn();
       const onPlayerPausedChange = jest.fn();
       const onDurationChange = jest.fn();
@@ -98,10 +123,11 @@ describe("YoutubePlayer", () => {
         onDurationChange,
         onProgressChange,
       };
-      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+      wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
       const instance = wrapper.instance();
-
-      instance.handlePlayerStateChanged({ ...youtubePlayerState, data: -1 });
+      await act(() => {
+        instance.handlePlayerStateChanged({ ...youtubePlayerState, data: -1 });
+      });
       // Update info with title only
       expect(instance.props.onTrackInfoChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onTrackInfoChange).toHaveBeenCalledWith(
@@ -139,7 +165,7 @@ describe("YoutubePlayer", () => {
       expect(instance.props.onProgressChange).toHaveBeenCalledWith(3000);
     });
 
-    it("does nothing if it's not the currently selected datasource", () => {
+    it("does nothing if it's not the currently selected datasource", async () => {
       const onTrackInfoChange = jest.fn();
       const onPlayerPausedChange = jest.fn();
       const onDurationChange = jest.fn();
@@ -154,10 +180,11 @@ describe("YoutubePlayer", () => {
         onProgressChange,
         onTrackEnd,
       };
-      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+      wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
       const instance = wrapper.instance();
-
-      instance.handlePlayerStateChanged({ ...youtubePlayerState, data: -1 });
+      await act(() => {
+        instance.handlePlayerStateChanged({ ...youtubePlayerState, data: -1 });
+      });
 
       expect(instance.props.onTrackInfoChange).not.toHaveBeenCalled();
       expect(instance.props.onPlayerPausedChange).not.toHaveBeenCalled();
@@ -167,11 +194,11 @@ describe("YoutubePlayer", () => {
     });
   });
 
-  it("toggles play/pause when calling togglePlay", () => {
+  it("toggles play/pause when calling togglePlay", async () => {
     const onPlayerPausedChange = jest.fn();
     const onProgressChange = jest.fn();
     const mockProps = { ...props, onPlayerPausedChange, onProgressChange };
-    const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+    wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
     const instance = wrapper.instance();
 
     const pauseVideo = jest.fn();
@@ -180,22 +207,24 @@ describe("YoutubePlayer", () => {
       pauseVideo,
       playVideo,
     } as any;
-
-    instance.togglePlay();
+    await act(() => {
+      instance.togglePlay();
+    });
     expect(pauseVideo).toHaveBeenCalledTimes(1);
     expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
     expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(true);
     onPlayerPausedChange.mockClear();
-
-    wrapper.setProps({ playerPaused: true });
-    instance.togglePlay();
+    await act(() => {
+      wrapper!.setProps({ playerPaused: true });
+      instance.togglePlay();
+    });
     expect(playVideo).toHaveBeenCalledTimes(1);
     expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
     expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(false);
   });
 
-  it("should play from youtube URL if present on the listen", () => {
-    const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...props} />);
+  it("should play from youtube URL if present on the listen", async () => {
+    wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...props} />);
     const instance = wrapper.instance();
     const playTrackById = jest.fn();
     instance.playTrackById = playTrackById;
@@ -209,7 +238,9 @@ describe("YoutubePlayer", () => {
         },
       },
     };
-    instance.playListen(youtubeListen);
+    await act(() => {
+      instance.playListen(youtubeListen);
+    });
     expect(playTrackById).toHaveBeenCalledTimes(1);
     expect(playTrackById).toHaveBeenCalledWith("RW8SBwGNcF8");
   });

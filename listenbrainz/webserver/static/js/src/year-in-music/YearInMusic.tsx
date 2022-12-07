@@ -1,4 +1,4 @@
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow } from "swiper";
@@ -973,7 +973,8 @@ document.addEventListener("DOMContentLoaded", () => {
     youtubeAuth: youtube,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <YearInMusicWithAlertNotifications
@@ -981,7 +982,6 @@ document.addEventListener("DOMContentLoaded", () => {
           yearInMusicData={yearInMusicData}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { get } from "lodash";
 
@@ -362,7 +362,8 @@ document.addEventListener("DOMContentLoaded", () => {
     critiquebrainzAuth: critiquebrainz,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <RecentListensWithAlertNotifications
@@ -370,7 +371,6 @@ document.addEventListener("DOMContentLoaded", () => {
           listens={listens}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

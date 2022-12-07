@@ -31,12 +31,12 @@ const fixSpotifyPlayerStyleIssue = () => {
   }
 };
 
-type SpotifyPlayerProps = DataSourceProps & {
+export type SpotifyPlayerProps = DataSourceProps & {
   spotifyUser?: SpotifyUser;
   refreshSpotifyToken: () => Promise<string>;
 };
 
-type SpotifyPlayerState = {
+export type SpotifyPlayerState = {
   currentSpotifyTrack?: SpotifyTrack;
   durationMs: number;
   trackWindow?: SpotifyPlayerTrackWindow;

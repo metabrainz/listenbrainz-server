@@ -20,6 +20,7 @@
 
 import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
+import { act } from "react-dom/test-utils";
 import FollowButton from "../../src/follow/FollowButton";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -64,9 +65,10 @@ describe("<FollowButton />", () => {
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
+    wrapper.unmount();
   });
 
-  it("renders with the correct text based on the props", () => {
+  it("renders with the correct text based on the props", async () => {
     // already follows the user, should show "Following"
     let wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
@@ -89,9 +91,11 @@ describe("<FollowButton />", () => {
     expect(wrapper.contains("Following")).toBeFalsy();
 
     // follows the user, hover, so should show "Unfollow"
-    wrapper.setState({ loggedInUserFollowsUser: true, hover: true });
-    wrapper.update();
+    await act(() => {
+      wrapper.setState({ loggedInUserFollowsUser: true, hover: true });
+    });
     expect(wrapper.contains("Unfollow")).toBeTruthy();
+    wrapper.unmount();
   });
 
   describe("handleButtonClick", () => {
@@ -111,7 +115,7 @@ describe("<FollowButton />", () => {
       return spy;
     };
 
-    it("follows the user if logged in user isn't following the user", () => {
+    it("follows the user if logged in user isn't following the user", async () => {
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
           <FollowButton
@@ -124,11 +128,14 @@ describe("<FollowButton />", () => {
       const instance = wrapper.instance();
 
       const spy = mockFollowAPICall(instance, 200);
-      clickButton(wrapper);
+      await act(() => {
+        clickButton(wrapper);
+      });
       expect(spy).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
 
-    it("unfollows the user if logged in user is already following the user", () => {
+    it("unfollows the user if logged in user is already following the user", async () => {
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
           <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
@@ -137,8 +144,11 @@ describe("<FollowButton />", () => {
       const instance = wrapper.instance();
 
       const spy = mockUnfollowAPICall(instance, 200);
-      clickButton(wrapper);
+      await act(() => {
+        clickButton(wrapper);
+      });
       expect(spy).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
   });
 });

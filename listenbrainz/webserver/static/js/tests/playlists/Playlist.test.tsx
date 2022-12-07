@@ -1,28 +1,23 @@
 import * as React from "react";
-import { shallow, mount } from "enzyme";
+import { shallow, mount, ReactWrapper } from "enzyme";
 import * as timeago from "time-ago";
 import AsyncSelect from "react-select/async";
-import PlaylistPage from "../../src/playlists/Playlist";
+import { act } from "react-dom/test-utils";
+import PlaylistPage, {
+  PlaylistPageProps,
+  PlaylistPageState,
+} from "../../src/playlists/Playlist";
 import * as playlistPageProps from "../__mocks__/playlistPageProps.json";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "../../src/playlists/utils";
+import { waitForComponentToPaint } from "../test-utils";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
-
-// from https://github.com/kentor/flush-promises/blob/46f58770b14fb74ce1ff27da00837c7e722b9d06/index.js
-const scheduler =
-  typeof setImmediate === "function" ? setImmediate : setTimeout;
-
-function flushPromises() {
-  return new Promise(function flushPromisesPromise(resolve) {
-    scheduler(resolve, 0);
-  });
-}
 
 const { labsApiUrl, currentUser, playlist } = playlistPageProps;
 
@@ -45,10 +40,25 @@ const GlobalContextMock: GlobalAppContextT = {
 };
 
 describe("PlaylistPage", () => {
+  let wrapper:
+    | ReactWrapper<PlaylistPageProps, PlaylistPageState, PlaylistPage>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   it("renders correctly", () => {
     // Mock timeago (returns an elapsed time string) otherwise snapshot won't match
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: GlobalContextMock,
@@ -58,7 +68,7 @@ describe("PlaylistPage", () => {
   });
 
   it("hides exportPlaylistToSpotify button if playlist permissions are absent", () => {
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: GlobalContextMock,
@@ -80,7 +90,7 @@ describe("PlaylistPage", () => {
         ] as Array<SpotifyPermission>,
       },
     };
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: alternativeContextMock,
@@ -90,7 +100,7 @@ describe("PlaylistPage", () => {
   });
 
   it("does not clear the add-a-track input on blur", async () => {
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: GlobalContextMock,
@@ -103,38 +113,41 @@ describe("PlaylistPage", () => {
     // @ts-ignore
     expect(searchInput.props().inputValue).toEqual("");
 
-    searchInput.simulate("focus");
-    instance.handleInputChange("mysearch", { action: "input-change" });
-    wrapper.update();
+    await act(() => {
+      searchInput.simulate("focus");
+      instance.handleInputChange("mysearch", { action: "input-change" });
+    });
 
     expect(instance.state.searchInputValue).toEqual("mysearch");
+    await waitForComponentToPaint(wrapper);
     searchInput = wrapper.find(AsyncSelect);
-
-    // @ts-ignore
     expect(searchInput.props().inputValue).toEqual("mysearch");
 
     // simulate ReactSelect input blur event
-    searchInput.simulate("blur");
-    instance.handleInputChange("", { action: "input-blur" });
-    wrapper.update();
+    await act(() => {
+      searchInput.simulate("blur");
+      instance.handleInputChange("", { action: "input-blur" });
+    });
 
+    await waitForComponentToPaint(wrapper);
     searchInput = wrapper.find(AsyncSelect);
     expect(instance.state.searchInputValue).toEqual("mysearch");
-    // @ts-ignore
     expect(searchInput.props().inputValue).toEqual("mysearch");
 
     // simulate ReactSelect menu close event (blur)
-    instance.handleInputChange("", { action: "menu-close" });
-    wrapper.update();
+    await act(() => {
+      instance.handleInputChange("", { action: "menu-close" });
+    });
 
+    await waitForComponentToPaint(wrapper);
     searchInput = wrapper.find(AsyncSelect);
     expect(instance.state.searchInputValue).toEqual("mysearch");
-    // @ts-ignore
+
     expect(searchInput.props().inputValue).toEqual("mysearch");
   });
 
   it("filters out playlist owner from collaborators", async () => {
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: GlobalContextMock,
@@ -149,17 +162,16 @@ describe("PlaylistPage", () => {
     const APISpy = jest
       .spyOn(instance.context.APIService, "editPlaylist")
       .mockResolvedValue(200);
-
-    await instance.editPlaylist(
-      "FNORD",
-      "I have seen the FNORDS, have you?",
-      true,
-      // Calling editPlaylist with playlist owner name, should be filtered out
-      ["iliekcomputers", "mr_monkey"],
-      "https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546"
-    );
-
-    await flushPromises();
+    await act(async () => {
+      await instance.editPlaylist(
+        "FNORD",
+        "I have seen the FNORDS, have you?",
+        true,
+        // Calling editPlaylist with playlist owner name, should be filtered out
+        ["iliekcomputers", "mr_monkey"],
+        "https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546"
+      );
+    });
 
     expect(APISpy).toHaveBeenCalledWith(
       "merde-a-celui-qui-lit",
@@ -180,7 +192,7 @@ describe("PlaylistPage", () => {
       instance.state.playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]
         ?.collaborators
     ).toEqual(["mr_monkey"]);
-    wrapper.update();
+    await waitForComponentToPaint(wrapper);
     expect(wrapper.find("[href='/user/mr_monkey']")).toHaveLength(1);
   });
 });

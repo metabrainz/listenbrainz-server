@@ -1,6 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
+import { act } from "react-dom/test-utils";
 import ListenFeedbackComponent, {
   ListenFeedbackComponentProps,
 } from "../../src/listens/ListenFeedbackComponent";
@@ -56,8 +57,9 @@ describe("ListenFeedbackComponent", () => {
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "submitFeedback");
       spy.mockImplementation(() => Promise.resolve(200));
-
-      await instance.submitFeedback(-1);
+      await act(async () => {
+        await instance.submitFeedback(-1);
+      });
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("baz", -1, "bar", "yyyy");
@@ -68,6 +70,7 @@ describe("ListenFeedbackComponent", () => {
         -1,
         "bar"
       );
+      wrapper.unmount();
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
@@ -88,9 +91,11 @@ describe("ListenFeedbackComponent", () => {
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "submitFeedback");
       spy.mockImplementation(() => Promise.resolve(200));
-
-      instance.submitFeedback(-1);
+      await act(() => {
+        instance.submitFeedback(-1);
+      });
       expect(spy).toHaveBeenCalledTimes(0);
+      wrapper.unmount();
     });
 
     it("doesn't update feedback state or call updateFeedbackCallback if status code is not 200", async () => {
@@ -106,12 +111,15 @@ describe("ListenFeedbackComponent", () => {
       const spy = jest.spyOn(APIService, "submitFeedback");
       spy.mockImplementation(() => Promise.resolve(201));
 
-      instance.submitFeedback(-1);
+      await act(() => {
+        instance.submitFeedback(-1);
+      });
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("baz", -1, "bar", "yyyy");
 
       expect(props.updateFeedbackCallback).toHaveBeenCalledTimes(0);
+      wrapper.unmount();
     });
 
     it("calls handleError if error is returned", async () => {
@@ -129,14 +137,16 @@ describe("ListenFeedbackComponent", () => {
       spy.mockImplementation(() => {
         throw error;
       });
-
-      instance.submitFeedback(-1);
+      await act(() => {
+        instance.submitFeedback(-1);
+      });
       expect(newAlertSpy).toHaveBeenCalledTimes(1);
       expect(newAlertSpy).toHaveBeenCalledWith(
         "danger",
         "Error while submitting feedback",
         "my error message"
       );
+      wrapper.unmount();
     });
   });
 });

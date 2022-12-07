@@ -1,8 +1,12 @@
 import * as React from "react";
-import { mount } from "enzyme";
+import { mount, ReactWrapper } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import UserFeedback, { UserFeedbackProps } from "../../src/user/UserFeedback";
+import { act } from "react-dom/test-utils";
+import UserFeedback, {
+  UserFeedbackProps,
+  UserFeedbackState,
+} from "../../src/user/UserFeedback";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
@@ -10,6 +14,7 @@ import APIService from "../../src/utils/APIService";
 import * as userFeedbackProps from "../__mocks__/userFeedbackProps.json";
 import * as userFeedbackAPIResponse from "../__mocks__/userFeedbackAPIResponse.json";
 import ListenCard from "../../src/listens/ListenCard";
+import { waitForComponentToPaint } from "../test-utils";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
 
@@ -58,16 +63,6 @@ const mountOptionsWithoutUser: { context: GlobalAppContextT } = {
   },
 };
 
-// from https://github.com/kentor/flush-promises/blob/46f58770b14fb74ce1ff27da00837c7e722b9d06/index.js
-const scheduler =
-  typeof setImmediate === "function" ? setImmediate : setTimeout;
-
-function flushPromises() {
-  return new Promise(function flushPromisesPromise(resolve) {
-    scheduler(resolve, 0);
-  });
-}
-
 const mockDate = new Date("2021-05-19");
 const fakeDateNow = jest
   .spyOn(global.Date, "now")
@@ -79,17 +74,30 @@ const fakeDateNow = jest
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 describe("UserFeedback", () => {
+  let wrapper:
+    | ReactWrapper<UserFeedbackProps, UserFeedbackState, UserFeedback>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
+
   it("renders correctly", () => {
-    const wrapper = mount<UserFeedback>(
-      <UserFeedback {...props} />,
-      mountOptions
-    );
+    wrapper = mount<UserFeedback>(<UserFeedback {...props} />, mountOptions);
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
   });
 
   it("loads user feedback from props if logged-in user on their profile", async () => {
-    const wrapper = mount<UserFeedback>(
+    wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider
         value={{
           ...mountOptions.context,
@@ -106,6 +114,7 @@ describe("UserFeedback", () => {
     );
     const instance = wrapper.instance();
     const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
+    await waitForComponentToPaint(wrapper);
 
     // We don't call loadFeedback because we already have the feedback scores in props
     expect(loadFeedbackSpy).not.toHaveBeenCalled();
@@ -115,7 +124,7 @@ describe("UserFeedback", () => {
   });
 
   it("loads user feedback from API for logged-in user", async () => {
-    const wrapper = mount<UserFeedback>(
+    wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
@@ -131,6 +140,7 @@ describe("UserFeedback", () => {
         ],
       });
     instance.componentDidMount();
+    await waitForComponentToPaint(wrapper);
     expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
     expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
       "pikachu",
@@ -143,7 +153,7 @@ describe("UserFeedback", () => {
         .filter(Boolean)
         .join(",")
     );
-    await flushPromises();
+
     expect(instance.state.recordingMsidFeedbackMap).toEqual({
       "some-uuid": 1,
       "some-other-uuid": -1,
@@ -151,12 +161,13 @@ describe("UserFeedback", () => {
   });
 
   it("loadFeedback does not do anything if no user is logged in", async () => {
-    const wrapper = mount<UserFeedback>(
+    wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptionsWithoutUser.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
+    await waitForComponentToPaint(wrapper);
     const getFeedbackSpy = jest.spyOn(instance, "getFeedback");
     const apiGetFeedbackSpy = jest.spyOn(
       instance.context.APIService,
@@ -164,14 +175,14 @@ describe("UserFeedback", () => {
     );
     expect(instance.context.currentUser).toEqual({});
     instance.loadFeedback();
+    await waitForComponentToPaint(wrapper);
     expect(getFeedbackSpy).toHaveBeenCalledTimes(1);
 
-    await flushPromises();
     expect(apiGetFeedbackSpy).not.toHaveBeenCalled();
   });
 
   it("renders ListenCard items for each feedback item", async () => {
-    const wrapper = mount<UserFeedback>(
+    wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
@@ -208,7 +219,7 @@ describe("UserFeedback", () => {
         },
       ],
     };
-    const wrapper = mount<UserFeedback>(
+    wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...(withoutTrackNameProps as UserFeedbackProps)} />
       </GlobalAppContext.Provider>
@@ -218,20 +229,22 @@ describe("UserFeedback", () => {
   });
 
   it("shows feedback on the ListenCards according to recordingFeedbackMap", async () => {
-    const wrapper = mount<UserFeedback>(
+    wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    instance.setState({
-      recordingMsidFeedbackMap: {
-        "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
-        "edfa0bb9-a58c-406c-9f7c-f16741443f9c": 0,
-        "20059ffb-1615-4712-8235-a12840fb156e": -1,
-      },
+    await act(() => {
+      instance.setState({
+        recordingMsidFeedbackMap: {
+          "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
+          "edfa0bb9-a58c-406c-9f7c-f16741443f9c": 0,
+          "20059ffb-1615-4712-8235-a12840fb156e": -1,
+        },
+      });
     });
-    wrapper.update();
+    await waitForComponentToPaint(wrapper);
     const listens = wrapper.find(ListenCard);
     // Score = 1 (loved) for first item
     const firstListenCard = listens.at(0).find(".listen-controls").first();
@@ -291,7 +304,7 @@ describe("UserFeedback", () => {
     ).toBeFalsy();
   });
   it("updates recordingFeedbackMap when clicking on a feedback button", async () => {
-    const wrapper = mount<UserFeedback>(
+    wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
@@ -303,12 +316,15 @@ describe("UserFeedback", () => {
       .mockResolvedValue(200);
     const updateFeedbackSpy = jest.spyOn(instance, "updateFeedback");
 
-    instance.setState({
-      recordingMsidFeedbackMap: {
-        ...instance.state.recordingMsidFeedbackMap,
-        "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
-      },
+    await act(() => {
+      instance.setState({
+        recordingMsidFeedbackMap: {
+          ...instance.state.recordingMsidFeedbackMap,
+          "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
+        },
+      });
     });
+
     expect(instance.state.recordingMsidFeedbackMap).toEqual({
       "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
     });
@@ -322,7 +338,7 @@ describe("UserFeedback", () => {
 
     // simulate clicking on "love" button
     loveButton.simulate("click");
-    await flushPromises();
+    await waitForComponentToPaint(wrapper);
 
     expect(APIsubmitFeedbackSpy).toHaveBeenCalledWith(
       "lalala",
@@ -335,14 +351,14 @@ describe("UserFeedback", () => {
       1,
       "8aa379ad-852e-4794-9c01-64959f5d0b17"
     );
-    await flushPromises();
+
     expect(instance.state.recordingMsidFeedbackMap).toEqual({
       "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
     });
   });
   describe("getFeedbackItemsFromAPI", () => {
     it("calls the API with the right parameters", async () => {
-      const wrapper = mount<UserFeedback>(
+      wrapper = mount<UserFeedback>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <UserFeedback {...props} />
         </GlobalAppContext.Provider>
@@ -364,7 +380,7 @@ describe("UserFeedback", () => {
     });
 
     it("sets the state, loads feedback for user and updates browser history", async () => {
-      const wrapper = mount<UserFeedback>(
+      wrapper = mount<UserFeedback>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <UserFeedback {...props} />
         </GlobalAppContext.Provider>
@@ -372,7 +388,7 @@ describe("UserFeedback", () => {
       const instance = wrapper.instance();
       const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
       const pushStateSpy = jest.spyOn(window.history, "pushState");
-      await flushPromises();
+      await waitForComponentToPaint(wrapper);
 
       // Initially set to 1 page (15 listens), after API response should be 2 pages
       expect(instance.state.maxPage).toEqual(1);
@@ -382,7 +398,7 @@ describe("UserFeedback", () => {
 
       fetchMock.mockResponseOnce(JSON.stringify(userFeedbackAPIResponse));
       await instance.getFeedbackItemsFromAPI(1, true);
-      await flushPromises();
+      await waitForComponentToPaint(wrapper);
 
       expect(instance.state.feedback).toEqual(userFeedbackAPIResponse.feedback);
       expect(instance.state.maxPage).toEqual(2);
