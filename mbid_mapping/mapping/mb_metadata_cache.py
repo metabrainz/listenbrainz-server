@@ -792,11 +792,12 @@ def cleanup_mbid_mapping_table():
     query = """
         UPDATE mbid_mapping mm
            SET last_updated = 'epoch'
-         WHERE NOT EXISTS(
+         WHERE match_type != 'no_match'
+           AND NOT EXISTS(
                 SELECT 1
                   FROM mapping.mb_metadata_cache mbc
                  WHERE mbc.recording_mbid = mm.recording_mbid 
-         )
+               )
     """
     with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn, lb_conn.cursor() as lb_curs:
         lb_curs.execute(query)
