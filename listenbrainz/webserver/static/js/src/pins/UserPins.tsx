@@ -23,6 +23,7 @@ import {
   getRecordingMBID,
   getRecordingMSID,
 } from "../utils/utils";
+import SimpleModal from "../utils/SimpleModal";
 
 export type UserPinsProps = {
   user: ListenBrainzUser;
@@ -438,16 +439,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const UserPinsWithAlertNotifications = withAlertNotifications(UserPins);
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <UserPinsWithAlertNotifications
           user={user}
