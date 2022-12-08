@@ -19,6 +19,7 @@ import { getArtistName, getPageProps, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import Loader from "../components/Loader";
+import SimpleModal from "../utils/SimpleModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
@@ -282,11 +283,13 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url || `${window.location.origin}/1`
   );
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
   const MissingMBDataPageWithAlertNotification = withAlertNotifications(
@@ -295,6 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <MissingMBDataPageWithAlertNotification
           initialAlerts={optionalAlerts}

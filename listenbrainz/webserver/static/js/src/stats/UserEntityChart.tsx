@@ -27,6 +27,7 @@ import {
   userChartEntityToListen,
 } from "./utils";
 import ListenCard from "../listens/ListenCard";
+import SimpleModal from "../utils/SimpleModal";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -691,16 +692,19 @@ document.addEventListener("DOMContentLoaded", () => {
     UserEntityChart
   );
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <UserEntityChartWithAlertNotifications
           initialAlerts={optionalAlerts}

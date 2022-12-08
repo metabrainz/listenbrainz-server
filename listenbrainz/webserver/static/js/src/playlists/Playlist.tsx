@@ -47,6 +47,7 @@ import {
   JSPFTrackToListen,
 } from "./utils";
 import { getPageProps } from "../utils/utils";
+import SimpleModal from "../utils/SimpleModal";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;
@@ -880,16 +881,19 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url || `${window.location.origin}/1`
   );
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <PlaylistPageWithAlertNotifications
           initialAlerts={optionalAlerts}
