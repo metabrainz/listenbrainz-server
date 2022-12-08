@@ -1,11 +1,18 @@
 import * as React from "react";
-import { get as _get } from "lodash";
+import { get as _get, isString } from "lodash";
+import hljs from "highlight.js/lib/core";
+import { sanitize } from "dompurify";
+
+const json = require("highlight.js/lib/languages/json");
+
+hljs.registerLanguage("json", json);
 
 export interface SimpleModalI {
   updateModal: (
     header: string | JSX.Element,
     body: string | JSX.Element,
-    footer: string | JSX.Element
+    footer: string | JSX.Element,
+    highlightCode: boolean
   ) => void;
   onClose?: () => void;
 }
@@ -16,13 +23,15 @@ export interface SimpleModalState {
   header?: string | JSX.Element;
   body: string | JSX.Element;
   footer?: string | JSX.Element;
+  highlightCode?: boolean;
 }
 
 export type WithSimpleModalInjectedProps = {
   updateModal: (
     header: string | JSX.Element,
     body: string | JSX.Element,
-    footer: string | JSX.Element
+    footer: string | JSX.Element,
+    highlightCode?: boolean
   ) => void;
 };
 
@@ -39,9 +48,10 @@ export default class SimpleModal
   public updateModal(
     body: string | JSX.Element,
     header?: string | JSX.Element,
-    footer?: string | JSX.Element
+    footer?: string | JSX.Element,
+    highlightCode: boolean = false
   ) {
-    this.setState({ header, body, footer });
+    this.setState({ header, body, footer, highlightCode });
     // Currently taken care of by Bootstrap3 and jQuery
     // this.setState({ isOpen: true });
   }
@@ -52,7 +62,22 @@ export default class SimpleModal
   // }
 
   render() {
-    const { header, body, footer } = this.state;
+    const { header, body, footer, highlightCode } = this.state;
+    let manipulatedBody = body;
+    if (highlightCode && isString(body)) {
+      const highlightedBody = hljs.highlightAuto(body).value;
+      manipulatedBody = (
+        <pre>
+          <code
+            className="hljs"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{
+              __html: sanitize(highlightedBody),
+            }}
+          />
+        </pre>
+      );
+    }
     return (
       <div
         className="modal fade"
@@ -79,7 +104,7 @@ export default class SimpleModal
                 </h4>
               )}
             </div>
-            <div className="modal-body">{body}</div>
+            <div className="modal-body">{manipulatedBody}</div>
             {footer && <div className="modal-footer">{footer}</div>}
           </form>
         </div>
