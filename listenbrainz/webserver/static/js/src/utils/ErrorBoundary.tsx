@@ -6,7 +6,7 @@ export type ErrorBoundaryState = {
 };
 
 export default class ErrorBoundary extends React.Component<
-  {},
+  React.PropsWithChildren,
   ErrorBoundaryState
 > {
   constructor(props: {}) {

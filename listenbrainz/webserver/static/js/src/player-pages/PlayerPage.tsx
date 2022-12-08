@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { get } from "lodash";
 
 import { faCog, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
@@ -29,6 +29,7 @@ import { getPageProps } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
 import ErrorBoundary from "../utils/ErrorBoundary";
+import SimpleModal from "../utils/SimpleModal";
 
 export type PlayerPageProps = {
   playlist: JSPFObject;
@@ -350,22 +351,25 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url || `${window.location.origin}/1`
   );
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <PlayerPageWithAlertNotifications
           initialAlerts={optionalAlerts}
           playlist={playlist}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

@@ -137,7 +137,21 @@
       "contribution",
       "threshold",
       "limit",
-      "filter_artist_credit"
+      "filter_artist_credit",
+      "skip"
+    ]
+  },
+  "similarity.artist": {
+    "name": "similarity.artist",
+    "description": "Generate artist similarity",
+    "params": [
+      "days",
+      "session",
+      "contribution",
+      "threshold",
+      "limit",
+      "filter_artist_credit",
+      "skip"
     ]
   },
   "year_in_music.similar_users": {

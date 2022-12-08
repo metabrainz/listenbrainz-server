@@ -4,7 +4,7 @@ from datasethoster import Query
 from flask import current_app
 from markupsafe import Markup
 
-from listenbrainz.db.recording_similarity import get_similar_recordings
+from listenbrainz.db import similarity
 from listenbrainz.labs_api.labs.api.utils import get_recordings_from_mbids
 
 
@@ -27,19 +27,22 @@ class SimilarRecordingsViewerQuery(Query):
         return None
 
     @staticmethod
-    def get_recordings_dataset(mb_curs, ts_curs, mbids, score_index=None, similar_mbid_index=None):
+    def get_recordings_dataset(mb_curs, ts_curs, mbids, score_idx=None, similar_mbid_idx=None):
+        """ Retrieve recording metadata for given list of mbids after resolving redirects, canonical redirects and
+        adding similarity data if available
+        """
         metadata = get_recordings_from_mbids(mb_curs, ts_curs, mbids)
         for r in metadata:
+            if score_idx and similar_mbid_idx:
+                similar_mbid = r["original_recording_mbid"]
+                r["score"] = score_idx[similar_mbid]
+                r["reference_mbid"] = similar_mbid_idx[similar_mbid]
+
             # remove unwanted fields from output
             r.pop("original_recording_mbid", None)
             r.pop("artist_credit_id", None)
             r.pop("length", None)
             r.pop("comment", None)
-
-            if score_index and similar_mbid_index:
-                similar_mbid = r["original_recording_mbid"]
-                r["score"] = score_index[similar_mbid]
-                r["reference_mbid"] = similar_mbid_index[similar_mbid]
 
         return {
             "type": "dataset",
@@ -48,7 +51,7 @@ class SimilarRecordingsViewerQuery(Query):
         }
 
     def fetch(self, params, offset=-1, count=-1):
-        recording_mbids = [p["recording_mbid"] for p in params]
+        recording_mbids = [p["recording_mbid"].strip() for p in params]
         algorithm = params[0]["algorithm"].strip()
         count = count if count > 0 else 100
 
@@ -57,29 +60,19 @@ class SimilarRecordingsViewerQuery(Query):
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
                 ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
 
-            recordings = get_similar_recordings(recording_mbids, algorithm, count)
-            references = self.get_recordings_dataset(mb_curs, ts_curs, recordings)
-
+            references = self.get_recordings_dataset(mb_curs, ts_curs, recording_mbids)
             results = [{"type": "markup", "data": Markup("<p><b>Reference recording</b></p>")}]
             results.append(references)
 
-            if len(recordings) == 0:
+            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "recording", recording_mbids, algorithm, count)
+            if len(similar_mbids) == 0:
                 results.append({
                     "type": "markup",
                     "data": Markup("<p><b>No similar recordings found!</b></p>")
                 })
                 return results
 
-            similar_mbid_index = {}
-            score_index = {}
-            mbids = []
-            for r in recordings:
-                similar_mbid = str(r["similar_mbid"])
-                similar_mbid_index[similar_mbid] = str(r["mbid"])
-                score_index[similar_mbid] = r["score"]
-                mbids.append(similar_mbid)
-
-            similar_dataset = self.get_recordings_dataset(mb_curs, ts_curs, mbids, score_index, similar_mbid_index)
+            similar_dataset = self.get_recordings_dataset(mb_curs, ts_curs, similar_mbids, score_idx, mbid_idx)
             results.append({"type": "markup", "data": Markup("<p><b>Similar Recordings</b></p>")})
             results.append(similar_dataset)
 

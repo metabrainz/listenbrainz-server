@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
@@ -20,6 +20,7 @@ import { getPageProps } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import Card from "../components/Card";
 import { COLOR_WHITE } from "../utils/constants";
+import SimpleModal from "../utils/SimpleModal";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
@@ -249,19 +250,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const ColorPlayWithAlertNotifications = withAlertNotifications(ColorPlay);
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <ColorPlayWithAlertNotifications user={user} />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { get } from "lodash";
 
@@ -33,6 +33,7 @@ import {
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
+import SimpleModal from "../utils/SimpleModal";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 
 export type RecentListensProps = {
@@ -229,7 +230,7 @@ export default class RecentListens extends React.Component<
                   /* eslint-disable react/jsx-no-bind */
                   const additionalMenuItems = [
                     <ListenControl
-                      text="Pin this recording"
+                      text="Pin this track"
                       icon={faThumbtack}
                       action={this.updateRecordingToPin.bind(this, listen)}
                       dataToggle="modal"
@@ -354,23 +355,26 @@ document.addEventListener("DOMContentLoaded", () => {
     RecentListens
   );
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
     critiquebrainzAuth: critiquebrainz,
+    modal: modalRef,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <RecentListensWithAlertNotifications
           initialAlerts={optionalAlerts}
           listens={listens}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

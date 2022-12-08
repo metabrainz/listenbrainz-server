@@ -1,4 +1,4 @@
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as React from "react";
 
 import * as Sentry from "@sentry/react";
@@ -110,6 +110,7 @@ export default class UserReports extends React.Component<
                   entity="artist"
                   apiUrl={apiUrl}
                   user={user}
+                  terminology="artist"
                 />
               </ErrorBoundary>
             </div>
@@ -120,6 +121,7 @@ export default class UserReports extends React.Component<
                   entity="release"
                   apiUrl={apiUrl}
                   user={user}
+                  terminology="album"
                 />
               </ErrorBoundary>
             </div>
@@ -130,6 +132,7 @@ export default class UserReports extends React.Component<
                   entity="recording"
                   apiUrl={apiUrl}
                   user={user}
+                  terminology="track"
                 />
               </ErrorBoundary>
             </div>
@@ -165,10 +168,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <UserReports apiUrl={api_url} user={user} />
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

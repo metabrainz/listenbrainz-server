@@ -13,7 +13,8 @@ from mapping.utils import log, CRON_LOG_FILE
 from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
-from mapping.mb_metadata_cache import create_mb_metadata_cache, incremental_update_mb_metadata_cache
+from mapping.mb_metadata_cache import create_mb_metadata_cache, incremental_update_mb_metadata_cache, \
+    cleanup_mbid_mapping_table
 from mapping.spotify_metadata_index import create_spotify_metadata_index
 
 
@@ -124,8 +125,12 @@ def update_mb_metadata_cache(use_lb_conn):
 
 @cli.command()
 def cron_build_mb_metadata_cache():
+    """ Build the mb metadata cache and tables it depends on in production in appropriate databases.
+     After building the cache, cleanup mbid_mapping table.
+    """
     create_canonical_musicbrainz_data(False)
     create_mb_metadata_cache(True)
+    cleanup_mbid_mapping_table()
 
 
 @cli.command()

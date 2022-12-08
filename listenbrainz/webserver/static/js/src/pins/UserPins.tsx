@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as React from "react";
 
 import * as _ from "lodash";
@@ -23,6 +23,7 @@ import {
   getRecordingMBID,
   getRecordingMSID,
 } from "../utils/utils";
+import SimpleModal from "../utils/SimpleModal";
 
 export type UserPinsProps = {
   user: ListenBrainzUser;
@@ -299,7 +300,7 @@ export default class UserPins extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8 col-md-offset-2">
-            <h3>Pinned Recordings</h3>
+            <h3>Pinned Tracks</h3>
 
             {pins.length === 0 && (
               <>
@@ -438,15 +439,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const UserPinsWithAlertNotifications = withAlertNotifications(UserPins);
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <UserPinsWithAlertNotifications
           user={user}
@@ -455,7 +460,6 @@ document.addEventListener("DOMContentLoaded", () => {
           profileUrl={profile_url}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });
