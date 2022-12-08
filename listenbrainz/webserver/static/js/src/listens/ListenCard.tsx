@@ -17,9 +17,6 @@ import {
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import hljs from "highlight.js/lib/core";
-import json from "highlight.js/lib/languages/json";
-import { sanitize } from "dompurify";
 import {
   getArtistLink,
   getTrackLink,
@@ -41,8 +38,6 @@ import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import { millisecondsToStr } from "../playlists/utils";
-
-hljs.registerLanguage("json", json);
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -487,21 +482,9 @@ export default class ListenCard extends React.Component<
                       text="Inspect listen"
                       icon={faCode}
                       action={() => {
-                        const stringifiedJSON = JSON.stringify(listen, null, 4);
-                        const highlightedJSON = hljs.highlight(
-                          stringifiedJSON,
-                          { language: "json" }
-                        ).value;
+                        const stringifiedJSON = JSON.stringify(listen, null, 2);
                         modal?.current?.updateModal(
-                          <pre>
-                            <code
-                              className="hljs"
-                              // eslint-disable-next-line react/no-danger
-                              dangerouslySetInnerHTML={{
-                                __html: sanitize(highlightedJSON),
-                              }}
-                            />
-                          </pre>,
+                          stringifiedJSON,
                           "Inspect listen",
                           <>
                             <button
@@ -522,7 +505,8 @@ export default class ListenCard extends React.Component<
                             >
                               Close
                             </button>
-                          </>
+                          </>,
+                          true
                         );
                       }}
                       dataToggle="modal"
