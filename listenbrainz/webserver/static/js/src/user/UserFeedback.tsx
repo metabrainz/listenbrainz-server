@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -33,6 +33,7 @@ import {
   handleNavigationClickEvent,
 } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
+import SimpleModal from "../utils/SimpleModal";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
@@ -509,7 +510,7 @@ export default class UserFeedback extends React.Component<
                     const additionalMenuItems = [
                       <ListenControl
                         title="Pin this recording"
-                        text="Pin this recording"
+                        text="Pin this track"
                         icon={faThumbtack}
                         // eslint-disable-next-line react/jsx-no-bind
                         action={this.updateRecordingToPin.bind(this, listen)}
@@ -657,15 +658,19 @@ document.addEventListener("DOMContentLoaded", () => {
     UserFeedback
   );
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <UserFeedbackWithAlertNotifications
           initialAlerts={optionalAlerts}
@@ -674,7 +679,6 @@ document.addEventListener("DOMContentLoaded", () => {
           totalCount={feedback_count}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

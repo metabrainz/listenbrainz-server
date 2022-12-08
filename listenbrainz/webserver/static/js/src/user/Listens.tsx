@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
 
@@ -48,6 +48,7 @@ import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCountCard from "../listens/ListenCountCard";
+import SimpleModal from "../utils/SimpleModal";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -724,7 +725,7 @@ export default class Listens extends React.Component<
     if (canPin) {
       additionalMenuItems.push(
         <ListenControl
-          text="Pin this recording"
+          text="Pin this track"
           icon={faThumbtack}
           action={this.updateRecordingToPin.bind(this, listen)}
           dataToggle="modal"
@@ -1060,17 +1061,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const ListensWithAlertNotifications = withAlertNotifications(Listens);
-
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
     critiquebrainzAuth: critiquebrainz,
+    modal: modalRef,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <ListensWithAlertNotifications
           initialAlerts={optionalAlerts}
@@ -1081,7 +1085,6 @@ document.addEventListener("DOMContentLoaded", () => {
           user={user}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

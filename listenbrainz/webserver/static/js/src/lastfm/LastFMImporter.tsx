@@ -1,4 +1,4 @@
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as React from "react";
 import * as Sentry from "@sentry/react";
 import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
@@ -641,7 +641,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <LastFmImporter
       user={user}
       profileUrl={profile_url}
@@ -650,7 +651,6 @@ document.addEventListener("DOMContentLoaded", () => {
       lastfmApiUrl={lastfm_api_url}
       librefmApiKey={librefm_api_key}
       librefmApiUrl={librefm_api_url}
-    />,
-    domContainer
+    />
   );
 });

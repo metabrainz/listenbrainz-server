@@ -1,13 +1,16 @@
 import * as React from "react";
+import { mount, ReactWrapper } from "enzyme";
 import { act } from "react-dom/test-utils";
+import { waitForComponentToPaint } from "../test-utils";
 
-import { mount } from "enzyme";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 
-import FreshReleases from "../../src/fresh-releases/FreshReleases";
+import FreshReleases, {
+  FreshReleasesProps,
+} from "../../src/fresh-releases/FreshReleases";
 import ReleaseFilters from "../../src/fresh-releases/ReleaseFilters";
 
 import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
@@ -46,58 +49,61 @@ const mountOptions: { context: GlobalAppContextT } = {
   },
 };
 
-// From https://github.com/enzymejs/enzyme/issues/2073
-const waitForComponentToPaint = async (wrapper: any) => {
-  await act(async () => {
-    // eslint-disable-next-line no-promise-executor-return
-    await new Promise((resolve) => setTimeout(resolve));
-    wrapper.update();
-  });
-};
-
 describe("FreshReleases", () => {
+  let wrapper:
+    | ReactWrapper<FreshReleasesProps, {}, React.Component>
+    | undefined;
+  beforeEach(() => {
+    wrapper = undefined;
+  });
+  afterEach(() => {
+    if (wrapper) {
+      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
+        related to async lifecycle methods run against a missing dom 'document'.
+        See https://github.com/facebook/react/issues/15691
+      */
+      wrapper.unmount();
+    }
+  });
   it("renders filters, card grid, and timeline components on the page", async () => {
-    const mockFetchSitewideFreshReleases = jest.fn().mockImplementation(() => {
-      return Promise.resolve({
-        json: () => sitewideData,
-      });
+    const mockFetchSitewideFreshReleases = jest.fn().mockResolvedValue({
+      json: () => sitewideData,
     });
     mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases;
-    const wrapper = mount(
+    wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
         <FreshReleases {...props} />
       </GlobalAppContext.Provider>
     );
     await waitForComponentToPaint(wrapper);
-    expect(mockFetchSitewideFreshReleases).toBeCalled();
+    expect(mockFetchSitewideFreshReleases).toHaveBeenCalledWith(3);
+    await waitForComponentToPaint(wrapper);
     expect(wrapper.find(ReleaseFilters)).toHaveLength(1);
     expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("renders user fresh releases page correctly", async () => {
-    const mockFetchUserFreshReleases = jest.fn().mockImplementation(() => {
-      return Promise.resolve({
-        json: () => userData,
-      });
+    const mockFetchUserFreshReleases = jest.fn().mockResolvedValue({
+      json: () => userData,
     });
     mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
-    const wrapper = mount(
+    wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
         <FreshReleases {...props} />
       </GlobalAppContext.Provider>
     );
+    // click on user-releases button
+    wrapper.find("#user-releases").at(0).simulate("click");
     await waitForComponentToPaint(wrapper);
 
-    // TODO set pageType to "user" before uncommenting the following code
-
-    // expect(mockFetchUserFreshReleases).toBeCalled();
-    // expect(wrapper.html()).toMatchSnapshot();
+    expect(mockFetchUserFreshReleases).toBeCalled();
+    expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("renders filters correctly", async () => {
     const setFilteredList = jest.fn();
 
-    const wrapper = mount(
+    wrapper = mount(
       <ReleaseFilters
         allFilters={sitewideFilters}
         releases={sitewideData}

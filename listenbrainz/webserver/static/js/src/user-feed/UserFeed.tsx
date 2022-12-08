@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 
 import {
@@ -51,6 +51,7 @@ import {
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
+import SimpleModal from "../utils/SimpleModal";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -65,11 +66,11 @@ export enum EventType {
   REVIEW = "critiquebrainz_review",
 }
 
-type UserFeedPageProps = {
+export type UserFeedPageProps = {
   events: TimelineEvent[];
 } & WithAlertNotificationsInjectedProps;
 
-type UserFeedPageState = {
+export type UserFeedPageState = {
   nextEventTs?: number;
   previousEventTs?: number;
   earliestEventTs?: number;
@@ -150,7 +151,7 @@ export default class UserFeedPage extends React.Component<
       case EventType.LIKE:
         return "added a track to their favorites";
       case EventType.RECORDING_PIN:
-        return "pinned a recording";
+        return "pinned a track";
       case EventType.REVIEW: {
         review = event.metadata as CritiqueBrainzReview;
         return `reviewed ${UserFeedPage.getReviewEntityName(
@@ -927,26 +928,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
   );
-
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
     UserFeedPage
   );
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <UserFeedPageWithAlertNotifications
           initialAlerts={optionalAlerts}
           events={events}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

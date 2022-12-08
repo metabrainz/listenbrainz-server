@@ -15,7 +15,7 @@ import ReleaseFilters from "./ReleaseFilters";
 import ReleaseTimeline from "./ReleaseTimeline";
 import Pill from "../components/Pill";
 
-type FreshReleasesProps = {
+export type FreshReleasesProps = {
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -40,57 +40,57 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [pageType, setPageType] = React.useState<string>(PAGE_TYPE_SITEWIDE);
 
-  const fetchReleases = React.useCallback(async () => {
-    setIsLoading(true);
-    let freshReleases: Array<FreshReleaseItem>;
-    try {
-      if (pageType === PAGE_TYPE_SITEWIDE) {
-        freshReleases = await APIService.fetchSitewideFreshReleases(3);
-      } else {
-        const userFreshReleases = await APIService.fetchUserFreshReleases(
-          currentUser.name
-        );
-        freshReleases = userFreshReleases.payload.releases;
-      }
-
-      const cleanReleases = uniqBy(freshReleases, (datum) => {
-        return (
-          /*
-           * toLowerCase() solves an edge case.
-           * Example:
-           * "release_name": "Waterslide, Diving Board, Ladder to the Sky"
-           * "release_name": "Waterslide, Diving Board, Ladder To The Sky"
-           * These releases will be considered unique.
-           */
-          datum.release_name.toLowerCase() +
-          datum.artist_credit_name.toLowerCase()
-        );
-      });
-      const releaseTypes = cleanReleases
-        .map(
-          (release) =>
-            release.release_group_secondary_type ||
-            release.release_group_primary_type
-        )
-        .filter(
-          (value, index, self) =>
-            self.indexOf(value) === index &&
-            value !== undefined &&
-            value !== null
-        );
-
-      setReleases(cleanReleases);
-      setFilteredList(cleanReleases);
-      setAllFilters(releaseTypes);
-      setIsLoading(false);
-    } catch (error) {
-      newAlert("danger", "Couldn't fetch fresh releases", error.toString());
-    }
-  }, [pageType]);
-
   React.useEffect(() => {
+    const fetchReleases = async () => {
+      setIsLoading(true);
+      let freshReleases: Array<FreshReleaseItem>;
+      try {
+        if (pageType === PAGE_TYPE_SITEWIDE) {
+          freshReleases = await APIService.fetchSitewideFreshReleases(3);
+        } else {
+          const userFreshReleases = await APIService.fetchUserFreshReleases(
+            currentUser.name
+          );
+          freshReleases = userFreshReleases.payload.releases;
+        }
+
+        const cleanReleases = uniqBy(freshReleases, (datum) => {
+          return (
+            /*
+             * toLowerCase() solves an edge case.
+             * Example:
+             * "release_name": "Waterslide, Diving Board, Ladder to the Sky"
+             * "release_name": "Waterslide, Diving Board, Ladder To The Sky"
+             * These releases will be considered unique.
+             */
+            datum.release_name.toLowerCase() +
+            datum.artist_credit_name.toLowerCase()
+          );
+        });
+        const releaseTypes = cleanReleases
+          .map(
+            (release) =>
+              release.release_group_secondary_type ||
+              release.release_group_primary_type
+          )
+          .filter(
+            (value, index, self) =>
+              self.indexOf(value) === index &&
+              value !== undefined &&
+              value !== null
+          );
+
+        setReleases(cleanReleases);
+        setFilteredList(cleanReleases);
+        setAllFilters(releaseTypes);
+        setIsLoading(false);
+      } catch (error) {
+        newAlert("danger", "Couldn't fetch fresh releases", error.toString());
+      }
+    };
+    // Call the async function defined above (useEffect can't return a Promise)
     fetchReleases();
-  }, [fetchReleases, pageType]);
+  }, [pageType]);
 
   return (
     <>

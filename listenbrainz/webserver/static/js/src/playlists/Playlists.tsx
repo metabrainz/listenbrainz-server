@@ -2,7 +2,7 @@
 /* eslint-disable camelcase */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 
 import {
   faPen,
@@ -734,7 +734,8 @@ document.addEventListener("DOMContentLoaded", () => {
     youtubeAuth: youtube,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <UserPlaylistsWithAlertNotifications
@@ -747,7 +748,6 @@ document.addEventListener("DOMContentLoaded", () => {
           user={user}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });

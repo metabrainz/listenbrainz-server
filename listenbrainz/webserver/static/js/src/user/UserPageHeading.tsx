@@ -19,7 +19,7 @@
  */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { isEmpty, isNil } from "lodash";
@@ -97,7 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
     youtubeAuth: youtube,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <GlobalAppContext.Provider value={globalProps}>
       <UserPageHeading
         user={user}
@@ -105,7 +106,6 @@ document.addEventListener("DOMContentLoaded", () => {
         loggedInUserFollowsUser={logged_in_user_follows_user}
         alreadyReportedUser={already_reported_user}
       />
-    </GlobalAppContext.Provider>,
-    domContainer
+    </GlobalAppContext.Provider>
   );
 });

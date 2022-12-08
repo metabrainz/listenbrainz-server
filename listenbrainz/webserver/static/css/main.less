@@ -27,6 +27,12 @@
 // Height of the BrainzPlayer component (fixed at the bottom of the page)
 @brainzplayer-height: 60px;
 
+@import (inline, css) "highlight.js/styles/github.css";
+pre code.hljs {
+  max-height: 50vh;
+  overflow-y: scroll;
+}
+
 body {
   // Leave some space for BrainzPlayer
   padding-bottom: @brainzplayer-height;

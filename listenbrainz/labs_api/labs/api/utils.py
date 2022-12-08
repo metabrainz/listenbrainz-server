@@ -1,13 +1,13 @@
 import psycopg2
 from psycopg2.extras import execute_values
+from psycopg2.sql import SQL, Identifier
 
 
 def _resolve_mbids_helper(curs, query, mbids):
     """ Helper to extract common code for resolving redirect and canonical mbids """
-    execute_values(curs, query, [(mbid,) for mbid in mbids], page_size=len(mbids))
-
+    result = execute_values(curs, query, [(mbid,) for mbid in mbids], fetch=True)
     index, inverse_index = {}, {}
-    for row in curs.fetchall():
+    for row in result:
         old_mbid = row[0]
         new_mbid = row[1]
         index[old_mbid] = new_mbid
@@ -21,20 +21,21 @@ def _resolve_mbids_helper(curs, query, mbids):
     return new_mbids, index, inverse_index
 
 
-def resolve_redirect_mbids(curs, mbids):
+def resolve_redirect_mbids(curs, table, mbids):
     """ Given a list of mbids, resolve redirects if any and return the list of new mbids, a dict of
     redirected mbids and a reverse index of the same.
     """
-    query = """
+    redirect_table = table + "_gid_redirect"
+    query = SQL("""
           WITH mbids (gid) AS (VALUES %s)
-        SELECT rgr.gid::TEXT AS old
-             , r.gid::TEXT AS new
-          FROM recording_gid_redirect rgr
-          JOIN mbids m
-            ON rgr.gid = m.gid::UUID
-          JOIN recording r
-            ON r.id = rgr.new_id
-    """
+        SELECT redirect.gid::TEXT AS old
+             , target.gid::TEXT AS new
+          FROM {redirect_table} redirect
+          JOIN mbids
+            ON redirect.gid = mbids.gid::UUID
+          JOIN {target_table} target
+            ON target.id = redirect.new_id
+    """).format(target_table=Identifier(table), redirect_table=Identifier(redirect_table))
     return _resolve_mbids_helper(curs, query, mbids)
 
 
@@ -89,7 +90,7 @@ def fetch_recording_metadata(curs, mbids):
 
 def get_recordings_from_mbids(mb_curs, ts_curs, mbids):
     """ Given a list of recording mbids, resolve redirects if any and return metadata for all recordings """
-    redirected_mbids, index, inverse_index = resolve_redirect_mbids(mb_curs, mbids)
+    redirected_mbids, index, inverse_index = resolve_redirect_mbids(mb_curs, "recording", mbids)
     recording_index = fetch_recording_metadata(mb_curs, redirected_mbids)
     _, canonical_index, _ = resolve_canonical_mbids(ts_curs, redirected_mbids)
 

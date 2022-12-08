@@ -1,4 +1,4 @@
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow } from "swiper";
@@ -37,6 +37,7 @@ import {
 } from "../playlists/utils";
 import FollowButton from "../follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../utils/constants";
+import SimpleModal from "../utils/SimpleModal";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -966,22 +967,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
 
+  const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    modal: modalRef,
   };
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
+      <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <YearInMusicWithAlertNotifications
           user={user}
           yearInMusicData={yearInMusicData}
         />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });
