@@ -21,7 +21,7 @@ const babelExcludeLibrariesRegexp = new RegExp(
 );
 module.exports = function (env, argv) {
   const isProd = argv.mode === "production";
-  const baseDir = "./listenbrainz/webserver/static";
+  const baseDir = "./frontend";
   const jsDir = path.join(baseDir, "js");
   const distDir = path.join(baseDir, "dist");
   const cssDir = path.join(baseDir, "css");

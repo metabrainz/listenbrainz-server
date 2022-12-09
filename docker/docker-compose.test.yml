@@ -56,4 +56,4 @@ services:
       dockerfile: Dockerfile
       target: listenbrainz-frontend-dev
     volumes:
-      - ../listenbrainz/webserver/static:/code/listenbrainz/webserver/static:z
+      - ../frontend:/code/frontend:z
