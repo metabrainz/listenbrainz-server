@@ -59,7 +59,7 @@ services:
     volumes:
       - web_home:/root
       - ..:/code/listenbrainz:z
-      - ../listenbrainz/webserver/static:/static
+      - ../frontend:/static
     ports:
       - "8100:80"
     depends_on:
@@ -119,7 +119,7 @@ services:
     command: npm run build:dev
     user: ${STATIC_BUILD_USER:-node}
     volumes:
-      - ../listenbrainz/webserver/static:/code/listenbrainz/webserver/static:z
+      - ../frontend:/code/frontend:z
 
 # Uncomment the following lines if you want to connect the LB network to a musicbrainz-docker network to access a MB replica
 # TODO: re-comment these before merging this code
