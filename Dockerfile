@@ -92,7 +92,7 @@ COPY webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.
 FROM listenbrainz-frontend-dev as listenbrainz-frontend-prod
 
 # Compile front-end (static) files
-COPY ./listenbrainz/webserver/static /code/listenbrainz/webserver/static
+COPY ./frontend /code/frontend
 RUN npm run build:prod
 
 
@@ -185,20 +185,20 @@ COPY ./docker/services/cron/crontab /etc/cron.d/crontab
 RUN chmod 0644 /etc/cron.d/crontab
 
 # copy the compiled js files and statis assets from image to prod
-COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/robots.txt /static/
-COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/sound /static/sound
-COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/fonts /static/fonts
-COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/img /static/img
-COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/js/lib /static/js/lib
-COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/js/info.js /static/js/
-COPY --from=listenbrainz-frontend-prod /code/listenbrainz/webserver/static/dist /static/dist
+COPY --from=listenbrainz-frontend-prod /code/frontend/robots.txt /static/
+COPY --from=listenbrainz-frontend-prod /code/frontend/sound /static/sound
+COPY --from=listenbrainz-frontend-prod /code/frontend/fonts /static/fonts
+COPY --from=listenbrainz-frontend-prod /code/frontend/img /static/img
+COPY --from=listenbrainz-frontend-prod /code/frontend/js/lib /static/js/lib
+COPY --from=listenbrainz-frontend-prod /code/frontend/js/info.js /static/js/
+COPY --from=listenbrainz-frontend-prod /code/frontend/dist /static/dist
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/
 
 WORKDIR /code/listenbrainz
 # Ensure we use the right files and folders by removing duplicates
-RUN rm -rf ./listenbrainz/webserver/static/
+RUN rm -rf ./frontend/
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
 
 ARG GIT_COMMIT_SHA
