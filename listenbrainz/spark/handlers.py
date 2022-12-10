@@ -382,17 +382,6 @@ def handle_most_listened_year(message):
 def handle_top_stats(message):
     year_in_music.handle_top_stats(message["entity"], message["year"], message["data"])
 
-    # for top_releases, look up cover art
-    if message["entity"] == "releases":
-        data = message["data"]
-        for user_data in data:
-            user = db_user.get(user_data["user_id"])
-            if not user:
-                return
-            release_mbids = [rel["release_mbid"] for rel in user_data["data"] if "release_mbid" in rel]
-            coverart = year_in_music.get_coverart_for_top_releases(release_mbids)
-            year_in_music.handle_coverart(user_data["user_id"], message["year"], "top_releases_coverart", coverart)
-
 
 def handle_listens_per_day(message):
     user_id = message["user_id"]
