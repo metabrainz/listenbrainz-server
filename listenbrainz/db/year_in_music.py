@@ -112,204 +112,25 @@ def handle_listens_per_day(user_id, year, data):
         """), {"user_id": user_id, "year": year, "data": ujson.dumps(data)})
 
 
-def insert_playlists(year, troi_patch_slug, import_file):
+def insert_playlists(year, playlists):
     connection = db.engine.raw_connection()
-    query = """
+    query = SQL("""
         INSERT INTO statistics.year_in_music(user_id, year, data)
-             SELECT "user".id
-                  , playlists::jsonb
-               FROM (VALUES %s) AS t(user_name, year, playlists)
-               JOIN "user"
-                 ON "user".musicbrainz_id = user_name
+             SELECT user_id
+                  , {year}
+                  , jsonb_build_object(slug, playlist_mbid)
+               FROM (VALUES %s) AS t(user_id, slug, playlist_mbid)
         ON CONFLICT (user_id, year)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-        """
-
-    data = []
-    coverart_data = []
-    with open(import_file, "r") as f:
-        while True:
-            user_name = f.readline()
-            if user_name == "":
-                break
-
-            user_name = user_name.strip()
-            playlist_mbid = f.readline().strip()
-            jspf = f.readline().strip()
-            jspf_obj = ujson.loads(jspf)
-            coverart = get_coverart_for_playlist(jspf_obj)
-            coverart_data.append((user_name, ujson.dumps({
-                f"playlist-{troi_patch_slug}-coverart": coverart
-            })))
-
-            data.append((user_name, year, ujson.dumps({
-                f"playlist-{troi_patch_slug}": {
-                    "mbid": playlist_mbid,
-                    "jspf": jspf_obj
-                }
-            })))
+    """).format(year=Literal(year))
 
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, data)
-        connection.commit()
-        # Coverart
-        with connection.cursor() as cursor:
-            execute_values(cursor, query, coverart_data)
+            execute_values(cursor, query, playlists)
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
-        current_app.logger.error("Error while inserting playlist/%s:" % troi_patch_slug, exc_info=True)
-
-
-def get_coverart_for_playlist(playlist_jspf):
-    tracks = playlist_jspf.get('playlist', {}).get('track', [])
-    track_recording_mbids = [os.path.basename(track['identifier']) for track in tracks]
-
-    if not track_recording_mbids:
-        return {}
-
-    query = """SELECT recording_mbid::text
-                    , release_mbid::text
-                 FROM mbid_mapping_metadata
-                WHERE recording_mbid in :recording_mbids"""
-
-    recording_mbid_to_release_mbid = {}
-    with timescale.engine.connect() as connection:
-        res = connection.execute(sqlalchemy.text(query), {"recording_mbids": tuple(track_recording_mbids)})
-        for row in res.fetchall():
-            recording_mbid = row["recording_mbid"]
-            release_mbid = row["release_mbid"]
-            recording_mbid_to_release_mbid[recording_mbid] = release_mbid
-
-    coverart = get_coverart_for_top_releases(list(recording_mbid_to_release_mbid.values()))
-    recording_mbid_to_coverart = {}
-    for recording_mbid, release_mbid in recording_mbid_to_release_mbid.items():
-        if release_mbid in coverart:
-            recording_mbid_to_coverart[recording_mbid] = coverart[release_mbid]
-    return recording_mbid_to_coverart
-
-
-def caa_id_to_archive_url(release_mbid, caa_id):
-    return f"https://archive.org/download/mbid-{release_mbid}/mbid-{release_mbid}-{caa_id}_thumb500.jpg"
-
-
-def get_coverart_for_top_releases(release_mbids):
-    """Use the CAA database connection to find coverart for each release
-    1. Get release id and releasegroup id for each release (also considering release mbid redirects)
-    2. Get coverart for these releases
-    3. For releases with no cover art, see if any other release in their releasegroup has coverarat
-    """
-
-    if musicbrainz_db.engine is None:
-        current_app.logger.warning("get_coverart_for_top_releases: No connection to MusicBrainz database")
-        return {}
-
-    if not release_mbids:
-        return {}
-
-    release_coverart = {}
-    release_id_to_mbid = {}
-    release_mbid_to_release_group_id = {}
-    with musicbrainz_db.engine.connect() as connection:
-        query = """SELECT release_gid_redirect.gid::text
-                        , new_id
-                        , release.release_group
-                     FROM release_gid_redirect
-                     JOIN release
-                       ON release.id = new_id
-                    WHERE release_gid_redirect.gid IN :release_mbids"""
-        res = connection.execute(sqlalchemy.text(query), {"release_mbids": tuple(release_mbids)})
-        for row in res.fetchall():
-            release_id_to_mbid[row["new_id"]] = row["gid"]
-            release_mbid_to_release_group_id[row["gid"]] = row["release_group"]
-        query = """SELECT gid::text
-                        , id
-                        , release_group
-                     FROM release
-                    WHERE gid IN :release_mbids"""
-        res = connection.execute(sqlalchemy.text(query), {"release_mbids": tuple(release_mbids)})
-        for row in res.fetchall():
-            release_id_to_mbid[row["id"]] = row["gid"]
-            release_mbid_to_release_group_id[row["gid"]] = row["release_group"]
-
-        if not release_id_to_mbid:
-            # sometimes we might not find a release in the database (e.g. running on an out of date db replica)
-            return {}
-
-        # We need to know what the release mbid was that we passed in which gave us this rgid
-        release_group_id_to_release_mbid = {v: k for k, v in release_mbid_to_release_group_id.items()}
-
-        # Front coverart
-        query = """SELECT id
-                        , release
-                     FROM cover_art_archive.index_listing
-                    WHERE release in :release_ids
-                      AND is_front = 't';
-        """
-        res = connection.execute(sqlalchemy.text(query), {"release_ids": tuple(release_id_to_mbid.keys())})
-        for row in res.fetchall():
-            release_id = row["release"]
-            caa_id = row["id"]
-            release_mbid = release_id_to_mbid[release_id]
-            caa_url = caa_id_to_archive_url(release_mbid, caa_id)
-            release_coverart[release_mbid] = caa_url
-
-        unmatched_release_group_ids = [release_mbid_to_release_group_id[rmbid]
-                                       for rmbid in release_mbids
-                                       if rmbid not in release_coverart and rmbid in release_mbid_to_release_group_id]
-
-        # Release mbids which didn't have coverart - find their releasegroup and then see if there is a release with coverart
-        # https://github.com/metabrainz/artwork-redirect/blob/90ff5c7b/artwork_redirect/request.py#L124
-        query = """SELECT DISTINCT ON (release.release_group)
-          release_group.id as release_group_id
-        , release.gid::text AS release_mbid
-        , index_listing.id as caa_id
-        FROM cover_art_archive.index_listing
-        JOIN musicbrainz.release
-          ON musicbrainz.release.id = cover_art_archive.index_listing.release
-        JOIN musicbrainz.release_group
-          ON release_group.id = release.release_group
-        LEFT JOIN (
-          SELECT release, date_year, date_month, date_day
-          FROM musicbrainz.release_country
-          UNION ALL
-          SELECT release, date_year, date_month, date_day
-          FROM musicbrainz.release_unknown_country
-        ) release_event ON (release_event.release = release.id)
-        FULL OUTER JOIN cover_art_archive.release_group_cover_art
-        ON release_group_cover_art.release = musicbrainz.release.id
-        WHERE release_group.id in :release_group_ids
-        AND is_front = true
-        ORDER BY release.release_group, release_group_cover_art.release,
-          release_event.date_year, release_event.date_month,
-          release_event.date_day"""
-        if unmatched_release_group_ids:
-            res = connection.execute(sqlalchemy.text(query), {"release_group_ids": tuple(unmatched_release_group_ids)})
-            for row in res.fetchall():
-                caa_id = row["caa_id"]
-                release_group_id = row["release_group_id"]
-                release_mbid = row["release_mbid"]
-                # Use the release mbid that was passed into the method as the returned key, even if this isn't actually
-                # the release that has the covert art
-                original_release_mbid = release_group_id_to_release_mbid[release_group_id]
-                caa_url = caa_id_to_archive_url(release_mbid, caa_id)
-                release_coverart[original_release_mbid] = caa_url
-
-    return release_coverart
-
-
-def handle_coverart(user_id, year, key, data):
-    with db.engine.connect() as connection:
-        connection.execute(
-            sqlalchemy.text("""
-            INSERT INTO statistics.year_in_music (user_id, year, data)
-                 VALUES (:user_id, :year, jsonb_build_object(:stat_type,:data :: jsonb))
-            ON CONFLICT (user_id, year)
-          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-            """),
-            {"user_id": user_id, "year": year, "stat_type": key, "data": ujson.dumps(data)}
-        )
+        current_app.logger.error(f"Error while inserting playlists:", exc_info=True)
 
 
 def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):

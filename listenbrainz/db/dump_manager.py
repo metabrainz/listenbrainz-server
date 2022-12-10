@@ -352,25 +352,6 @@ def create_test_parquet_files():
         sys.exit(-2)
 
 
-@cli.command(name="import_yim_playlists")
-@click.argument('patch-slug', type=str)
-@click.argument('dump-file', type=str)
-def import_yim_playlists(patch_slug, dump_file):
-    """ Import playlist excerpts into the YIM data table from a dump file.
-
-    .. note::
-        First copy the dump to inside the container from which the script is to be run.
-
-    Args:
-        patch_slug (str): The slug of the troi patch that generated these playlists.
-        dump_file (str): The dump file to import. For each user, it should contain
-        three lines: user_name, playlist_mbid, JSPF data.
-    """
-    app = create_app()
-    with app.app_context():
-        insert_playlists(patch_slug, dump_file)
-
-
 def get_dump_id(dump_name):
     return int(dump_name.split('-')[2])
 

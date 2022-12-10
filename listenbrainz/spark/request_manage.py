@@ -7,6 +7,7 @@ import ujson
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
+from listenbrainz.troi.year_in_music import yim_patch_runner
 from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
@@ -410,6 +411,13 @@ def request_yim_similar_users(year: int):
     send_request_to_spark_cluster('year_in_music.similar_users', year=year)
 
 
+@cli.command(name="request_yim_playlists")
+@click.option("--year", type=int, help="Year for which to generate the playlists",
+              default=date.today().year)
+def request_yim_playlists(year: int):
+    yim_patch_runner(year)
+
+
 @cli.command(name="request_year_in_music")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
@@ -424,6 +432,7 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_listens_per_day, year=year)
     ctx.invoke(request_yim_listen_count, year=year)
     ctx.invoke(request_yim_similar_users, year=year)
+    ctx.invoke(request_yim_playlists, year=year)
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
