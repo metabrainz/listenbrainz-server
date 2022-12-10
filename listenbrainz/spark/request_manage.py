@@ -415,7 +415,9 @@ def request_yim_similar_users(year: int):
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
 def request_yim_playlists(year: int):
-    yim_patch_runner(year)
+    app = create_app()
+    with app.app_context():
+        yim_patch_runner(year)
 
 
 @cli.command(name="request_year_in_music")
