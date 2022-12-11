@@ -168,7 +168,7 @@ def request_yim_top_stats(year: int):
     send_request_to_spark_cluster("year_in_music.top_stats", year=year)
 
 
-@cli.command(name="request_listens_per_day")
+@cli.command(name="request_yim_listens_per_day")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
 def request_yim_listens_per_day(year: int):
@@ -177,7 +177,7 @@ def request_yim_listens_per_day(year: int):
     send_request_to_spark_cluster("year_in_music.listens_per_day", year=year)
 
 
-@cli.command(name="request_yearly_listen_count")
+@cli.command(name="request_yim_listen_count")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
 def request_yim_listen_count(year: int):

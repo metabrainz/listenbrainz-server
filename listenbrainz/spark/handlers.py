@@ -354,11 +354,11 @@ def handle_similar_users(message):
         )
 
 
-def handle_similar_users_year_end(message):
+def handle_yim_similar_users(message):
     year_in_music.insert("similar_users", message["year"], message["data"])
 
 
-def handle_new_releases_of_top_artists(message):
+def handle_yim_new_releases_of_top_artists(message):
     user_id = message["user_id"]
     # need to check whether user exists before inserting otherwise possible FK error.
     user = db_user.get(user_id)
@@ -367,23 +367,23 @@ def handle_new_releases_of_top_artists(message):
     year_in_music.insert_new_releases_of_top_artists(user_id, message["year"], message["data"])
 
 
-def handle_day_of_week(message):
+def handle_yim_day_of_week(message):
     year_in_music.insert("day_of_week", message["year"], message["data"])
 
 
-def handle_most_listened_year(message):
+def handle_yim_most_listened_year(message):
     year_in_music.handle_multi_large_insert("most_listened_year", message["year"], message["data"])
 
 
-def handle_top_stats(message):
+def handle_yim_top_stats(message):
     year_in_music.handle_multi_large_insert(f'top_{message["entity"]}', message["year"], message["data"])
 
 
-def handle_listens_per_day(message):
+def handle_yim_listens_per_day(message):
     year_in_music.handle_multi_large_insert("listens_per_day", message["year"], message["data"])
 
 
-def handle_yearly_listen_counts(message):
+def handle_yim_listen_counts(message):
     year_in_music.insert("total_listen_count", message["year"], message["data"])
 
 

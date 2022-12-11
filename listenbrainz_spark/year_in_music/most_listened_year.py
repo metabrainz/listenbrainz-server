@@ -12,7 +12,7 @@ def get_most_listened_year(year):
     data = run_query(_get_releases_with_date()).collect()
     for entries in chunked(data, USERS_PER_MESSAGE):
         yield {
-            "type": "most_listened_year",
+            "type": "year_in_music_most_listened_year",
             "year": year,
             "data": [e.asDict(recursive=True) for e in entries]
         }
