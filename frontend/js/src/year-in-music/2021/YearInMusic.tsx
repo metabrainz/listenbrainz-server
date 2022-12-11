@@ -366,9 +366,10 @@ export default class YearInMusic extends React.Component<
                   Share your year with your friends
                   <p id="share-link">
                     <a
-                      href={`https://listenbrainz.org/user/${user.name}/year-in-music/`}
+                      href={`https://listenbrainz.org/user/${user.name}/year-in-music/2021/`}
                     >
-                      https://listenbrainz.org/user/{user.name}/year-in-music/
+                      https://listenbrainz.org/user/{user.name}
+                      /year-in-music/2021/
                     </a>
                   </p>
                 </div>
