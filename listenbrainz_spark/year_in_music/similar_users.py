@@ -13,7 +13,7 @@ def get_similar_users(year):
     itr = similar_users_df.toLocalIterator()
     message = {
         row.user_id: {
-            user.other_user_name: user.similarity
+            user.other_user_id: user.similarity
             for user in row.similar_users
         }
         for row in itr
