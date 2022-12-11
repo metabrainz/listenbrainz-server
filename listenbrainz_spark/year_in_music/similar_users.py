@@ -20,7 +20,7 @@ def get_similar_users(year):
     }
 
     yield {
-        "type": "similar_users_year_end",
+        "type": "year_in_music_similar_users",
         "year": year,
         "data": message
     }

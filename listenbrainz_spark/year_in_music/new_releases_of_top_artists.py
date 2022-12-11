@@ -13,7 +13,7 @@ def get_new_releases_of_top_artists(year):
     for entry in new_releases:
         data = entry.asDict(recursive=True)
         yield NewReleasesStat(
-            type="new_releases_of_top_artists",
+            type="year_in_music_new_releases_of_top_artists",
             year=year,
             user_id=data["user_id"],
             data=data["new_releases"]
