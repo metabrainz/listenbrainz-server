@@ -58,7 +58,7 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
         return canvas.toDataURL("image/png", 1.0);
       })
       .then((image) => {
-        saveAs(image, `${user.name}-top-${entityType}s-2021.png`);
+        saveAs(image, `${user.name}-top-${entityType}s-2022.png`);
       });
   };
 
@@ -83,10 +83,10 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
         <img
           className="card-img-top"
           src="/static/img/year-in-music-2021.png"
-          alt="Your year in music 2021"
+          alt="Your year in music 2022"
         />
         <h3 className="card-title">
-          {user.name}&apos;s top {entityType}s of 2021
+          {user.name}&apos;s top {entityType}s of 2022
         </h3>
         {entityType === "release" && (
           <div className="grid">
