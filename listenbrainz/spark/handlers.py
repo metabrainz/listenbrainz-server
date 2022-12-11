@@ -367,10 +367,6 @@ def handle_new_releases_of_top_artists(message):
     year_in_music.insert_new_releases_of_top_artists(user_id, message["year"], message["data"])
 
 
-def handle_most_prominent_color(message):
-    year_in_music.insert("most_prominent_color", message["year"], message["data"])
-
-
 def handle_day_of_week(message):
     year_in_music.insert("day_of_week", message["year"], message["data"])
 

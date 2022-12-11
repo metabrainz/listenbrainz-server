@@ -77,7 +77,6 @@ export type YearInMusicProps = {
     }>;
     most_listened_year: { [key: string]: number };
     total_listen_count: number;
-    most_prominent_color: string;
     new_releases_of_top_artists: Array<{
       type: string;
       title: string;
