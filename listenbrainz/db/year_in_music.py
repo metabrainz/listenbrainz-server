@@ -56,7 +56,7 @@ def insert(key, year, data):
                   , jsonb_build_object({key}, value)
                FROM (VALUES %s) AS t(user_id, value)
                JOIN "user"
-                 ON "user".id = user_id
+                 ON "user".id = user_id::int
         ON CONFLICT (user_id, year)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
     """).format(year=Literal(year), key=Literal(key))
@@ -73,43 +73,33 @@ def insert_new_releases_of_top_artists(user_id, year, data):
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO statistics.year_in_music (user_id, year, data)
-                 VALUES (:user_id, :year, jsonb_build_object('new_releases_of_top_artists', :data :: jsonb))
+                 VALUES (:user_id::int, :year, jsonb_build_object('new_releases_of_top_artists', :data :: jsonb))
             ON CONFLICT (user_id, year)
           DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """), {"user_id": user_id, "year": year, "data": ujson.dumps(data)})
 
 
-def handle_top_stats(entity, year, data):
+def handle_multi_large_insert(key, year, data):
     connection = db.engine.raw_connection()
     query = SQL("""
         INSERT INTO statistics.year_in_music (user_id, year, data)
              SELECT "user".id
                   , {year}
-                  , jsonb_build_object({key}, top_stats::jsonb)
-               FROM (VALUES %s) AS t(user_name, top_stats)
+                  , jsonb_build_object({key}, data::jsonb)
+               FROM (VALUES %s) AS t(user_id, data)
                JOIN "user"
-                 ON "user".musicbrainz_id = user_name
+                 ON "user".id = user_id::int
         ON CONFLICT (user_id, year)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-    """).format(key=Literal(f"top_{entity}"), year=year)
+    """).format(key=Literal(key), year=Literal(year))
     try:
         with connection.cursor() as cursor:
-            values = [(user["musicbrainz_id"], ujson.dumps(user["data"])) for user in data]
+            values = [(user["id"], ujson.dumps(user["data"])) for user in data]
             execute_values(cursor, query, values)
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error("Error while inserting top stats:", exc_info=True)
-
-
-def handle_listens_per_day(user_id, year, data):
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.year_in_music (user_id, year, data)
-                 VALUES (:user_id, :year, jsonb_build_object('listens_per_day', :data :: jsonb))
-            ON CONFLICT (user_id, year)
-          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-        """), {"user_id": user_id, "year": year, "data": ujson.dumps(data)})
 
 
 def insert_playlists(year, playlists):

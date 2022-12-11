@@ -38,15 +38,13 @@ def _get_releases_with_date():
                      collect_list(
                          struct(year, listen_count)
                      )
-               ) AS yearly_count
+               ) AS data
           FROM listen_year
       GROUP BY user_id
         )
         SELECT to_json(
-                    map_from_entries(
-                        collect_list(
-                            struct(user_id, yearly_count)
-                        )
+                    collect_list(
+                        struct(user_id, data)
                     )
                ) AS all_user_yearly_counts
           FROM grouped_counts
