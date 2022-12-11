@@ -93,11 +93,11 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
 
         fresh_releases = []
         for mbid, row in result.items():
-            row[mbid]["caa_id"] = covers[mbid]["caa_id"]
+            row["caa_id"] = covers[mbid]["caa_id"]
             if covers[mbid]["caa_release_mbid"]:
-                row[mbid]["caa_release_mbid"] = uuid.UUID(covers[mbid]["caa_release_mbid"])
+                row["caa_release_mbid"] = uuid.UUID(covers[mbid]["caa_release_mbid"])
             else:
-                row[mbid]["caa_release_mbid"] = None
+                row["caa_release_mbid"] = None
             fresh_releases.append(FreshRelease(**row))
 
         return fresh_releases
