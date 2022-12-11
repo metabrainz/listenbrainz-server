@@ -14,7 +14,7 @@ def get_most_listened_year(year):
         yield {
             "type": "most_listened_year",
             "year": year,
-            "data": [e.dict(recursive=True) for e in entries]
+            "data": [e.asDict(recursive=True) for e in entries]
         }
 
 
