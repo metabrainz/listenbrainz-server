@@ -4,6 +4,8 @@ import psycopg2
 import psycopg2.extras
 import requests
 
+from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
+
 #: Minimum image size
 MIN_IMAGE_SIZE = 128
 
@@ -121,27 +123,6 @@ class CoverArtGenerator:
 
         return None
 
-    def get_caa_id(self, release_mbid):
-        """ Fetch the CAA id for the front image for the given release_mbid """
-
-        query = """SELECT caa.id AS caa_id
-                     FROM cover_art_archive.cover_art caa
-                     JOIN cover_art_archive.cover_art_type cat
-                       ON cat.id = caa.id
-                     JOIN musicbrainz.release
-                       ON caa.release = release.id
-                    WHERE type_id = 1
-                      AND release.gid = %s"""
-
-        with psycopg2.connect(self.mb_db_connection_str) as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-                curs.execute(query, (release_mbid, ))
-                row = curs.fetchone()
-                if row:
-                    return row["caa_id"]
-                else:
-                    return None
-
     def get_tile_position(self, tile):
         """ Calculate the position of a given tile, return (x1, y1, x2, y2). The math
             in this setup may seem a bit wonky, but that is to ensure that we don't have
@@ -201,20 +182,12 @@ class CoverArtGenerator:
 
         return (bb_x1, bb_y1, bb_x2, bb_y2)
 
-    def resolve_cover_art(self, release_mbid, cover_art_size=500):
+    def resolve_cover_art(self, caa_id, caa_release_mbid, cover_art_size=500):
         """ Translate a release_mbid into a cover art URL. Return None if unresolvable. """
-
         if cover_art_size not in (250, 500):
             return None
 
-        if release_mbid is None:
-            return None
-
-        caa_id = self.get_caa_id(release_mbid)
-        if caa_id is None:
-            return None
-
-        return f"https://archive.org/download/mbid-{release_mbid}/mbid-{release_mbid}-{caa_id}_thumb{cover_art_size}.jpg"
+        return f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb{cover_art_size}.jpg"
 
     def load_images(self, mbids, tile_addrs=None, layout=None):
         """ Given a list of MBIDs and optional tile addresses, resolve all the cover art design, all the
@@ -237,21 +210,25 @@ class CoverArtGenerator:
                 raise ValueError(f"Invalid address {addr} specified.")
             tiles.append((x1, y1, x2, y2))
 
+        release_mbids = [mbid for mbid in mbids if mbid]
+        covers = get_caa_ids_for_release_mbids(release_mbids)
+
         # Now resolve cover art images into URLs and image dimensions
         images = []
         for x1, y1, x2, y2 in tiles:
             while True:
                 try:
-                    url = self.resolve_cover_art(mbids.pop(0))
-                    color = None
-                    if url is None:
+                    mbid = release_mbids.pop(0)
+                    if covers[mbid]["caa_id"] is None:
                         if self.skip_missing:
+                            url = None
                             continue
+                        elif self.show_caa_image_for_missing_covers:
+                            url = self.CAA_MISSING_IMAGE
                         else:
-                            if self.show_caa_image_for_missing_covers:
-                                url = self.CAA_MISSING_IMAGE
-                            else:
-                                url = None
+                            url = None
+                    else:
+                        url = self.resolve_cover_art(covers[mbid]["caa_id"], covers[mbid]["caa_release_mbid"])
 
                     break
                 except IndexError:
