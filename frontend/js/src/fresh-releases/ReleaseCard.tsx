@@ -1,7 +1,7 @@
 import * as React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { getAlbumArtFromReleaseMBID } from "../utils/utils";
 import { formatReleaseDate } from "./utils";
+import { generateAlbumArtThumbnailLink } from "../utils/utils";
 
 type ReleaseCardProps = {
   releaseDate: string;
@@ -12,6 +12,8 @@ type ReleaseCardProps = {
   releaseTypePrimary: string | undefined | null;
   releaseTypeSecondary: string | undefined | null;
   confidence?: number | null;
+  caaId: number | null;
+  caaReleaseMbid: string | null;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -24,6 +26,8 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     releaseTypePrimary,
     releaseTypeSecondary,
     confidence,
+    caaId,
+    caaReleaseMbid,
   } = props;
 
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
@@ -59,14 +63,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   }
 
   React.useEffect(() => {
-    async function getCoverArt() {
-      const coverartURL = await getAlbumArtFromReleaseMBID(releaseMBID);
-      if (coverartURL) {
-        setCoverartSrc(coverartURL);
-      }
+    if (caaId && caaReleaseMbid) {
+      const coverartURL = generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
+      setCoverartSrc(coverartURL);
     }
-    getCoverArt();
-  }, [releaseMBID, setCoverartSrc]);
+  }, [caaId, caaReleaseMbid, setCoverartSrc]);
 
   return (
     <div className="release-card-container">

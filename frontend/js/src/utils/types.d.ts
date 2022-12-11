@@ -651,6 +651,7 @@ type FreshReleaseItem = {
   artist_credit_name: string;
   artist_mbids: Array<string>;
   caa_id: number | null;
+  caa_release_mbid: string | null;
   confidence?: number;
   release_date: string;
   release_group_mbid: string;

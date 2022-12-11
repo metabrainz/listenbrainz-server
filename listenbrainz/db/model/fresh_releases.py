@@ -58,6 +58,12 @@ class FreshRelease(BaseModel):
     # The cover art archive id of the release's front cover art if it has any
     caa_id: Optional[int]
 
+    # The release mbid of the cover art to use for this release. this will be the same
+    # as the release mbid if the release has a cover art. if the release doesn't have a
+    # cover art but another release in the release group has it, this mbid will point to
+    # that release.
+    caa_release_mbid: Optional[uuid.UUID]
+
     def to_dict(self):
         """Convert this model to a dict for easy jsonification"""
 
