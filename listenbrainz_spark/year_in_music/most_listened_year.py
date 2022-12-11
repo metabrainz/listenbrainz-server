@@ -1,16 +1,21 @@
+from more_itertools import chunked
+
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year, setup_all_releases
 from listenbrainz_spark.stats import run_query
+
+USERS_PER_MESSAGE = 1000
 
 
 def get_most_listened_year(year):
     setup_listens_for_year(year)
     setup_all_releases()
     data = run_query(_get_releases_with_date()).collect()
-    yield {
-        "type": "most_listened_year",
-        "year": year,
-        "data": data[0]["all_user_yearly_counts"]
-    }
+    for entries in chunked(data, USERS_PER_MESSAGE):
+        yield {
+            "type": "most_listened_year",
+            "year": year,
+            "data": [e.dict(recursive=True) for e in entries]
+        }
 
 
 def _get_releases_with_date():
@@ -32,7 +37,7 @@ def _get_releases_with_date():
             ON l.release_mbid = release_date.release_mbid
       GROUP BY user_id
              , release_date.year
-        ), grouped_counts AS (
+        )
         SELECT user_id
              , map_from_entries(
                      collect_list(
@@ -41,11 +46,4 @@ def _get_releases_with_date():
                ) AS data
           FROM listen_year
       GROUP BY user_id
-        )
-        SELECT to_json(
-                    collect_list(
-                        struct(user_id, data)
-                    )
-               ) AS all_user_yearly_counts
-          FROM grouped_counts
     """
