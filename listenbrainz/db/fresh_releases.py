@@ -1,3 +1,4 @@
+import uuid
 from datetime import date, timedelta
 from typing import List
 
@@ -6,6 +7,7 @@ import psycopg2.extras
 from flask import current_app
 
 from listenbrainz.db import couchdb
+from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
 from listenbrainz.db.model.fresh_releases import FreshRelease
 
 
@@ -28,23 +30,20 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
     from_date = pivot_release_date + timedelta(days=-release_date_window_days)
     to_date = pivot_release_date + timedelta(days=release_date_window_days)
 
-    query = """ 
-        WITH q AS (
-            SELECT DISTINCT rl.id AS release_id
-                          , rl.gid AS release_mbid
-                          , rg.gid AS release_group_mbid
-                          , rl.name AS release_name
-                          , make_date(rgm.first_release_date_year,
+    query = """
+                WITH releases AS (
+                    SELECT DISTINCT ON (rg.id)
+                           rl.id AS release_id
+                         , rl.gid AS release_mbid
+                         , rg.gid AS release_group_mbid
+                         , rl.name AS release_name
+                         , make_date(rgm.first_release_date_year,
                                       rgm.first_release_date_month,
                                       rgm.first_release_date_day) AS release_date
-                          , ac.name AS artist_credit_name
-                          , array_agg(distinct a.gid) AS artist_mbids
-                          , rgpt.name AS release_group_primary_type
-                          , rgst.name AS release_group_secondary_type
-                          , row_number() OVER (PARTITION BY rg.id ORDER BY make_date(rgm.first_release_date_year,
-                                                                                     rgm.first_release_date_month,
-                                                                                     rgm.first_release_date_day)
-                                                                                    ) AS rnum
+                         , ac.name AS artist_credit_name
+                         , array_agg(distinct a.gid) AS artist_mbids
+                         , rgpt.name AS release_group_primary_type
+                         , rgst.name AS release_group_secondary_type
                       FROM release rl
                       JOIN release_group rg
                         ON rl.release_group = rg.id
@@ -77,43 +76,31 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                          , artist_credit_name
                          , release_group_primary_type
                          , release_group_secondary_type
-        ), cover_art AS (
-            SELECT release_mbid
-                 , release_name
-                 , release_group_mbid
-                 , release_date
-                 , artist_credit_name
-                 , artist_mbids
-                 , release_group_primary_type
-                 , release_group_secondary_type
-                 , CASE WHEN cat.type_id = 1 THEN caa.id ELSE NULL END AS caa_id
-                 , row_number() OVER (partition by release_mbid ORDER BY ordering) AS rnum
-              FROM q
-         LEFT JOIN cover_art_archive.cover_art caa
-                ON caa.release = release_id
-         LEFT JOIN cover_art_archive.cover_art_type cat
-                ON cat.id = caa.id
-             WHERE q.rnum = 1
-        )   SELECT release_mbid
-                 , release_name
-                 , release_group_mbid
-                 , release_date
-                 , artist_credit_name
-                 , artist_mbids
-                 , release_group_primary_type
-                 , release_group_secondary_type
-                 , caa_id
-                 , rnum
-              FROM cover_art
-             WHERE rnum = 1
-          ORDER BY release_date
-                 , artist_credit_name
-                 , release_name
+                  ORDER BY rg.id
+                         , release_date
+                ) SELECT *
+                    FROM releases
+                ORDER BY release_date
+                       , artist_credit_name
+                       , release_name
         """
-    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn:
-        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-            curs.execute(query, (from_date, to_date))
-            return [FreshRelease(**dict(row)) for row in curs.fetchall()]
+    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, \
+            conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+        curs.execute(query, (from_date, to_date))
+        result = {str(row["release_mbid"]): dict(row) for row in curs.fetchall()}
+
+        covers = get_caa_ids_for_release_mbids(curs, result.keys())
+
+        fresh_releases = []
+        for mbid, row in result.items():
+            row[mbid]["caa_id"] = covers[mbid]["caa_id"]
+            if covers[mbid]["caa_release_mbid"]:
+                row[mbid]["caa_release_mbid"] = uuid.UUID(covers[mbid]["caa_release_mbid"])
+            else:
+                row[mbid]["caa_release_mbid"] = None
+            fresh_releases.append(FreshRelease(**row))
+
+        return fresh_releases
 
 
 def insert_fresh_releases(database: str, docs: list[dict]):
