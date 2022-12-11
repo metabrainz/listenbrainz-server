@@ -55,7 +55,7 @@ def get_two_quarters_ago_offset(_date: date) -> relativedelta:
         return relativedelta(month=4, day=1)
 
 
-def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str, str]:
+def _get_time_range_bounds(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str, str]:
     """ Returns the start time, end time, segment step size, python date format and spark
      date format to use for calculating the listening activity stats
 
@@ -71,16 +71,6 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         time ranges. if making modifications here, remember to check and update that as well
     """
     latest_listen_ts = get_latest_listen_ts()
-
-    if stats_range == "year_in_music":
-        # listening activity per day for the current year only, don't need data of 2 ranges here
-        to_ts = latest_listen_ts
-        from_date = to_ts.date() + relativedelta(month=1, day=1)
-        from_ts = datetime.combine(from_date, time.min)
-        step = relativedelta(days=+1)
-        date_format = "%d %B %Y"
-        spark_date_format = "dd MMMM y"
-        return from_ts, to_ts, step, date_format, spark_date_format
 
     if stats_range == "all_time":
         # all_time stats range is easy, just return time from LASTFM founding
@@ -183,20 +173,8 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
     return from_date, to_date, step, date_format, spark_date_format
 
 
-def setup_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str, str]:
-    """
-    Sets up time range buckets needed to calculate listening activity stats and
-    returns the start and end time of the time range.
-
-    The listening activity stats compare the number of listens in sub-segments
-    of two time ranges of similar length. For example: consider the this_year
-    stat range. It will count the listens for each month since the start of
-    last year so that we can present a chart comparing the listen counts of
-    the corresponding months of last year against this year. Also, this function
-    will return 1st of last year as the start time and the current date as the
-    end time in this example.
-    """
-    from_date, to_date, step, date_format, spark_date_format = get_time_range(stats_range)
+def _create_time_range_df(from_date, to_date, step, date_format, spark_date_format):
+    """ Sets up time range buckets dataframe needed to calculate listening activity stats. """
     time_range = []
 
     segment_start = from_date
@@ -211,4 +189,20 @@ def setup_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelt
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView("time_range")
 
+
+def setup_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str, str]:
+    """
+    Sets up time range buckets needed to calculate listening activity stats and
+    returns the start and end time of the time range.
+
+    The listening activity stats compare the number of listens in sub-segments
+    of two time ranges of similar length. For example: consider the this_year
+    stat range. It will count the listens for each month since the start of
+    last year so that we can present a chart comparing the listen counts of
+    the corresponding months of last year against this year. Also, this function
+    will return 1st of last year as the start time and the current date as the
+    end time in this example.
+    """
+    from_date, to_date, step, date_format, spark_date_format = _get_time_range_bounds(stats_range)
+    _create_time_range_df(from_date, to_date, step, date_format, spark_date_format)
     return from_date, to_date, step, date_format, spark_date_format
