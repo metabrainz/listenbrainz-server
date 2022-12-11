@@ -14,6 +14,7 @@
         "release_group_primary_type": "Single",
         "release_group_secondary_type": null,
         "caa_id": 33759180025,
+        "caa_release_mbid": "daa1e865-42d9-46d5-b272-c92c099dbc2d",
         "confidence": 3
       },
       {
@@ -29,6 +30,7 @@
         "release_group_primary_type": "Single",
         "release_group_secondary_type": "Soundtrack",
         "caa_id": 33709392020,
+        "caa_release_mbid": "a202dc7e-cb61-4ecd-87d0-3bedf597f8cc",
         "confidence": 2
       },
       {
@@ -43,6 +45,7 @@
         "release_group_primary_type": "Single",
         "release_group_secondary_type": null,
         "caa_id": null,
+        "caa_release_mbid": null,
         "confidence": 1
       }
     ]
@@ -63,6 +66,7 @@
         "release_group_primary_type": "Album",
         "release_group_secondary_type": null,
         "caa_id": null,
+        "caa_release_mbid": null,
         "confidence": 4
       },
       {
@@ -77,6 +81,7 @@
         "release_group_primary_type": "Album",
         "release_group_secondary_type": null,
         "caa_id": null,
+        "caa_release_mbid": null,
         "confidence": 1
       }
     ]

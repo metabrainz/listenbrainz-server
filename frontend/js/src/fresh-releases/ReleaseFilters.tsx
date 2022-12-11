@@ -33,7 +33,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   React.useEffect(() => {
     // if no filter is chosen, display all releases
     if (checkedList.length === 0) {
-      if (coverartOnly === false) {
+      if (!coverartOnly) {
         setFilteredList(releases);
       } else {
         setFilteredList(releases.filter((item) => item.caa_id !== null));

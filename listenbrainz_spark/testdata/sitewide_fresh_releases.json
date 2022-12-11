@@ -10,7 +10,8 @@
     "artist_credit_name": "티키틱 TIKITIK",
     "release_group_primary_type": "Single",
     "release_group_secondary_type": null,
-    "caa_id": 33755527018
+    "caa_id": 33755527018,
+    "caa_release_mbid": "46962eb4-82c1-499c-b5ca-d1520cacb9e2"
   },
   {
     "release_date": "2022-5-17",
@@ -24,7 +25,8 @@
     "artist_credit_name": "ARuFa / ダ・ヴィンチ・恐山",
     "release_group_primary_type": "Album",
     "release_group_secondary_type": null,
-    "caa_id": null
+    "caa_id": null,
+    "caa_release_mbid": null
   },
   {
     "release_date": "2022-5-18",
@@ -37,7 +39,8 @@
     "artist_credit_name": "fripSide",
     "release_group_primary_type": "Single",
     "release_group_secondary_type": null,
-    "caa_id": 33684408555
+    "caa_id": 33684408555,
+    "caa_release_mbid": "6948e168-3316-4458-b5d7-f14d6b9c8aa0"
   },
   {
     "release_date": "2022-5-25",
@@ -51,7 +54,8 @@
     "artist_credit_name": "ライムスター 逆featuring CRAZY KEN BAND",
     "release_group_primary_type": "Single",
     "release_group_secondary_type": "Remix",
-    "caa_id": 33713737777
+    "caa_id": 33713737777,
+    "caa_release_mbid": "8d322ab8-ca68-40f6-8d3b-527545830302"
   },
   {
     "release_date": "2022-5-27",
@@ -64,7 +68,8 @@
     "artist_credit_name": "Amadea Music Productions",
     "release_group_primary_type": "Album",
     "release_group_secondary_type": null,
-    "caa_id": 33702046539
+    "caa_id": 33702046539,
+    "caa_release_mbid": "c5955771-c7ec-4de6-9c5f-cc53ee5c1cb7"
   },
   {
     "release_date": "2022-5-27",
@@ -78,7 +83,8 @@
     "artist_credit_name": "Ammy Virk & Simar Kaur",
     "release_group_primary_type": "Single",
     "release_group_secondary_type": "Soundtrack",
-    "caa_id": 33709392020
+    "caa_id": 33709392020,
+    "caa_release_mbid": "a202dc7e-cb61-4ecd-87d0-3bedf597f8cc"
   },
   {
     "release_date": "2022-5-30",
@@ -91,7 +97,8 @@
     "artist_credit_name": "sadfem",
     "release_group_primary_type": "Single",
     "release_group_secondary_type": null,
-    "caa_id": null
+    "caa_id": null,
+    "caa_release_mbid": null
   },
   {
     "release_date": "2022-5-30",
@@ -104,7 +111,8 @@
     "artist_credit_name": "Тишина",
     "release_group_primary_type": "Album",
     "release_group_secondary_type": null,
-    "caa_id": null
+    "caa_id": null,
+    "caa_release_mbid": null
   },
   {
     "release_date": "2022-5-31",
@@ -115,7 +123,8 @@
     "release_group_mbid": "ef1497b6-01ae-4477-94a8-e3e0e9a12125",
     "release_name": "So Cold",
     "artist_credit_name": "44closures",
-    "caa_id": 33706994031
+    "caa_id": 33706994031,
+    "caa_release_mbid": "db05975c-2210-47c6-8c31-15b7e29465df"
   },
   {
     "release_date": "2022-6-1",
@@ -128,7 +137,8 @@
     "artist_credit_name": "aespa",
     "release_group_primary_type": "Single",
     "release_group_secondary_type": null,
-    "caa_id": null
+    "caa_id": null,
+    "caa_release_mbid": null
   },
   {
     "release_date": "2022-6-3",
@@ -140,7 +150,8 @@
     "release_name": "Endless Garden",
     "artist_credit_name": "Witchfinder",
     "release_group_primary_type": "EP",
-    "caa_id": null
+    "caa_id": null,
+    "caa_release_mbid": null
   },
   {
     "release_date": "2022-6-8",
@@ -153,7 +164,8 @@
     "artist_credit_name": "Little Glee Monster",
     "release_group_primary_type": "Single",
     "release_group_secondary_type": null,
-    "caa_id": 33700346677
+    "caa_id": 33700346677,
+    "caa_release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"
   },
   {
     "release_date": "2022-6-9",
@@ -166,6 +178,7 @@
     "artist_credit_name": "Halsey",
     "release_group_primary_type": "Single",
     "release_group_secondary_type": null,
-    "caa_id": 33759180025
+    "caa_id": 33759180025,
+    "caa_release_mbid": "daa1e865-42d9-46d5-b272-c92c099dbc2d"
   }
 ]

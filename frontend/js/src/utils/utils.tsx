@@ -753,4 +753,5 @@ export {
   getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,
   getAdditionalContent,
+  generateAlbumArtThumbnailLink,
 };
