@@ -94,7 +94,7 @@ def handle_multi_large_insert(key, year, data):
     """).format(key=Literal(key), year=Literal(year))
     try:
         with connection.cursor() as cursor:
-            values = [(user["id"], ujson.dumps(user["data"])) for user in data]
+            values = [(user["user_id"], ujson.dumps(user["data"])) for user in data]
             execute_values(cursor, query, values)
         connection.commit()
     except psycopg2.errors.OperationalError:
