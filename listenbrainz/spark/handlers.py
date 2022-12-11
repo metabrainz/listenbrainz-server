@@ -380,15 +380,11 @@ def handle_most_listened_year(message):
 
 
 def handle_top_stats(message):
-    year_in_music.handle_top_stats(message["entity"], message["year"], message["data"])
+    year_in_music.handle_multi_large_insert(f'top_{message["entity"]}', message["year"], message["data"])
 
 
 def handle_listens_per_day(message):
-    user_id = message["user_id"]
-    user = db_user.get(user_id)
-    if not user:
-        return
-    year_in_music.handle_listens_per_day(user_id, message["year"], message["data"])
+    year_in_music.handle_multi_large_insert("listens_per_day", message["year"], message["data"])
 
 
 def handle_yearly_listen_counts(message):
