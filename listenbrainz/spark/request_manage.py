@@ -141,15 +141,6 @@ def request_yim_new_release_stats(year: int):
     send_request_to_spark_cluster("year_in_music.new_releases_of_top_artists", year=year)
 
 
-@cli.command(name="request_yim_most_prominent_color")
-@click.option("--year", type=int, help="Year for which to calculate the stat",
-              default=date.today().year)
-def request_yim_most_prominent_color(year: int):
-    """ Send request to calculate most prominent color stat to the spark cluster
-    """
-    send_request_to_spark_cluster("year_in_music.most_prominent_color", year=year)
-
-
 @cli.command(name="request_yim_day_of_week")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
@@ -427,7 +418,6 @@ def request_yim_playlists(year: int):
 def request_year_in_music(ctx, year: int):
     """ Send the cluster a request to generate all year in music statistics. """
     ctx.invoke(request_yim_new_release_stats, year=year)
-    ctx.invoke(request_yim_most_prominent_color, year=year)
     ctx.invoke(request_yim_day_of_week, year=year)
     ctx.invoke(request_yim_most_listened_year, year=year)
     ctx.invoke(request_yim_top_stats, year=year)
