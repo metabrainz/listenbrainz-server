@@ -14,7 +14,7 @@ from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_creat
     get_playlists_collaborated_on
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
-from listenbrainz.db import year_in_music
+from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.errors import APIBadRequest
@@ -514,19 +514,24 @@ def feedback(user_name: str):
 
 
 @user_bp.route("/<user_name>/year-in-music/")
-def year_in_music(user_name):
+@user_bp.route("/<user_name>/year-in-music/<int:year>/")
+def year_in_music(user_name, year: int = 2021):
     """ Year in Music """
+    if year != 2021 and year != 2022:
+        raise NotFound(f"Cannot find Year in Music report for year: {year}")
+
     user = _get_user(user_name)
     return render_template(
         "user/year-in-music.html",
         user_name=user_name,
         props=ujson.dumps({
-            "data": year_in_music.get(user.id, 2021),
+            "data": db_year_in_music.get(user.id, year),
             "user": {
                 "id": user.id,
                 "name": user.musicbrainz_id,
             }
-        })
+        }),
+        year_in_music_js_file=f"yearInMusic{year}.js"
     )
 
 

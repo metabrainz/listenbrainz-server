@@ -15,29 +15,31 @@ import {
   capitalize,
   toPairs,
 } from "lodash";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import ErrorBoundary from "../../utils/ErrorBoundary";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../utils/GlobalAppContext";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+} from "../../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
-import { getPageProps } from "../utils/utils";
-import { getEntityLink } from "../stats/utils";
+import APIServiceClass from "../../utils/APIService";
+import { getPageProps } from "../../utils/utils";
+import { getEntityLink } from "../../stats/utils";
 import ComponentToImage from "./ComponentToImage";
 
-import ListenCard from "../listens/ListenCard";
-import UserListModalEntry from "../follow/UserListModalEntry";
+import ListenCard from "../../listens/ListenCard";
+import UserListModalEntry from "../../follow/UserListModalEntry";
 import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
-} from "../playlists/utils";
-import FollowButton from "../follow/FollowButton";
-import { COLOR_LB_ORANGE } from "../utils/constants";
-import SimpleModal from "../utils/SimpleModal";
+} from "../../playlists/utils";
+import FollowButton from "../../follow/FollowButton";
+import { COLOR_LB_ORANGE } from "../../utils/constants";
+import SimpleModal from "../../utils/SimpleModal";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -409,24 +411,43 @@ export default class YearInMusic extends React.Component<
             <p>You will find in this page:</p>
             <ul>
               <li>
-                {yourOrUsersName} top <a href="#top-releases">albums</a>,{" "}
-                <a href="#top-recordings">songs</a> and{" "}
-                <a href="#top-artists">artists</a> of the year
+                {yourOrUsersName} top{" "}
+                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-releases">
+                  albums
+                </a>
+                ,{" "}
+                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-recordings">
+                  songs
+                </a>{" "}
+                and{" "}
+                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-artists">
+                  artists
+                </a>{" "}
+                of the year
               </li>
               <li>
                 some statistics about {yourOrUsersName}{" "}
-                <a href="#calendar">listening activity</a>
+                <a href="listenbrainz/webserver/static/js/src/year-in-music#calendar">
+                  listening activity
+                </a>
               </li>
               <li>
                 a list of{" "}
-                <a href="#similar-users">users similar to {youOrUsername}</a>
+                <a href="listenbrainz/webserver/static/js/src/year-in-music#similar-users">
+                  users similar to {youOrUsername}
+                </a>
               </li>
               <li>
                 new albums that {yourOrUsersName} top artists{" "}
-                <a href="#new-releases">released in 2021</a>
+                <a href="listenbrainz/webserver/static/js/src/year-in-music#new-releases">
+                  released in 2021
+                </a>
               </li>
               <li>
-                and finally four <a href="#playlists">personalized playlists</a>
+                and finally four{" "}
+                <a href="listenbrainz/webserver/static/js/src/year-in-music#playlists">
+                  personalized playlists
+                </a>
                 &nbsp; of music {youOrUsername} listened to and new songs to
                 discover
               </li>
