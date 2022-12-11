@@ -13,7 +13,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": null,
                 "release_mbid": "a2225115-891b-4f6b-a795-f2b7a68d0bcb",
-                "release_name": "Return of the Dream Canteen"
+                "release_name": "Return of the Dream Canteen",
+                "caa_release_mbid": "a2225115-891b-4f6b-a795-f2b7a68d0bcb"
             },
             {
                 "artist_credit_name": "Vipin Patwa & Shankar Mahadevan",
@@ -28,7 +29,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "5b2c8f92-5567-479f-8262-a00a7f8724b1",
-                "release_name": "Vande Mataram (From \u201cCode Name Tiranga\u201d)"
+                "release_name": "Vande Mataram (From \u201cCode Name Tiranga\u201d)",
+                "caa_release_mbid": "5b2c8f92-5567-479f-8262-a00a7f8724b1"
             },
             {
                 "artist_credit_name": "Green Day",
@@ -42,7 +44,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "6b3ff898-8886-4a7b-8144-8e5763780440",
-                "release_name": "You Irritate Me (demo)"
+                "release_name": "You Irritate Me (demo)",
+                "caa_release_mbid": "6b3ff898-8886-4a7b-8144-8e5763780440"
             },
             {
                 "artist_credit_name": "Pav Dharia",
@@ -56,7 +59,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "ccf3ad22-7128-471d-9d68-27da19a24b3b",
-                "release_name": "Duawan"
+                "release_name": "Duawan",
+                "caa_release_mbid": "ccf3ad22-7128-471d-9d68-27da19a24b3b"
             },
             {
                 "artist_credit_name": "Queen",
@@ -70,7 +74,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "1ff94a0f-950e-448b-935c-9218740ca778",
-                "release_name": "Face It Alone"
+                "release_name": "Face It Alone",
+                "caa_release_mbid": "1ff94a0f-950e-448b-935c-9218740ca778"
             },
             {
                 "artist_credit_name": "Kimbra",
@@ -84,7 +89,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "06a68bdd-c42b-48e5-8459-264f31b1d65b",
-                "release_name": "A RECKONING"
+                "release_name": "A RECKONING",
+                "caa_release_mbid": null
             },
             {
                 "artist_credit_name": "Pritam & Arijit Singh",
@@ -99,7 +105,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "4c3e85bb-a6fa-4ba5-8c78-be5853e75833",
-                "release_name": "Rasiya Reprise (From \u201cBrahmastra\u201d)"
+                "release_name": "Rasiya Reprise (From \u201cBrahmastra\u201d)",
+                "caa_release_mbid": "4c3e85bb-a6fa-4ba5-8c78-be5853e75833"
             },
             {
                 "artist_credit_name": "Charlie Puth",
@@ -113,7 +120,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": null,
                 "release_mbid": "f1df0b2e-d00c-4686-810d-1f633ecb4aee",
-                "release_name": "CHARLIE"
+                "release_name": "CHARLIE",
+                "caa_release_mbid": "f1df0b2e-d00c-4686-810d-1f633ecb4aee"
             },
             {
                 "artist_credit_name": "Deep Purple",
@@ -127,7 +135,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": "Live",
                 "release_mbid": "410ed3da-0392-4344-b1e9-ee6cb48dc05c",
-                "release_name": "Live in Hong Kong 2001"
+                "release_name": "Live in Hong Kong 2001",
+                "caa_release_mbid": "410ed3da-0392-4344-b1e9-ee6cb48dc05c"
             },
             {
                 "artist_credit_name": "Deep Purple",
@@ -141,7 +150,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": "Live",
                 "release_mbid": "26514cad-731b-49b0-89a2-18f244647b46",
-                "release_name": "Live in Tokyo 2001"
+                "release_name": "Live in Tokyo 2001",
+                "caa_release_mbid": "26514cad-731b-49b0-89a2-18f244647b46"
             },
             {
                 "artist_credit_name": "Young the Giant",
@@ -155,7 +165,8 @@
                 "release_group_primary_type": "EP",
                 "release_group_secondary_type": null,
                 "release_mbid": "28c2c3eb-b302-4637-849a-cb0959ad1916",
-                "release_name": "ACT III: BATTLE"
+                "release_name": "ACT III: BATTLE",
+                "caa_release_mbid": "28c2c3eb-b302-4637-849a-cb0959ad1916"
             },
             {
                 "artist_credit_name": "Arctic Monkeys",
@@ -169,7 +180,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "9500aade-b992-4391-b63d-ac48e6925ed1",
-                "release_name": "I Ain't Quite Where I Think I Am"
+                "release_name": "I Ain't Quite Where I Think I Am",
+                "caa_release_mbid": "9500aade-b992-4391-b63d-ac48e6925ed1"
             },
             {
                 "artist_credit_name": "Hans Zimmer, Adam Lukas & James Everingham",
@@ -185,7 +197,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": null,
                 "release_mbid": "df5f930f-f9ef-4e39-8f89-17f5034a11fd",
-                "release_name": "Frozen Planet II (Original Television Soundtrack)"
+                "release_name": "Frozen Planet II (Original Television Soundtrack)",
+                "caa_release_mbid": "df5f930f-f9ef-4e39-8f89-17f5034a11fd"
             },
             {
                 "artist_credit_name": "Hans Zimmer",
@@ -199,7 +212,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Live",
                 "release_mbid": "ddf24806-c813-43b1-882d-e51152a29868",
-                "release_name": "The Last Samurai Suite"
+                "release_name": "The Last Samurai Suite",
+                "caa_release_mbid": "ddf24806-c813-43b1-882d-e51152a29868"
             },
             {
                 "artist_credit_name": "Ti\u00ebsto \u00d7 Black Eyed Peas",
@@ -214,7 +228,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "b4f3a486-aef2-456d-9b15-06d4d5d7eea2",
-                "release_name": "Pump It Louder"
+                "release_name": "Pump It Louder",
+                "caa_release_mbid": "b4f3a486-aef2-456d-9b15-06d4d5d7eea2"
             },
             {
                 "artist_credit_name": "Arctic Monkeys",
@@ -228,7 +243,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": null,
                 "release_mbid": "d6d1140f-5b4f-422e-a8b0-a8c43732701f",
-                "release_name": "The Car"
+                "release_name": "The Car",
+                "caa_release_mbid": "d6d1140f-5b4f-422e-a8b0-a8c43732701f"
             },
             {
                 "artist_credit_name": "Carly Rae Jepsen feat. Rufus Wainwright",
@@ -243,7 +259,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "1e981fea-35ca-474e-9078-3916e72869a2",
-                "release_name": "The Loneliest Time"
+                "release_name": "The Loneliest Time",
+                "caa_release_mbid": null
             },
             {
                 "artist_credit_name": "Mot\u00f6rhead",
@@ -257,7 +274,8 @@
                 "release_group_primary_type": "EP",
                 "release_group_secondary_type": "Compilation",
                 "release_mbid": "403a79a8-0cbd-4a6c-b694-39a2cbd6dc75",
-                "release_name": "Mot\u00f6r\u2010ween"
+                "release_name": "Mot\u00f6r\u2010ween",
+                "caa_release_mbid": "403a79a8-0cbd-4a6c-b694-39a2cbd6dc75"
             },
             {
                 "artist_credit_name": "Beethoven; Dover Quartet",
@@ -272,7 +290,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": null,
                 "release_mbid": "205b9c35-bb8a-4074-aa93-f06f09c56345",
-                "release_name": "Complete String Quartets, Volume 3: The Late Quartets"
+                "release_name": "Complete String Quartets, Volume 3: The Late Quartets",
+                "caa_release_mbid": "205b9c35-bb8a-4074-aa93-f06f09c56345"
             },
             {
                 "artist_credit_name": "blink\u2010182",
@@ -286,7 +305,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "cfa9fe1a-dd26-4167-b8d5-08cef4f14717",
-                "release_name": "Edging"
+                "release_name": "Edging",
+                "caa_release_mbid": "cfa9fe1a-dd26-4167-b8d5-08cef4f14717"
             },
             {
                 "artist_credit_name": "Beethoven, Stravinsky; Vilde Frang, Deutsche Kammerphilharmonie Bremen, Pekka Kuusisto",
@@ -304,7 +324,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": null,
                 "release_mbid": "d6709127-57a4-4dda-9c5a-30acda5c2326",
-                "release_name": "Violin Concertos"
+                "release_name": "Violin Concertos",
+                "caa_release_mbid": "d6709127-57a4-4dda-9c5a-30acda5c2326"
             },
             {
                 "artist_credit_name": "Pritam",
@@ -318,7 +339,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "d8ec11cb-ac29-497f-82fa-19ea9fff274c",
-                "release_name": "Brahmastra (Original Motion Picture Soundtrack)"
+                "release_name": "Brahmastra (Original Motion Picture Soundtrack)",
+                "caa_release_mbid": "d8ec11cb-ac29-497f-82fa-19ea9fff274c"
             },
             {
                 "artist_credit_name": "Flo Rida",
@@ -332,7 +354,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "c85346a9-ecae-474a-b625-aec1aaa26471",
-                "release_name": "High Heels"
+                "release_name": "High Heels",
+                "caa_release_mbid": "c85346a9-ecae-474a-b625-aec1aaa26471"
             },
             {
                 "artist_credit_name": "Florence + the Machine",
@@ -346,7 +369,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": "Live",
                 "release_mbid": "27dd50ed-1446-4f14-8cda-23fe2f476ccc",
-                "release_name": "Dance Fever (live at Madison Square Garden)"
+                "release_name": "Dance Fever (live at Madison Square Garden)",
+                "caa_release_mbid": "27dd50ed-1446-4f14-8cda-23fe2f476ccc"
             },
             {
                 "artist_credit_name": "Men I Trust",
@@ -360,7 +384,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "10f56fe5-2b56-4009-b29a-fb6f9b932bc7",
-                "release_name": "Girl"
+                "release_name": "Girl",
+                "caa_release_mbid": "10f56fe5-2b56-4009-b29a-fb6f9b932bc7"
             },
             {
                 "artist_credit_name": "Bonobo",
@@ -374,7 +399,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "3d205a95-2f37-4801-9056-4077b14b6a26",
-                "release_name": "Defender"
+                "release_name": "Defender",
+                "caa_release_mbid": null
             },
             {
                 "artist_credit_name": "Artbat, David Guetta & Idris Elba",
@@ -390,7 +416,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "19a5f597-8273-4693-a482-139dcb2c3a14",
-                "release_name": "It\u2019s Ours"
+                "release_name": "It\u2019s Ours",
+                "caa_release_mbid": "19a5f597-8273-4693-a482-139dcb2c3a14"
             },
             {
                 "artist_credit_name": "Robbie Williams",
@@ -404,7 +431,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "30d69d76-bb7a-4262-b3b9-e49488fa8b09",
-                "release_name": "Life Thru a Lens (rehearsal recording, spring 1997)"
+                "release_name": "Life Thru a Lens (rehearsal recording, spring 1997)",
+                "caa_release_mbid": "30d69d76-bb7a-4262-b3b9-e49488fa8b09"
             },
             {
                 "artist_credit_name": "Michael Giacchino",
@@ -418,7 +446,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "d31bdc81-2ad9-4f68-8473-617541f499dd",
-                "release_name": "Marvel Studios\u2019 Werewolf By Night (Original Soundtrack)"
+                "release_name": "Marvel Studios\u2019 Werewolf By Night (Original Soundtrack)",
+                "caa_release_mbid": "d31bdc81-2ad9-4f68-8473-617541f499dd"
             },
             {
                 "artist_credit_name": "Vianney feat. Ed Sheeran",
@@ -433,7 +462,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "b6693f58-48b8-40ea-affa-3ba442cad5b1",
-                "release_name": "Call on Me"
+                "release_name": "Call on Me",
+                "caa_release_mbid": "b6693f58-48b8-40ea-affa-3ba442cad5b1"
             },
             {
                 "artist_credit_name": "Boston Pops Orchestra & John Williams",
@@ -448,7 +478,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "ae8c614e-616f-44f4-bc32-e403e0eaf8cb",
-                "release_name": "The Christmas Song (Chestnuts Roasting)"
+                "release_name": "The Christmas Song (Chestnuts Roasting)",
+                "caa_release_mbid": "ae8c614e-616f-44f4-bc32-e403e0eaf8cb"
             },
             {
                 "artist_credit_name": "Benj Pasek, Justin Paul & Shawn Mendes",
@@ -464,7 +495,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "350d33dd-a6ae-41c3-b6a2-3de423159c77",
-                "release_name": "Lyle, Lyle, Crocodile: Original Motion Picture Soundtrack"
+                "release_name": "Lyle, Lyle, Crocodile: Original Motion Picture Soundtrack",
+                "caa_release_mbid": "350d33dd-a6ae-41c3-b6a2-3de423159c77"
             },
             {
                 "artist_credit_name": "Backstreet Boys",
@@ -478,7 +510,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": null,
                 "release_mbid": "cf419ac6-de61-46d7-a30e-5e2aba048505",
-                "release_name": "A Very Backstreet Christmas"
+                "release_name": "A Very Backstreet Christmas",
+                "caa_release_mbid": "cf419ac6-de61-46d7-a30e-5e2aba048505"
             },
             {
                 "artist_credit_name": "Nicki Minaj & Skeng feat. Spice, Destra Garcia, Patrice Roberts, Lady Leshurr, Pamputtae, Dovey Magnum, Lisa Mercedez & London Hill",
@@ -501,7 +534,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Remix",
                 "release_mbid": "25d7902c-37f7-4b23-91d7-3d981d30a0a7",
-                "release_name": "Likkle Miss (THE FINE NINE REMIX)"
+                "release_name": "Likkle Miss (THE FINE NINE REMIX)",
+                "caa_release_mbid": "25d7902c-37f7-4b23-91d7-3d981d30a0a7"
             },
             {
                 "artist_credit_name": "girl in red",
@@ -515,7 +549,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "49c64d26-1789-488e-b338-c5c3390c061c",
-                "release_name": "October Passed Me By"
+                "release_name": "October Passed Me By",
+                "caa_release_mbid": "49c64d26-1789-488e-b338-c5c3390c061c"
             },
             {
                 "artist_credit_name": "Tove Lo",
@@ -529,7 +564,8 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": null,
                 "release_mbid": "313a8c33-fd75-4119-882c-8924339a09b7",
-                "release_name": "Dirt Femme"
+                "release_name": "Dirt Femme",
+                "caa_release_mbid": "313a8c33-fd75-4119-882c-8924339a09b7"
             },
             {
                 "artist_credit_name": "B Praak & Jaani",
@@ -544,7 +580,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "cf71cdc8-2f0b-4159-9d33-3f1a0a0df924",
-                "release_name": "Aa Chaliye (From \u201cHoneymoon\u201d)"
+                "release_name": "Aa Chaliye (From \u201cHoneymoon\u201d)",
+                "caa_release_mbid": "cf71cdc8-2f0b-4159-9d33-3f1a0a0df924"
             },
             {
                 "artist_credit_name": "B Praak, Jaani, Gippy Grewal & Shipra Goyal",
@@ -561,7 +598,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "699297f4-6b8c-441f-aa12-db9ae90e7259",
-                "release_name": "Hypnotize (From \u201cHoneymoon\u201d)"
+                "release_name": "Hypnotize (From \u201cHoneymoon\u201d)",
+                "caa_release_mbid": "699297f4-6b8c-441f-aa12-db9ae90e7259"
             },
             {
                 "artist_credit_name": "Madonna",
@@ -575,7 +613,8 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Remix",
                 "release_mbid": "e92ad33d-c247-47f2-90e8-0e1eb9c01fd4",
-                "release_name": "Bad Girl / Fever"
+                "release_name": "Bad Girl / Fever",
+                "caa_release_mbid": "e92ad33d-c247-47f2-90e8-0e1eb9c01fd4"
             }
         ],
         "user_id": "test"
