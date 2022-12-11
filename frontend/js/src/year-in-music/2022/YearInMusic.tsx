@@ -316,7 +316,7 @@ export default class YearInMusic extends React.Component<
     /* Playlists */
     const topDiscoveriesPlaylist = this.getPlaylistByName(
       "playlist-top-discoveries-for-year",
-      `Highlights songs that ${user.name} first listened to (more than once) in 2021`
+      `Highlights songs that ${user.name} first listened to (more than once) in 2022`
     );
     const topMissedRecordingsPlaylist = this.getPlaylistByName(
       "playlist-top-missed-recordings-for-year",
@@ -324,11 +324,11 @@ export default class YearInMusic extends React.Component<
     );
     const topNewRecordingsPlaylist = this.getPlaylistByName(
       "playlist-top-new-recordings-for-year",
-      `Songs released in 2021 that ${user.name} listened to`
+      `Songs released in 2022 that ${user.name} listened to`
     );
     const topRecordingsPlaylist = this.getPlaylistByName(
       "playlist-top-recordings-for-year",
-      `This playlist is made from ${user.name}'s top recordings for 2021 statistics`
+      `This playlist is made from ${user.name}'s top recordings for 2022 statistics`
     );
     if (
       !topDiscoveriesPlaylist ||
@@ -358,7 +358,7 @@ export default class YearInMusic extends React.Component<
             <img
               className="img-responsive header-image"
               src="/static/img/year-in-music-2021.svg"
-              alt="Your year in music 2021"
+              alt="Your year in music 2022"
             />
             <div>
               <h4>
@@ -403,7 +403,7 @@ export default class YearInMusic extends React.Component<
             </p>
             <p>
               The ListenBrainz team would like to wish you happy holidays! You
-              have been sending us your listen history in 2021 and we wanted to
+              have been sending us your listen history in 2022 and we wanted to
               thank you for doing that! We have been working hard to create
               useful personalized features based on your data. We hope you like
               it!
@@ -440,7 +440,7 @@ export default class YearInMusic extends React.Component<
               <li>
                 new albums that {yourOrUsersName} top artists{" "}
                 <a href="listenbrainz/webserver/static/js/src/year-in-music#new-releases">
-                  released in 2021
+                  released in 2022
                 </a>
               </li>
               <li>
@@ -488,7 +488,7 @@ export default class YearInMusic extends React.Component<
         <div className="row">
           <div className="card content-card" id="top-releases">
             <div className="col-md-12 d-flex center-p">
-              <h3>{capitalize(yourOrUsersName)} top albums of 2021</h3>
+              <h3>{capitalize(yourOrUsersName)} top albums of 2022</h3>
               {yearInMusicData.top_releases && (
                 <ComponentToImage
                   data={yearInMusicData.top_releases
@@ -589,7 +589,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="top-recordings">
             <div className="col-md-12 d-flex center-p">
               <h3>
-                {capitalize(yourOrUsersName)} 50 most played songs of 2021
+                {capitalize(yourOrUsersName)} 50 most played songs of 2022
               </h3>
               {yearInMusicData.top_recordings && (
                 <ComponentToImage
@@ -636,7 +636,7 @@ export default class YearInMusic extends React.Component<
           </div>
           <div className="card content-card" id="top-artists">
             <div className="col-md-12 d-flex center-p">
-              <h3>{capitalize(yourOrUsersName)} top 50 artists of 2021</h3>
+              <h3>{capitalize(yourOrUsersName)} top 50 artists of 2022</h3>
               {yearInMusicData.top_artists && (
                 <ComponentToImage
                   data={yearInMusicData.top_artists.slice(0, 10)}
@@ -691,7 +691,7 @@ export default class YearInMusic extends React.Component<
         <div className="row">
           <div className="card content-card" id="calendar">
             <h3 className="text-center">
-              {capitalize(yourOrUsersName)} listening activity in 2021
+              {capitalize(yourOrUsersName)} listening activity in 2022
               <div className="small mt-15">
                 Number of listens submitted for each day of the year
               </div>
@@ -699,8 +699,8 @@ export default class YearInMusic extends React.Component<
             {listensPerDayForGraph ? (
               <div className="graph">
                 <ResponsiveCalendar
-                  from="2021-01-01"
-                  to="2021-12-31"
+                  from="2022-01-01"
+                  to="2022-12-31"
                   data={listensPerDayForGraph as CalendarDatum[]}
                   emptyColor="#eeeeee"
                   colors={["#bbb7e1", "#6e66cc", "#eea582", COLOR_LB_ORANGE]}
@@ -824,7 +824,7 @@ export default class YearInMusic extends React.Component<
             <h3 className="text-center">
               New albums of {yourOrUsersName} top artists
               <div className="small mt-15">
-                New albums released in 2021 from {yourOrUsersName} favorite
+                New albums released in 2022 from {yourOrUsersName} favorite
                 artists
               </div>
             </h3>
