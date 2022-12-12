@@ -211,7 +211,9 @@ class CoverArtGenerator:
             tiles.append((x1, y1, x2, y2))
 
         release_mbids = [mbid for mbid in mbids if mbid]
-        covers = get_caa_ids_for_release_mbids(release_mbids)
+        with psycopg2.connect(self.mb_db_connection_str) as conn, \
+                conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            covers = get_caa_ids_for_release_mbids(curs, release_mbids)
 
         # Now resolve cover art images into URLs and image dimensions
         images = []
