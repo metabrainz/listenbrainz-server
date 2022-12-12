@@ -1,5 +1,11 @@
-import html2canvas from "html2canvas";
-import React, { useState } from "react";
+import * as htmlToImage from "html-to-image";
+import React, {
+  ForwardedRef,
+  forwardRef,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 import { faCamera, faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -41,24 +47,42 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
     setIsLoading(true);
     const targetId = `savable-${entityType}-component`;
     const element = document.getElementById(targetId);
-    html2canvas(element as HTMLElement, {
-      onclone(clonedDoc) {
-        // eslint-disable-next-line no-param-reassign
-        clonedDoc!.getElementById(targetId)!.style.display = "block";
-      },
-      useCORS: true,
-      allowTaint: true,
-      imageTimeout: 30000,
-      scrollX: -window.scrollX,
-      scrollY: -window.scrollY,
-      windowWidth: element!.offsetWidth,
-      windowHeight: element!.offsetHeight,
-    })
-      .then((canvas) => {
-        return canvas.toDataURL("image/png", 1.0);
+
+    htmlToImage
+      .toPng(element as HTMLElement, {
+        canvasWidth: element!.offsetWidth,
+        canvasHeight: element!.offsetHeight,
       })
       .then((image) => {
-        saveAs(image, `${user.name}-top-${entityType}s-2021.png`);
+        const fileName = `${user.name}-top-${entityType}s-2021.png`;
+        if (navigator.canShare) {
+          const files = [
+            new File([image], fileName, {
+              type: "image/png",
+              lastModified: new Date().getTime(),
+            }),
+          ];
+          if (navigator.canShare({ files })) {
+            navigator
+              .share({
+                files,
+                title: `${user.name}'s Year In Music 2021`,
+                text: `Your top ${entityType}s of 2021`,
+              })
+              .then(() => {
+                // eslint-disable-next-line no-console
+                console.log("Share was successful.");
+                setIsLoading(false);
+              })
+              .catch((error) => {
+                // eslint-disable-next-line no-console
+                console.log("Sharing failed", error);
+                setIsLoading(false);
+              });
+          }
+        } else {
+          saveAs(image, fileName);
+        }
       });
   };
 
