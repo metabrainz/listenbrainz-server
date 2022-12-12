@@ -1,7 +1,7 @@
 from pyspark.sql import Row
 
 import listenbrainz_spark
-from listenbrainz_spark import schema, utils
+from listenbrainz_spark import schema, utils, hdfs
 from listenbrainz_spark.path import RECOMMENDATION_RECORDING_MAPPED_LISTENS, \
     RECOMMENDATION_RECORDINGS_DATAFRAME, RECOMMENDATION_RECORDING_USERS_DATAFRAME, \
     RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME, RECOMMENDATION_RECORDING_DATAFRAME_METADATA
@@ -25,7 +25,7 @@ class CreateDataframeTestCase(RecommendationsTestCase):
         self.assertCountEqual(expected_users_df.columns, users_df.columns)
         self.assertEqual(metadata['users_count'], 2)
 
-        status = utils.path_exists(RECOMMENDATION_RECORDING_USERS_DATAFRAME)
+        status = hdfs.path_exists(RECOMMENDATION_RECORDING_USERS_DATAFRAME)
         self.assertTrue(status)
 
     def test_get_recordings_dataframe(self):
@@ -36,7 +36,7 @@ class CreateDataframeTestCase(RecommendationsTestCase):
         self.assertCountEqual(['artist_credit_id', 'recording_id', 'recording_mbid'], recordings_df.columns)
         self.assertEqual(metadata['recordings_count'], 20)
 
-        status = utils.path_exists(RECOMMENDATION_RECORDINGS_DATAFRAME)
+        status = hdfs.path_exists(RECOMMENDATION_RECORDINGS_DATAFRAME)
         self.assertTrue(status)
 
     def test_get_listens_df(self):
@@ -66,7 +66,7 @@ class CreateDataframeTestCase(RecommendationsTestCase):
         metadata = self.get_dataframe_metadata(df_id)
         create_dataframes.save_dataframe_metadata_to_hdfs(metadata, RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
 
-        status = utils.path_exists(RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
+        status = hdfs.path_exists(RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
         self.assertTrue(status)
 
         df = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_DATAFRAME_METADATA)

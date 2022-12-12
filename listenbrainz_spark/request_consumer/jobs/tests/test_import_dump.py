@@ -9,9 +9,9 @@ from listenbrainz_spark.exceptions import (DumpInvalidException,
                                            DumpNotFoundException)
 from listenbrainz_spark.path import IMPORT_METADATA
 from listenbrainz_spark.tests import SparkNewTestCase
-from listenbrainz_spark.utils import (delete_dir, path_exists,
-                                      read_files_from_HDFS)
+from listenbrainz_spark.utils import (read_files_from_HDFS)
 
+from listenbrainz_spark.hdfs import (delete_dir, path_exists)
 
 def mock_import_dump_to_hdfs(dump_id: int):
     """ Mock function returning dump name all dump ids less than 210, else raising DumpNotFoundException """

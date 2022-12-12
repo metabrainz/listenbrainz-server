@@ -19,7 +19,7 @@ from pyspark.sql import Row
 from unittest.mock import patch
 import pyspark.sql.functions as f
 from pyspark.sql.types import StructField, StructType, StringType
-
+from listenbrainz_spark import hdfs
 
 class CandidateSetsTestClass(RecommendationsTestCase):
 
@@ -93,10 +93,10 @@ class CandidateSetsTestClass(RecommendationsTestCase):
         similar_artist_candidate_set_dfs_df = self.get_candidate_set()
 
         candidate_sets.save_candidate_sets(top_artist_candidate_set_df_df, similar_artist_candidate_set_dfs_df)
-        top_artist_exist = utils.path_exists(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
+        top_artist_exist = hdfs.path_exists(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
         self.assertTrue(top_artist_exist)
 
-        similar_artist_exist = utils.path_exists(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
+        similar_artist_exist = hdfs.path_exists(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
         self.assertTrue(similar_artist_exist)
 
     def get_top_artist(self):

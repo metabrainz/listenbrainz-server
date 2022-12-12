@@ -6,8 +6,10 @@ from listenbrainz_spark.ftp import DumpType
 from listenbrainz_spark.path import IMPORT_METADATA
 from listenbrainz_spark.schema import import_metadata_schema
 from listenbrainz_spark.tests import SparkNewTestCase
-from listenbrainz_spark.utils import (create_dataframe, delete_dir,
-                                      path_exists, read_files_from_HDFS, save_parquet, rename)
+from listenbrainz_spark.utils import (create_dataframe,
+                                   read_files_from_HDFS, save_parquet)
+from listenbrainz_spark.hdfs import (delete_dir, path_exists, rename)
+
 from pyspark.sql import Row
 
 

@@ -5,7 +5,7 @@ import tarfile
 import tempfile
 import logging
 
-from listenbrainz_spark import schema, path, utils
+from listenbrainz_spark import schema, path, utils, hdfs
 from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader, TEMP_DIR_PATH as HDFS_TEMP_DIR
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
 from listenbrainz_spark.utils import read_files_from_HDFS
@@ -52,10 +52,10 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         hdfs_mbdump_dir = os.path.join(hdfs_dir, "mbdump")  # release.tar.xz file has actual dump file inside mbdump dir
         with tarfile.open(name=archive, mode="r:xz") as tar, tempfile.TemporaryDirectory() as local_dir:
             # Remove existing dumps
-            if utils.path_exists(hdfs_dir):
-                utils.delete_dir(hdfs_dir, recursive=True)
+            if hdfs.path_exists(hdfs_dir):
+                hdfs.delete_dir(hdfs_dir, recursive=True)
 
-            utils.create_dir(hdfs_dir)
+            hdfs.create_dir(hdfs_dir)
 
             for member in tar:
                 t0 = time.monotonic()
@@ -67,7 +67,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 logger.info(f"Uploading {member.name}")
                 hdfs_path = os.path.join(hdfs_dir, member.name)
                 local_path = os.path.join(local_dir, member.name)
-                utils.upload_to_HDFS(hdfs_path, local_path)
+                hdfs.upload_to_HDFS(hdfs_path, local_path)
                 logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
 
     def upload_new_listens_incremental_dump(self, archive: str):
@@ -89,7 +89,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             .parquet(INCREMENTAL_DUMPS_SAVE_PATH)
 
         # delete parquet from hdfs temporary path
-        utils.delete_dir(hdfs_path, recursive=True)
+        hdfs.delete_dir(hdfs_path, recursive=True)
 
     def upload_new_listens_full_dump(self, archive: str):
         """ Upload new format parquet listens dumps to of a full
@@ -101,9 +101,9 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         src_path = self.upload_archive_to_temp(archive)
         dest_path = path.LISTENBRAINZ_NEW_DATA_DIRECTORY
         # Delete existing dumps if any
-        if utils.path_exists(dest_path):
+        if hdfs.path_exists(dest_path):
             logger.info(f'Removing {dest_path} from HDFS...')
-            utils.delete_dir(dest_path, recursive=True)
+            hdfs.delete_dir(dest_path, recursive=True)
             logger.info('Done!')
 
         logger.info(f"Moving the processed files from {src_path} to {dest_path}")
@@ -111,10 +111,10 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
         # Check if parent directory exists, if not create a directory
         dest_path_parent = str(Path(dest_path).parent)
-        if not utils.path_exists(dest_path_parent):
-            utils.create_dir(dest_path_parent)
+        if not hdfs.path_exists(dest_path_parent):
+            hdfs.create_dir(dest_path_parent)
 
-        utils.rename(src_path, dest_path)
+        hdfs.rename(src_path, dest_path)
         utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
     def upload_archive_to_temp(self, archive: str) -> str:
@@ -133,8 +133,8 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         """
         with tempfile.TemporaryDirectory() as local_temp_dir:
             logger.info("Cleaning HDFS temporary directory...")
-            if utils.path_exists(HDFS_TEMP_DIR):
-                utils.delete_dir(HDFS_TEMP_DIR, recursive=True)
+            if hdfs.path_exists(HDFS_TEMP_DIR):
+                hdfs.delete_dir(HDFS_TEMP_DIR, recursive=True)
 
             logger.info("Uploading listens to temporary directory in HDFS...")
             self.extract_and_upload_archive(archive, local_temp_dir, HDFS_TEMP_DIR)

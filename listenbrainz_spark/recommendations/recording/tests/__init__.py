@@ -4,7 +4,7 @@ from pyspark import Row
 from pyspark.sql.types import StructType, StructField, IntegerType
 
 import listenbrainz_spark
-from listenbrainz_spark import utils
+from listenbrainz_spark import utils, hdfs
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, RECOMMENDATION_RECORDING_MAPPED_LISTENS
 from listenbrainz_spark.tests import SparkNewTestCase, TEST_DATA_PATH, PLAYCOUNTS_COUNT, TEST_PLAYCOUNTS_PATH
 
@@ -14,8 +14,8 @@ class RecommendationsTestCase(SparkNewTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super(RecommendationsTestCase, cls).setUpClass()
-        utils.upload_to_HDFS(LISTENBRAINZ_NEW_DATA_DIRECTORY, os.path.join(TEST_DATA_PATH, 'rec_listens.parquet'))
-        utils.upload_to_HDFS(RECOMMENDATION_RECORDING_MAPPED_LISTENS, os.path.join(TEST_DATA_PATH, 'mapped_listens.parquet'))
+        hdfs.upload_to_HDFS(LISTENBRAINZ_NEW_DATA_DIRECTORY, os.path.join(TEST_DATA_PATH, 'rec_listens.parquet'))
+        hdfs.upload_to_HDFS(RECOMMENDATION_RECORDING_MAPPED_LISTENS, os.path.join(TEST_DATA_PATH, 'mapped_listens.parquet'))
 
     @classmethod
     def get_candidate_set(cls):

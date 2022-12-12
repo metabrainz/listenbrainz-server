@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
 from listenbrainz_spark.recommendations.recording.train_models import Model, NUM_FOLDS
+from listenbrainz_spark import hdfs
 from listenbrainz_spark.tests import TEST_PLAYCOUNTS_PATH, PLAYCOUNTS_COUNT
 from listenbrainz_spark import utils, config, path, schema
 from listenbrainz_spark.recommendations.recording import train_models
@@ -91,7 +92,7 @@ class TrainModelsTestCase(RecommendationsTestCase):
         utils.save_parquet(df, path.RECOMMENDATION_RECORDING_DATA_DIR)
         train_models.delete_model()
 
-        dir_exists = utils.path_exists(path.RECOMMENDATION_RECORDING_DATA_DIR)
+        dir_exists = hdfs.path_exists(path.RECOMMENDATION_RECORDING_DATA_DIR)
         self.assertFalse(dir_exists)
 
     def test_save_model_metadata_to_hdfs(self):
@@ -111,7 +112,7 @@ class TrainModelsTestCase(RecommendationsTestCase):
             "test_rmse": 4.5
         })
 
-        status = utils.path_exists(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
+        status = hdfs.path_exists(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
         self.assertTrue(status)
 
         df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
