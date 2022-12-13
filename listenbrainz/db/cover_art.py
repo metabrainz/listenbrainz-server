@@ -10,14 +10,7 @@ def get_caa_ids_for_release_mbids(curs, release_mbids: Iterable[str]):
     """
     query = """
           WITH release_mbids(mbid) AS (
-                    VALUES ('d101e395-0c04-4237-a3d2-167b1d88056c'::uuid)
-                         , ('4211382c-39e8-4a72-a32d-e4046fd96356'::uuid)
-                         , ('6d895dfa-8688-4867-9730-2b98050dae04'::uuid)
-                         , ('773e54bb-3f43-4813-826c-ca762bfa8318'::uuid)
-                         , ('ec782dbe-9204-4ec3-bf50-576c7cf3dfb3'::uuid)
-                         , ('10dffffc-c2aa-4ddd-81fd-42b5e125f240'::uuid)
-                         , ('be5f714d-02eb-4c89-9a06-5e544f132604'::uuid)
-                         , ('3eee4ed1-b48e-4894-8a05-f535f16a4985'::uuid)
+                    VALUES %s
             ), release_cover_art AS (
                     SELECT DISTINCT ON (rm.mbid)
                            rm.mbid AS original_mbid
