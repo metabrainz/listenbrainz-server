@@ -241,6 +241,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 type="submit"
                 className="btn btn-success"
                 data-dismiss="modal"
+                disabled={users.length === 0}
                 onClick={this.submitPersonalRecommendation}
               >
                 Send Recommendation
