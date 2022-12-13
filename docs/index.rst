@@ -35,6 +35,7 @@ Contents
    developers/spark-devel-env
    developers/architecture
    developers/spark-architecture
+   developers/mapping
    developers/commands
 
 .. toctree::
@@ -44,6 +45,7 @@ Contents
    maintainers/deploy
    maintainers/docker-image
    maintainers/dumps
+   maintainers/mapping
    maintainers/spotify-reader
    maintainers/updating-prod-db-schema
    maintainers/pull-requests
