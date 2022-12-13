@@ -28,17 +28,16 @@ def create_all():
     """
         Create all canonical data in one go. First mb canonical data, then its typesense index.
     """
-    create_canonical_musicbrainz_data(True)
+    create_canonical_musicbrainz_data()
     action_build_index()
 
 
 @cli.command()
-@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
-def canonical_data(use_lb_conn):
+def canonical_data():
     """
         Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
-    create_canonical_musicbrainz_data(use_lb_conn)
+    create_canonical_musicbrainz_data()
 
 
 @cli.command()
