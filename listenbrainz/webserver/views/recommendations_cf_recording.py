@@ -86,7 +86,6 @@ def _get_template(active_section, user):
     result = data.recording_mbid.dict()[active_section]
 
     if not result:
-        current_app.logger.error('Top/Similar artists/raw not found in Mapping/artist relation for "{}"'.format(user.musicbrainz_id))
         return render_template(
             "recommendations_cf_recording/base.html",
             active_section=active_section,
@@ -98,8 +97,6 @@ def _get_template(active_section, user):
 
     recommendations = _get_playable_recommendations_list(result)
     if not recommendations:
-        current_app.logger.error('The API returned an empty response for {} recommendations.\nData: {}'
-                                 .format(active_section, result))
         return render_template(
             "recommendations_cf_recording/base.html",
             active_section=active_section,
@@ -133,24 +130,6 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
         Args:
             mbids_and_ratings_list: Contains recording mbid and corresponding score.
 
-
-
-
-            if caa_id and caa_release_mbid or release_mbid and recording_mbid are available then:
-
-                
-            Returns:
-                'track_metadata' : {
-                    'additional_info' : {
-                        'caa_id' : "demo caa id",
-                        'caa_release_mbid' : "demo caa release album mbid"
-                        'release_mbid' : "demo release mbid"
-                    }
-                }
-
-              These fields are required to show cover art on the front-end web app.
-
-
         Returns:
             recommendations: list of recommendations of the format
                 {
@@ -161,7 +140,10 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                         'release_name' : "",
                         'additional_info' : {
                             'recording_mbid' : "181c4177-f33a-441d-b15d-910acaf18b07",
-                            'artist_mbids' : "181c4177-f33a-441d-b15d-910acaf18b07"
+                            'artist_mbids' : "181c4177-f33a-441d-b15d-910acaf18b07",
+                            'caa_id' : 34021497287,
+                            'caa_release_mbid' : "a2225115-891b-4f6b-a795-f2b7a68d0bcb"
+                            'release_mbid' : "a2225115-891b-4f6b-a795-f2b7a68d0bcb"
                         }
                     }
                 }
