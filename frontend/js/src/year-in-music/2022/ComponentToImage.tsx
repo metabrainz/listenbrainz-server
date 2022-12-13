@@ -54,7 +54,7 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
         canvasHeight: element!.offsetHeight,
       })
       .then((image) => {
-        const fileName = `${user.name}-top-${entityType}s-2021.png`;
+        const fileName = `${user.name}-top-${entityType}s-2022.png`;
         if (navigator.canShare) {
           const files = [
             new File([image], fileName, {
@@ -66,8 +66,8 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
             navigator
               .share({
                 files,
-                title: `${user.name}'s Year In Music 2021`,
-                text: `Your top ${entityType}s of 2021`,
+                title: `${user.name}'s Year In Music 2022`,
+                text: `Your top ${entityType}s of 2022`,
               })
               .then(() => {
                 // eslint-disable-next-line no-console
