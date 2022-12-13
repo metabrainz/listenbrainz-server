@@ -166,8 +166,8 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
                     artistCreditName={release.artist_credit_name}
                     artistMBIDs={release.artist_mbids}
                     confidence={release.confidence}
-                    caaId={release.caa_id}
-                    caaReleaseMbid={release.caa_release_mbid}
+                    caaID={release.caa_id}
+                    caaReleaseMBID={release.caa_release_mbid}
                   />
                 );
               })}

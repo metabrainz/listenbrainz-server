@@ -1,7 +1,10 @@
 import * as React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { formatReleaseDate } from "./utils";
-import { generateAlbumArtThumbnailLink } from "../utils/utils";
+import {
+  generateAlbumArtThumbnailLink,
+  getAlbumArtFromReleaseMBID,
+} from "../utils/utils";
 
 type ReleaseCardProps = {
   releaseDate: string;
@@ -12,8 +15,8 @@ type ReleaseCardProps = {
   releaseTypePrimary: string | undefined | null;
   releaseTypeSecondary: string | undefined | null;
   confidence?: number | null;
-  caaId: number | null;
-  caaReleaseMbid: string | null;
+  caaID: number | null;
+  caaReleaseMBID: string | null;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -26,8 +29,8 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     releaseTypePrimary,
     releaseTypeSecondary,
     confidence,
-    caaId,
-    caaReleaseMbid,
+    caaID,
+    caaReleaseMBID,
   } = props;
 
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
@@ -61,13 +64,23 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
     return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
   }
+  React.useEffect(() => {}, [releaseMBID, setCoverartSrc]);
 
   React.useEffect(() => {
-    if (caaId && caaReleaseMbid) {
-      const coverartURL = generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
-      setCoverartSrc(coverartURL);
+    async function getCoverArt() {
+      const coverartURL = await getAlbumArtFromReleaseMBID(releaseMBID);
+      if (coverartURL) {
+        setCoverartSrc(coverartURL);
+      }
     }
-  }, [caaId, caaReleaseMbid, setCoverartSrc]);
+
+    if (caaID && caaReleaseMBID) {
+      const coverartURL = generateAlbumArtThumbnailLink(caaID, caaReleaseMBID);
+      setCoverartSrc(coverartURL);
+    } else {
+      getCoverArt();
+    }
+  }, [releaseMBID, caaID, caaReleaseMBID, setCoverartSrc]);
 
   return (
     <div className="release-card-container">
