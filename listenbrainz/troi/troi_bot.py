@@ -138,9 +138,10 @@ def run_daily_jams(user, existing_url, service):
 
     if user["export_to_spotify"]:
         spotify = _get_spotify_details(user["id"], service)
-        if existing_url:
-            spotify["existing_urls"] = [existing_url]
-        args["spotify"] = spotify
+        if spotify:
+            if existing_url:
+                spotify["existing_urls"] = [existing_url]
+            args["spotify"] = spotify
 
     playlist = generate_playlist(DailyJamsPatch(), args)
 
