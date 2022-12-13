@@ -12,7 +12,7 @@ from psycopg2.sql import SQL, Literal
 
 from mapping.utils import insert_rows, log
 from mapping.bulk_table import BulkInsertTable
-from mapping.canonical_release_redirect import CanonicalReleaseRedirect
+from mapping.canonical_recording_release_redirect import CanonicalRecordingReleaseRedirect
 import config
 
 
@@ -735,7 +735,7 @@ def create_mb_metadata_cache(use_lb_conn: bool):
         if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
-        can_rel = CanonicalReleaseRedirect(mb_conn)
+        can_rel = CanonicalRecordingReleaseRedirect(mb_conn)
         if not can_rel.table_exists():
             log("mb metadata cache: canonical_release_redirect table doesn't exist, run `canonical-data` manage command first with --use-mb-conn option")
             return
