@@ -29,7 +29,7 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "5b2c8f92-5567-479f-8262-a00a7f8724b1",
-                "release_name": "Vande Mataram (From \u201cCode Name Tiranga\u201d)",
+                "release_name": "Vande Mataram (From “Code Name Tiranga”)",
                 "caa_release_mbid": "5b2c8f92-5567-479f-8262-a00a7f8724b1"
             },
             {
@@ -105,7 +105,7 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "4c3e85bb-a6fa-4ba5-8c78-be5853e75833",
-                "release_name": "Rasiya Reprise (From \u201cBrahmastra\u201d)",
+                "release_name": "Rasiya Reprise (From “Brahmastra”)",
                 "caa_release_mbid": "4c3e85bb-a6fa-4ba5-8c78-be5853e75833"
             },
             {
@@ -216,7 +216,7 @@
                 "caa_release_mbid": "ddf24806-c813-43b1-882d-e51152a29868"
             },
             {
-                "artist_credit_name": "Ti\u00ebsto \u00d7 Black Eyed Peas",
+                "artist_credit_name": "Tiësto × Black Eyed Peas",
                 "artist_mbids": [
                     "aabb1d9f-be12-45b3-a84d-a1fc3e8181fd",
                     "d5be5333-4171-427e-8e12-732087c6b78e"
@@ -263,7 +263,7 @@
                 "caa_release_mbid": null
             },
             {
-                "artist_credit_name": "Mot\u00f6rhead",
+                "artist_credit_name": "Motörhead",
                 "artist_mbids": [
                     "57961a97-3796-4bf7-9f02-a985a8979ae9"
                 ],
@@ -274,7 +274,7 @@
                 "release_group_primary_type": "EP",
                 "release_group_secondary_type": "Compilation",
                 "release_mbid": "403a79a8-0cbd-4a6c-b694-39a2cbd6dc75",
-                "release_name": "Mot\u00f6r\u2010ween",
+                "release_name": "Motör‐ween",
                 "caa_release_mbid": "403a79a8-0cbd-4a6c-b694-39a2cbd6dc75"
             },
             {
@@ -294,7 +294,7 @@
                 "caa_release_mbid": "205b9c35-bb8a-4074-aa93-f06f09c56345"
             },
             {
-                "artist_credit_name": "blink\u2010182",
+                "artist_credit_name": "blink‐182",
                 "artist_mbids": [
                     "0743b15a-3c32-48c8-ad58-cb325350befa"
                 ],
@@ -416,7 +416,7 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": null,
                 "release_mbid": "19a5f597-8273-4693-a482-139dcb2c3a14",
-                "release_name": "It\u2019s Ours",
+                "release_name": "It’s Ours",
                 "caa_release_mbid": "19a5f597-8273-4693-a482-139dcb2c3a14"
             },
             {
@@ -446,7 +446,7 @@
                 "release_group_primary_type": "Album",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "d31bdc81-2ad9-4f68-8473-617541f499dd",
-                "release_name": "Marvel Studios\u2019 Werewolf By Night (Original Soundtrack)",
+                "release_name": "Marvel Studios’ Werewolf By Night (Original Soundtrack)",
                 "caa_release_mbid": "d31bdc81-2ad9-4f68-8473-617541f499dd"
             },
             {
@@ -580,7 +580,7 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "cf71cdc8-2f0b-4159-9d33-3f1a0a0df924",
-                "release_name": "Aa Chaliye (From \u201cHoneymoon\u201d)",
+                "release_name": "Aa Chaliye (From “Honeymoon”)",
                 "caa_release_mbid": "cf71cdc8-2f0b-4159-9d33-3f1a0a0df924"
             },
             {
@@ -598,7 +598,7 @@
                 "release_group_primary_type": "Single",
                 "release_group_secondary_type": "Soundtrack",
                 "release_mbid": "699297f4-6b8c-441f-aa12-db9ae90e7259",
-                "release_name": "Hypnotize (From \u201cHoneymoon\u201d)",
+                "release_name": "Hypnotize (From “Honeymoon”)",
                 "caa_release_mbid": "699297f4-6b8c-441f-aa12-db9ae90e7259"
             },
             {

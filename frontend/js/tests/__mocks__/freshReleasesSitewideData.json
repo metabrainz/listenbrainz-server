@@ -1,16 +1,16 @@
 [
     {
-        "artist_credit_name": "\u3092\u3068\u306f",
+        "artist_credit_name": "をとは",
         "artist_mbids": [
             "404670b2-bb19-4be8-862b-fe465a6e2a79"
         ],
         "caa_id": 34021497287,
-        "caa_release_mbid": "09786531-f473-4fa2-a64d-788a647ea21c",
         "release_date": "2022-11-06",
         "release_group_mbid": "24225190-eb36-4972-9907-9b22e1d19d99",
         "release_group_primary_type": "EP",
         "release_mbid": "09786531-f473-4fa2-a64d-788a647ea21c",
-        "release_name": "\u3081\u3044\u3069\u306e\u307f\u3084\u3052"
+        "release_name": "めいどのみやげ",
+        "caa_release_mbid": "09786531-f473-4fa2-a64d-788a647ea21c"
     },
     {
         "artist_credit_name": "Achint & Mikey McCleary",
@@ -19,13 +19,13 @@
             "ddf71a40-5148-4b8d-83d5-4f2fda23f431"
         ],
         "caa_id": 34026663688,
-        "caa_release_mbid": "689653af-46c0-4d11-90d2-adf1dda36915",
         "release_date": "2022-11-06",
         "release_group_mbid": "c7df49b8-510d-4634-8d06-644afad617fa",
         "release_group_primary_type": "Album",
         "release_group_secondary_type": "Soundtrack",
         "release_mbid": "689653af-46c0-4d11-90d2-adf1dda36915",
-        "release_name": "Monica, O My Darling (Music from the Netflix Film)"
+        "release_name": "Monica, O My Darling (Music from the Netflix Film)",
+        "caa_release_mbid": "689653af-46c0-4d11-90d2-adf1dda36915"
     },
     {
         "artist_credit_name": "Adeline Yeo (HP)",
@@ -33,13 +33,13 @@
             "baca10cc-e249-4969-a27f-6503955ae7b5"
         ],
         "caa_id": 33137471417,
-        "caa_release_mbid": "440e2fcd-9bbd-4f8a-aeb1-bf658d98ed21",
         "release_date": "2022-11-06",
         "release_group_mbid": "8add4348-8618-4b97-9316-1d356454c953",
         "release_group_primary_type": "Single",
         "release_group_secondary_type": "Soundtrack",
         "release_mbid": "440e2fcd-9bbd-4f8a-aeb1-bf658d98ed21",
-        "release_name": "Helicopter Gun Fighter"
+        "release_name": "Helicopter Gun Fighter",
+        "caa_release_mbid": "440e2fcd-9bbd-4f8a-aeb1-bf658d98ed21"
     },
     {
         "artist_credit_name": "Areal Kollen",
@@ -47,12 +47,12 @@
             "6aedd326-5af9-4ed0-aa73-9f0e6edc9de4"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "b19c3601-20fd-43ee-8caa-cad25ba0eee3",
         "release_group_primary_type": "Single",
         "release_mbid": "b7806d72-9bed-4c0f-ab89-b0490e6f21f0",
-        "release_name": "Black Hawk Down 2"
+        "release_name": "Black Hawk Down 2",
+        "caa_release_mbid": null
     },
     {
         "artist_credit_name": "Beats by Mr. Jay",
@@ -60,13 +60,13 @@
             "69b2f79f-e19d-4c44-9a2e-725581ec30e9"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "8610a240-e352-4309-8cc5-f6301854d3f0",
         "release_group_primary_type": "Single",
         "release_group_secondary_type": "Demo",
         "release_mbid": "4ceda762-8cb1-48d3-a28b-7b7c2720efb8",
-        "release_name": "100"
+        "release_name": "100",
+        "caa_release_mbid": null
     },
     {
         "artist_credit_name": "Cold Frequenz",
@@ -74,12 +74,12 @@
             "0559dcba-2d64-43cb-8c33-fb13af1cd014"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "0b4b4fe8-2b30-49cb-bc59-527a02f34b6e",
         "release_group_primary_type": "Album",
         "release_mbid": "b599ad48-0368-4d09-b4c9-89c0dd292ba1",
-        "release_name": "Programmed for Violence"
+        "release_name": "Programmed for Violence",
+        "caa_release_mbid": null
     },
     {
         "artist_credit_name": "Electric Yawn",
@@ -87,12 +87,12 @@
             "a03a9d90-0d4f-4f92-bd99-6d4640e04bb0"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "78709a06-f0a6-49c6-a87f-740fc22a900b",
         "release_group_primary_type": "Album",
         "release_mbid": "3f59468b-906c-489e-97f2-c24b09b1a471",
-        "release_name": "YTINASNiNSIGHT"
+        "release_name": "YTINASNiNSIGHT",
+        "caa_release_mbid": null
     },
     {
         "artist_credit_name": "Ella Es Tan Cargosa & Lula Bertoldi",
@@ -101,12 +101,12 @@
             "8bbee743-ce59-4411-ae3f-fe2bbc9acc17"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "883710cc-62b3-4185-a340-33e6e2c78d75",
         "release_group_primary_type": "Single",
         "release_mbid": "a1609858-ae14-489c-b585-d4a616aaab6d",
-        "release_name": "Fui"
+        "release_name": "Fui",
+        "caa_release_mbid": null
     },
     {
         "artist_credit_name": "Horned Garden's Princess",
@@ -114,12 +114,12 @@
             "067e7dc3-b528-4d1b-97f3-58f199ea9e18"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "88971593-e86a-4ee8-80cf-635192f02536",
         "release_group_primary_type": "EP",
         "release_mbid": "a662577f-32ec-4719-803c-f71be29c8efc",
-        "release_name": "\u0428\u0430\u0443\u0440\u043c\u0430 \u0441 \u043e\u043b\u0435\u043d\u0438\u043d\u043e\u0439 06.11.22"
+        "release_name": "Шаурма с олениной 06.11.22",
+        "caa_release_mbid": null
     },
     {
         "artist_credit_name": "Kadeshiaa",
@@ -127,25 +127,25 @@
             "f2ab90bd-1bc1-4394-a2af-7f977fe44dc1"
         ],
         "caa_id": 34035418719,
-        "caa_release_mbid": "e3e9bbb4-d0d3-409f-b0c7-3efbaf196935",
         "release_date": "2022-11-06",
         "release_group_mbid": "3a30b85b-589f-46e1-89c9-2ae3a0fd367c",
         "release_group_primary_type": "Album",
         "release_mbid": "e3e9bbb4-d0d3-409f-b0c7-3efbaf196935",
-        "release_name": "SUCCESS STREET (PART ONE)"
+        "release_name": "SUCCESS STREET (PART ONE)",
+        "caa_release_mbid": "e3e9bbb4-d0d3-409f-b0c7-3efbaf196935"
     },
     {
-        "artist_credit_name": "milky\u2731heart",
+        "artist_credit_name": "milky✱heart",
         "artist_mbids": [
             "c2c87d64-aded-4810-9cd5-bda0aba6d554"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "e5781dd8-54f3-4300-9235-5670882188a6",
         "release_group_primary_type": "EP",
         "release_mbid": "df0f802d-be83-4c32-ad3f-2fae0342fcfd",
-        "release_name": "\u2731 bang! EP \u2731"
+        "release_name": "✱ bang! EP ✱",
+        "caa_release_mbid": null
     },
     {
         "artist_credit_name": "mulpHia",
@@ -153,12 +153,12 @@
             "6594f523-9ae5-40ba-95ed-3598d7ffd9cc"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "7e1eb593-85ed-4627-9e2a-8e649b56b9af",
         "release_group_primary_type": "Album",
         "release_mbid": "9b99de65-dac8-4f86-ab5a-d02ad67af002",
-        "release_name": "NOKTURNO 3"
+        "release_name": "NOKTURNO 3",
+        "caa_release_mbid": null
     },
     {
         "artist_credit_name": "Proteus",
@@ -166,12 +166,12 @@
             "f3b73f46-9009-4ec7-aae1-bdcb3ced1683"
         ],
         "caa_id": 33997684680,
-        "caa_release_mbid": "c945bda3-39f2-4a4a-910a-be4823865c08",
         "release_date": "2022-11-06",
         "release_group_mbid": "7138e035-550f-4dc1-9488-0585ef15b313",
         "release_group_primary_type": "Album",
         "release_mbid": "c945bda3-39f2-4a4a-910a-be4823865c08",
-        "release_name": "Prometheia I: Arrival"
+        "release_name": "Prometheia I: Arrival",
+        "caa_release_mbid": "c945bda3-39f2-4a4a-910a-be4823865c08"
     },
     {
         "artist_credit_name": "ReddyBeats",
@@ -179,12 +179,12 @@
             "af29ba0a-af76-4566-8603-bb468846b1b1"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "0272a162-f51c-466f-bd22-87e5d9210050",
         "release_group_primary_type": "Album",
         "release_mbid": "86c4bab9-4380-4ceb-8a80-173042d53c78",
-        "release_name": "Raleigh BLVD"
+        "release_name": "Raleigh BLVD",
+        "caa_release_mbid": null
     },
     {
         "artist_credit_name": "Silvxrsurfxr",
@@ -192,12 +192,12 @@
             "660ed857-58a9-4164-9e8f-7a47717d7b4f"
         ],
         "caa_id": 34022478351,
-        "caa_release_mbid": "362b842c-8ddd-4a98-9470-03eaa7ba152b",
         "release_date": "2022-11-06",
         "release_group_mbid": "57f20f31-1bbd-47e5-90bf-b82253dceb30",
         "release_group_primary_type": "EP",
         "release_mbid": "362b842c-8ddd-4a98-9470-03eaa7ba152b",
-        "release_name": "WAVES"
+        "release_name": "WAVES",
+        "caa_release_mbid": "362b842c-8ddd-4a98-9470-03eaa7ba152b"
     },
     {
         "artist_credit_name": "Various Artists",
@@ -205,16 +205,16 @@
             "89ad4ac3-39f7-470e-963a-56509c546377"
         ],
         "caa_id": null,
-        "caa_release_mbid": null,
         "release_date": "2022-11-06",
         "release_group_mbid": "b3123aeb-d7df-4450-9072-19def57fca0f",
         "release_group_primary_type": "Album",
         "release_group_secondary_type": "Live",
         "release_mbid": "3b710095-6d39-4482-a644-8d66a4c5aa8e",
-        "release_name": "\u6211\u4eec\u7684\u6b4c\u7b2c\u56db\u5b63 \u7b2c7\u671f"
+        "release_name": "我们的歌第四季 第7期",
+        "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u7d50\u675f\u30d0\u30f3\u30c9",
+        "artist_credit_name": "結束バンド",
         "artist_mbids": [
             "c1b0fe0a-779d-43ed-b193-4370f0d0f88f"
         ],
@@ -223,11 +223,11 @@
         "release_group_mbid": "40afb369-8230-494f-8507-def48bc53f22",
         "release_group_primary_type": "Single",
         "release_mbid": "d23933d6-b48b-4e05-b8ac-e08fdf8fcc9a",
-        "release_name": "\u30ae\u30bf\u30fc\u3068\u5b64\u72ec\u3068\u84bc\u3044\u60d1\u661f",
+        "release_name": "ギターと孤独と蒼い惑星",
         "caa_release_mbid": "d23933d6-b48b-4e05-b8ac-e08fdf8fcc9a"
     },
     {
-        "artist_credit_name": "\ud835\udd07\ud835\udd0d 6YR\u0c25\u0c4d\u200c\u0663\u0663A \u0417\u0410\u041e",
+        "artist_credit_name": "𝔇𝔍 6YRథ్‌٣٣A ЗАО",
         "artist_mbids": [
             "a7e0d7da-579d-42b6-aea0-306eb0847784"
         ],
@@ -374,7 +374,7 @@
         "caa_release_mbid": "f262cc16-ca2e-4f59-af11-001eb013f65f"
     },
     {
-        "artist_credit_name": "Imogen Heap & Dan O\u2019Neill",
+        "artist_credit_name": "Imogen Heap & Dan O’Neill",
         "artist_mbids": [
             "328d146c-79f1-4eb6-9e40-8ee5710c14e5",
             "c564e953-b4ce-4bfb-9c71-96d8339eaf48"
@@ -532,7 +532,7 @@
         "release_group_mbid": "d90428a3-78e2-44f5-89aa-61d286149d40",
         "release_group_primary_type": "Single",
         "release_mbid": "c5913d14-0ede-4f13-81fc-be3d07df143e",
-        "release_name": "Agon\u00eda",
+        "release_name": "Agonía",
         "caa_release_mbid": "c5913d14-0ede-4f13-81fc-be3d07df143e"
     },
     {
@@ -600,7 +600,7 @@
         "release_group_primary_type": "Single",
         "release_group_secondary_type": "Remix",
         "release_mbid": "75334caf-6088-43bf-b95a-a2c2fe0f0c03",
-        "release_name": "Anti\u2010Hero",
+        "release_name": "Anti‐Hero",
         "caa_release_mbid": "75334caf-6088-43bf-b95a-a2c2fe0f0c03"
     },
     {
@@ -654,11 +654,11 @@
         "release_group_mbid": "920c155f-59c5-4f87-a066-8f4de05c3d81",
         "release_group_primary_type": "Single",
         "release_mbid": "8cc37395-52d9-4f73-a369-855339977fd0",
-        "release_name": "All \u2019Bout All",
+        "release_name": "All ’Bout All",
         "caa_release_mbid": "8cc37395-52d9-4f73-a369-855339977fd0"
     },
     {
-        "artist_credit_name": "Aleksi Per\u00e4l\u00e4",
+        "artist_credit_name": "Aleksi Perälä",
         "artist_mbids": [
             "a913c0de-d77e-424e-9ba5-c8872793512b"
         ],
@@ -706,7 +706,7 @@
         "release_group_mbid": "d6c47b3b-c2ca-4dfa-a237-96ca8eb312e3",
         "release_group_primary_type": "Single",
         "release_mbid": "38545fef-c13c-4b41-af2d-76f1c7e829fc",
-        "release_name": "\u2622\ufe0fNukaBass\u2622\ufe0f",
+        "release_name": "☢️NukaBass☢️",
         "caa_release_mbid": null
     },
     {
@@ -750,7 +750,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "En Paz Me Acostar\u00e9",
+        "artist_credit_name": "En Paz Me Acostaré",
         "artist_mbids": [
             "7c25b8fb-01aa-4691-bc9a-a344d321896c"
         ],
@@ -772,7 +772,7 @@
         "release_group_mbid": "d51ea764-2f5a-4369-bd40-87d6990ea1af",
         "release_group_primary_type": "Album",
         "release_mbid": "f2e95ca4-7a1c-486d-bdbf-a9d06466421e",
-        "release_name": "Spirit Gatherer \u2022 Tribute to Don Cherry",
+        "release_name": "Spirit Gatherer • Tribute to Don Cherry",
         "caa_release_mbid": "f2e95ca4-7a1c-486d-bdbf-a9d06466421e"
     },
     {
@@ -827,7 +827,7 @@
         "caa_release_mbid": "29749d12-1a67-406e-9df0-a4d983762c20"
     },
     {
-        "artist_credit_name": "Israel Garc\u00eda",
+        "artist_credit_name": "Israel García",
         "artist_mbids": [
             "ca472f3c-46ab-4d10-b9ec-54ccc74b82e6"
         ],
@@ -1061,7 +1061,7 @@
         "caa_release_mbid": "70ce59f9-ae49-4580-b663-28ae0a706fd5"
     },
     {
-        "artist_credit_name": "\u0425\u0430\u0441\u043a\u0438",
+        "artist_credit_name": "Хаски",
         "artist_mbids": [
             "02761fb1-8db3-4df4-8d43-6defb0e17abf"
         ],
@@ -1071,11 +1071,11 @@
         "release_group_primary_type": "Single",
         "release_group_secondary_type": "Remix",
         "release_mbid": "8aec7e9b-799d-4daf-a381-fc0429ee0aaa",
-        "release_name": "\u041b\u044e\u0446\u0438\u0444\u0435\u0440 (Comfortless rework)",
+        "release_name": "Люцифер (Comfortless rework)",
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u3048\u306e\u3050",
+        "artist_credit_name": "えのぐ",
         "artist_mbids": [
             "57452363-2e27-4e5b-9142-3ad1e91872ba"
         ],
@@ -1084,11 +1084,11 @@
         "release_group_mbid": "aa444cbd-6063-4fd9-b652-127d48750b25",
         "release_group_primary_type": "Album",
         "release_mbid": "c29e1a77-104b-4e4b-a0f3-842a243560eb",
-        "release_name": "\u306a\u3089\u3001\u771f\u3063\u767d\u304b\u3089\u59cb\u3081\u3088\u3046\u3002",
+        "release_name": "なら、真っ白から始めよう。",
         "caa_release_mbid": "c29e1a77-104b-4e4b-a0f3-842a243560eb"
     },
     {
-        "artist_credit_name": "\u30b7\u30fc\u30ba",
+        "artist_credit_name": "シーズ",
         "artist_mbids": [
             "304373de-26df-4673-80dc-26a9798dae13"
         ],
@@ -1101,7 +1101,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u308f\u3044\u308f\u3044\u308f\u3044",
+        "artist_credit_name": "わいわいわい",
         "artist_mbids": [
             "56c44ec1-a065-4007-ad8b-8f2e4b3223d8"
         ],
@@ -1110,11 +1110,11 @@
         "release_group_mbid": "e45bd2fd-547f-4f98-a556-2069d8ee1159",
         "release_group_primary_type": "Single",
         "release_mbid": "6fd9738e-cbd0-4c7c-a91b-ff7ee4411ed9",
-        "release_name": "\u308f\u30fc\u3044\u308f\u3044\u308f\u3044 \u308f\u3044\u308f\u3044\u308f\u3044!",
+        "release_name": "わーいわいわい わいわいわい!",
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u3055\u3088\u306a\u3089\u30dd\u30cb\u30fc\u30c6\u30fc\u30eb",
+        "artist_credit_name": "さよならポニーテール",
         "artist_mbids": [
             "a8c6ef99-6a24-4c68-83e5-35aa1eca32fa"
         ],
@@ -1123,7 +1123,7 @@
         "release_group_mbid": "d2ccf174-bc8a-44a2-8f59-23f3d3a0b532",
         "release_group_primary_type": "Single",
         "release_mbid": "f0b63af4-b4be-40ab-8ebe-80f475993b58",
-        "release_name": "\u3068\u304a\u3044\u660e\u65e5",
+        "release_name": "とおい明日",
         "caa_release_mbid": null
     },
     {
@@ -1162,7 +1162,7 @@
         "release_group_mbid": "d12f8e7b-cdd0-408c-8d6a-57803534a650",
         "release_group_primary_type": "Single",
         "release_mbid": "1911bf94-6d73-40cc-b5d8-d85562abeabd",
-        "release_name": "T\u00fa tienes el control",
+        "release_name": "Tú tienes el control",
         "caa_release_mbid": null
     },
     {
@@ -1245,7 +1245,7 @@
         "caa_release_mbid": "2e5fbc0f-3335-47c6-a790-14511cb83021"
     },
     {
-        "artist_credit_name": "Juha Kujanp\u00e4\u00e4",
+        "artist_credit_name": "Juha Kujanpää",
         "artist_mbids": [
             "e1862b06-8f40-48fa-a4f8-d99060cda1b6"
         ],
@@ -1332,7 +1332,7 @@
         "release_group_mbid": "4b45f56e-5a9f-49e1-aa2d-53c04c82472b",
         "release_group_primary_type": "Single",
         "release_mbid": "9428d220-d518-47d0-8b81-2d092b4f0be9",
-        "release_name": "\u8ff7\u661f\u53eb",
+        "release_name": "迷星叫",
         "caa_release_mbid": null
     },
     {
@@ -1412,7 +1412,7 @@
         "release_group_mbid": "16ada62f-9ea6-475b-ae6a-cfbdd0870c7b",
         "release_group_primary_type": "Single",
         "release_mbid": "2d4f6884-a4a1-4590-8c9d-b09cb7880077",
-        "release_name": "\u30a4\u30f3\u30b6\u30d0\u30c3\u30af\u30eb\u30fc\u30e0",
+        "release_name": "インザバックルーム",
         "caa_release_mbid": "2d4f6884-a4a1-4590-8c9d-b09cb7880077"
     },
     {
@@ -1425,11 +1425,11 @@
         "release_group_mbid": "9a0b7272-4678-494c-b632-ec6cfd75d016",
         "release_group_primary_type": "EP",
         "release_mbid": "8bd63dcc-c14f-40d4-8466-713952f50bf9",
-        "release_name": "\u9320\u5264",
+        "release_name": "錠剤",
         "caa_release_mbid": "8bd63dcc-c14f-40d4-8466-713952f50bf9"
     },
     {
-        "artist_credit_name": "Un Coraz\u00f3n",
+        "artist_credit_name": "Un Corazón",
         "artist_mbids": [
             "e82120fc-097e-494c-833b-c7ce2a7f04b4"
         ],
@@ -1438,7 +1438,7 @@
         "release_group_mbid": "53b1e9f2-1065-42df-9e3a-6939b9789544",
         "release_group_primary_type": "Single",
         "release_mbid": "a0d0f0a0-03f7-40a7-9517-4d7d8559cb16",
-        "release_name": "X SIEMPRE (Ac\u00fastico)",
+        "release_name": "X SIEMPRE (Acústico)",
         "caa_release_mbid": "a0d0f0a0-03f7-40a7-9517-4d7d8559cb16"
     },
     {
@@ -1468,7 +1468,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u0179OO\u013b",
+        "artist_credit_name": "ŹOOĻ",
         "artist_mbids": [
             "51ebae67-101d-4f10-be6d-1231b57433b6"
         ],
@@ -1481,7 +1481,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u4f50\u54b2\u7d17\u82b1",
+        "artist_credit_name": "佐咲紗花",
         "artist_mbids": [
             "da331d79-0068-4fa9-aba2-8dfb9e47a2de"
         ],
@@ -1494,7 +1494,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u5085\u83c1",
+        "artist_credit_name": "傅菁",
         "artist_mbids": [
             "c4f06a86-01fc-4eb3-bf49-08a6017298d9"
         ],
@@ -1504,11 +1504,11 @@
         "release_group_primary_type": "Single",
         "release_group_secondary_type": "Soundtrack",
         "release_mbid": "e59b8759-c728-4c1b-9e7a-edc0ae4323e0",
-        "release_name": "\u613f\u537f\u5b89",
+        "release_name": "愿卿安",
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u690d\u677e\u4f38\u592b",
+        "artist_credit_name": "植松伸夫",
         "artist_mbids": [
             "92bb085a-2924-4479-b627-181a1835d2f5"
         ],
@@ -1521,7 +1521,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u6c38\u585a\u62d3\u99ac",
+        "artist_credit_name": "永塚拓馬",
         "artist_mbids": [
             "1ffae607-1be8-4a80-8625-acdc9ea183df"
         ],
@@ -1534,7 +1534,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "\u904a\u4f50\u3053\u305a\u3048\uff08CV\uff1a\u82b1\u8c37\u9ebb\u5983\uff09, \u53cc\u8449\u674f\uff08CV\uff1a\u4e94\u5341\u5d50\u88d5\u7f8e\uff09, \u591a\u7530\u674e\u8863\u83dc\uff08CV\uff1a\u9752\u6728\u7460\u7483\u5b50\uff09, \u6728\u6751\u590f\u6a39\uff08CV\uff1a\u5b89\u91ce\u5e0c\u4e16\u4e43\uff09",
+        "artist_credit_name": "遊佐こずえ（CV：花谷麻妃）, 双葉杏（CV：五十嵐裕美）, 多田李衣菜（CV：青木瑠璃子）, 木村夏樹（CV：安野希世乃）",
         "artist_mbids": [
             "33fd76ca-0472-4853-bdff-f505f2e2208c",
             "34438792-01d5-483c-ac1d-dba7391fd23a",
@@ -1550,7 +1550,7 @@
         "release_group_mbid": "f62cbff0-479a-4951-86e9-7f596c7e8a6b",
         "release_group_primary_type": "Single",
         "release_mbid": "bcbd32d6-74cb-45e7-b1f1-1b90c5cda12f",
-        "release_name": "THE IDOLM@STER CINDERELLA GIRLS STARLIGHT MASTER R/LOCK ON! 10 \u307e\u307b\u3046\u306e\u307e\u304f\u3089",
+        "release_name": "THE IDOLM@STER CINDERELLA GIRLS STARLIGHT MASTER R/LOCK ON! 10 まほうのまくら",
         "caa_release_mbid": null
     },
     {
@@ -1607,7 +1607,7 @@
         "caa_release_mbid": "41371659-4cba-4dfc-9113-c3873cf6b1a3"
     },
     {
-        "artist_credit_name": "\uc7a0\ube44\ub098\uc774",
+        "artist_credit_name": "잠비나이",
         "artist_mbids": [
             "74c9db5a-cece-4381-afa8-a5f381901487"
         ],
@@ -1734,7 +1734,7 @@
         "release_group_mbid": "9c7e7079-66db-40b3-a305-d9fcdee7ad68",
         "release_group_primary_type": "EP",
         "release_mbid": "471bf890-fb57-422b-b7df-6e3739f56b04",
-        "release_name": "I\u2019m Wide Awake, It\u2019s Morning: A Companion",
+        "release_name": "I’m Wide Awake, It’s Morning: A Companion",
         "caa_release_mbid": "471bf890-fb57-422b-b7df-6e3739f56b04"
     },
     {
@@ -1804,7 +1804,7 @@
         "caa_release_mbid": "bd65b422-1053-4b93-82c8-042a02c020f9"
     },
     {
-        "artist_credit_name": "Chancha V\u00eda Circuito",
+        "artist_credit_name": "Chancha Vía Circuito",
         "artist_mbids": [
             "22c82e36-c32c-4206-8a49-6d350cce992f"
         ],
@@ -1839,7 +1839,7 @@
         "release_group_mbid": "1557d6eb-216f-451d-a90b-378e292d5742",
         "release_group_primary_type": "Album",
         "release_mbid": "17c94fba-387d-4510-bbb6-4ce08cf25279",
-        "release_name": "Redcar les adorables \u00e9toiles (prologue)",
+        "release_name": "Redcar les adorables étoiles (prologue)",
         "caa_release_mbid": "17c94fba-387d-4510-bbb6-4ce08cf25279"
     },
     {
@@ -1917,7 +1917,7 @@
         "release_group_mbid": "9b804fb0-9d02-4dcd-ab44-b812783fe40e",
         "release_group_primary_type": "Album",
         "release_mbid": "f42c9a2f-e110-4ce2-b763-9d5d01a02cc0",
-        "release_name": "\u0412\u0441\u0456 \u043d\u0430\u043b\u0435\u0436\u0430\u0442\u044c \u043d\u043e\u0447\u0456",
+        "release_name": "Всі належать ночі",
         "caa_release_mbid": null
     },
     {
@@ -2012,7 +2012,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "FJ\u00d8RT",
+        "artist_credit_name": "FJØRT",
         "artist_mbids": [
             "bcb478f4-dbf9-4bc8-823e-bec7986d652b"
         ],
@@ -2131,7 +2131,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "Guns N\u2019 Roses",
+        "artist_credit_name": "Guns N’ Roses",
         "artist_mbids": [
             "eeb1195b-f213-4ce1-b28c-8565211f8e43"
         ],
@@ -2198,7 +2198,7 @@
         "caa_release_mbid": "81bc6db4-b830-4b6b-aad6-501a1307adc9"
     },
     {
-        "artist_credit_name": "I\u2019ve",
+        "artist_credit_name": "I’ve",
         "artist_mbids": [
             "9eea0562-cb2c-4a61-8587-a6abcb2e6396"
         ],
@@ -2224,7 +2224,7 @@
         "caa_release_mbid": "6ec81230-458f-4268-bbc4-bfb6c945cb66"
     },
     {
-        "artist_credit_name": "Joe Jonas \u00d7 Khalid",
+        "artist_credit_name": "Joe Jonas × Khalid",
         "artist_mbids": [
             "28737730-ec70-4da5-89c5-77ac13c5c34d",
             "79e1bb77-fd8b-42ab-8043-892af5370f0b"
@@ -2419,7 +2419,7 @@
         "release_group_primary_type": "Album",
         "release_group_secondary_type": "Live",
         "release_mbid": "16317fa2-7382-42e2-a39f-cbdc4dcc0ea1",
-        "release_name": "11\u202211\u202211",
+        "release_name": "11•11•11",
         "caa_release_mbid": "16317fa2-7382-42e2-a39f-cbdc4dcc0ea1"
     },
     {
@@ -2436,7 +2436,7 @@
         "caa_release_mbid": null
     },
     {
-        "artist_credit_name": "Nicolas Bouga\u00efeff",
+        "artist_credit_name": "Nicolas Bougaïeff",
         "artist_mbids": [
             "69700f44-98c4-47b6-8a61-1e0b858d645a"
         ],
@@ -2488,7 +2488,7 @@
         "caa_release_mbid": "f53776e9-728e-4a3c-bfc8-048fc00d32e2"
     },
     {
-        "artist_credit_name": "RADWIMPS & \u9663\u5185\u4e00\u771f",
+        "artist_credit_name": "RADWIMPS & 陣内一真",
         "artist_mbids": [
             "6f500293-7396-4903-b4fd-118127d06f9e",
             "c9c59c75-f51b-4e38-bc15-b3a036f4d0ad"
@@ -2498,7 +2498,7 @@
         "release_group_mbid": "575df7d0-d1a1-4ca0-82dd-6ef4a1f03f4e",
         "release_group_primary_type": "Album",
         "release_mbid": "69009395-214f-4625-9fc4-139bcef9d413",
-        "release_name": "\u3059\u305a\u3081\u306e\u6238\u7de0\u307e\u308a",
+        "release_name": "すずめの戸締まり",
         "caa_release_mbid": null
     },
     {
@@ -2774,7 +2774,7 @@
         "release_group_primary_type": "Album",
         "release_group_secondary_type": "Compilation",
         "release_mbid": "23d75691-f313-4ab8-88fa-d44ba32dfab3",
-        "release_name": "NOW That\u2019s What I Call a Massive 80s Party",
+        "release_name": "NOW That’s What I Call a Massive 80s Party",
         "caa_release_mbid": "23d75691-f313-4ab8-88fa-d44ba32dfab3"
     },
     {
