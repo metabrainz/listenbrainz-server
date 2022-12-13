@@ -189,6 +189,12 @@ class CoverArtGenerator:
 
         return f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb{cover_art_size}.jpg"
 
+    def load_caa_ids(self, release_mbids):
+        """ Load caa_ids for the given release mbids """
+        with psycopg2.connect(self.mb_db_connection_str) as conn, \
+                conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            return get_caa_ids_for_release_mbids(curs, release_mbids)
+
     def load_images(self, mbids, tile_addrs=None, layout=None):
         """ Given a list of MBIDs and optional tile addresses, resolve all the cover art design, all the
             cover art to be used and then return the list of images and locations where they should be
@@ -211,9 +217,7 @@ class CoverArtGenerator:
             tiles.append((x1, y1, x2, y2))
 
         release_mbids = [mbid for mbid in mbids if mbid]
-        with psycopg2.connect(self.mb_db_connection_str) as conn, \
-                conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-            covers = get_caa_ids_for_release_mbids(curs, release_mbids)
+        covers = self.load_caa_ids(release_mbids)
 
         # Now resolve cover art images into URLs and image dimensions
         images = []
