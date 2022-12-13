@@ -7,6 +7,30 @@ from psycopg2.extras import execute_values
 def get_caa_ids_for_release_mbids(curs, release_mbids: Iterable[str]):
     """ Given a list of release mbids, find the associated cover art for the releases. If cover art
      is missing for the release, fallback to the release group cover art if present.
+
+     Returns a dictionary keyed by provided releases mbids, each key further maps to a dict having 3
+     keys original_mbid (mbid of the provided release), caa_id and caa_release_mbid.
+
+     Example:
+
+        {
+            "be5f714d-02eb-4c89-9a06-5e544f132604": {
+                "original_mbid": "be5f714d-02eb-4c89-9a06-5e544f132604",
+                "caa_id": 2273480607,
+                "caa_release_mbid": "be5f714d-02eb-4c89-9a06-5e544f132604"
+            },
+            "4211382c-39e8-4a72-a32d-e4046fd96356": {
+                "original_mbid": "4211382c-39e8-4a72-a32d-e4046fd96356",
+                "caa_id": null,
+                "caa_release_mbid": null
+            },
+            "773e54bb-3f43-4813-826c-ca762bfa8318": {
+                "original_mbid": "773e54bb-3f43-4813-826c-ca762bfa8318",
+                "caa_id": 9660646535,
+                "caa_release_mbid": "3eee4ed1-b48e-4894-8a05-f535f16a4985"
+            }
+        }
+
     """
     query = """
           WITH release_mbids(mbid) AS (
