@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from pydantic import BaseModel, NonNegativeInt, constr
+from pydantic import BaseModel, NonNegativeInt, constr, conlist
 
 from datetime import datetime
 from enum import Enum
@@ -44,7 +44,7 @@ class RecordingRecommendationMetadata(MsidMbidModel):
 
 
 class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata):
-    users: List[str]
+    users: conlist(str, min_items=1)
     blurb_content: Optional[str]
 
 
@@ -86,7 +86,7 @@ class APICBReviewEvent(BaseModel):
     entity_name: str
     entity_id: str
     entity_type: str
-    rating: int
+    rating: Optional[int]
     text: str
     review_mbid: str
 
