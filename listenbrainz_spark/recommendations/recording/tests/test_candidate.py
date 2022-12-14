@@ -9,6 +9,7 @@ from listenbrainz_spark.path import RECOMMENDATION_RECORDING_MAPPED_LISTENS, REC
     RECOMMENDATION_RECORDING_USERS_DATAFRAME
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
 from listenbrainz_spark.tests import TEST_DATA_PATH
+from listenbrainz_spark.hdfs.utils import path_exists
 from listenbrainz_spark.recommendations.recording import candidate_sets
 from listenbrainz_spark.recommendations.recording import create_dataframes
 from listenbrainz_spark import utils, path, stats
@@ -19,7 +20,7 @@ from pyspark.sql import Row
 from unittest.mock import patch
 import pyspark.sql.functions as f
 from pyspark.sql.types import StructField, StructType, StringType
-from listenbrainz_spark import hdfs
+from listenbrainz_spark.hdfs.utils import path_exists
 
 class CandidateSetsTestClass(RecommendationsTestCase):
 
@@ -93,10 +94,10 @@ class CandidateSetsTestClass(RecommendationsTestCase):
         similar_artist_candidate_set_dfs_df = self.get_candidate_set()
 
         candidate_sets.save_candidate_sets(top_artist_candidate_set_df_df, similar_artist_candidate_set_dfs_df)
-        top_artist_exist = hdfs.path_exists(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
+        top_artist_exist = path_exists(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
         self.assertTrue(top_artist_exist)
 
-        similar_artist_exist = hdfs.path_exists(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
+        similar_artist_exist = path_exists(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
         self.assertTrue(similar_artist_exist)
 
     def get_top_artist(self):

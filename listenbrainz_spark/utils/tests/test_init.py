@@ -4,9 +4,12 @@ from datetime import datetime
 
 from listenbrainz_spark.tests import SparkNewTestCase
 from listenbrainz_spark import utils
-from listenbrainz_spark import hdfs
-
-
+from listenbrainz_spark.hdfs.utils import create_dir
+from listenbrainz_spark.hdfs.utils import delete_dir
+from listenbrainz_spark.hdfs.utils import path_exists
+from listenbrainz_spark.hdfs.utils import upload_to_HDFS
+from listenbrainz_spark.hdfs.utils import rename
+from listenbrainz_spark.hdfs.utils import copy
 from pyspark.sql import Row
 
 
@@ -16,11 +19,11 @@ class UtilsTestCase(SparkNewTestCase):
     temp_path_ = "/temp"
 
     def tearDown(self):
-        if hdfs.path_exists(self.path_):
-            hdfs.delete_dir(self.path_, recursive=True)
+        if path_exists(self.path_):
+            delete_dir(self.path_, recursive=True)
 
-        if hdfs.path_exists(self.temp_path_):
-            hdfs.delete_dir(self.temp_path_, recursive=True)
+        if path_exists(self.temp_path_):
+            delete_dir(self.temp_path_, recursive=True)
 
     def test_append_dataframe(self):
         hdfs_path = self.path_ + '/test_df.parquet'
@@ -44,19 +47,19 @@ class UtilsTestCase(SparkNewTestCase):
         self.assertEqual(received_df.count(), 1)
 
     def test_create_dir(self):
-        hdfs.create_dir(self.path_)
-        status = hdfs.path_exists(self.path_)
+        create_dir(self.path_)
+        status = path_exists(self.path_)
         self.assertTrue(status)
 
     def test_delete_dir(self):
-        hdfs.create_dir(self.path_)
-        hdfs.delete_dir(self.path_)
-        status = hdfs.path_exists(self.path_)
+        create_dir(self.path_)
+        delete_dir(self.path_)
+        status = path_exists(self.path_)
         self.assertFalse(status)
 
     def test_path_exists(self):
-        hdfs.create_dir(self.path_)
-        status = hdfs.path_exists(self.path_)
+        create_dir(self.path_)
+        status = path_exists(self.path_)
         self.assertTrue(status)
 
     def test_save_parquet(self):
@@ -71,26 +74,26 @@ class UtilsTestCase(SparkNewTestCase):
         with open(local_path, 'w') as f:
             f.write('test file')
         self.path_ = '/test/upload.parquet'
-        hdfs.upload_to_HDFS(self.path_, local_path)
-        status = hdfs.path_exists(self.path_)
+        upload_to_HDFS(self.path_, local_path)
+        status = path_exists(self.path_)
         self.assertTrue(status)
 
     def test_rename(self):
-        hdfs.create_dir(self.path_)
-        test_exists = hdfs.path_exists(self.path_)
+        create_dir(self.path_)
+        test_exists = path_exists(self.path_)
         self.assertTrue(test_exists)
-        hdfs.rename(self.path_, self.temp_path_)
-        test_exists = hdfs.path_exists(self.path_)
+        rename(self.path_, self.temp_path_)
+        test_exists = path_exists(self.path_)
         self.assertFalse(test_exists)
-        temp_exists = hdfs.path_exists(self.temp_path_)
+        temp_exists = path_exists(self.temp_path_)
         self.assertTrue(temp_exists)
-        hdfs.delete_dir(self.temp_path_)
+        delete_dir(self.temp_path_)
 
     def test_copy(self):
         # Test directories
-        hdfs.create_dir(self.path_)
-        hdfs.create_dir(os.path.join(self.path_, "a"))
-        hdfs.create_dir(os.path.join(self.path_, "b"))
+        create_dir(self.path_)
+        create_dir(os.path.join(self.path_, "a"))
+        create_dir(os.path.join(self.path_, "b"))
 
         # DataFrames to create parquets
         df_a = utils.create_dataframe([Row(column1=1, column2=2)], schema=None)
@@ -102,7 +105,7 @@ class UtilsTestCase(SparkNewTestCase):
         utils.save_parquet(df_b, os.path.join(self.path_, "b", "df_b.parquet"))
         utils.save_parquet(df_c, os.path.join(self.path_, "df_c.parquet"))
 
-        hdfs.copy(self.path_, self.temp_path_, overwrite=True)
+        copy(self.path_, self.temp_path_, overwrite=True)
 
         # Read copied DataFrame
         cp_df_a = utils.read_files_from_HDFS(os.path.join(self.temp_path_, "a", "df_a.parquet"))

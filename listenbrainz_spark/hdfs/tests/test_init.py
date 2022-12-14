@@ -9,12 +9,13 @@ from unittest.mock import patch, MagicMock
 
 import logging
 
-from listenbrainz_spark import config, utils, schema, hdfs
+from listenbrainz_spark import config, utils, schema
+from listenbrainz_spark.hdfs.utils import delete_dir
 from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.tests import SparkNewTestCase
-
+from listenbrainz_spark.hdfs.utils import path_exists
 
 class HDFSTestCase(SparkNewTestCase):
 
@@ -77,10 +78,10 @@ class HDFSTestCase(SparkNewTestCase):
         df = utils.read_files_from_HDFS('/artist_relations.parquet')
         self.assertEqual(df.count(), 1)
 
-        status = hdfs.path_exists(tmp_dump_dir)
+        status = path_exists(tmp_dump_dir)
         self.assertFalse(status)
 
-        hdfs.delete_dir('/artist_relations.parquet', recursive=True)
+        delete_dir('/artist_relations.parquet', recursive=True)
 
     def test_upload_archive_failed(self):
         faulty_tar = MagicMock()
@@ -92,5 +93,5 @@ class HDFSTestCase(SparkNewTestCase):
         self.assertRaises(DumpInvalidException, self.uploader.upload_archive, tmp_dump_dir,
                           faulty_tar, '/test', schema.artist_relation_schema, self.uploader.process_json)
 
-        status = hdfs.path_exists('/test')
+        status = path_exists('/test')
         self.assertFalse(status)

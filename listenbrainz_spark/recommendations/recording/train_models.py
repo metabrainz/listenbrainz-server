@@ -28,7 +28,9 @@ from pyspark.ml.recommendation import ALS
 from pyspark.ml.tuning import ParamGridBuilder, CrossValidator, CrossValidatorModel
 
 import listenbrainz_spark
-from listenbrainz_spark import config, utils, path, schema, hdfs
+from listenbrainz_spark import config, utils, path, schema
+from listenbrainz_spark.hdfs.utils import delete_dir
+from listenbrainz_spark.hdfs.utils import path_exists
 from listenbrainz_spark.exceptions import PathNotFoundException
 from listenbrainz_spark.recommendations.recording.create_dataframes import describe_listencount_transformer
 from listenbrainz_spark.recommendations.utils import save_html
@@ -195,9 +197,9 @@ def delete_model():
     """ Delete model.
         Note: At any point in time, only one model is in HDFS
     """
-    dir_exists = hdfs.path_exists(path.RECOMMENDATION_RECORDING_DATA_DIR)
+    dir_exists = path_exists(path.RECOMMENDATION_RECORDING_DATA_DIR)
     if dir_exists:
-        hdfs.delete_dir(path.RECOMMENDATION_RECORDING_DATA_DIR, recursive=True)
+        delete_dir(path.RECOMMENDATION_RECORDING_DATA_DIR, recursive=True)
 
 
 def save_model_metadata_to_hdfs(model: Model, context: dict):
@@ -304,7 +306,7 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None, use_transformed
     save_training_html(context)
 
     # Delete checkpoint dir as saved lineages would eat up space, we won't be using them anyway.
-    hdfs.delete_dir(path.CHECKPOINT_DIR, recursive=True)
+    delete_dir(path.CHECKPOINT_DIR, recursive=True)
 
     return [{
         'type': 'cf_recommendations_recording_model',
