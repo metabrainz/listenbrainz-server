@@ -213,7 +213,7 @@ def save_parquet(df, path, mode='overwrite'):
     except Py4JJavaError as err:
         raise FileNotSavedException(err.java_exception, path)
 
-        
+
 def read_json(hdfs_path, schema):
     """ Upload JSON file to HDFS as parquet.
 
@@ -226,3 +226,16 @@ def read_json(hdfs_path, schema):
     """
     df = listenbrainz_spark.session.read.json(config.HDFS_CLUSTER_URI + hdfs_path, schema=schema)
     return df
+
+
+def create_pg_table_df(table, df):
+    listenbrainz_spark\
+        .sql_context\
+        .read\
+        .format("jdbc")\
+        .option("url", config.PG_JDBC_URI)\
+        .option("dbtable", table)\
+        .option("user", config.PG_USER)\
+        .option("password", config.PG_PASSWORD)\
+        .load()\
+        .createOrReplaceTempView(df)
