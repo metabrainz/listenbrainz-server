@@ -29,7 +29,7 @@ import {
 import APIServiceClass from "../../utils/APIService";
 import { getPageProps } from "../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
-import ComponentToImage from "./ComponentToImage";
+import ShareOrSaveSVG from "./ShareOrSaveSVG";
 
 import ListenCard from "../../listens/ListenCard";
 import UserListModalEntry from "../../follow/UserListModalEntry";
@@ -488,28 +488,6 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="top-releases">
             <div className="col-md-12 d-flex center-p">
               <h3>{capitalize(yourOrUsersName)} top albums of 2022</h3>
-              {yearInMusicData.top_releases && (
-                <ComponentToImage
-                  data={yearInMusicData.top_releases
-                    .filter((release) =>
-                      has(
-                        yearInMusicData.top_releases_coverart,
-                        release.release_mbid
-                      )
-                    )
-                    .slice(0, 10)
-                    .map((release) => {
-                      // eslint-disable-next-line no-param-reassign
-                      release.cover_art_src =
-                        yearInMusicData.top_releases_coverart?.[
-                          release.release_mbid
-                        ];
-                      return release;
-                    })}
-                  entityType="release"
-                  user={user}
-                />
-              )}
             </div>
 
             {yearInMusicData.top_releases ? (
@@ -590,13 +568,6 @@ export default class YearInMusic extends React.Component<
               <h3>
                 {capitalize(yourOrUsersName)} 50 most played songs of 2022
               </h3>
-              {yearInMusicData.top_recordings && (
-                <ComponentToImage
-                  data={yearInMusicData.top_recordings.slice(0, 10)}
-                  entityType="recording"
-                  user={user}
-                />
-              )}
             </div>
             {yearInMusicData.top_recordings ? (
               <div className="scrollable-area">
@@ -636,13 +607,6 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="top-artists">
             <div className="col-md-12 d-flex center-p">
               <h3>{capitalize(yourOrUsersName)} top 50 artists of 2022</h3>
-              {yearInMusicData.top_artists && (
-                <ComponentToImage
-                  data={yearInMusicData.top_artists.slice(0, 10)}
-                  entityType="artist"
-                  user={user}
-                />
-              )}
             </div>
             {yearInMusicData.top_artists ? (
               <div className="scrollable-area">
