@@ -30,7 +30,7 @@ def get_releases(table: str, cache_table: str, number_of_results: int):
                  , l.release_mbid
                  , COALESCE(rel.release_name, l.release_name) AS release_name
                  , COALESCE(rel.album_artist_name, l.artist_name) AS release_artist_name
-                 , l.artist_credit_mbids
+                 , COALESCE(rel.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
                  , rel.caa_id
                  , rel.caa_release_mbid
               FROM {table} l
@@ -49,12 +49,12 @@ def get_releases(table: str, cache_table: str, number_of_results: int):
              WHERE release_name != ''
                AND release_name IS NOT NULL
           GROUP BY user_id
-                , lower(release_name)
-                , release_mbid
-                , lower(release_artist_name)
-                , artist_credit_mbids
-                , caa_id
-                , caa_release_mbid
+                 , lower(release_name)
+                 , release_mbid
+                 , lower(release_artist_name)
+                 , artist_credit_mbids
+                 , caa_id
+                 , caa_release_mbid
         ), entity_count as (
             SELECT user_id
                  , count(*) as releases_count
