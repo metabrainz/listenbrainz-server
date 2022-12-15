@@ -367,7 +367,7 @@ export default class YearInMusic extends React.Component<
         <div id="header" className="flex-center">
           <img
             className="img-responsive header-image"
-            src="/static/img/year-in-music-22/logo-with-text.png"
+            src="/static/img/year-in-music-22/yim22-logo.png"
             alt="Your year in music 2022"
           />
         </div>
