@@ -248,6 +248,8 @@ declare type UserReleasesResponse = {
       release_mbid?: string;
       release_name: string;
       listen_count: number;
+      caa_id?: number;
+      caa_release_mbid?: string;
     }>;
     count: number;
     last_updated: number;
@@ -308,6 +310,8 @@ declare type UserEntityDatum = {
   releaseMBID?: string;
   idx: number;
   count: number;
+  caaID?: number;
+  caaReleaseMBID?: string;
 };
 
 declare type UserEntityData = Array<UserEntityDatum>;
