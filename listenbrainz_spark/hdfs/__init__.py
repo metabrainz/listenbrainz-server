@@ -10,6 +10,11 @@ from tarfile import TarError
 
 import listenbrainz_spark
 from listenbrainz_spark import utils
+from listenbrainz_spark.hdfs.utils import create_dir
+from listenbrainz_spark.hdfs.utils import delete_dir
+from listenbrainz_spark.hdfs.utils import path_exists
+from listenbrainz_spark.hdfs.utils import upload_to_HDFS
+from listenbrainz_spark.hdfs.utils import rename
 from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, DumpInvalidException
 
 
@@ -67,11 +72,11 @@ class ListenbrainzHDFSUploader:
             raise NotImplementedError('Callback to process JSON missing. Aborting...')
 
         # Delete TEMP_DIR_PATH if it exists
-        if utils.path_exists(TEMP_DIR_PATH):
-            utils.delete_dir(TEMP_DIR_PATH, recursive=True)
+        if path_exists(TEMP_DIR_PATH):
+            delete_dir(TEMP_DIR_PATH, recursive=True)
 
         # Copy data from dest_path to TEMP_DIR_PATH to be merged with new data
-        if not overwrite and utils.path_exists(dest_path):
+        if not overwrite and path_exists(dest_path):
             t0 = time.monotonic()
             logger.info("Copying old listens into '{}'".format(TEMP_DIR_PATH))
             utils.copy(dest_path, TEMP_DIR_PATH, overwrite=True)
@@ -89,16 +94,16 @@ class ListenbrainzHDFSUploader:
                     tar.extract(member)
                 except TarError as err:
                     # Cleanup
-                    if utils.path_exists(TEMP_DIR_PATH):
-                        utils.delete_dir(TEMP_DIR_PATH, recursive=True)
-                    if utils.path_exists(tmp_dump_dir):
-                        utils.delete_dir(tmp_dump_dir, recursive=True)
+                    if path_exists(TEMP_DIR_PATH):
+                        delete_dir(TEMP_DIR_PATH, recursive=True)
+                    if path_exists(tmp_dump_dir):
+                        delete_dir(tmp_dump_dir, recursive=True)
                     raise DumpInvalidException("{} while extracting {}, aborting import".format(type(err).__name__, member.name))
 
                 tmp_hdfs_path = os.path.join(tmp_dump_dir, member.name)
-                utils.upload_to_HDFS(tmp_hdfs_path, member.name)
+                upload_to_HDFS(tmp_hdfs_path, member.name)
                 callback(member.name, TEMP_DIR_PATH, tmp_hdfs_path, not overwrite, schema)
-                utils.delete_dir(tmp_hdfs_path, recursive=True)
+                delete_dir(tmp_hdfs_path, recursive=True)
                 os.remove(member.name)
                 time_taken = time.monotonic() - t0
                 total_files += 1
@@ -109,9 +114,9 @@ class ListenbrainzHDFSUploader:
         ))
 
         # Delete dest_path if present
-        if utils.path_exists(dest_path):
+        if path_exists(dest_path):
             logger.info('Removing {} from HDFS...'.format(dest_path))
-            utils.delete_dir(dest_path, recursive=True)
+            delete_dir(dest_path, recursive=True)
             logger.info('Done!')
 
         logger.info("Moving the processed files to {}".format(dest_path))
@@ -119,14 +124,14 @@ class ListenbrainzHDFSUploader:
 
         # Check if parent directory exists, if not create a directory
         dest_path_parent = pathlib.Path(dest_path).parent
-        if not utils.path_exists(dest_path_parent):
-            utils.create_dir(dest_path_parent)
+        if not path_exists(dest_path_parent):
+            create_dir(dest_path_parent)
 
-        utils.rename(TEMP_DIR_PATH, dest_path)
+        rename(TEMP_DIR_PATH, dest_path)
         utils.logger.info("Done! Time taken: {:.2f}".format(time.monotonic() - t0))
 
         # Cleanup
-        utils.delete_dir(tmp_dump_dir, recursive=True)
+        delete_dir(tmp_dump_dir, recursive=True)
 
     def extract_and_upload_archive(self, archive, local_dir, hdfs_dir, cleanup_on_failure=True):
         """
@@ -150,14 +155,14 @@ class ListenbrainzHDFSUploader:
                         tar.extract(member, path=local_dir)
                     except tarfile.TarError as err:
                         if cleanup_on_failure:
-                            if utils.path_exists(hdfs_dir):
-                                utils.delete_dir(hdfs_dir, recursive=True)
+                            if path_exists(hdfs_dir):
+                                delete_dir(hdfs_dir, recursive=True)
                             shutil.rmtree(local_dir, ignore_errors=True)
                         raise DumpInvalidException(f"{type(err).__name__} while extracting {member.name}, aborting import")
 
                     hdfs_path = os.path.join(hdfs_dir, member.name)
                     local_path = os.path.join(local_dir, member.name)
-                    utils.upload_to_HDFS(hdfs_path, local_path)
+                    upload_to_HDFS(hdfs_path, local_path)
 
                     time_taken = time.monotonic() - t0
                     total_files += 1

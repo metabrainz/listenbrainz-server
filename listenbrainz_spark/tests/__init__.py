@@ -11,7 +11,9 @@ from listenbrainz_spark import hdfs_connection, utils, config
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
 from listenbrainz_spark.utils import get_listens_from_new_dump
-
+from listenbrainz_spark.hdfs.utils import delete_dir
+from listenbrainz_spark.hdfs.utils import path_exists
+from listenbrainz_spark.hdfs.utils import hdfs_walk
 TEST_PLAYCOUNTS_PATH = '/tests/playcounts.parquet'
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 PLAYCOUNTS_COUNT = 100
@@ -37,11 +39,11 @@ class SparkNewTestCase(unittest.TestCase):
 
     @classmethod
     def delete_dir(cls):
-        walk = utils.hdfs_walk('/', depth=1)
+        walk = hdfs_walk('/', depth=1)
         # dirs in '/'
         dirs = next(walk)[1]
         for directory in dirs:
-            utils.delete_dir(os.path.join('/', directory), recursive=True)
+            delete_dir(os.path.join('/', directory), recursive=True)
 
     @staticmethod
     def create_temp_listens_tar(name: str):
@@ -74,8 +76,8 @@ class SparkNewTestCase(unittest.TestCase):
 
     @staticmethod
     def delete_uploaded_listens():
-        if utils.path_exists(LISTENBRAINZ_NEW_DATA_DIRECTORY):
-            utils.delete_dir(LISTENBRAINZ_NEW_DATA_DIRECTORY, recursive=True)
+        if path_exists(LISTENBRAINZ_NEW_DATA_DIRECTORY):
+            delete_dir(LISTENBRAINZ_NEW_DATA_DIRECTORY, recursive=True)
 
     @staticmethod
     def path_to_data_file(file_name):

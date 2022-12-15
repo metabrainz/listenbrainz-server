@@ -4,6 +4,9 @@ import os
 import requests_mock
 
 from listenbrainz_spark import utils
+from listenbrainz_spark.hdfs.utils import create_dir
+from listenbrainz_spark.hdfs.utils import path_exists
+from listenbrainz_spark.hdfs.utils import upload_to_HDFS
 from listenbrainz_spark.fresh_releases import fresh_releases
 from listenbrainz_spark.fresh_releases.fresh_releases import FRESH_RELEASES_ENDPOINT
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
@@ -14,10 +17,10 @@ class FreshReleasesTestCase(SparkNewTestCase):
 
     def setUp(self):
         super(FreshReleasesTestCase, self).setUp()
-        if not utils.path_exists(LISTENBRAINZ_NEW_DATA_DIRECTORY):
-            utils.create_dir(LISTENBRAINZ_NEW_DATA_DIRECTORY)
+        if not path_exists(LISTENBRAINZ_NEW_DATA_DIRECTORY):
+            create_dir(LISTENBRAINZ_NEW_DATA_DIRECTORY)
 
-        utils.upload_to_HDFS(
+        upload_to_HDFS(
             os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "0.parquet"),
             os.path.join(TEST_DATA_PATH, "fresh_releases_listens.parquet")
         )
