@@ -3,7 +3,18 @@
 @import "/node_modules/swiper/modules/navigation/navigation.less";
 @import "/node_modules/swiper/modules/effect-coverflow/effect-coverflow.less";
 
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("../fonts/Inter.woff2") format('woff2');
+}
+
 @coverflow-image-height: 400px;
+@2022red: #ff0e25;
+@2022yellow: #ffcc49;
 
 #year-in-music {
   // For coverflow arrow colors
@@ -147,4 +158,128 @@
       }
     }
   }
+  
+  /* Styles specific to YIM 2022 */
+  &.yim-2022 {
+    /* Main header section at the top with logo */
+    #header {
+      padding: 3em 0;
+      background:white;
+    }
+    .header {
+      margin: unset;
+      text-align: center;
+      font-family: "Roboto";
+      font-weight: 700;
+      font-size: 48px;
+      line-height: 56px;
+      .subheader {
+        font-family: "Roboto";
+        font-weight: 300;
+        font-size: 24px;
+        line-height: 28px;
+        text-align: center;
+      }
+    }
+    .share-section {
+      margin: unset;
+      text-align: center;
+      font-family: "Roboto";
+      font-weight: 300;
+      font-size: 1.6em;
+      color: @2022yellow;
+      >div{max-width: 500px;}
+      .input-group {
+        margin-top: 0.7em;
+      }
+    }
+    .button {
+      width: 2em;
+      height: 2em;
+      border-radius: 3px;
+    }
+    .red-section,.yellow-section{
+      padding: 5em;
+      position: relative;
+      margin-left: -15px;
+      margin-right: -15px;
+      &:extend(.container);
+      // &::after, &::before{
+      //   content: "";
+      //   width: 50vw;
+      //   height: 100%;
+      //   position: absolute;
+      //   top: 0;
+      //   z-index: -1;
+      // }
+      // &::after{
+      //   left: 100%;
+      // }
+      // &::before{
+      //   right: 100%;
+      // }
+    }
+    .red-section {
+      background-color: @2022red;
+      &::after, &::before{
+        background: @2022red;
+      }
+      .header {
+        color: @2022yellow;
+      }
+      .button {
+        color: @2022red;
+        background-color: @2022yellow;
+      }
+    }
+    .yellow-section {
+      background-color: @2022yellow;
+      &::after, &::before{
+        background: @2022yellow;
+      }
+      .header {
+        color: @2022red;
+      }
+      .button {
+        color: @2022yellow;
+        background-color: @2022red;
+      }
+    }
+    
+    .cover-art-mosaic {
+      width: 100vw;
+      max-height: 42em;
+    }
+    .content-card .img-header {
+      max-height: 15em;
+    }
+    .content-card + .content-card{
+      margin-top: 2.5em;
+    }
+    .small-cards-container {
+      > * {
+        font-family: "Roboto",sans-serif;
+        font-weight: 300;
+        font-size: 24px;
+        line-height: 1.3;
+        height: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+    .cover-art-composite{
+      // position: relative;
+      padding-left:0;
+      padding-right:0;
+      > img{
+        max-width: 100vw;
+        // left: calc(50% + 15px);
+        // position: absolute;
+        // transform: translateX(-50vw);
+        // padding-bottom: 60px;
+      }
+    }
+  }
 }
+
