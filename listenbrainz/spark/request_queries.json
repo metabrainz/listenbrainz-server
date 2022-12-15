@@ -59,6 +59,11 @@
     "description": "Import incremental dump with the specified ID into the spark cluster",
     "params": ["dump_id"]
   },
+  "import.pg_metadata_tables": {
+    "name": "import.pg_metadata_tables",
+    "description": "Send the cluster a request to import metadata table from MB db postgres",
+    "params": []
+  },
   "cf.missing_mb_data": {
     "name": "cf.missing_mb_data",
     "description": "Generate missing MB data",
