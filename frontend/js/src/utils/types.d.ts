@@ -272,6 +272,8 @@ declare type UserRecordingsResponse = {
       track_name: string;
       recording_mbid?: string;
       recording_msid?: string;
+      caa_id?: number;
+      caa_release_mbid?: string;
       listen_count: number;
     }>;
     count: number;

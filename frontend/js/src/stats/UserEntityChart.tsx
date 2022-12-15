@@ -258,6 +258,8 @@ export default class UserEntityChart extends React.Component<
             releaseMBID: elem.release_mbid,
             idx: offset + idx + 1,
             count: elem.listen_count,
+            caaID: elem.caa_id,
+            caaReleaseMBID: elem.caa_release_mbid,
           };
         })
         .reverse();
