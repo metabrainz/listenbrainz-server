@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 
 from listenbrainz_spark.tests import SparkNewTestCase
-
+from listenbrainz_spark.hdfs.utils import path_exists
 from listenbrainz_spark.recommendations import dataframe_utils
 from listenbrainz_spark import utils
 
@@ -37,5 +37,5 @@ class DataframeUtilsTestCase(SparkNewTestCase):
         df = utils.create_dataframe(Row(column1=1, column2=2), schema=None)
         dataframe_utils.save_dataframe(df, path_)
 
-        status = utils.path_exists(path_)
+        status = path_exists(path_)
         self.assertTrue(status)
