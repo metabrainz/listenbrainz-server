@@ -12,6 +12,8 @@ class ReleaseRecord(BaseModel):
     release_name: str
     listen_count: NonNegativeInt
     artist_name: str
+    caa_id: Optional[NonNegativeInt]
+    caa_release_mbid: Optional[str]
 
     _validate_uuids: classmethod = validator("release_mbid", allow_reuse=True)(check_valid_uuid)
 
