@@ -35,24 +35,20 @@ def _get_top_50_artists():
     return """
         WITH intermediate_table as (
             SELECT user_id
-                 , artist_name
                  , artist_credit_mbids
                  , count(*) as listen_count
               FROM listens_of_year
              WHERE artist_credit_mbids IS NOT NULL
           GROUP BY user_id
-                 , artist_name
                  , artist_credit_mbids
         ), intermediate_table_2 AS (
             SELECT user_id
-                 , artist_name
                  , artist_credit_mbids
                  , listen_count
                  , row_number() OVER(PARTITION BY user_id ORDER BY listen_count DESC) AS row_number
               FROM intermediate_table
         )
             SELECT user_id
-                 , artist_name
                  , artist_credit_mbids
                  , listen_count
               FROM intermediate_table_2
@@ -62,7 +58,7 @@ def _get_top_50_artists():
 def _get_new_releases_of_top_artists():
     return """
         SELECT user_id
-             , collect_set(
+             , collect_list(
                     struct(
                        rgoy.title
                      , rgoy.artist_credit_name  
