@@ -169,6 +169,16 @@
     "description": "Calculate the total listen count for the given year for each user",
     "params": ["year"]
   },
+  "year_in_music.listening_time": {
+    "name": "year_in_music.listening_time",
+    "description": "Calculate the total duration of the listens for the given year for each user",
+    "params": ["year"]
+  },
+  "year_in_music.new_artists_discovered_count": {
+    "name": "year_in_music.new_artists_discovered_count",
+    "description": "Calculate the number of artists the user listened to in the given year",
+    "params": ["year"]
+  },
   "year_in_music.top_stats": {
     "name": "year_in_music.top_stats",
     "description": "Calculate the top artists/recordings/releases stats for the current year for each user",
