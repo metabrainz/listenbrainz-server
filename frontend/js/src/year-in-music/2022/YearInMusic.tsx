@@ -27,7 +27,7 @@ import {
 } from "../../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../../utils/APIService";
-import { getPageProps } from "../../utils/utils";
+import {generateAlbumArtThumbnailLink, getAlbumArtFromReleaseMBID, getPageProps} from "../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
 import ShareOrSaveSVG from "./ShareOrSaveSVG";
 
@@ -56,9 +56,9 @@ export type YearInMusicProps = {
       listen_count: number;
       release_name: string;
       release_mbid: string;
-      cover_art_src?: string;
+      caa_id?: number;
+      caa_release_mbid?: string;
     }>;
-    top_releases_coverart: { [key: string]: string };
     top_recordings: Array<{
       artist_name: string;
       artist_mbids: string[];
@@ -519,20 +519,20 @@ export default class YearInMusic extends React.Component<
                   }}
                 >
                   {yearInMusicData.top_releases.slice(0, 50).map((release) => {
-                    const coverArtSrc =
-                      yearInMusicData.top_releases_coverart?.[
-                        release.release_mbid
-                      ];
-                    if (!coverArtSrc) {
+                    if (!release.caa_id || !release.caa_release_mbid) {
                       return null;
                     }
+
+                    const coverArt = generateAlbumArtThumbnailLink(
+                      release.caa_id,
+                      release.caa_release_mbid
+                    );
+
                     return (
                       <SwiperSlide key={`coverflow-${release.release_name}`}>
                         <img
                           src={
-                            yearInMusicData.top_releases_coverart?.[
-                              release.release_mbid
-                            ] ?? "/static/img/cover-art-placeholder.jpg"
+                            coverArt ?? "/static/img/cover-art-placeholder.jpg"
                           }
                           alt={release.release_name}
                         />
