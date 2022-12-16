@@ -404,7 +404,7 @@ describe.each([
         endDate,
       } = await instance.getInitData("all_time", "release");
 
-      expect(maxListens).toEqual(26);
+      expect(maxListens).toEqual(57);
       expect(totalPages).toEqual(7);
       expect(entityCount).toEqual(164);
       expect(startDate).toEqual(
@@ -434,7 +434,7 @@ describe.each([
         endDate,
       } = await instance.getInitData("all_time", "recording");
 
-      expect(maxListens).toEqual(25);
+      expect(maxListens).toEqual(57);
       expect(totalPages).toEqual(10);
       expect(entityCount).toEqual(227);
       expect(startDate).toEqual(
