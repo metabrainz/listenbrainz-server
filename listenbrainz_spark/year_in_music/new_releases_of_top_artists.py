@@ -51,21 +51,34 @@ def _get_new_releases_of_top_artists(year):
                  , artist_credit_mbids
                  , row_number() OVER(PARTITION BY user_id ORDER BY listen_count DESC) AS row_number
               FROM artist_counts
+        ), top_50_artists AS (
+            SELECT user_id
+                 , explode(artist_credit_mbids) AS artist_mbid
+              FROM top_artists
+             WHERE row_number <= 50   
+        ), release_groups AS (
+            SELECT title
+                 , artist_credit_name  
+                 , release_group_mbid
+                 , artist_credit_mbids
+                 , caa_id
+                 , caa_release_mbid
+                 , explode(artist_credit_mbids) AS artist_mbid
+              FROM release_groups_of_year    
         )
             SELECT user_id
                  , collect_list(
                         struct(
-                           rgoy.title
-                         , rgoy.artist_credit_name  
-                         , rgoy.release_group_mbid
-                         , rgoy.artist_credit_mbids
-                         , rgoy.caa_id
-                         , rgoy.caa_release_mbid
+                           rg.title
+                         , rg.artist_credit_name  
+                         , rg.release_group_mbid
+                         , rg.artist_credit_mbids
+                         , rg.caa_id
+                         , rg.caa_release_mbid
                         )
                     ) AS new_releases
-              FROM release_groups_of_year rgoy
-              JOIN top_artists t50a
-             WHERE row_number <= 50
-               AND arrays_overlap(rgoy.artist_credit_mbids, t50a.artist_credit_mbids)
+              FROM release_groups rg
+              JOIN top_50_artists t50a
+             WHERE rg.artist_mbid = t50a.artist_mbid
           GROUP BY user_id
     """
