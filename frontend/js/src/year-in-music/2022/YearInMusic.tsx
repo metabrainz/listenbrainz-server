@@ -35,7 +35,7 @@ import {
 import APIServiceClass from "../../utils/APIService";
 import { getPageProps } from "../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
-import ShareOrSaveSVG from "./ShareOrSaveSVG";
+import MagicShareButton from "./MagicShareButton";
 
 import ListenCard from "../../listens/ListenCard";
 import UserListModalEntry from "../../follow/UserListModalEntry";
@@ -43,7 +43,6 @@ import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../../playlists/utils";
-import FollowButton from "../../follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
 import SimpleModal from "../../utils/SimpleModal";
 
@@ -230,7 +229,7 @@ export default class YearInMusic extends React.Component<
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
         <div role="main" id="year-in-music" className="yim-2022">
-          <div id="header" className="flex-center">
+          <div id="main-header" className="flex-center">
             <img
               className="img-responsive header-image"
               src="/static/img/year-in-music-22/logo-with-text.png"
@@ -372,7 +371,7 @@ export default class YearInMusic extends React.Component<
           />
         </div>
         <div className="red-section">
-          <div className="share-section flex-center">
+          <div className="container share-section flex-center">
             <div>
               Share <b>{yourOrUsersName}</b> year
               <div className="input-group">
@@ -407,484 +406,535 @@ export default class YearInMusic extends React.Component<
           </div>
         )}
         <div className="yellow-section">
-          <div className="card content-card" id="top-releases">
-            <div className="col-md-12 d-flex center-p">
-              <h3>Top albums of 2022</h3>
-            </div>
+          <div className="container">
+            <div className="card content-card" id="top-releases">
+              <div className="col-md-12 d-flex center-p">
+                <h3>Top albums of 2022</h3>
+              </div>
 
-            {yearInMusicData.top_releases ? (
-              <div id="releases-coverflow">
-                <Swiper
-                  modules={[Navigation, Keyboard, EffectCoverflow]}
-                  spaceBetween={15}
-                  slidesPerView={2}
-                  initialSlide={0}
-                  centeredSlides
-                  navigation
-                  effect="coverflow"
-                  coverflowEffect={{
-                    rotate: 40,
-                    depth: 100,
-                    slideShadows: false,
-                  }}
-                  breakpoints={{
-                    700: {
-                      initialSlide: 3,
-                      spaceBetween: 100,
-                      slidesPerView: 3,
-                      coverflowEffect: {
-                        rotate: 20,
-                        depth: 300,
-                        slideShadows: false,
+              {yearInMusicData.top_releases ? (
+                <div id="top-albums">
+                  <Swiper
+                    modules={[Navigation, Keyboard, EffectCoverflow]}
+                    spaceBetween={15}
+                    slidesPerView={2}
+                    initialSlide={0}
+                    centeredSlides
+                    navigation
+                    effect="coverflow"
+                    coverflowEffect={{
+                      rotate: 40,
+                      depth: 100,
+                      slideShadows: false,
+                    }}
+                    breakpoints={{
+                      700: {
+                        initialSlide: 3,
+                        spaceBetween: 100,
+                        slidesPerView: 3,
+                        coverflowEffect: {
+                          rotate: 20,
+                          depth: 300,
+                          slideShadows: false,
+                        },
                       },
-                    },
-                  }}
-                >
-                  {yearInMusicData.top_releases.slice(0, 50).map((release) => {
-                    const coverArtSrc =
-                      yearInMusicData.top_releases_coverart?.[
-                        release.release_mbid
-                      ];
-                    if (!coverArtSrc) {
-                      return null;
+                    }}
+                  >
+                    {yearInMusicData.top_releases
+                      .slice(0, 50)
+                      .map((release) => {
+                        const coverArtSrc =
+                          yearInMusicData.top_releases_coverart?.[
+                            release.release_mbid
+                          ];
+                        if (!coverArtSrc) {
+                          return null;
+                        }
+                        return (
+                          <SwiperSlide
+                            key={`coverflow-${release.release_name}`}
+                          >
+                            <img
+                              src={
+                                yearInMusicData.top_releases_coverart?.[
+                                  release.release_mbid
+                                ] ?? "/static/img/cover-art-placeholder.jpg"
+                              }
+                              alt={release.release_name}
+                            />
+                            <div title={release.release_name}>
+                              <a
+                                href={
+                                  release.release_mbid
+                                    ? `https://musicbrainz.org/release/${release.release_mbid}/`
+                                    : undefined
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {release.release_name}
+                              </a>
+                              <div className="small text-muted">
+                                {release.artist_name}
+                              </div>
+                            </div>
+                          </SwiperSlide>
+                        );
+                      })}
+                  </Swiper>
+                </div>
+              ) : (
+                noDataText
+              )}
+            </div>
+            <div className="share-button-container">
+              <MagicShareButton
+                svgURL={`https://api.listenbrainz.org/1/art/grid-stats/${user.name}/year/4/0/500`}
+                shareUrl={`${linkToThisPage}#top-albums`}
+                // shareText="Check out my"
+                shareTitle="My top albums of 2022"
+                fileName={`${user.name}-top-albums-2022`}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="red-section">
+          <div className="container">
+            <div className="header">
+              Charts
+              <div className="subheader">
+                These got you through the year. Respect.
+              </div>
+            </div>
+            <div className="flex flex-wrap">
+              <div style={{ display: "table" }}>
+                <div className="card content-card" id="top-tracks">
+                  <div className="center-p">
+                    <img
+                      className="img-header"
+                      src="/static/img/year-in-music-22/stereo.png"
+                      alt="Top artists of 2022"
+                    />
+                    <h4>Top tracks of 2022</h4>
+                  </div>
+                  {yearInMusicData.top_recordings ? (
+                    <div className="scrollable-area">
+                      {yearInMusicData.top_recordings
+                        .slice(0, 50)
+                        .map((recording) => {
+                          const listenHere = {
+                            listened_at: 0,
+                            track_metadata: {
+                              artist_name: recording.artist_name,
+                              track_name: recording.track_name,
+                              release_name: recording.release_name,
+                              additional_info: {
+                                recording_mbid: recording.recording_mbid,
+                                release_mbid: recording.release_mbid,
+                                artist_mbids: recording.artist_mbids,
+                              },
+                            },
+                          };
+                          listens.push(listenHere);
+                          return (
+                            <ListenCard
+                              compact
+                              key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
+                              listen={listenHere}
+                              showTimestamp={false}
+                              showUsername={false}
+                              newAlert={newAlert}
+                            />
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    noDataText
+                  )}
+                </div>
+                <div className="share-button-container">
+                  <MagicShareButton
+                    svgURL={`https://api.listenbrainz.org/1/art/designer-top-10/${user.name}/year/500`}
+                    shareUrl={`${linkToThisPage}#top-tracks`}
+                    // shareText="Check out my"
+                    shareTitle="My top tracks of 2022"
+                    fileName={`${user.name}-top-tracks-2022`}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "table" }}>
+                <div className="card content-card" id="top-artists">
+                  <div className="center-p">
+                    <img
+                      className="img-header"
+                      src="/static/img/year-in-music-22/map.png"
+                      alt="Top artists of 2022"
+                    />
+                    <h4>Top artists of 2022</h4>
+                  </div>
+                  {yearInMusicData.top_artists ? (
+                    <div className="scrollable-area">
+                      {yearInMusicData.top_artists
+                        .slice(0, 50)
+                        .map((artist) => {
+                          const details = getEntityLink(
+                            "artist",
+                            artist.artist_name,
+                            artist.artist_mbids[0]
+                          );
+                          const thumbnail = (
+                            <span className="badge badge-info">
+                              {artist.listen_count} listens
+                            </span>
+                          );
+                          const listenHere = {
+                            listened_at: 0,
+                            track_metadata: {
+                              track_name: "",
+                              artist_name: artist.artist_name,
+                              additional_info: {
+                                artist_mbids: artist.artist_mbids,
+                              },
+                            },
+                          };
+                          listens.push(listenHere);
+                          return (
+                            <ListenCard
+                              compact
+                              key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
+                              listen={listenHere}
+                              customThumbnail={thumbnail}
+                              listenDetails={details}
+                              showTimestamp={false}
+                              showUsername={false}
+                              newAlert={newAlert}
+                            />
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    noDataText
+                  )}
+                </div>
+                <div className="share-button-container">
+                  <MagicShareButton
+                    svgURL={`https://api.listenbrainz.org/1/art/designer-top-5/${user.name}/year/500`}
+                    shareUrl={`${linkToThisPage}#top-artists`}
+                    // shareText="Check out my"
+                    shareTitle="My top artists of 2022"
+                    fileName={`${user.name}-top-artists-2022`}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="yellow-section">
+          <div className="container">
+            <div className="header">
+              Statistics
+              <div className="subheader">Mmmm…Delicous.</div>
+            </div>
+            <div className="card content-card" id="calendar">
+              <h3 className="text-center">
+                {capitalize(yourOrUsersName)} listening activity
+              </h3>
+              {listensPerDayForGraph ? (
+                <div className="graph">
+                  <ResponsiveCalendar
+                    from="2022-01-01"
+                    to="2022-12-31"
+                    data={listensPerDayForGraph as CalendarDatum[]}
+                    emptyColor="#eeeeee"
+                    colors={["#bbb7e1", "#6e66cc", "#eea582", COLOR_LB_ORANGE]}
+                    monthBorderColor="#eeeeee"
+                    dayBorderWidth={2}
+                    dayBorderColor="#ffffff"
+                    legends={[
+                      {
+                        anchor: "bottom-right",
+                        direction: "row",
+                        itemCount: 4,
+                        itemWidth: 42,
+                        itemHeight: 36,
+                        itemsSpacing: 14,
+                        itemDirection: "right-to-left",
+                      },
+                    ]}
+                  />
+                </div>
+              ) : (
+                noDataText
+              )}
+            </div>
+            <div className="flex flex-wrap small-cards-container">
+              {yearInMusicData.total_listen_count && (
+                <div className="card content-card">
+                  <div className="text-center">
+                    {capitalize(youOrUsername)} listened to{" "}
+                    <span className="accent">
+                      {yearInMusicData.total_listen_count}
+                    </span>{" "}
+                    songs this year
+                  </div>
+                </div>
+              )}
+              {yearInMusicData.day_of_week && (
+                <div className="card content-card">
+                  <div className="text-center">
+                    <span className="accent">
+                      {yearInMusicData.day_of_week}
+                    </span>{" "}
+                    was {yourOrUsersName} most active listening day on average
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="card content-card" id="most-listened-year">
+              <h3 className="text-center">
+                What year are {yourOrUsersName} favorite songs from?
+              </h3>
+              {mostListenedYearDataForGraph ? (
+                <div className="graph">
+                  <ResponsiveBar
+                    margin={{ left: 50, bottom: 30 }}
+                    data={mostListenedYearDataForGraph}
+                    padding={0.1}
+                    layout="vertical"
+                    keys={["songs"]}
+                    indexBy="year"
+                    colors={COLOR_LB_ORANGE}
+                    enableLabel={false}
+                    axisBottom={{
+                      // Round to nearest 5 year mark
+                      tickValues: uniq(
+                        mostListenedYearDataForGraph.map(
+                          (datum) => Math.round((datum.year + 1) / 5) * 5
+                        )
+                      ),
+                    }}
+                    axisLeft={{
+                      legend: "Number of listens",
+                      legendOffset: -40,
+                      legendPosition: "middle",
+                    }}
+                  />
+                </div>
+              ) : (
+                noDataText
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="red-section">
+          <div className="container">
+            <div className="header">
+              2022 Playlists
+              <div className="subheader">Generated just for you.</div>
+            </div>
+            <div className="row flex flex-wrap" id="playlists">
+              {allPlaylists.length
+                ? allPlaylists.slice(0, 2).map((topLevelPlaylist) => {
+                    if (!topLevelPlaylist) {
+                      return undefined;
                     }
                     return (
-                      <SwiperSlide key={`coverflow-${release.release_name}`}>
-                        <img
-                          src={
-                            yearInMusicData.top_releases_coverart?.[
-                              release.release_mbid
-                            ] ?? "/static/img/cover-art-placeholder.jpg"
-                          }
-                          alt={release.release_name}
-                        />
-                        <div title={release.release_name}>
-                          <a
-                            href={
-                              release.release_mbid
-                                ? `https://musicbrainz.org/release/${release.release_mbid}/`
-                                : undefined
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {release.release_name}
-                          </a>
-                          <div className="small text-muted">
-                            {release.artist_name}
-                          </div>
+                      <div
+                        className="card content-card mb-10"
+                        id="top-discoveries"
+                      >
+                        <div className="center-p">
+                          SVG OF COVERS HERE
+                          <h4>
+                            <a
+                              href={`/playlist/${topLevelPlaylist.mbid}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {topLevelPlaylist.jspf?.playlist?.title}
+                            </a>
+                            <FontAwesomeIcon icon={faQuestionCircle} />
+                            {/* {topLevelPlaylist.description} */}
+                          </h4>
                         </div>
-                      </SwiperSlide>
-                    );
-                  })}
-                </Swiper>
-              </div>
-            ) : (
-              noDataText
-            )}
-          </div>
-        </div>
-        <div className="red-section">
-          <div className="header">
-            Charts
-            <div className="subheader">
-              These got you through the year. Respect.
-            </div>
-          </div>
-          <div className="flex flex-wrap">
-            <div className="card content-card" id="top-recordings">
-              <div className="center-p">
-                <img
-                  className="img-header"
-                  src="/static/img/year-in-music-22/stereo.png"
-                  alt="Top artists of 2022"
-                />
-                <h4>Top tracks of 2022</h4>
-              </div>
-              {yearInMusicData.top_recordings ? (
-                <div className="scrollable-area">
-                  {yearInMusicData.top_recordings
-                    .slice(0, 50)
-                    .map((recording) => {
-                      const listenHere = {
-                        listened_at: 0,
-                        track_metadata: {
-                          artist_name: recording.artist_name,
-                          track_name: recording.track_name,
-                          release_name: recording.release_name,
-                          additional_info: {
-                            recording_mbid: recording.recording_mbid,
-                            release_mbid: recording.release_mbid,
-                            artist_mbids: recording.artist_mbids,
-                          },
-                        },
-                      };
-                      listens.push(listenHere);
-                      return (
-                        <ListenCard
-                          compact
-                          key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
-                          listen={listenHere}
-                          showTimestamp={false}
-                          showUsername={false}
-                          newAlert={newAlert}
-                        />
-                      );
-                    })}
-                </div>
-              ) : (
-                noDataText
-              )}
-            </div>
-            <div className="card content-card" id="top-artists">
-              <div className="center-p">
-                <img
-                  className="img-header"
-                  src="/static/img/year-in-music-22/map.png"
-                  alt="Top artists of 2022"
-                />
-                <h4>Top artists of 2022</h4>
-              </div>
-              {yearInMusicData.top_artists ? (
-                <div className="scrollable-area">
-                  {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
-                    const details = getEntityLink(
-                      "artist",
-                      artist.artist_name,
-                      artist.artist_mbids[0]
-                    );
-                    const thumbnail = (
-                      <span className="badge badge-info">
-                        {artist.listen_count} listens
-                      </span>
-                    );
-                    const listenHere = {
-                      listened_at: 0,
-                      track_metadata: {
-                        track_name: "",
-                        artist_name: artist.artist_name,
-                        additional_info: {
-                          artist_mbids: artist.artist_mbids,
-                        },
-                      },
-                    };
-                    listens.push(listenHere);
-                    return (
-                      <ListenCard
-                        compact
-                        key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
-                        listen={listenHere}
-                        customThumbnail={thumbnail}
-                        listenDetails={details}
-                        showTimestamp={false}
-                        showUsername={false}
-                        newAlert={newAlert}
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                noDataText
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="yellow-section">
-          <div className="header">
-            Statistics
-            <div className="subheader">Mmmm…Delicous.</div>
-          </div>
-          <div className="card content-card" id="calendar">
-            <h3 className="text-center">
-              {capitalize(yourOrUsersName)} listening activity
-            </h3>
-            {listensPerDayForGraph ? (
-              <div className="graph">
-                <ResponsiveCalendar
-                  from="2022-01-01"
-                  to="2022-12-31"
-                  data={listensPerDayForGraph as CalendarDatum[]}
-                  emptyColor="#eeeeee"
-                  colors={["#bbb7e1", "#6e66cc", "#eea582", COLOR_LB_ORANGE]}
-                  monthBorderColor="#eeeeee"
-                  dayBorderWidth={2}
-                  dayBorderColor="#ffffff"
-                  legends={[
-                    {
-                      anchor: "bottom-right",
-                      direction: "row",
-                      itemCount: 4,
-                      itemWidth: 42,
-                      itemHeight: 36,
-                      itemsSpacing: 14,
-                      itemDirection: "right-to-left",
-                    },
-                  ]}
-                />
-              </div>
-            ) : (
-              noDataText
-            )}
-          </div>
-          <div className="flex flex-wrap small-cards-container">
-            {yearInMusicData.total_listen_count && (
-              <div className="card content-card">
-                <div className="text-center">
-                  {capitalize(youOrUsername)} listened to{" "}
-                  <span className="accent">
-                    {yearInMusicData.total_listen_count}
-                  </span>{" "}
-                  songs this year
-                </div>
-              </div>
-            )}
-            {yearInMusicData.day_of_week && (
-              <div className="card content-card">
-                <div className="text-center">
-                  <span className="accent">{yearInMusicData.day_of_week}</span>{" "}
-                  was {yourOrUsersName} most active listening day on average
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="card content-card" id="most-listened-year">
-            <h3 className="text-center">
-              What year are {yourOrUsersName} favorite songs from?
-            </h3>
-            {mostListenedYearDataForGraph ? (
-              <div className="graph">
-                <ResponsiveBar
-                  margin={{ left: 50, bottom: 30 }}
-                  data={mostListenedYearDataForGraph}
-                  padding={0.1}
-                  layout="vertical"
-                  keys={["songs"]}
-                  indexBy="year"
-                  colors={COLOR_LB_ORANGE}
-                  enableLabel={false}
-                  axisBottom={{
-                    // Round to nearest 5 year mark
-                    tickValues: uniq(
-                      mostListenedYearDataForGraph.map(
-                        (datum) => Math.round((datum.year + 1) / 5) * 5
-                      )
-                    ),
-                  }}
-                  axisLeft={{
-                    legend: "Number of listens",
-                    legendOffset: -40,
-                    legendPosition: "middle",
-                  }}
-                />
-              </div>
-            ) : (
-              noDataText
-            )}
-          </div>
-        </div>
-        <div className="red-section">
-          <div className="header">
-            2022 Playlists
-            <div className="subheader">Generated just for you.</div>
-          </div>
-          <div className="row flex flex-wrap" id="playlists">
-            {allPlaylists.length
-              ? allPlaylists.slice(0, 2).map((topLevelPlaylist) => {
-                  if (!topLevelPlaylist) {
-                    return undefined;
-                  }
-                  return (
-                    <div
-                      className="card content-card mb-10"
-                      id="top-discoveries"
-                    >
-                      <div className="center-p">
-                        SVG OF COVERS HERE
-                        <h4>
-                          <a
-                            href={`/playlist/${topLevelPlaylist.mbid}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {topLevelPlaylist.jspf?.playlist?.title}
-                          </a>
-                          <FontAwesomeIcon icon={faQuestionCircle} />
-                          {/* {topLevelPlaylist.description} */}
-                        </h4>
-                      </div>
-                      <div>
-                        {topLevelPlaylist.jspf?.playlist?.track.map(
-                          (playlistTrack) => {
-                            const listen = JSPFTrackToListen(playlistTrack);
-                            listens.push(listen);
-                            let thumbnail;
-                            if (playlistTrack.image) {
-                              thumbnail = (
-                                <div className="listen-thumbnail">
-                                  <img
-                                    src={playlistTrack.image}
-                                    alt={`Cover Art for ${playlistTrack.title}`}
-                                  />
-                                </div>
+                        <div>
+                          {topLevelPlaylist.jspf?.playlist?.track.map(
+                            (playlistTrack) => {
+                              const listen = JSPFTrackToListen(playlistTrack);
+                              listens.push(listen);
+                              let thumbnail;
+                              if (playlistTrack.image) {
+                                thumbnail = (
+                                  <div className="listen-thumbnail">
+                                    <img
+                                      src={playlistTrack.image}
+                                      alt={`Cover Art for ${playlistTrack.title}`}
+                                    />
+                                  </div>
+                                );
+                              }
+                              return (
+                                <ListenCard
+                                  className="playlist-item-card"
+                                  listen={listen}
+                                  customThumbnail={thumbnail}
+                                  compact
+                                  showTimestamp={false}
+                                  showUsername={false}
+                                  newAlert={newAlert}
+                                />
                               );
                             }
-                            return (
-                              <ListenCard
-                                className="playlist-item-card"
-                                listen={listen}
-                                customThumbnail={thumbnail}
-                                compact
-                                showTimestamp={false}
-                                showUsername={false}
-                                newAlert={newAlert}
-                              />
-                            );
-                          }
-                        )}
-                        <hr />
-                        <a
-                          href={`/playlist/${topLevelPlaylist.mbid}`}
-                          className="btn btn-info btn-block"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          See the full playlist…
-                        </a>
+                          )}
+                          <hr />
+                          <a
+                            href={`/playlist/${topLevelPlaylist.mbid}`}
+                            className="btn btn-info btn-block"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            See the full playlist…
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
-              : noDataText}
+                    );
+                  })
+                : noDataText}
+            </div>
           </div>
         </div>
         <div className="yellow-section">
-          <div className="header">
-            Discover
-            <div className="subheader">
-              The year&apos;s over, but there&apos;s still more to uncover!
-            </div>
-          </div>
-          <div className="flex flex-wrap">
-            <div
-              className="card content-card"
-              id="new-releases"
-              style={{ marginBottom: "2.5em" }}
-            >
-              <div className="center-p">
-                <img
-                  className="img-header"
-                  src="/static/img/year-in-music-22/magnify.png"
-                  alt={`New albums from ${yourOrUsersName} top artists`}
-                />
-                <h4>New albums from {yourOrUsersName} top artists</h4>
+          <div className="container">
+            <div className="header">
+              Discover
+              <div className="subheader">
+                The year&apos;s over, but there&apos;s still more to uncover!
               </div>
-              <div className="scrollable-area">
-                {yearInMusicData.new_releases_of_top_artists
-                  ? yearInMusicData.new_releases_of_top_artists.map(
-                      (release) => {
-                        const artistName = release.artist_credit_names.join(
-                          ", "
-                        );
-                        const details = (
-                          <>
-                            <div
-                              title={release.title}
-                              className="ellipsis-2-lines"
-                            >
-                              {getEntityLink(
-                                "release",
-                                release.title,
-                                release.release_mbid
-                              )}
-                            </div>
-                            <span
-                              className="small text-muted ellipsis"
-                              title={artistName}
-                            >
-                              {getEntityLink(
-                                "artist",
-                                artistName,
-                                release.artist_credit_mbids[0]
-                              )}
-                            </span>
-                          </>
-                        );
-                        const listenHere = {
-                          listened_at: 0,
-                          listened_at_iso: release.first_release_date,
-                          track_metadata: {
-                            artist_name: artistName,
-                            track_name: release.title,
-                            release_name: release.title,
-                            additional_info: {
-                              release_mbid: release.release_mbid,
-                              artist_mbids: release.artist_credit_mbids,
+            </div>
+            <div className="flex flex-wrap">
+              <div
+                className="card content-card"
+                id="new-releases"
+                style={{ marginBottom: "2.5em" }}
+              >
+                <div className="center-p">
+                  <img
+                    className="img-header"
+                    src="/static/img/year-in-music-22/magnify.png"
+                    alt={`New albums from ${yourOrUsersName} top artists`}
+                  />
+                  <h4>New albums from {yourOrUsersName} top artists</h4>
+                </div>
+                <div className="scrollable-area">
+                  {yearInMusicData.new_releases_of_top_artists
+                    ? yearInMusicData.new_releases_of_top_artists.map(
+                        (release) => {
+                          const artistName = release.artist_credit_names.join(
+                            ", "
+                          );
+                          const details = (
+                            <>
+                              <div
+                                title={release.title}
+                                className="ellipsis-2-lines"
+                              >
+                                {getEntityLink(
+                                  "release",
+                                  release.title,
+                                  release.release_mbid
+                                )}
+                              </div>
+                              <span
+                                className="small text-muted ellipsis"
+                                title={artistName}
+                              >
+                                {getEntityLink(
+                                  "artist",
+                                  artistName,
+                                  release.artist_credit_mbids[0]
+                                )}
+                              </span>
+                            </>
+                          );
+                          const listenHere = {
+                            listened_at: 0,
+                            listened_at_iso: release.first_release_date,
+                            track_metadata: {
+                              artist_name: artistName,
+                              track_name: release.title,
+                              release_name: release.title,
+                              additional_info: {
+                                release_mbid: release.release_mbid,
+                                artist_mbids: release.artist_credit_mbids,
+                              },
                             },
-                          },
+                          };
+                          listens.push(listenHere);
+                          return (
+                            <ListenCard
+                              listenDetails={details}
+                              key={release.release_mbid}
+                              compact
+                              listen={listenHere}
+                              showTimestamp={false}
+                              showUsername={false}
+                              newAlert={newAlert}
+                            />
+                          );
+                        }
+                      )
+                    : noDataText}
+                </div>
+              </div>
+
+              <div
+                className="card content-card"
+                id="similar-users"
+                style={{ marginBottom: "2.5em" }}
+              >
+                <div className="center-p">
+                  <img
+                    className="img-header"
+                    src="/static/img/year-in-music-22/buddy.png"
+                    alt="Music buddies"
+                  />
+                  <h4>Music buddies</h4>
+                </div>
+                <div className="scrollable-area similar-users-list">
+                  {sortedSimilarUsers && sortedSimilarUsers.length
+                    ? sortedSimilarUsers.map((userFromList) => {
+                        const [name, similarityScore] = userFromList;
+                        const similarUser: SimilarUser = {
+                          name,
+                          similarityScore,
                         };
-                        listens.push(listenHere);
+                        const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
+                          similarUser
+                        );
                         return (
-                          <ListenCard
-                            listenDetails={details}
-                            key={release.release_mbid}
-                            compact
-                            listen={listenHere}
-                            showTimestamp={false}
-                            showUsername={false}
-                            newAlert={newAlert}
+                          <UserListModalEntry
+                            mode="similar-users"
+                            key={name}
+                            user={similarUser}
+                            loggedInUserFollowsUser={loggedInUserFollowsUser}
+                            updateFollowingList={this.updateFollowingList}
                           />
                         );
-                      }
-                    )
-                  : noDataText}
-              </div>
-            </div>
-
-            <div
-              className="card content-card"
-              id="similar-users"
-              style={{ marginBottom: "2.5em" }}
-            >
-              <div className="center-p">
-                <img
-                  className="img-header"
-                  src="/static/img/year-in-music-22/buddy.png"
-                  alt="Music buddies"
-                />
-                <h4>Music buddies</h4>
-              </div>
-              <div className="scrollable-area similar-users-list">
-                {sortedSimilarUsers && sortedSimilarUsers.length
-                  ? sortedSimilarUsers.map((userFromList) => {
-                      const [name, similarityScore] = userFromList;
-                      const similarUser: SimilarUser = {
-                        name,
-                        similarityScore,
-                      };
-                      const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
-                        similarUser
-                      );
-                      return (
-                        <UserListModalEntry
-                          mode="similar-users"
-                          key={name}
-                          user={similarUser}
-                          loggedInUserFollowsUser={loggedInUserFollowsUser}
-                          updateFollowingList={this.updateFollowingList}
-                        />
-                      );
-                    })
-                  : noDataText}
+                      })
+                    : noDataText}
+                </div>
               </div>
             </div>
           </div>
         </div>
         <div className="red-section cover-art-composite">
-          <div className="header">
-            2022 Albums
-            <div className="subheader">
-              Just some of the albums that came out in 2022. Drag, scroll and
-              click to listen to an album.
+          <div className="container">
+            <div className="header">
+              2022 Albums
+              <div className="subheader">
+                Just some of the albums that came out in 2022. Drag, scroll and
+                click to listen to an album.
+              </div>
             </div>
           </div>
           <img

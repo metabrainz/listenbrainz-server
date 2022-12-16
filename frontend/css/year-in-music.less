@@ -162,12 +162,15 @@
   /* Styles specific to YIM 2022 */
   &.yim-2022 {
     /* Main header section at the top with logo */
-    #header {
+    #main-header {
       padding: 3em 0;
       background:white;
     }
+    .header-image{
+      max-width: 600px;
+    }
     .header {
-      margin: unset;
+      margin-bottom: 1em;
       text-align: center;
       font-family: "Roboto";
       font-weight: 700;
@@ -182,7 +185,7 @@
       }
     }
     .share-section {
-      margin: unset;
+      padding: 3em;
       text-align: center;
       font-family: "Roboto";
       font-weight: 300;
@@ -199,25 +202,21 @@
       border-radius: 3px;
     }
     .red-section,.yellow-section{
-      padding: 5em;
-      position: relative;
-      margin-left: -15px;
-      margin-right: -15px;
-      &:extend(.container);
-      // &::after, &::before{
-      //   content: "";
-      //   width: 50vw;
-      //   height: 100%;
-      //   position: absolute;
-      //   top: 0;
-      //   z-index: -1;
-      // }
-      // &::after{
-      //   left: 100%;
-      // }
-      // &::before{
-      //   right: 100%;
-      // }
+      padding-top: 3em;
+      padding-bottom: 3em;
+      width: 100%;
+    }
+    .share-button-container {
+      text-align: center;
+      margin-top:2em;
+      margin-bottom: 2em;
+    }
+    .share-button {
+      border:none;
+      width: 2em;
+      height: 2em;
+      line-height: 2em;
+      font-size: 1.5em;
     }
     .red-section {
       background-color: @2022red;
@@ -227,7 +226,7 @@
       .header {
         color: @2022yellow;
       }
-      .button {
+      .share-button {
         color: @2022red;
         background-color: @2022yellow;
       }
@@ -240,7 +239,7 @@
       .header {
         color: @2022red;
       }
-      .button {
+      .share-button {
         color: @2022yellow;
         background-color: @2022red;
       }
