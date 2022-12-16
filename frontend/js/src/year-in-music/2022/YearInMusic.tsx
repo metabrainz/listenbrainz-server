@@ -981,8 +981,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <YearInMusicWithAlertNotifications
           user={user}
-          // @ts-ignore
-          yearInMusicData={fakeData}
+          yearInMusicData={yearInMusicData}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>
