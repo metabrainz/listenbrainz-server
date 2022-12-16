@@ -7,181 +7,259 @@
     "range": "all_time", 
     "releases": [
       {
-        "artist_mbids": [], 
-        "artist_name": "Coldplay", 
-        "listen_count": 26, 
-        "release_mbid": "",  
-        "release_name": "Live in Buenos Aires"
-      }, 
+        "artist_mbids": [
+          "78830f6e-5832-443d-9e93-0e308238406e"
+        ],
+        "artist_name": "Amit Trivedi",
+        "caa_id": 29717381514,
+        "caa_release_mbid": "7ddac155-91e2-4eb7-b08a-4fc584fd60f9",
+        "listen_count": 57,
+        "release_mbid": "7ddac155-91e2-4eb7-b08a-4fc584fd60f9",
+        "release_name": "Padman"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "The Fray", 
-        "listen_count": 25, 
-        "release_mbid": "",
-        "release_name": "How to Save a Life"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Taaruk Raina, Mismatched",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 10,
+        "release_mbid": null,
+        "release_name": "Mismatched: Season 2 (Music from the Netflix Series)"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Ellie Goulding", 
-        "listen_count": 25, 
-        "release_mbid": "",
-        "release_name": "Delirium (Deluxe)"
-      }, 
+        "artist_mbids": [
+          "e7e8031d-f232-4883-bb5d-bd97589bc29b"
+        ],
+        "artist_name": "Abhishek-Akshay",
+        "caa_id": 3193866265,
+        "caa_release_mbid": "3a29d02a-d29a-40f8-86f8-c9dab6eba7ac",
+        "listen_count": 4,
+        "release_mbid": "3a29d02a-d29a-40f8-86f8-c9dab6eba7ac",
+        "release_name": "Vicky Donor"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Ritviz", 
-        "listen_count": 20, 
-        "release_mbid": "",  
-        "release_name": "Udd Gaye (Bacardi House Party Sessions)"
-      }, 
+        "artist_mbids": [
+          "b458fc3f-b9b5-4ff3-ba6a-748c9a1aac83"
+        ],
+        "artist_name": "Sanam",
+        "caa_id": 16789420179,
+        "caa_release_mbid": "32c388ff-5123-4430-8ba7-62657eea41f8",
+        "listen_count": 4,
+        "release_mbid": "32c388ff-5123-4430-8ba7-62657eea41f8",
+        "release_name": "Revisited: Sanam"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "OneRepublic", 
-        "listen_count": 18, 
-        "release_mbid": "",  
-        "release_name": "Native"
-      }, 
+        "artist_mbids": [
+          "620009e5-d6fc-4104-b543-5c2af18d8889"
+        ],
+        "artist_name": "Bilal Saeed",
+        "caa_id": 6601655750,
+        "caa_release_mbid": "e9fa9c7a-ad24-4c9c-bfb2-69dfc17bbcb8",
+        "listen_count": 3,
+        "release_mbid": "e9fa9c7a-ad24-4c9c-bfb2-69dfc17bbcb8",
+        "release_name": "Twelve"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Vance Joy", 
-        "listen_count": 18, 
-        "release_mbid": "",  
-        "release_name": "Dream Your Life Away (Special Edition)"
-      }, 
+        "artist_mbids": [
+          "20a69a45-8fc0-4abb-84a9-f4e0515695f9"
+        ],
+        "artist_name": "The Bilz and Kashif",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 3,
+        "release_mbid": "f132db0b-3aaa-41a0-a4b6-4ae395ec213d",
+        "release_name": "The Trinity"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Ed Sheeran", 
-        "listen_count": 17, 
-        "release_mbid": "",  
-        "release_name": "\u00f7 (Deluxe)"
-      }, 
+        "artist_mbids": [
+          "4f2ea2cb-923d-487e-a517-a2a03089546b",
+          "b088fe42-db0b-4ef9-9c7d-e546b785c171"
+        ],
+        "artist_name": "Gajendra Verma & Sachin Gupta",
+        "caa_id": 3197539768,
+        "caa_release_mbid": "4f1f8e13-656a-46bf-900e-18b28f3b3991",
+        "listen_count": 3,
+        "release_mbid": "4f1f8e13-656a-46bf-900e-18b28f3b3991",
+        "release_name": "Table No. 21"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Imagine Dragons", 
-        "listen_count": 17, 
-        "release_mbid": "",  
-        "release_name": "Night Visions (Deluxe)"
-      }, 
+        "artist_mbids": [
+          "4db8e5a9-beb9-47bb-8bc8-334b7e33ece5"
+        ],
+        "artist_name": "Salim-Sulaiman",
+        "caa_id": 18392173981,
+        "caa_release_mbid": "4152d958-d0d1-4464-ae7a-8fe6cc359473",
+        "listen_count": 3,
+        "release_mbid": "4152d958-d0d1-4464-ae7a-8fe6cc359473",
+        "release_name": "Rab Ne Bana Di Jodi"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Taylor Swift", 
-        "listen_count": 17, 
-        "release_mbid": "",  
-        "release_name": "1989"
-      }, 
+        "artist_mbids": [
+          "79c5547a-e098-495c-8dac-7e99546aa46b",
+          "0278f30f-266b-4261-ba3a-67491555eab0"
+        ],
+        "artist_name": "Asha Bhosle - R. D. Burman",
+        "caa_id": 31608812704,
+        "caa_release_mbid": "3d4390e7-4f90-437e-8297-9c78ce910431",
+        "listen_count": 3,
+        "release_mbid": "3d4390e7-4f90-437e-8297-9c78ce910431",
+        "release_name": "Mohabbatein"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Ellie Goulding", 
-        "listen_count": 16, 
-        "release_mbid": "",  
-        "release_name": "Halcyon Days"
-      }, 
+        "artist_mbids": [
+          "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "artist_name": "Various Artists",
+        "caa_id": 28336130099,
+        "caa_release_mbid": "9fef1281-c8ac-466e-ab39-d81b9781a55f",
+        "listen_count": 3,
+        "release_mbid": "9fef1281-c8ac-466e-ab39-d81b9781a55f",
+        "release_name": "Malang: Unleash The Madness"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Christina Perri", 
-        "listen_count": 16, 
-        "release_mbid": "",  
-        "release_name": "A Thousand Years"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Ayushmann Khurrana, Neeti Mohan",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 3,
+        "release_mbid": null,
+        "release_name": "Latest Songs Of Ayushmann Khurrana"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Coldplay", 
-        "listen_count": 16, 
-        "release_mbid": "",  
-        "release_name": "A Head Full Of Dreams"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Kalyanji-Anandji, Kishore Kumar",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 3,
+        "release_mbid": null,
+        "release_name": "Kalaakaar (Original Motion Picture Soundtrack)"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "George Ezra", 
-        "listen_count": 15, 
-        "release_mbid": "",  
-        "release_name": "Staying at Tamara's"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Asim Azhar",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 3,
+        "release_mbid": null,
+        "release_name": "Jo Tu Na Mila"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Lenka", 
-        "listen_count": 13, 
-        "release_mbid": "",  
-        "release_name": "Two (Expanded Edition)"
-      }, 
+        "artist_mbids": [
+          "e0bba708-bdd3-478d-84ea-c706413bedab"
+        ],
+        "artist_name": "A. R. Rahman",
+        "caa_id": 13007261956,
+        "caa_release_mbid": "9aa17de3-9496-421c-a97a-1cba83969815",
+        "listen_count": 3,
+        "release_mbid": "9aa17de3-9496-421c-a97a-1cba83969815",
+        "release_name": "Jaane Tu Ya Jaane Na"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "OneRepublic", 
-        "listen_count": 13, 
-        "release_mbid": "",  
-        "release_name": "13 Reasons Why (Season 2)"
-      }, 
+        "artist_mbids": [
+          "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "artist_name": "Various Artists",
+        "caa_id": 4653252004,
+        "caa_release_mbid": "ab960442-661b-40f6-9c09-0f89f92e52a1",
+        "listen_count": 3,
+        "release_mbid": "ab960442-661b-40f6-9c09-0f89f92e52a1",
+        "release_name": "I, Me Aur Main"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Tommee Profitt", 
-        "listen_count": 12, 
-        "release_mbid": "",  
-        "release_name": "In The End"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Sanam",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 2,
+        "release_mbid": null,
+        "release_name": "Universally SANAM"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "The Script", 
-        "listen_count": 12, 
-        "release_mbid": "",  
-        "release_name": "#3"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "King",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 2,
+        "release_mbid": null,
+        "release_name": "The Carnival"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Maroon 5", 
-        "listen_count": 11, 
-        "release_mbid": "",  
-        "release_name": "Singles"
-      }, 
+        "artist_mbids": [
+          "72da533e-cb78-414e-8968-9d7dac0e80df"
+        ],
+        "artist_name": "Ram Sampath",
+        "caa_id": 3252266924,
+        "caa_release_mbid": "69bf700c-b549-4153-b42c-b76e59f111ed",
+        "listen_count": 2,
+        "release_mbid": "69bf700c-b549-4153-b42c-b76e59f111ed",
+        "release_name": "Talaash"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Maroon 5", 
-        "listen_count": 11, 
-        "release_mbid": "",  
-        "release_name": "Overexposed"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Yashal Shahid",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 2,
+        "release_mbid": null,
+        "release_name": "Sajna"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Of Monsters and Men", 
-        "listen_count": 11, 
-        "release_mbid": "",  
-        "release_name": "My Head Is an Animal"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Pritam, Javed Bashir",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 2,
+        "release_mbid": null,
+        "release_name": "Once Upon Ay Time In Mumbai Dobaara !"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Sia", 
-        "listen_count": 11, 
-        "release_mbid": "",  
-        "release_name": "Cheap Thrills (feat. Sean Paul)"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Vishal Mishra",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 2,
+        "release_mbid": null,
+        "release_name": "Manjha"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Linkin Park", 
-        "listen_count": 10, 
-        "release_mbid": "",  
-        "release_name": "One More Light"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Asim Azhar",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 2,
+        "release_mbid": null,
+        "release_name": "Jo Tu Na Mila (Acoustic)"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "M.I.A.", 
-        "listen_count": 10, 
-        "release_mbid": "",  
-        "release_name": "Kala"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "Jeet Gannguli, Arijit Singh",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 2,
+        "release_mbid": null,
+        "release_name": "Jalebi (Original Motion Picture Soundtrack)"
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "The Local train", 
-        "listen_count": 9, 
-        "release_mbid": "",  
-        "release_name": "Aalas Ka Pedh"
-      }, 
+        "artist_mbids": [],
+        "artist_name": "KK",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 2,
+        "release_mbid": null,
+        "release_name": "Evergreen Hits Of K.K."
+      },
       {
-        "artist_mbids": [], 
-        "artist_name": "Backstreet Boys", 
-        "listen_count": 8, 
-        "release_mbid": "",  
-        "release_name": "The Hits--Chapter One"
+        "artist_mbids": [
+          "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+        ],
+        "artist_name": "Nusrat Fateh Ali Khan",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 2,
+        "release_mbid": "7fff2a44-6f46-41c4-ae96-effd3b8f06be",
+        "release_name": "50 Greatest Hits Nusrat Fateh Ali Khan"
       }
-    ], 
+    ],
     "to_ts": 1589496658, 
     "total_release_count": 164, 
     "user_id": "ishaanshah"
