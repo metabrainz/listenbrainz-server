@@ -17,6 +17,8 @@ import listenbrainz_spark.year_in_music.most_listened_year
 import listenbrainz_spark.year_in_music.top_stats
 import listenbrainz_spark.year_in_music.listens_per_day
 import listenbrainz_spark.year_in_music.listen_count
+import listenbrainz_spark.year_in_music.listening_time
+import listenbrainz_spark.year_in_music.new_artists_discovered
 import listenbrainz_spark.fresh_releases.fresh_releases
 import listenbrainz_spark.similarity.recording
 import listenbrainz_spark.similarity.artist
@@ -52,6 +54,8 @@ functions = {
     'year_in_music.top_stats': listenbrainz_spark.year_in_music.top_stats.calculate_top_entity_stats,
     'year_in_music.listens_per_day': listenbrainz_spark.year_in_music.listens_per_day.calculate_listens_per_day,
     'year_in_music.listen_count': listenbrainz_spark.year_in_music.listen_count.get_listen_count,
+    'year_in_music.new_artists_discovered_count': listenbrainz_spark.year_in_music.new_artists_discovered.get_new_artists_discovered_count,
+    'year_in_music.listening_time': listenbrainz_spark.year_in_music.listening_time.get_listening_time,
     'import.pg_metadata_tables': listenbrainz_spark.postgres.release.create_release_metadata_cache,
     'releases.fresh': listenbrainz_spark.fresh_releases.fresh_releases.main,
 }

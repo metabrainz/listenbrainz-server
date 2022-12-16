@@ -192,6 +192,24 @@ def request_import_pg_tables():
     send_request_to_spark_cluster('import.pg_metadata_tables')
 
 
+@cli.command(name="request_yim_listening_time")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_listening_time(year: int):
+    """ Send request to calculate yearly total listening time stat for each user to the spark cluster
+    """
+    send_request_to_spark_cluster("year_in_music.listening_time", year=year)
+
+
+@cli.command(name="request_yim_new_artists_discovered")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_new_artists_discovered(year: int):
+    """ Send request to calculate count of new artists user listened to this year.
+    """
+    send_request_to_spark_cluster("year_in_music.new_artists_discovered_count", year=year)
+
+
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
