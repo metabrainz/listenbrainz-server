@@ -67,7 +67,7 @@ def _get_new_releases_of_top_artists(year):
               FROM release_groups_of_year    
         )
             SELECT user_id
-                 , collect_list(
+                 , collect_set(
                         struct(
                            rg.title
                          , rg.artist_credit_name  
