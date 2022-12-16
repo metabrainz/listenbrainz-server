@@ -41,8 +41,8 @@ def _get_new_releases_of_top_artists(year):
                  , artist_credit_mbids
                  , count(*) as listen_count
               FROM listens
-             WHERE listened_at >= to_timestamp({start})
-               AND listened_at <= to_timestamp({end})
+             WHERE listened_at >= to_timestamp('{start}')
+               AND listened_at <= to_timestamp('{end}')
                AND artist_credit_mbids IS NOT NULL
           GROUP BY user_id
                  , artist_credit_mbids
