@@ -10,9 +10,7 @@ def create_release_metadata_cache():
                        rg.id AS release_group
                      , caa.id AS caa_id
                      , caa_rel.gid AS caa_release_mbid
-                  FROM musicbrainz.release rel
-                  JOIN musicbrainz.release_group rg
-                    ON rg.id = rel.release_group
+                  FROM musicbrainz.release_group rg
                   JOIN musicbrainz.release caa_rel
                     ON rg.id = caa_rel.release_group
              LEFT JOIN (
