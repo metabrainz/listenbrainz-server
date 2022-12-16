@@ -141,6 +141,15 @@ def request_yim_new_release_stats(year: int):
     send_request_to_spark_cluster("year_in_music.new_releases_of_top_artists", year=year)
 
 
+@cli.command(name="request_yim_tracks_of_the_year")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_tracks_of_the_year(year: int):
+    """ Send request to calculate new release stats to the spark cluster
+    """
+    send_request_to_spark_cluster("year_in_music.tracks_of_the_year", year=year)
+
+
 @cli.command(name="request_yim_day_of_week")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
