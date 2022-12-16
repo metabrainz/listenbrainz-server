@@ -16,8 +16,8 @@ def calculate_tracks_of_the_year(year):
         SELECT user_id
              , recording_name
              , recording_mbid
-             , artist_credit_name
-             , artist_mbids
+             , artist_name
+             , artist_credit_mbids
              , count(*) AS listen_count
           FROM listens
          WHERE listened_at >= to_timestamp('{start}')
