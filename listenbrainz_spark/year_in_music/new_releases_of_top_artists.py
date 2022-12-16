@@ -65,7 +65,7 @@ def _get_new_releases_of_top_artists(year):
                     ) AS new_releases
               FROM release_groups_of_year rgoy
               JOIN top_artists t50a
-                ON cardinality(array_intersect(rgoy.artist_credit_mbids, t50a.artist_credit_mbids)) > 0
              WHERE row_number <= 50
+               AND arrays_overlap(rgoy.artist_credit_mbids, t50a.artist_credit_mbids)
           GROUP BY user_id
     """
