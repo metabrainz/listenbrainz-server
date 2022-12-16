@@ -30,4 +30,8 @@ def calculate_tracks_of_the_year(year):
              , artist_credit_mbids
     """
 
-    run_query(query).write.format("json").save(config.HDFS_CLUSTER_URI + "/tracks_of_the_year", mode="overwrite")
+    run_query(query)\
+        .repartition(1)\
+        .write\
+        .format("json")\
+        .save(config.HDFS_CLUSTER_URI + "/tracks_of_the_year", mode="overwrite")
