@@ -26,8 +26,8 @@ def calculate_tracks_of_the_year(year):
       GROUP BY user_id
              , recording_name
              , recording_mbid
-             , artist_credit_name
-             , artist_mbids
+             , artist_name
+             , artist_credit_mbids
     """
 
     run_query(query).write.format("csv").save(config.HDFS_CLUSTER_URI + "/tracks_of_the_year", mode="overwrite")
