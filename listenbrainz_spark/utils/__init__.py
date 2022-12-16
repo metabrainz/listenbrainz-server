@@ -186,6 +186,14 @@ def get_listens_from_new_dump(start: datetime, end: datetime) -> DataFrame:
     return dfs
 
 
+def get_all_listens_from_new_dump() -> DataFrame:
+    full_df = read_files_from_HDFS(path.LISTENBRAINZ_NEW_DATA_DIRECTORY)
+    if hdfs_connection.client.status(path.INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
+        inc_df = read_files_from_HDFS(path.INCREMENTAL_DUMPS_SAVE_PATH)
+        full_df = full_df.union(inc_df)
+    return full_df
+
+
 def get_latest_listen_ts() -> datetime:
     """" Get the listened_at time of the latest listen present
      in the imported dumps

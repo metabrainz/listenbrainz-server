@@ -1,26 +1,14 @@
-import errno
 import logging
 import os
-from datetime import datetime
-from typing import List
 
-from py4j.protocol import Py4JJavaError
-from pyspark.sql import DataFrame, functions
-from pyspark.sql.utils import AnalysisException
-
-import listenbrainz_spark
 from hdfs.util import HdfsError
-from listenbrainz_spark import config, hdfs_connection, path
-from listenbrainz_spark.schema import listens_new_schema
-from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
-                                           DataFrameNotCreatedException,
-                                           FileNotFetchedException,
-                                           FileNotSavedException,
-                                           HDFSDirectoryNotDeletedException,
-                                           PathNotFoundException,
-                                           ViewNotRegisteredException)
+
+from listenbrainz_spark import hdfs_connection
+from listenbrainz_spark.exceptions import (HDFSDirectoryNotDeletedException,
+                                           PathNotFoundException)
 
 logger = logging.getLogger(__name__)
+
 
 # A typical listen is of the form:
 # {
