@@ -88,7 +88,7 @@ def get_releases(table: str, cache_table: str, number_of_results: int):
                        , false
                     ) as releases
               FROM ranked_stats
-             WHERE rank < {number_of_results}
+             WHERE rank <= {number_of_results}
           GROUP BY user_id
         )
             SELECT user_id

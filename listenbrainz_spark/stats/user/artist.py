@@ -61,7 +61,7 @@ def get_artists(table: str, cache_table: str, number_of_results: int) -> Iterato
                         , false
                    ) as artists
               FROM ranked_stats
-             WHERE rank < {number_of_results}
+             WHERE rank <= {number_of_results}
           GROUP BY user_id
         )
             SELECT user_id
