@@ -355,7 +355,7 @@ def handle_similar_users(message):
 
 
 def handle_yim_similar_users(message):
-    year_in_music.insert("similar_users", message["year"], message["data"])
+    year_in_music.insert_similar_recordings(message["year"], message["data"])
 
 
 def handle_yim_new_releases_of_top_artists(message):
