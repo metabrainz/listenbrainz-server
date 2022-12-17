@@ -1,653 +1,755 @@
 [
-    {
-        "type": "user_entity",
-        "entity": "recordings",
-        "stats_range": "all_time",
-        "from_ts": 1009843200,
-        "to_ts": 1628511763,
+  {
+    "type": "user_entity",
+    "entity": "recordings",
+    "stats_range": "all_time",
+    "from_ts": 1009843200,
+    "to_ts": 1628511763,
+    "data": [
+      {
+        "user_id": 1,
         "data": [
-            {
-                "user_id": 1,
-                "data": [
-                    {
-                        "artist_name": "Portishead",
-                        "artist_mbids": [
-                            "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
-                        ],
-                        "recording_mbid": "a7ed3365-affa-4331-8bd9-1ececaf9ae77",
-                        "release_name": "Third",
-                        "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
-                        "track_name": "The Rip",
-                        "listen_count": 2
-                    },
-                    {
-                        "artist_name": "Portishead",
-                        "artist_mbids": [
-                            "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
-                        ],
-                        "recording_mbid": "8855e971-0570-4d20-9258-4b7ed7441f10",
-                        "release_name": "Third",
-                        "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
-                        "track_name": "Plastic",
-                        "listen_count": 2
-                    },
-                    {
-                        "artist_name": "Massive Attack",
-                        "artist_mbids": [
-                            "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
-                        ],
-                        "recording_mbid": "e69db070-8ff6-47bc-ab5f-d0291ee08dc6",
-                        "release_name": "Protection",
-                        "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
-                        "track_name": "Euro Child",
-                        "listen_count": 2
-                    },
-                    {
-                        "artist_name": "Aether",
-                        "artist_mbids": [
-                            "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
-                        ],
-                        "recording_mbid": "bb7601d3-f006-4421-83c9-d71e35962a95",
-                        "release_name": "Yamanote",
-                        "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
-                        "track_name": "You Still Echo Here",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Aether",
-                        "artist_mbids": [
-                            "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
-                        ],
-                        "recording_mbid": "40e085a0-9637-42a6-88f7-d5e12c793854",
-                        "release_name": "Yamanote",
-                        "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
-                        "track_name": "Yamanote",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Jah Wobble, Marconi Union",
-                        "artist_mbids": [
-                            "904cc1c8-021e-45ac-bbe9-95c01a1f8099",
-                            "3f9b5837-ed1c-413e-bfef-ca4f892dcc59"
-                        ],
-                        "recording_mbid": "0ca2a698-7280-4b40-a357-ca966bbd3a96",
-                        "release_name": "Anomic",
-                        "release_mbid": "39967fee-e436-4f87-b36e-299aae4dc670",
-                        "track_name": "Wealth",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Portishead",
-                        "artist_mbids": [
-                            "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
-                        ],
-                        "recording_mbid": "b00efba7-0d88-478c-97ad-257aef64cc27",
-                        "release_name": "Third",
-                        "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
-                        "track_name": "We Carry On",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "The Egg",
-                        "artist_mbids": [
-                            "6fe91ae9-8ddb-47b0-a2d7-252833ce5500"
-                        ],
-                        "recording_mbid": "975f5943-6c9b-45c2-a219-8f5c34b11014",
-                        "release_name": "Forwards (Special Edition)",
-                        "release_mbid": "af6fdf7a-fcb0-46f9-b8c5-517fe8cb3e5d",
-                        "track_name": "Venice Beach",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "The Polish Ambassador",
-                        "artist_mbids": [
-                            "e9787dd2-5857-4b51-8e59-a190a54820fc"
-                        ],
-                        "recording_mbid": "1991c5e5-053a-4222-ad04-7d84cc11907c",
-                        "release_name": "Ecozoic",
-                        "release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
-                        "track_name": "Two and a Half Moons Away",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Sounds From The Ground",
-                        "artist_mbids": [
-                            "9806e551-9a63-4a9d-be1b-5297b2ac0e76"
-                        ],
-                        "recording_mbid": "986257af-4ed5-4e6e-bb68-a4e6f03eb284",
-                        "release_name": "Mosaic Remastered",
-                        "release_mbid": "2f7634f3-3bb5-4f2c-9821-d150e8415fb8",
-                        "track_name": "Treasure",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Romare",
-                        "artist_mbids": [
-                            "b014d579-b549-4b21-b90d-5264e0433988"
-                        ],
-                        "recording_mbid": "5176acc7-1b58-4434-ba16-d76e3ca094cd",
-                        "release_name": "Projections",
-                        "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
-                        "track_name": "The Drifter",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Aether",
-                        "artist_mbids": [
-                            "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
-                        ],
-                        "recording_mbid": "c626c408-ecbb-47ac-a3d8-961a072d0819",
-                        "release_name": "Yamanote",
-                        "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
-                        "track_name": "Sunshine City",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Ott",
-                        "artist_mbids": [
-                            "1a40f886-0877-4bab-9ab1-761147dadb89"
-                        ],
-                        "recording_mbid": "19cdfa84-f4ec-4e1d-8595-ed2bc4e295d4",
-                        "release_name": "Blumenkraft",
-                        "release_mbid": "99e39642-cae5-4061-9800-751108bc650b",
-                        "track_name": "Splitting an Atom",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Massive Attack",
-                        "artist_mbids": [
-                            "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
-                        ],
-                        "recording_mbid": "f837bff5-faf2-4323-81de-91f056207a42",
-                        "release_name": "Protection",
-                        "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
-                        "track_name": "Sly",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Portishead",
-                        "artist_mbids": [
-                            "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
-                        ],
-                        "recording_mbid": "83b416db-4ee1-4560-a3b3-52fd453eb285",
-                        "release_name": "Third",
-                        "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
-                        "track_name": "Silence",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "The Polish Ambassador",
-                        "artist_mbids": [
-                            "e9787dd2-5857-4b51-8e59-a190a54820fc"
-                        ],
-                        "recording_mbid": "82ac2959-a2d6-4f41-be9f-50bac0976fd1",
-                        "release_name": "Ecozoic",
-                        "release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
-                        "track_name": "Rootshine Revival",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Massive Attack, Tracey Thorn",
-                        "artist_mbids": [
-                            "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8",
-                            "6dbd7f8b-20ac-4287-8dd3-b4cae5c5f82f"
-                        ],
-                        "recording_mbid": "535b2d75-ce44-41a5-9d7c-12318d219dd4",
-                        "release_name": "Protection",
-                        "release_mbid": "91231e74-2674-411e-968f-b188bb67b711",
-                        "track_name": "Protection",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Romare",
-                        "artist_mbids": [
-                            "b014d579-b549-4b21-b90d-5264e0433988"
-                        ],
-                        "recording_mbid": "90fb24e7-3b50-4043-a5f1-2c3a78d692f0",
-                        "release_name": "Projections",
-                        "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
-                        "track_name": "Prison Blues",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Romare",
-                        "artist_mbids": [
-                            "b014d579-b549-4b21-b90d-5264e0433988"
-                        ],
-                        "recording_mbid": "d58ebf31-6e08-4baa-857f-2e43f4ff8f0f",
-                        "release_name": "Projections",
-                        "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
-                        "track_name": "Nina's Charm",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Little People",
-                        "artist_mbids": [
-                            "78c94cba-761f-4212-8508-a24bda2e57dc"
-                        ],
-                        "recording_mbid": "793f88ed-2e8c-4cdc-b042-8920877a82fc",
-                        "release_name": "Mickey Mouse Operation",
-                        "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
-                        "track_name": "Moon",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Vangelis",
-                        "artist_mbids": [
-                            "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
-                        ],
-                        "recording_mbid": "349101b9-0570-4859-9ad7-f939ea4e68ab",
-                        "release_name": "Blade Runner (Music From The Original Soundtrack)",
-                        "release_mbid": "d619edca-d766-36b3-a2c0-19cd47ed427b",
-                        "track_name": "Memories of Green",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Brazilian Girls",
-                        "artist_mbids": [
-                            "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
-                        ],
-                        "recording_mbid": "9fc313fc-d213-42f9-984f-4405ccf74e23",
-                        "release_name": "Brazilian Girls",
-                        "release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
-                        "track_name": "Me Gustas Cuando Callas",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Vangelis",
-                        "artist_mbids": [
-                            "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
-                        ],
-                        "recording_mbid": "1f36b477-3b7c-4a34-a024-a042135fede8",
-                        "release_name": "Blade Runner (Music From The Original Soundtrack)",
-                        "release_mbid": "9792e059-f7af-4bce-90cf-9a2f78288c72",
-                        "track_name": "Main Titles",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Kiasmos",
-                        "artist_mbids": [
-                            "3252542b-98a7-48ba-9861-7a612b16c227"
-                        ],
-                        "recording_mbid": "7133862a-0fd3-4d1c-9cb6-3be5e051af13",
-                        "release_name": "Kiasmos",
-                        "release_mbid": "73e4a3e9-bb1d-4243-9c1b-f285fc842248",
-                        "track_name": "Lit",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Kalabi",
-                        "artist_mbids": [],
-                        "release_name": "Support Network",
-                        "track_name": "Like a Feather",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Romare",
-                        "artist_mbids": [
-                            "b014d579-b549-4b21-b90d-5264e0433988"
-                        ],
-                        "recording_mbid": "c497be4a-38f9-4cdd-9d8e-4701d8378067",
-                        "release_name": "Projections",
-                        "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
-                        "track_name": "La Petite Mort",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Kalabi",
-                        "artist_mbids": [],
-                        "release_name": "Support Network",
-                        "track_name": "Keep Falling - Sleeping on the Job Mix",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Massive Attack",
-                        "artist_mbids": [
-                            "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
-                        ],
-                        "recording_mbid": "bffca891-5f37-47cf-a38f-4ba51a4d8e0f",
-                        "release_name": "Protection",
-                        "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
-                        "track_name": "Karmacoma",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Little People",
-                        "artist_mbids": [
-                            "78c94cba-761f-4212-8508-a24bda2e57dc"
-                        ],
-                        "recording_mbid": "254c6a77-fa4c-4794-b51b-a3ad2a703bf2",
-                        "release_name": "Mickey Mouse Operation",
-                        "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
-                        "track_name": "Intermezzo",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Abakus",
-                        "artist_mbids": [
-                            "a8b39181-6939-451e-9641-2db231b73706"
-                        ],
-                        "recording_mbid": "10dc3283-a3f1-4357-a74b-5983e1c1483f",
-                        "release_name": "Silent Geometry",
-                        "release_mbid": "6122ca09-a4ca-4d13-96c5-2b1ea502e7f5",
-                        "track_name": "I Had a Dream Last Night",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Daft Punk",
-                        "artist_mbids": [
-                            "056e4f3e-d505-4dad-8ec1-d04f521cbb56"
-                        ],
-                        "recording_mbid": "4383e23d-59a3-4631-8727-0b3248061cf9",
-                        "release_name": "Random Access Memories",
-                        "release_mbid": "74fcd7f4-a2c8-4526-b350-558b157942bf",
-                        "track_name": "Give Life Back to Music",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "All India Radio",
-                        "artist_mbids": [
-                            "53d2a4d1-556e-4701-a8ac-5fcb74a8e393"
-                        ],
-                        "recording_mbid": "90d0380f-8541-4183-b8c5-fc891b0b361a",
-                        "release_name": "Echo Other",
-                        "release_mbid": "1a12cb18-84cc-4818-b748-2eceaa63de16",
-                        "track_name": "Four Three",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "New Order",
-                        "artist_mbids": [
-                            "f1106b17-dcbb-45f6-b938-199ccfab50cc"
-                        ],
-                        "recording_mbid": "1663fff2-09f4-4257-9aeb-06e53622b1f3",
-                        "release_name": "Technique",
-                        "release_mbid": "f63bfd08-a085-3a33-8d83-d396ab8d1f6d",
-                        "track_name": "Dream Attack",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Brazilian Girls",
-                        "artist_mbids": [
-                            "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
-                        ],
-                        "recording_mbid": "35e65392-7a92-414c-8fd8-357c7a01a557",
-                        "release_name": "Brazilian Girls",
-                        "release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
-                        "track_name": "Don't Stop",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Brazilian Girls",
-                        "artist_mbids": [],
-                        "release_name": "Brazilian Girls",
-                        "track_name": "Die Gedanken Sind Frei (Thoughts Are Free)",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Little People, Rachael Roberts",
-                        "artist_mbids": [
-                            "78c94cba-761f-4212-8508-a24bda2e57dc",
-                            "bd43cb68-3a68-429e-9aad-6fc512f7df71"
-                        ],
-                        "recording_mbid": "ba62d5d4-5fb7-4040-b3d0-a4f833482cdd",
-                        "release_name": "Mickey Mouse Operation",
-                        "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
-                        "track_name": "Breathe Again",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Vangelis",
-                        "artist_mbids": [
-                            "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
-                        ],
-                        "recording_mbid": "1411b187-2c47-48ca-b44c-474514c4d3b9",
-                        "release_name": "Blade Runner (Music From The Original Soundtrack)",
-                        "release_mbid": "0efa1563-cbc7-4249-b6ec-fab766c38c81",
-                        "track_name": "Blade Runner Blues",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Massive Attack",
-                        "artist_mbids": [
-                            "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
-                        ],
-                        "recording_mbid": "873aeb83-3911-4f75-a343-ec2a9f607a17",
-                        "release_name": "Protection",
-                        "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
-                        "track_name": "Better Things",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Brazilian Girls",
-                        "artist_mbids": [
-                            "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
-                        ],
-                        "recording_mbid": "9a0d552e-f763-4806-8772-0a6ad6dabd84",
-                        "release_name": "Brazilian Girls",
-                        "release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
-                        "track_name": "All We Have",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Little People",
-                        "artist_mbids": [
-                            "78c94cba-761f-4212-8508-a24bda2e57dc"
-                        ],
-                        "recording_mbid": "21ea50a4-a82e-48a7-a11d-40f9636e874e",
-                        "release_name": "Mickey Mouse Operation",
-                        "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
-                        "track_name": "Above The Clouds",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Aether",
-                        "artist_mbids": [
-                            "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
-                        ],
-                        "recording_mbid": "2bdb4900-eab3-4428-8a3c-2fc3d824ed48",
-                        "release_name": "Yamanote",
-                        "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
-                        "track_name": "151018",
-                        "listen_count": 1
-                    }
-                ],
-                "count": 41
-            },
-            {
-                "user_id": 2,
-                "data": [
-                    {
-                        "artist_name": "Lucifer Cast, Tom Ellis",
-                        "artist_mbids": [],
-                        "release_name": "Lucifer: Season 5 - Bloody Celestial Karaoke Jam (Special Episode Soundtrack)",
-                        "track_name": "Wicked Game (feat. Tom Ellis)",
-                        "listen_count": 5
-                    },
-                    {
-                        "artist_name": "Katy Perry",
-                        "artist_mbids": [
-                            "122d63fc-8671-43e4-9752-34e846d62a9c"
-                        ],
-                        "recording_mbid": "2d6f51c6-afc5-457e-9c58-689679c08d30",
-                        "release_name": "Teenage Dream",
-                        "release_mbid": "ae8288cf-134e-48bc-a146-f0a2ac35b322",
-                        "track_name": "The One That Got Away",
-                        "listen_count": 5
-                    },
-                    {
-                        "artist_name": "Klergy",
-                        "artist_mbids": [
-                            "5586fc31-7c41-4a2d-97a2-d358b58b250d"
-                        ],
-                        "recording_mbid": "5fdcd356-600b-40d9-8ebe-9459fba2e6a1",
-                        "release_name": "And so It Begins",
-                        "release_mbid": "834d8732-8e2d-42b6-9496-55b067d0748f",
-                        "track_name": "And so It Begins",
-                        "listen_count": 5
-                    },
-                    {
-                        "artist_name": "Future, Marshmello",
-                        "artist_mbids": [],
-                        "release_name": "Mask Off (Marshmello Remix)",
-                        "track_name": "Mask Off - Marshmello Remix",
-                        "listen_count": 4
-                    },
-                    {
-                        "artist_name": "Guy Sebastian, Lupe Fiasco",
-                        "artist_mbids": [
-                            "cf15719f-51f9-4db8-a15d-5eed9664ce69",
-                            "f116b984-45ae-49d0-9445-efc5a61458a1"
-                        ],
-                        "recording_mbid": "b9e26fa2-8d35-456b-ad09-b946d4e0675f",
-                        "release_name": "This Is Hip Hop",
-                        "release_mbid": "1760ede9-4041-4d64-982e-a8fa76b9ea51",
-                        "track_name": "Battle Scars",
-                        "listen_count": 3
-                    },
-                    {
-                        "artist_name": "Jon Bellion",
-                        "artist_mbids": [
-                            "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
-                        ],
-                        "recording_mbid": "52534f30-d1c6-4313-b7e5-d58a171c7036",
-                        "release_name": "The Human Condition",
-                        "release_mbid": "7a5d7834-ff3b-4214-95eb-9b14332e9541",
-                        "track_name": "All Time Low",
-                        "listen_count": 3
-                    },
-                    {
-                        "artist_name": "Ursine Vulpine, Annaca",
-                        "artist_mbids": [
-                            "93cfee41-b1a6-4604-a01c-91243e6926e6",
-                            "43736f76-419a-42a0-816a-830876647ba5"
-                        ],
-                        "recording_mbid": "6b7745aa-840c-4bea-b41d-b13c2dc625cc",
-                        "release_name": "Wicked Game",
-                        "release_mbid": "1355c8b7-f563-4ddc-8b00-620f4a63d081",
-                        "track_name": "Wicked Game",
-                        "listen_count": 2
-                    },
-                    {
-                        "artist_name": "X Ambassadors",
-                        "artist_mbids": [
-                            "298f4089-1948-44b5-b5e8-d5381f42362f"
-                        ],
-                        "recording_mbid": "1dcae90f-2b49-484e-9e30-3fa7d19221a4",
-                        "release_name": "VHS",
-                        "release_mbid": "89b9a362-af9b-4a19-8e56-647355a73f39",
-                        "track_name": "Renegades",
-                        "listen_count": 2
-                    },
-                    {
-                        "artist_name": "Beyonc\u00e9",
-                        "artist_mbids": [
-                            "859d0860-d480-4efd-970c-c05d5f1776b8"
-                        ],
-                        "recording_mbid": "899a043d-67bc-420c-85ea-6fee705baeb3",
-                        "release_name": "I Am... Sasha Fierce",
-                        "release_mbid": "e00b32b1-a697-4679-b085-52eb6bd5ffd9",
-                        "track_name": "Halo",
-                        "listen_count": 2
-                    },
-                    {
-                        "artist_name": "Bo Burnham",
-                        "artist_mbids": [],
-                        "release_name": "Inside (The Songs)",
-                        "track_name": "Bezos I",
-                        "listen_count": 2
-                    },
-                    {
-                        "artist_name": "Olivia Rodrigo",
-                        "artist_mbids": [
-                            "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
-                        ],
-                        "recording_mbid": "dbcdb192-8e1f-47f5-9fd6-b6f5dcb2da1a",
-                        "release_name": "SOUR",
-                        "release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
-                        "track_name": "jealousy, jealousy",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Olivia Rodrigo",
-                        "artist_mbids": [
-                            "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
-                        ],
-                        "recording_mbid": "97aa087b-5fa2-42ff-bd48-d162862cdc95",
-                        "release_name": "SOUR",
-                        "release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
-                        "track_name": "good 4 u",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Dua Lipa",
-                        "artist_mbids": [
-                            "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
-                        ],
-                        "recording_mbid": "19ddd84f-0353-4d6e-99a1-f00c0aa22cd1",
-                        "release_name": "Ballermann Hits 2020 (XXL Zuhause Edition)",
-                        "release_mbid": "96a204c8-e368-436f-a1e6-37f13f302108",
-                        "track_name": "Physical",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Shakira",
-                        "artist_mbids": [
-                            "4f29ecd7-21a5-4c03-b9ba-d0cfe9488f8c",
-                            "bf24ca37-25f4-4e34-9aec-460b94364cfc"
-                        ],
-                        "recording_mbid": "2c0b2787-307c-49e9-b2e9-5b1ddd6e713e",
-                        "release_mbid": "5fe133cb-d394-4089-a5e1-ec1e27bf4fe3",
-                        "track_name": "Hips Don't Lie ft. Wyclef Jean",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Beyonc\u00e9",
-                        "artist_mbids": [
-                            "859d0860-d480-4efd-970c-c05d5f1776b8"
-                        ],
-                        "recording_mbid": "899a043d-67bc-420c-85ea-6fee705baeb3",
-                        "release_name": "I AM...SASHA FIERCE - Platinum Edition",
-                        "release_mbid": "2866428a-8a00-354d-af5c-0648746a1202",
-                        "track_name": "Halo",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Harry Styles",
-                        "artist_mbids": [
-                            "7eb1ce54-a355-41f9-8d68-e018b096d427"
-                        ],
-                        "recording_mbid": "c3551fa7-ee72-4295-8fbd-a2d203dd17b6",
-                        "release_name": "Fine Line",
-                        "release_mbid": "c6a3c8a1-1c6e-4fef-a3f4-6b24eb064c19",
-                        "track_name": "Golden",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "*NSYNC",
-                        "artist_mbids": [
-                            "603ba565-3967-4be1-931e-9cb945394e86"
-                        ],
-                        "recording_mbid": "5aa053a9-5b84-418f-bb3c-d61df67b3880",
-                        "release_name": "No Strings Attached",
-                        "release_mbid": "5f68e32a-ccc1-4b01-a4de-daa880bf3864",
-                        "track_name": "Bye Bye Bye",
-                        "listen_count": 1
-                    },
-                    {
-                        "artist_name": "Dua Lipa",
-                        "artist_mbids": [
-                            "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
-                        ],
-                        "recording_mbid": "ba2a214d-39b0-4b53-8b20-b2b80cf9bfab",
-                        "release_name": "Now That's What I Call Music Vol. 83",
-                        "release_mbid": "315bbc48-dea9-463c-bfa9-a6ccab78b990",
-                        "track_name": "Break My Heart",
-                        "listen_count": 1
-                    }
-                ],
-                "count": 18
-            }
-        ]
-    }
+          {
+            "artist_name": "Portishead",
+            "artist_mbids": [
+              "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+            ],
+            "recording_mbid": "a7ed3365-affa-4331-8bd9-1ececaf9ae77",
+            "release_name": "Third",
+            "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "caa_id": 6351940170,
+            "caa_release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "track_name": "The Rip",
+            "listen_count": 2
+          },
+          {
+            "artist_name": "Portishead",
+            "artist_mbids": [
+              "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+            ],
+            "recording_mbid": "8855e971-0570-4d20-9258-4b7ed7441f10",
+            "release_name": "Third",
+            "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "caa_id": 6351940170,
+            "caa_release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "track_name": "Plastic",
+            "listen_count": 2
+          },
+          {
+            "artist_name": "Massive Attack",
+            "artist_mbids": [
+              "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+            ],
+            "recording_mbid": "e69db070-8ff6-47bc-ab5f-d0291ee08dc6",
+            "release_name": "Protection",
+            "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "caa_id": 2714350967,
+            "caa_release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "track_name": "Euro Child",
+            "listen_count": 2
+          },
+          {
+            "artist_name": "Aether",
+            "artist_mbids": [
+              "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+            ],
+            "recording_mbid": "bb7601d3-f006-4421-83c9-d71e35962a95",
+            "release_name": "Yamanote",
+            "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "caa_id": 32489333474,
+            "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "track_name": "You Still Echo Here",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Aether",
+            "artist_mbids": [
+              "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+            ],
+            "recording_mbid": "40e085a0-9637-42a6-88f7-d5e12c793854",
+            "release_name": "Yamanote",
+            "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "caa_id": 32489333474,
+            "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "track_name": "Yamanote",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Jah Wobble, Marconi Union",
+            "artist_mbids": [
+              "904cc1c8-021e-45ac-bbe9-95c01a1f8099",
+              "3f9b5837-ed1c-413e-bfef-ca4f892dcc59"
+            ],
+            "recording_mbid": "0ca2a698-7280-4b40-a357-ca966bbd3a96",
+            "release_name": "Anomic",
+            "release_mbid": "39967fee-e436-4f87-b36e-299aae4dc670",
+            "caa_id": 27448523314,
+            "caa_release_mbid": "39967fee-e436-4f87-b36e-299aae4dc670",
+            "track_name": "Wealth",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Portishead",
+            "artist_mbids": [
+              "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+            ],
+            "recording_mbid": "b00efba7-0d88-478c-97ad-257aef64cc27",
+            "release_name": "Third",
+            "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "caa_id": 6351940170,
+            "caa_release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "track_name": "We Carry On",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "The Egg",
+            "artist_mbids": [
+              "6fe91ae9-8ddb-47b0-a2d7-252833ce5500"
+            ],
+            "recording_mbid": "975f5943-6c9b-45c2-a219-8f5c34b11014",
+            "release_name": "Forwards (Special Edition)",
+            "release_mbid": "af6fdf7a-fcb0-46f9-b8c5-517fe8cb3e5d",
+            "caa_id": 11988727956,
+            "caa_release_mbid": "00cc6a5a-1051-4b7e-8344-4ec33099eb98",
+            "track_name": "Venice Beach",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "The Polish Ambassador",
+            "artist_mbids": [
+              "e9787dd2-5857-4b51-8e59-a190a54820fc"
+            ],
+            "recording_mbid": "1991c5e5-053a-4222-ad04-7d84cc11907c",
+            "release_name": "Ecozoic",
+            "release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
+            "caa_id": 34328682227,
+            "caa_release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
+            "track_name": "Two and a Half Moons Away",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Sounds From The Ground",
+            "artist_mbids": [
+              "9806e551-9a63-4a9d-be1b-5297b2ac0e76"
+            ],
+            "recording_mbid": "986257af-4ed5-4e6e-bb68-a4e6f03eb284",
+            "release_name": "Mosaic Remastered",
+            "release_mbid": "2f7634f3-3bb5-4f2c-9821-d150e8415fb8",
+            "caa_id": 14187025380,
+            "caa_release_mbid": "2f7634f3-3bb5-4f2c-9821-d150e8415fb8",
+            "track_name": "Treasure",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Romare",
+            "artist_mbids": [
+              "b014d579-b549-4b21-b90d-5264e0433988"
+            ],
+            "recording_mbid": "5176acc7-1b58-4434-ba16-d76e3ca094cd",
+            "release_name": "Projections",
+            "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "caa_id": 19363639475,
+            "caa_release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "track_name": "The Drifter",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Aether",
+            "artist_mbids": [
+              "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+            ],
+            "recording_mbid": "c626c408-ecbb-47ac-a3d8-961a072d0819",
+            "release_name": "Yamanote",
+            "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "caa_id": 32489333474,
+            "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "track_name": "Sunshine City",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Ott",
+            "artist_mbids": [
+              "1a40f886-0877-4bab-9ab1-761147dadb89"
+            ],
+            "recording_mbid": "19cdfa84-f4ec-4e1d-8595-ed2bc4e295d4",
+            "release_name": "Blumenkraft",
+            "release_mbid": "99e39642-cae5-4061-9800-751108bc650b",
+            "caa_id": 6477557415,
+            "caa_release_mbid": "99e39642-cae5-4061-9800-751108bc650b",
+            "track_name": "Splitting an Atom",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Massive Attack",
+            "artist_mbids": [
+              "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+            ],
+            "recording_mbid": "f837bff5-faf2-4323-81de-91f056207a42",
+            "release_name": "Protection",
+            "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "caa_id": 2714350967,
+            "caa_release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "track_name": "Sly",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Portishead",
+            "artist_mbids": [
+              "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+            ],
+            "recording_mbid": "83b416db-4ee1-4560-a3b3-52fd453eb285",
+            "release_name": "Third",
+            "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "caa_id": 6351940170,
+            "caa_release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "track_name": "Silence",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "The Polish Ambassador",
+            "artist_mbids": [
+              "e9787dd2-5857-4b51-8e59-a190a54820fc"
+            ],
+            "recording_mbid": "82ac2959-a2d6-4f41-be9f-50bac0976fd1",
+            "release_name": "Ecozoic",
+            "release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
+            "caa_id": 34328682227,
+            "caa_release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
+            "track_name": "Rootshine Revival",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Massive Attack, Tracey Thorn",
+            "artist_mbids": [
+              "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8",
+              "6dbd7f8b-20ac-4287-8dd3-b4cae5c5f82f"
+            ],
+            "recording_mbid": "535b2d75-ce44-41a5-9d7c-12318d219dd4",
+            "release_name": "Protection",
+            "release_mbid": "91231e74-2674-411e-968f-b188bb67b711",
+            "caa_id": 10340680649,
+            "caa_release_mbid": "91231e74-2674-411e-968f-b188bb67b711",
+            "track_name": "Protection",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Romare",
+            "artist_mbids": [
+              "b014d579-b549-4b21-b90d-5264e0433988"
+            ],
+            "recording_mbid": "90fb24e7-3b50-4043-a5f1-2c3a78d692f0",
+            "release_name": "Projections",
+            "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "caa_id": 19363639475,
+            "caa_release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "track_name": "Prison Blues",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Romare",
+            "artist_mbids": [
+              "b014d579-b549-4b21-b90d-5264e0433988"
+            ],
+            "recording_mbid": "d58ebf31-6e08-4baa-857f-2e43f4ff8f0f",
+            "release_name": "Projections",
+            "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "caa_id": 19363639475,
+            "caa_release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "track_name": "Nina's Charm",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Little People",
+            "artist_mbids": [
+              "78c94cba-761f-4212-8508-a24bda2e57dc"
+            ],
+            "recording_mbid": "793f88ed-2e8c-4cdc-b042-8920877a82fc",
+            "release_name": "Mickey Mouse Operation",
+            "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "caa_id": 15079002702,
+            "caa_release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "track_name": "Moon",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Vangelis",
+            "artist_mbids": [
+              "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+            ],
+            "recording_mbid": "349101b9-0570-4859-9ad7-f939ea4e68ab",
+            "release_name": "Blade Runner (Music From The Original Soundtrack)",
+            "release_mbid": "d619edca-d766-36b3-a2c0-19cd47ed427b",
+            "caa_id": 6082721506,
+            "caa_release_mbid": "d619edca-d766-36b3-a2c0-19cd47ed427b",
+            "track_name": "Memories of Green",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Brazilian Girls",
+            "artist_mbids": [
+              "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+            ],
+            "recording_mbid": "9fc313fc-d213-42f9-984f-4405ccf74e23",
+            "release_name": "Brazilian Girls",
+            "release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+            "caa_id": 11778363663,
+            "caa_release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+            "track_name": "Me Gustas Cuando Callas",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Vangelis",
+            "artist_mbids": [
+              "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+            ],
+            "recording_mbid": "1f36b477-3b7c-4a34-a024-a042135fede8",
+            "release_name": "Blade Runner (Music From The Original Soundtrack)",
+            "release_mbid": "9792e059-f7af-4bce-90cf-9a2f78288c72",
+            "track_name": "Main Titles",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Kiasmos",
+            "artist_mbids": [
+              "3252542b-98a7-48ba-9861-7a612b16c227"
+            ],
+            "recording_mbid": "7133862a-0fd3-4d1c-9cb6-3be5e051af13",
+            "release_name": "Kiasmos",
+            "release_mbid": "73e4a3e9-bb1d-4243-9c1b-f285fc842248",
+            "caa_id": 22036362973,
+            "caa_release_mbid": "73e4a3e9-bb1d-4243-9c1b-f285fc842248",
+            "track_name": "Lit",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Kalabi",
+            "artist_mbids": [],
+            "release_name": "Support Network",
+            "track_name": "Like a Feather",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Romare",
+            "artist_mbids": [
+              "b014d579-b549-4b21-b90d-5264e0433988"
+            ],
+            "recording_mbid": "c497be4a-38f9-4cdd-9d8e-4701d8378067",
+            "release_name": "Projections",
+            "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "caa_id": 19363639475,
+            "caa_release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "track_name": "La Petite Mort",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Kalabi",
+            "artist_mbids": [],
+            "release_name": "Support Network",
+            "track_name": "Keep Falling - Sleeping on the Job Mix",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Massive Attack",
+            "artist_mbids": [
+              "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+            ],
+            "recording_mbid": "bffca891-5f37-47cf-a38f-4ba51a4d8e0f",
+            "release_name": "Protection",
+            "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "caa_id": 2714350967,
+            "caa_release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "track_name": "Karmacoma",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Little People",
+            "artist_mbids": [
+              "78c94cba-761f-4212-8508-a24bda2e57dc"
+            ],
+            "recording_mbid": "254c6a77-fa4c-4794-b51b-a3ad2a703bf2",
+            "release_name": "Mickey Mouse Operation",
+            "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "caa_id": 15079002702,
+            "caa_release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "track_name": "Intermezzo",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Abakus",
+            "artist_mbids": [
+              "a8b39181-6939-451e-9641-2db231b73706"
+            ],
+            "recording_mbid": "10dc3283-a3f1-4357-a74b-5983e1c1483f",
+            "release_name": "Silent Geometry",
+            "release_mbid": "6122ca09-a4ca-4d13-96c5-2b1ea502e7f5",
+            "caa_id": 3984827641,
+            "caa_release_mbid": "6122ca09-a4ca-4d13-96c5-2b1ea502e7f5",
+            "track_name": "I Had a Dream Last Night",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Daft Punk",
+            "artist_mbids": [
+              "056e4f3e-d505-4dad-8ec1-d04f521cbb56"
+            ],
+            "recording_mbid": "4383e23d-59a3-4631-8727-0b3248061cf9",
+            "release_name": "Random Access Memories",
+            "release_mbid": "74fcd7f4-a2c8-4526-b350-558b157942bf",
+            "caa_id": 28936814610,
+            "caa_release_mbid": "74fcd7f4-a2c8-4526-b350-558b157942bf",
+            "track_name": "Give Life Back to Music",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "All India Radio",
+            "artist_mbids": [
+              "53d2a4d1-556e-4701-a8ac-5fcb74a8e393"
+            ],
+            "recording_mbid": "90d0380f-8541-4183-b8c5-fc891b0b361a",
+            "release_name": "Echo Other",
+            "release_mbid": "1a12cb18-84cc-4818-b748-2eceaa63de16",
+            "caa_id": 11008549019,
+            "caa_release_mbid": "1a12cb18-84cc-4818-b748-2eceaa63de16",
+            "track_name": "Four Three",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "New Order",
+            "artist_mbids": [
+              "f1106b17-dcbb-45f6-b938-199ccfab50cc"
+            ],
+            "recording_mbid": "1663fff2-09f4-4257-9aeb-06e53622b1f3",
+            "release_name": "Technique",
+            "release_mbid": "f63bfd08-a085-3a33-8d83-d396ab8d1f6d",
+            "caa_id": 2546509254,
+            "caa_release_mbid": "01681b1d-3068-3689-b879-efefde1f7b3b",
+            "track_name": "Dream Attack",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Brazilian Girls",
+            "artist_mbids": [
+              "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+            ],
+            "recording_mbid": "35e65392-7a92-414c-8fd8-357c7a01a557",
+            "release_name": "Brazilian Girls",
+            "release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+            "caa_id": 11778363663,
+            "caa_release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+            "track_name": "Don't Stop",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Brazilian Girls",
+            "artist_mbids": [],
+            "release_name": "Brazilian Girls",
+            "track_name": "Die Gedanken Sind Frei (Thoughts Are Free)",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Little People, Rachael Roberts",
+            "artist_mbids": [
+              "78c94cba-761f-4212-8508-a24bda2e57dc",
+              "bd43cb68-3a68-429e-9aad-6fc512f7df71"
+            ],
+            "recording_mbid": "ba62d5d4-5fb7-4040-b3d0-a4f833482cdd",
+            "release_name": "Mickey Mouse Operation",
+            "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "caa_id": 15079002702,
+            "caa_release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "track_name": "Breathe Again",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Vangelis",
+            "artist_mbids": [
+              "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+            ],
+            "recording_mbid": "1411b187-2c47-48ca-b44c-474514c4d3b9",
+            "release_name": "Blade Runner (Music From The Original Soundtrack)",
+            "release_mbid": "0efa1563-cbc7-4249-b6ec-fab766c38c81",
+            "caa_id": 8448022908,
+            "caa_release_mbid": "0efa1563-cbc7-4249-b6ec-fab766c38c81",
+            "track_name": "Blade Runner Blues",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Massive Attack",
+            "artist_mbids": [
+              "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+            ],
+            "recording_mbid": "873aeb83-3911-4f75-a343-ec2a9f607a17",
+            "release_name": "Protection",
+            "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "caa_id": 2714350967,
+            "caa_release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "track_name": "Better Things",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Brazilian Girls",
+            "artist_mbids": [
+              "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+            ],
+            "recording_mbid": "9a0d552e-f763-4806-8772-0a6ad6dabd84",
+            "release_name": "Brazilian Girls",
+            "release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+            "caa_id": 11778363663,
+            "caa_release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+            "track_name": "All We Have",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Little People",
+            "artist_mbids": [
+              "78c94cba-761f-4212-8508-a24bda2e57dc"
+            ],
+            "recording_mbid": "21ea50a4-a82e-48a7-a11d-40f9636e874e",
+            "release_name": "Mickey Mouse Operation",
+            "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "caa_id": 15079002702,
+            "caa_release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "track_name": "Above The Clouds",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Aether",
+            "artist_mbids": [
+              "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+            ],
+            "recording_mbid": "2bdb4900-eab3-4428-8a3c-2fc3d824ed48",
+            "release_name": "Yamanote",
+            "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "caa_id": 32489333474,
+            "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "track_name": "151018",
+            "listen_count": 1
+          }
+        ],
+        "count": 41
+      },
+      {
+        "user_id": 2,
+        "data": [
+          {
+            "artist_name": "Lucifer Cast, Tom Ellis",
+            "artist_mbids": [],
+            "release_name": "Lucifer: Season 5 - Bloody Celestial Karaoke Jam (Special Episode Soundtrack)",
+            "track_name": "Wicked Game (feat. Tom Ellis)",
+            "listen_count": 5
+          },
+          {
+            "artist_name": "Katy Perry",
+            "artist_mbids": [
+              "122d63fc-8671-43e4-9752-34e846d62a9c"
+            ],
+            "recording_mbid": "2d6f51c6-afc5-457e-9c58-689679c08d30",
+            "release_name": "Teenage Dream",
+            "release_mbid": "ae8288cf-134e-48bc-a146-f0a2ac35b322",
+            "track_name": "The One That Got Away",
+            "listen_count": 5
+          },
+          {
+            "artist_name": "Klergy",
+            "artist_mbids": [
+              "5586fc31-7c41-4a2d-97a2-d358b58b250d"
+            ],
+            "recording_mbid": "5fdcd356-600b-40d9-8ebe-9459fba2e6a1",
+            "release_name": "And so It Begins",
+            "release_mbid": "834d8732-8e2d-42b6-9496-55b067d0748f",
+            "caa_id": 27620887370,
+            "caa_release_mbid": "834d8732-8e2d-42b6-9496-55b067d0748f",
+            "track_name": "And so It Begins",
+            "listen_count": 5
+          },
+          {
+            "artist_name": "Future, Marshmello",
+            "artist_mbids": [],
+            "release_name": "Mask Off (Marshmello Remix)",
+            "track_name": "Mask Off - Marshmello Remix",
+            "listen_count": 4
+          },
+          {
+            "artist_name": "Guy Sebastian, Lupe Fiasco",
+            "artist_mbids": [
+              "cf15719f-51f9-4db8-a15d-5eed9664ce69",
+              "f116b984-45ae-49d0-9445-efc5a61458a1"
+            ],
+            "recording_mbid": "b9e26fa2-8d35-456b-ad09-b946d4e0675f",
+            "release_name": "This Is Hip Hop",
+            "release_mbid": "1760ede9-4041-4d64-982e-a8fa76b9ea51",
+            "caa_id": 4199784147,
+            "caa_release_mbid": "b0d805e3-2afe-4e3a-a8a5-3f4f8dfde2bb",
+            "track_name": "Battle Scars",
+            "listen_count": 3
+          },
+          {
+            "artist_name": "Jon Bellion",
+            "artist_mbids": [
+              "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
+            ],
+            "recording_mbid": "52534f30-d1c6-4313-b7e5-d58a171c7036",
+            "release_name": "The Human Condition",
+            "release_mbid": "7a5d7834-ff3b-4214-95eb-9b14332e9541",
+            "caa_id": 28354644282,
+            "caa_release_mbid": "7a5d7834-ff3b-4214-95eb-9b14332e9541",
+            "track_name": "All Time Low",
+            "listen_count": 3
+          },
+          {
+            "artist_name": "Ursine Vulpine, Annaca",
+            "artist_mbids": [
+              "93cfee41-b1a6-4604-a01c-91243e6926e6",
+              "43736f76-419a-42a0-816a-830876647ba5"
+            ],
+            "recording_mbid": "6b7745aa-840c-4bea-b41d-b13c2dc625cc",
+            "release_name": "Wicked Game",
+            "release_mbid": "1355c8b7-f563-4ddc-8b00-620f4a63d081",
+            "caa_id": 15528924240,
+            "caa_release_mbid": "1355c8b7-f563-4ddc-8b00-620f4a63d081",
+            "track_name": "Wicked Game",
+            "listen_count": 2
+          },
+          {
+            "artist_name": "X Ambassadors",
+            "artist_mbids": [
+              "298f4089-1948-44b5-b5e8-d5381f42362f"
+            ],
+            "recording_mbid": "1dcae90f-2b49-484e-9e30-3fa7d19221a4",
+            "release_name": "VHS",
+            "release_mbid": "89b9a362-af9b-4a19-8e56-647355a73f39",
+            "caa_id": 11188355897,
+            "caa_release_mbid": "89b9a362-af9b-4a19-8e56-647355a73f39",
+            "track_name": "Renegades",
+            "listen_count": 2
+          },
+          {
+            "artist_name": "Beyoncé",
+            "artist_mbids": [
+              "859d0860-d480-4efd-970c-c05d5f1776b8"
+            ],
+            "recording_mbid": "899a043d-67bc-420c-85ea-6fee705baeb3",
+            "release_name": "I Am... Sasha Fierce",
+            "release_mbid": "e00b32b1-a697-4679-b085-52eb6bd5ffd9",
+            "caa_id": 6325697296,
+            "caa_release_mbid": "e00b32b1-a697-4679-b085-52eb6bd5ffd9",
+            "track_name": "Halo",
+            "listen_count": 2
+          },
+          {
+            "artist_name": "Bo Burnham",
+            "artist_mbids": [],
+            "release_name": "Inside (The Songs)",
+            "track_name": "Bezos I",
+            "listen_count": 2
+          },
+          {
+            "artist_name": "Olivia Rodrigo",
+            "artist_mbids": [
+              "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+            ],
+            "recording_mbid": "dbcdb192-8e1f-47f5-9fd6-b6f5dcb2da1a",
+            "release_name": "SOUR",
+            "release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
+            "caa_id": 29093344876,
+            "caa_release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
+            "track_name": "jealousy, jealousy",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Olivia Rodrigo",
+            "artist_mbids": [
+              "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+            ],
+            "recording_mbid": "97aa087b-5fa2-42ff-bd48-d162862cdc95",
+            "release_name": "SOUR",
+            "release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
+            "caa_id": 29093344876,
+            "caa_release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
+            "track_name": "good 4 u",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Dua Lipa",
+            "artist_mbids": [
+              "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+            ],
+            "recording_mbid": "19ddd84f-0353-4d6e-99a1-f00c0aa22cd1",
+            "release_name": "Ballermann Hits 2020 (XXL Zuhause Edition)",
+            "release_mbid": "96a204c8-e368-436f-a1e6-37f13f302108",
+            "caa_id": 26607171644,
+            "caa_release_mbid": "96a204c8-e368-436f-a1e6-37f13f302108",
+            "track_name": "Physical",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Shakira",
+            "artist_mbids": [
+              "4f29ecd7-21a5-4c03-b9ba-d0cfe9488f8c",
+              "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+            ],
+            "recording_mbid": "2c0b2787-307c-49e9-b2e9-5b1ddd6e713e",
+            "release_mbid": "5fe133cb-d394-4089-a5e1-ec1e27bf4fe3",
+            "caa_id": 7179546566,
+            "caa_release_mbid": "5fe133cb-d394-4089-a5e1-ec1e27bf4fe3",
+            "track_name": "Hips Don't Lie ft. Wyclef Jean",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Beyoncé",
+            "artist_mbids": [
+              "859d0860-d480-4efd-970c-c05d5f1776b8"
+            ],
+            "recording_mbid": "899a043d-67bc-420c-85ea-6fee705baeb3",
+            "release_name": "I AM...SASHA FIERCE - Platinum Edition",
+            "release_mbid": "2866428a-8a00-354d-af5c-0648746a1202",
+            "caa_id": 10964653558,
+            "caa_release_mbid": "2866428a-8a00-354d-af5c-0648746a1202",
+            "track_name": "Halo",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Harry Styles",
+            "artist_mbids": [
+              "7eb1ce54-a355-41f9-8d68-e018b096d427"
+            ],
+            "recording_mbid": "c3551fa7-ee72-4295-8fbd-a2d203dd17b6",
+            "release_name": "Fine Line",
+            "release_mbid": "c6a3c8a1-1c6e-4fef-a3f4-6b24eb064c19",
+            "caa_id": 24872573548,
+            "caa_release_mbid": "c6a3c8a1-1c6e-4fef-a3f4-6b24eb064c19",
+            "track_name": "Golden",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "*NSYNC",
+            "artist_mbids": [
+              "603ba565-3967-4be1-931e-9cb945394e86"
+            ],
+            "recording_mbid": "5aa053a9-5b84-418f-bb3c-d61df67b3880",
+            "release_name": "No Strings Attached",
+            "release_mbid": "5f68e32a-ccc1-4b01-a4de-daa880bf3864",
+            "caa_id": 8059714826,
+            "caa_release_mbid": "5f68e32a-ccc1-4b01-a4de-daa880bf3864",
+            "track_name": "Bye Bye Bye",
+            "listen_count": 1
+          },
+          {
+            "artist_name": "Dua Lipa",
+            "artist_mbids": [
+              "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+            ],
+            "recording_mbid": "ba2a214d-39b0-4b53-8b20-b2b80cf9bfab",
+            "release_name": "Now That's What I Call Music Vol. 83",
+            "release_mbid": "315bbc48-dea9-463c-bfa9-a6ccab78b990",
+            "caa_id": 25806517352,
+            "caa_release_mbid": "315bbc48-dea9-463c-bfa9-a6ccab78b990",
+            "track_name": "Break My Heart",
+            "listen_count": 1
+          }
+        ],
+        "count": 18
+      }
+    ]
+  }
 ]
