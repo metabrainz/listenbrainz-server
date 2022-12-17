@@ -458,6 +458,8 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_listens_per_day, year=year)
     ctx.invoke(request_yim_listen_count, year=year)
     ctx.invoke(request_yim_similar_users, year=year)
+    ctx.invoke(request_yim_new_artists_discovered, year=year)
+    ctx.invoke(request_yim_listening_time, year=year)
     # ctx.invoke(request_yim_playlists, year=year)
 
 
