@@ -12,7 +12,9 @@
         "release_name": "13 Reasons Why (Season 2)",
         "release_mbid": "7d5a6263-a779-4b8d-93b0-76aaf2fb017a",
         "track_name": "Start Again (feat. Logic)",
-        "listen_count": 9
+        "listen_count": 9,
+        "caa_id": null,
+        "caa_release_mbid": null
       },
       {
         "artist_name": "The Fray",
@@ -23,7 +25,9 @@
         "release_name": "How to Save a Life",
         "release_mbid": "2b2a93c3-a0bd-4f46-8507-baf5ad291966",
         "track_name": "How to Save a Life",
-        "listen_count": 8
+        "listen_count": 8,
+        "caa_id": null,
+        "caa_release_mbid": null
       },
       {
         "artist_name": "Christina Perri",
@@ -34,7 +38,9 @@
         "release_name": "A Thousand Years",
         "release_mbid": "c268bfdc-dbae-49bc-805c-77317c853b03",
         "track_name": "A Thousand Years",
-        "listen_count": 8
+        "listen_count": 8,
+        "caa_id": null,
+        "caa_release_mbid": null
       },
       {
         "artist_name": "Maroon 5",
@@ -45,7 +51,9 @@
         "release_name": "Overexposed",
         "release_mbid": "a9626819-db11-4d52-adea-7d3c1d9040bb",
         "track_name": "Payphone",
-        "listen_count": 7
+        "listen_count": 7,
+        "caa_id": null,
+        "caa_release_mbid": null
       }
     ]
   },
@@ -62,7 +70,9 @@
         "release_name": "Halcyon Days",
         "release_mbid": "08e09ff8-7dbd-4a2f-af3c-5e3e169b7c76",
         "track_name": "Burn",
-        "listen_count": 16
+        "listen_count": 16,
+        "caa_id": null,
+        "caa_release_mbid": null
       },
       {
         "artist_name": "Ed Sheeran",
@@ -73,7 +83,9 @@
         "release_name": "\u00f7 (Deluxe)",
         "release_mbid": "aec9a871-cd3b-467f-a53d-4ef5bc3bbafe",
         "track_name": "Castle on the Hill",
-        "listen_count": 13
+        "listen_count": 13,
+        "caa_id": null,
+        "caa_release_mbid": null
       },
       {
         "artist_name": "The Script",
@@ -84,7 +96,9 @@
         "release_name": "#3",
         "release_mbid": "1850ad45-5906-458b-89d5-068760d122b5",
         "track_name": "Hall of Fame",
-        "listen_count": 10
+        "listen_count": 10,
+        "caa_id": null,
+        "caa_release_mbid": null
       }
     ]
   }
