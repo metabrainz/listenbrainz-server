@@ -244,12 +244,14 @@ def cover_art_yim_2022(user_name):
         case "Sunday": most_played_day_message = 'I LOVED SPENDING <tspan class="user-stat">SUNDAYS</tspan> WITH MUSIC'
         case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
 
+    most_listened_year = max(stats["most_listened_year"], key=stats["most_listened_year"].get)
+
     return render_template(
         "art/svg-templates/yim-2022.svg",
         user_name=user_name,
         most_played_day_message=most_played_day_message,
-        most_listened_year=stats["most_listened_year"],
+        most_listened_year=most_listened_year,
         total_listen_count=stats["total_listen_count"],
-        new_artists_discovered_count=stats["total_new_artists_discovered"],
+        total_new_artists_discovered=stats["total_new_artists_discovered"],
         total_artists_count=stats["total_artists_count"],
     ), 200, {"Content-Type": "image/svg+xml"}
