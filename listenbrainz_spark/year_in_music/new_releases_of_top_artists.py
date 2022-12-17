@@ -35,6 +35,10 @@ def get_new_releases_of_top_artists(year):
 def _get_new_releases_of_top_artists(year):
     start = datetime.combine(date(year, 1, 1), time.min)
     end = datetime.combine(date(year, 12, 31), time.max)
+
+    # instead of exploding the artist mbids, it is possible to use arrays_overlap on the two artist credit mbids
+    # however in that case spark will do a BroadcastNestedLoopJoin which is very slow (takes 3 hours). the query
+    # below using equality on artist mbid takes 2 minutes.
     return f"""
         WITH artist_counts as (
             SELECT user_id
