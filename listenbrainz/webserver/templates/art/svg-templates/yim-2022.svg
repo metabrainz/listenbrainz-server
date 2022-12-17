@@ -10,8 +10,9 @@
           font-weight: 300;
           fill: #FF0E25;
           font-family: Inter;
-          font-size: 32px;
+          font-size: 28px;
           letter-spacing: 0em;
+          text-anchor: middle;
         }
         .user-stat {
           font-weight: 900;
@@ -42,24 +43,24 @@
             <tspan x="389" y="792">2022</tspan>
     </text>
     <rect x="110.5" y="206.5" width="684" height="462" fill="#FFC93D" stroke="#FF0E25"/>
-    <text class="common-description" x="188" y="283">
+    <text class="common-description" x="451.5" y="283">
         {{most_played_day_message}}
     </text>
-    <text class="common-description" x="231" y="370">
+    <text class="common-description" x="451.5" y="370">
         LISTENED TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS
     </text>
-    <text class="common-description" x="172" y="457">
+    <text class="common-description" x="451.5" y="457">
         MAINLY PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
     </text>
-    <text class="common-description" x="244" y="541">
-        LISTENED TO <tspan class="user-stat">{{total_artist_count}}</tspan> ARTISTS
+    <text class="common-description" x="451.5" y="541">
+        LISTENED TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS
     </text>
-    <text class="common-description" x="213" y="625">
-        DISCOVERED <tspan class="user-stat">{{new_artists_discovered_count}}</tspan> NEW ARTISTS
+    <text class="common-description" x="451.5" y="625">
+        DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
     </text>
-    <rect width="123" height="154.088" transform="matrix(-1 0 0 1 511 83)" />
-    <line x1="399" y1="314.5" x2="501" y2="314.5" stroke="#FF0E25"/>
-    <line x1="399" y1="400.5" x2="501" y2="400.5" stroke="#FF0E25"/>
-    <line x1="399" y1="486.5" x2="501" y2="486.5" stroke="#FF0E25"/>
-    <line x1="399" y1="572.5" x2="501" y2="572.5" stroke="#FF0E25"/>
+    <rect width="123" height="154" transform="matrix(-1 0 0 1 511 83)" />
+    <line x1="399" y1="314.5" x2="504" y2="314.5" stroke="#FF0E25"/>
+    <line x1="399" y1="400.5" x2="504" y2="400.5" stroke="#FF0E25"/>
+    <line x1="399" y1="486.5" x2="504" y2="486.5" stroke="#FF0E25"/>
+    <line x1="399" y1="572.5" x2="504" y2="572.5" stroke="#FF0E25"/>
 </svg>
