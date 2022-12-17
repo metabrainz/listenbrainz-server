@@ -10,16 +10,20 @@
         "release_mbid": "08e09ff8-7dbd-4a2f-af3c-5e3e169b7c76",
         "release_name": "Halcyon Days",
         "listen_count": 10,
-        "artist_name": "Ellie Goulding"
+        "artist_name": "Ellie Goulding",
+        "caa_id": null,
+        "caa_release_mbid": null
       },
       {
         "artist_mbids": [
           "6817e85a-f5ae-4479-b73d-e8e320e1b927"
         ],
         "release_mbid": "aec9a871-cd3b-467f-a53d-4ef5bc3bbafe",
-        "release_name": "\u00f7 (Deluxe)",
+        "release_name": "÷ (Deluxe)",
         "listen_count": 9,
-        "artist_name": "Ed Sheeran"
+        "artist_name": "Ed Sheeran",
+        "caa_id": null,
+        "caa_release_mbid": null
       },
       {
         "artist_mbids": [
@@ -28,7 +32,9 @@
         "release_mbid": "de97ca87-36c4-4995-a5c9-540e35944352",
         "release_name": "Delirium (Deluxe)",
         "listen_count": 9,
-        "artist_name": "Ellie Goulding"
+        "artist_name": "Ellie Goulding",
+        "caa_id": null,
+        "caa_release_mbid": null
       }
     ]
   },
@@ -43,7 +49,9 @@
         "release_mbid": "1850ad45-5906-458b-89d5-068760d122b5",
         "release_name": "#3",
         "listen_count": 8,
-        "artist_name": "The Script"
+        "artist_name": "The Script",
+        "caa_id": null,
+        "caa_release_mbid": null
       },
       {
         "artist_mbids": [
@@ -52,7 +60,9 @@
         "release_mbid": "96c70312-64ce-496d-8604-46a0d20ad347",
         "release_name": "My Head Is an Animal",
         "listen_count": 6,
-        "artist_name": "Of Monsters and Men"
+        "artist_name": "Of Monsters and Men",
+        "caa_id": null,
+        "caa_release_mbid": null
       }
     ]
   }
