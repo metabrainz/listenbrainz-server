@@ -131,6 +131,29 @@ def handle_multi_large_insert(key, year, data):
         current_app.logger.error("Error while inserting top stats:", exc_info=True)
 
 
+def handle_insert_top_stats(entity, year, data):
+    connection = db.engine.raw_connection()
+    query = SQL("""
+        INSERT INTO statistics.year_in_music (user_id, year, data)
+             SELECT "user".id
+                  , {year}
+                  , jsonb_build_object({key}, data::jsonb, {count_key}, count)
+               FROM (VALUES %s) AS t(user_id, count, data)
+               JOIN "user"
+                 ON "user".id = user_id::int
+        ON CONFLICT (user_id, year)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+    """).format(key=Literal(f"top_{entity}"), count_key=Literal(f"total_{entity}_count"), year=Literal(year))
+    try:
+        with connection.cursor() as cursor:
+            values = [(user["user_id"], user["count"], ujson.dumps(user["data"])) for user in data]
+            execute_values(cursor, query, values)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting top stats:", exc_info=True)
+
+
 def insert_playlists(year, playlists):
     connection = db.engine.raw_connection()
     query = SQL("""
