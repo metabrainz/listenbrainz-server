@@ -1,3 +1,6 @@
+import listenbrainz.db.user as db_user
+import listenbrainz.db.year_in_music as db_yim
+
 from uuid import UUID
 
 from brainzutils.ratelimit import ratelimit
@@ -216,3 +219,37 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
                                }
 
     raise APIBadRequest(f"Unkown custom cover art type {custom_name}")
+
+
+@art_api_bp.route("/year-in-music/2022/<user_name>", methods=["GET"])
+@crossdomain
+@ratelimit()
+def cover_art_yim_2022(user_name):
+    """ Create the shareable svg image using YIM 2022 stats """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APIBadRequest(f"User {user_name} not found")
+
+    stats = db_yim.get(user["id"], 2022)
+    if stats is None:
+        raise APIBadRequest(f"Year In Music report for user {user_name} not found")
+
+    match stats["day_of_week"]:
+        case "Monday": most_played_day_message = 'MUSIC IS HOW I SURVIVED <tspan class="user-stat">MONDAYS</tspan>'
+        case "Tuesday": most_played_day_message = '<tspan class="user-stat">TUESDAY</tspan>, MORE LIKE MUSICDAY, AM I RIGHT?'
+        case "Wednesday": most_played_day_message = 'I GOT THROUGH <tspan class="user-stat">WEDNESDAYS</tspan> WITH MUSIC'
+        case "Thursday": most_played_day_message = 'I SPENT TIME WITH MY TUNES ON <tspan class="user-stat">THURSDAYS</tspan>'
+        case "Friday": most_played_day_message = 'I CELEBRATED <tspan class="user-stat">FRIDAYS</tspan> WITH MUSIC!'
+        case "Saturday": most_played_day_message = 'I PARTIED HARD - OR HARDLY! - WITH MUSIC ON <tspan class="user-stat">SATURDAYS</tspan>'
+        case "Sunday": most_played_day_message = 'I LOVED SPENDING <tspan class="user-stat">SUNDAYS</tspan> WITH MUSIC'
+        case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
+
+    return render_template(
+        "art/svg-templates/yim-2022.svg",
+        user_name=user_name,
+        most_played_day_message=most_played_day_message,
+        most_listened_year=stats["most_listened_year"],
+        total_listen_count=stats["total_listen_count"],
+        new_artists_discovered_count=stats["total_new_artists_discovered"],
+        total_artists_count=stats["total_artists_count"],
+    ), 200, {"Content-Type": "image/svg+xml"}
