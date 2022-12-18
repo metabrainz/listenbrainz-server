@@ -2,7 +2,11 @@ import datetime
 
 import psycopg2
 import psycopg2.extras
-import requests
+
+import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user as db_user
+from data.model.common_stat import StatisticsRange
+from data.model.user_entity import EntityRecord
 
 from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
 
@@ -17,6 +21,9 @@ MIN_DIMENSION = 2
 
 #: Maximum dimension
 MAX_DIMENSION = 5
+
+#: Number of stats to fetch
+NUMBER_OF_STATS = 100
 
 
 class CoverArtGenerator:
@@ -155,11 +162,11 @@ class CoverArtGenerator:
             for i in range(len(tiles)):
                 tiles[i] = int(tiles[i].strip())
         except ValueError:
-            return (None, None, None, None)
+            return None, None, None, None
 
         for tile in tiles:
             if tile < 0 or tile >= (self.dimension * self.dimension):
-                return (None, None, None, None)
+                return None, None, None, None
 
         for i, tile in enumerate(tiles):
             x1, y1, x2, y2 = self.get_tile_position(tile)
@@ -180,7 +187,7 @@ class CoverArtGenerator:
             bb_x2 = max(bb_x2, x2)
             bb_y2 = max(bb_y2, y2)
 
-        return (bb_x1, bb_y1, bb_x2, bb_y2)
+        return bb_x1, bb_y1, bb_x2, bb_y2
 
     def resolve_cover_art(self, caa_id, caa_release_mbid, cover_art_size=500):
         """ Translate a release_mbid into a cover art URL. Return None if unresolvable. """
@@ -250,33 +257,30 @@ class CoverArtGenerator:
         return images
 
     def download_user_stats(self, entity, user_name, time_range):
-        """ Given a user name, a stats entity and a stats time_range, return the stats dict from LB. """
+        """ Given a user name, a stats entity and a stats time_range, return the stats and total stats count from LB. """
 
-        if time_range not in [
-                'week', 'month', 'quarter', 'half_yearly', 'year', 'all_time', 'this_week', 'this_month', 'this_year'
-        ]:
+        if time_range not in StatisticsRange.__members__:
             raise ValueError("Invalid date range given.")
 
-        if entity not in ("artist", "release", "recording"):
+        if entity not in ("artists", "releases", "recordings"):
             raise ValueError("Stats entity must be one of artist, release or recording.")
 
-        url = f"https://api.listenbrainz.org/1/stats/user/{user_name}/{entity}s"
-        r = requests.get(url, {"range": time_range, "count": 100})
-        if r.status_code != 200:
-            raise ValueError("Fetching stats for user {user_name} failed: %d" % r.status_code)
+        user = db_user.get_by_mb_id(user_name)
+        if user is None:
+            raise ValueError(f"User {user_name} not found")
 
-        data = r.json()["payload"]
-        return data[entity + "s"], data[f"total_{entity}_count"]
+        stats = db_stats.get(user["id"], entity, time_range, EntityRecord)
+        if stats is None:
+            raise ValueError(f"Stats for user {user_name} not found/calculated")
+
+        return stats.data.__root__[:NUMBER_OF_STATS], stats.count
 
     def create_grid_stats_cover(self, user_name, time_range, layout):
         """ Given a user name, stats time_range and a grid layout, return the array of
             images for the grid and the stats that were downloaded for the grid. """
 
-        releases, _ = self.download_user_stats("release", user_name, time_range)
-        if len(releases) == 0:
-            raise ValueError(f"user {user_name} does not have any releases we can fetch. :(")
-
-        release_mbids = [r["release_mbid"] for r in releases]
+        releases, _ = self.download_user_stats("releases", user_name, time_range)
+        release_mbids = [r.release_mbid for r in releases]
         images = self.load_images(release_mbids, layout=layout)
         if images is None:
             return None, None
@@ -288,10 +292,7 @@ class CoverArtGenerator:
             the artist stats and metadata about this user/stats. The metadata dict contains
             user_name, date, time_range and num_artists. """
 
-        artists, total_count = self.download_user_stats("artist", user_name, time_range)
-        if len(artists) == 0:
-            raise ValueError(f"user {user_name} does not have any artists we can fetch. :(")
-
+        artists, total_count = self.download_user_stats("artists", user_name, time_range)
         metadata = {
             "user_name": user_name,
             "date": datetime.datetime.now().strftime("%Y-%m-%d"),
@@ -305,10 +306,8 @@ class CoverArtGenerator:
             the release stats and metadata about this user/stats. The metadata dict contains:
             user_name, date, time_range and num_releases."""
 
-        releases, total_count = self.download_user_stats("release", user_name, time_range)
-        if len(releases) == 0:
-            raise ValueError(f"user {user_name} does not have any releases we can fetch. :(")
-        release_mbids = [r["release_mbid"] for r in releases]
+        releases, total_count = self.download_user_stats("releases", user_name, time_range)
+        release_mbids = [r.release_mbid for r in releases]
 
         images = self.load_images(release_mbids)
         if images is None:
