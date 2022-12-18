@@ -902,13 +902,13 @@ def year_in_music(user_name: str):
     })
 
 
-def _process_user_entity(stats: StatApi[EntityRecord], offset, count) -> Tuple[list, int]:
+def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int) -> Tuple[list[dict], int]:
     """ Process the statistics data according to query params
 
         Args:
-            stats (dict): the dictionary containing statistic data
-            offset (int): number of entities to skip from the beginning
-            count (int): number of entities to return
+            stats: the dictionary containing statistic data
+            offset: number of entities to skip from the beginning
+            count: number of entities to return
 
         Returns:
             entity_list, total_entity_count: a tuple of a list and integer
