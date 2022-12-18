@@ -235,11 +235,11 @@ def cover_art_yim_2022(user_name):
         raise APIBadRequest(f"Year In Music report for user {user_name} not found")
 
     match stats["day_of_week"]:
-        case "Monday": most_played_day_message = 'MUSIC IS HOW I SURVIVED <tspan class="user-stat">MONDAYS</tspan>'
-        case "Tuesday": most_played_day_message = '<tspan class="user-stat">TUESDAY</tspan>, MORE LIKE MUSICDAY, AM I RIGHT?'
+        case "Monday": most_played_day_message = 'I SURVIVED <tspan class="user-stat">MONDAYS</tspan> WITH MUSIC'
+        case "Tuesday": most_played_day_message = 'I CHILLED WITH MUSIC ON <tspan class="user-stat">TUESDAY</tspan>'
         case "Wednesday": most_played_day_message = 'I GOT THROUGH <tspan class="user-stat">WEDNESDAYS</tspan> WITH MUSIC'
         case "Thursday": most_played_day_message = 'I SPENT TIME WITH MY TUNES ON <tspan class="user-stat">THURSDAYS</tspan>'
-        case "Friday": most_played_day_message = 'I CELEBRATED <tspan class="user-stat">FRIDAYS</tspan> WITH MUSIC!'
+        case "Friday": most_played_day_message = 'I CELEBRATED <tspan class="user-stat">FRIDAYS</tspan> WITH MUSIC'
         case "Saturday": most_played_day_message = 'I PARTIED HARD - OR HARDLY! - WITH MUSIC ON <tspan class="user-stat">SATURDAYS</tspan>'
         case "Sunday": most_played_day_message = 'I LOVED SPENDING <tspan class="user-stat">SUNDAYS</tspan> WITH MUSIC'
         case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
@@ -254,4 +254,6 @@ def cover_art_yim_2022(user_name):
         total_listen_count=stats["total_listen_count"],
         total_new_artists_discovered=stats["total_new_artists_discovered"],
         total_artists_count=stats["total_artists_count"],
+        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+        magnify_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-magnify.png',
     ), 200, {"Content-Type": "image/svg+xml"}
