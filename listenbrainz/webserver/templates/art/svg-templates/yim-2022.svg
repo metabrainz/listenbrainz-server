@@ -3,13 +3,16 @@
     height="924"
     viewBox="0 0 924 924"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg">
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
-        .common-description {
-          font-weight: 300;
+        text {
           fill: #FF0E25;
           font-family: Inter;
+        }
+        .common-description {
+          font-weight: 300;
           font-size: 28px;
           letter-spacing: 0em;
           text-anchor: middle;
@@ -18,49 +21,61 @@
           font-weight: 900;
         }
         .branding {
-          fill: #FF0E25;
-          font-family: Inter;
           font-size: 20px;
           font-weight: 900;
           letter-spacing: 0em;
         }
+        .subtitle {
+            text-anchor: middle;
+        }
     </style>
-    <g style="mix-blend-mode:multiply">
-        <rect width="924" height="924" fill="#FFC93D"/>
-        <rect width="924" height="924" fill="#FFC93D" style="mix-blend-mode:overlay"/>
+    <g>
+        <g>
+            <g style="mix-blend-mode:multiply">
+                <rect width="924" height="924" fill="#FFC93D"/>
+                <rect width="924" height="924" fill="url(#pattern0)" style="mix-blend-mode:overlay"/>
+            </g>
+            <text class="branding" x="750" y="897">LISTENBRAINZ</text>
+            <text class="branding" x="26" y="43">{{user_name}}</text>
+            <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
+            <text class="branding" x="844" y="43">2022</text>
+            <text font-size="32" font-weight="900" letter-spacing="0.6em">
+                <tspan class="subtitle" x="50%" y="754">AND GOT THROUGH</tspan>
+                <tspan class="subtitle" x="50%" y="792">2022</tspan>
+            </text>
+        </g>
+        <rect x="110.5" y="206.5" width="684" height="462" fill="#FFC93D" stroke="#FF0E25"/>
+        <text class="common-description" x="451.5" y="283">
+            {{most_played_day_message}}
+        </text>
+        <text class="common-description" x="451.5" y="370">
+            LISTENED TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS
+        </text>
+        <text class="common-description" x="451.5" y="457">
+            MAINLY PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
+        </text>
+        <text class="common-description" x="451.5" y="541">
+            LISTENED TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS
+        </text>
+        <text class="common-description" x="451.5" y="625">
+            DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
+        </text>
+        <g>
+            <rect width="125" height="154" transform="matrix(-1 0 0 1 511 83)" fill="url(#pattern1)"/>
+        </g>
+        <line x1="399" y1="314.5" x2="504" y2="314.5" stroke="#FF0E25"/>
+        <line x1="399" y1="400.5" x2="504" y2="400.5" stroke="#FF0E25"/>
+        <line x1="399" y1="486.5" x2="504" y2="486.5" stroke="#FF0E25"/>
+        <line x1="399" y1="572.5" x2="504" y2="572.5" stroke="#FF0E25"/>
     </g>
-    <text class="branding" x="750" y="897">LISTENBRAINZ</text>
-    <text class="branding" x="26" y="43">{{user_name}}</text>
-    <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
-    <text class="branding" x="844" y="43">2022</text>
-    <text
-        fill="#FF0E25"
-        font-family="Inter"
-        font-size="32"
-        font-weight="900"
-        letter-spacing="0.6em">
-            <tspan x="167" y="754">AND GOT THROUGH</tspan>
-            <tspan x="389" y="792">2022</tspan>
-    </text>
-    <rect x="110.5" y="206.5" width="684" height="462" fill="#FFC93D" stroke="#FF0E25"/>
-    <text class="common-description" x="451.5" y="283">
-        {{most_played_day_message}}
-    </text>
-    <text class="common-description" x="451.5" y="370">
-        LISTENED TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS
-    </text>
-    <text class="common-description" x="451.5" y="457">
-        MAINLY PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
-    </text>
-    <text class="common-description" x="451.5" y="541">
-        LISTENED TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS
-    </text>
-    <text class="common-description" x="451.5" y="625">
-        DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
-    </text>
-    <rect width="123" height="154" transform="matrix(-1 0 0 1 511 83)" />
-    <line x1="399" y1="314.5" x2="504" y2="314.5" stroke="#FF0E25"/>
-    <line x1="399" y1="400.5" x2="504" y2="400.5" stroke="#FF0E25"/>
-    <line x1="399" y1="486.5" x2="504" y2="486.5" stroke="#FF0E25"/>
-    <line x1="399" y1="572.5" x2="504" y2="572.5" stroke="#FF0E25"/>
+    <defs>
+        <pattern id="pattern0" patternContentUnits="objectBoundingBox" width="1" height="1">
+            <use xlink:href="#bg" transform="translate(-0.067113 -0.468785) scale(0.00127425 0.00195211)"/>
+        </pattern>
+        <pattern id="pattern1" patternContentUnits="objectBoundingBox" width="1" height="1">
+            <use xlink:href="#magnify" transform="translate(-0.0021494) scale(0.000525261 0.000419287)"/>
+        </pattern>
+        <image id="bg" width="1000" height="1000" xlink:href="https://usercontent.irccloud-cdn.com/file/k3Df7iOe/share%20bg%20(medium).png"/>
+        <image id="magnify" width="1912" height="2385" xlink:href="https://usercontent.irccloud-cdn.com/file/hlCRIgei/magnify%20(small).png"/>
+    </defs>
 </svg>
