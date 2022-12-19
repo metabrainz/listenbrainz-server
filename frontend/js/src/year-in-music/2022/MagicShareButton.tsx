@@ -153,7 +153,7 @@ export default function ShareButton({
                 Share your stats
               </h4>
             </div>
-            <div className="modal-body center-p">
+            <div className="modal-body">
               <canvas ref={canvasRef} />
               <p>
                 <button
