@@ -19,6 +19,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCopy,
+  faHeadphones,
   faQuestionCircle,
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
@@ -132,6 +133,9 @@ export default class YearInMusic extends React.Component<
     let playlist;
     try {
       const rawPlaylist = get(yearInMusicData, playlistName);
+      if (!rawPlaylist) {
+        return undefined;
+      }
       const coverArt = get(yearInMusicData, `${playlistName}-coverart`);
       playlist = isString(rawPlaylist) ? JSON.parse(rawPlaylist) : rawPlaylist;
       // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
@@ -175,6 +179,7 @@ export default class YearInMusic extends React.Component<
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(`"Error parsing ${playlistName}:`, error);
+      return undefined;
     }
     return playlist;
   }
@@ -238,7 +243,6 @@ export default class YearInMusic extends React.Component<
               className="img-responsive header-image"
               src="/static/img/year-in-music-22/logo-with-text.png"
               alt="Your year in music 2022"
-              width="600"
             />
           </div>
           <div className="flex-center flex-wrap">
@@ -328,6 +332,7 @@ export default class YearInMusic extends React.Component<
     }
 
     /* Playlists */
+    let hasNoPlaylists = false;
     const topDiscoveriesPlaylist = this.getPlaylistByName(
       "playlist-top-discoveries-for-year",
       `Highlights songs that ${user.name} first listened to (more than once) in 2022`
@@ -339,11 +344,12 @@ export default class YearInMusic extends React.Component<
     if (!topDiscoveriesPlaylist || !topMissedRecordingsPlaylist) {
       missingSomeData = true;
     }
-
-    const allPlaylists = [topDiscoveriesPlaylist, topMissedRecordingsPlaylist];
+    if (!topDiscoveriesPlaylist && !topMissedRecordingsPlaylist) {
+      hasNoPlaylists = true;
+    }
 
     const noDataText = (
-      <div className="center-p">
+      <div className="center-p no-data">
         We were not able to calculate this data for {youOrUsername}
       </div>
     );
@@ -394,11 +400,8 @@ export default class YearInMusic extends React.Component<
         )}
         <div className="yellow-section">
           <div className="container">
+            <div className="header">Top albums of 2022</div>
             <div className="card content-card" id="top-releases">
-              <div className="col-md-12 d-flex center-p">
-                <h3>Top albums of 2022</h3>
-              </div>
-
               {yearInMusicData.top_releases ? (
                 <div id="top-albums">
                   <Swiper
@@ -416,7 +419,7 @@ export default class YearInMusic extends React.Component<
                     }}
                     breakpoints={{
                       700: {
-                        initialSlide: 3,
+                        initialSlide: 2,
                         spaceBetween: 100,
                         slidesPerView: 3,
                         coverflowEffect: {
@@ -570,7 +573,11 @@ export default class YearInMusic extends React.Component<
                           );
                           const thumbnail = (
                             <span className="badge badge-info">
-                              {artist.listen_count} listens
+                              <FontAwesomeIcon
+                                style={{ marginRight: "4px" }}
+                                icon={faHeadphones}
+                              />{" "}
+                              {artist.listen_count}
                             </span>
                           );
                           const listenHere = {
@@ -628,7 +635,7 @@ export default class YearInMusic extends React.Component<
                   icon={faQuestionCircle}
                   data-tip
                   data-for="listening-activity"
-                  size="sm"
+                  size="xs"
                 />
                 <Tooltip id="listening-activity">
                   How many tracks did you listen to each day of the year?
@@ -643,7 +650,7 @@ export default class YearInMusic extends React.Component<
                     emptyColor="#eeeeee"
                     colors={["#f9e5b3", "#ffcc49", COLOR_LB_ORANGE, "#ff0e25"]}
                     monthBorderColor="#eeeeee"
-                    dayBorderWidth={2}
+                    dayBorderWidth={1}
                     dayBorderColor="#ffffff"
                     legends={[
                       {
@@ -692,7 +699,7 @@ export default class YearInMusic extends React.Component<
                   icon={faQuestionCircle}
                   data-tip
                   data-for="most-listened-year-helptext"
-                  size="sm"
+                  size="xs"
                 />
                 <Tooltip id="most-listened-year-helptext">
                   How much were you on the lookout for new music this year? Not
@@ -738,79 +745,82 @@ export default class YearInMusic extends React.Component<
               <div className="subheader">Generated just for you.</div>
             </div>
             <div className="row flex flex-wrap" id="playlists">
-              {allPlaylists.length
-                ? allPlaylists.map((topLevelPlaylist, index) => {
-                    if (!topLevelPlaylist) {
-                      return undefined;
-                    }
-                    return (
-                      <div
-                        className="card content-card mb-10"
-                        id="top-discoveries"
-                      >
-                        <div className="center-p">
-                          SVG OF COVERS HERE
-                          <h4>
+              {Boolean(topDiscoveriesPlaylist) ||
+              Boolean(topMissedRecordingsPlaylist)
+                ? [topDiscoveriesPlaylist, topMissedRecordingsPlaylist].map(
+                    (topLevelPlaylist, index) => {
+                      if (!topLevelPlaylist) {
+                        return undefined;
+                      }
+                      return (
+                        <div
+                          className="card content-card mb-10"
+                          id="top-discoveries"
+                        >
+                          <div className="center-p">
+                            SVG OF COVERS HERE
+                            <h4>
+                              <a
+                                href={`/playlist/${topLevelPlaylist.mbid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {topLevelPlaylist.jspf?.playlist?.title}
+                              </a>
+                              <FontAwesomeIcon
+                                icon={faQuestionCircle}
+                                data-tip
+                                data-for={`playlist-${index}-tooltip`}
+                                size="xs"
+                              />
+                              <Tooltip id={`playlist-${index}-tooltip`}>
+                                {topLevelPlaylist.description}
+                              </Tooltip>
+                            </h4>
+                          </div>
+                          <div>
+                            {topLevelPlaylist.jspf?.playlist?.track.map(
+                              (playlistTrack) => {
+                                const listen = JSPFTrackToListen(playlistTrack);
+                                listens.push(listen);
+                                let thumbnail;
+                                if (playlistTrack.image) {
+                                  thumbnail = (
+                                    <div className="listen-thumbnail">
+                                      <img
+                                        src={playlistTrack.image}
+                                        alt={`Cover Art for ${playlistTrack.title}`}
+                                      />
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <ListenCard
+                                    className="playlist-item-card"
+                                    listen={listen}
+                                    customThumbnail={thumbnail}
+                                    compact
+                                    showTimestamp={false}
+                                    showUsername={false}
+                                    newAlert={newAlert}
+                                  />
+                                );
+                              }
+                            )}
+                            <hr />
                             <a
                               href={`/playlist/${topLevelPlaylist.mbid}`}
+                              className="btn btn-info btn-block"
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              {topLevelPlaylist.jspf?.playlist?.title}
+                              See the full playlist…
                             </a>
-                            <FontAwesomeIcon
-                              icon={faQuestionCircle}
-                              data-tip
-                              data-for={`playlist-${index}-tooltip`}
-                              size="sm"
-                            />
-                            <Tooltip id={`playlist-${index}-tooltip`}>
-                              {topLevelPlaylist.description}
-                            </Tooltip>
-                          </h4>
+                          </div>
                         </div>
-                        <div>
-                          {topLevelPlaylist.jspf?.playlist?.track.map(
-                            (playlistTrack) => {
-                              const listen = JSPFTrackToListen(playlistTrack);
-                              listens.push(listen);
-                              let thumbnail;
-                              if (playlistTrack.image) {
-                                thumbnail = (
-                                  <div className="listen-thumbnail">
-                                    <img
-                                      src={playlistTrack.image}
-                                      alt={`Cover Art for ${playlistTrack.title}`}
-                                    />
-                                  </div>
-                                );
-                              }
-                              return (
-                                <ListenCard
-                                  className="playlist-item-card"
-                                  listen={listen}
-                                  customThumbnail={thumbnail}
-                                  compact
-                                  showTimestamp={false}
-                                  showUsername={false}
-                                  newAlert={newAlert}
-                                />
-                              );
-                            }
-                          )}
-                          <hr />
-                          <a
-                            href={`/playlist/${topLevelPlaylist.mbid}`}
-                            className="btn btn-info btn-block"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            See the full playlist…
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })
+                      );
+                    }
+                  )
                 : noDataText}
             </div>
           </div>
@@ -841,11 +851,13 @@ export default class YearInMusic extends React.Component<
                       icon={faQuestionCircle}
                       data-tip
                       data-for="new-albums-helptext"
-                      size="sm"
+                      size="xs"
                     />
                     <Tooltip id="new-albums-helptext">
-                      2022 albums and singles from artists you listen to. Missed
-                      anything?
+                      Albums and singles released in 2022 from artists you
+                      listen to.
+                      <br />
+                      Missed anything?
                     </Tooltip>
                   </h4>
                 </div>
@@ -931,12 +943,14 @@ export default class YearInMusic extends React.Component<
                       icon={faQuestionCircle}
                       data-tip
                       data-for="music-buddies-helptext"
-                      size="sm"
+                      size="xs"
                     />
                     <Tooltip id="music-buddies-helptext">
                       Here are the users with the most similar taste to{" "}
-                      {youOrUsername} this year. Maybe go check out what else
-                      they listen to?
+                      {youOrUsername} this year.
+                      <br />
+                      You can check out what else they listen to, adn follow
+                      them to see more content and updates.
                     </Tooltip>
                   </h4>
                 </div>
@@ -981,6 +995,46 @@ export default class YearInMusic extends React.Component<
             src="https://via.placeholder.com/1800x600?text=Cover+art+composite+image+here"
             alt="2022 albums"
           />
+          <div className="container closing-remarks">
+            <span className="bold">
+              Wishing you a wonderful 2023, from the ListenBrainz team.
+            </span>
+            <br />
+            If you have questions or feedback don&apos;t hesitate to contact us
+            <br />
+            on{" "}
+            <a
+              target="_blank"
+              href="https://community.metabrainz.org/c/listenbrainz/18"
+              rel="noreferrer"
+            >
+              our forums
+            </a>
+            ,{" "}
+            <a
+              target="_blank"
+              href="mailto:listenbrainz@metabrainz.org"
+              rel="noreferrer"
+            >
+              by email
+            </a>
+            ,{" "}
+            <a
+              target="_blank"
+              href="https://web.libera.chat/#metabrainz"
+              rel="noreferrer"
+            >
+              IRC
+            </a>
+            , or{" "}
+            <a
+              target="_blank"
+              href="https://twitter.com/listenbrainz"
+              rel="noreferrer"
+            >
+              on twitter
+            </a>
+          </div>
         </div>
         <BrainzPlayer
           listens={listens}

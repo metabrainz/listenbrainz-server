@@ -161,10 +161,15 @@
   
   /* Styles specific to YIM 2022 */
   &.yim-2022 {
+    --swiper-theme-color: @2022red;
     /* Main header section at the top with logo */
     #main-header {
       padding: 3em 2em;
       background:white;
+    }
+    .header-image{
+      padding: 1.5em 0;
+      width: 700px;
     }
     .header {
       margin-bottom: 1em;
@@ -220,7 +225,7 @@
       &::after, &::before{
         background: @2022red;
       }
-      .header {
+      .header,.no-data {
         color: @2022yellow;
       }
       .share-button {
@@ -233,7 +238,7 @@
       &::after, &::before{
         background: @2022yellow;
       }
-      .header {
+      .header,.no-data {
         color: @2022red;
       }
       .share-button {
@@ -241,7 +246,10 @@
         background-color: @2022red;
       }
     }
-    
+    .flex > .content-card {
+      min-width: 300px;
+      height: auto;
+    }
     .cover-art-mosaic {
       width: 100vw;
       max-height: 42em;
@@ -249,13 +257,12 @@
     .content-card .img-header {
       max-height: 15em;
     }
-    .content-card + .content-card{
-      margin-top: 2.5em;
-    }
+
     .small-cards-container {
+      margin-top: 1.5em;
       > * {
-        margin-top: 1.5em;
-        margin-bottom: 1.5em;
+        min-width: calc(100vw - 60px);
+        margin-bottom: 1em;
         font-family: "Roboto",sans-serif;
         font-weight: 300;
         font-size: 24px;
@@ -267,20 +274,34 @@
       }
     }
     .cover-art-composite{
-      // position: relative;
       padding-left:0;
       padding-right:0;
       > img{
-        max-width: 100vw;
-        // left: calc(50% + 15px);
-        // position: absolute;
-        // transform: translateX(-50vw);
-        // padding-bottom: 60px;
+        width: 100vw;
+      }
+    }
+    .closing-remarks{
+      padding: 3em 2em;
+      font-size: 1.3em;
+      color: @white;
+      font-family: "Roboto";
+      font-weight: 200;
+      text-align: center;
+      .bold{
+        font-weight: 400;
+      }
+      a, a:visited, a:hover{
+        color: @white;
+        text-decoration: underline;
       }
     }
 
     .share-modal .modal-body{
     overflow-x: auto;
+    }
+    .alert{
+      margin: 0;
+      padding: 2em;
     }
   }
 }
