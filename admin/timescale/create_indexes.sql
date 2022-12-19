@@ -27,6 +27,7 @@ CREATE INDEX collaborator_id_playlist_collaborator ON playlist.playlist_collabor
 
 -- MBID Mapping
 
+CREATE UNIQUE INDEX recording_msid_user_id_mbid_manual_mapping_idx ON mbid_manual_mapping(recording_msid, user_id);
 CREATE UNIQUE INDEX recording_mbid_ndx_mbid_mapping_metadata ON mbid_mapping_metadata (recording_mbid);
 
 -- these indexes are defined in listenbrainz/mbid_mapping/mapping/mb_metadata_cache.py and created in production
