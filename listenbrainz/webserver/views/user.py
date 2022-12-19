@@ -524,6 +524,7 @@ def year_in_music(user_name, year: int = 2021):
     return render_template(
         "user/year-in-music.html",
         user_name=user_name,
+        year=year,
         props=ujson.dumps({
             "data": db_year_in_music.get(user.id, year),
             "user": {
