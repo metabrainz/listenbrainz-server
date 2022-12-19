@@ -722,7 +722,7 @@ export default class APIService {
       headers,
     });
     await this.checkStatus(response);
-    return response.json();
+    return response;
   };
 
   addPlaylistItems = async (
@@ -1242,6 +1242,22 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.json();
+  };
+
+  exportPlaylistToXSPF = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<Blob> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/xspf`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/xspf+xml;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.blob();
   };
 
   fetchSitewideFreshReleases = async (

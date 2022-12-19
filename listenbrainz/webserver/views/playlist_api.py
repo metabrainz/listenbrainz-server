@@ -3,6 +3,7 @@ from uuid import UUID
 
 import psycopg2
 from flask import Blueprint, current_app, jsonify, request
+from xml.etree import ElementTree as ET
 import requests
 from psycopg2.extras import DictCursor
 
@@ -150,6 +151,113 @@ def serialize_jspf(playlist: Playlist):
     pl["track"] = tracks
 
     return {"playlist": pl}
+
+
+def serialize_xspf(playlist: Playlist):
+    """
+        Given a playlist, return a properly formatted dict that can be passed to jsonify.
+    """
+
+    playlist_root = ET.Element("playlist")
+    playlist_root.attrib = {
+        "version": "1",
+        "xmlns": "http://xspf.org/ns/0"
+    }
+
+    creator = ET.SubElement(playlist_root, "creator")
+    creator.text = playlist.creator
+
+    title = ET.SubElement(playlist_root, "title")
+    title.text = playlist.name
+
+    identifier = ET.SubElement(playlist_root, "identifier")
+    identifier.text = PLAYLIST_URI_PREFIX + str(playlist.mbid)
+
+    date = ET.SubElement(playlist_root, "date")
+    date.text = playlist.created.astimezone(datetime.timezone.utc).isoformat()
+
+    if playlist.description:
+        annotation = ET.SubElement(playlist_root, "annotation")
+        annotation.text = playlist.description
+
+    # Extension
+    playlist_extension = ET.SubElement(playlist_root, "extension", application=PLAYLIST_EXTENSION_URI)
+
+    playlist_extension_public = ET.SubElement(playlist_extension, "public")
+    playlist_extension_public.text = playlist.public
+
+    playlist_extension_creator = ET.SubElement(playlist_extension, "creator")
+    playlist_extension_creator.text = playlist.creator
+
+    if playlist.last_updated:
+        playlist_extension_last_modified_at = ET.SubElement(playlist_extension, "last_modified_at")
+        playlist_extension_last_modified_at.text = playlist.last_updated.astimezone(datetime.timezone.utc).isoformat()
+
+    if playlist.copied_from_id is not None:
+        if playlist.copied_from_mbid is None:
+            playlist_extension_copied_from_deleted = ET.SubElement(playlist_extension,
+                                                                   "playlist_extension_copied_from_deleted")
+            playlist_extension_copied_from_deleted.text = True
+        else:
+            playlist_extension_copied_from_mbid = ET.SubElement(playlist_extension, "copied_from_mbid")
+            playlist_extension_copied_from_mbid.text = PLAYLIST_URI_PREFIX + str(playlist.copied_from_mbid)
+
+    if playlist.created_for_id:
+        playlist_extension_created_for = ET.SubElement(playlist_extension, "created_for")
+        playlist_extension_created_for.text = playlist.created_for
+
+    if playlist.collaborators:
+        playlist_extension_collaborators = ET.SubElement(playlist_extension, "collaborators")
+        for collaborator in playlist.collaborators:
+            playlist_extension_collaborator = ET.SubElement(playlist_extension_collaborators, "collaborator")
+            playlist_extension_collaborator.text = collaborator
+
+    if playlist.additional_metadata:
+        playlist_extension_additional_metadata = ET.SubElement(playlist_extension, "additional_metadata")
+        for meta_key, meta_value in playlist.additional_metadata:
+            additional_metadata_item = ET.SubElement(playlist_extension_additional_metadata, "item", key=meta_key)
+            additional_metadata_item.text = meta_value
+
+    track_list = ET.SubElement(playlist_root, "trackList")
+    for rec in playlist.recordings:
+        tr = ET.SubElement(track_list, "track")
+
+        tr_identifier = ET.SubElement(tr, "identifier")
+        tr_identifier.text = PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid)
+
+        if rec.artist_credit:
+            tr_creator = ET.SubElement(tr, "creator")
+            tr_creator.text = rec.artist_credit
+
+        if rec.release_name:
+            tr_album = ET.SubElement(tr, "album")
+            tr_album.text = rec.release_name
+
+        if rec.title:
+            tr_title = ET.SubElement(tr, "title")
+            tr_title.text = rec.title
+
+        tr_extension = ET.SubElement(tr, "extension", application=PLAYLIST_TRACK_EXTENSION_URI)
+
+        tr_extension_added_by = ET.SubElement(tr_extension, "added_by")
+        tr_extension_added_by.text = rec.added_by
+
+        tr_extension_added_at = ET.SubElement(tr_extension, "added_at")
+        tr_extension_added_at.text = rec.created.astimezone(datetime.timezone.utc).isoformat()
+
+        if rec.artist_mbids:
+            tr_extension_artist_identifiers = ET.SubElement(tr_extension, "artist_identifiers")
+            for artist_mbid in rec.artist_mbids:
+                artist_identifier = ET.SubElement(tr_extension_artist_identifiers, "identifier")
+                artist_identifier.text = PLAYLIST_ARTIST_URI_PREFIX + str(artist_mbid)
+
+        if rec.release_mbid:
+            tr_extension_release_identifier = ET.SubElement(tr_extension, "release_identifier")
+            tr_extension_release_identifier.text = PLAYLIST_RELEASE_URI_PREFIX + str(rec.release_mbid)
+
+    ET.indent(playlist_root, space="\t", level=0)
+
+    return ET.tostring(playlist_root, encoding="unicode", method="xml")
 
 
 def validate_move_data(data):
@@ -452,6 +560,46 @@ def get_playlist(playlist_mbid):
         fetch_playlist_recording_metadata(playlist)
 
     return jsonify(serialize_jspf(playlist))
+
+
+@playlist_api_bp.route("/<playlist_mbid>/xspf", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def get_playlist_xspf(playlist_mbid):
+    """
+    Fetch the given playlist as XSPF.
+
+    :param playlist_mbid: The playlist mbid to fetch.
+    :type playlist_mbid: ``str``
+    :param fetch_metadata: Optional, pass value 'false' to skip lookup up recording metadata
+    :type fetch_metadata: ``bool``
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: Playlist not found
+    :statuscode 401: Invalid authorization. See error message for details.
+    :resheader Content-Type: *application/xspf+xml*
+    """
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    fetch_metadata = parse_boolean_arg("fetch_metadata", True)
+
+    playlist = db_playlist.get_by_mbid(playlist_mbid, True)
+    if playlist is None:
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    user = validate_auth_header(optional=True)
+    user_id = None
+    if user:
+        user_id = user["id"]
+    if not playlist.is_visible_by(user_id):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if fetch_metadata:
+        fetch_playlist_recording_metadata(playlist)
+
+    return serialize_xspf(playlist)
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])

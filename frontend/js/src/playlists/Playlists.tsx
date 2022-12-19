@@ -76,6 +76,90 @@ export default class UserPlaylists extends React.Component<
     );
   };
 
+  copyPlaylist = async (
+    playlistId: string,
+    playlistTitle: string
+  ): Promise<void> => {
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
+    }
+    if (!playlistId?.length) {
+      newAlert("danger", "Error", "No playlist to copy; missing a playlist ID");
+      return;
+    }
+    try {
+      const newPlaylistId = await this.APIService.copyPlaylist(
+        currentUser.auth_token,
+        playlistId
+      );
+      // Fetch the newly created playlist and add it to the state if it's the current user's page
+      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
+        newPlaylistId,
+        currentUser.auth_token
+      ).then((res) => res.json());
+      newAlert(
+        "success",
+        "Duplicated playlist",
+        <>
+          Duplicated to playlist&ensp;
+          <a href={`/playlist/${newPlaylistId}`}>{JSPFObject.playlist.title}</a>
+        </>
+      );
+      if (this.isCurrentUserPage()) {
+        this.setState((prevState) => ({
+          playlists: [JSPFObject.playlist, ...prevState.playlists],
+        }));
+      }
+    } catch (error) {
+      newAlert("danger", "Error", error.message);
+    }
+  };
+
+  deletePlaylist = async (): Promise<void> => {
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
+    const { playlistSelectedForOperation: playlist, playlists } = this.state;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
+    }
+    if (!playlist) {
+      newAlert("danger", "Error", "No playlist to delete");
+      return;
+    }
+    if (!this.isOwner(playlist)) {
+      this.alertNotAuthorized();
+      return;
+    }
+    try {
+      await this.APIService.deletePlaylist(
+        currentUser.auth_token,
+        getPlaylistId(playlist)
+      );
+      // redirect
+      // Remove playlist from state and display success message afterwards
+      this.setState(
+        {
+          playlists: playlists.filter(
+            (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
+          ),
+          playlistSelectedForOperation: undefined,
+        },
+        newAlert.bind(
+          this,
+          "success",
+          "Deleted playlist",
+          `Deleted playlist ${playlist.title}`
+        )
+      );
+    } catch (error) {
+      newAlert("danger", "Error", error.message);
+    }
+  };
+
   selectPlaylistForEdit = (playlist: JSPFPlaylist): void => {
     this.setState({ playlistSelectedForOperation: playlist });
   };
@@ -155,7 +239,7 @@ export default class UserPlaylists extends React.Component<
       const JSPFObject: JSPFObject = await APIService.getPlaylist(
         newPlaylistId,
         currentUser.auth_token
-      );
+      ).then((res) => res.json());
       this.setState(
         (prevState) => ({
           playlists: [JSPFObject.playlist, ...prevState.playlists],

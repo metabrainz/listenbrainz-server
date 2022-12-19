@@ -7,6 +7,7 @@ import { get, findIndex, omit } from "lodash";
 import { ActionMeta, InputActionMeta, ValueType } from "react-select";
 import {
   faCog,
+  faFileExport,
   faPen,
   faPlusCircle,
   faTrashAlt,
@@ -269,7 +270,7 @@ export default class PlaylistPage extends React.Component<
       const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
         newPlaylistId,
         currentUser.auth_token
-      );
+      ).then((res) => res.json());
       newAlert(
         "success",
         "Duplicated playlist",
@@ -547,7 +548,73 @@ export default class PlaylistPage extends React.Component<
     newAlert("danger", "Error", error.message);
   };
 
-  exportToSpotify = async () => {
+  exportToSpotify = async (
+    playlistId: string,
+    playlistTitle: string,
+    auth_token: string
+  ) => {
+    const { newAlert } = this.props;
+
+    const result = await this.APIService.exportPlaylistToSpotify(
+      auth_token,
+      playlistId
+    );
+    const { external_url } = await result.json();
+    newAlert(
+      "success",
+      "Playlist exported to Spotify",
+      <>
+        Successfully exported playlist:{" "}
+        <a href={external_url} target="_blank" rel="noopener noreferrer">
+          {external_url}
+        </a>
+        Heads up: the new playlist is public on Spotify.
+      </>
+    );
+  };
+
+  exportAsJSPF = async (
+    playlistId: string,
+    playlistTitle: string,
+    auth_token: string
+  ) => {
+    const result = await this.APIService.getPlaylist(playlistId, auth_token);
+    this.downloadFile(`${playlistTitle}.jspf`, await result.blob());
+  };
+
+  exportAsXSPF = async (
+    playlistId: string,
+    playlistTitle: string,
+    auth_token: string
+  ) => {
+    const result = await this.APIService.exportPlaylistToXSPF(
+      auth_token,
+      playlistId
+    );
+    this.downloadFile(`${playlistTitle}.xspf`, result);
+  };
+
+  downloadFile = (fileName: string, blob: Blob) => {
+    // Create a dummy anchor element to force a download
+    const anchorElement = document.createElement("a");
+    anchorElement.href = URL.createObjectURL(blob);
+    anchorElement.download = fileName;
+    anchorElement.style.display = "none";
+
+    document.body.appendChild(anchorElement);
+    anchorElement.click();
+    document.body.removeChild(anchorElement);
+
+    URL.revokeObjectURL(anchorElement.href);
+  };
+
+  handlePlaylistExport = async (
+    handler: (
+      playlistId: string,
+      playlistTitle: string,
+      auth_token: string
+    ) => void
+  ) => {
     const { newAlert } = this.props;
     const { playlist } = this.state;
     const { currentUser } = this.context;
@@ -565,22 +632,7 @@ export default class PlaylistPage extends React.Component<
     this.setState({ loading: true });
     try {
       const playlistId = getPlaylistId(playlist);
-      const result = await this.APIService.exportPlaylistToSpotify(
-        currentUser.auth_token,
-        playlistId
-      );
-      const { external_url } = result;
-      newAlert(
-        "success",
-        "Playlist exported to Spotify",
-        <>
-          Successfully exported playlist:{" "}
-          <a href={external_url} target="_blank" rel="noopener noreferrer">
-            {external_url}
-          </a>
-          Heads up: the new playlist is public on Spotify.
-        </>
-      );
+      handler(playlistId, playlist.title, currentUser.auth_token);
     } catch (error) {
       this.handleError(error.error ?? error);
     }
@@ -687,7 +739,9 @@ export default class PlaylistPage extends React.Component<
                               id="exportPlaylistToSpotify"
                               role="button"
                               href="#"
-                              onClick={this.exportToSpotify}
+                              onClick={() =>
+                                this.handlePlaylistExport(this.exportToSpotify)
+                              }
                             >
                               <FontAwesomeIcon icon={faSpotify as IconProp} />{" "}
                               Export to Spotify
@@ -695,6 +749,33 @@ export default class PlaylistPage extends React.Component<
                           </li>
                         </>
                       )}
+                      <li role="separator" className="divider" />
+                      <li>
+                        <a
+                          id="exportPlaylistToJSPF"
+                          role="button"
+                          href="#"
+                          onClick={() =>
+                            this.handlePlaylistExport(this.exportAsJSPF)
+                          }
+                        >
+                          <FontAwesomeIcon icon={faFileExport as IconProp} />{" "}
+                          Export as JSPF
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          id="exportPlaylistToXSPF"
+                          role="button"
+                          href="#"
+                          onClick={() =>
+                            this.handlePlaylistExport(this.exportAsXSPF)
+                          }
+                        >
+                          <FontAwesomeIcon icon={faFileExport as IconProp} />{" "}
+                          Export as XSPF
+                        </a>
+                      </li>
                     </ul>
                   </span>
                 </div>
