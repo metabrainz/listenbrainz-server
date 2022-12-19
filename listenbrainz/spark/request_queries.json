@@ -29,6 +29,11 @@
     "description": "Calculate list of releases released this year by top 50 artists of this year for each user",
     "params": ["year"]
   },
+  "year_in_music.tracks_of_the_year": {
+    "name": "year_in_music.tracks_of_the_year",
+    "description": "Calculate all tracks a user has listened to in the given year",
+    "params": ["year"]
+  },
   "year_in_music.day_of_week": {
     "name": "year_in_music.day_of_week",
     "description": "Calculate the day of week with most listens for the user",
