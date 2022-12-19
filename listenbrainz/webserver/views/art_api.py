@@ -140,7 +140,7 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
         if images is None:
             raise APIInternalServerError("Failed to grid cover art SVG")
     except ValueError as error:
-        raise APIBadRequest(error)
+        raise APIBadRequest(str(error))
 
     return render_template("art/svg-templates/simple-grid.svg",
                            background=cac.background,
@@ -180,13 +180,13 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
     if err is not None:
         raise APIBadRequest(err)
 
-    if custom_name in ("designer-top-5"):
+    if custom_name in ("designer-top-5",):
         try:
             artists, metadata = cac.create_artist_stats_cover(user_name, time_range)
             if artists is None:
                 raise APIInternalServerError("Failed to artist cover art SVG")
         except ValueError as error:
-            raise APIBadRequest(error)
+            raise APIBadRequest(str(error))
 
         return render_template(f"art/svg-templates/{custom_name}.svg",
                                artists=artists,
@@ -202,7 +202,7 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
             if images is None:
                 raise APIInternalServerError("Failed to release cover art SVG")
         except ValueError as error:
-            raise APIBadRequest(error)
+            raise APIBadRequest(str(error))
 
         cover_art_on_floor_url = f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/cover-art-on-floor.png'
         return render_template(f"art/svg-templates/{custom_name}.svg",

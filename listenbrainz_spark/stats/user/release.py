@@ -1,7 +1,7 @@
 from listenbrainz_spark.stats import run_query
 
 
-def get_releases(table: str, number_of_results: int):
+def get_releases(table: str, cache_table: str, number_of_results: int):
     """
     Get release information (release_name, release_mbid etc) for every user
     ordered by listen count (number of times a user has listened to tracks
@@ -25,20 +25,36 @@ def get_releases(table: str, number_of_results: int):
                 }
     """
     result = run_query(f"""
-        WITH intermediate_table as (
+        WITH gather_release_data AS (
             SELECT user_id
+                 , l.release_mbid
+                 , COALESCE(rel.release_name, l.release_name) AS release_name
+                 , COALESCE(rel.album_artist_name, l.artist_name) AS release_artist_name
+                 , COALESCE(rel.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
+                 , rel.caa_id
+                 , rel.caa_release_mbid
+              FROM {table} l
+         LEFT JOIN {cache_table} rel
+                ON rel.release_mbid = l.release_mbid
+        ), intermediate_table as (
+           SELECT user_id
                 , first(release_name) AS any_release_name
                 , release_mbid
-                , first(artist_name) AS any_artist_name
+                , first(release_artist_name) AS any_artist_name
                 , artist_credit_mbids
+                , caa_id
+                , caa_release_mbid
                 , count(*) as listen_count
-              FROM {table}
+              FROM gather_release_data
              WHERE release_name != ''
+               AND release_name IS NOT NULL
           GROUP BY user_id
-                , lower(release_name)
-                , release_mbid
-                , lower(artist_name)
-                , artist_credit_mbids
+                 , lower(release_name)
+                 , release_mbid
+                 , lower(release_artist_name)
+                 , artist_credit_mbids
+                 , caa_id
+                 , caa_release_mbid
         ), entity_count as (
             SELECT user_id
                  , count(*) as releases_count
@@ -50,6 +66,8 @@ def get_releases(table: str, number_of_results: int):
                  , release_mbid
                  , any_artist_name AS artist_name
                  , artist_credit_mbids
+                 , caa_id
+                 , caa_release_mbid
                  , listen_count
                  , row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rank
               FROM intermediate_table
@@ -63,6 +81,8 @@ def get_releases(table: str, number_of_results: int):
                               , release_mbid
                               , artist_name
                               , coalesce(artist_credit_mbids, array()) AS artist_mbids
+                              , caa_id
+                              , caa_release_mbid
                             )
                         )
                        , false

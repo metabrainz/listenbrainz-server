@@ -248,6 +248,8 @@ declare type UserReleasesResponse = {
       release_mbid?: string;
       release_name: string;
       listen_count: number;
+      caa_id?: number;
+      caa_release_mbid?: string;
     }>;
     count: number;
     last_updated: number;
@@ -270,6 +272,8 @@ declare type UserRecordingsResponse = {
       track_name: string;
       recording_mbid?: string;
       recording_msid?: string;
+      caa_id?: number;
+      caa_release_mbid?: string;
       listen_count: number;
     }>;
     count: number;
@@ -308,11 +312,13 @@ declare type UserEntityDatum = {
   releaseMBID?: string;
   idx: number;
   count: number;
+  caaID?: number;
+  caaReleaseMBID?: string;
 };
 
 declare type UserEntityData = Array<UserEntityDatum>;
 
-declare type Entity = "artist" | "release" | "recording";
+declare type Entity = "artist" | "release" | "recording" | "release-group";
 
 declare type UserListeningActivityResponse = {
   payload: {

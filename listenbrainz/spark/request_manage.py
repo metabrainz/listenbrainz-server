@@ -141,6 +141,15 @@ def request_yim_new_release_stats(year: int):
     send_request_to_spark_cluster("year_in_music.new_releases_of_top_artists", year=year)
 
 
+@cli.command(name="request_yim_tracks_of_the_year")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_tracks_of_the_year(year: int):
+    """ Send request to calculate new release stats to the spark cluster
+    """
+    send_request_to_spark_cluster("year_in_music.tracks_of_the_year", year=year)
+
+
 @cli.command(name="request_yim_day_of_week")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
@@ -184,6 +193,30 @@ def request_yim_listen_count(year: int):
     """ Send request to calculate yearly listen count stat to the spark cluster
     """
     send_request_to_spark_cluster("year_in_music.listen_count", year=year)
+
+
+@cli.command(name="request_import_pg_tables")
+def request_import_pg_tables():
+    """ Send the cluster a request to import metadata table from MB db postgres """
+    send_request_to_spark_cluster('import.pg_metadata_tables')
+
+
+@cli.command(name="request_yim_listening_time")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_listening_time(year: int):
+    """ Send request to calculate yearly total listening time stat for each user to the spark cluster
+    """
+    send_request_to_spark_cluster("year_in_music.listening_time", year=year)
+
+
+@cli.command(name="request_yim_new_artists_discovered")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_new_artists_discovered(year: int):
+    """ Send request to calculate count of new artists user listened to this year.
+    """
+    send_request_to_spark_cluster("year_in_music.new_artists_discovered_count", year=year)
 
 
 @cli.command(name="request_import_full")
@@ -417,6 +450,7 @@ def request_yim_playlists(year: int):
 @click.pass_context
 def request_year_in_music(ctx, year: int):
     """ Send the cluster a request to generate all year in music statistics. """
+    ctx.invoke(request_import_pg_tables)
     ctx.invoke(request_yim_new_release_stats, year=year)
     ctx.invoke(request_yim_day_of_week, year=year)
     ctx.invoke(request_yim_most_listened_year, year=year)
@@ -424,7 +458,7 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_listens_per_day, year=year)
     ctx.invoke(request_yim_listen_count, year=year)
     ctx.invoke(request_yim_similar_users, year=year)
-    ctx.invoke(request_yim_playlists, year=year)
+    # ctx.invoke(request_yim_playlists, year=year)
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
@@ -433,6 +467,7 @@ def request_year_in_music(ctx, year: int):
 @cli.command(name='cron_request_all_stats')
 @click.pass_context
 def cron_request_all_stats(ctx):
+    ctx.invoke(request_import_pg_tables)
     for stats_range in ALLOWED_STATISTICS_RANGE:
         for entity in ["artists", "releases", "recordings"]:
             ctx.invoke(request_user_stats, type_="entity", range_=stats_range, entity=entity)

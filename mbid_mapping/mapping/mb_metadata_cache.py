@@ -113,11 +113,14 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         if row["release_mbid"] is not None:
             release["mbid"] = row["release_mbid"]
             release["release_group_mbid"] = row["release_group_mbid"]
-            release["caa_id"] = row["caa_id"]
-            release["caa_release_mbid"] = row["caa_release_mbid"]
             release["name"] = row["release_name"]
+            release["album_artist_name"] = row["album_artist_name"]
             if row["year"] is not None:
                 release["year"] = row["year"]
+            if row["caa_id"] is not None:
+                release["caa_id"] = row["caa_id"]
+            if row["caa_release_mbid"] is not None:
+                release["caa_release_mbid"] = row["caa_release_mbid"]
 
         artist = {
             "name": row["artist_credit_name"],
@@ -369,6 +372,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                    ), release_data AS (
                             SELECT r.gid AS recording_mbid
                                  , rel.name
+                                 , rac.name AS album_artist_name
                                  , rg.gid AS release_group_mbid
                                  , crr.release_mbid::TEXT
                                  , rgca.caa_id
@@ -377,9 +381,11 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                               JOIN mapping.canonical_release_redirect crr
                                 ON r.gid = crr.recording_mbid
                               JOIN musicbrainz.release rel
-                                        ON crr.release_mbid = rel.gid
-                                      JOIN musicbrainz.release_group rg
-                                        ON rel.release_group = rg.id
+                                ON crr.release_mbid = rel.gid
+                              JOIN musicbrainz.artist_credit rac
+                                ON rac.id = rel.artist_credit  
+                              JOIN musicbrainz.release_group rg
+                                ON rel.release_group = rg.id  
                          LEFT JOIN rg_cover_art rgca
                                 ON rgca.release_group = rel.release_group
                               {values_join}
@@ -397,6 +403,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , r.length
                                  , r.gid::TEXT AS recording_mbid
                                  , rd.release_mbid::TEXT
+                                 , rd.album_artist_name
                                  , rd.caa_id
                                  , rd.caa_release_mbid
                                  , year
@@ -431,6 +438,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , artist_data
                                  , artist_tags
                                  , rd.release_mbid
+                                 , rd.album_artist_name
                                  , rd.caa_id
                                  , rd.caa_release_mbid
                                  , year"""
@@ -801,5 +809,5 @@ def cleanup_mbid_mapping_table():
     """
     with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn, lb_conn.cursor() as lb_curs:
         lb_curs.execute(query)
-        log(f"mbid mapping: invalidated {lb_curs.row_count} rows")
+        log(f"mbid mapping: invalidated {lb_curs.rowcount} rows")
         lb_conn.commit()

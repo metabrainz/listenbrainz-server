@@ -30,6 +30,8 @@ export function userChartEntityToListen(
     artistMBID: artistMBIDs,
     release,
     releaseMBID,
+    caaID,
+    caaReleaseMBID,
   } = datum;
 
   const trackName = entityType === "recording" ? entityName : "";
@@ -53,10 +55,12 @@ export function userChartEntityToListen(
       track_name: trackName ?? "",
       artist_name: artistName ?? "",
       release_name: releaseName ?? "",
-      additional_info: {
-        artist_mbids,
-        recording_mbid,
-        release_mbid,
+      mbid_mapping: {
+        artist_mbids: artist_mbids ?? [],
+        recording_mbid: recording_mbid ?? "",
+        release_mbid: release_mbid ?? "",
+        caa_id: caaID,
+        caa_release_mbid: caaReleaseMBID,
       },
     },
   };

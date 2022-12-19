@@ -29,6 +29,11 @@
     "description": "Calculate list of releases released this year by top 50 artists of this year for each user",
     "params": ["year"]
   },
+  "year_in_music.tracks_of_the_year": {
+    "name": "year_in_music.tracks_of_the_year",
+    "description": "Calculate all tracks a user has listened to in the given year",
+    "params": ["year"]
+  },
   "year_in_music.day_of_week": {
     "name": "year_in_music.day_of_week",
     "description": "Calculate the day of week with most listens for the user",
@@ -58,6 +63,11 @@
     "name": "import.dump.incremental_id",
     "description": "Import incremental dump with the specified ID into the spark cluster",
     "params": ["dump_id"]
+  },
+  "import.pg_metadata_tables": {
+    "name": "import.pg_metadata_tables",
+    "description": "Send the cluster a request to import metadata table from MB db postgres",
+    "params": []
   },
   "cf.missing_mb_data": {
     "name": "cf.missing_mb_data",
@@ -162,6 +172,16 @@
   "year_in_music.listen_count": {
     "name": "year_in_music.listen_count",
     "description": "Calculate the total listen count for the given year for each user",
+    "params": ["year"]
+  },
+  "year_in_music.listening_time": {
+    "name": "year_in_music.listening_time",
+    "description": "Calculate the total duration of the listens for the given year for each user",
+    "params": ["year"]
+  },
+  "year_in_music.new_artists_discovered_count": {
+    "name": "year_in_music.new_artists_discovered_count",
+    "description": "Calculate the number of artists the user listened to in the given year",
     "params": ["year"]
   },
   "year_in_music.top_stats": {

@@ -10,12 +10,13 @@ from data.model.user_artist_stat import ArtistRecord
 from data.model.user_entity import UserEntityStatMessage, UserEntityRecords
 from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_stat import ReleaseRecord
+from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_new_dump, read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +46,11 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
     table = f"user_{entity}_{stats_range}"
     listens_df.createOrReplaceTempView(table)
 
+    df_name = "release_data_cache"
+    read_files_from_HDFS(RELEASE_METADATA_CACHE_DATAFRAME).createOrReplaceTempView(df_name)
+
     messages = calculate_entity_stats(
-        from_date, to_date, table, entity, stats_range, message_type, database
+        from_date, to_date, table, df_name, entity, stats_range, message_type, database
     )
 
     logger.debug("Done!")
@@ -54,14 +58,14 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
     return messages
 
 
-def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, entity: str,
-                           stats_range: str, message_type: str, database: str = None):
+def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, cache_table: str,
+                           entity: str, stats_range: str, message_type: str, database: str = None):
     handler = entity_handler_map[entity]
     if message_type == "year_in_music_top_stats":
         number_of_results = NUMBER_OF_YIM_ENTITIES
     else:
         number_of_results = NUMBER_OF_TOP_ENTITIES
-    data = handler(table, number_of_results)
+    data = handler(table, cache_table, number_of_results)
     return create_messages(data=data, entity=entity, stats_range=stats_range, from_date=from_date,
                            to_date=to_date, message_type=message_type, database=database)
 

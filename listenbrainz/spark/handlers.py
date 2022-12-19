@@ -387,6 +387,14 @@ def handle_yim_listen_counts(message):
     year_in_music.insert("total_listen_count", message["year"], message["data"])
 
 
+def handle_yim_listening_time(message):
+    year_in_music.insert("total_listening_time", message["year"], message["data"])
+
+
+def handle_new_artists_discovered_count(message):
+    year_in_music.insert("total_new_artists_discovered", message["year"], message["data"])
+
+
 def handle_similar_recordings(message):
     similarity.insert("recording", message["data"], message["algorithm"])
 

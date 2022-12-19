@@ -19,7 +19,7 @@ from flask import Blueprint, current_app, jsonify, request
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
-from listenbrainz.db import year_in_music
+from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -888,27 +888,32 @@ def _get_artist_map_stats(user_id, stats_range):
     return stats
 
 
-@stats_api_bp.route("/user/<user_name>/year-in-music/")
-def year_in_music(user_name: str):
+@stats_api_bp.route("/user/<user_name>/year-in-music")
+@stats_api_bp.route("/user/<user_name>/year-in-music/<int:year>")
+def year_in_music(user_name: str, year: int = 2021):
     """ Get data for year in music stuff """
+    if year != 2021 and year != 2022:
+        raise APINotFound(f"Cannot find Year in Music report for year: {year}")
+
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APINotFound(f"Cannot find user: {user_name}")
+
     return jsonify({
         "payload": {
             "user_name": user_name,
-            "data": year_in_music.get(user["id"], 2021) or {}
+            "data": db_year_in_music.get(user["id"], year) or {}
         }
     })
 
 
-def _process_user_entity(stats: StatApi[EntityRecord], offset, count) -> Tuple[list, int]:
+def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int) -> Tuple[list[dict], int]:
     """ Process the statistics data according to query params
 
         Args:
-            stats (dict): the dictionary containing statistic data
-            offset (int): number of entities to skip from the beginning
-            count (int): number of entities to return
+            stats: the dictionary containing statistic data
+            offset: number of entities to skip from the beginning
+            count: number of entities to return
 
         Returns:
             entity_list, total_entity_count: a tuple of a list and integer
