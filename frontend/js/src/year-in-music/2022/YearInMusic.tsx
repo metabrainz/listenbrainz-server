@@ -335,29 +335,11 @@ export default class YearInMusic extends React.Component<
       "playlist-top-missed-recordings-for-year",
       `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
     );
-    const topNewRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-new-recordings-for-year",
-      `Songs released in 2022 that ${user.name} listened to`
-    );
-    const topRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-recordings-for-year",
-      `This playlist is made from ${user.name}'s top recordings for 2022 statistics`
-    );
-    if (
-      !topDiscoveriesPlaylist ||
-      !topMissedRecordingsPlaylist ||
-      !topNewRecordingsPlaylist ||
-      !topRecordingsPlaylist
-    ) {
+    if (!topDiscoveriesPlaylist || !topMissedRecordingsPlaylist) {
       missingSomeData = true;
     }
 
-    const allPlaylists = [
-      topDiscoveriesPlaylist,
-      topMissedRecordingsPlaylist,
-      topNewRecordingsPlaylist,
-      topRecordingsPlaylist,
-    ];
+    const allPlaylists = [topDiscoveriesPlaylist, topMissedRecordingsPlaylist];
 
     const noDataText = (
       <div className="center-p">
@@ -737,7 +719,7 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="row flex flex-wrap" id="playlists">
               {allPlaylists.length
-                ? allPlaylists.slice(0, 2).map((topLevelPlaylist) => {
+                ? allPlaylists.map((topLevelPlaylist, index) => {
                     if (!topLevelPlaylist) {
                       return undefined;
                     }
