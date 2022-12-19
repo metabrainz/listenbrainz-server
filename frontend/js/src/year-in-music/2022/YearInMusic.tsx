@@ -85,12 +85,12 @@ export type YearInMusicProps = {
     most_listened_year: { [key: string]: number };
     total_listen_count: number;
     new_releases_of_top_artists: Array<{
-      type: string;
       title: string;
-      release_mbid: string;
-      first_release_date: string;
+      release_group_mbid: string;
+      caa_id?: number;
+      caa_release_mbid?: string;
       artist_credit_mbids: string[];
-      artist_credit_names: string[];
+      artist_credit_name: string;
     }>;
   };
 } & WithAlertNotificationsInjectedProps;
@@ -830,9 +830,6 @@ export default class YearInMusic extends React.Component<
                   {yearInMusicData.new_releases_of_top_artists
                     ? yearInMusicData.new_releases_of_top_artists.map(
                         (release) => {
-                          const artistName = release.artist_credit_names.join(
-                            ", "
-                          );
                           const details = (
                             <>
                               <div
@@ -840,33 +837,39 @@ export default class YearInMusic extends React.Component<
                                 className="ellipsis-2-lines"
                               >
                                 {getEntityLink(
-                                  "release",
+                                  "release-group",
                                   release.title,
-                                  release.release_mbid
+                                  release.release_group_mbid
                                 )}
                               </div>
                               <span
                                 className="small text-muted ellipsis"
-                                title={artistName}
+                                title={release.artist_credit_name}
                               >
                                 {getEntityLink(
                                   "artist",
-                                  artistName,
+                                  release.artist_credit_name,
                                   release.artist_credit_mbids[0]
                                 )}
                               </span>
                             </>
                           );
-                          const listenHere = {
+                          const listenHere: Listen = {
                             listened_at: 0,
-                            listened_at_iso: release.first_release_date,
                             track_metadata: {
-                              artist_name: artistName,
+                              artist_name: release.artist_credit_name,
                               track_name: release.title,
                               release_name: release.title,
                               additional_info: {
-                                release_mbid: release.release_mbid,
+                                release_group_mbid: release.release_group_mbid,
                                 artist_mbids: release.artist_credit_mbids,
+                              },
+                              mbid_mapping: {
+                                recording_mbid: "",
+                                release_mbid: "",
+                                artist_mbids: [],
+                                caa_id: release.caa_id,
+                                caa_release_mbid: release.caa_release_mbid,
                               },
                             },
                           };
@@ -874,7 +877,7 @@ export default class YearInMusic extends React.Component<
                           return (
                             <ListenCard
                               listenDetails={details}
-                              key={release.release_mbid}
+                              key={release.release_group_mbid}
                               compact
                               listen={listenHere}
                               showTimestamp={false}
