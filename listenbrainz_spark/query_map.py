@@ -19,6 +19,7 @@ import listenbrainz_spark.year_in_music.listens_per_day
 import listenbrainz_spark.year_in_music.listen_count
 import listenbrainz_spark.year_in_music.listening_time
 import listenbrainz_spark.year_in_music.new_artists_discovered
+import listenbrainz_spark.year_in_music.tracks_of_the_year
 import listenbrainz_spark.fresh_releases.fresh_releases
 import listenbrainz_spark.similarity.recording
 import listenbrainz_spark.similarity.artist
@@ -48,6 +49,7 @@ functions = {
     'similarity.artist': listenbrainz_spark.similarity.artist.main,
     'year_in_music.new_releases_of_top_artists':
         listenbrainz_spark.year_in_music.new_releases_of_top_artists.get_new_releases_of_top_artists,
+    'year_in_music.tracks_of_the_year': listenbrainz_spark.year_in_music.tracks_of_the_year.calculate_tracks_of_the_year,
     'year_in_music.most_listened_year': listenbrainz_spark.year_in_music.most_listened_year.get_most_listened_year,
     'year_in_music.day_of_week': listenbrainz_spark.year_in_music.day_of_week.get_day_of_week,
     'year_in_music.similar_users': listenbrainz_spark.year_in_music.similar_users.get_similar_users,
