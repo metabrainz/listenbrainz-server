@@ -4,6 +4,7 @@ import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
+import Tooltip from "react-tooltip";
 import {
   get,
   has,
@@ -622,7 +623,16 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="card content-card" id="calendar">
               <h3 className="text-center">
-                {capitalize(yourOrUsersName)} listening activity
+                {capitalize(yourOrUsersName)} listening activity{" "}
+                <FontAwesomeIcon
+                  icon={faQuestionCircle}
+                  data-tip
+                  data-for="listening-activity"
+                  size="sm"
+                />
+                <Tooltip id="listening-activity">
+                  How many tracks did you listen to each day of the year?
+                </Tooltip>
               </h3>
               {listensPerDayForGraph ? (
                 <div className="graph">
@@ -631,7 +641,7 @@ export default class YearInMusic extends React.Component<
                     to="2022-12-31"
                     data={listensPerDayForGraph as CalendarDatum[]}
                     emptyColor="#eeeeee"
-                    colors={["#bbb7e1", "#6e66cc", "#eea582", COLOR_LB_ORANGE]}
+                    colors={["#f9e5b3", "#ffcc49", COLOR_LB_ORANGE, "#ff0e25"]}
                     monthBorderColor="#eeeeee"
                     dayBorderWidth={2}
                     dayBorderColor="#ffffff"
@@ -677,7 +687,17 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="card content-card" id="most-listened-year">
               <h3 className="text-center">
-                What year are {yourOrUsersName} favorite songs from?
+                What year are {yourOrUsersName} favorite songs from?{" "}
+                <FontAwesomeIcon
+                  icon={faQuestionCircle}
+                  data-tip
+                  data-for="most-listened-year-helptext"
+                  size="sm"
+                />
+                <Tooltip id="most-listened-year-helptext">
+                  How much were you on the lookout for new music this year? Not
+                  that we&apos;re judging.
+                </Tooltip>
               </h3>
               {mostListenedYearDataForGraph ? (
                 <div className="graph">
@@ -688,7 +708,7 @@ export default class YearInMusic extends React.Component<
                     layout="vertical"
                     keys={["songs"]}
                     indexBy="year"
-                    colors={COLOR_LB_ORANGE}
+                    colors="#ff0e25"
                     enableLabel={false}
                     axisBottom={{
                       // Round to nearest 5 year mark
@@ -738,8 +758,15 @@ export default class YearInMusic extends React.Component<
                             >
                               {topLevelPlaylist.jspf?.playlist?.title}
                             </a>
-                            <FontAwesomeIcon icon={faQuestionCircle} />
-                            {/* {topLevelPlaylist.description} */}
+                            <FontAwesomeIcon
+                              icon={faQuestionCircle}
+                              data-tip
+                              data-for={`playlist-${index}-tooltip`}
+                              size="sm"
+                            />
+                            <Tooltip id={`playlist-${index}-tooltip`}>
+                              {topLevelPlaylist.description}
+                            </Tooltip>
                           </h4>
                         </div>
                         <div>
@@ -808,7 +835,19 @@ export default class YearInMusic extends React.Component<
                     src="/static/img/year-in-music-22/magnify.png"
                     alt={`New albums from ${yourOrUsersName} top artists`}
                   />
-                  <h4>New albums from {yourOrUsersName} top artists</h4>
+                  <h4>
+                    New albums from {yourOrUsersName} top artists{" "}
+                    <FontAwesomeIcon
+                      icon={faQuestionCircle}
+                      data-tip
+                      data-for="new-albums-helptext"
+                      size="sm"
+                    />
+                    <Tooltip id="new-albums-helptext">
+                      2022 albums and singles from artists you listen to. Missed
+                      anything?
+                    </Tooltip>
+                  </h4>
                 </div>
                 <div className="scrollable-area">
                   {yearInMusicData.new_releases_of_top_artists
@@ -886,7 +925,20 @@ export default class YearInMusic extends React.Component<
                     src="/static/img/year-in-music-22/buddy.png"
                     alt="Music buddies"
                   />
-                  <h4>Music buddies</h4>
+                  <h4>
+                    Music buddies{" "}
+                    <FontAwesomeIcon
+                      icon={faQuestionCircle}
+                      data-tip
+                      data-for="music-buddies-helptext"
+                      size="sm"
+                    />
+                    <Tooltip id="music-buddies-helptext">
+                      Here are the users with the most similar taste to{" "}
+                      {youOrUsername} this year. Maybe go check out what else
+                      they listen to?
+                    </Tooltip>
+                  </h4>
                 </div>
                 <div className="scrollable-area similar-users-list">
                   {sortedSimilarUsers && sortedSimilarUsers.length
