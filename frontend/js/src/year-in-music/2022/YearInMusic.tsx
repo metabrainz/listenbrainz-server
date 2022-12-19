@@ -50,8 +50,6 @@ import {
 import { COLOR_LB_ORANGE } from "../../utils/constants";
 import SimpleModal from "../../utils/SimpleModal";
 
-import fakeData from "./fakeData.json";
-
 export type YearInMusicProps = {
   user: ListenBrainzUser;
   yearInMusicData: {
