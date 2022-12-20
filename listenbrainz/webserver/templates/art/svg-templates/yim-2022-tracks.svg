@@ -54,53 +54,53 @@
         </g>
         <g>
             <text>
-                <tspan class="track-name" x="100" y="250">1</tspan>
-                <tspan class="track-name" x="125" y="250">{{ tracks[0].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="240">1</tspan>
+                <tspan class="track-name" x="125" y="240">{{ tracks[0].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[0].artist_name|upper|e }}</tspan>
             </text>
             <text>
-                <tspan class="track-name" x="100" y="295">2</tspan>
-                <tspan class="track-name" x="125" y="295">{{ tracks[1].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="285">2</tspan>
+                <tspan class="track-name" x="125" y="285">{{ tracks[1].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[1].artist_name|upper|e }}</tspan>
             </text>
             <text>
-                <tspan class="track-name" x="100" y="340">3</tspan>
-                <tspan class="track-name" x="125" y="340">{{ tracks[2].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="330">3</tspan>
+                <tspan class="track-name" x="125" y="330">{{ tracks[2].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[2].artist_name|upper|e }}</tspan>
             </text>
             <text>
-                <tspan class="track-name" x="100" y="385">4</tspan>
-                <tspan class="track-name" x="125" y="385">{{ tracks[3].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="375">4</tspan>
+                <tspan class="track-name" x="125" y="375">{{ tracks[3].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[3].artist_name|upper|e }}</tspan>
             </text>
             <text>
-                <tspan class="track-name" x="100" y="430">5</tspan>
-                <tspan class="track-name" x="125" y="430">{{ tracks[4].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="420">5</tspan>
+                <tspan class="track-name" x="125" y="420">{{ tracks[4].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[4].artist_name|upper|e }}</tspan>
             </text>
             <text>
-                <tspan class="track-name" x="100" y="485">6</tspan>
-                <tspan class="track-name" x="125" y="485">{{ tracks[5].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="465">6</tspan>
+                <tspan class="track-name" x="125" y="465">{{ tracks[5].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[5].artist_name|upper|e }}</tspan>
             </text>
             <text>
-                <tspan class="track-name" x="100" y="530">7</tspan>
-                <tspan class="track-name" x="125" y="530">{{ tracks[6].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="510">7</tspan>
+                <tspan class="track-name" x="125" y="510">{{ tracks[6].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[6].artist_name|upper|e }}</tspan>
             </text>
             <text>
-                <tspan class="track-name" x="100" y="575">8</tspan>
-                <tspan class="track-name" x="125" y="575">{{ tracks[7].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="555">8</tspan>
+                <tspan class="track-name" x="125" y="555">{{ tracks[7].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[7].artist_name|upper|e }}</tspan>
             </text>
             <text>
-                <tspan class="track-name" x="100" y="620">9</tspan>
-                <tspan class="track-name" x="125" y="620">{{ tracks[8].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="600">9</tspan>
+                <tspan class="track-name" x="125" y="600">{{ tracks[8].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[8].artist_name|upper|e }}</tspan>
             </text>
             <text>
-                <tspan class="track-name" x="100" y="665">X</tspan>
-                <tspan class="track-name" x="125" y="665">{{ tracks[9].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="645">X</tspan>
+                <tspan class="track-name" x="125" y="645">{{ tracks[9].track_name|upper|e }}</tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[0].artist_name|upper|e }}</tspan>
             </text>
         </g>
