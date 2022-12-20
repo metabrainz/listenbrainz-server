@@ -221,19 +221,8 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
     raise APIBadRequest(f"Unkown custom cover art type {custom_name}")
 
 
-@art_api_bp.route("/year-in-music/2022/<user_name>", methods=["GET"])
-@crossdomain
-@ratelimit()
-def cover_art_yim_2022(user_name):
-    """ Create the shareable svg image using YIM 2022 stats """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APIBadRequest(f"User {user_name} not found")
-
-    stats = db_yim.get(user["id"], 2022)
-    if stats is None:
-        raise APIBadRequest(f"Year In Music report for user {user_name} not found")
-
+def _cover_art_yim_stats(user_name, stats):
+    """ Create the SVG using YIM statistics for the given year. """
     match stats["day_of_week"]:
         case "Monday": most_played_day_message = 'I SURVIVED <tspan class="user-stat">MONDAYS</tspan> WITH MUSIC'
         case "Tuesday": most_played_day_message = 'I CHILLED WITH MUSIC ON <tspan class="user-stat">TUESDAY</tspan>'
@@ -245,7 +234,6 @@ def cover_art_yim_2022(user_name):
         case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
 
     most_listened_year = max(stats["most_listened_year"], key=stats["most_listened_year"].get)
-
     return render_template(
         "art/svg-templates/yim-2022.svg",
         user_name=user_name,
@@ -256,4 +244,63 @@ def cover_art_yim_2022(user_name):
         total_artists_count=stats["total_artists_count"],
         bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
         magnify_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-magnify.png',
-    ), 200, {"Content-Type": "image/svg+xml"}
+    )
+
+
+def _cover_art_yim_albums(user_name, stats):
+    """ Create the SVG using YIM top albums for the given year. """
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    image_urls = []
+    for item in stats["top_releases"]:
+        image_urls.append(cac.resolve_cover_art(item["mbid"], item["release_mbid"]))
+    return render_template(
+        "art/svg-templates/yim-2022-albums.svg",
+        user_name=user_name,
+        images=image_urls,
+        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+        flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-flames.png',
+    )
+
+
+def _cover_art_yim_tracks(user_name, stats):
+    """ Create the SVG using top tracks for the given user. """
+    return render_template(
+        "art/svg-templates/yim-2022-albums.svg",
+        user_name=user_name,
+        tracks=stats["top_recordings"],
+        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+        stereo_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-stereo.png',
+    )
+
+
+
+@art_api_bp.route("/year-in-music/2022/<user_name>", methods=["GET"])
+@crossdomain
+@ratelimit()
+def cover_art_yim_2022(user_name):
+    """ Create the shareable svg image using YIM 2022 stats """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APIBadRequest(f"User {user_name} not found")
+
+    image = request.args.get("image")
+    if image is None:
+        raise APIBadRequest("Type of Image needs to be specified should be one of (stats, albums, tracks, discovery-playlist, missed-playlist)")
+
+    if image not in ("stats", "albums", "tracks", "discovery-playlist", "missed-playlist"):
+        raise APIBadRequest(f"Invalid image type {image}. Image type should be one of (stats, albums, tracks, discovery-playlist, missed-playlist)")
+
+    stats = db_yim.get(user["id"], 2022)
+    if stats is None:
+        raise APIBadRequest(f"Year In Music report for user {user_name} not found")
+
+    if image == "stats":
+        svg = _cover_art_yim_stats(user_name, stats)
+    elif image == "albums":
+        svg = _cover_art_yim_albums(user_name, stats)
+    elif image == "tracks":
+        svg = _cover_art_yim_tracks(user_name, stats)
+    else:
+        svg = None
+
+    return svg, 200, {"Content-Type": "image/svg+xml"}
