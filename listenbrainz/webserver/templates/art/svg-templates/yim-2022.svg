@@ -25,8 +25,11 @@
           font-weight: 900;
           letter-spacing: 0em;
         }
-        .subtitle {
+        .subtitle > tspan {
             text-anchor: middle;
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 0.6em;
         }
     </style>
     <g>
@@ -39,9 +42,9 @@
             <text class="branding" x="26" y="43">{{user_name}}</text>
             <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
             <text class="branding" x="844" y="43">2022</text>
-            <text font-size="32" font-weight="900" letter-spacing="0.6em">
-                <tspan class="subtitle" x="50%" y="754">AND GOT THROUGH</tspan>
-                <tspan class="subtitle" x="50%" y="792">2022</tspan>
+            <text class="subtitle">
+                <tspan x="50%" y="754">AND GOT THROUGH</tspan>
+                <tspan x="50%" y="792">2022</tspan>
             </text>
         </g>
         <rect x="110.5" y="206.5" width="684" height="462" fill="#FFC93D" stroke="#FF0E25"/>
@@ -75,7 +78,7 @@
         <pattern id="pattern1" patternContentUnits="objectBoundingBox" width="1" height="1">
             <use xlink:href="#magnify" transform="translate(-0.0021494) scale(0.000525261 0.000419287)"/>
         </pattern>
-        <image id="bg" width="1000" height="1000" xlink:href="https://usercontent.irccloud-cdn.com/file/k3Df7iOe/share%20bg%20(medium).png"/>
-        <image id="magnify" width="1912" height="2385" xlink:href="https://usercontent.irccloud-cdn.com/file/hlCRIgei/magnify%20(small).png"/>
+        <image id="bg" width="1000" height="1000" xlink:href="{{ bg_image_url }}" />
+        <image id="magnify" width="1912" height="2385" xlink:href="{{ magnify_image_url }}" />
     </defs>
 </svg>
