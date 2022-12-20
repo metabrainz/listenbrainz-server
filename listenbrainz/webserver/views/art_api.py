@@ -252,11 +252,14 @@ def _cover_art_yim_albums(user_name, stats):
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
     image_urls = []
     for item in stats["top_releases"]:
-        image_urls.append(cac.resolve_cover_art(item["mbid"], item["release_mbid"]))
+        if "caa_id" in item and "caa_release_mbid" in item:
+            url = cac.resolve_cover_art(item["caa_id"], item["caa_release_mbid"], 250)
+            image_urls.append(url)
+
     return render_template(
         "art/svg-templates/yim-2022-albums.svg",
         user_name=user_name,
-        images=image_urls,
+        image_urls=image_urls,
         bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
         flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-flames.png',
     )
@@ -265,7 +268,7 @@ def _cover_art_yim_albums(user_name, stats):
 def _cover_art_yim_tracks(user_name, stats):
     """ Create the SVG using top tracks for the given user. """
     return render_template(
-        "art/svg-templates/yim-2022-albums.svg",
+        "art/svg-templates/yim-2022-tracks.svg",
         user_name=user_name,
         tracks=stats["top_recordings"],
         bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
