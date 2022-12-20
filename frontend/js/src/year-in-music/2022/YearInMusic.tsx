@@ -24,6 +24,8 @@ import {
   faQuestionCircle,
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import PrismaZoom from "react-prismazoom";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -36,11 +38,7 @@ import {
 } from "../../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../../utils/APIService";
-import {
-  generateAlbumArtThumbnailLink,
-  getAlbumArtFromReleaseMBID,
-  getPageProps,
-} from "../../utils/utils";
+import { generateAlbumArtThumbnailLink, getPageProps } from "../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
 import MagicShareButton from "./MagicShareButton";
 
@@ -376,6 +374,7 @@ export default class YearInMusic extends React.Component<
             src="/static/img/year-in-music-22/yim22-logo.png"
             alt="Your year in music 2022"
           />
+          <div className="arrow-down" />
         </div>
         <div className="red-section">
           <div className="container share-section flex-center">
@@ -1009,14 +1008,20 @@ export default class YearInMusic extends React.Component<
               </div>
             </div>
           </div>
-          <img
-            src="https://via.placeholder.com/1800x600?text=Cover+art+composite+image+here"
-            srcSet="https://via.placeholder.com/900x300?text=Cover+art+composite+image+here 1x,
-              https://via.placeholder.com/3600x1200?text=Cover+art+composite+image+here 2x"
-            alt="2022 albums"
-            loading="lazy"
-            decoding="async"
-          />
+          <div className="composite-image">
+            <PrismaZoom maxZoom={10}>
+              <LazyLoadImage
+                src="/static/img/year-in-music-22/rainbow1-100-3-500.jpeg"
+                placeholderSrc="/static/img/year-in-music-22/rainbow1-100-3-500.jpeg"
+                srcSet="/static/img/year-in-music-22/rainbow1-100-3-500.jpeg 300w,
+                /static/img/year-in-music-22/rainbow1-100-3-1500.jpeg 1000w,
+                /static/img/year-in-music-22/rainbow1-100-3-11250.jpeg 1500w"
+                alt="2022 albums"
+                loading="lazy"
+                decoding="async"
+              />
+            </PrismaZoom>
+          </div>
           <div className="container closing-remarks">
             <span className="bold">
               Wishing you a wonderful 2023, from the ListenBrainz team.

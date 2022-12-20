@@ -175,7 +175,9 @@
         }
       }
       .arrow-down {
-        display: none;
+        @media (min-width: @screen-sm) {
+            display: none;
+        }
         width: 0;
         height: 0;
         border-left: 7px solid transparent;
@@ -301,8 +303,9 @@
     .cover-art-composite{
       padding-left:0;
       padding-right:0;
-      > img{
+      .composite-image img{
         width: 100vw;
+        content-visibility: auto;
       }
     }
     .closing-remarks{
