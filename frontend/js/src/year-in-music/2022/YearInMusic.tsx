@@ -15,6 +15,7 @@ import {
   uniq,
   capitalize,
   toPairs,
+  isUndefined,
 } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -230,6 +231,19 @@ export default class YearInMusic extends React.Component<
     return followingList.includes(user.name);
   };
 
+  sharePage = () => {
+    const dataToShare: ShareData = {
+      title: "My 2022 in music",
+      url: window.location.toString(),
+    };
+    // Use the Share API to share the image
+    if (navigator.canShare && navigator.canShare(dataToShare)) {
+      navigator.share(dataToShare).catch((error) => {
+        console.error("Error sharing image:", error);
+      });
+    }
+  };
+
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
     const { APIService, currentUser } = this.context;
@@ -356,7 +370,7 @@ export default class YearInMusic extends React.Component<
     const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/`;
     return (
       <div role="main" id="year-in-music" className="yim-2022">
-        <div id="header" className="flex-center">
+        <div id="main-header" className="flex-center">
           <img
             className="img-responsive header-image"
             src="/static/img/year-in-music-22/yim22-logo.png"
@@ -383,9 +397,14 @@ export default class YearInMusic extends React.Component<
                     }}
                   />
                 </span>
-                <span className="input-group-addon">
-                  <FontAwesomeIcon icon={faShareAlt} />
-                </span>
+                {!isUndefined(navigator.canShare) ? (
+                  <span className="input-group-addon">
+                    <FontAwesomeIcon
+                      icon={faShareAlt}
+                      onClick={this.sharePage}
+                    />
+                  </span>
+                ) : null}
               </div>
             </div>
           </div>
@@ -476,7 +495,7 @@ export default class YearInMusic extends React.Component<
                 noDataText
               )}
             </div>
-            <div className="share-button-container">
+            <div className="yim-share-button-container">
               <MagicShareButton
                 svgURL={`https://api.listenbrainz.org/1/art/grid-stats/${user.name}/year/4/0/500`}
                 shareUrl={`${linkToThisPage}#top-albums`}
@@ -541,7 +560,7 @@ export default class YearInMusic extends React.Component<
                     noDataText
                   )}
                 </div>
-                <div className="share-button-container">
+                <div className="yim-share-button-container">
                   <MagicShareButton
                     svgURL={`https://api.listenbrainz.org/1/art/designer-top-10/${user.name}/year/500`}
                     shareUrl={`${linkToThisPage}#top-tracks`}
@@ -609,7 +628,7 @@ export default class YearInMusic extends React.Component<
                     noDataText
                   )}
                 </div>
-                <div className="share-button-container">
+                <div className="yim-share-button-container">
                   <MagicShareButton
                     svgURL={`https://api.listenbrainz.org/1/art/designer-top-5/${user.name}/year/500`}
                     shareUrl={`${linkToThisPage}#top-artists`}
@@ -949,8 +968,7 @@ export default class YearInMusic extends React.Component<
                       Here are the users with the most similar taste to{" "}
                       {youOrUsername} this year.
                       <br />
-                      You can check out what else they listen to, adn follow
-                      them to see more content and updates.
+                      Maybe check them out and follow them?
                     </Tooltip>
                   </h4>
                 </div>
@@ -993,7 +1011,11 @@ export default class YearInMusic extends React.Component<
           </div>
           <img
             src="https://via.placeholder.com/1800x600?text=Cover+art+composite+image+here"
+            srcSet="https://via.placeholder.com/900x300?text=Cover+art+composite+image+here 1x,
+              https://via.placeholder.com/3600x1200?text=Cover+art+composite+image+here 2x"
             alt="2022 albums"
+            loading="lazy"
+            decoding="async"
           />
           <div className="container closing-remarks">
             <span className="bold">

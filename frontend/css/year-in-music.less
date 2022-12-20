@@ -166,10 +166,29 @@
     #main-header {
       padding: 3em 2em;
       background:white;
+      flex-direction: column;
+      @media (max-width: @screen-sm) {
+        // 80% of screen height minus menu bar and BrainzPlayer
+        height: calc(80vh - 84px - 60px);
+        .arrow-down {
+          display: initial;
+        }
+      }
+      .arrow-down {
+        display: none;
+        width: 0;
+        height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-top: 12px solid @2022red;
+      }
     }
     .header-image{
-      padding: 1.5em 0;
+      padding: 1.5em;
       width: 700px;
+      @media (max-width: @screen-sm) {
+        min-height: 20vh;
+      }
     }
     .header {
       margin-bottom: 1em;
@@ -178,6 +197,12 @@
       font-weight: 700;
       font-size: 48px;
       line-height: 56px;
+      @media (max-width: @screen-sm) {
+        font-size: 38px;
+        .subheader{
+          font-size: 20px;
+        }
+      }
       .subheader {
         font-family: "Roboto";
         font-weight: 300;
@@ -187,7 +212,7 @@
       }
     }
     .share-section {
-      padding: 1em;
+      padding: 0 1em;
       text-align: center;
       font-family: "Roboto";
       font-weight: 300;
@@ -208,12 +233,12 @@
       padding-bottom: 3em;
       width: 100%;
     }
-    .share-button-container {
+    .yim-share-button-container {
       text-align: center;
       margin-top:2em;
       margin-bottom: 2em;
     }
-    .share-button {
+    .yim-share-button {
       border:none;
       width: 2em;
       height: 2em;
@@ -228,7 +253,7 @@
       .header,.no-data {
         color: @2022yellow;
       }
-      .share-button {
+      .yim-share-button {
         color: @2022red;
         background-color: @2022yellow;
       }
@@ -241,7 +266,7 @@
       .header,.no-data {
         color: @2022red;
       }
-      .share-button {
+      .yim-share-button {
         color: @2022yellow;
         background-color: @2022red;
       }
@@ -293,6 +318,7 @@
       a, a:visited, a:hover{
         color: @white;
         text-decoration: underline;
+        font-weight: 300;
       }
     }
 

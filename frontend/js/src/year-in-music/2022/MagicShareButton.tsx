@@ -123,7 +123,7 @@ export default function ShareButton({
   return (
     <>
       <button
-        className="share-button"
+        className="yim-share-button"
         type="button"
         data-toggle="modal"
         data-target={`#${id}`}
