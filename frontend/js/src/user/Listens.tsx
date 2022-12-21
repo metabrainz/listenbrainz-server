@@ -14,6 +14,7 @@ import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
   faCompactDisc,
+  faLink,
   faPencilAlt,
   faThumbtack,
   faTrashAlt,
@@ -755,8 +756,8 @@ export default class Listens extends React.Component<
     if (canManuallyMap) {
       additionalMenuItems.push(
         <ListenControl
-          text="Map to a MusicBrainz Recording"
-          icon={faPencilAlt}
+          text="Link with MusicBrainz"
+          icon={faLink}
           action={this.updateRecordingToMapToMusicbrainz.bind(this, listen)}
           dataToggle="modal"
           dataTarget="#MapToMusicBrainzRecordingModal"
@@ -1018,9 +1019,6 @@ export default class Listens extends React.Component<
                     <MbidMappingModal
                       recordingToMap={recordingToMapToMusicbrainz}
                       newAlert={newAlert}
-                      onSuccessfulPin={(pinnedListen) =>
-                        this.handlePinnedRecording(pinnedListen)
-                      }
                     />
                     <CBReviewModal
                       listen={recordingToReview}
