@@ -65,4 +65,7 @@ CREATE INDEX similar_recordings_algorithm_idx ON similarity.recording USING gin 
 CREATE UNIQUE INDEX similar_artists_uniq_idx ON similarity.artist (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_artists_reverse_uniq_idx ON similarity.artist (mbid1, mbid0);
 CREATE INDEX similar_artists_algorithm_idx ON similarity.artist USING gin (metadata);
+
+CREATE INDEX mbid_manual_mapping_top_idx ON mbid_manual_mapping_top (recording_msid) INCLUDE (recording_mbid);
+
 COMMIT;
