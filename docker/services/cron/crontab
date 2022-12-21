@@ -43,8 +43,8 @@ MAILTO=""
 # run job to update msids with mapped mbids daily
 0 6 * * * root /usr/local/bin/python /code/listenbrainz/manage.py update-msid-tables >> /logs/msid-updater.log 2>&1
 
+# run daily cron job to refresh top msid-mbid mappings
+0 7 * * * root /usr/local/bin/python /code/listenbrainz/manage.py refresh-top-manual-mappings >> /logs/top_manual_mappings.log 2>&1
+
 # run weekly cron job to remove expired do not recommends
 0 8 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py clear-expired-do-not-recommends >> /logs/do_not_recommend.log 2>&1
-
-# run daily cron job to refresh top msid-mbid mappings
-0 8 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py refresh-top-manual-mappings >> /logs/top_manual_mappings.log 2>&1
