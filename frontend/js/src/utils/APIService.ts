@@ -931,6 +931,27 @@ export default class APIService {
     return response.json();
   };
 
+  submitMbidMapping = async (
+    userToken: string,
+    recordingMSID: string,
+    recordingMBID: string
+  ): Promise<{ status: string; data: PinnedRecording }> => {
+    const url = `${this.APIBaseURI}/metadata/submit_manual_mapping`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        recording_msid: recordingMSID,
+        recording_mbid: recordingMBID,
+      }),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   unpinRecording = async (userToken: string): Promise<number> => {
     const url = `${this.APIBaseURI}/pin/unpin`;
     const response = await fetch(url, {
