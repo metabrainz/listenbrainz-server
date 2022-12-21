@@ -346,5 +346,11 @@ def unlock_cron():
         logger.error("Cannot unlock cron after updating continuous aggregates: %s" % str(err))
 
 
+def refresh_top_manual_mappings():
+    """ Refresh top manual msid-mbid mappings view """
+    with timescale.engine.connect() as ts_conn:
+        ts_conn.execute(text("REFRESH MATERIALIZED VIEW mbid_manual_mapping_top"))
+
+
 class TimescaleListenStoreException(Exception):
     pass
