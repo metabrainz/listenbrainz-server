@@ -15,6 +15,4 @@ CREATE MATERIALIZED VIEW mbid_manual_mapping_top AS (
          , max(created) DESC
 );
 
-CREATE INDEX mbid_manual_mapping_top_idx ON mbid_manual_mapping_top (recording_msid) INCLUDE (recording_mbid);
-
 COMMIT;
