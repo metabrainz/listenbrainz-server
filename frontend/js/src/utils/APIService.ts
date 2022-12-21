@@ -935,8 +935,8 @@ export default class APIService {
     userToken: string,
     recordingMSID: string,
     recordingMBID: string
-  ): Promise<{ status: string; data: PinnedRecording }> => {
-    const url = `${this.APIBaseURI}/metadata/submit_manual_mapping`;
+  ): Promise<{ status: string }> => {
+    const url = `${this.APIBaseURI}/metadata/submit_manual_mapping/`;
     const response = await fetch(url, {
       method: "POST",
       headers: {

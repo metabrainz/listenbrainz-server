@@ -3,6 +3,8 @@ import { get as _get } from "lodash";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getArtistName, getTrackName } from "../utils/utils";
 
+const RECORDING_MBID_RE = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
+
 export type MbidMappingModalProps = {
   recordingToMap?: Listen;
   newAlert: (
@@ -10,11 +12,14 @@ export type MbidMappingModalProps = {
     title: string,
     message: string | JSX.Element
   ) => void;
-  onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
 };
 
 export interface MbidMappingModalState {
-  recordingMBID: string;
+  // Managed form field
+  recordingMBIDInput: string;
+  // If the input is valid, the extracted UUID
+  recordingMBIDSubmit: string;
+  recordingMBIDValid: boolean;
 }
 
 export default class MbidMappingModal extends React.Component<
@@ -26,12 +31,16 @@ export default class MbidMappingModal extends React.Component<
 
   constructor(props: MbidMappingModalProps) {
     super(props);
-    this.state = { recordingMBID: "" };
+    this.state = {
+      recordingMBIDInput: "",
+      recordingMBIDSubmit: "",
+      recordingMBIDValid: true,
+    };
   }
 
   submitMbidMapping = async () => {
-    const { recordingToMap, newAlert, onSuccessfulPin } = this.props;
-    const { recordingMBID } = this.state;
+    const { recordingToMap, newAlert } = this.props;
+    const { recordingMBIDSubmit } = this.state;
     const { APIService, currentUser } = this.context;
 
     if (recordingToMap && currentUser?.auth_token) {
@@ -41,34 +50,41 @@ export default class MbidMappingModal extends React.Component<
       );
 
       try {
-        const response = await APIService.submitMbidMapping(
+        await APIService.submitMbidMapping(
           currentUser.auth_token,
           recordingMSID,
-          recordingMBID
+          recordingMBIDSubmit
         );
-        const { data } = response;
       } catch (error) {
-        this.handleError(error, "Error while pinning track");
+        this.handleError(error, "Error while linking track");
         return;
       }
 
       newAlert(
         "success",
-        `You mapped a track!`,
+        `You linked a track!`,
         `${getArtistName(recordingToMap)} - ${getTrackName(recordingToMap)}`
       );
-      this.setState({ recordingMBID: "" });
-
-      // if (onSuccessfulPin) {
-      //   onSuccessfulPin(newPin);
-      // }
+      this.setState({
+        recordingMBIDInput: "",
+        recordingMBIDSubmit: "",
+        recordingMBIDValid: true,
+      });
     }
   };
 
   handleMbidInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     const input = event.target.value;
-    this.setState({ recordingMBID: input });
+    const isValidUUID = RECORDING_MBID_RE.test(input);
+    const recordingMBIDSubmit = isValidUUID
+      ? RECORDING_MBID_RE.exec(input)![2].toLowerCase()
+      : "";
+    this.setState({
+      recordingMBIDInput: input,
+      recordingMBIDSubmit,
+      recordingMBIDValid: isValidUUID,
+    });
   };
 
   handleError = (error: string | Error, title?: string): void => {
@@ -88,7 +104,7 @@ export default class MbidMappingModal extends React.Component<
     if (!recordingToMap) {
       return null;
     }
-    const { recordingMBID } = this.state;
+    const { recordingMBIDInput, recordingMBIDValid } = this.state;
 
     return (
       <div
@@ -111,20 +127,30 @@ export default class MbidMappingModal extends React.Component<
                 <span aria-hidden="true">&times;</span>
               </button>
               <h4 className="modal-title" id="MbidMappingModalLabel">
-                Set a Recording MBID for this Listen
+                Link this Listen with MusicBrainz
               </h4>
             </div>
             <div className="modal-body">
+              <p>
+                If ListenBrainz was unable to link your Listen to a MusicBrainz
+                recording, you can do so manually here. Paste a Recording MBID
+                to link it to this Listen and all others with the same metadata.
+              </p>
               <div className="form-group">
                 <input
                   type="text"
-                  value={recordingMBID}
+                  value={recordingMBIDInput}
                   className="form-control"
                   id="recording-mbid"
                   name="recording-mbid"
                   onChange={this.handleMbidInputChange}
                 />
               </div>
+              {recordingMBIDInput.length > 0 && !recordingMBIDValid && (
+                <div className="has-error small">
+                  Not a valid recording MBID
+                </div>
+              )}
             </div>
             <div className="modal-footer">
               <button
@@ -139,6 +165,7 @@ export default class MbidMappingModal extends React.Component<
                 className="btn btn-success"
                 onClick={this.submitMbidMapping}
                 data-dismiss="modal"
+                disabled={!recordingMBIDValid}
               >
                 Add mapping
               </button>
