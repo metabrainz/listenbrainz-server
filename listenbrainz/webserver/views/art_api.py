@@ -276,6 +276,17 @@ def _cover_art_yim_tracks(user_name, stats):
     )
 
 
+def _cover_art_yim_artists(user_name, stats):
+    """ Create the SVG using top artists for the given user. """
+    return render_template(
+        "art/svg-templates/yim-2022-artists.svg",
+        user_name=user_name,
+        artists=stats["top_artists"],
+        total_artists_count=stats["total_artists_count"],
+        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+    )
+
+
 
 @art_api_bp.route("/year-in-music/2022/<user_name>", methods=["GET"])
 @crossdomain
@@ -288,10 +299,10 @@ def cover_art_yim_2022(user_name):
 
     image = request.args.get("image")
     if image is None:
-        raise APIBadRequest("Type of Image needs to be specified should be one of (stats, albums, tracks, discovery-playlist, missed-playlist)")
+        raise APIBadRequest("Type of Image needs to be specified should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
-    if image not in ("stats", "albums", "tracks", "discovery-playlist", "missed-playlist"):
-        raise APIBadRequest(f"Invalid image type {image}. Image type should be one of (stats, albums, tracks, discovery-playlist, missed-playlist)")
+    if image not in ("stats", "artists", "albums", "tracks", "discovery-playlist", "missed-playlist"):
+        raise APIBadRequest(f"Invalid image type {image}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
     stats = db_yim.get(user["id"], 2022)
     if stats is None:
@@ -303,6 +314,8 @@ def cover_art_yim_2022(user_name):
         svg = _cover_art_yim_albums(user_name, stats)
     elif image == "tracks":
         svg = _cover_art_yim_tracks(user_name, stats)
+    elif image == "artists":
+        svg = _cover_art_yim_artists(user_name, stats)
     else:
         svg = None
 
