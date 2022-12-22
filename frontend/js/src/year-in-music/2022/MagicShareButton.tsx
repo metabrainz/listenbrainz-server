@@ -37,8 +37,12 @@ export default function ShareButton({
       try {
         const response = await fetch(svgURL);
         fetchedSvgString = await response.text();
+        if (!response.ok) {
+          throw Error(fetchedSvgString);
+        }
       } catch (error) {
         console.error("Failed to load save image", error);
+        return;
       }
 
       const ctx = canvas?.getContext("2d", { alpha: false });
@@ -56,7 +60,7 @@ export default function ShareButton({
         }
       });
     };
-    getSVG();
+    getSVG().catch(console.error);
   }, []);
 
   const saveToFile = useCallback(() => {
