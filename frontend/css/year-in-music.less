@@ -5,11 +5,11 @@
 
 /* latin */
 @font-face {
-  font-family: 'Inter';
+  font-family: "Inter";
   font-style: normal;
   font-weight: 900;
   font-display: swap;
-  src: url("../fonts/Inter.woff2") format('woff2');
+  src: url("../fonts/Inter.woff2") format("woff2");
 }
 
 @coverflow-image-height: 400px;
@@ -158,14 +158,14 @@
       }
     }
   }
-  
+
   /* Styles specific to YIM 2022 */
   &.yim-2022 {
     --swiper-theme-color: @2022red;
     /* Main header section at the top with logo */
     #main-header {
       padding: 3em 2em;
-      background:white;
+      background: white;
       flex-direction: column;
       @media (max-width: @screen-sm) {
         // 80% of screen height minus menu bar and BrainzPlayer
@@ -176,7 +176,7 @@
       }
       .arrow-down {
         @media (min-width: @screen-sm) {
-            display: none;
+          display: none;
         }
         width: 0;
         height: 0;
@@ -185,7 +185,7 @@
         border-top: 12px solid @2022red;
       }
     }
-    .header-image{
+    .header-image {
       padding: 1.5em;
       width: 700px;
       @media (max-width: @screen-sm) {
@@ -195,18 +195,18 @@
     .header {
       margin-bottom: 1em;
       text-align: center;
-      font-family: "Roboto";
+      font-family: "Roboto", sans-serif;
       font-weight: 700;
       font-size: 48px;
       line-height: 56px;
       @media (max-width: @screen-sm) {
         font-size: 38px;
-        .subheader{
+        .subheader {
           font-size: 20px;
         }
       }
       .subheader {
-        font-family: "Roboto";
+        font-family: "Roboto", sans-serif;
         font-weight: 300;
         font-size: 24px;
         line-height: 28px;
@@ -216,11 +216,13 @@
     .share-section {
       padding: 0 1em;
       text-align: center;
-      font-family: "Roboto";
+      font-family: "Roboto", sans-serif;
       font-weight: 300;
       font-size: 1.6em;
       color: @2022yellow;
-      >div{max-width: 500px;}
+      > div {
+        max-width: 500px;
+      }
       .input-group {
         margin-top: 0.7em;
       }
@@ -230,18 +232,19 @@
       height: 2em;
       border-radius: 3px;
     }
-    .red-section,.yellow-section{
+    .red-section,
+    .yellow-section {
       padding-top: 3em;
       padding-bottom: 3em;
       width: 100%;
     }
     .yim-share-button-container {
       text-align: center;
-      margin-top:2em;
+      margin-top: 2em;
       margin-bottom: 2em;
     }
     .yim-share-button {
-      border:none;
+      border: none;
       width: 2em;
       height: 2em;
       line-height: 2em;
@@ -249,10 +252,12 @@
     }
     .red-section {
       background-color: @2022red;
-      &::after, &::before{
+      &::after,
+      &::before {
         background: @2022red;
       }
-      .header,.no-data {
+      .header,
+      .no-data {
         color: @2022yellow;
       }
       .yim-share-button {
@@ -262,10 +267,12 @@
     }
     .yellow-section {
       background-color: @2022yellow;
-      &::after, &::before{
+      &::after,
+      &::before {
         background: @2022yellow;
       }
-      .header,.no-data {
+      .header,
+      .no-data {
         color: @2022red;
       }
       .yim-share-button {
@@ -287,10 +294,10 @@
 
     .small-cards-container {
       margin-top: 1.5em;
-      > * {
+      > * {
         min-width: calc(100vw - 60px);
         margin-bottom: 1em;
-        font-family: "Roboto",sans-serif;
+        font-family: "Roboto", sans-serif;
         font-weight: 300;
         font-size: 24px;
         line-height: 1.3;
@@ -300,38 +307,39 @@
         justify-content: center;
       }
     }
-    .cover-art-composite{
-      padding-left:0;
-      padding-right:0;
-      .composite-image img{
+    .cover-art-composite {
+      padding-left: 0;
+      padding-right: 0;
+      .composite-image img {
         width: 100vw;
         content-visibility: auto;
       }
     }
-    .closing-remarks{
+    .closing-remarks {
       padding: 3em 2em;
       font-size: 1.3em;
       color: @white;
-      font-family: "Roboto";
+      font-family: "Roboto", sans-serif;
       font-weight: 200;
       text-align: center;
-      .bold{
+      .bold {
         font-weight: 400;
       }
-      a, a:visited, a:hover{
+      a,
+      a:visited,
+      a:hover {
         color: @white;
         text-decoration: underline;
         font-weight: 300;
       }
     }
 
-    .share-modal .modal-body{
-    overflow-x: auto;
+    .share-modal .modal-body {
+      overflow-x: auto;
     }
-    .alert{
+    .alert {
       margin: 0;
       padding: 2em;
     }
   }
 }
-
