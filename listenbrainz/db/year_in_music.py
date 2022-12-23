@@ -176,7 +176,7 @@ def insert_playlists(year, playlists):
 
 
 def create_tracks_of_the_year(year):
-    connection = db.engine.raw_connection()
+    connection = timescale.engine.raw_connection()
     query = SQL("""
         CREATE TABLE IF NOT EXISTS mapping.tracks_of_the_year_{year} (
             user_id             INTEGER     NOT NULL,
@@ -197,7 +197,7 @@ def create_tracks_of_the_year(year):
 
 
 def finalise_tracks_of_the_year(year):
-    connection = db.engine.raw_connection()
+    connection = timescale.engine.raw_connection()
     query = SQL("""CREATE INDEX IF NOT EXISTS tracks_of_the_year_{year}_user_id_idx ON mapping.tracks_of_the_year_{year} (user_id)""").format(year=year)
     with connection.cursor() as curs:
         curs.execute(query)
@@ -208,7 +208,7 @@ def insert_tracks_of_the_year(year, data):
     query = SQL("""
         INSERT INTO mapping.tracks_of_the_year_{year} (user_id, recording_name, recording_mbid, artist_name, artist_credit_mbids, listen_count) VALUES %s
     """).format(year=Literal(year))
-    connection = db.engine.raw_connection()
+    connection = timescale.engine.raw_connection()
     with connection.cursor() as curs:
         values = [(r["user_id"], r["recording_name"], r["recording_mbid"], r["artist_name"], r["artist_credit_mbids"], r["listen_count"]) for r in data]
         execute_values(curs, query, values)
