@@ -355,7 +355,7 @@ def handle_similar_users(message):
 
 
 def handle_yim_similar_users(message):
-    year_in_music.insert("similar_users", message["year"], message["data"])
+    year_in_music.insert_similar_recordings(message["year"], message["data"])
 
 
 def handle_yim_new_releases_of_top_artists(message):
@@ -376,7 +376,7 @@ def handle_yim_most_listened_year(message):
 
 
 def handle_yim_top_stats(message):
-    year_in_music.handle_multi_large_insert(f'top_{message["entity"]}', message["year"], message["data"])
+    year_in_music.handle_insert_top_stats(message["entity"], message["year"], message["data"])
 
 
 def handle_yim_listens_per_day(message):

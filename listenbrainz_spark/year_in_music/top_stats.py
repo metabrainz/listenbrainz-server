@@ -1,8 +1,9 @@
 from datetime import datetime, date, time
 
+from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.postgres.release import create_release_metadata_cache
 from listenbrainz_spark.stats.user.entity import calculate_entity_stats
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_new_dump, read_files_from_HDFS
 
 
 def calculate_top_entity_stats(year):
@@ -13,8 +14,8 @@ def calculate_top_entity_stats(year):
     listens = get_listens_from_new_dump(from_date, to_date)
     listens.createOrReplaceTempView(table)
 
-    create_release_metadata_cache()
     df_name = "release_data_cache"
+    read_files_from_HDFS(RELEASE_METADATA_CACHE_DATAFRAME).createOrReplaceTempView(df_name)
 
     for entity in ["artists", "recordings", "releases"]:
         stats = calculate_entity_stats(

@@ -234,23 +234,39 @@ class TimescaleListenStore:
             to_ts = max_user_ts + 1
 
         window_size = DEFAULT_FETCH_WINDOW
-        query = """SELECT listened_at
+        query = """
+                   WITH selected_listens AS (
+                        SELECT l.listened_at
+                             , l.track_name
+                             , l.user_id
+                             , l.created
+                             , l.data
+                             -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
+                             , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
+                          FROM listen l
+                     LEFT JOIN mbid_mapping mm
+                            ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+                     LEFT JOIN mbid_manual_mapping user_mm
+                            ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = user_mm.recording_msid
+                           AND user_mm.user_id = l.user_id 
+                     LEFT JOIN mbid_manual_mapping_top other_mm
+                            ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = other_mm.recording_msid
+                   )
+                   SELECT listened_at
                         , track_name
                         , user_id
                         , created
                         , data
-                        , mm.recording_mbid
+                        , sl.recording_mbid
                         , mbc.release_mbid
                         , mbc.artist_mbids::TEXT[]
                         , (mbc.release_data->>'caa_id')::bigint AS caa_id
                         , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
                         , array_agg(artist->>'name' ORDER BY position) AS ac_names
                         , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
-                     FROM listen
-                LEFT JOIN mbid_mapping mm
-                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+                     FROM selected_listens sl
                 LEFT JOIN mapping.mb_metadata_cache mbc
-                       ON mm.recording_mbid = mbc.recording_mbid
+                       ON sl.recording_mbid = mbc.recording_mbid
         LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
                        ON TRUE
                     WHERE user_id = :user_id
@@ -261,7 +277,7 @@ class TimescaleListenStore:
                         , user_id
                         , created
                         , data
-                        , mm.recording_mbid
+                        , sl.recording_mbid
                         , release_mbid
                         , artist_mbids
                         , artist_data->>'name'

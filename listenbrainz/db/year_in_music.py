@@ -1,3 +1,4 @@
+import json
 import smtplib
 from email.message import EmailMessage
 from email.utils import make_msgid
@@ -79,6 +80,34 @@ def insert_new_releases_of_top_artists(user_id, year, data):
         """), {"user_id": user_id, "year": year, "data": ujson.dumps(data)})
 
 
+def insert_similar_recordings(year, data):
+    connection = db.engine.raw_connection()
+    query = SQL("""
+        INSERT INTO statistics.year_in_music (user_id, year, data)
+             SELECT "user".id
+                  , {year}
+                  , jsonb_build_object('similar_users', jsonb_object_agg(other_user.musicbrainz_id, similar_user.score::float))
+               FROM (VALUES %s) AS t(user_id, data)
+               JOIN "user"
+                 ON "user".id = user_id::int
+       JOIN LATERAL jsonb_each(t.data::jsonb) AS similar_user(user_id, score)
+                 ON TRUE
+               JOIN "user" other_user
+                 ON other_user.id = similar_user.user_id::int
+           GROUP BY "user".id
+        ON CONFLICT (user_id, year)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+    """).format(year=Literal(year))
+    try:
+        with connection.cursor() as cursor:
+            values = [(k, json.dumps(v, ensure_ascii=False)) for k, v in data.items()]
+            execute_values(cursor, query, values)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting similar users:", exc_info=True)
+
+
 def handle_multi_large_insert(key, year, data):
     connection = db.engine.raw_connection()
     query = SQL("""
@@ -95,6 +124,29 @@ def handle_multi_large_insert(key, year, data):
     try:
         with connection.cursor() as cursor:
             values = [(user["user_id"], ujson.dumps(user["data"])) for user in data]
+            execute_values(cursor, query, values)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting top stats:", exc_info=True)
+
+
+def handle_insert_top_stats(entity, year, data):
+    connection = db.engine.raw_connection()
+    query = SQL("""
+        INSERT INTO statistics.year_in_music (user_id, year, data)
+             SELECT "user".id
+                  , {year}
+                  , jsonb_build_object({key}, data::jsonb, {count_key}, count)
+               FROM (VALUES %s) AS t(user_id, count, data)
+               JOIN "user"
+                 ON "user".id = user_id::int
+        ON CONFLICT (user_id, year)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+    """).format(key=Literal(f"top_{entity}"), count_key=Literal(f"total_{entity}_count"), year=Literal(year))
+    try:
+        with connection.cursor() as cursor:
+            values = [(user["user_id"], user["count"], ujson.dumps(user["data"])) for user in data]
             execute_values(cursor, query, values)
         connection.commit()
     except psycopg2.errors.OperationalError:

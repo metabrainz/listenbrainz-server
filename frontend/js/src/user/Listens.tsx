@@ -14,6 +14,7 @@ import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
   faCompactDisc,
+  faLink,
   faPencilAlt,
   faThumbtack,
   faTrashAlt,
@@ -49,6 +50,7 @@ import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCountCard from "../listens/ListenCountCard";
 import SimpleModal from "../utils/SimpleModal";
+import MbidMappingModal from "../mbid-mapping/MbidMappingModal";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -69,6 +71,7 @@ export interface ListensState {
   recordingMbidFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   recordingToReview?: Listen;
+  recordingToMapToMusicbrainz?: Listen;
   recordingToPersonallyRecommend?: Listen;
   dateTimePickerValue: Date | Date[];
   /* This is used to mark a listen as deleted
@@ -107,6 +110,7 @@ export default class Listens extends React.Component<
       previousListenTs: props.listens?.[0]?.listened_at,
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
+      recordingToMapToMusicbrainz: props.listens?.[0],
       recordingToPersonallyRecommend: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
@@ -559,6 +563,10 @@ export default class Listens extends React.Component<
     this.setState({ recordingToReview });
   };
 
+  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
+    this.setState({ recordingToMapToMusicbrainz });
+  };
+
   updateRecordingToPersonallyRecommend = (
     recordingToPersonallyRecommend: Listen
   ) => {
@@ -708,6 +716,7 @@ export default class Listens extends React.Component<
       Boolean(releaseGroupMBID);
     const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
     const canPersonallyRecommend = Boolean(recordingMSID);
+    const canManuallyMap = recordingMSID && !recordingMBID;
 
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
@@ -741,6 +750,17 @@ export default class Listens extends React.Component<
           action={this.updateRecordingToReview.bind(this, listen)}
           dataToggle="modal"
           dataTarget="#CBReviewModal"
+        />
+      );
+    }
+    if (canManuallyMap) {
+      additionalMenuItems.push(
+        <ListenControl
+          text="Link with MusicBrainz"
+          icon={faLink}
+          action={this.updateRecordingToMapToMusicbrainz.bind(this, listen)}
+          dataToggle="modal"
+          dataTarget="#MapToMusicBrainzRecordingModal"
         />
       );
     }
@@ -793,6 +813,7 @@ export default class Listens extends React.Component<
       previousListenTs,
       dateTimePickerValue,
       recordingToPin,
+      recordingToMapToMusicbrainz,
       recordingToReview,
       recordingToPersonallyRecommend,
       userPinnedRecording,
@@ -994,6 +1015,10 @@ export default class Listens extends React.Component<
                       onSuccessfulPin={(pinnedListen) =>
                         this.handlePinnedRecording(pinnedListen)
                       }
+                    />
+                    <MbidMappingModal
+                      recordingToMap={recordingToMapToMusicbrainz}
+                      newAlert={newAlert}
                     />
                     <CBReviewModal
                       listen={recordingToReview}
