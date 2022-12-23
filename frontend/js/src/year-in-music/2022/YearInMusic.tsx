@@ -25,7 +25,6 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import PrismaZoom from "react-prismazoom";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -1017,18 +1016,16 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <PrismaZoom maxZoom={10}>
-              <LazyLoadImage
-                src="/static/img/year-in-music-22/rainbow1-100-3-500.jpeg"
-                placeholderSrc="/static/img/year-in-music-22/rainbow1-100-3-500.jpeg"
-                srcSet="/static/img/year-in-music-22/rainbow1-100-3-500.jpeg 300w,
-                /static/img/year-in-music-22/rainbow1-100-3-1500.jpeg 1000w,
-                /static/img/year-in-music-22/rainbow1-100-3-11250.jpeg 1500w"
-                alt="2022 albums"
-                loading="lazy"
-                decoding="async"
-              />
-            </PrismaZoom>
+            <LazyLoadImage
+              src="/static/img/year-in-music-22/rainbow1-100-7-small.jpeg"
+              placeholderSrc="/static/img/year-in-music-22/rainbow1-100-7-small.jpeg"
+              srcSet="/static/img/year-in-music-22/rainbow1-100-7-small.jpeg 500w,
+              /static/img/year-in-music-22/rainbow1-100-7-medium.jpeg 1000w,
+              /static/img/year-in-music-22/rainbow1-100-7-large.jpeg 2000w"
+              alt="2022 albums"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <div className="container closing-remarks">
             <span className="bold">

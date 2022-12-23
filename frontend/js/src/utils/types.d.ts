@@ -4,7 +4,6 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "time-ago";
 declare module "debounce-async";
-declare module "react-prismazoom";
 
 declare module "react-bs-notifier";
 declare type AlertType = "danger" | "warning" | "success" | "info";
