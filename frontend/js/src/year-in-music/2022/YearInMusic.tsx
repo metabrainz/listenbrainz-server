@@ -495,7 +495,7 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="yim-share-button-container">
               <MagicShareButton
-                svgURL={`https://api.listenbrainz.org/1/art/year-in-music/2022/${user.name}?image=albums`}
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=albums`}
                 shareUrl={`${linkToThisPage}#top-albums`}
                 // shareText="Check out my"
                 shareTitle="My top albums of 2022"
@@ -560,7 +560,7 @@ export default class YearInMusic extends React.Component<
                 </div>
                 <div className="yim-share-button-container">
                   <MagicShareButton
-                    svgURL={`https://api.listenbrainz.org/1/art/year-in-music/2022/${user.name}?image=tracks`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=tracks`}
                     shareUrl={`${linkToThisPage}#top-tracks`}
                     // shareText="Check out my"
                     shareTitle="My top tracks of 2022"
@@ -628,7 +628,7 @@ export default class YearInMusic extends React.Component<
                 </div>
                 <div className="yim-share-button-container">
                   <MagicShareButton
-                    svgURL={`https://api.listenbrainz.org/1/art/designer-top-5/${user.name}/year/500`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=artists`}
                     shareUrl={`${linkToThisPage}#top-artists`}
                     // shareText="Check out my"
                     shareTitle="My top artists of 2022"
@@ -647,7 +647,7 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="yim-share-button-container">
               <MagicShareButton
-                svgURL={`https://api.listenbrainz.org/1/art/year-in-music/2022/${user.name}?image=stats`}
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=stats`}
                 shareUrl={`${linkToThisPage}#stats`}
                 shareTitle="My music listening in 2022"
                 fileName={`${user.name}-stats-2022`}
