@@ -12,7 +12,8 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
     update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
     delete_listens as ts_delete_listens, \
-    delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data
+    delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data, \
+    refresh_top_manual_mappings as ts_refresh_top_manual_mappings
 from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
 from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
@@ -156,6 +157,9 @@ def init_ts_db(force, create_db):
 
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
+
+        print('TS: Creating views...')
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
 
         print('TS: Creating Functions...')
         ts.run_sql_script(os.path.join(
@@ -317,3 +321,13 @@ def clear_expired_do_not_recommends():
         app.logger.info("Starting process to clean up expired do not recommends")
         do_not_recommend.clear_expired()
         app.logger.info("Completed process to clean up expired do not recommends")
+
+
+@cli.command()
+def refresh_top_manual_mappings():
+    """ Refresh top manual msid-mbid mappings view """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Starting process to refresh top manual mappings")
+        ts_refresh_top_manual_mappings()
+        app.logger.info("Completed process to refresh top manual mappings")
