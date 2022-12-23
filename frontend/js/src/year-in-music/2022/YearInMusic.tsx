@@ -496,7 +496,7 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="yim-share-button-container">
               <MagicShareButton
-                svgURL={`https://api.listenbrainz.org/1/art/grid-stats/${user.name}/year/4/0/500`}
+                svgURL={`https://api.listenbrainz.org/1/art/year-in-music/2022/${user.name}?image=albums`}
                 shareUrl={`${linkToThisPage}#top-albums`}
                 // shareText="Check out my"
                 shareTitle="My top albums of 2022"
@@ -561,7 +561,7 @@ export default class YearInMusic extends React.Component<
                 </div>
                 <div className="yim-share-button-container">
                   <MagicShareButton
-                    svgURL={`https://api.listenbrainz.org/1/art/designer-top-10/${user.name}/year/500`}
+                    svgURL={`https://api.listenbrainz.org/1/art/year-in-music/2022/${user.name}?image=tracks`}
                     shareUrl={`${linkToThisPage}#top-tracks`}
                     // shareText="Check out my"
                     shareTitle="My top tracks of 2022"
@@ -641,10 +641,18 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <div className="yellow-section">
-          <div className="container">
+          <div className="container" id="stats">
             <div className="header">
               Statistics
               <div className="subheader">Mmmm…Delicous.</div>
+            </div>
+            <div className="yim-share-button-container">
+              <MagicShareButton
+                svgURL={`https://api.listenbrainz.org/1/art/year-in-music/2022/${user.name}?image=stats`}
+                shareUrl={`${linkToThisPage}#stats`}
+                shareTitle="My music listening in 2022"
+                fileName={`${user.name}-stats-2022`}
+              />
             </div>
             <div className="card content-card" id="calendar">
               <h3 className="text-center">
