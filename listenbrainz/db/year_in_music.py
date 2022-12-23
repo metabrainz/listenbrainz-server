@@ -175,6 +175,46 @@ def insert_playlists(year, playlists):
         current_app.logger.error(f"Error while inserting playlists:", exc_info=True)
 
 
+def create_tracks_of_the_year(year):
+    connection = db.engine.raw_connection()
+    query = SQL("""
+        CREATE TABLE IF NOT EXISTS mapping.tracks_of_the_year_{year} (
+            user_id             INTEGER     NOT NULL,
+            recording_mbid      UUID        NOT NULL,
+            recording_name      TEXT        NOT NULL,
+            artist_name         TEXT        NOT NULL,
+            artist_credit_mbids TEXT[]      NOT NULL,
+            listen_count        INTEGER     NOT NULL
+        )
+    """).format(year=Literal(year))
+    truncate_query = SQL("TRUNCATE TABLE mapping.tracks_of_the_year_{year}").format(year=year)
+    drop_query = SQL("DROP INDEX IF EXISTS tracks_of_the_year_{year}_user_id_idx").format(year=year)
+    with connection.cursor() as curs:
+        curs.execute(query)
+        curs.execute(truncate_query)
+        curs.execute(drop_query)
+    connection.commit()
+
+
+def finalise_tracks_of_the_year(year):
+    connection = db.engine.raw_connection()
+    query = SQL("""CREATE INDEX IF NOT EXISTS tracks_of_the_year_{year}_user_id_idx ON mapping.tracks_of_the_year_{year} (user_id)""").format(year=year)
+    with connection.cursor() as curs:
+        curs.execute(query)
+    connection.commit()
+
+
+def insert_tracks_of_the_year(year, data):
+    query = SQL("""
+        INSERT INTO mapping.tracks_of_the_year_{year} (user_id, recording_name, recording_mbid, artist_name, artist_credit_mbids, listen_count) VALUES %s
+    """).format(year=Literal(year))
+    connection = db.engine.raw_connection()
+    with connection.cursor() as curs:
+        values = [(r["user_id"], r["recording_name"], r["recording_mbid"], r["artist_name"], r["artist_credit_mbids"], r["listen_count"]) for r in data]
+        execute_values(curs, query, values)
+    connection.commit()
+
+
 def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
     if not to_email:
         return
