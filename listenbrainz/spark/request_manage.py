@@ -141,15 +141,6 @@ def request_yim_new_release_stats(year: int):
     send_request_to_spark_cluster("year_in_music.new_releases_of_top_artists", year=year)
 
 
-@cli.command(name="request_yim_tracks_of_the_year")
-@click.option("--year", type=int, help="Year for which to calculate the stat",
-              default=date.today().year)
-def request_yim_tracks_of_the_year(year: int):
-    """ Send request to calculate new release stats to the spark cluster
-    """
-    send_request_to_spark_cluster("year_in_music.tracks_of_the_year", year=year)
-
-
 @cli.command(name="request_yim_day_of_week")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
@@ -439,9 +430,9 @@ def request_yim_similar_users(year: int):
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
 def request_yim_playlists(year: int):
-    app = create_app()
-    with app.app_context():
-        yim_patch_runner(year)
+    """ Send the cluster a request to generate tracks of the year data and then
+     once the data has been imported generate YIM playlists. """
+    send_request_to_spark_cluster("year_in_music.tracks_of_the_year", year=year)
 
 
 @cli.command(name="request_year_in_music")
@@ -460,7 +451,7 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_similar_users, year=year)
     ctx.invoke(request_yim_new_artists_discovered, year=year)
     ctx.invoke(request_yim_listening_time, year=year)
-    # ctx.invoke(request_yim_playlists, year=year)
+    ctx.invoke(request_yim_playlists, year=year)
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality

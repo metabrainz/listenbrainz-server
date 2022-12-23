@@ -1,9 +1,12 @@
 from datetime import datetime, date, time
 
-from listenbrainz_spark import config
+from more_itertools import chunked
+
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_all_listens_from_new_dump
 
+
+ENTRIES_PER_MESSAGE = 100000
 
 def calculate_tracks_of_the_year(year):
     """ Calculate all tracks a user has listened to in the given year. """
@@ -29,9 +32,21 @@ def calculate_tracks_of_the_year(year):
              , artist_name
              , artist_credit_mbids
     """
+    data = run_query(query).toLocalIterator()
 
-    run_query(query)\
-        .repartition(1)\
-        .write\
-        .format("json")\
-        .save(config.HDFS_CLUSTER_URI + "/tracks_of_the_year", mode="overwrite")
+    yield {
+        "type": "year_in_music_tracks_of_the_year_start",
+        "year": year,
+    }
+
+    for entries in chunked(data, ENTRIES_PER_MESSAGE):
+        yield {
+            "type": "year_in_music_tracks_of_the_year_data",
+            "year": year,
+            "data": [e.asDict() for e in entries]
+        }
+
+    yield {
+        "type": "year_in_music_tracks_of_the_year_end",
+        "year": year,
+    }
