@@ -1,13 +1,15 @@
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify
 
+from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
 from listenbrainz.db.metadata import get_metadata_for_recording
+from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.mbid_mapping_writer.mbid_mapper_metadata_api import MBIDMapperMetadataAPI
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.utils import parse_boolean_arg
-from listenbrainz.webserver.views.api_tools import is_valid_uuid
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header
 
 metadata_bp = Blueprint('metadata', __name__)
 
@@ -151,3 +153,76 @@ def get_mbid_mapping():
         return process_results(fuzzy_result, metadata, incs)
 
     return jsonify({})
+
+
+@metadata_bp.route("/submit_manual_mapping/", methods=["POST", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def submit_manual_mapping():
+    """
+    Submit a manual mapping of a recording messybrainz ID to a musicbrainz recording id.
+
+    The format of the JSON to be POSTed to this endpoint is:
+
+    .. code-block:: json
+
+        {
+            "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+            "recording_mbid": "8f3471b5-7e6a-48da-86a9-c1c07a0f47ae"
+        }
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Mapping added, or already exists.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    recording_msid = request.json.get("recording_msid")
+    recording_mbid = request.json.get("recording_mbid")
+    if not recording_msid or not is_valid_uuid(recording_msid):
+        raise APIBadRequest("recording_msid is invalid or not present in arguments")
+    if not recording_mbid or not is_valid_uuid(recording_mbid):
+        raise APIBadRequest("recording_mbid is invalid or not present in arguments")
+
+    mapping = MbidManualMapping(
+        recording_msid=recording_msid,
+        recording_mbid=recording_mbid,
+        user_id=user["id"]
+    )
+
+    create_mbid_manual_mapping(mapping)
+
+    return jsonify({"status": "ok"})
+
+
+@metadata_bp.route("/get_manual_mapping/", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def get_manual_mapping():
+    """
+    Get the manual mapping of a recording messybrainz ID that a user added.
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: The response of the mapping.
+    :statuscode 404: No such mapping for this user/recording msid
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    recording_msid = request.args.get("recording_msid")
+    if not recording_msid or not is_valid_uuid(recording_msid):
+        raise APIBadRequest("recording_msid is invalid or not present in arguments")
+
+    existing_mapping = get_mbid_manual_mapping(recording_msid=recording_msid, user_id=user["id"])
+
+    if existing_mapping:
+        return jsonify({
+            "status": "ok",
+            "mapping": existing_mapping.to_api()
+        })
+    else:
+        return jsonify({"status": "none"}), 404

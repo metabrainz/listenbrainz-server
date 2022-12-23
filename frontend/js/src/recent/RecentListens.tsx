@@ -45,6 +45,7 @@ export interface RecentListensState {
   listenCount?: number;
   recordingToPin?: Listen;
   recordingToReview?: Listen;
+  recordingToMapToMusicbrainz?: Listen;
   recordingToPersonallyRecommend: Listen;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
@@ -63,6 +64,7 @@ export default class RecentListens extends React.Component<
       listens: props.listens || [],
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
+      recordingToMapToMusicbrainz: props.listens?.[0],
       recordingToPersonallyRecommend: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
@@ -85,6 +87,10 @@ export default class RecentListens extends React.Component<
 
   updateRecordingToReview = (recordingToReview: Listen) => {
     this.setState({ recordingToReview });
+  };
+
+  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
+    this.setState({ recordingToMapToMusicbrainz });
   };
 
   getFeedback = async () => {
@@ -192,6 +198,7 @@ export default class RecentListens extends React.Component<
       listens,
       recordingToPin,
       recordingToReview,
+      recordingToMapToMusicbrainz,
       recordingToPersonallyRecommend,
     } = this.state;
     const { newAlert } = this.props;
@@ -248,6 +255,18 @@ export default class RecentListens extends React.Component<
                       />
                     );
                   }
+                  additionalMenuItems.push(
+                    <ListenControl
+                      text="Map to a Recording"
+                      icon={faPencilAlt}
+                      action={this.updateRecordingToMapToMusicbrainz.bind(
+                        this,
+                        listen
+                      )}
+                      dataToggle="modal"
+                      dataTarget="#UpdateMusicbrainzMappingModal"
+                    />
+                  );
 
                   if (isListenPersonallyRecommendable) {
                     additionalMenuItems.push(
