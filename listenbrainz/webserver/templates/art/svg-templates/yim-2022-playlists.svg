@@ -13,15 +13,15 @@
         }
     </style>
     <g>
-        <image class="album-art" x="30" y="75" xlink:href="{{ image_urls[0] }}" />
-        <image class="album-art" x="30" y="210" xlink:href="{{ image_urls[1] }}" />
-        <image class="album-art" x="30" y="345" xlink:href="{{ image_urls[2] }}" />
-        <image class="album-art" x="165" y="75" xlink:href="{{ image_urls[3] }}" />
-        <image class="album-art" x="165" y="210" xlink:href="{{ image_urls[4] }}" />
-        <image class="album-art" x="165" y="345" xlink:href="{{ image_urls[5] }}" />
-        <image class="album-art" x="300" y="75" xlink:href="{{ image_urls[6] }}" />
-        <image class="album-art" x="300" y="210" xlink:href="{{ image_urls[7] }}" />
-        <image class="album-art" x="300" y="345" xlink:href="{{ image_urls[8] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="30" y="75" xlink:href="{{ image_urls[0] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="30" y="210" xlink:href="{{ image_urls[1] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="30" y="345" xlink:href="{{ image_urls[2] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="165" y="75" xlink:href="{{ image_urls[3] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="165" y="210" xlink:href="{{ image_urls[4] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="165" y="345" xlink:href="{{ image_urls[5] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="300" y="75" xlink:href="{{ image_urls[6] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="300" y="210" xlink:href="{{ image_urls[7] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="300" y="345" xlink:href="{{ image_urls[8] }}" />
         <rect x="0" y="0" width="452" height="521" fill="url(#pattern2)"/>
     </g>
     <defs>
