@@ -156,11 +156,11 @@ def handle_insert_top_stats(entity, year, data):
 
 
 def insert_playlists_cover_art(year, data):
-    """ Insert cover art for YIM playlists. Only lookup cover art for the first 5 tracks of each playlist because
-     that's the number of tracks we show on the YIM page."""
+    """ Insert cover art for YIM playlists. This is used to lookup cover art for the first 5 tracks of each playlist
+     preview and for the SVG cover on YIM page. """
     all_mbids = set()
     for (user_id, slug, playlist) in data:
-        for track in playlist["track"][:5]:
+        for track in playlist["track"]:
             mbid = track["identifier"].split("/")[-1]
             all_mbids.add(mbid)
 
@@ -170,7 +170,7 @@ def insert_playlists_cover_art(year, data):
     cover_art_data = []
     for (user_id, slug, playlist) in data:
         cover_arts = {}
-        for track in playlist["track"][:5]:
+        for track in playlist["track"]:
             mbid = track["identifier"].split("/")[-1]
             r = recordings.get(mbid)
             if r:

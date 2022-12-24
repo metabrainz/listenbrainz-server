@@ -287,6 +287,23 @@ def _cover_art_yim_artists(user_name, stats):
     )
 
 
+def _cover_art_yim_playlist(user_name, stats, key):
+    """ Create the SVG using playlist tracks' cover arts for the given YIM playlist. """
+    all_cover_arts = stats[f"{key}-coverart"]
+    image_urls = []
+    for track in stats[key]["track"]:
+        mbid = track["identifier"].split("/")[-1]
+        if mbid in all_cover_arts:
+            image_urls.append(all_cover_arts[mbid])
+
+    return render_template(
+        "art/svg-templates/yim-2022-playlists.svg",
+        user_name=user_name,
+        image_urls=image_urls,
+        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+        flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-flames.png',
+    )
+
 
 @art_api_bp.route("/year-in-music/2022/<user_name>", methods=["GET"])
 @crossdomain
@@ -316,6 +333,10 @@ def cover_art_yim_2022(user_name):
         svg = _cover_art_yim_tracks(user_name, stats)
     elif image == "artists":
         svg = _cover_art_yim_artists(user_name, stats)
+    elif image == "discovery-playlist":
+        svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year")
+    elif image == "missed-playlist":
+        svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year")
     else:
         svg = None
 

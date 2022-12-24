@@ -219,6 +219,83 @@ export default class YearInMusic extends React.Component<
     }
   };
 
+  showTopLevelPlaylist = (
+    index: number,
+    topLevelPlaylist: JSPFPlaylist | undefined,
+    coverArtKey: string,
+    listens: Array<Listen>
+  ): JSX.Element | undefined => {
+    if (!topLevelPlaylist) {
+      return undefined;
+    }
+    const { APIService } = this.context;
+    const { newAlert, user } = this.props;
+    return (
+      <div className="card content-card mb-10" id={`${coverArtKey}`}>
+        <div className="center-p">
+          <object
+            data={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=${coverArtKey}`}
+          >{`SVG of cover art for Top Discovery Playlist for ${user.name}`}</object>
+          <h4>
+            <a
+              href={topLevelPlaylist.identifier}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {topLevelPlaylist.title}{" "}
+            </a>
+            <FontAwesomeIcon
+              icon={faQuestionCircle}
+              data-tip
+              data-for={`playlist-${index}-tooltip`}
+              size="xs"
+            />
+            <Tooltip id={`playlist-${index}-tooltip`}>
+              {topLevelPlaylist.annotation}
+            </Tooltip>
+          </h4>
+        </div>
+        <div>
+          {topLevelPlaylist.track.slice(0, 5).map((playlistTrack) => {
+            const listen = JSPFTrackToListen(playlistTrack);
+            listens.push(listen);
+            let thumbnail;
+            if (playlistTrack.image) {
+              thumbnail = (
+                <div className="listen-thumbnail">
+                  <img
+                    src={playlistTrack.image}
+                    alt={`Cover Art for ${playlistTrack.title}`}
+                  />
+                </div>
+              );
+            }
+            return (
+              <ListenCard
+                className="playlist-item-card"
+                listen={listen}
+                customThumbnail={thumbnail}
+                compact
+                showTimestamp={false}
+                showUsername={false}
+                newAlert={newAlert}
+              />
+            );
+          })}
+          <hr />
+          <a
+            href={topLevelPlaylist.identifier}
+            className="btn btn-info btn-block"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            See the full playlist…
+          </a>
+        </div>
+      </div>
+    );
+  };
+
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
     const { APIService, currentUser } = this.context;
@@ -748,83 +825,16 @@ export default class YearInMusic extends React.Component<
               <div className="subheader">Generated just for you.</div>
             </div>
             <div className="row flex flex-wrap" id="playlists">
-              {Boolean(topDiscoveriesPlaylist) ||
-              Boolean(topMissedRecordingsPlaylist)
-                ? [topDiscoveriesPlaylist, topMissedRecordingsPlaylist].map(
-                    (topLevelPlaylist, index) => {
-                      if (!topLevelPlaylist) {
-                        return undefined;
-                      }
-                      return (
-                        <div
-                          className="card content-card mb-10"
-                          id="top-discoveries"
-                        >
-                          <div className="center-p">
-                            SVG OF COVERS HERE
-                            <h4>
-                              <a
-                                href={topLevelPlaylist.identifier}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {topLevelPlaylist.title}{" "}
-                              </a>
-                              <FontAwesomeIcon
-                                icon={faQuestionCircle}
-                                data-tip
-                                data-for={`playlist-${index}-tooltip`}
-                                size="xs"
-                              />
-                              <Tooltip id={`playlist-${index}-tooltip`}>
-                                {topLevelPlaylist.annotation}
-                              </Tooltip>
-                            </h4>
-                          </div>
-                          <div>
-                            {topLevelPlaylist.track
-                              .slice(0, 5)
-                              .map((playlistTrack) => {
-                                const listen = JSPFTrackToListen(playlistTrack);
-                                listens.push(listen);
-                                let thumbnail;
-                                if (playlistTrack.image) {
-                                  thumbnail = (
-                                    <div className="listen-thumbnail">
-                                      <img
-                                        src={playlistTrack.image}
-                                        alt={`Cover Art for ${playlistTrack.title}`}
-                                      />
-                                    </div>
-                                  );
-                                }
-                                return (
-                                  <ListenCard
-                                    className="playlist-item-card"
-                                    listen={listen}
-                                    customThumbnail={thumbnail}
-                                    compact
-                                    showTimestamp={false}
-                                    showUsername={false}
-                                    newAlert={newAlert}
-                                  />
-                                );
-                              })}
-                            <hr />
-                            <a
-                              href={topLevelPlaylist.identifier}
-                              className="btn btn-info btn-block"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              See the full playlist…
-                            </a>
-                          </div>
-                        </div>
-                      );
-                    }
-                  )
-                : noDataText}
+              {Boolean(topDiscoveriesPlaylist) &&
+                this.showTopLevelPlaylist(0, topDiscoveriesPlaylist, "discovery-playlist", listens)}
+              {Boolean(topMissedRecordingsPlaylist) &&
+                this.showTopLevelPlaylist(
+                  1,
+                  topMissedRecordingsPlaylist,
+                  "missed-playlist",
+                  listens
+                )}
+              {hasNoPlaylists && noDataText}
             </div>
           </div>
         </div>
