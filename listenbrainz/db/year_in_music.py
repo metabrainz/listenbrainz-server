@@ -8,7 +8,7 @@ import psycopg2
 import sqlalchemy
 import ujson
 from flask import current_app, render_template
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_values, DictCursor
 from brainzutils import musicbrainz_db
 from psycopg2.sql import SQL, Literal
 
@@ -164,8 +164,8 @@ def insert_playlists_cover_art(year, data):
             mbid = track["identifier"].split("/")[-1]
             all_mbids.add(mbid)
 
-    with timescale.engine.connect() as connection:
-        recordings = load_recordings_from_mbids(connection, all_mbids)
+    with timescale.engine.connect() as ts_conn, ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_cursor:
+        recordings = load_recordings_from_mbids(ts_cursor, all_mbids)
 
     cover_art_data = []
     for (user_id, slug, playlist) in data:

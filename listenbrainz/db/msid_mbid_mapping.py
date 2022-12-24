@@ -4,6 +4,7 @@ from typing import Iterable, Dict, List, TypeVar
 from typing import Optional, Tuple
 
 from flask import current_app
+from psycopg2.extras import execute_values, DictCursor
 from pydantic import BaseModel, validator, root_validator
 from sqlalchemy import text
 
@@ -37,54 +38,51 @@ class MsidMbidModel(BaseModel):
         return values
 
 
-def load_recordings_from_mbids(connection, mbids: Iterable[str]) -> dict:
+def load_recordings_from_mbids(ts_curs, mbids: Iterable[str]) -> dict:
     """ Given a list of mbids return a map with mbid as key and the recording info as value. """
     if not mbids:
         return {}
 
     query = """
-        SELECT recording_mbid::TEXT
+        SELECT mbc.recording_mbid::TEXT
              , release_mbid::TEXT
              , artist_mbids::TEXT[]
              , artist_data->>'name' AS artist
+             , (artist_data->>'artist_credit_id')::bigint AS artist_credit_id
              , recording_data->>'name' AS title
+             , (recording_data->>'length')::bigint AS length
              , release_data->>'name' AS release
              , (release_data->>'caa_id')::bigint AS caa_id
              , release_data->>'caa_release_mbid' AS caa_release_mbid
              , array_agg(artist->>'name' ORDER BY position) AS ac_names
              , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
-          FROM mapping.mb_metadata_cache mbc
+          FROM (VALUES %s) AS m (recording_mbid)
+          JOIN mapping.mb_metadata_cache mbc
+            ON mbc.recording_mbid = m.recording_mbid::uuid
   JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
             ON TRUE
-         WHERE recording_mbid IN :mbids
-      GROUP BY recording_mbid
+      GROUP BY mbc.recording_mbid
              , release_mbid
              , artist_mbids
              , artist_data->>'name'
+             , artist_data->>'artist_credit_id'
              , recording_data->>'name'
+             , recording_data->>'length'
              , release_data->>'name'
              , release_data->>'caa_id'
              , release_data->>'caa_release_mbid'
     """
-
-    result = connection.execute(text(query), {"mbids": tuple(mbids)})
-
+    results = execute_values(ts_curs, query, [(mbid,) for mbid in mbids], fetch=True)
     rows = {}
-    for row in result.all():
-        recording_mbid = row.recording_mbid
-        data = {
-            "recording_mbid": row.recording_mbid,
-            "release_mbid": row.release_mbid,
-            "artist_mbids": row.artist_mbids,
-            "artist": row.artist,
-            "title": row.title,
-            "release": row.release,
-            "caa_id": row.caa_id,
-            "caa_release_mbid": row.caa_release_mbid
-        }
+    for row in results:
+        data = dict(row)
+        recording_mbid = data["recording_mbid"]
+
+        ac_names = data.pop("ac_names")
+        ac_join_phrases = data.pop("ac_join_phrases")
 
         artists = []
-        for (mbid, name, join_phrase) in zip(row.artist_mbids, row.ac_names, row.ac_join_phrases):
+        for (mbid, name, join_phrase) in zip(data["artist_mbids"], ac_names, ac_join_phrases):
             artists.append({
                 "artist_mbid": mbid,
                 "artist_credit_name": name,
@@ -120,11 +118,11 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
 
     # first we try to load data from mapping using mbids. for the items without a mbid,
     # we'll later lookup data for these items from messybrainz.
-    with timescale.engine.begin() as connection:
-        mbid_metadatas = load_recordings_from_mbids(connection, mbid_item_map.keys())
+    with timescale.engine.connect() as ts_conn, ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
+        mbid_metadatas = load_recordings_from_mbids(ts_curs, mbid_item_map.keys())
         _update_mbid_items(mbid_item_map, mbid_metadatas, msid_item_map)
 
-        msid_metadatas = load_recordings_from_msids(connection, msid_item_map.keys())
+        msid_metadatas = load_recordings_from_msids(ts_curs, msid_item_map.keys())
         _update_msid_items(msid_item_map, msid_metadatas)
 
     return items
