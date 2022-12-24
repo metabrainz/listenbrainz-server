@@ -2,6 +2,8 @@ import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Identifier
 
+from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mbids
+
 
 def _resolve_mbids_helper(curs, query, mbids):
     """ Helper to extract common code for resolving redirect and canonical mbids """
@@ -60,38 +62,10 @@ def resolve_canonical_mbids(curs, mbids):
     return _resolve_mbids_helper(curs, query, mbids)
 
 
-def fetch_recording_metadata(curs, mbids):
-    """ Fetch recording metadata for given recording mbids """
-    query = """
-        SELECT r.gid::TEXT AS recording_mbid
-             , r.name AS recording_name
-             , r.length
-             , r.comment
-             , ac.id AS artist_credit_id
-             , ac.name AS artist_credit_name
-             , array_agg(a.gid ORDER BY acn.position)::TEXT[] AS artist_credit_mbids
-          FROM recording r
-          JOIN artist_credit ac
-            ON r.artist_credit = ac.id
-          JOIN artist_credit_name acn
-            ON ac.id = acn.artist_credit
-          JOIN artist a
-            ON acn.artist = a.id
-         WHERE r.gid
-            IN %s
-      GROUP BY r.gid, r.id, r.name, r.length, r.comment, ac.id, ac.name
-      ORDER BY r.gid
-    """
-
-    args = [tuple([psycopg2.extensions.adapt(p) for p in mbids])]
-    curs.execute(query, tuple(args))
-    return {row['recording_mbid']: dict(row) for row in curs.fetchall()}
-
-
 def get_recordings_from_mbids(mb_curs, ts_curs, mbids):
     """ Given a list of recording mbids, resolve redirects if any and return metadata for all recordings """
     redirected_mbids, index, inverse_index = resolve_redirect_mbids(mb_curs, "recording", mbids)
-    recording_index = fetch_recording_metadata(mb_curs, redirected_mbids)
+    recording_index = load_recordings_from_mbids(ts_curs, redirected_mbids)
     _, canonical_index, _ = resolve_canonical_mbids(ts_curs, redirected_mbids)
 
     # Finally collate all the results, ensuring that we have one entry with original_recording_mbid for each input
@@ -99,17 +73,22 @@ def get_recordings_from_mbids(mb_curs, ts_curs, mbids):
     for mbid in mbids:
         redirected_mbid = index.get(mbid, mbid)
         if redirected_mbid in recording_index:
-            r = dict(recording_index[redirected_mbid])
-            r['[artist_credit_mbids]'] = [ac_mbid for ac_mbid in r['artist_credit_mbids']]
-            del r['artist_credit_mbids']
-            r['original_recording_mbid'] = mbid
-            r['canonical_recording_mbid'] = canonical_index.get(redirected_mbid, redirected_mbid)
+            data = recording_index[redirected_mbid]
+            r = {
+                "recording_mbid": redirected_mbid,
+                "recording_name": data["title"],
+                "length": data["length"],
+                "artist_credit_id": data["artist_credit_id"],
+                "artist_credit_name": data["artist"],
+                "[artist_credit_mbids]": data["artist_mbids"],
+                "original_recording_mbid": mbid,
+                "canonical_recording_mbid": canonical_index.get(redirected_mbid, redirected_mbid)
+            }
         else:
             r = {
                 'recording_mbid': None,
                 'recording_name': None,
                 'length': None,
-                'comment': None,
                 'artist_credit_id': None,
                 'artist_credit_name': None,
                 '[artist_credit_mbids]': None,

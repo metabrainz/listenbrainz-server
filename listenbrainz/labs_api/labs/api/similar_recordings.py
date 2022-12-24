@@ -42,7 +42,6 @@ class SimilarRecordingsViewerQuery(Query):
             r.pop("original_recording_mbid", None)
             r.pop("artist_credit_id", None)
             r.pop("length", None)
-            r.pop("comment", None)
 
         return {
             "type": "dataset",
