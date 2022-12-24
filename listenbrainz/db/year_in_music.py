@@ -183,12 +183,12 @@ def create_tracks_of_the_year(year):
             recording_mbid      UUID        NOT NULL,
             recording_name      TEXT        NOT NULL,
             artist_name         TEXT        NOT NULL,
-            artist_credit_mbids TEXT[]      NOT NULL,
+            artist_credit_mbids TEXT[],
             listen_count        INTEGER     NOT NULL
         )
     """).format(year=Literal(year))
-    truncate_query = SQL("TRUNCATE TABLE mapping.tracks_of_the_year_{year}").format(year=year)
-    drop_query = SQL("DROP INDEX IF EXISTS tracks_of_the_year_{year}_user_id_idx").format(year=year)
+    truncate_query = SQL("TRUNCATE TABLE mapping.tracks_of_the_year_{year}").format(year=Literal(year))
+    drop_query = SQL("DROP INDEX IF EXISTS tracks_of_the_year_{year}_user_id_idx").format(year=Literal(year))
     with connection.cursor() as curs:
         curs.execute(query)
         curs.execute(truncate_query)
@@ -198,7 +198,9 @@ def create_tracks_of_the_year(year):
 
 def finalise_tracks_of_the_year(year):
     connection = timescale.engine.raw_connection()
-    query = SQL("""CREATE INDEX IF NOT EXISTS tracks_of_the_year_{year}_user_id_idx ON mapping.tracks_of_the_year_{year} (user_id)""").format(year=year)
+    query = SQL("""
+        CREATE INDEX IF NOT EXISTS tracks_of_the_year_{year}_user_id_idx ON mapping.tracks_of_the_year_{year} (user_id)
+    """).format(year=Literal(year))
     with connection.cursor() as curs:
         curs.execute(query)
     connection.commit()
@@ -211,7 +213,7 @@ def insert_tracks_of_the_year(year, data):
     connection = timescale.engine.raw_connection()
     with connection.cursor() as curs:
         values = [(r["user_id"], r["recording_name"], r["recording_mbid"], r["artist_name"], r["artist_credit_mbids"], r["listen_count"]) for r in data]
-        execute_values(curs, query, values)
+        execute_values(curs, query, values, page_size=5000)
     connection.commit()
 
 
