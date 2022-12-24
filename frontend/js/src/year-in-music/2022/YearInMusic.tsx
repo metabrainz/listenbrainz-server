@@ -123,57 +123,35 @@ export default class YearInMusic extends React.Component<
   private getPlaylistByName(
     playlistName: string,
     description?: string
-  ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
+  ): JSPFPlaylist | undefined {
     const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
-    /* We generated some playlists with this incorrect value as the track extension key, rewrite it if it exists */
-    const badPlaylistTrackExtensionValue = "https://musicbrainz.org/recording/";
     const { yearInMusicData } = this.props;
     let playlist;
     try {
-      const rawPlaylist = get(yearInMusicData, playlistName);
-      if (!rawPlaylist) {
+      playlist = get(yearInMusicData, playlistName);
+      if (!playlist) {
         return undefined;
       }
       const coverArt = get(yearInMusicData, `${playlistName}-coverart`);
-      playlist = isString(rawPlaylist) ? JSON.parse(rawPlaylist) : rawPlaylist;
       // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
       if (description) {
-        playlist.description = description;
+        playlist.annotation = description;
       }
       /* Add a track image if it exists in the `{playlistName}-coverart` key */
-      playlist.jspf.playlist.track = playlist.jspf.playlist.track.map(
-        (track: JSPFTrack) => {
-          const newTrack = { ...track };
-          const track_id = track.identifier;
-          const found = track_id.match(uuidMatch);
-          if (found) {
-            const recording_mbid = found[0];
-            newTrack.id = recording_mbid;
-            const recording_coverart = coverArt?.[recording_mbid];
-            if (recording_coverart) {
-              newTrack.image = recording_coverart;
-            }
+      playlist.track = playlist.track.map((track: JSPFTrack) => {
+        const newTrack = { ...track };
+        const track_id = track.identifier;
+        const found = track_id.match(uuidMatch);
+        if (found) {
+          const recording_mbid = found[0];
+          newTrack.id = recording_mbid;
+          const recording_coverart = coverArt?.[recording_mbid];
+          if (recording_coverart) {
+            newTrack.image = recording_coverart;
           }
-          if (
-            newTrack.extension &&
-            track.extension?.[badPlaylistTrackExtensionValue]
-          ) {
-            newTrack.extension[MUSICBRAINZ_JSPF_TRACK_EXTENSION] =
-              track.extension[badPlaylistTrackExtensionValue];
-          }
-          const trackExtension =
-            newTrack?.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION];
-          // See https://github.com/metabrainz/listenbrainz-server/pull/1839 for context
-          if (trackExtension && has(trackExtension, "artist_mbids")) {
-            //  Using some forbiddden (but oh so sweet) ts-ignore as we're fixing objects that don't fit the expected type
-            // @ts-ignore
-            trackExtension.artist_identifiers = trackExtension.artist_mbids;
-            // @ts-ignore
-            delete trackExtension.artist_mbids;
-          }
-          return newTrack;
         }
-      );
+        return newTrack;
+      });
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(`"Error parsing ${playlistName}:`, error);
@@ -786,11 +764,11 @@ export default class YearInMusic extends React.Component<
                             SVG OF COVERS HERE
                             <h4>
                               <a
-                                href={`/playlist/${topLevelPlaylist.mbid}`}
+                                href={topLevelPlaylist.identifier}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                {topLevelPlaylist.jspf?.playlist?.title}
+                                {topLevelPlaylist.title}{" "}
                               </a>
                               <FontAwesomeIcon
                                 icon={faQuestionCircle}
@@ -799,13 +777,14 @@ export default class YearInMusic extends React.Component<
                                 size="xs"
                               />
                               <Tooltip id={`playlist-${index}-tooltip`}>
-                                {topLevelPlaylist.description}
+                                {topLevelPlaylist.annotation}
                               </Tooltip>
                             </h4>
                           </div>
                           <div>
-                            {topLevelPlaylist.jspf?.playlist?.track.map(
-                              (playlistTrack) => {
+                            {topLevelPlaylist.track
+                              .slice(0, 5)
+                              .map((playlistTrack) => {
                                 const listen = JSPFTrackToListen(playlistTrack);
                                 listens.push(listen);
                                 let thumbnail;
@@ -830,11 +809,10 @@ export default class YearInMusic extends React.Component<
                                     newAlert={newAlert}
                                   />
                                 );
-                              }
-                            )}
+                              })}
                             <hr />
                             <a
-                              href={`/playlist/${topLevelPlaylist.mbid}`}
+                              href={topLevelPlaylist.identifier}
                               className="btn btn-info btn-block"
                               target="_blank"
                               rel="noopener noreferrer"

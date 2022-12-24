@@ -1,11 +1,14 @@
 import ujson
 from flask import current_app
+from more_itertools import chunked
 from troi.core import generate_playlist
 from troi.patches.top_discoveries_for_year import TopDiscoveries
 from troi.patches.top_missed_recordings_for_year import TopMissedTracksPatch
 from troi.playlist import _serialize_to_jspf
 
-from listenbrainz.db.year_in_music import insert_playlists
+from listenbrainz.db.year_in_music import insert_playlists, insert_playlists_cover_art
+
+USERS_PER_BATCH = 25
 
 
 def get_all_users():
@@ -23,9 +26,17 @@ def yim_patch_runner(year):
     """ Run troi bot to generate playlists for all users """
     users = get_all_users()
     patches = get_all_patches()
+    batches = chunked(users, USERS_PER_BATCH)
+    for batch in batches:
+        playlists = generate_playlists_for_batch(batch, patches)
+        insert_playlists(year, playlists)
+        insert_playlists_cover_art(year, playlists)
 
+
+def generate_playlists_for_batch(batch, patches):
+    """ Generate playlists for a batch of users """
     yim_playlists = []
-    for user in users:
+    for user in batch:
         args = {
             "user_name": user["musicbrainz_id"],
             "user_id": user["id"],
@@ -42,12 +53,8 @@ def yim_patch_runner(year):
                     playlist = playlist_element.playlists[0]
                     data = _serialize_to_jspf(playlist)
                     data["playlist"]["identifier"] = "https://listenbrainz.org/playlist/" + playlist.mbid + "/"
-                    yim_playlists.append((
-                        user["id"],
-                        f"playlist-{patch.slug()}",
-                        ujson.dumps(data["playlist"]),
-                    ))
+                    yim_playlists.append((user["id"], f"playlist-{patch.slug()}", data["playlist"]))
             except Exception:
                 current_app.logger.error("Error while generate YIM playlist:", exc_info=True)
 
-    insert_playlists(year, yim_playlists)
+    return yim_playlists
