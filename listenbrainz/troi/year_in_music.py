@@ -1,3 +1,4 @@
+import ujson
 from flask import current_app
 from troi.core import generate_playlist
 from troi.patches.top_discoveries_for_year import TopDiscoveries
@@ -11,7 +12,7 @@ def get_all_users():
     # query = """SELECT musicbrainz_id, id FROM "user" """
     # with db.engine.connect() as conn:
     #     return conn.execute(text(query)).mappings().all()
-    return [{"musicbrainz_id": "lucifer", "id": 5746}, {"musicbrainz_id": "rob", "id": 1}]
+    return [{"musicbrainz_id": "lucifer", "id": 5746}]
 
 
 def get_all_patches():
@@ -23,7 +24,7 @@ def yim_patch_runner(year):
     users = get_all_users()
     patches = get_all_patches()
 
-    playlists = []
+    yim_playlists = []
     for user in users:
         args = {
             "user_name": user["musicbrainz_id"],
@@ -36,11 +37,17 @@ def yim_patch_runner(year):
         }
         for patch in patches:
             try:
-                playlist = generate_playlist(patch, args)
-                if playlist is not None:
-                    playlist_mbid = playlist.playlists[0].mbid
-                    playlists.append((user["id"], f"playlist-{patch.slug()}", playlist_mbid))
+                playlist_element = generate_playlist(patch, args)
+                if playlist_element is not None:
+                    playlist = playlist_element.playlists[0]
+                    data = _serialize_to_jspf(playlist)
+                    data["playlist"]["identifier"] = "https://listenbrainz.org/playlist/" + playlist.mbid + "/"
+                    yim_playlists.append((
+                        user["id"],
+                        f"playlist-{patch.slug()}",
+                        ujson.dumps(data["playlist"]),
+                    ))
             except Exception:
                 current_app.logger.error("Error while generate YIM playlist:", exc_info=True)
 
-    insert_playlists(year, playlists)
+    insert_playlists(year, yim_playlists)

@@ -160,8 +160,9 @@ def insert_playlists(year, playlists):
         INSERT INTO statistics.year_in_music(user_id, year, data)
              SELECT user_id
                   , {year}
-                  , jsonb_build_object(slug, playlist_mbid)
-               FROM (VALUES %s) AS t(user_id, slug, playlist_mbid)
+                  , jsonb_object_agg(slug, playlist::jsonb)
+               FROM (VALUES %s) AS t(user_id, slug, playlist)
+           GROUP BY user_id
         ON CONFLICT (user_id, year)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
     """).format(year=Literal(year))
