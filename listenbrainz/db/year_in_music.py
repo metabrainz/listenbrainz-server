@@ -15,6 +15,7 @@ from psycopg2.sql import SQL, Literal
 from listenbrainz.db.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
 from listenbrainz.db import timescale
+from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mbids
 from listenbrainz.db.user_timeline_event import create_user_notification_event
 
 # Year in Music data element defintions
@@ -154,7 +155,38 @@ def handle_insert_top_stats(entity, year, data):
         current_app.logger.error("Error while inserting top stats:", exc_info=True)
 
 
-def insert_playlists(year, playlists):
+def insert_playlists_cover_art(year, data):
+    """ Insert cover art for YIM playlists. Only lookup cover art for the first 5 tracks of each playlist because
+     that's the number of tracks we show on the YIM page."""
+    all_mbids = set()
+    for (user_id, slug, playlist) in data:
+        for track in playlist["track"][:5]:
+            mbid = track["identifier"].split("/")[-1]
+            all_mbids.add(mbid)
+
+    with timescale.engine.connect() as connection:
+        recordings = load_recordings_from_mbids(connection, all_mbids)
+
+    cover_art_data = []
+    for (user_id, slug, playlist) in data:
+        cover_arts = {}
+        for track in playlist["track"][:5]:
+            mbid = track["identifier"].split("/")[-1]
+            r = recordings.get(mbid)
+            if r:
+                caa_release_mbid = r["caa_release_mbid"]
+                caa_id = r["caa_id"]
+                if caa_id and caa_release_mbid:
+                    url = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb500.jpg"
+                    cover_arts[mbid] = url
+
+        cover_art_data.append((user_id, f"{slug}-coverart", cover_arts))
+
+    insert_playlists(year, cover_art_data)
+
+
+def insert_playlists(year, data):
+    """ Insert playlists data for the year in music """
     connection = db.engine.raw_connection()
     query = SQL("""
         INSERT INTO statistics.year_in_music(user_id, year, data)
@@ -169,7 +201,7 @@ def insert_playlists(year, playlists):
 
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, playlists)
+            execute_values(cursor, query, [(user, slug, ujson.dumps(playlist)) for user, slug, playlist in data])
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
