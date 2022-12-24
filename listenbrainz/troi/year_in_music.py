@@ -1,24 +1,21 @@
 from flask import current_app
-from sqlalchemy import text
 from troi.core import generate_playlist
-from troi.internal.top_recordings_for_year import TopTracksYearPatch
-from troi.internal.top_discoveries_for_year import TopDiscoveries
-from troi.internal.top_missed_recordings_for_year import TopMissedTracksPatch
-from troi.internal.top_new_recordings_you_listened_to_for_year import TopTracksYouListenedToPatch
+from troi.patches.top_discoveries_for_year import TopDiscoveries
+from troi.patches.top_missed_recordings_for_year import TopMissedTracksPatch
+from troi.playlist import _serialize_to_jspf
 
-from listenbrainz import db
 from listenbrainz.db.year_in_music import insert_playlists
 
 
 def get_all_users():
-    # query = """SELECT musicbrainz_id, id as user_id FROM "user" """
+    # query = """SELECT musicbrainz_id, id FROM "user" """
     # with db.engine.connect() as conn:
     #     return conn.execute(text(query)).mappings().all()
-    return [{"musicbrainz_id": "lucifer", "id": 5746}]
+    return [{"musicbrainz_id": "lucifer", "id": 5746}, {"musicbrainz_id": "rob", "id": 1}]
 
 
 def get_all_patches():
-    return [TopMissedTracksPatch(), TopTracksYearPatch(), TopDiscoveries(), TopTracksYouListenedToPatch()]
+    return [TopMissedTracksPatch(), TopDiscoveries()]
 
 
 def yim_patch_runner(year):
@@ -30,8 +27,11 @@ def yim_patch_runner(year):
     for user in users:
         args = {
             "user_name": user["musicbrainz_id"],
+            "user_id": user["id"],
             "token": current_app.config["WHITELISTED_AUTH_TOKENS"][0],
             "created_for": user["musicbrainz_id"],
+            "mb_db_connect_str": current_app.config["SQLALCHEMY_DATABASE_URI"],
+            "lb_db_connect_str": current_app.config["SQLALCHEMY_TIMESCALE_URI"],
             "upload": True
         }
         for patch in patches:
