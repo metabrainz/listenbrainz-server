@@ -81,6 +81,8 @@ def get_recordings_from_mbids(mb_curs, ts_curs, mbids):
                 "artist_credit_id": data["artist_credit_id"],
                 "artist_credit_name": data["artist"],
                 "[artist_credit_mbids]": data["artist_mbids"],
+                "caa_id": data["caa_id"],
+                "caa_release_mbid": data["caa_release_mbid"],
                 "original_recording_mbid": mbid,
                 "canonical_recording_mbid": canonical_index.get(redirected_mbid, redirected_mbid)
             }
