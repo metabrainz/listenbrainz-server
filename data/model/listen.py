@@ -64,6 +64,7 @@ class TrackMetadata(BaseModel):
     track_name: constr(min_length=1)
     release_name: Optional[str]
     additional_info: Optional[AdditionalInfo]
+    mbid_mapping: Optional[dict]
 
 
 # this is not an exhaustive definition
