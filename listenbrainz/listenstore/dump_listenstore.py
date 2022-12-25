@@ -337,31 +337,48 @@ class DumpListenStore:
         -- listen, coalesce mapping data with listen data can yield values from different sources for same listen.
         -- an alternative is to use to CASE, but need to put case for each column because SQL CASE doesn't allow
         -- setting multiple columns at once.
+                WITH listen_with_mbid AS (
                      SELECT listened_at
-                          , user_id
-                          , (artist_data->'artist_credit_id')::INT AS artist_credit_id
-                          , artist_mbids::TEXT[] AS m_artist_credit_mbids
+                          , l.user_id
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
                           -- here and let psycopg2 adapt it to a python list which is what we want anyway
                           , data->'track_metadata'->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
-                          , artist_data->>'name' AS m_artist_name
                           , data->'track_metadata'->>'artist_name' AS l_artist_name
-                          , release_data->>'name' AS m_release_name
                           , data->'track_metadata'->>'release_name' AS l_release_name
-                          , release_mbid::TEXT AS m_release_mbid
                           , data->'track_metadata'->'additional_info'->>'release_mbid' AS l_release_mbid
-                          , recording_data->>'name' AS m_recording_name
                           , track_name AS l_recording_name
-                          , mm.recording_mbid::TEXT AS m_recording_mbid
                           , data->'track_metadata'->'additional_info'->>'recording_mbid' AS l_recording_mbid
+                          -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
+                          , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS m_recording_mbid
                        FROM listen l
                   LEFT JOIN mbid_mapping mm
                          ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
-                  LEFT JOIN mapping.mb_metadata_cache mbc
-                         ON mm.recording_mbid = mbc.recording_mbid
+                  LEFT JOIN mbid_manual_mapping user_mm
+                         ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = user_mm.recording_msid
+                        AND user_mm.user_id = l.user_id 
+                  LEFT JOIN mbid_manual_mapping_top other_mm
+                         ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = other_mm.recording_msid
                       WHERE {criteria} > %(start)s
                         AND {criteria} <= %(end)s
-                   ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
+                )    SELECT l.listened_at
+                          , l.user_id
+                          , l_artist_credit_mbids
+                          , l_artist_name
+                          , l_release_name
+                          , l_release_mbid
+                          , l_recording_name
+                          , l_recording_mbid
+                          , m_recording_mbid::TEXT
+                          , (artist_data->'artist_credit_id')::INT AS artist_credit_id
+                          , mbc.artist_mbids::TEXT[] AS m_artist_credit_mbids
+                          , mbc.artist_data->>'name' AS m_artist_name
+                          , mbc.release_mbid::TEXT AS m_release_mbid
+                          , mbc.release_data->>'name' AS m_release_name
+                          , mbc.recording_data->>'name' AS m_recording_name
+                       FROM listen_with_mbid l
+                       JOIN mapping.mb_metadata_cache mbc
+                         ON l.m_recording_mbid = mbc.recording_mbid
+                """).format(criteria=psycopg2.sql.Identifier("l", criteria))  # l is the listen table's alias
 
         listen_count = 0
         current_listened_at = None
