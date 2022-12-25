@@ -398,43 +398,59 @@ class TimescaleListenStore:
             args["max_ts"] = max_ts
         filters = " AND ".join(filters_list)
 
-        query = f"""SELECT * FROM (
-                               SELECT listened_at
-                                    , track_name
-                                    , user_id
-                                    , created
-                                    , data
-                                    , mm.recording_mbid
-                                    , mbc.release_mbid
-                                    , mbc.artist_mbids::TEXT[]
-                                    , (mbc.release_data->>'caa_id')::bigint AS caa_id
-                                    , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
-                                    , array_agg(artist->>'name' ORDER BY position) AS ac_names
-                                    , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
-                                    , row_number() OVER (PARTITION BY user_id ORDER BY listened_at DESC) AS rownum
-                                FROM listen l
-                           LEFT JOIN mbid_mapping mm
-                                  ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
-                           LEFT JOIN mapping.mb_metadata_cache mbc
-                                  ON mm.recording_mbid = mbc.recording_mbid
-                   LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
-                                  ON TRUE
-                               WHERE {filters}
-                            GROUP BY user_id
-                                   , listened_at
-                                   , track_name
-                                   , created
-                                   , data
-                                   , mm.recording_mbid
-                                   , mbc.release_mbid
-                                   , mbc.artist_mbids
-                                   , mbc.release_data->>'caa_id'
-                                   , mbc.release_data->>'caa_release_mbid'
-                            ORDER BY listened_at DESC
-                            ) tmp
-                               WHERE rownum <= :per_user_limit
-                            ORDER BY listened_at DESC   
-                               LIMIT :limit"""
+        query = f"""
+              WITH intermediate AS (
+                    SELECT listened_at
+                         , track_name
+                         , user_id
+                         , created
+                         , data
+                         , row_number() OVER (PARTITION BY user_id ORDER BY listened_at DESC) AS rownum
+                      FROM listen l
+                     WHERE {filters} 
+              ), selected_listens AS (
+                    SELECT l.*
+                           -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
+                         , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
+                      FROM intermediate l
+                 LEFT JOIN mbid_mapping mm
+                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+                 LEFT JOIN mbid_manual_mapping user_mm
+                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = user_mm.recording_msid
+                       AND user_mm.user_id = l.user_id 
+                 LEFT JOIN mbid_manual_mapping_top other_mm
+                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = other_mm.recording_msid
+                     WHERE rownum <= :per_user_limit
+              )     SELECT user_id
+                         , listened_at
+                         , track_name
+                         , created
+                         , data
+                         , l.recording_mbid
+                         , mbc.release_mbid
+                         , mbc.artist_mbids::TEXT[]
+                         , (mbc.release_data->>'caa_id')::bigint AS caa_id
+                         , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
+                         , array_agg(artist->>'name' ORDER BY position) AS ac_names
+                         , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases            
+                      FROM selected_listens l
+                 LEFT JOIN mapping.mb_metadata_cache mbc
+                        ON l.recording_mbid = mbc.recording_mbid
+         LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
+                        ON TRUE            
+                  GROUP BY user_id
+                         , listened_at
+                         , track_name
+                         , created
+                         , data
+                         , l.recording_mbid
+                         , mbc.release_mbid
+                         , mbc.artist_mbids
+                         , mbc.release_data->>'caa_id'
+                         , mbc.release_data->>'caa_release_mbid'
+                  ORDER BY listened_at DESC
+                     LIMIT :limit
+        """
 
         listens = []
         with timescale.engine.connect() as connection:
