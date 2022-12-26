@@ -2,15 +2,14 @@ import datetime
 from uuid import UUID
 
 import psycopg2
-import ujson
 from flask import Blueprint, current_app, jsonify, request
 import requests
 from psycopg2.extras import DictCursor
 
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-from listenbrainz.domain.spotify import SPOTIFY_LISTEN_PERMISSIONS, SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
-from listenbrainz.labs_api.labs.api.utils import get_recordings_from_mbids
+from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.troi.export import export_to_spotify
 
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -206,7 +205,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
             psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
             ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
-                rows = get_recordings_from_mbids(mb_curs, ts_curs, mbids)
+                rows = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
     except Exception:
         current_app.logger.error("Error while fetching metadata for a playlist: ", exc_info=True)
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")

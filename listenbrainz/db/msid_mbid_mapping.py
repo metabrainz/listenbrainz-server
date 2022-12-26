@@ -1,15 +1,14 @@
-import logging
 from collections import defaultdict
-from typing import Iterable, Dict, List, TypeVar
-from typing import Optional, Tuple
+from typing import List, TypeVar
+from typing import Optional
 
 from flask import current_app
-from psycopg2.extras import execute_values, DictCursor
+from psycopg2.extras import DictCursor
 from pydantic import BaseModel, validator, root_validator
-from sqlalchemy import text
 
 from data.model.validators import check_valid_uuid
 from listenbrainz.db import timescale
+from listenbrainz.db.recording import load_recordings_from_mbids
 from listenbrainz.messybrainz import load_recordings_from_msids
 
 
@@ -36,62 +35,6 @@ class MsidMbidModel(BaseModel):
         if recording_msid is None and recording_mbid is None:
             raise ValueError("at least one of recording_msid or recording_mbid should be specified")
         return values
-
-
-def load_recordings_from_mbids(ts_curs, mbids: Iterable[str]) -> dict:
-    """ Given a list of mbids return a map with mbid as key and the recording info as value. """
-    if not mbids:
-        return {}
-
-    query = """
-        SELECT mbc.recording_mbid::TEXT
-             , release_mbid::TEXT
-             , artist_mbids::TEXT[]
-             , artist_data->>'name' AS artist
-             , (artist_data->>'artist_credit_id')::bigint AS artist_credit_id
-             , recording_data->>'name' AS title
-             , (recording_data->>'length')::bigint AS length
-             , release_data->>'name' AS release
-             , (release_data->>'caa_id')::bigint AS caa_id
-             , release_data->>'caa_release_mbid' AS caa_release_mbid
-             , array_agg(artist->>'name' ORDER BY position) AS ac_names
-             , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
-          FROM (VALUES %s) AS m (recording_mbid)
-          JOIN mapping.mb_metadata_cache mbc
-            ON mbc.recording_mbid = m.recording_mbid::uuid
-  JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
-            ON TRUE
-      GROUP BY mbc.recording_mbid
-             , release_mbid
-             , artist_mbids
-             , artist_data->>'name'
-             , artist_data->>'artist_credit_id'
-             , recording_data->>'name'
-             , recording_data->>'length'
-             , release_data->>'name'
-             , release_data->>'caa_id'
-             , release_data->>'caa_release_mbid'
-    """
-    results = execute_values(ts_curs, query, [(mbid,) for mbid in mbids], fetch=True)
-    rows = {}
-    for row in results:
-        data = dict(row)
-        recording_mbid = data["recording_mbid"]
-
-        ac_names = data.pop("ac_names")
-        ac_join_phrases = data.pop("ac_join_phrases")
-
-        artists = []
-        for (mbid, name, join_phrase) in zip(data["artist_mbids"], ac_names, ac_join_phrases):
-            artists.append({
-                "artist_mbid": mbid,
-                "artist_credit_name": name,
-                "join_phrase": join_phrase
-            })
-        data["artists"] = artists
-        rows[recording_mbid] = data
-
-    return rows
 
 
 ModelT = TypeVar('ModelT', bound=MsidMbidModel)
