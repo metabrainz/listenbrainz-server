@@ -5,7 +5,7 @@ from flask import current_app
 from markupsafe import Markup
 
 from listenbrainz.db import similarity
-from listenbrainz.labs_api.labs.api.utils import get_recordings_from_mbids
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 
 
 class SimilarRecordingsViewerQuery(Query):
@@ -31,7 +31,7 @@ class SimilarRecordingsViewerQuery(Query):
         """ Retrieve recording metadata for given list of mbids after resolving redirects, canonical redirects and
         adding similarity data if available
         """
-        metadata = get_recordings_from_mbids(mb_curs, ts_curs, mbids)
+        metadata = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
         for r in metadata:
             if score_idx and similar_mbid_idx:
                 similar_mbid = r["original_recording_mbid"]

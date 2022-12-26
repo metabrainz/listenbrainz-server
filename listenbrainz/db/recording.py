@@ -1,9 +1,7 @@
-import psycopg2
+from typing import Iterable
+
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Identifier
-
-from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mbids
-
 
 def _resolve_mbids_helper(curs, query, mbids):
     """ Helper to extract common code for resolving redirect and canonical mbids """
@@ -62,7 +60,68 @@ def resolve_canonical_mbids(curs, mbids):
     return _resolve_mbids_helper(curs, query, mbids)
 
 
-def get_recordings_from_mbids(mb_curs, ts_curs, mbids):
+def load_recordings_from_mbids(ts_curs, mbids: Iterable[str]) -> dict:
+    """ Given a list of mbids return a map with mbid as key and the recording info as value.
+
+
+    TODO: Ideally, we should always resolve redirects but that makes testing some LB features difficult
+        because we don't have a MB db in the test environment yet. Once, we do we can merge the two versions.
+    """
+    if not mbids:
+        return {}
+
+    query = """
+        SELECT mbc.recording_mbid::TEXT
+             , release_mbid::TEXT
+             , artist_mbids::TEXT[]
+             , artist_data->>'name' AS artist
+             , (artist_data->>'artist_credit_id')::bigint AS artist_credit_id
+             , recording_data->>'name' AS title
+             , (recording_data->>'length')::bigint AS length
+             , release_data->>'name' AS release
+             , (release_data->>'caa_id')::bigint AS caa_id
+             , release_data->>'caa_release_mbid' AS caa_release_mbid
+             , array_agg(artist->>'name' ORDER BY position) AS ac_names
+             , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
+          FROM (VALUES %s) AS m (recording_mbid)
+          JOIN mapping.mb_metadata_cache mbc
+            ON mbc.recording_mbid = m.recording_mbid::uuid
+  JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
+            ON TRUE
+      GROUP BY mbc.recording_mbid
+             , release_mbid
+             , artist_mbids
+             , artist_data->>'name'
+             , artist_data->>'artist_credit_id'
+             , recording_data->>'name'
+             , recording_data->>'length'
+             , release_data->>'name'
+             , release_data->>'caa_id'
+             , release_data->>'caa_release_mbid'
+    """
+    results = execute_values(ts_curs, query, [(mbid,) for mbid in mbids], fetch=True)
+    rows = {}
+    for row in results:
+        data = dict(row)
+        recording_mbid = data["recording_mbid"]
+
+        ac_names = data.pop("ac_names")
+        ac_join_phrases = data.pop("ac_join_phrases")
+
+        artists = []
+        for (mbid, name, join_phrase) in zip(data["artist_mbids"], ac_names, ac_join_phrases):
+            artists.append({
+                "artist_mbid": mbid,
+                "artist_credit_name": name,
+                "join_phrase": join_phrase
+            })
+        data["artists"] = artists
+        rows[recording_mbid] = data
+
+    return rows
+
+
+def load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids):
     """ Given a list of recording mbids, resolve redirects if any and return metadata for all recordings """
     redirected_mbids, index, inverse_index = resolve_redirect_mbids(mb_curs, "recording", mbids)
     recording_index = load_recordings_from_mbids(ts_curs, redirected_mbids)

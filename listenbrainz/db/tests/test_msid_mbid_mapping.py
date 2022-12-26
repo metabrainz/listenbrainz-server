@@ -83,7 +83,9 @@ class MappingTestCase(TimescaleTestCase):
                 ],
                 "title": "The Final Confrontation, Part 1",
                 "caa_release_mbid": "a2589025-8517-45ab-9d64-fe927ba087b1-3151246737",
-                "caa_id": 3151246737
+                "caa_id": 3151246737,
+                "length": None,
+                "artist_credit_id": None,
             },
             {
                 "recording_mbid": "c5bfd98d-ccde-4cf3-8abb-63fad1b6065a",
@@ -100,7 +102,9 @@ class MappingTestCase(TimescaleTestCase):
                 ],
                 "title": "A Number and a Name",
                 "caa_id": None,
-                "caa_release_mbid": None
+                "caa_release_mbid": None,
+                "length": None,
+                "artist_credit_id": None,
             },
             {
                 "artist": "James S.A. Corey",
@@ -164,6 +168,7 @@ class MappingTestCase(TimescaleTestCase):
                 ts_curs,
                 [recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]]
             )
+        self.maxDiff = None
         self.assertEqual(expected, received)
 
     def test_fetch_track_metadata_for_items(self):
