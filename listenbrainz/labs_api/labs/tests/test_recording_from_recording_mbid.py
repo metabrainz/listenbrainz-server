@@ -50,37 +50,40 @@ canonical_db_response = [
 
 metadata_db_response = {
     "1234a7ae-2af2-4291-aa84-bd0bafe291a1": {
-        "artist_credit_mbids": [
+        "artist_mbids": [
             "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
         ],
         "artist_credit_id": 65,
-        "artist_credit_name": "Portishead",
-        "comment": "",
+        "artist": "Portishead",
         "length": 253000,
         "recording_mbid": "1234a7ae-2af2-4291-aa84-bd0bafe291a1",
-        "recording_name": "Sour Times"
+        "title": "Sour Times",
+        "caa_id": None,
+        "caa_release_mbid": None
     },
     "1636e7a9-229d-446d-aa81-e33071b42d7a": {
-        "artist_credit_mbids": [
+        "artist_mbids": [
             "4e024037-14b7-4aea-99ad-c6ace63b9620"
         ],
         "artist_credit_id": 92381,
-        "artist_credit_name": "Madvillain",
-        "comment": "",
+        "artist": "Madvillain",
         "length": 111666,
         "recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
-        "recording_name": "Strange Ways"
+        "title": "Strange Ways",
+        "caa_id": None,
+        "caa_release_mbid": None
     },
     "8fa0023e-1268-4d32-8341-83bb7506086e": {
-        "artist_credit_mbids": [
+        "artist_mbids": [
             "31810c40-932a-4f2d-8cfd-17849844e2a6"
         ],
         "artist_credit_id": 11,
-        "artist_credit_name": "Squirrel Nut Zippers",
-        "comment": "",
+        "artist": "Squirrel Nut Zippers",
         "length": 275333,
         "recording_mbid": "8fa0023e-1268-4d32-8341-83bb7506086e",
-        "recording_name": "Blue Angel"
+        "title": "Blue Angel",
+        "caa_id": None,
+        "caa_release_mbid": None
     }
 }
 
@@ -91,7 +94,6 @@ json_response = [
         ],
         "artist_credit_id": 65,
         "artist_credit_name": "Portishead",
-        "comment": "",
         "length": 253000,
         "recording_mbid": "1234a7ae-2af2-4291-aa84-bd0bafe291a1",
         "canonical_recording_mbid": "1234a7ae-2af2-4291-aa84-bd0bafe291a1",
@@ -104,7 +106,6 @@ json_response = [
         ],
         "artist_credit_id": 11,
         "artist_credit_name": "Squirrel Nut Zippers",
-        "comment": "",
         "length": 275333,
         "recording_mbid": "8fa0023e-1268-4d32-8341-83bb7506086e",
         "canonical_recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
@@ -117,7 +118,6 @@ json_response = [
         ],
         "artist_credit_id": 92381,
         "artist_credit_name": "Madvillain",
-        "comment": "",
         "length": 111666,
         "recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
         "canonical_recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
@@ -128,7 +128,6 @@ json_response = [
         "[artist_credit_mbids]": None,
         "artist_credit_id": None,
         "artist_credit_name": None,
-        "comment": None,
         "length": None,
         "recording_mbid": None,
         "canonical_recording_mbid": None,
@@ -149,25 +148,22 @@ class MainTestCase(flask_testing.TestCase):
     def setUp(self):
         self.maxDiff = None
         flask_testing.TestCase.setUp(self)
-        mock_connect = patch("psycopg2.connect")
         mock_resolve_redirect_mbids = patch(
-            "listenbrainz.labs_api.labs.api.utils.resolve_redirect_mbids",
+            "listenbrainz.db.recording.resolve_redirect_mbids",
             return_value=redirect_db_response
         )
         mock_resolve_canonical_mbids = patch(
-            "listenbrainz.labs_api.labs.api.utils.resolve_canonical_mbids",
+            "listenbrainz.db.recording.resolve_canonical_mbids",
             return_value=canonical_db_response
         )
         mock_metadata_db_response = patch(
-            "listenbrainz.labs_api.labs.api.utils.fetch_recording_metadata",
+            "listenbrainz.db.recording.load_recordings_from_mbids",
             return_value=metadata_db_response
         )
-        mock_connect.start()
         mock_resolve_redirect_mbids.start()
         mock_resolve_canonical_mbids.start()
         mock_metadata_db_response.start()
 
-        self.addCleanup(mock_connect.stop)
         self.addCleanup(mock_resolve_redirect_mbids.stop)
         self.addCleanup(mock_resolve_canonical_mbids.stop)
         self.addCleanup(mock_metadata_db_response.stop)
@@ -182,10 +178,11 @@ class MainTestCase(flask_testing.TestCase):
         self.assertNotEqual(q.introduction(), "")
         self.assertEqual(q.inputs(), ['[recording_mbid]'])
         self.assertEqual(q.outputs(), [
-            'recording_mbid', 'recording_name', 'length', 'comment', 'artist_credit_id', 'artist_credit_name',
+            'recording_mbid', 'recording_name', 'length', 'artist_credit_id', 'artist_credit_name',
             '[artist_credit_mbids]', 'canonical_recording_mbid', 'original_recording_mbid'])
 
-    def test_fetch(self):
+    @patch('psycopg2.connect')
+    def test_fetch(self, mock_connect):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request)
         print(resp)
@@ -195,13 +192,15 @@ class MainTestCase(flask_testing.TestCase):
         self.assertDictEqual(resp[2], json_response[2])
         self.assertDictEqual(resp[3], json_response[3])
 
-    def test_count(self):
+    @patch('psycopg2.connect')
+    def test_count(self, mock_connect):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, count=1)
         self.assertEqual(len(resp), 1)
         self.assertDictEqual(resp[0], json_response[0])
 
-    def test_offset(self):
+    @patch('psycopg2.connect')
+    def test_offset(self, mock_connect):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, offset=1)
         self.assertEqual(len(resp), 3)
@@ -209,7 +208,8 @@ class MainTestCase(flask_testing.TestCase):
         self.assertDictEqual(resp[1], json_response[2])
         self.assertDictEqual(resp[2], json_response[3])
 
-    def test_count_and_offset(self):
+    @patch('psycopg2.connect')
+    def test_count_and_offset(self, mock_connect):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, count=1, offset=1)
         self.assertEqual(len(resp), 1)

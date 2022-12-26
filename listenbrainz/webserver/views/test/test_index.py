@@ -1,5 +1,5 @@
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from flask import url_for
 from flask_login import login_required
@@ -289,7 +289,8 @@ class IndexViewsTestCase(IntegrationTestCase):
         resp = self.client.get(url_for('index.similar_users'))
         self.assertStatus(resp, 302)
 
-    def test_instant_playlist(self):
+    @patch("listenbrainz.webserver.views.player.fetch_playlist_recording_metadata")
+    def test_instant_playlist(self, mock_recording_metadata):
         resp = self.client.get(url_for('player.load_instant', recording_mbids="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
         self.assert200(resp)
 
