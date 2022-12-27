@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Canvg } from "canvg";
 import { saveAs } from "file-saver";
 
-export type ShareButtonProps = {
+export type MagicShareButtonProps = {
   svgURL: string;
   shareUrl: string;
   shareTitle: string;
@@ -16,13 +16,13 @@ export type ShareButtonProps = {
   fileName: string;
 };
 
-export default function ShareButton({
+export default function MagicShareButton({
   svgURL,
   shareUrl,
   shareTitle,
   shareText,
   fileName,
-}: ShareButtonProps) {
+}: MagicShareButtonProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [svgBlob, setSvgBlob] = useState<Blob>();
