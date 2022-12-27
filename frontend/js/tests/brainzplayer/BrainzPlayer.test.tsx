@@ -828,6 +828,7 @@ describe("BrainzPlayer", () => {
           artist_name: "Rick Astley",
           track_name: "Never Gonna Give You Up",
           additional_info: {
+            duration_ms: 123990,
             media_player: "BrainzPlayer",
             submission_client: "BrainzPlayer",
             music_service: "spotify.com",

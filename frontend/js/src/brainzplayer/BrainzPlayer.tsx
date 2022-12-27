@@ -620,6 +620,7 @@ export default class BrainzPlayer extends React.Component<
       currentTrackArtist,
       currentTrackAlbum,
       currentTrackURL,
+      durationMs,
     } = this.state;
     const dataSource = this.dataSources[currentDataSourceIndex];
 
@@ -652,6 +653,7 @@ export default class BrainzPlayer extends React.Component<
     assign(newListen.track_metadata, {
       brainzplayer_metadata,
       additional_info: {
+        duration_ms: durationMs > 0 ? durationMs : undefined,
         media_player: "BrainzPlayer",
         submission_client: "BrainzPlayer",
         // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as submission_client_version
