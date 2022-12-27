@@ -126,6 +126,16 @@ export default function ShareButton({
   const id = `share-modal-${fileName}`;
   return (
     <>
+      {/* Trick to load the font files for use with the SVG render */}
+      <span
+        style={{
+          fontFamily: "Inter, sans-serif",
+          opacity: 0,
+          position: "fixed",
+        }}
+      >
+        x
+      </span>
       <button
         className="yim-share-button"
         type="button"
