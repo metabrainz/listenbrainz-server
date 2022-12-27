@@ -9,7 +9,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
         text {
           fill: #FF0E25;
-          font-family: Inter;
+          font-family: Inter, sans-serif;
+          font-weight: 900;
         }
         .common-description {
           font-weight: 300;
@@ -22,13 +23,11 @@
         }
         .branding {
           font-size: 20px;
-          font-weight: 900;
           letter-spacing: 0em;
         }
         .subtitle > tspan {
             text-anchor: middle;
             font-size: 32px;
-            font-weight: 900;
             letter-spacing: 0.6em;
         }
     </style>
@@ -36,7 +35,7 @@
         <g>
             <g style="mix-blend-mode:multiply">
                 <rect width="924" height="924" fill="#FFC93D"/>
-                <rect width="924" height="924" fill="url(#pattern0)" style="mix-blend-mode:overlay"/>
+                <image id="bg" width="924" height="924" xlink:href="{{ bg_image_url }}" style="mix-blend-mode:overlay"/>
             </g>
             <text class="branding" x="750" y="897">LISTENBRAINZ</text>
             <text class="branding" x="26" y="43">{{user_name}}</text>
@@ -64,21 +63,11 @@
             DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
         </text>
         <g>
-            <rect width="125" height="154" transform="matrix(-1 0 0 1 511 83)" fill="url(#pattern1)"/>
+            <image id="magnify" width="125" height="154" transform="matrix(-1 0 0 1 511 83)" xlink:href="{{ magnify_image_url }}" />
         </g>
         <line x1="399" y1="314.5" x2="504" y2="314.5" stroke="#FF0E25"/>
         <line x1="399" y1="400.5" x2="504" y2="400.5" stroke="#FF0E25"/>
         <line x1="399" y1="486.5" x2="504" y2="486.5" stroke="#FF0E25"/>
         <line x1="399" y1="572.5" x2="504" y2="572.5" stroke="#FF0E25"/>
     </g>
-    <defs>
-        <pattern id="pattern0" patternContentUnits="objectBoundingBox" width="1" height="1">
-            <use xlink:href="#bg" transform="translate(-0.067113 -0.468785) scale(0.00127425 0.00195211)"/>
-        </pattern>
-        <pattern id="pattern1" patternContentUnits="objectBoundingBox" width="1" height="1">
-            <use xlink:href="#magnify" transform="translate(-0.0021494) scale(0.000525261 0.000419287)"/>
-        </pattern>
-        <image id="bg" width="1000" height="1000" xlink:href="{{ bg_image_url }}" />
-        <image id="magnify" width="1912" height="2385" xlink:href="{{ magnify_image_url }}" />
-    </defs>
 </svg>
