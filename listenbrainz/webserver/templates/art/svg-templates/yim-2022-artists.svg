@@ -6,14 +6,14 @@
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
         text {
           fill: #FF0E25;
-          font-family: Inter;
+          font-family: 'Inter', sans-serif;
+          font-weight: 900;
         }
         .branding {
           font-size: 20px;
-          font-weight: 900;
           letter-spacing: 0em;
         }
         .artist-name {
@@ -24,7 +24,7 @@
         <g>
             <g style="mix-blend-mode:multiply">
                 <rect width="924" height="924" fill="#FFC93D"/>
-                <rect width="924" height="924" fill="url(#pattern0)" style="mix-blend-mode:overlay"/>
+                <image id="bg" width="924" height="924" xlink:href="{{ bg_image_url }}" style="mix-blend-mode:overlay"/>
             </g>
             <text class="branding" x="750" y="897">LISTENBRAINZ</text>
             <text class="branding" x="26" y="43">{{user_name}}</text>
@@ -46,10 +46,4 @@
             <text class="artist-name" y="830" x="-20">{{ artists[9].artist_name|upper|e }}</text>
         </g>
     </g>
-    <defs>
-        <pattern id="pattern0" patternContentUnits="objectBoundingBox" width="1" height="1">
-            <use xlink:href="#bg" transform="translate(-0.067113 -0.468785) scale(0.00127425 0.00195211)"/>
-        </pattern>
-        <image id="bg" width="1000" height="1000" xlink:href="{{ bg_image_url }}"/>
-    </defs>
 </svg>
