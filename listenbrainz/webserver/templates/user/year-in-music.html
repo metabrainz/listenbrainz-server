@@ -8,6 +8,20 @@
    <meta property="og:title" content="ListenBrainz Year in Music for {{ user_name }}" />
    <meta property="og:description" content="Check out the music review for 2021 that @ListenBrainz created from my listening history!" />
    <meta property="og:image" content="https://listenbrainz.org/static/img/year-in-music-2021.png" />
+   {% if year == 2022 %}
+        <style type="text/css">
+            /* Allow for full-screen backgrounds using ::before and ::after elements in css
+                without ending up with horizontal scrolling  */
+            body>.container {
+                margin:0;
+                padding:0;
+                width: 100%;
+            }
+            section.footer{
+                display: none;
+            }
+        </style>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
