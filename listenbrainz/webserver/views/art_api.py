@@ -1,3 +1,5 @@
+from random import sample
+
 import listenbrainz.db.user as db_user
 import listenbrainz.db.year_in_music as db_yim
 
@@ -251,10 +253,18 @@ def _cover_art_yim_albums(user_name, stats):
     """ Create the SVG using YIM top albums for the given year. """
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
     image_urls = []
+    selected_urls = set()
     for item in stats["top_releases"]:
         if "caa_id" in item and "caa_release_mbid" in item:
             url = cac.resolve_cover_art(item["caa_id"], item["caa_release_mbid"], 250)
-            image_urls.append(url)
+            if url not in selected_urls:
+                selected_urls.add(url)
+                image_urls.append(url)
+
+    if len(image_urls) < 9:
+        # fill up the remaining slots with random repeated images
+        more_image_urls = sample(image_urls, 9 - len(image_urls))
+        image_urls.extend(more_image_urls)
 
     return render_template(
         "art/svg-templates/yim-2022-albums.svg",
@@ -291,10 +301,18 @@ def _cover_art_yim_playlist(user_name, stats, key):
     """ Create the SVG using playlist tracks' cover arts for the given YIM playlist. """
     all_cover_arts = stats[f"{key}-coverart"]
     image_urls = []
+    selected_urls = set()
     for track in stats[key]["track"]:
         mbid = track["identifier"].split("/")[-1]
-        if mbid in all_cover_arts:
+        # check existence in set to avoid duplicates
+        if mbid in all_cover_arts and all_cover_arts[mbid] not in selected_urls:
             image_urls.append(all_cover_arts[mbid])
+            selected_urls.add(all_cover_arts[mbid])
+
+    if len(image_urls) < 9:
+        # fill up the remaining slots with random repeated images
+        more_image_urls = sample(image_urls, 9 - len(image_urls))
+        image_urls.extend(more_image_urls)
 
     return render_template(
         "art/svg-templates/yim-2022-playlists.svg",
