@@ -1047,7 +1047,7 @@ export default class YearInMusic extends React.Component<
             <a
               target="_blank"
               href="https://community.metabrainz.org/c/listenbrainz/18"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               our forums
             </a>
@@ -1055,7 +1055,7 @@ export default class YearInMusic extends React.Component<
             <a
               target="_blank"
               href="mailto:listenbrainz@metabrainz.org"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               by email
             </a>
@@ -1063,7 +1063,7 @@ export default class YearInMusic extends React.Component<
             <a
               target="_blank"
               href="https://web.libera.chat/#metabrainz"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               IRC
             </a>
@@ -1071,10 +1071,14 @@ export default class YearInMusic extends React.Component<
             <a
               target="_blank"
               href="https://twitter.com/listenbrainz"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               on twitter
             </a>
+          </div>
+          <div className="thanks-kc-green">
+            With thanks to KC Green for the original &apos;this is fine&apos;
+            cartoon.
           </div>
         </div>
         <BrainzPlayer
