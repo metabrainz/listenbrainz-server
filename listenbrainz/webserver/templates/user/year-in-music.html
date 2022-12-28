@@ -2,12 +2,25 @@
 
 {% block head %}
    {{ super() }}
-   <meta name="twitter:card" content="summary"></meta>
+   <title>ListenBrainz Year in Music {{ year }} for {{ user_name }}</title>
+   <meta name="description" content="Check out the music review for {{ year }} that @ListenBrainz created from my listening history!" />
+   <meta name="twitter:card" content="summary_large_image"></meta>
    <meta name="twitter:site" content="@listenbrainz" />
    <meta property="og:url" content="{{ url_for("user.year_in_music", user_name=user_name) }}" />
+   <meta property="og:type" content="website">
    <meta property="og:title" content="ListenBrainz Year in Music for {{ user_name }}" />
-   <meta property="og:description" content="Check out the music review for 2021 that @ListenBrainz created from my listening history!" />
-   <meta property="og:image" content="https://listenbrainz.org/static/img/year-in-music-2021.png" />
+   <meta property="og:description" content="Check out the music review for {{ year }} that @ListenBrainz created from my listening history!" />
+   <meta property="twitter:url" content="{{ url_for("user.year_in_music", user_name=user_name) }}" />
+   <meta property="twitter:title" content="ListenBrainz Year in Music for {{ user_name }}" />
+   <meta property="twitter:domain" content="listenbrainz.org">
+   <meta property="twitter:description" content="Check out the music review for {{ year }} that @ListenBrainz created from my listening history!" />
+   {% if year == 2022 %}
+     <meta property="og:image" content="https://listenbrainz.org/static/img/year-in-music-2021.png" />
+     <meta property="twitter:image" content="https://listenbrainz.org/static/img/year-in-music-2021.png" />
+     {% elif year == 2022 %}
+     <meta property="og:image" content="https://listenbrainz.org/static/img/year-in-music-22/yim22-logo.png" />
+     <meta property="twitter:image" content="https://listenbrainz.org/static/img/year-in-music-22/yim22-logo.png" />
+   {% endif %}
    {% if year == 2022 %}
         <style type="text/css">
             /* Allow for full-screen backgrounds using ::before and ::after elements in css
