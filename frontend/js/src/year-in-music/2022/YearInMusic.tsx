@@ -229,6 +229,7 @@ export default class YearInMusic extends React.Component<
   };
 
   sharePage = () => {
+    const { newAlert } = this.props;
     const dataToShare: ShareData = {
       title: "My 2022 in music",
       url: window.location.toString(),
@@ -236,7 +237,7 @@ export default class YearInMusic extends React.Component<
     // Use the Share API to share the image
     if (navigator.canShare && navigator.canShare(dataToShare)) {
       navigator.share(dataToShare).catch((error) => {
-        console.error("Error sharing image:", error);
+        newAlert("danger", "Error sharing image", error.toString());
       });
     }
   };
@@ -427,7 +428,7 @@ export default class YearInMusic extends React.Component<
                     slidesPerView={2}
                     initialSlide={0}
                     centeredSlides
-                    lazy={{enabled:true, loadPrevNext:true}}
+                    lazy={{ enabled: true, loadPrevNext: true }}
                     watchSlidesProgress
                     navigation
                     effect="coverflow"
@@ -471,7 +472,7 @@ export default class YearInMusic extends React.Component<
                               alt={release.release_name}
                               className="swiper-lazy"
                             />
-                            <div className="swiper-lazy-preloader swiper-lazy-preloader-white"></div>
+                            <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                             <div title={release.release_name}>
                               <a
                                 href={
