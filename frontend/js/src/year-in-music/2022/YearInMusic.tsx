@@ -667,28 +667,35 @@ export default class YearInMusic extends React.Component<
                 </Tooltip>
               </h3>
               {listensPerDayForGraph ? (
-                <div className="graph">
-                  <ResponsiveCalendar
-                    from="2022-01-01"
-                    to="2022-12-31"
-                    data={listensPerDayForGraph as CalendarDatum[]}
-                    emptyColor="#eeeeee"
-                    colors={["#f9e5b3", "#ffcc49", COLOR_LB_ORANGE, "#ff0e25"]}
-                    monthBorderColor="#eeeeee"
-                    dayBorderWidth={1}
-                    dayBorderColor="#ffffff"
-                    legends={[
-                      {
-                        anchor: "bottom-right",
-                        direction: "row",
-                        itemCount: 4,
-                        itemWidth: 42,
-                        itemHeight: 36,
-                        itemsSpacing: 14,
-                        itemDirection: "right-to-left",
-                      },
-                    ]}
-                  />
+                <div className="graph-container">
+                  <div className="graph">
+                    <ResponsiveCalendar
+                      from="2022-01-01"
+                      to="2022-12-31"
+                      data={listensPerDayForGraph as CalendarDatum[]}
+                      emptyColor="#eeeeee"
+                      colors={[
+                        "#f9e5b3",
+                        "#ffcc49",
+                        COLOR_LB_ORANGE,
+                        "#ff0e25",
+                      ]}
+                      monthBorderColor="#eeeeee"
+                      dayBorderWidth={1}
+                      dayBorderColor="#ffffff"
+                      legends={[
+                        {
+                          anchor: "bottom-left",
+                          direction: "row",
+                          itemCount: 4,
+                          itemWidth: 42,
+                          itemHeight: 36,
+                          itemsSpacing: 14,
+                          itemDirection: "right-to-left",
+                        },
+                      ]}
+                    />
+                  </div>
                 </div>
               ) : (
                 noDataText
@@ -732,30 +739,32 @@ export default class YearInMusic extends React.Component<
                 </Tooltip>
               </h3>
               {mostListenedYearDataForGraph ? (
-                <div className="graph">
-                  <ResponsiveBar
-                    margin={{ left: 50, bottom: 30 }}
-                    data={mostListenedYearDataForGraph}
-                    padding={0.1}
-                    layout="vertical"
-                    keys={["songs"]}
-                    indexBy="year"
-                    colors="#ff0e25"
-                    enableLabel={false}
-                    axisBottom={{
-                      // Round to nearest 5 year mark
-                      tickValues: uniq(
-                        mostListenedYearDataForGraph.map(
-                          (datum) => Math.round((datum.year + 1) / 5) * 5
-                        )
-                      ),
-                    }}
-                    axisLeft={{
-                      legend: "Number of listens",
-                      legendOffset: -40,
-                      legendPosition: "middle",
-                    }}
-                  />
+                <div className="graph-container">
+                  <div className="graph">
+                    <ResponsiveBar
+                      margin={{ left: 50, bottom: 30 }}
+                      data={mostListenedYearDataForGraph}
+                      padding={0.1}
+                      layout="vertical"
+                      keys={["songs"]}
+                      indexBy="year"
+                      colors="#ff0e25"
+                      enableLabel={false}
+                      axisBottom={{
+                        // Round to nearest 5 year mark
+                        tickValues: uniq(
+                          mostListenedYearDataForGraph.map(
+                            (datum) => Math.round((datum.year + 1) / 5) * 5
+                          )
+                        ),
+                      }}
+                      axisLeft={{
+                        legend: "Number of listens",
+                        legendOffset: -40,
+                        legendPosition: "middle",
+                      }}
+                    />
+                  </div>
                 </div>
               ) : (
                 noDataText
