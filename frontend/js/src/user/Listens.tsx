@@ -716,7 +716,7 @@ export default class Listens extends React.Component<
       Boolean(releaseGroupMBID);
     const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
     const canPersonallyRecommend = Boolean(recordingMSID);
-    const canManuallyMap = recordingMSID && !recordingMBID;
+    const canManuallyMap = Boolean(recordingMSID);
 
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
