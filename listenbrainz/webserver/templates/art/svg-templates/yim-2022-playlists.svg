@@ -22,12 +22,6 @@
         <image class="album-art" preserveAspectRatio="xMidYMid slice" x="300" y="75" xlink:href="{{ image_urls[6] }}" />
         <image class="album-art" preserveAspectRatio="xMidYMid slice" x="300" y="210" xlink:href="{{ image_urls[7] }}" />
         <image class="album-art" preserveAspectRatio="xMidYMid slice" x="300" y="345" xlink:href="{{ image_urls[8] }}" />
-        <rect x="0" y="0" width="452" height="521" fill="url(#pattern2)"/>
+        <image x="0" y="0" width="452" height="521" xlink:href="{{ flames_image_url }}" />
     </g>
-    <defs>
-        <pattern id="pattern2" patternContentUnits="objectBoundingBox" width="1" height="1">
-            <use xlink:href="#flames" transform="translate(-0.0891089 -0.0386266) scale(0.000479208 0.000415451)"/>
-        </pattern>
-        <image id="flames" width="2500" height="2500" xlink:href="{{ flames_image_url }}" />
-    </defs>
 </svg>
