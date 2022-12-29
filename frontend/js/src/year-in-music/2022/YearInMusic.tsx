@@ -1005,16 +1005,18 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <LazyLoadImage
-              src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
-              placeholderSrc="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
-              srcSet="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg 500w,
-              https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-medium.jpeg 1000w,
-              https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-large.jpeg 2000w"
-              alt="2022 albums"
-              loading="lazy"
-              decoding="async"
-            />
+            <a href="/explore/cover-art-collage">
+              <LazyLoadImage
+                src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
+                placeholderSrc="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
+                srcSet="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg 500w,
+                https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-medium.jpeg 1000w,
+                https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-large.jpeg 2000w"
+                alt="2022 albums"
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
           </div>
           <div className="container closing-remarks">
             <span className="bold">
