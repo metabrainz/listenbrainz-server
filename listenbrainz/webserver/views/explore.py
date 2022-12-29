@@ -38,3 +38,11 @@ def fresh_releases():
         "explore/fresh-releases.html",
         props=ujson.dumps({})
     )
+
+@explore_bp.route("/cover-art-collage/")
+def cover_art_collage():
+    """ A collage of album covers from 2022 """
+
+    return render_template(
+        "explore/cover-art-collage.html"
+    )

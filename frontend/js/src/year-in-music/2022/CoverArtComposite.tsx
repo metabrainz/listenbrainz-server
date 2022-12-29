@@ -1,6 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import panzoom, { PanZoom } from "panzoom";
+import { createRoot } from "react-dom/client";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHandPointRight, faSyncAlt } from "@fortawesome/free-solid-svg-icons";
 import * as jsonMap from "./rainbow1-100-7.jpg.json";
+import { getPageProps } from "../../utils/utils";
+import ErrorBoundary from "../../utils/ErrorBoundary";
 
 type CoverDef = {
   x1: number;
@@ -14,6 +19,7 @@ type CoverDef = {
 export default function CoverArtComposite() {
   const targetRef = useRef<HTMLImageElement>(null);
   const [preventClick, setPreventClick] = useState(false);
+  const [bigImageActive, setBigImageActive] = useState(false);
   const [panZoomInstance, setPanZoomInstance] = useState<PanZoom>();
 
   const setInitialZoom = useCallback(() => {
@@ -29,7 +35,7 @@ export default function CoverArtComposite() {
   }, [panZoomInstance]);
 
   useEffect(() => {
-    if (!targetRef.current) return;
+    if (!targetRef.current || !bigImageActive) return;
 
     const container = targetRef.current.parentElement as HTMLDivElement;
     const containerWidth = container.clientWidth;
@@ -51,7 +57,7 @@ export default function CoverArtComposite() {
         setPreventClick(false);
       }, 100);
     });
-  }, []);
+  }, [bigImageActive]);
 
   return (
     <div
@@ -64,50 +70,116 @@ export default function CoverArtComposite() {
       }}
     >
       <div className="red-section">
-        <div className="header">
+        <div
+          className="header"
+          style={{ marginBottom: "0.5em", height: "15vh" }}
+        >
           Album covers of 2022
           <div className="subheader">
-            Zoom, pan and click to go to a playable album page
+            Zoom, pan and click on the image below to go to a playable album
+            page
           </div>
         </div>
-        <button
-          type="button"
-          className="btn btn-default"
-          onClick={setInitialZoom}
+        {bigImageActive && (
+          <button
+            type="button"
+            className="btn"
+            onClick={setInitialZoom}
+            style={{
+              color: "#ff0e25",
+              backgroundColor: "#ffcc49",
+            }}
+          >
+            <FontAwesomeIcon icon={faSyncAlt} /> Reset
+          </button>
+        )}
+        <div
+          style={{
+            width: "100%",
+            height: "70vh",
+            overflow: "hidden",
+            position: "relative",
+          }}
         >
-          Reset
-        </button>
-        <div style={{ width: "100%", height: "70vh", overflow: "hidden" }}>
-          <img
-            ref={targetRef}
-            src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7.jpg"
-            useMap="#cover-image-map"
-            alt="Albums"
-            onLoad={setInitialZoom}
-          />
-          <map name="cover-image-map">
-            {jsonMap.map((coverDef: CoverDef) => {
-              const { x1, x2, y1, y2, name, release_mbid } = coverDef;
-              const coordinates = [x1, y1, x2, y2].join();
-              return (
-                <area
-                  key={`${name}-${coordinates}`}
-                  shape="rect"
-                  coords={coordinates}
-                  alt={name}
-                  href={
-                    preventClick
-                      ? undefined
-                      : `//musicbrainz.org/release/${release_mbid}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              );
-            })}
-          </map>
+          {!bigImageActive ? (
+            <>
+              <div
+                className="flex flex-center"
+                style={{ width: "100%", top: "10em", position: "absolute" }}
+              >
+                <div
+                  className="alert alert-warning"
+                  style={{ maxWidth: "700px", zIndex: 1 }}
+                >
+                  A word of warning: this detailed image is very heavy (35Mb),
+                  so make sure you are on wifi before clicking
+                  &apos;continue&apos;
+                  <br />
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    onClick={() => {
+                      setBigImageActive(true);
+                    }}
+                    style={{ marginTop: "0.5em" }}
+                  >
+                    <FontAwesomeIcon icon={faHandPointRight} /> Continue
+                  </button>
+                </div>
+              </div>
+              <img
+                style={{ filter: "blur(3px)" }}
+                src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
+                srcSet="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg 500w,
+              https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-medium.jpeg 1000w"
+                alt="2022 albums"
+              />
+            </>
+          ) : (
+            <>
+              <img
+                ref={targetRef}
+                src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7.jpg"
+                useMap="#cover-image-map"
+                alt="Albums"
+                onLoad={setInitialZoom}
+              />
+              <map name="cover-image-map">
+                {jsonMap.map((coverDef: CoverDef) => {
+                  const { x1, x2, y1, y2, name, release_mbid } = coverDef;
+                  const coordinates = [x1, y1, x2, y2].join();
+                  return (
+                    <area
+                      key={`${name}-${coordinates}`}
+                      shape="rect"
+                      coords={coordinates}
+                      alt={name}
+                      href={
+                        preventClick
+                          ? undefined
+                          : `//musicbrainz.org/release/${release_mbid}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  );
+                })}
+              </map>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const { domContainer } = getPageProps();
+
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
+    <ErrorBoundary>
+      <CoverArtComposite />
+    </ErrorBoundary>
+  );
+});
