@@ -155,7 +155,7 @@ export default function CoverArtComposite() {
                       href={
                         preventClick
                           ? undefined
-                          : `//musicbrainz.org/release/${release_mbid}`
+                          : `/player/release/${release_mbid}/`
                       }
                       target="_blank"
                       rel="noopener noreferrer"
