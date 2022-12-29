@@ -76,8 +76,8 @@ export default function CoverArtComposite() {
         >
           Album covers of 2022
           <div className="subheader">
-            Zoom, pan and click on the image below to go to a playable album
-            page
+            Zoom, drag and click your way to some of last years most colourful
+            albums.
           </div>
         </div>
         {bigImageActive && (
@@ -111,9 +111,7 @@ export default function CoverArtComposite() {
                   className="alert alert-warning"
                   style={{ maxWidth: "700px", zIndex: 1 }}
                 >
-                  A word of warning: this detailed image is very heavy (35Mb),
-                  so make sure you are on wifi before clicking
-                  &apos;continue&apos;
+                  - Confirm to load large image (28Mb) -
                   <br />
                   <button
                     type="button"
