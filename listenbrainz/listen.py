@@ -131,14 +131,13 @@ class Listen(object):
                        caa_id=None, caa_release_mbid=None):
         """Factory to make Listen() objects from a timescale dict"""
 
-        data['listened_at'] = datetime.utcfromtimestamp(float(listened_at))
-        data['track_metadata']['track_name'] = track_name
-        if recording_mbid is not None and release_mbid is not None:
-            data["track_metadata"]["mbid_mapping"] = {
-                "recording_mbid": str(recording_mbid),
-                "release_mbid": str(release_mbid),
-                "artist_mbids": [str(m) for m in artist_mbids]
-            }
+        data["listened_at"] = datetime.utcfromtimestamp(float(listened_at))
+        data["track_metadata"]["track_name"] = track_name
+        if recording_mbid is not None:
+            data["track_metadata"]["mbid_mapping"] = {"recording_mbid": str(recording_mbid)}
+
+            if release_mbid is not None:
+                data["track_metadata"]["mbid_mapping"]["release_mbid"] = str(release_mbid)
 
             if artist_mbids is not None and ac_names is not None and ac_join_phrases is not None:
                 artists = []
@@ -148,7 +147,9 @@ class Listen(object):
                         "artist_credit_name": name,
                         "join_phrase": join_phrase
                     })
+
                 data["track_metadata"]["mbid_mapping"]["artists"] = artists
+                data["track_metadata"]["mbid_mapping"]["artist_mbids"] = [str(m) for m in artist_mbids]
 
             if caa_id is not None and caa_release_mbid is not None:
                 data["track_metadata"]["mbid_mapping"]["caa_id"] = caa_id
