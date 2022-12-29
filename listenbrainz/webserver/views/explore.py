@@ -41,7 +41,7 @@ def fresh_releases():
     )
 
 @explore_bp.route("/cover-art-collage/")
-@explore_bp.route("/cover-art-collage/<int:year>")
+@explore_bp.route("/cover-art-collage/<int:year>/")
 def cover_art_collage(year: int = 2022):
     """ A collage of album covers from 2022
         Raises:
