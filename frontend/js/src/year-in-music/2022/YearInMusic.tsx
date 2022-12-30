@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { Navigation, Keyboard, EffectCoverflow } from "swiper";
+import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import Tooltip from "react-tooltip";
@@ -207,6 +207,7 @@ export default class YearInMusic extends React.Component<
   };
 
   sharePage = () => {
+    const { newAlert } = this.props;
     const dataToShare: ShareData = {
       title: "My 2022 in music",
       url: window.location.toString(),
@@ -214,7 +215,7 @@ export default class YearInMusic extends React.Component<
     // Use the Share API to share the image
     if (navigator.canShare && navigator.canShare(dataToShare)) {
       navigator.share(dataToShare).catch((error) => {
-        console.error("Error sharing image:", error);
+        newAlert("danger", "Error sharing image", error.toString());
       });
     }
   };
@@ -478,11 +479,13 @@ export default class YearInMusic extends React.Component<
               {yearInMusicData.top_releases ? (
                 <div id="top-albums">
                   <Swiper
-                    modules={[Navigation, Keyboard, EffectCoverflow]}
+                    modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
                     spaceBetween={15}
                     slidesPerView={2}
                     initialSlide={0}
                     centeredSlides
+                    lazy={{ enabled: true, loadPrevNext: true }}
+                    watchSlidesProgress
                     navigation
                     effect="coverflow"
                     coverflowEffect={{
@@ -518,12 +521,14 @@ export default class YearInMusic extends React.Component<
                             key={`coverflow-${release.release_name}`}
                           >
                             <img
-                              src={
+                              data-src={
                                 coverArt ??
                                 "/static/img/cover-art-placeholder.jpg"
                               }
                               alt={release.release_name}
+                              className="swiper-lazy"
                             />
+                            <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                             <div title={release.release_name}>
                               <a
                                 href={
@@ -723,28 +728,35 @@ export default class YearInMusic extends React.Component<
                 </Tooltip>
               </h3>
               {listensPerDayForGraph ? (
-                <div className="graph">
-                  <ResponsiveCalendar
-                    from="2022-01-01"
-                    to="2022-12-31"
-                    data={listensPerDayForGraph as CalendarDatum[]}
-                    emptyColor="#eeeeee"
-                    colors={["#f9e5b3", "#ffcc49", COLOR_LB_ORANGE, "#ff0e25"]}
-                    monthBorderColor="#eeeeee"
-                    dayBorderWidth={1}
-                    dayBorderColor="#ffffff"
-                    legends={[
-                      {
-                        anchor: "bottom-right",
-                        direction: "row",
-                        itemCount: 4,
-                        itemWidth: 42,
-                        itemHeight: 36,
-                        itemsSpacing: 14,
-                        itemDirection: "right-to-left",
-                      },
-                    ]}
-                  />
+                <div className="graph-container">
+                  <div className="graph">
+                    <ResponsiveCalendar
+                      from="2022-01-01"
+                      to="2022-12-31"
+                      data={listensPerDayForGraph as CalendarDatum[]}
+                      emptyColor="#eeeeee"
+                      colors={[
+                        "#f9e5b3",
+                        "#ffcc49",
+                        COLOR_LB_ORANGE,
+                        "#ff0e25",
+                      ]}
+                      monthBorderColor="#eeeeee"
+                      dayBorderWidth={1}
+                      dayBorderColor="#ffffff"
+                      legends={[
+                        {
+                          anchor: "bottom-left",
+                          direction: "row",
+                          itemCount: 4,
+                          itemWidth: 42,
+                          itemHeight: 36,
+                          itemsSpacing: 14,
+                          itemDirection: "right-to-left",
+                        },
+                      ]}
+                    />
+                  </div>
                 </div>
               ) : (
                 noDataText
@@ -788,30 +800,32 @@ export default class YearInMusic extends React.Component<
                 </Tooltip>
               </h3>
               {mostListenedYearDataForGraph ? (
-                <div className="graph">
-                  <ResponsiveBar
-                    margin={{ left: 50, bottom: 30 }}
-                    data={mostListenedYearDataForGraph}
-                    padding={0.1}
-                    layout="vertical"
-                    keys={["songs"]}
-                    indexBy="year"
-                    colors="#ff0e25"
-                    enableLabel={false}
-                    axisBottom={{
-                      // Round to nearest 5 year mark
-                      tickValues: uniq(
-                        mostListenedYearDataForGraph.map(
-                          (datum) => Math.round((datum.year + 1) / 5) * 5
-                        )
-                      ),
-                    }}
-                    axisLeft={{
-                      legend: "Number of listens",
-                      legendOffset: -40,
-                      legendPosition: "middle",
-                    }}
-                  />
+                <div className="graph-container">
+                  <div className="graph">
+                    <ResponsiveBar
+                      margin={{ left: 50, bottom: 30 }}
+                      data={mostListenedYearDataForGraph}
+                      padding={0.1}
+                      layout="vertical"
+                      keys={["songs"]}
+                      indexBy="year"
+                      colors="#ff0e25"
+                      enableLabel={false}
+                      axisBottom={{
+                        // Round to nearest 5 year mark
+                        tickValues: uniq(
+                          mostListenedYearDataForGraph.map(
+                            (datum) => Math.round((datum.year + 1) / 5) * 5
+                          )
+                        ),
+                      }}
+                      axisLeft={{
+                        legend: "Number of listens",
+                        legendOffset: -40,
+                        legendPosition: "middle",
+                      }}
+                    />
+                  </div>
                 </div>
               ) : (
                 noDataText
@@ -1027,7 +1041,7 @@ export default class YearInMusic extends React.Component<
             <a
               target="_blank"
               href="https://community.metabrainz.org/c/listenbrainz/18"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               our forums
             </a>
@@ -1035,7 +1049,7 @@ export default class YearInMusic extends React.Component<
             <a
               target="_blank"
               href="mailto:listenbrainz@metabrainz.org"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               by email
             </a>
@@ -1043,7 +1057,7 @@ export default class YearInMusic extends React.Component<
             <a
               target="_blank"
               href="https://web.libera.chat/#metabrainz"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               IRC
             </a>
@@ -1051,10 +1065,14 @@ export default class YearInMusic extends React.Component<
             <a
               target="_blank"
               href="https://twitter.com/listenbrainz"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               on twitter
             </a>
+          </div>
+          <div className="thanks-kc-green">
+            With thanks to KC Green for the original &apos;this is fine&apos;
+            cartoon.
           </div>
         </div>
         <BrainzPlayer
