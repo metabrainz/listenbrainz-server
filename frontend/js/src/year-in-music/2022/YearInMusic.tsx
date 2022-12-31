@@ -21,10 +21,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCopy,
   faHeadphones,
+  faLink,
   faQuestionCircle,
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -45,10 +47,11 @@ import ListenCard from "../../listens/ListenCard";
 import UserListModalEntry from "../../follow/UserListModalEntry";
 import {
   JSPFTrackToListen,
-  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../../playlists/utils";
-import { COLOR_LB_ORANGE } from "../../utils/constants";
+import { COLOR_BLACK, COLOR_LB_ORANGE } from "../../utils/constants";
 import SimpleModal from "../../utils/SimpleModal";
+import Card from "../../components/Card";
+import CustomChoropleth from "../../stats/Choropleth";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -96,16 +99,17 @@ export type YearInMusicProps = {
       artist_credit_name: string;
     }>;
     artist_map: Array<{
-      artist_mbid: string;
-      artist_name: string;
+      country: string;
+      artist_count: number;
       listen_count: number;
-      country_code: string;
+      artists: Array<UserArtistMapArtist>;
     }>;
   };
 } & WithAlertNotificationsInjectedProps;
 
 export type YearInMusicState = {
   followingList: Array<string>;
+  selectedMetric: "artist" | "listen";
 };
 
 export default class YearInMusic extends React.Component<
@@ -119,6 +123,7 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
+      selectedMetric: "listen",
     };
   }
 
@@ -165,6 +170,19 @@ export default class YearInMusic extends React.Component<
     }
     return playlist;
   }
+
+  changeSelectedMetric = (
+    newSelectedMetric: "artist" | "listen",
+    event?: React.MouseEvent<HTMLElement>
+  ) => {
+    if (event) {
+      event.preventDefault();
+    }
+
+    this.setState({
+      selectedMetric: newSelectedMetric,
+    });
+  };
 
   getFollowing = async () => {
     const { APIService, currentUser } = this.context;
@@ -241,7 +259,7 @@ export default class YearInMusic extends React.Component<
       <div className="card content-card mb-10" id={`${coverArtKey}`}>
         <div className="center-p">
           <object
-            style={{maxWidth:"100%"}}
+            style={{ maxWidth: "100%" }}
             data={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=${coverArtKey}`}
           >{`SVG of cover art for Top Discovery Playlist for ${user.name}`}</object>
           <h4>
@@ -306,6 +324,7 @@ export default class YearInMusic extends React.Component<
 
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
+    const { selectedMetric } = this.state;
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
 
@@ -374,6 +393,21 @@ export default class YearInMusic extends React.Component<
         year,
         // Set to 0 for years without data
         songs: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
+      }));
+    }
+
+    /* Users artist map */
+    let artistMapDataForGraph;
+    if (isEmpty(yearInMusicData.artist_map)) {
+      missingSomeData = true;
+    } else {
+      artistMapDataForGraph = yearInMusicData.artist_map.map((country) => ({
+        id: country.country,
+        value:
+          selectedMetric === "artist"
+            ? country.artist_count
+            : country.listen_count,
+        artists: country.artists,
       }));
     }
 
@@ -838,6 +872,102 @@ export default class YearInMusic extends React.Component<
                 noDataText
               )}
             </div>
+            <div className="card content-card" id="user-artist-map">
+              <h3 className="text-center">
+                What country are {yourOrUsersName} favorite artists from?{" "}
+              </h3>
+              {artistMapDataForGraph ? (
+                <Card
+                  style={{
+                    marginTop: 20,
+                    minHeight: 600,
+                  }}
+                >
+                  <div className="row">
+                    <div className="col-md-9 col-xs-6">
+                      <h3 style={{ marginLeft: 20 }}>
+                        <span className="capitalize-bold">Artist Origins</span>
+                        <small>
+                          &nbsp;Click on a country to see more details
+                        </small>
+                      </h3>
+                    </div>
+                    <div
+                      className="col-md-2 col-xs-4 text-right"
+                      style={{ marginTop: 20 }}
+                    >
+                      <span>Rank by</span>
+                      <span className="dropdown">
+                        <button
+                          className="dropdown-toggle btn-transparent capitalize-bold"
+                          data-toggle="dropdown"
+                          type="button"
+                        >
+                          {selectedMetric}s
+                          <span className="caret" />
+                        </button>
+                        <ul className="dropdown-menu" role="menu">
+                          <li
+                            className={
+                              selectedMetric === "listen" ? "active" : undefined
+                            }
+                          >
+                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                            <a
+                              href=""
+                              role="button"
+                              onClick={(event) =>
+                                this.changeSelectedMetric("listen", event)
+                              }
+                            >
+                              Listens
+                            </a>
+                          </li>
+                          <li
+                            className={
+                              selectedMetric === "artist" ? "active" : undefined
+                            }
+                          >
+                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                            <a
+                              href=""
+                              role="button"
+                              onClick={(event) =>
+                                this.changeSelectedMetric("artist", event)
+                              }
+                            >
+                              Artists
+                            </a>
+                          </li>
+                        </ul>
+                      </span>
+                    </div>
+                    <div className="col-md-1 col-xs-2 text-right">
+                      <h4 style={{ marginTop: 20 }}>
+                        <a href="#artist-origin">
+                          <FontAwesomeIcon
+                            icon={faLink as IconProp}
+                            size="sm"
+                            color={COLOR_BLACK}
+                            style={{ marginRight: 20 }}
+                          />
+                        </a>
+                      </h4>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-xs-12">
+                      <CustomChoropleth
+                        data={artistMapDataForGraph}
+                        selectedMetric={selectedMetric}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              ) : (
+                noDataText
+              )}
+            </div>
           </div>
         </div>
         <div className="red-section">
@@ -848,7 +978,12 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="row flex flex-wrap" id="playlists">
               {Boolean(topDiscoveriesPlaylist) &&
-                this.showTopLevelPlaylist(0, topDiscoveriesPlaylist, "discovery-playlist", listens)}
+                this.showTopLevelPlaylist(
+                  0,
+                  topDiscoveriesPlaylist,
+                  "discovery-playlist",
+                  listens
+                )}
               {Boolean(topMissedRecordingsPlaylist) &&
                 this.showTopLevelPlaylist(
                   1,
