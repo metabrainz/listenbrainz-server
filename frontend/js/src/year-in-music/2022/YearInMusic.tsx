@@ -95,6 +95,12 @@ export type YearInMusicProps = {
       artist_credit_mbids: string[];
       artist_credit_name: string;
     }>;
+    artist_map: Array<{
+      artist_mbid: string;
+      artist_name: string;
+      listen_count: number;
+      country_code: string;
+    }>;
   };
 } & WithAlertNotificationsInjectedProps;
 
@@ -342,7 +348,8 @@ export default class YearInMusic extends React.Component<
       !yearInMusicData.listens_per_day ||
       !yearInMusicData.total_listen_count ||
       !yearInMusicData.day_of_week ||
-      !yearInMusicData.new_releases_of_top_artists
+      !yearInMusicData.new_releases_of_top_artists ||
+      !yearInMusicData.artist_map
     ) {
       missingSomeData = true;
     }
