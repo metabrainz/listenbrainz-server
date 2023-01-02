@@ -6,6 +6,7 @@ from pyspark.sql.types import StructField, StructType, ArrayType, StringType, Ti
 listens_new_schema = StructType([
     StructField('listened_at', TimestampType(), nullable=False),
     StructField('user_id', IntegerType(), nullable=False),
+    StructField('recording_msid', StringType(), nullable=False),
     StructField('artist_name', StringType(), nullable=False),
     StructField('artist_credit_id', LongType(), nullable=True),
     StructField('release_name', StringType(), nullable=True),

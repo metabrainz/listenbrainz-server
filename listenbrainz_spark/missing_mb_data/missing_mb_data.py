@@ -14,6 +14,7 @@ def get_missing_mb_data():
         WITH grouped_listens AS (
             SELECT user_id
                  , max(listened_at) AS max_listened_at
+                 , recording_msid
                  , recording_name
                  , artist_name
                  , release_name
@@ -23,12 +24,14 @@ def get_missing_mb_data():
                AND recording_name != ''
                AND artist_name != ''
           GROUP BY user_id
+                 , recording_msid
                  , recording_name
                  , artist_name
                  , release_name
         ), filtered_listens AS (
             SELECT user_id
                  , max_listened_at
+                 , recording_msid
                  , recording_name
                  , artist_name
                  , release_name
@@ -40,6 +43,7 @@ def get_missing_mb_data():
                     collect_list(
                         struct(
                             date_format(max_listened_at, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") AS listened_at
+                          , recording_msid  
                           , recording_name
                           , artist_name
                           , release_name
