@@ -653,6 +653,7 @@ type MissingMBData = {
   listened_at: string;
   recording_name: string;
   release_name?: string;
+  recording_msid: string;
 };
 
 type FreshReleaseItem = {
