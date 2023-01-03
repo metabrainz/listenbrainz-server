@@ -105,8 +105,8 @@ def check_manual_mapping_exists(user_id: int, recording_msids: Iterable[str]) ->
           FROM mbid_manual_mapping mmm
           JOIN (VALUES %s) AS t(msid)
             ON mmm.recording_msid = t.msid::uuid
-         WHERE user_id = :user_id
+         WHERE user_id = {user_id}
         """).format(user_id=Literal(user_id))
     with ts.engine.begin() as conn, conn.connection.cursor() as cursor:
-        result = execute_values(cursor, query, [(msid,) for msid in recording_msids])
+        result = execute_values(cursor, query, [(msid,) for msid in recording_msids], fetch=True)
         return set(row[0] for row in result)
