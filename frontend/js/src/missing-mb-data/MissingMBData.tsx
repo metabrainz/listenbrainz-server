@@ -232,6 +232,8 @@ export default class MissingMBDataPage extends React.Component<
                     showTimestamp
                     showUsername={false}
                     newAlert={newAlert}
+                    // eslint-disable-next-line react/jsx-no-useless-fragment
+                    customThumbnail={<></>}
                     listen={missingMBDataAsListen[index]}
                     additionalActions={additionalActions}
                     additionalMenuItems={additionalMenuItems}
