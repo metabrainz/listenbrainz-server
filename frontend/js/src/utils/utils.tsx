@@ -115,7 +115,7 @@ const searchForYoutubeTrack = async (
 
   if (response.status === 429) {
     throw new Error(
-      "The request cannot be completed because ListenBrainz has exceeded its quota. Please try again later."
+      "We couldn't play this track because we ran out of Youtube quota, sorry about the inconvenience."
     );
   }
 
