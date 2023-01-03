@@ -128,7 +128,6 @@ export default function CoverArtComposite() {
                 </div>
               </div>
               <img
-                style={{ filter: "blur(3px)" }}
                 src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
                 srcSet="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg 500w,
               https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-medium.jpeg 1000w"
