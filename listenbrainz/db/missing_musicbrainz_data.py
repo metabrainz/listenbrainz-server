@@ -141,6 +141,6 @@ def remove_mapped_mb_data(user_id: int, missing_musicbrainz_data: list[UserMissi
     remaining_data = []
     for item in missing_musicbrainz_data:
         if item.recording_msid not in existing_mappings:
-            remaining_data.append(item)
+            remaining_data.append(item.dict())
 
     return remaining_data
