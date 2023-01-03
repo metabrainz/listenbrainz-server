@@ -23,8 +23,10 @@ from listenbrainz import db
 from pydantic import ValidationError
 
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData,
-                                                      UserMissingMusicBrainzDataJson)
+                                                      UserMissingMusicBrainzDataJson, UserMissingMusicBrainzDataRecord)
 from flask import current_app
+
+from listenbrainz.db.mbid_manual_mapping import check_manual_mapping_exists
 
 
 def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data: UserMissingMusicBrainzDataJson, source: str):
@@ -110,9 +112,35 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
         row = result.mappings().first()
 
     try:
-        return UserMissingMusicBrainzData(**row) if row else None
+        if row:
+            missing_mb_data = UserMissingMusicBrainzData(**row).data.missing_musicbrainz_data
+            if missing_mb_data:
+                return remove_mapped_mb_data(user_id, missing_mb_data)
+        else:
+            return None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting missing musicbrainz data for source "{source}"
                                  for user with user_id: {user_id}. Data: {data}""".format(source=source, user_id=user_id,
                                  data=ujson.dumps(row['data'], indent=4)), exc_info=True)
         return None
+
+
+def remove_mapped_mb_data(user_id: int, missing_musicbrainz_data: list[UserMissingMusicBrainzDataRecord]):
+    """ Remove musicbrainz data that has been mapped to MusicBrainz by the user.
+
+        Args:
+            user_id: LB user id.
+            missing_musicbrainz_data: List of missing musicbrainz data.
+
+        Returns:
+            List of missing musicbrainz data that has not been mapped to MusicBrainz.
+    """
+    missing_data_map = {r.recording_msid: r for r in missing_musicbrainz_data}
+    existing_mappings = check_manual_mapping_exists(user_id, missing_data_map.keys())
+
+    remaining_data = []
+    for item in missing_musicbrainz_data:
+        if item.recording_msid not in existing_mappings:
+            remaining_data.append(item)
+
+    return remaining_data
