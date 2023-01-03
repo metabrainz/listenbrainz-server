@@ -45,6 +45,7 @@ export default function CoverArtComposite() {
       maxZoom: 1,
       minZoom: lowestZoom,
       bounds: true,
+      onTouch: () => false, // how to allow touch events to work on mobile. See https://github.com/anvaka/panzoom/issues/235#issuecomment-1207341563
     });
     createdPanZoomInstance.smoothZoomAbs(0, 0, lowestZoom);
     setPanZoomInstance(createdPanZoomInstance);
@@ -67,6 +68,7 @@ export default function CoverArtComposite() {
         textAlign: "center",
         backgroundColor: "#ff0e25",
         color: "#ffcc49",
+        WebkitOverflowScrolling: "auto", // See https://github.com/anvaka/panzoom/issues/235#issuecomment-1207341563
       }}
     >
       <div className="red-section">
