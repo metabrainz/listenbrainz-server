@@ -433,7 +433,7 @@ export default class YearInMusic extends React.Component<
           <div className="arrow-down" />
         </div>
         <div className="red-section">
-          <div className="container share-section flex-center">
+          <div className="link-section flex-center">
             <div>
               Share <b>{yourOrUsersName}</b> year
               <div className="input-group">
@@ -1018,8 +1018,8 @@ export default class YearInMusic extends React.Component<
             <div className="header">
               2022 Albums
               <div className="subheader">
-                Just some of the albums that came out in 2022. Drag, scroll and
-                click to listen to an album.
+                An interactive collage of albums released in 2022. Drag, scroll,
+                and click to explore.
               </div>
             </div>
           </div>
