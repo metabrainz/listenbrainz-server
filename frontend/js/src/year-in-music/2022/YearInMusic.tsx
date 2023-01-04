@@ -7,10 +7,8 @@ import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import Tooltip from "react-tooltip";
 import {
   get,
-  has,
   isEmpty,
   isNil,
-  isString,
   range,
   uniq,
   capitalize,
@@ -21,12 +19,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCopy,
   faHeadphones,
-  faLink,
   faQuestionCircle,
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -46,9 +42,8 @@ import MagicShareButton from "./MagicShareButton";
 import ListenCard from "../../listens/ListenCard";
 import UserListModalEntry from "../../follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../playlists/utils";
-import { COLOR_BLACK, COLOR_LB_ORANGE } from "../../utils/constants";
+import { COLOR_LB_ORANGE } from "../../utils/constants";
 import SimpleModal from "../../utils/SimpleModal";
-import Card from "../../components/Card";
 import CustomChoropleth from "../../stats/Choropleth";
 
 export type YearInMusicProps = {
