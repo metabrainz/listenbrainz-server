@@ -435,6 +435,15 @@ def request_yim_playlists(year: int):
     send_request_to_spark_cluster("year_in_music.tracks_of_the_year", year=year)
 
 
+@cli.command(name="request_yim_artist_map")
+@click.option("--year", type=int, help="Year for which to generate the playlists",
+              default=date.today().year)
+def request_yim_artist_map(year: int):
+    """ Send the cluster a request to generate artist map data and then
+     once the data has been imported generate YIM artist map. """
+    send_request_to_spark_cluster("year_in_music.artist_map", year=year)
+
+
 @cli.command(name="request_year_in_music")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
@@ -451,6 +460,7 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_similar_users, year=year)
     ctx.invoke(request_yim_new_artists_discovered, year=year)
     ctx.invoke(request_yim_listening_time, year=year)
+    ctx.invoke(request_yim_artist_map, year=year)
     ctx.invoke(request_yim_playlists, year=year)
 
 

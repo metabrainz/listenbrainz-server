@@ -7,10 +7,8 @@ import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import Tooltip from "react-tooltip";
 import {
   get,
-  has,
   isEmpty,
   isNil,
-  isString,
   range,
   uniq,
   capitalize,
@@ -43,12 +41,10 @@ import MagicShareButton from "./MagicShareButton";
 
 import ListenCard from "../../listens/ListenCard";
 import UserListModalEntry from "../../follow/UserListModalEntry";
-import {
-  JSPFTrackToListen,
-  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
-} from "../../playlists/utils";
+import { JSPFTrackToListen } from "../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
 import SimpleModal from "../../utils/SimpleModal";
+import CustomChoropleth from "../../stats/Choropleth";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -95,11 +91,18 @@ export type YearInMusicProps = {
       artist_credit_mbids: string[];
       artist_credit_name: string;
     }>;
+    artist_map: Array<{
+      country: string;
+      artist_count: number;
+      listen_count: number;
+      artists: Array<UserArtistMapArtist>;
+    }>;
   };
 } & WithAlertNotificationsInjectedProps;
 
 export type YearInMusicState = {
   followingList: Array<string>;
+  selectedMetric: "artist" | "listen";
 };
 
 export default class YearInMusic extends React.Component<
@@ -113,6 +116,7 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
+      selectedMetric: "listen",
     };
   }
 
@@ -159,6 +163,19 @@ export default class YearInMusic extends React.Component<
     }
     return playlist;
   }
+
+  changeSelectedMetric = (
+    newSelectedMetric: "artist" | "listen",
+    event?: React.MouseEvent<HTMLElement>
+  ) => {
+    if (event) {
+      event.preventDefault();
+    }
+
+    this.setState({
+      selectedMetric: newSelectedMetric,
+    });
+  };
 
   getFollowing = async () => {
     const { APIService, currentUser } = this.context;
@@ -300,6 +317,7 @@ export default class YearInMusic extends React.Component<
 
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
+    const { selectedMetric } = this.state;
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
 
@@ -342,7 +360,8 @@ export default class YearInMusic extends React.Component<
       !yearInMusicData.listens_per_day ||
       !yearInMusicData.total_listen_count ||
       !yearInMusicData.day_of_week ||
-      !yearInMusicData.new_releases_of_top_artists
+      !yearInMusicData.new_releases_of_top_artists ||
+      !yearInMusicData.artist_map
     ) {
       missingSomeData = true;
     }
@@ -367,6 +386,21 @@ export default class YearInMusic extends React.Component<
         year,
         // Set to 0 for years without data
         songs: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
+      }));
+    }
+
+    /* Users artist map */
+    let artistMapDataForGraph;
+    if (isEmpty(yearInMusicData.artist_map)) {
+      missingSomeData = true;
+    } else {
+      artistMapDataForGraph = yearInMusicData.artist_map.map((country) => ({
+        id: country.country,
+        value:
+          selectedMetric === "artist"
+            ? country.artist_count
+            : country.listen_count,
+        artists: country.artists,
       }));
     }
 
@@ -824,6 +858,88 @@ export default class YearInMusic extends React.Component<
                         legendOffset: -40,
                         legendPosition: "middle",
                       }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                noDataText
+              )}
+            </div>
+            <div className="card content-card" id="user-artist-map">
+              <h3 className="text-center">
+                What countries are {yourOrUsersName} favorite artists from?{" "}
+                <FontAwesomeIcon
+                  icon={faQuestionCircle}
+                  data-tip
+                  data-for="user-artist-map-helptext"
+                  size="xs"
+                />
+                <Tooltip id="user-artist-map-helptext">
+                  Click on a country to see more details
+                </Tooltip>
+              </h3>
+              {artistMapDataForGraph ? (
+                <div className="graph-container">
+                  <div className="graph">
+                    <div style={{ paddingLeft: "3em" }}>
+                      <span>Rank by number of</span>
+                      <span className="dropdown">
+                        <button
+                          className="dropdown-toggle btn-transparent capitalize-bold"
+                          data-toggle="dropdown"
+                          type="button"
+                        >
+                          {selectedMetric}s
+                          <span className="caret" />
+                        </button>
+                        <ul className="dropdown-menu" role="menu">
+                          <li
+                            className={
+                              selectedMetric === "listen" ? "active" : undefined
+                            }
+                          >
+                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                            <a
+                              href=""
+                              role="button"
+                              onClick={(event) =>
+                                this.changeSelectedMetric("listen", event)
+                              }
+                            >
+                              Listens
+                            </a>
+                          </li>
+                          <li
+                            className={
+                              selectedMetric === "artist" ? "active" : undefined
+                            }
+                          >
+                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                            <a
+                              href=""
+                              role="button"
+                              onClick={(event) =>
+                                this.changeSelectedMetric("artist", event)
+                              }
+                            >
+                              Artists
+                            </a>
+                          </li>
+                        </ul>
+                      </span>
+                    </div>
+                    <CustomChoropleth
+                      width={700}
+                      data={artistMapDataForGraph}
+                      selectedMetric={selectedMetric}
+                      colorScaleRange={[
+                        "#ffeec2",
+                        "#ffdb80",
+                        "#ffcc49",
+                        "#ff9c40",
+                        "#ff6b36",
+                        "#ff0a23",
+                      ]}
                     />
                   </div>
                 </div>
