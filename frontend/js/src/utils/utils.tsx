@@ -113,6 +113,12 @@ const searchForYoutubeTrack = async (
     }
   }
 
+  if (response.status === 429) {
+    throw new Error(
+      "We couldn't play this track because we ran out of Youtube quota, sorry about the inconvenience."
+    );
+  }
+
   const responseBody = await response.json();
   if (!response.ok) {
     throw responseBody.error;
