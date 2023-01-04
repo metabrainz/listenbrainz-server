@@ -865,7 +865,11 @@ export default class YearInMusic extends React.Component<
                 noDataText
               )}
             </div>
-            <div className="card content-card" id="user-artist-map">
+            <div
+              className="card content-card"
+              id="user-artist-map"
+              style={{ marginTop: "1.5em" }}
+            >
               <h3 className="text-center">
                 What countries are {yourOrUsersName} favorite artists from?{" "}
                 <FontAwesomeIcon
@@ -929,7 +933,7 @@ export default class YearInMusic extends React.Component<
                       </span>
                     </div>
                     <CustomChoropleth
-                      width={700}
+                      width={1000}
                       data={artistMapDataForGraph}
                       selectedMetric={selectedMetric}
                       colorScaleRange={[
