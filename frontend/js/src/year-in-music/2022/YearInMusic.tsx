@@ -235,7 +235,7 @@ export default class YearInMusic extends React.Component<
       <div className="card content-card mb-10" id={`${coverArtKey}`}>
         <div className="center-p">
           <object
-            style={{maxWidth:"100%"}}
+            style={{ maxWidth: "100%" }}
             data={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=${coverArtKey}`}
           >{`SVG of cover art for Top Discovery Playlist for ${user.name}`}</object>
           <h4>
@@ -433,7 +433,7 @@ export default class YearInMusic extends React.Component<
           <div className="arrow-down" />
         </div>
         <div className="red-section">
-          <div className="container share-section flex-center">
+          <div className="link-section flex-center">
             <div>
               Share <b>{yourOrUsersName}</b> year
               <div className="input-group">
@@ -841,7 +841,12 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="row flex flex-wrap" id="playlists">
               {Boolean(topDiscoveriesPlaylist) &&
-                this.showTopLevelPlaylist(0, topDiscoveriesPlaylist, "discovery-playlist", listens)}
+                this.showTopLevelPlaylist(
+                  0,
+                  topDiscoveriesPlaylist,
+                  "discovery-playlist",
+                  listens
+                )}
               {Boolean(topMissedRecordingsPlaylist) &&
                 this.showTopLevelPlaylist(
                   1,
@@ -1013,22 +1018,24 @@ export default class YearInMusic extends React.Component<
             <div className="header">
               2022 Albums
               <div className="subheader">
-                Just some of the albums that came out in 2022. Drag, scroll and
-                click to listen to an album.
+                An interactive collage of albums released in 2022. Drag, scroll,
+                and click to explore.
               </div>
             </div>
           </div>
           <div className="composite-image">
-            <LazyLoadImage
-              src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
-              placeholderSrc="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
-              srcSet="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg 500w,
-              https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-medium.jpeg 1000w,
-              https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-large.jpeg 2000w"
-              alt="2022 albums"
-              loading="lazy"
-              decoding="async"
-            />
+            <a href="/explore/cover-art-collage">
+              <LazyLoadImage
+                src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
+                placeholderSrc="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
+                srcSet="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg 500w,
+                https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-medium.jpeg 1000w,
+                https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-large.jpeg 2000w"
+                alt="2022 albums"
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
           </div>
           <div className="container closing-remarks">
             <span className="bold">
