@@ -157,5 +157,4 @@ def load_recordings_from_msids(ts_curs, messybrainz_ids: Iterable[str]) -> dict[
             ON s.gid = t.msid::UUID
     """
     results = execute_values(ts_curs, query, [(msid,) for msid in messybrainz_ids], fetch=True)
-    print(results)
     return {row["msid"]: dict(row) for row in results}

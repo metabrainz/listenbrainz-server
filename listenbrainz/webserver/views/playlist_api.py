@@ -219,7 +219,6 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
         caa_id = row.get("caa_id")
         caa_release_mbid = row.get("caa_release_mbid")
         if caa_id and caa_release_mbid:
-            # TODO: Discuss image vs additional_metadata, what to permit caa.org link archive.org link etc?
             rec.additional_metadata = {"caa_id": caa_id, "caa_release_mbid": caa_release_mbid}
 
 
