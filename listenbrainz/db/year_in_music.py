@@ -277,19 +277,17 @@ def notify_yim_users(year):
     with open("/static/img/year-in-music-22/yim-22-logo-small-compressed.png", "rb") as img:
         logo = img.read()
 
-    # with db.engine.connect() as connection:
-    #     result = connection.execute(sqlalchemy.text("""
-    #         SELECT user_id
-    #              , musicbrainz_id
-    #              , email
-    #           FROM statistics.year_in_music yim
-    #           JOIN "user"
-    #             ON "user".id = yim.user_id
-    #          WHERE year = :year
-    #     """), {"year": year})
-    #     rows = result.mappings().fetchall()
-
-    rows = [{"user_id": 5746, "musicbrainz_id": "lucifer", "email": "kartikohri13@gmail.com"}]
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id
+                 , musicbrainz_id
+                 , email
+              FROM statistics.year_in_music yim
+              JOIN "user"
+                ON "user".id = yim.user_id
+             WHERE year = :year
+        """), {"year": year})
+        rows = result.mappings().fetchall()
 
     for row in rows:
         user_name = row["musicbrainz_id"]

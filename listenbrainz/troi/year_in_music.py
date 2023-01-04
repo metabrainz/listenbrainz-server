@@ -1,21 +1,22 @@
 import ujson
 from flask import current_app
 from more_itertools import chunked
+from sqlalchemy import text
 from troi.core import generate_playlist
 from troi.patches.top_discoveries_for_year import TopDiscoveries
 from troi.patches.top_missed_recordings_for_year import TopMissedTracksPatch
 from troi.playlist import _serialize_to_jspf
 
+from listenbrainz import db
 from listenbrainz.db.year_in_music import insert_playlists, insert_playlists_cover_art
 
 USERS_PER_BATCH = 25
 
 
 def get_all_users():
-    # query = """SELECT musicbrainz_id, id FROM "user" """
-    # with db.engine.connect() as conn:
-    #     return conn.execute(text(query)).mappings().all()
-    return [{"musicbrainz_id": "lucifer", "id": 5746}]
+    query = """SELECT musicbrainz_id, id FROM "user" """
+    with db.engine.connect() as conn:
+        return conn.execute(text(query)).mappings().all()
 
 
 def get_all_patches():
