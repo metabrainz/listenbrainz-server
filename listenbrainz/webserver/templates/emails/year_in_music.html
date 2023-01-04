@@ -1,71 +1,55 @@
-<div>
-    <img src="cid:{{ lb_logo_cid }}" alt="ListenBrainz" style="float: right; margin-left: 4px;" width="180px" height="48px">
-</div>
-<div>
-    <p>
-        Dear {{ user_name }},
-    </p>
-    <p>
-        The ListenBrainz team would like to wish you happy holidays!
-    </p>
-    <p>
-        You have been sending us your listen history during 2021 and we wanted to thank you for doing that!
-    </p>
-    <p>
-        We have been working hard to create useful features that are based on your data and we’re proud to
-        announce that we’ve created a <a href="{{ year_in_music }}">personalised Year in Music report</a>
-        for you. Unlike the report from a certain large streaming service, we don’t indulge in weird fonts
-        and too many splashy colours, but we do aim to create more insights into your listening experience
-        in 2021.
-    </p>
-    <p>
-        The Year in Music report summarises your statistics of 2021, identifies your most active listening
-        day of the week, listening activity over the year, lists users who listen to similar music to you
-        and includes up to 4 playlists for you to enjoy.
-    </p>
-    <p>
-        The Top Discoveries of 2021, Tracks Released in 2021 and Top Recordings of 2021 are all playlists
-        that review your listening habits of 2021. However, we’ve included one more playlist, the Top Missed
-        Recordings playlist, which selects tracks that users similar to you listened to, but you didn’t. This
-        is a discovery playlist and it may not flow as smoothly as the other playlists, but we’ve found it
-        quite helpful to discover new music that we’ve not listened to yet.
-    </p>
-    <p>
-        We hope that you enjoy your Year in Music review, but we also wanted to point out that we have some
-        of these features available on the ListenBrainz website all year round:
-    </p>
-    <ul>
-        <li>
-            <a href="{{ feed }}">User feed page</a>, which shows activity from your friends, including similar
-            users, pinned tracks, recommended tracks and more.
-        </li>
-        <li><a href="{{ statistics }}">Statistics page</a>, which shows your listening statistics.</li>
-        <li>
-            <a href="{{ feedback }}">Feedback page</a> and <a href="{{ pins }}">pins page</a> which show
-            tracks you loved (or hated!)
-        </li>
-        <li>
-            <a href="{{ playlists }}">Playlists, both your own</a> and ones
-            <a href="{{ collaborations }}">generated for you</a>
-        </li>
-    </ul>
-    <p>
-        In the new year we hope to start generating more playlist recommendations based on your listening
-        history – stay tuned for that!
-    </p>
-    <p>
-        Thanks for being part of it – we really appreciate it.
-    </p>
-    <p>
-        Happy Holidays and a Happy New Year!
-    </p>
-    <p>
-        Sincerely,
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" lang="en">
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" type="text/css" hs-webfonts="true" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&display=swap">
+
+    <title>Your Year in Music report</title>
+    <meta property="og:title" content="Your Year in Music report">
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!--[if gte mso 9]>
+    <xml>
+    <o:OfficeDocumentSettings>
+    <o:AllowPNG/>
+    <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
+  </head>
+  <body style="padding:0px; margin:0px">
+    <main style="max-width: 600px;margin-left: auto;margin-right: auto;border-color: transparent;background-color: #ffffff;font-family: 'Roboto', sans-serif;font-weight: 300">
+      <div style="padding: 2em;border-style: none;background-color: transparent;margin: auto;text-align: center;">
+        <img alt="Year in music 2022 logo" src="cid:{{ logo_cid }}">
+      </div>
+      <header style="width: 100%;height: auto;padding: 2em 1em;background-color: #ff0e25; color:#ffffff;text-align: center;">
+        <p>
+          <span style="text-transform: capitalize;">{{user_name}}</span>, your ListenBrainz Year in Music 2022 is now available.
+        </p>
+        <a href="https://listenbrainz.org/user/{{user_name}}/year-in-music/" style="font-weight: 700;margin-top:1em;color:#ffffff">Click here</a>
+      </header>
+      <div style="padding:1em;color: rgba(30, 30, 30, 1);width: auto;height: auto;font-size: 12px;text-align: center;line-height: normal;">
+        <p>
+          We have compiled the Year in Music report for 2022, which summarises of your listening habits throughout the year.
+          Some of the statistics you can expect to see include your most active listening day of the week, your listening days throughout the year, and users who listened to similar music to you. Additionally, we have included information about the countries where your favorite artists are from.
+        </p>
+        <p>
+        To top it off, we have also generated two new playlists for you to discover even more music in 2023.
+        We hope you enjoy the report and the new playlists.
+        <p>
+        <p>
+        Happy listening, and thanks for being part of ListenBrainz!
         <br>
-        The ListenBrainz team: akshaaatt, alastairp, lucifer, mayhem and monkey.
-    </p>
-    <p>
-        P.S. Heads up! This page loads many album covers; if you are on a mobile device you might want to wait
-        until you are connected to wifi.
-    </p>
-</div>
+        Wishing you a wonderful 2023, from the ListenBrainz team.
+        </p>
+      </div>
+      <div style="padding:0.5em;background-color: #f2f2f2;color: rgba(30, 30, 30, 1);font-size: 9px;text-align: center;font-weight: 300">
+            Whatever small print we usually have at the bottom of our emails, links and junk
+      </div>
+    </main>
+  </body>
+</html>
