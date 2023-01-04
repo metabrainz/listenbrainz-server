@@ -1191,7 +1191,11 @@ export default class YearInMusic extends React.Component<
               rel="noopener noreferrer"
             >
               on twitter
-            </a>
+            </a>{" "}
+            <br />
+            <br />
+            Feeling nostalgic? See your previous Year in Music:{" "}
+            <a href={`/user/${user.name}/year-in-music/2021`}>2021</a>
           </div>
           <div className="thanks-kc-green">
             With thanks to KC Green for the original &apos;this is fine&apos;
