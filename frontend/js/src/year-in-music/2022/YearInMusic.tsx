@@ -871,10 +871,10 @@ export default class YearInMusic extends React.Component<
                 <FontAwesomeIcon
                   icon={faQuestionCircle}
                   data-tip
-                  data-for="most-listened-year-helptext"
+                  data-for="user-artist-map-helptext"
                   size="xs"
                 />
-                <Tooltip id="most-listened-year-helptext">
+                <Tooltip id="user-artist-map-helptext">
                   Click on a country to see more details
                 </Tooltip>
               </h3>
