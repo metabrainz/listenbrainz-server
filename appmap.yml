@@ -1,0 +1,8 @@
+appmap_dir: tmp/appmap
+language: python
+name: listenbrainz
+packages:
+- path: mbid_mapping
+- path: listenbrainz
+- path: data
+- path: listenbrainz_spark

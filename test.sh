@@ -117,7 +117,7 @@ function unit_stop {
 
 function unit_dcdown {
     # Shutting down all unit test containers associated with this project
-    invoke_docker_compose down
+    invoke_docker_compose down -v
 }
 
 function build_frontend_containers {
@@ -254,13 +254,13 @@ if [ $DB_EXISTS -eq 1 ] && [ $DB_RUNNING -eq 1 ] ; then
     bring_up_unit_db
     unit_setup
     echo "Running tests"
-    docker_compose_run listenbrainz pytest "$@"
+    docker_compose_run listenbrainz env APPMAP=true pytest --trace-config -svv "$@"
     RET=$?
     unit_dcdown
     exit $RET
 else
     # Else, we have containers, just run tests
     echo "Running tests"
-    docker_compose_run listenbrainz pytest "$@"
+    docker_compose_run listenbrainz env APPMAP=true pytest --trace-config -svv "$@"
     exit $?
 fi
