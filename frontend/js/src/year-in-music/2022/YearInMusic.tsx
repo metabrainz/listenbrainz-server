@@ -45,9 +45,7 @@ import MagicShareButton from "./MagicShareButton";
 
 import ListenCard from "../../listens/ListenCard";
 import UserListModalEntry from "../../follow/UserListModalEntry";
-import {
-  JSPFTrackToListen,
-} from "../../playlists/utils";
+import { JSPFTrackToListen } from "../../playlists/utils";
 import { COLOR_BLACK, COLOR_LB_ORANGE } from "../../utils/constants";
 import SimpleModal from "../../utils/SimpleModal";
 import Card from "../../components/Card";
@@ -874,29 +872,22 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="card content-card" id="user-artist-map">
               <h3 className="text-center">
-                What country are {yourOrUsersName} favorite artists from?{" "}
+                What countries are {yourOrUsersName} favorite artists from?{" "}
+                <FontAwesomeIcon
+                  icon={faQuestionCircle}
+                  data-tip
+                  data-for="most-listened-year-helptext"
+                  size="xs"
+                />
+                <Tooltip id="most-listened-year-helptext">
+                  Click on a country to see more details
+                </Tooltip>
               </h3>
               {artistMapDataForGraph ? (
-                <Card
-                  style={{
-                    marginTop: 20,
-                    minHeight: 600,
-                  }}
-                >
-                  <div className="row">
-                    <div className="col-md-9 col-xs-6">
-                      <h3 style={{ marginLeft: 20 }}>
-                        <span className="capitalize-bold">Artist Origins</span>
-                        <small>
-                          &nbsp;Click on a country to see more details
-                        </small>
-                      </h3>
-                    </div>
-                    <div
-                      className="col-md-2 col-xs-4 text-right"
-                      style={{ marginTop: 20 }}
-                    >
-                      <span>Rank by</span>
+                <div className="graph-container">
+                  <div className="graph">
+                    <div style={{ paddingLeft: "3em" }}>
+                      <span>Rank by number of</span>
                       <span className="dropdown">
                         <button
                           className="dropdown-toggle btn-transparent capitalize-bold"
@@ -942,28 +933,21 @@ export default class YearInMusic extends React.Component<
                         </ul>
                       </span>
                     </div>
-                    <div className="col-md-1 col-xs-2 text-right">
-                      <h4 style={{ marginTop: 20 }}>
-                        <a href="#artist-origin">
-                          <FontAwesomeIcon
-                            icon={faLink as IconProp}
-                            size="sm"
-                            color={COLOR_BLACK}
-                            style={{ marginRight: 20 }}
-                          />
-                        </a>
-                      </h4>
-                    </div>
+                    <CustomChoropleth
+                      width={700}
+                      data={artistMapDataForGraph}
+                      selectedMetric={selectedMetric}
+                      colorScaleRange={[
+                        "#ffeec2",
+                        "#ffdb80",
+                        "#ffcc49",
+                        "#ff9c40",
+                        "#ff6b36",
+                        "#ff0a23",
+                      ]}
+                    />
                   </div>
-                  <div className="row">
-                    <div className="col-xs-12">
-                      <CustomChoropleth
-                        data={artistMapDataForGraph}
-                        selectedMetric={selectedMetric}
-                      />
-                    </div>
-                  </div>
-                </Card>
+                </div>
               ) : (
                 noDataText
               )}
