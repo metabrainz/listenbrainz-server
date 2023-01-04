@@ -515,7 +515,7 @@ def feedback(user_name: str):
 
 @user_bp.route("/<user_name>/year-in-music/")
 @user_bp.route("/<user_name>/year-in-music/<int:year>/")
-def year_in_music(user_name, year: int = 2021):
+def year_in_music(user_name, year: int = 2022):
     """ Year in Music """
     if year != 2021 and year != 2022:
         raise NotFound(f"Cannot find Year in Music report for year: {year}")
