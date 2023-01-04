@@ -1,6 +1,6 @@
 {{user_name}}, your ListenBrainz Year in Music 2022 is now available.
 
-We have compiled the Year in Music report for 2022 (https://listenbrainz.org/user/{{user_name}}/year-in-music/), which summarises of your listening habits throughout the year. Some of the statistics you can expect to see include your most active listening day of the week, your listening days throughout the year, and users who listened to similar music to you. Additionally, we have included information about the countries where your favorite artists are from.
+We have compiled the Year in Music report for 2022 (https://listenbrainz.org/user/{{user_name}}/year-in-music/), which summarises your listening habits throughout the year. Some of the statistics you can expect to see include your most active listening day of the week, your listening days throughout the year, and users who listened to similar music to you. Additionally, we have included information about the countries where your favorite artists are from.
 
 To top it off, we have also generated two new playlists for you to discover even more music in 2023. We hope you enjoy the report and the new playlists.
 
