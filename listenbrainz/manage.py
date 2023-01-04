@@ -18,6 +18,7 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
 from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
 from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
+from listenbrainz.troi.year_in_music import fixup_yim_playlists
 from listenbrainz.webserver import create_app
 
 
@@ -333,3 +334,9 @@ def refresh_top_manual_mappings():
         app.logger.info("Starting process to refresh top manual mappings")
         ts_refresh_top_manual_mappings()
         app.logger.info("Completed process to refresh top manual mappings")
+
+
+@cli.command()
+def run_fixup_yim_playlists():
+    with create_app().app_context():
+        fixup_yim_playlists()
