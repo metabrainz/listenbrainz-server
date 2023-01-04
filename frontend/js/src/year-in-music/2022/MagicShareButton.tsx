@@ -169,7 +169,7 @@ export default function MagicShareButton({
               </h4>
             </div>
             <div className="modal-body">
-              <canvas ref={canvasRef} />
+              <canvas ref={canvasRef} width={600} height={600} />
               <p>
                 <button
                   className="btn btn-primary"
