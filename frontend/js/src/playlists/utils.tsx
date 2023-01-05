@@ -76,6 +76,18 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
     },
     user_name: customFields?.added_by,
   };
+  const caa_id = customFields?.additional_metadata?.caa_id;
+  const caa_release_mbid = customFields?.additional_metadata?.caa_release_mbid;
+  if (caa_id && caa_release_mbid) {
+    listen.track_metadata.mbid_mapping = {
+      artist_mbids: [],
+      artists: [],
+      recording_mbid: "",
+      release_mbid: "",
+      caa_id,
+      caa_release_mbid,
+    };
+  }
   if (customFields?.added_at) {
     listen.listened_at_iso = customFields.added_at;
   }

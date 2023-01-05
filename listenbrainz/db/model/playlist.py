@@ -30,6 +30,8 @@ class PlaylistRecording(BaseModel):
     duration_ms: Optional[NonNegativeInt]
     image: Optional[str]  # who looks this up on CAA?
 
+    additional_metadata: Optional[Dict] = None
+
     # Computed
     added_by: constr(min_length=1)
 
@@ -39,7 +41,6 @@ class WritablePlaylistRecording(PlaylistRecording):
     playlist_id: NonNegativeInt = None
     position: NonNegativeInt = None
     created: datetime.datetime = None
-    additional_metadata: Optional[Dict] = None
     added_by: str = None
 
 

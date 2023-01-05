@@ -232,7 +232,9 @@ export default class YearInMusic extends React.Component<
         <div className="flex-center flex-wrap">
           <h3>
             We don&apos;t have enough listening data for {user.name} to produce
-            any statistics or playlists.
+            any statistics or playlists. (If you received an email from us
+            telling you that you had a report waiting for you, we apologize for
+            the goof-up. We don&apos;t -- 2022 continues to suck, sorry!)
           </h3>
           <p>
             Check out how you can submit listens by{" "}

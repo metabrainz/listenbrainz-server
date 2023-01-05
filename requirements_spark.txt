@@ -10,3 +10,4 @@ pydantic == 1.8.2
 sentry-sdk == 0.20.3
 unidecode == 1.2.0
 more-itertools==8.8.0
+pycountry==22.3.5

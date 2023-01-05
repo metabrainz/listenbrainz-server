@@ -1,29 +1,8 @@
-Dear {{ user_name }},
+{{user_name}}, your ListenBrainz Year in Music 2022 is now available.
 
-The ListenBrainz team would like to wish you happy holidays!
+We have compiled your personal Year in Music report for 2022 ( https://listenbrainz.org/user/{{user_name}}/year-in-music/ ), which summarises your listening habits throughout the year. Some of the statistics you can expect to see include your most active listening day of the week, your listening days throughout the year, and users who listened to similar music to you.
+To top it off, we've made a map of where your artists are from and we have also generated two new playlists for you to discover even more music in 2023.
+We hope you enjoy the report and the new playlists!
 
-You have been sending us your listen history during 2021 and we wanted to thank you for doing that!
-
-We have been working hard to create useful features that are based on your data and we’re proud to announce that we’ve created a personalised Year in Music report ({{ year_in_music }}) for you. Unlike the report from a certain large streaming service, we don’t indulge in weird fonts and too many splashy colours, but we do aim to create more insights into your listening experience in 2021.
-
-The Year in Music report summarises your statistics of 2021, identifies your most active listening day of the week, listening activity over the year, lists users who listen to similar music to you and includes up to 4 playlists for you to enjoy.
-
-The Top Discoveries of 2021, Tracks Released in 2021 and Top Recordings of 2021 are all playlists that review your listening habits of 2021. However, we’ve included one more playlist, the Top Missed Recordings playlist, which selects tracks that users similar to you listened to, but you didn’t. This is a discovery playlist and it may not flow as smoothly as the other playlists, but we’ve found it quite helpful to discover new music that we’ve not listened to yet.
-
-We hope that you enjoy your Year in Music review, but we also wanted to point out that we have some of these features available on the ListenBrainz website all year round:
-
-User feed page ({{ feed }}), which shows activity from your friends, including similar users, pinned tracks, recommended tracks and more.
-Statistics page ({{ statistics }}), which shows your listening statistics.
-Feedback page ({{ feedback }}) and pins page ({{ pins }}) which show tracks you loved (or hated!).
-Playlists, both your own ({{ playlists }}) and ones generated for you ({{ collaborations }}).
-
-In the new year we hope to start generating more playlist recommendations based on your listening history – stay tuned for that!
-
-Thanks for being part of it – we really appreciate it.
-
-Happy Holidays and a Happy New Year!
-
-Sincerely,
-The ListenBrainz team: akshaaatt, alastairp, lucifer, mayhem and monkey.
-
-P.S. Heads up! This page loads many album covers; if you are on a mobile device you might want to wait until you are connected to wifi.
+Happy listening, and thanks for being part of ListenBrainz!
+Wishing you a wonderful 2023, from the ListenBrainz team.

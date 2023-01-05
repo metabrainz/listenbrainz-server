@@ -464,6 +464,8 @@ declare type JSPFTrackExtension = {
   artist_identifiers: string[]; // Full MusicBrainz artist URIs
   added_at: string; // ISO date string
   release_identifier?: string; // Full MusicBrainz release URI
+
+  additional_metadata?: { [key: string]: any };
 };
 
 declare type JSPFPlaylist = {

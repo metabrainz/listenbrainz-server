@@ -7,7 +7,7 @@ from flask import current_app
 from werkzeug.exceptions import BadRequest
 
 from listenbrainz.labs_api.labs.api.spotify.utils import lookup_using_metadata
-from listenbrainz.labs_api.labs.api.utils import resolve_redirect_mbids, resolve_canonical_mbids
+from listenbrainz.db.recording import resolve_redirect_mbids, resolve_canonical_mbids
 
 
 class SpotifyIdFromMBIDQuery(Query):

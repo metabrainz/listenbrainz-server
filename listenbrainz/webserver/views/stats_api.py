@@ -890,7 +890,7 @@ def _get_artist_map_stats(user_id, stats_range):
 
 @stats_api_bp.route("/user/<user_name>/year-in-music")
 @stats_api_bp.route("/user/<user_name>/year-in-music/<int:year>")
-def year_in_music(user_name: str, year: int = 2021):
+def year_in_music(user_name: str, year: int = 2022):
     """ Get data for year in music stuff """
     if year != 2021 and year != 2022:
         raise APINotFound(f"Cannot find Year in Music report for year: {year}")

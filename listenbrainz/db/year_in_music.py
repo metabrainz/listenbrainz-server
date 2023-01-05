@@ -8,7 +8,7 @@ import psycopg2
 import sqlalchemy
 import ujson
 from flask import current_app, render_template
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_values, DictCursor
 from brainzutils import musicbrainz_db
 from psycopg2.sql import SQL, Literal
 
@@ -164,8 +164,8 @@ def insert_playlists_cover_art(year, data):
             mbid = track["identifier"].split("/")[-1]
             all_mbids.add(mbid)
 
-    with timescale.engine.connect() as connection:
-        recordings = load_recordings_from_mbids(connection, all_mbids)
+    with timescale.engine.connect() as ts_conn, ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_cursor:
+        recordings = load_recordings_from_mbids(ts_cursor, all_mbids)
 
     cover_art_data = []
     for (user_id, slug, playlist) in data:
@@ -250,7 +250,7 @@ def insert_tracks_of_the_year(year, data):
     connection.commit()
 
 
-def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
+def send_mail(subject, to_name, to_email, text, html, logo, logo_cid):
     if not to_email:
         return
 
@@ -262,7 +262,7 @@ def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
     message.set_content(text)
     message.add_alternative(html, subtype="html")
 
-    message.get_payload()[1].add_related(lb_logo, 'image', 'png', cid=lb_logo_cid, filename="listenbrainz-logo.png")
+    message.get_payload()[1].add_related(logo, 'image', 'png', cid=logo_cid, filename="year-in-music-2022-logo.png")
     if current_app.config["TESTING"]:  # Not sending any emails during the testing process
         return
 
@@ -273,9 +273,9 @@ def send_mail(subject, to_name, to_email, text, html, lb_logo, lb_logo_cid):
 
 
 def notify_yim_users(year):
-    lb_logo_cid = make_msgid()
-    with open("/static/img/listenbrainz-logo.png", "rb") as img:
-        lb_logo = img.read()
+    logo_cid = make_msgid()
+    with open("/static/img/year-in-music-22/yim-22-logo-small-compressed.png", "rb") as img:
+        logo = img.read()
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -285,7 +285,7 @@ def notify_yim_users(year):
               FROM statistics.year_in_music yim
               JOIN "user"
                 ON "user".id = yim.user_id
-             WHERE year = :year   
+             WHERE year = :year
         """), {"year": year})
         rows = result.mappings().fetchall()
 
@@ -298,31 +298,24 @@ def notify_yim_users(year):
         year_in_music = f"{base_url}/user/{user_name}/year-in-music/"
         params = {
             "user_name": user_name,
-            "year_in_music": year_in_music,
-            "statistics": f"{base_url}/user/{user_name}/reports/",
-            "feed": f"{base_url}/feed/",
-            "feedback": f"{base_url}/user/{user_name}/feedback/",
-            "pins": f"{base_url}/user/{user_name}/pins/",
-            "playlists": f"{base_url}/user/{user_name}/playlists/",
-            "collaborations": f"{base_url}/user/{user_name}/collaborations/",
-            "lb_logo_cid": lb_logo_cid[1:-1]
+            "logo_cid": logo_cid[1:-1]
         }
 
         try:
             send_mail(
-                subject="Year In Music 2021",
+                subject=f"Year In Music {year}",
                 text=render_template("emails/year_in_music.txt", **params),
                 to_email=row["email"],
                 to_name=user_name,
                 html=render_template("emails/year_in_music.html", **params),
-                lb_logo_cid=lb_logo_cid,
-                lb_logo=lb_logo
+                logo_cid=logo_cid,
+                logo=logo
             )
         except Exception:
             current_app.logger.error("Could not send YIM email to %s", user_name, exc_info=True)
 
         # create timeline event too
-        timeline_message = 'ListenBrainz\' very own retrospective on 2021 has just dropped: Check out ' \
+        timeline_message = f'ListenBrainz\' very own retrospective on {year} has just dropped: Check out ' \
                            f'your own <a href="{year_in_music}">Year in Music</a> now!'
         metadata = NotificationMetadata(creator="troi-bot", message=timeline_message)
         create_user_notification_event(row["user_id"], metadata)
