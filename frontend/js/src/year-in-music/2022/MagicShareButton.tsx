@@ -173,7 +173,7 @@ export default function MagicShareButton({
             <div className="modal-body">
               <canvas
                 ref={canvasRef}
-                style={{ width: "400px", height: "400px" }}
+                style={{ width: "100%", height: "auto" }}
                 width="924"
                 height="924"
               />
