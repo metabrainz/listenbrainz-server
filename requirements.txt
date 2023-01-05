@@ -1,3 +1,4 @@
+appmap == 1.12.8
 Flask-Admin == 1.6.0
 Flask-Testing == 0.8.1
 Flask-Login == 0.6.1
