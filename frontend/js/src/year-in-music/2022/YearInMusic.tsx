@@ -401,6 +401,9 @@ export default class YearInMusic extends React.Component<
             (year) => year >= mostListenedMinYear && year <= mostListenedMaxYear
           )
       );
+      if (!mostListenedYearTicks.includes(mostListenedMaxYear)) {
+        mostListenedYearTicks.push(mostListenedMaxYear);
+      }
     }
 
     /* Users artist map */
