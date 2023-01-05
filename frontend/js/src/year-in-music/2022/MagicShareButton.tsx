@@ -54,7 +54,7 @@ export default function MagicShareButton({
         anonymousCrossOrigin: true,
       });
       // Start SVG rendering
-      await v.render();
+      await v.render({ignoreDimensions:true});
       canvas?.toBlob((blob) => {
         if (blob) {
           setSvgBlob(blob);
@@ -169,7 +169,7 @@ export default function MagicShareButton({
               </h4>
             </div>
             <div className="modal-body">
-              <canvas ref={canvasRef} width={600} height={600} />
+              <canvas ref={canvasRef} width={550} height={550} />
               <p>
                 <button
                   className="btn btn-primary"
