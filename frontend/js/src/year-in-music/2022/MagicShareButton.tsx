@@ -56,8 +56,6 @@ export default function MagicShareButton({
       // Start SVG rendering
       await v.render({
         ignoreDimensions: true,
-        scaleWidth: canvas?.width || 550,
-        scaleHeight: canvas?.height || 550,
       });
       canvas?.toBlob((blob) => {
         if (blob) {
@@ -173,7 +171,12 @@ export default function MagicShareButton({
               </h4>
             </div>
             <div className="modal-body">
-              <canvas ref={canvasRef} width={550} height={550} />
+              <canvas
+                ref={canvasRef}
+                style={{ width: "400px", height: "400px" }}
+                width="924"
+                height="924"
+              />
               <p>
                 <button
                   className="btn btn-primary"
