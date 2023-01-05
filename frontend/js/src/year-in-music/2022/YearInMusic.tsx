@@ -323,20 +323,20 @@ export default class YearInMusic extends React.Component<
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
-        <div role="main" id="year-in-music" className="yim-2022">
+        <div role="main" id="year-in-music" className="yim-2022 container">
           <div id="main-header" className="flex-center">
             <img
               className="img-responsive header-image"
-              src="/static/img/year-in-music-22/logo-with-text.png"
+              src="/static/img/year-in-music-22/yim22-logo.png"
               alt="Your year in music 2022"
             />
           </div>
-          <div className="flex-center flex-wrap">
-            <h3>
+          <div className="flex-wrap">
+            <h3 className="center-p">
               We don&apos;t have enough listening data for {user.name} to
               produce any statistics or playlists.
             </h3>
-            <p>
+            <p className="center-p">
               Check out how you can submit listens by{" "}
               <a href="/profile/music-services/details/">
                 connecting a music service
