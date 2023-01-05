@@ -1012,8 +1012,7 @@ export default class YearInMusic extends React.Component<
                     />
                     <Tooltip id="new-albums-helptext">
                       Albums and singles released in 2022 from artists{" "}
-                      {youOrUsername}
-                      listen{!isCurrentUser ? "s" : ""} to.
+                      {youOrUsername} listened to.
                       <br />
                       Missed anything?
                     </Tooltip>
