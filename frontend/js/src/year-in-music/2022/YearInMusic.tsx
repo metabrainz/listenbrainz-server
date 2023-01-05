@@ -323,20 +323,20 @@ export default class YearInMusic extends React.Component<
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
-        <div role="main" id="year-in-music" className="yim-2022">
+        <div role="main" id="year-in-music" className="yim-2022 container">
           <div id="main-header" className="flex-center">
             <img
               className="img-responsive header-image"
-              src="/static/img/year-in-music-22/logo-with-text.png"
+              src="/static/img/year-in-music-22/yim22-logo.png"
               alt="Your year in music 2022"
             />
           </div>
-          <div className="flex-center flex-wrap">
-            <h3>
+          <div>
+            <h3 className="center-p">
               We don&apos;t have enough listening data for {user.name} to
               produce any statistics or playlists.
             </h3>
-            <p>
+            <p className="center-p">
               Check out how you can submit listens by{" "}
               <a href="/profile/music-services/details/">
                 connecting a music service
@@ -373,6 +373,7 @@ export default class YearInMusic extends React.Component<
 
     /* Most listened years */
     let mostListenedYearDataForGraph;
+    let mostListenedYearTicks;
     if (isEmpty(yearInMusicData.most_listened_year)) {
       missingSomeData = true;
     } else {
@@ -387,6 +388,19 @@ export default class YearInMusic extends React.Component<
         // Set to 0 for years without data
         songs: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
       }));
+      // Round to nearest 5 year mark but don't add dates that are out of the range of the listening history
+      const mostListenedYearYears = uniq(
+        mostListenedYearDataForGraph.map((datum) => datum.year)
+      );
+      const mostListenedMaxYear = Math.max(...mostListenedYearYears);
+      const mostListenedMinYear = Math.min(...mostListenedYearYears);
+      mostListenedYearTicks = uniq(
+        mostListenedYearYears
+          .map((year) => Math.round((year + 1) / 5) * 5)
+          .filter(
+            (year) => year >= mostListenedMinYear && year <= mostListenedMaxYear
+          )
+      );
     }
 
     /* Users artist map */
@@ -455,7 +469,7 @@ export default class YearInMusic extends React.Component<
         We were not able to calculate this data for {youOrUsername}
       </div>
     );
-    const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/`;
+    const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2022`;
     return (
       <div role="main" id="year-in-music" className="yim-2022">
         <div id="main-header" className="flex-center">
@@ -518,7 +532,11 @@ export default class YearInMusic extends React.Component<
                     slidesPerView={2}
                     initialSlide={0}
                     centeredSlides
-                    lazy={{ enabled: true, loadPrevNext: true }}
+                    lazy={{
+                      enabled: true,
+                      loadPrevNext: true,
+                      loadPrevNextAmount: 4,
+                    }}
                     watchSlidesProgress
                     navigation
                     effect="coverflow"
@@ -604,7 +622,7 @@ export default class YearInMusic extends React.Component<
             <div className="header">
               Charts
               <div className="subheader">
-                These got you through the year. Respect.
+                These got {youOrUsername} through the year. Respect.
               </div>
             </div>
             <div className="flex flex-wrap">
@@ -758,7 +776,8 @@ export default class YearInMusic extends React.Component<
                   size="xs"
                 />
                 <Tooltip id="listening-activity">
-                  How many tracks did you listen to each day of the year?
+                  How many tracks did {youOrUsername} listen to each day of the
+                  year?
                 </Tooltip>
               </h3>
               {listensPerDayForGraph ? (
@@ -829,8 +848,9 @@ export default class YearInMusic extends React.Component<
                   size="xs"
                 />
                 <Tooltip id="most-listened-year-helptext">
-                  How much were you on the lookout for new music this year? Not
-                  that we&apos;re judging.
+                  How much {isCurrentUser ? "were you" : `was ${user.name}`} on
+                  the lookout for new music this year? Not that we&apos;re
+                  judging.
                 </Tooltip>
               </h3>
               {mostListenedYearDataForGraph ? (
@@ -846,12 +866,7 @@ export default class YearInMusic extends React.Component<
                       colors="#ff0e25"
                       enableLabel={false}
                       axisBottom={{
-                        // Round to nearest 5 year mark
-                        tickValues: uniq(
-                          mostListenedYearDataForGraph.map(
-                            (datum) => Math.round((datum.year + 1) / 5) * 5
-                          )
-                        ),
+                        tickValues: mostListenedYearTicks,
                       }}
                       axisLeft={{
                         legend: "Number of listens",
@@ -957,7 +972,9 @@ export default class YearInMusic extends React.Component<
           <div className="container">
             <div className="header">
               2022 Playlists
-              <div className="subheader">Generated just for you.</div>
+              <div className="subheader">
+                Generated just for {youOrUsername}.
+              </div>
             </div>
             <div className="row flex flex-wrap" id="playlists">
               {Boolean(topDiscoveriesPlaylist) &&
@@ -1007,8 +1024,8 @@ export default class YearInMusic extends React.Component<
                       size="xs"
                     />
                     <Tooltip id="new-albums-helptext">
-                      Albums and singles released in 2022 from artists you
-                      listen to.
+                      Albums and singles released in 2022 from artists{" "}
+                      {youOrUsername} listened to.
                       <br />
                       Missed anything?
                     </Tooltip>
