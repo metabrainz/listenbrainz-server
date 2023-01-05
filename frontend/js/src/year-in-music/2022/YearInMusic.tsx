@@ -535,7 +535,7 @@ export default class YearInMusic extends React.Component<
                     lazy={{
                       enabled: true,
                       loadPrevNext: true,
-                      loadPrevNextAmount: 4,
+                      loadPrevNextAmount: 2,
                     }}
                     watchSlidesProgress
                     navigation
@@ -547,9 +547,14 @@ export default class YearInMusic extends React.Component<
                     }}
                     breakpoints={{
                       700: {
-                        initialSlide: 2,
+                        initialSlide: 1,
                         spaceBetween: 100,
                         slidesPerView: 3,
+                        lazy: {
+                          enabled: true,
+                          loadPrevNext: true,
+                          loadPrevNextAmount: 6,
+                        },
                         coverflowEffect: {
                           rotate: 20,
                           depth: 300,
