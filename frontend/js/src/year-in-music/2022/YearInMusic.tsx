@@ -604,7 +604,7 @@ export default class YearInMusic extends React.Component<
             <div className="header">
               Charts
               <div className="subheader">
-                These got you through the year. Respect.
+                These got {youOrUsername} through the year. Respect.
               </div>
             </div>
             <div className="flex flex-wrap">
@@ -758,7 +758,8 @@ export default class YearInMusic extends React.Component<
                   size="xs"
                 />
                 <Tooltip id="listening-activity">
-                  How many tracks did you listen to each day of the year?
+                  How many tracks did {youOrUsername} listen to each day of the
+                  year?
                 </Tooltip>
               </h3>
               {listensPerDayForGraph ? (
@@ -829,8 +830,9 @@ export default class YearInMusic extends React.Component<
                   size="xs"
                 />
                 <Tooltip id="most-listened-year-helptext">
-                  How much were you on the lookout for new music this year? Not
-                  that we&apos;re judging.
+                  How much {isCurrentUser ? "were you" : `was ${user.name}`} on
+                  the lookout for new music this year? Not that we&apos;re
+                  judging.
                 </Tooltip>
               </h3>
               {mostListenedYearDataForGraph ? (
@@ -957,7 +959,9 @@ export default class YearInMusic extends React.Component<
           <div className="container">
             <div className="header">
               2022 Playlists
-              <div className="subheader">Generated just for you.</div>
+              <div className="subheader">
+                Generated just for {youOrUsername}.
+              </div>
             </div>
             <div className="row flex flex-wrap" id="playlists">
               {Boolean(topDiscoveriesPlaylist) &&
@@ -1007,8 +1011,9 @@ export default class YearInMusic extends React.Component<
                       size="xs"
                     />
                     <Tooltip id="new-albums-helptext">
-                      Albums and singles released in 2022 from artists you
-                      listen to.
+                      Albums and singles released in 2022 from artists{" "}
+                      {youOrUsername}
+                      listen{!isCurrentUser ? "s" : ""} to.
                       <br />
                       Missed anything?
                     </Tooltip>
