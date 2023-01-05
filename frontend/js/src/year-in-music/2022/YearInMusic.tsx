@@ -532,7 +532,11 @@ export default class YearInMusic extends React.Component<
                     slidesPerView={2}
                     initialSlide={0}
                     centeredSlides
-                    lazy={{ enabled: true, loadPrevNext: true,loadPrevNextAmount:4 }}
+                    lazy={{
+                      enabled: true,
+                      loadPrevNext: true,
+                      loadPrevNextAmount: 4,
+                    }}
                     watchSlidesProgress
                     navigation
                     effect="coverflow"
