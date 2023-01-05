@@ -1,9 +1,6 @@
-from uuid import UUID
-
 import ujson
 from flask import current_app
 from more_itertools import chunked
-from psycopg2.extras import execute_values
 from sqlalchemy import text
 from troi.core import generate_playlist
 from troi.patches.top_discoveries_for_year import TopDiscoveries
@@ -11,7 +8,6 @@ from troi.patches.top_missed_recordings_for_year import TopMissedTracksPatch
 from troi.playlist import _serialize_to_jspf
 
 from listenbrainz import db
-from listenbrainz.db import timescale
 from listenbrainz.db.year_in_music import insert_playlists, insert_playlists_cover_art
 
 USERS_PER_BATCH = 25
@@ -63,35 +59,3 @@ def generate_playlists_for_batch(batch, patches):
                 current_app.logger.error("Error while generate YIM playlist:", exc_info=True)
 
     return yim_playlists
-
-
-def fixup_yim_playlists():
-    """ Fix the year in YIM playlists"""
-    query = """
-            SELECT user_id
-                 , data->'playlist-top-missed-recordings-for-year'->>'identifier' AS missed
-                 , data->'playlist-top-discoveries-for-year'->>'identifier' AS discoveries
-              FROM statistics.year_in_music
-             WHERE year = 2022;
-    """
-    with db.engine.connect() as conn:
-        rows = conn.execute(text(query)).mappings().all()
-
-    playlist_mbids = []
-    for row in rows:
-        if row["missed"] is not None:
-            playlist_mbids.append(row["missed"].split("/")[-2])
-
-        if row["discoveries"] is not None:
-            playlist_mbids.append(row["discoveries"].split("/")[-2])
-
-    fix_query = """
-          WITH t(mbid) AS (VALUES %s)
-        UPDATE playlist.playlist p
-           SET name = replace(name, '2023', '2022')
-             , description = replace(description, '2023', '2022')
-          FROM t
-         WHERE t.mbid = p.mbid
-    """
-    with timescale.engine.begin() as conn, conn.connection.cursor() as cursor:
-        execute_values(cursor, fix_query, [(UUID(mbid),) for mbid in playlist_mbids])
