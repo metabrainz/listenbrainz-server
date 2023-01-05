@@ -3,7 +3,7 @@ import panzoom, { PanZoom } from "panzoom";
 import { createRoot } from "react-dom/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHandPointRight, faSyncAlt } from "@fortawesome/free-solid-svg-icons";
-import * as jsonMap from "./rainbow1-100-7.jpg.json";
+import * as jsonMap from "./rainbow1-100-7.json";
 import { getPageProps } from "../../utils/utils";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 
