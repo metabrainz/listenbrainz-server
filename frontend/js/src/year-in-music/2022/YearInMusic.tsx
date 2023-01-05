@@ -331,7 +331,7 @@ export default class YearInMusic extends React.Component<
               alt="Your year in music 2022"
             />
           </div>
-          <div className="flex-wrap">
+          <div>
             <h3 className="center-p">
               We don&apos;t have enough listening data for {user.name} to
               produce any statistics or playlists.
