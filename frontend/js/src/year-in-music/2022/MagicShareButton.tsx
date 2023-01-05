@@ -54,7 +54,11 @@ export default function MagicShareButton({
         anonymousCrossOrigin: true,
       });
       // Start SVG rendering
-      await v.render({ignoreDimensions:true});
+      await v.render({
+        ignoreDimensions: true,
+        scaleWidth: canvas?.width || 550,
+        scaleHeight: canvas?.height || 550,
+      });
       canvas?.toBlob((blob) => {
         if (blob) {
           setSvgBlob(blob);
