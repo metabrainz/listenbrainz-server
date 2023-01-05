@@ -373,6 +373,7 @@ export default class YearInMusic extends React.Component<
 
     /* Most listened years */
     let mostListenedYearDataForGraph;
+    let mostListenedYearTicks;
     if (isEmpty(yearInMusicData.most_listened_year)) {
       missingSomeData = true;
     } else {
@@ -387,6 +388,19 @@ export default class YearInMusic extends React.Component<
         // Set to 0 for years without data
         songs: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
       }));
+      // Round to nearest 5 year mark but don't add dates that are out of the range of the listening history
+      const mostListenedYearYears = uniq(
+        mostListenedYearDataForGraph.map((datum) => datum.year)
+      );
+      const mostListenedMaxYear = Math.max(...mostListenedYearYears);
+      const mostListenedMinYear = Math.min(...mostListenedYearYears);
+      mostListenedYearTicks = uniq(
+        mostListenedYearYears
+          .map((year) => Math.round((year + 1) / 5) * 5)
+          .filter(
+            (year) => year >= mostListenedMinYear && year <= mostListenedMaxYear
+          )
+      );
     }
 
     /* Users artist map */
@@ -848,12 +862,7 @@ export default class YearInMusic extends React.Component<
                       colors="#ff0e25"
                       enableLabel={false}
                       axisBottom={{
-                        // Round to nearest 5 year mark
-                        tickValues: uniq(
-                          mostListenedYearDataForGraph.map(
-                            (datum) => Math.round((datum.year + 1) / 5) * 5
-                          )
-                        ),
+                        tickValues: mostListenedYearTicks,
                       }}
                       axisLeft={{
                         legend: "Number of listens",
