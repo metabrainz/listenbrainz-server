@@ -29,14 +29,14 @@ export function getTrackExtension(
 }
 
 export function getPlaylistId(playlist?: JSPFPlaylist): string {
-  return playlist?.identifier?.substr(PLAYLIST_URI_PREFIX.length) ?? "";
+  return playlist?.identifier?.replace(PLAYLIST_URI_PREFIX, "") ?? "";
 }
 
 export function getRecordingMBIDFromJSPFTrack(track: JSPFTrack): string {
-  return track.identifier?.substr(PLAYLIST_TRACK_URI_PREFIX.length) ?? "";
+  return track.identifier?.replace(PLAYLIST_TRACK_URI_PREFIX, "") ?? "";
 }
 export function getArtistMBIDFromURI(URI: string): string {
-  return URI?.substr(PLAYLIST_ARTIST_URI_PREFIX.length) ?? "";
+  return URI?.replace(PLAYLIST_ARTIST_URI_PREFIX, "") ?? "";
 }
 
 // Originally by Sinjai https://stackoverflow.com/a/67462589
