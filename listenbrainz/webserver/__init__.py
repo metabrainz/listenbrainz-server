@@ -69,15 +69,6 @@ def create_app(debug=None):
         use_flask_uuid=True,
     )
 
-    try:
-        import appmap
-        from appmap.flask import AppmapFlask
-
-        if appmap.enabled():
-            AppmapFlask().init_app(app)
-    except ImportError:
-        pass
-
     load_config(app)
     if debug is not None:
         app.debug = debug

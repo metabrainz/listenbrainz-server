@@ -61,7 +61,6 @@ RUN pip3 install --no-cache-dir -r requirements_development.txt
 RUN mkdir /code/listenbrainz/docs
 COPY ./docs/requirements.txt /code/listenbrainz/docs
 RUN pip3 install --no-cache-dir -r ./docs/requirements.txt
-RUN pip3 install --no-cache-dir appmap
 COPY . /code/listenbrainz
 
 
