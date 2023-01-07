@@ -1,6 +1,9 @@
 import * as React from "react";
+import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchDropDown from "./SearchDropDown";
+import ListenControl from "../listens/ListenControl";
+import SubmitListenInfo from "./submit-listen-info";
 
 type TrackType = {
   artist_credit_id: number;
@@ -16,6 +19,7 @@ export interface AddListenModalState {
   SearchField: string;
   TrackResults: Array<TrackType>;
   SelectedTrack: TrackType;
+  TrackIsSelected: Boolean;
 }
 
 export default class AddListenModal extends React.Component<
@@ -31,25 +35,41 @@ export default class AddListenModal extends React.Component<
       SearchField: "",
       TrackResults: [],
       SelectedTrack: {},
+      TrackIsSelected: false,
     };
   }
 
-  closeModal = () => {};
+  closeModal = () => {
+    this.setState({
+      ListenOption: "track",
+      SearchField: "",
+      TrackResults: [],
+      SelectedTrack: {},
+      TrackIsSelected: false,
+    });
+  };
 
   addTrack = () => {
     this.setState({
       ListenOption: "track",
+      SearchField: "",
+      TrackResults: [],
+      SelectedTrack: {},
+      TrackIsSelected: false,
     });
   };
 
   addAlbum = () => {
     this.setState({
       ListenOption: "album",
+      SearchField: "",
+      TrackResults: [],
+      SelectedTrack: {},
+      TrackIsSelected: false,
     });
   };
 
   TrackName = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { SearchField } = this.state;
     this.setState({
       SearchField: event.target.value,
     });
@@ -70,28 +90,19 @@ export default class AddListenModal extends React.Component<
       );
 
       const parsedResponse = await response.json();
-      this.setState(
-        {
-          TrackResults: parsedResponse,
-        },
-        () => {
-          console.log(this.state.TrackResults);
-        }
-      );
+      this.setState({
+        TrackResults: parsedResponse,
+      });
     } catch (error) {
       console.debug(error);
     }
   };
 
   addTrackMetadata = (track: TrackType) => {
-    this.setState(
-      {
-        SelectedTrack: track,
-      },
-      () => {
-        console.log(this.state.SelectedTrack);
-      }
-    );
+    this.setState({
+      SelectedTrack: track,
+      TrackIsSelected: true,
+    });
   };
 
   componentDidUpdate(pp, ps, ss) {
@@ -101,7 +112,13 @@ export default class AddListenModal extends React.Component<
   }
 
   render() {
-    const { ListenOption, TrackResults } = this.state;
+    const {
+      ListenOption,
+      TrackResults,
+      TrackIsSelected,
+      SelectedTrack,
+      SearchField,
+    } = this.state;
     return (
       <div
         className="modal fade"
@@ -152,55 +169,32 @@ export default class AddListenModal extends React.Component<
                   Add album
                 </button>
               </div>
-              <input
-                type="text"
-                className="form-control add-track-field"
-                onChange={this.TrackName}
-                placeholder="Add Artist name followed by Track name"
-              />
-              <SearchDropDown
-                TrackResults={TrackResults}
-                action={this.addTrackMetadata}
-              />
-              {/* {users.map((user) => {
-                return (
-                  <NamePill
-                    title={user}
-                    // eslint-disable-next-line react/jsx-no-bind
-                    closeAction={this.removeUser.bind(this, user)}
-                  />
-                );
-              })}
-              <input
-                type="text"
-                className="form-control"
-                onChange={this.searchUsers}
-                placeholder="Add followers*"
-              />
-              <SearchDropDown
-                suggestions={suggestions}
-                // eslint-disable-next-line react/jsx-no-bind
-                action={this.addUser}
-              />
-              <p>Leave a message (optional)</p>
-              <div className="form-group">
-                <textarea
-                  className="form-control"
-                  id="blurb-content"
-                  placeholder="You will love this song because..."
-                  value={blurbContent}
-                  name="blurb-content"
-                  rows={4}
-                  style={{ resize: "vertical" }}
-                  onChange={this.handleBlurbInputChange}
-                />
-              </div>
-              <small className="character-count">
-                {blurbContent.length} / {this.maxBlurbContentLength}
-                <br />
-                *Can’t find a user? Make sure they are following you, and then
-                try again.
-              </small> */}
+              {ListenOption === "track" &&
+                (TrackIsSelected === false ? (
+                  <div>
+                    <input
+                      type="text"
+                      className="form-control add-track-field"
+                      onChange={this.TrackName}
+                      placeholder="Add Artist name followed by Track name"
+                      value={SearchField}
+                    />
+                    <SearchDropDown
+                      TrackResults={TrackResults}
+                      action={this.addTrackMetadata}
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <div className="addtrackpill">
+                      <div>
+                        <span>{`${SelectedTrack.recording_name} - ${SelectedTrack.artist_credit_name}`}</span>
+                        <ListenControl text="" icon={faTimesCircle} />
+                      </div>
+                    </div>
+                    <SubmitListenInfo SelectedTrack={SelectedTrack} />
+                  </div>
+                ))}
             </div>
             <div className="modal-footer">
               <button
