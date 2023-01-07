@@ -33,6 +33,7 @@ import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
 import PinRecordingModal from "../pins/PinRecordingModal";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+import AddListenModal from "../add-listen/add-listen-modal";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
@@ -840,7 +841,17 @@ export default class Listens extends React.Component<
       listens[listens.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
-        {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
+        <div className="listen-header">
+          {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
+          <button
+            className="btn btn-primary add-listen-btn"
+            data-Toggle="modal"
+            data-Target="#AddListenModal"
+          >
+            Add listen
+          </button>
+        </div>
+
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {playingNowListen && this.getListenCard(playingNowListen)}
@@ -1031,6 +1042,7 @@ export default class Listens extends React.Component<
                       }
                       newAlert={newAlert}
                     />
+                    <AddListenModal />
                   </>
                 )}
               </div>

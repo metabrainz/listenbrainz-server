@@ -235,7 +235,7 @@ export default class YearInMusic extends React.Component<
       <div className="card content-card mb-10" id={`${coverArtKey}`}>
         <div className="center-p">
           <object
-            style={{maxWidth:"100%"}}
+            style={{ maxWidth: "100%" }}
             data={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=${coverArtKey}`}
           >{`SVG of cover art for Top Discovery Playlist for ${user.name}`}</object>
           <h4>
@@ -841,7 +841,12 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="row flex flex-wrap" id="playlists">
               {Boolean(topDiscoveriesPlaylist) &&
-                this.showTopLevelPlaylist(0, topDiscoveriesPlaylist, "discovery-playlist", listens)}
+                this.showTopLevelPlaylist(
+                  0,
+                  topDiscoveriesPlaylist,
+                  "discovery-playlist",
+                  listens
+                )}
               {Boolean(topMissedRecordingsPlaylist) &&
                 this.showTopLevelPlaylist(
                   1,
