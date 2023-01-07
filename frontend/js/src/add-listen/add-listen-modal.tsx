@@ -1,5 +1,7 @@
 import * as React from "react";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchDropDown from "./SearchDropDown";
 import ListenControl from "../listens/ListenControl";
@@ -20,6 +22,8 @@ export interface AddListenModalState {
   TrackResults: Array<TrackType>;
   SelectedTrack: TrackType;
   TrackIsSelected: Boolean;
+  TimestampOption: string;
+  dateTimePickerValue: Date;
 }
 
 export default class AddListenModal extends React.Component<
@@ -36,6 +40,8 @@ export default class AddListenModal extends React.Component<
       TrackResults: [],
       SelectedTrack: {},
       TrackIsSelected: false,
+      TimestampOption: "now",
+      dateTimePickerValue: Date.now(),
     };
   }
 
@@ -46,6 +52,8 @@ export default class AddListenModal extends React.Component<
       TrackResults: [],
       SelectedTrack: {},
       TrackIsSelected: false,
+      TimestampOption: "now",
+      dateTimePickerValue: Date.now(),
     });
   };
 
@@ -56,6 +64,8 @@ export default class AddListenModal extends React.Component<
       TrackResults: [],
       SelectedTrack: {},
       TrackIsSelected: false,
+      TimestampOption: "now",
+      dateTimePickerValue: Date.now(),
     });
   };
 
@@ -66,6 +76,21 @@ export default class AddListenModal extends React.Component<
       TrackResults: [],
       SelectedTrack: {},
       TrackIsSelected: false,
+      TimestampOption: "now",
+      dateTimePickerValue: Date.now(),
+    });
+  };
+
+  timestampNow = () => {
+    this.setState({
+      TimestampOption: "now",
+      dateTimePickerValue: Date.now(),
+    });
+  };
+
+  timestampCustom = () => {
+    this.setState({
+      TimestampOption: "custom",
     });
   };
 
@@ -105,6 +130,20 @@ export default class AddListenModal extends React.Component<
     });
   };
 
+  onChangeDateTimePicker = async (newDateTimePickerValue: Date | Date[]) => {
+    if (!newDateTimePickerValue) {
+      return;
+    }
+    this.setState(
+      {
+        dateTimePickerValue: newDateTimePickerValue,
+      },
+      () => {
+        console.log(this.state.dateTimePickerValue);
+      }
+    );
+  };
+
   componentDidUpdate(pp, ps, ss) {
     if (ps.SearchField !== this.state.SearchField) {
       this.SearchTrack();
@@ -118,6 +157,7 @@ export default class AddListenModal extends React.Component<
       TrackIsSelected,
       SelectedTrack,
       SearchField,
+      TimestampOption,
     } = this.state;
     return (
       <div
@@ -193,6 +233,31 @@ export default class AddListenModal extends React.Component<
                       </div>
                     </div>
                     <SubmitListenInfo SelectedTrack={SelectedTrack} />
+                    <div className="timestamp">
+                      <span>Timestamp</span>
+                      <button
+                        type="button"
+                        className={`btn btn-primary add-listen ${
+                          TimestampOption == "now"
+                            ? "timestamp-active"
+                            : "timestamp-unactive"
+                        }`}
+                        onClick={this.timestampNow}
+                      >
+                        Now
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-primary add-listen ${
+                          TimestampOption == "custom"
+                            ? "timestamp-active"
+                            : "timestamp-unactive"
+                        }`}
+                        onClick={this.timestampCustom}
+                      >
+                        Custom
+                      </button>
+                    </div>
                   </div>
                 ))}
             </div>
