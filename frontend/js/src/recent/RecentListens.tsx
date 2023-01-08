@@ -206,7 +206,7 @@ export default class RecentListens extends React.Component<
 
     return (
       <div role="main">
-        <h3>Recent listen</h3>
+        <h3>Recent listens</h3>
         <div className="row">
           <div className="col-md-8">
             {!listens.length && (
