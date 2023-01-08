@@ -51,20 +51,7 @@ export default class AddListenModal extends React.Component<
     };
   }
 
-  closeModal = () => {
-    this.setState({
-      ListenOption: "track",
-      SearchField: "",
-      TrackResults: [],
-      SelectedTrack: {artist_credit_id: 0,
-        artist_credit_name: "",
-        recording_mbid: "",
-        recording_name: "",
-        release_mbid: "",
-        release_name: "",},
-      TrackIsSelected: false,
-    });
-  };
+  
 
   addTrack = () => {
     this.setState({
@@ -153,6 +140,21 @@ export default class AddListenModal extends React.Component<
       this.SearchTrack();
     }
   }
+
+  closeModal = () => {
+    this.setState({
+      ListenOption: "track",
+      SearchField: "",
+      TrackResults: [],
+      SelectedTrack: {artist_credit_id: 0,
+        artist_credit_name: "",
+        recording_mbid: "",
+        recording_name: "",
+        release_mbid: "",
+        release_name: "",},
+      TrackIsSelected: false,
+    });
+  };
 
   render() {
     const {
