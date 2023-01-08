@@ -6,13 +6,17 @@ import ListenControl from "../listens/ListenControl";
 import SubmitListenInfo from "./submit-listen-info";
 
 type TrackType = {
-  artist_credit_id: number;
-  artist_credit_name: string;
-  recording_mbid: string;
-  recording_name: string;
-  release_mbid: string;
-  release_name: string;
+  artist_credit_id: number,
+  artist_credit_name: string,
+  recording_mbid: string,
+  recording_name: string,
+  release_mbid: string,
+  release_name: string,
 };
+
+export interface AddListenModalProps {
+  
+}
 
 export interface AddListenModalState {
   ListenOption: string;
@@ -23,19 +27,26 @@ export interface AddListenModalState {
 }
 
 export default class AddListenModal extends React.Component<
-  null,
+  AddListenModalProps,
   AddListenModalState
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  constructor(props) {
+  constructor(props: AddListenModalProps) {
     super(props);
     this.state = {
       ListenOption: "track",
       SearchField: "",
       TrackResults: [],
-      SelectedTrack: {},
+      SelectedTrack: {
+        artist_credit_id: 0,
+  artist_credit_name: "",
+  recording_mbid: "",
+  recording_name: "",
+  release_mbid: "",
+  release_name: "",
+      },
       TrackIsSelected: false,
     };
   }
@@ -45,7 +56,12 @@ export default class AddListenModal extends React.Component<
       ListenOption: "track",
       SearchField: "",
       TrackResults: [],
-      SelectedTrack: {},
+      SelectedTrack: {artist_credit_id: 0,
+        artist_credit_name: "",
+        recording_mbid: "",
+        recording_name: "",
+        release_mbid: "",
+        release_name: "",},
       TrackIsSelected: false,
     });
   };
@@ -55,7 +71,12 @@ export default class AddListenModal extends React.Component<
       ListenOption: "track",
       SearchField: "",
       TrackResults: [],
-      SelectedTrack: {},
+      SelectedTrack: {artist_credit_id: 0,
+        artist_credit_name: "",
+        recording_mbid: "",
+        recording_name: "",
+        release_mbid: "",
+        release_name: "",},
       TrackIsSelected: false,
     });
   };
@@ -65,7 +86,12 @@ export default class AddListenModal extends React.Component<
       ListenOption: "album",
       SearchField: "",
       TrackResults: [],
-      SelectedTrack: {},
+      SelectedTrack: {artist_credit_id: 0,
+        artist_credit_name: "",
+        recording_mbid: "",
+        recording_name: "",
+        release_mbid: "",
+        release_name: "",},
       TrackIsSelected: false,
     });
   };
@@ -111,7 +137,12 @@ export default class AddListenModal extends React.Component<
       ListenOption: "track",
       SearchField: "",
       TrackResults: [],
-      SelectedTrack: {},
+      SelectedTrack: {artist_credit_id: 0,
+        artist_credit_name: "",
+        recording_mbid: "",
+        recording_name: "",
+        release_mbid: "",
+        release_name: "",},
       TrackIsSelected: false,
     });
   };
