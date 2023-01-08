@@ -148,7 +148,8 @@ export default class AddListenModal extends React.Component<
   };
 
   componentDidUpdate(pp: any,ps: any,ss: any) {
-    if (ps.SearchField !== this.state.SearchField) {
+    const {SearchField} = this.state
+    if (ps.SearchField !== SearchField) {
       this.SearchTrack();
     }
   }
@@ -191,7 +192,7 @@ export default class AddListenModal extends React.Component<
                 <button
                   type="button"
                   className={`btn btn-primary add-listen ${
-                    ListenOption == "track"
+                    ListenOption === "track"
                       ? "option-active"
                       : "option-unactive"
                   }`}
@@ -202,7 +203,7 @@ export default class AddListenModal extends React.Component<
                 <button
                   type="button"
                   className={`btn btn-primary add-listen ${
-                    ListenOption == "album"
+                    ListenOption === "album"
                       ? "option-active"
                       : "option-unactive"
                   }`}

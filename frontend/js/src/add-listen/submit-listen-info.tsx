@@ -39,6 +39,10 @@ export default class SubmitListenInfo extends React.Component<
     };
   }
 
+  componentDidMount(): void {
+    this.getCoverArt();
+  }
+
   async getCoverArt() {
     const { SelectedTrack } = this.props;
     const albumArtSrc = await getAlbumArtFromReleaseMBID(
@@ -67,16 +71,11 @@ export default class SubmitListenInfo extends React.Component<
     this.setState(
       {
         Timestamp: newDateTimePickerValue,
-      },
-      () => {
-        console.log(this.state.Timestamp.toLocaleString("es-CL"));
       }
     );
   };
 
-  componentDidMount(): void {
-    this.getCoverArt();
-  }
+ 
 
   render() {
     const { thumbnailSrc, TimestampOption, Timestamp } = this.state;
@@ -120,7 +119,7 @@ export default class SubmitListenInfo extends React.Component<
             <button
               type="button"
               className={`btn btn-primary add-listen ${
-                TimestampOption == "now"
+                TimestampOption === "now"
                   ? "timestamp-active"
                   : "timestamp-unactive"
               }`}
@@ -131,7 +130,7 @@ export default class SubmitListenInfo extends React.Component<
             <button
               type="button"
               className={`btn btn-primary add-listen ${
-                TimestampOption == "custom"
+                TimestampOption === "custom"
                   ? "timestamp-active"
                   : "timestamp-unactive"
               }`}
@@ -141,7 +140,7 @@ export default class SubmitListenInfo extends React.Component<
             </button>
           </div>
           <div className="timestamp-date-picker">
-            {TimestampOption == "custom" ? (
+            {TimestampOption === "custom" ? (
               <DatePicker
                 selected={Timestamp}
                 onChange={this.onChangeDateTimePicker}
