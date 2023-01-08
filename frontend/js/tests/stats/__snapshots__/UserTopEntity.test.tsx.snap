@@ -10205,3 +10205,1855 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
   </ForwardRef>
 </UserTopEntity>
 `;
+
+exports[`User Stats UserTopEntity renders correctly for release 2`] = `
+<UserTopEntity
+  apiUrl="foobar"
+  entity="release"
+  range="week"
+  terminology="artist"
+  user={
+    Object {
+      "name": "test_user",
+    }
+  }
+>
+  <ForwardRef
+    style={
+      Object {
+        "alignItems": "center",
+        "display": "flex",
+        "flexDirection": "column",
+        "marginTop": 20,
+        "minHeight": 550,
+      }
+    }
+  >
+    <div
+      className="card "
+      style={
+        Object {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "column",
+          "marginTop": 20,
+          "minHeight": 550,
+        }
+      }
+    >
+      <h3
+        className="capitalize-bold"
+        style={
+          Object {
+            "display": "inline",
+          }
+        }
+      >
+        Top 
+        artists
+      </h3>
+      <h4
+        style={
+          Object {
+            "display": "inline",
+            "marginTop": 20,
+            "position": "absolute",
+            "right": 20,
+          }
+        }
+      >
+        <a
+          href="#top-entity"
+        >
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            color="#46433a"
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f0c1",
+                  "M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z",
+                ],
+                "iconName": "link",
+                "prefix": "fas",
+              }
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size="sm"
+            spin={false}
+            style={
+              Object {
+                "marginRight": 20,
+              }
+            }
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-link fa-w-16 fa-sm "
+              color="#46433a"
+              data-icon="link"
+              data-prefix="fas"
+              focusable="false"
+              role="img"
+              style={
+                Object {
+                  "marginRight": 20,
+                }
+              }
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z"
+                fill="currentColor"
+                style={Object {}}
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </a>
+      </h4>
+      <Loader
+        isLoading={false}
+      >
+        <table
+          style={
+            Object {
+              "tableLayout": "fixed",
+              "whiteSpace": "nowrap",
+              "width": "90%",
+            }
+          }
+        >
+          <tbody>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                1
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/7ddac155-91e2-4eb7-b08a-4fc584fd60f9"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Padman
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                57
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/78830f6e-5832-443d-9e93-0e308238406e"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Amit Trivedi
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Mismatched: Season 2 (Music from the Netflix Series)
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Taaruk Raina, Mismatched
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/3a29d02a-d29a-40f8-86f8-c9dab6eba7ac"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Vicky Donor
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                4
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/e7e8031d-f232-4883-bb5d-bd97589bc29b"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Abhishek-Akshay
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                4
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/32c388ff-5123-4430-8ba7-62657eea41f8"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Revisited: Sanam
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                4
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/b458fc3f-b9b5-4ff3-ba6a-748c9a1aac83"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Sanam
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                5
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/e9fa9c7a-ad24-4c9c-bfb2-69dfc17bbcb8"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Twelve
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/620009e5-d6fc-4104-b543-5c2af18d8889"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Bilal Saeed
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                6
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/f132db0b-3aaa-41a0-a4b6-4ae395ec213d"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  The Trinity
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/20a69a45-8fc0-4abb-84a9-f4e0515695f9"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  The Bilz and Kashif
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                7
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/4f1f8e13-656a-46bf-900e-18b28f3b3991"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Table No. 21
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/4f2ea2cb-923d-487e-a517-a2a03089546b"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Gajendra Verma & Sachin Gupta
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/4152d958-d0d1-4464-ae7a-8fe6cc359473"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Rab Ne Bana Di Jodi
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/4db8e5a9-beb9-47bb-8bc8-334b7e33ece5"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Salim-Sulaiman
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                9
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/3d4390e7-4f90-437e-8297-9c78ce910431"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Mohabbatein
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/79c5547a-e098-495c-8dac-7e99546aa46b"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Asha Bhosle - R. D. Burman
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/9fef1281-c8ac-466e-ab39-d81b9781a55f"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Malang: Unleash The Madness
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/89ad4ac3-39f7-470e-963a-56509c546377"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Various Artists
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Latest Songs Of Ayushmann Khurrana
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Ayushmann Khurrana, Neeti Mohan
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Kalaakaar (Original Motion Picture Soundtrack)
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Kalyanji-Anandji, Kishore Kumar
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                13
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Jo Tu Na Mila
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Asim Azhar
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                14
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/9aa17de3-9496-421c-a97a-1cba83969815"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Jaane Tu Ya Jaane Na
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/e0bba708-bdd3-478d-84ea-c706413bedab"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  A. R. Rahman
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                15
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/ab960442-661b-40f6-9c09-0f89f92e52a1"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  I, Me Aur Main
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/89ad4ac3-39f7-470e-963a-56509c546377"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Various Artists
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Universally SANAM
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Sanam
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                17
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  The Carnival
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  King
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                18
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/69bf700c-b549-4153-b42c-b76e59f111ed"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Talaash
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/72da533e-cb78-414e-8968-9d7dac0e80df"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Ram Sampath
+                </a>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                19
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Sajna
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Yashal Shahid
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                20
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Once Upon Ay Time In Mumbai Dobaara !
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Pritam, Javed Bashir
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                21
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Manjha
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Vishal Mishra
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                22
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Jo Tu Na Mila (Acoustic)
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Asim Azhar
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                23
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Jalebi (Original Motion Picture Soundtrack)
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Jeet Gannguli, Arijit Singh
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                24
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  Evergreen Hits Of K.K.
+                </span>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <span>
+                  KK
+                </span>
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                25
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/release/7fff2a44-6f46-41c4-ae96-effd3b8f06be"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  50 Greatest Hits Nusrat Fateh Ali Khan
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  href="https://musicbrainz.org/artist/5968383c-11c1-4c5b-ada0-504a38cec8e7"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Nusrat Fateh Ali Khan
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <a
+          className="mt-15"
+          href="http://localhost/user/test_user/charts?range=week&entity=release"
+        >
+          View More
+        </a>
+      </Loader>
+    </div>
+  </ForwardRef>
+</UserTopEntity>
+`;

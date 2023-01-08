@@ -23,6 +23,7 @@ export interface AddListenModalState {
 }
 
 export default class AddListenModal extends React.Component<
+  null,
   AddListenModalState
 > {
   static contextType = GlobalAppContext;
