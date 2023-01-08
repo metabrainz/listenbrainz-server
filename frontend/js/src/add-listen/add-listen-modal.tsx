@@ -147,7 +147,7 @@ export default class AddListenModal extends React.Component<
     });
   };
 
-  componentDidUpdate(pp, ps, ss) {
+  componentDidUpdate(pp: any,ps: any,ss: any) {
     if (ps.SearchField !== this.state.SearchField) {
       this.SearchTrack();
     }
