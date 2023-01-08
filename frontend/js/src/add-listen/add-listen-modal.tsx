@@ -1,7 +1,6 @@
 import * as React from "react";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchDropDown from "./SearchDropDown";
 import ListenControl from "../listens/ListenControl";
@@ -23,7 +22,7 @@ export interface AddListenModalState {
   SelectedTrack: TrackType;
   TrackIsSelected: Boolean;
   TimestampOption: string;
-  dateTimePickerValue: Date;
+  Timestamp: Date;
 }
 
 export default class AddListenModal extends React.Component<
@@ -41,7 +40,7 @@ export default class AddListenModal extends React.Component<
       SelectedTrack: {},
       TrackIsSelected: false,
       TimestampOption: "now",
-      dateTimePickerValue: Date.now(),
+      Timestamp: new Date(),
     };
   }
 
@@ -53,7 +52,7 @@ export default class AddListenModal extends React.Component<
       SelectedTrack: {},
       TrackIsSelected: false,
       TimestampOption: "now",
-      dateTimePickerValue: Date.now(),
+      Timestamp: new Date(),
     });
   };
 
@@ -65,7 +64,7 @@ export default class AddListenModal extends React.Component<
       SelectedTrack: {},
       TrackIsSelected: false,
       TimestampOption: "now",
-      dateTimePickerValue: Date.now(),
+      Timestamp: new Date(),
     });
   };
 
@@ -77,20 +76,21 @@ export default class AddListenModal extends React.Component<
       SelectedTrack: {},
       TrackIsSelected: false,
       TimestampOption: "now",
-      dateTimePickerValue: Date.now(),
+      Timestamp: new Date(),
     });
   };
 
   timestampNow = () => {
     this.setState({
       TimestampOption: "now",
-      dateTimePickerValue: Date.now(),
+      Timestamp: new Date(),
     });
   };
 
   timestampCustom = () => {
     this.setState({
       TimestampOption: "custom",
+      Timestamp: new Date(),
     });
   };
 
@@ -130,18 +130,27 @@ export default class AddListenModal extends React.Component<
     });
   };
 
-  onChangeDateTimePicker = async (newDateTimePickerValue: Date | Date[]) => {
-    if (!newDateTimePickerValue) {
-      return;
-    }
+  onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
     this.setState(
       {
-        dateTimePickerValue: newDateTimePickerValue,
+        Timestamp: newDateTimePickerValue,
       },
       () => {
-        console.log(this.state.dateTimePickerValue);
+        console.log(this.state.Timestamp.toLocaleString("es-CL"));
       }
     );
+  };
+
+  removeTrack = () => {
+    this.setState({
+      ListenOption: "track",
+      SearchField: "",
+      TrackResults: [],
+      SelectedTrack: {},
+      TrackIsSelected: false,
+      TimestampOption: "now",
+      Timestamp: new Date(),
+    });
   };
 
   componentDidUpdate(pp, ps, ss) {
@@ -158,6 +167,7 @@ export default class AddListenModal extends React.Component<
       SelectedTrack,
       SearchField,
       TimestampOption,
+      Timestamp,
     } = this.state;
     return (
       <div
@@ -229,7 +239,11 @@ export default class AddListenModal extends React.Component<
                     <div className="addtrackpill">
                       <div>
                         <span>{`${SelectedTrack.recording_name} - ${SelectedTrack.artist_credit_name}`}</span>
-                        <ListenControl text="" icon={faTimesCircle} />
+                        <ListenControl
+                          text=""
+                          icon={faTimesCircle}
+                          action={this.removeTrack}
+                        />
                       </div>
                     </div>
                     <SubmitListenInfo SelectedTrack={SelectedTrack} />
@@ -257,6 +271,27 @@ export default class AddListenModal extends React.Component<
                       >
                         Custom
                       </button>
+                    </div>
+                    <div className="timestamp-date-picker">
+                      {TimestampOption == "custom" ? (
+                        <DatePicker
+                          selected={Timestamp}
+                          onChange={this.onChangeDateTimePicker}
+                          showTimeSelect
+                          timeFormat="HH:mm"
+                          timeIntervals={1}
+                          timeCaption="time"
+                          dateFormat="dd-MM-yyyy, hh:mm:ss"
+                        />
+                      ) : (
+                        <div className="react-datepicker__input-container">
+                          <input
+                            type="text"
+                            value={Timestamp.toLocaleString("es-CL")}
+                            readOnly
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
