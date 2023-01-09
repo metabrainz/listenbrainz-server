@@ -3,6 +3,7 @@ from typing import Iterable
 
 import sqlalchemy
 import sqlalchemy.exc
+from psycopg2.extras import execute_values
 from sqlalchemy import text
 
 from listenbrainz.db import timescale
@@ -130,7 +131,7 @@ def submit_recording(connection, recording, artist, release=None, track_number=N
     return str(msid)
 
 
-def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str]) -> dict[str, dict]:
+def load_recordings_from_msids(ts_curs, messybrainz_ids: Iterable[str]) -> dict[str, dict]:
     """ Returns data for a recordings corresponding to a given list of MessyBrainz IDs.
     msids not found in the database are omitted from the returned dict (usually indicates the msid
     is wrong because data is not deleted from MsB).
@@ -151,8 +152,9 @@ def load_recordings_from_msids(connection, messybrainz_ids: Iterable[str]) -> di
              , release
              , track_number
              , duration
-          FROM messybrainz.submissions
-         WHERE gid IN :msids 
+          FROM (VALUES %s) AS t (msid)
+          JOIN messybrainz.submissions s
+            ON s.gid = t.msid::UUID
     """
-    result = connection.execute(text(query), {"msids": tuple(messybrainz_ids)})
-    return {row["msid"]: row for row in result.mappings().all()}
+    results = execute_values(ts_curs, query, [(msid,) for msid in messybrainz_ids], fetch=True)
+    return {row["msid"]: dict(row) for row in results}

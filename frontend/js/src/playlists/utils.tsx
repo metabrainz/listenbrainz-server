@@ -29,14 +29,14 @@ export function getTrackExtension(
 }
 
 export function getPlaylistId(playlist?: JSPFPlaylist): string {
-  return playlist?.identifier?.substr(PLAYLIST_URI_PREFIX.length) ?? "";
+  return playlist?.identifier?.replace(PLAYLIST_URI_PREFIX, "") ?? "";
 }
 
 export function getRecordingMBIDFromJSPFTrack(track: JSPFTrack): string {
-  return track.identifier?.substr(PLAYLIST_TRACK_URI_PREFIX.length) ?? "";
+  return track.identifier?.replace(PLAYLIST_TRACK_URI_PREFIX, "") ?? "";
 }
 export function getArtistMBIDFromURI(URI: string): string {
-  return URI?.substr(PLAYLIST_ARTIST_URI_PREFIX.length) ?? "";
+  return URI?.replace(PLAYLIST_ARTIST_URI_PREFIX, "") ?? "";
 }
 
 // Originally by Sinjai https://stackoverflow.com/a/67462589
@@ -76,6 +76,18 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
     },
     user_name: customFields?.added_by,
   };
+  const caa_id = customFields?.additional_metadata?.caa_id;
+  const caa_release_mbid = customFields?.additional_metadata?.caa_release_mbid;
+  if (caa_id && caa_release_mbid) {
+    listen.track_metadata.mbid_mapping = {
+      artist_mbids: [],
+      artists: [],
+      recording_mbid: "",
+      release_mbid: "",
+      caa_id,
+      caa_release_mbid,
+    };
+  }
   if (customFields?.added_at) {
     listen.listened_at_iso = customFields.added_at;
   }

@@ -1,12 +1,15 @@
 import datetime
 from uuid import UUID
 
-import ujson
+import psycopg2
 from flask import Blueprint, current_app, jsonify, request
 import requests
+from psycopg2.extras import DictCursor
+
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-from listenbrainz.domain.spotify import SPOTIFY_LISTEN_PERMISSIONS, SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
+from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.troi.export import export_to_spotify
 
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -138,6 +141,9 @@ def serialize_jspf(playlist: Playlist):
         if rec.release_mbid:
             extension["release_identifier"] = PLAYLIST_RELEASE_URI_PREFIX + str(rec.release_mbid)
 
+        if rec.additional_metadata:
+            extension["additional_metadata"] = rec.additional_metadata
+
         tr["extension"] = {PLAYLIST_TRACK_EXTENSION_URI: extension}
         tracks.append(tr)
 
@@ -190,36 +196,30 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
     """
         This interim function will soon be replaced with a more complete service layer
     """
-
-    mbids = [{'[recording_mbid]': str(item.mbid)} for item in playlist.recordings]
+    mbids = [str(item.mbid) for item in playlist.recordings]
     if not mbids:
         return
 
-    r = requests.post(RECORDING_LOOKUP_SERVER_URL, params={"count": len(mbids)}, json=mbids)
-    if r.status_code != 200:
-        current_app.logger.error("Error while fetching metadata for a playlist: %d" % r.status_code)
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+            ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+                rows = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
+    except Exception:
+        current_app.logger.error("Error while fetching metadata for a playlist: ", exc_info=True)
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
 
-    try:
-        rows = ujson.loads(r.text)
-    except ValueError as err:
-        current_app.logger.error("Error parse metadata for a playlist: {}".format(err))
-        raise APIInternalServerError("Failed parse fetched metadata for a playlist. Please try again.")
-
-    mbid_index = {}
-    for row in rows:
-        mbid_index[row['original_recording_mbid']] = row
-
-    for rec in playlist.recordings:
-        try:
-            row = mbid_index[str(rec.mbid)]
-        except KeyError:
-            continue
-
+    for rec, row in zip(playlist.recordings, rows):
         rec.artist_credit = row.get("artist_credit_name", "")
-        if "[artist_credit_mbids]" in row and not row["[artist_credit_mbids]"] is None:
+        if "[artist_credit_mbids]" in row and row["[artist_credit_mbids]"] is not None:
             rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"]]
         rec.title = row.get("recording_name", "")
+
+        caa_id = row.get("caa_id")
+        caa_release_mbid = row.get("caa_release_mbid")
+        if caa_id and caa_release_mbid:
+            rec.additional_metadata = {"caa_id": caa_id, "caa_release_mbid": caa_release_mbid}
 
 
 @playlist_api_bp.route("/create", methods=["POST", "OPTIONS"])

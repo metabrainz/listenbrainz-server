@@ -5,7 +5,7 @@ from markupsafe import Markup
 from psycopg2.extras import execute_values
 
 from listenbrainz.db import similarity
-from listenbrainz.labs_api.labs.api.utils import resolve_redirect_mbids
+from listenbrainz.db.recording import resolve_redirect_mbids
 
 
 class SimilarArtistsViewerQuery(Query):

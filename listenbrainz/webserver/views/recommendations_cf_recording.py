@@ -1,5 +1,6 @@
 import ujson
 from flask import Blueprint, render_template, current_app
+from psycopg2.extras import DictCursor
 
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 from listenbrainz.db import timescale
@@ -149,8 +150,8 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                 }
     """
     mbids = [r['recording_mbid'] for r in mbids_and_ratings_list]
-    with timescale.engine.connect() as connection:
-        data = load_recordings_from_mbids(connection, mbids)
+    with timescale.engine.connect() as ts_conn, ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_cursor:
+        data = load_recordings_from_mbids(ts_cursor, mbids)
 
     recommendations = []
 

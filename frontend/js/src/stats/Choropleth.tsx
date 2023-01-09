@@ -24,6 +24,7 @@ export type ChoroplethProps = {
   data: UserArtistMapData;
   width?: number;
   selectedMetric: "artist" | "listen";
+  colorScaleRange?: string[];
 };
 
 const commonLegendProps = {
@@ -91,8 +92,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
-  const { data } = props;
-  const { width } = props;
+  const { data, width, colorScaleRange } = props;
   const containerWidth = width || 1200; // Set default width to 1200
   const containerHeight = containerWidth / 2;
 
@@ -112,7 +112,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
 
   const colorScale = scaleThreshold<number, string>()
     .domain(domain)
-    .range(schemeOranges[6]);
+    .range(colorScaleRange ?? schemeOranges[6]);
 
   // Create a custom legend component because the default doesn't work with scaleThreshold
   const customLegend = () => (
