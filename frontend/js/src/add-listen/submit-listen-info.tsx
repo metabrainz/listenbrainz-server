@@ -4,12 +4,12 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import { getAlbumArtFromReleaseMBID } from "../utils/utils";
 
 type TrackType = {
-  artist_credit_id: number,
-  artist_credit_name: string,
-  recording_mbid: string,
-  recording_name: string,
-  release_mbid: string,
-  release_name: string,
+  artist_credit_id: number;
+  artist_credit_name: string;
+  recording_mbid: string;
+  recording_name: string;
+  release_mbid: string;
+  release_name: string;
 };
 
 export type SubmitListenInfoState = {
@@ -68,14 +68,10 @@ export default class SubmitListenInfo extends React.Component<
   };
 
   onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
-    this.setState(
-      {
-        Timestamp: newDateTimePickerValue,
-      }
-    );
+    this.setState({
+      Timestamp: newDateTimePickerValue,
+    });
   };
-
- 
 
   render() {
     const { thumbnailSrc, TimestampOption, Timestamp } = this.state;

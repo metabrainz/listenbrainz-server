@@ -844,7 +844,7 @@ export default class Listens extends React.Component<
         <div className="listen-header">
           {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
           <button
-          type="button"
+            type="button"
             className="btn btn-primary add-listen-btn"
             data-Toggle="modal"
             data-Target="#AddListenModal"
