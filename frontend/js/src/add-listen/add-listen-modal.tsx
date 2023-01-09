@@ -6,17 +6,15 @@ import ListenControl from "../listens/ListenControl";
 import SubmitListenInfo from "./submit-listen-info";
 
 type TrackType = {
-  artist_credit_id: number,
-  artist_credit_name: string,
-  recording_mbid: string,
-  recording_name: string,
-  release_mbid: string,
-  release_name: string,
+  artist_credit_id: number;
+  artist_credit_name: string;
+  recording_mbid: string;
+  recording_name: string;
+  release_mbid: string;
+  release_name: string;
 };
 
-export interface AddListenModalProps {
-  
-}
+export interface AddListenModalProps {}
 
 export interface AddListenModalState {
   ListenOption: string;
@@ -41,42 +39,29 @@ export default class AddListenModal extends React.Component<
       TrackResults: [],
       SelectedTrack: {
         artist_credit_id: 0,
-  artist_credit_name: "",
-  recording_mbid: "",
-  recording_name: "",
-  release_mbid: "",
-  release_name: "",
-      },
-      TrackIsSelected: false,
-    };
-  }
-
-  closeModal = () => {
-    this.setState({
-      ListenOption: "track",
-      SearchField: "",
-      TrackResults: [],
-      SelectedTrack: {artist_credit_id: 0,
         artist_credit_name: "",
         recording_mbid: "",
         recording_name: "",
         release_mbid: "",
-        release_name: "",},
+        release_name: "",
+      },
       TrackIsSelected: false,
-    });
-  };
+    };
+  }
 
   addTrack = () => {
     this.setState({
       ListenOption: "track",
       SearchField: "",
       TrackResults: [],
-      SelectedTrack: {artist_credit_id: 0,
+      SelectedTrack: {
+        artist_credit_id: 0,
         artist_credit_name: "",
         recording_mbid: "",
         recording_name: "",
         release_mbid: "",
-        release_name: "",},
+        release_name: "",
+      },
       TrackIsSelected: false,
     });
   };
@@ -86,12 +71,14 @@ export default class AddListenModal extends React.Component<
       ListenOption: "album",
       SearchField: "",
       TrackResults: [],
-      SelectedTrack: {artist_credit_id: 0,
+      SelectedTrack: {
+        artist_credit_id: 0,
         artist_credit_name: "",
         recording_mbid: "",
         recording_name: "",
         release_mbid: "",
-        release_name: "",},
+        release_name: "",
+      },
       TrackIsSelected: false,
     });
   };
@@ -137,21 +124,41 @@ export default class AddListenModal extends React.Component<
       ListenOption: "track",
       SearchField: "",
       TrackResults: [],
-      SelectedTrack: {artist_credit_id: 0,
+      SelectedTrack: {
+        artist_credit_id: 0,
         artist_credit_name: "",
         recording_mbid: "",
         recording_name: "",
         release_mbid: "",
-        release_name: "",},
+        release_name: "",
+      },
       TrackIsSelected: false,
     });
   };
 
-  componentDidUpdate(pp: any,ps: any,ss: any) {
-    if (ps.SearchField !== this.state.SearchField) {
+  componentDidUpdate(pp: any, ps: any, ss: any) {
+    const { SearchField } = this.state;
+    if (ps.SearchField !== SearchField) {
       this.SearchTrack();
     }
   }
+
+  closeModal = () => {
+    this.setState({
+      ListenOption: "track",
+      SearchField: "",
+      TrackResults: [],
+      SelectedTrack: {
+        artist_credit_id: 0,
+        artist_credit_name: "",
+        recording_mbid: "",
+        recording_name: "",
+        release_mbid: "",
+        release_name: "",
+      },
+      TrackIsSelected: false,
+    });
+  };
 
   render() {
     const {
@@ -191,7 +198,7 @@ export default class AddListenModal extends React.Component<
                 <button
                   type="button"
                   className={`btn btn-primary add-listen ${
-                    ListenOption == "track"
+                    ListenOption === "track"
                       ? "option-active"
                       : "option-unactive"
                   }`}
@@ -202,7 +209,7 @@ export default class AddListenModal extends React.Component<
                 <button
                   type="button"
                   className={`btn btn-primary add-listen ${
-                    ListenOption == "album"
+                    ListenOption === "album"
                       ? "option-active"
                       : "option-unactive"
                   }`}
