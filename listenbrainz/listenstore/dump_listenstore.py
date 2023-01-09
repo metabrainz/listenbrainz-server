@@ -376,7 +376,7 @@ class DumpListenStore:
                           , mbc.release_data->>'name' AS m_release_name
                           , mbc.recording_data->>'name' AS m_recording_name
                        FROM listen_with_mbid l
-                       JOIN mapping.mb_metadata_cache mbc
+                  LEFT JOIN mapping.mb_metadata_cache mbc
                          ON l.m_recording_mbid = mbc.recording_mbid
                 """).format(criteria=psycopg2.sql.Identifier("l", criteria))  # l is the listen table's alias
 

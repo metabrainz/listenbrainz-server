@@ -1,4 +1,5 @@
 import os
+from datetime import date
 from time import sleep
 
 import click
@@ -266,11 +267,12 @@ def submit_release(user, token, releasembid):
 
 
 @cli.command(name="notify_yim_users")
-def notify_yim_users():
+@click.option("--year", type=int, help="Year for which to send the emails", default=date.today().year)
+def notify_yim_users(year: int):
     application = webserver.create_app()
     with application.app_context():
         from listenbrainz.db import year_in_music
-        year_in_music.notify_yim_users()
+        year_in_music.notify_yim_users(year)
 
 
 @cli.command()

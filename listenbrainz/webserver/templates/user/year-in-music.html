@@ -1,8 +1,11 @@
 {%- extends 'base-react.html' -%}
 
+{% block title %}
+ListenBrainz Year in Music {{ year }} for {{ user_name }}
+{% endblock %}
+
 {% block head %}
    {{ super() }}
-   <title>ListenBrainz Year in Music {{ year }} for {{ user_name }}</title>
    <meta name="description" content="Check out the music review for {{ year }} that @ListenBrainz created from my listening history!" />
    <meta name="twitter:card" content="summary_large_image"></meta>
    <meta name="twitter:site" content="@listenbrainz" />

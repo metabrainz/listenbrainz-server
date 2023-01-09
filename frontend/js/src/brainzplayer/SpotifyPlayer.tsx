@@ -407,10 +407,18 @@ export default class SpotifyPlayer
     this.spotifyPlayer = new window.Spotify.Player({
       name: "ListenBrainz Player",
       getOAuthToken: async (authCallback) => {
-        const userToken = await refreshSpotifyToken();
-        this.accessToken = userToken;
-        this.authenticationRetries = 0;
-        authCallback(userToken);
+        try {
+          const userToken = await refreshSpotifyToken();
+          this.accessToken = userToken;
+          this.authenticationRetries = 0;
+          authCallback(userToken);
+        } catch (error) {
+          handleError(error, "Error connecting to Spotify");
+          setTimeout(
+            this.connectSpotifyPlayer.bind(this, callbackFunction),
+            1000
+          );
+        }
       },
       volume: 0.7, // Careful with this, now…
     });

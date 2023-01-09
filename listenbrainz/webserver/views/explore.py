@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, current_app
 import ujson
+from werkzeug.exceptions import NotFound
 
 from listenbrainz.db.similar_users import get_top_similar_users
 
@@ -37,4 +38,18 @@ def fresh_releases():
     return render_template(
         "explore/fresh-releases.html",
         props=ujson.dumps({})
+    )
+
+@explore_bp.route("/cover-art-collage/")
+@explore_bp.route("/cover-art-collage/<int:year>/")
+def cover_art_collage(year: int = 2022):
+    """ A collage of album covers from 2022
+        Raises:
+            NotFound if the there is no collage for the year
+    """
+    if year != 2022:
+        raise NotFound(f"Cannot find Coveer Art Collage for year: {year}")
+
+    return render_template(
+        "explore/cover-art-collage.html"
     )

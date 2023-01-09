@@ -392,6 +392,10 @@ def handle_yim_listening_time(message):
     year_in_music.insert("total_listening_time", message["year"], message["data"])
 
 
+def handle_yim_artist_map(message):
+    year_in_music.handle_multi_large_insert("artist_map", message["year"], message["data"])
+
+
 def handle_new_artists_discovered_count(message):
     year_in_music.insert("total_new_artists_discovered", message["year"], message["data"])
 
