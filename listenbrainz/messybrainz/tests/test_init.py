@@ -17,6 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA)
 from datetime import datetime, timedelta
 
+from psycopg2.extras import DictCursor
 from sqlalchemy import text
 
 from listenbrainz import messybrainz
@@ -83,10 +84,10 @@ class DataTestCase(TimescaleTestCase):
             self.assertEqual(msid1, msid2)
 
     def test_load_recordings_from_msids(self):
-        with timescale.engine.begin() as connection:
+        with timescale.engine.begin() as connection, connection.connection.cursor(cursor_factory=DictCursor) as curs:
             title, artist, release = recording["title"], recording["artist"], recording["release"]
             recording_msid = messybrainz.submit_recording(connection, title, artist, release)
-            result = messybrainz.load_recordings_from_msids(connection, [recording_msid])
+            result = messybrainz.load_recordings_from_msids(curs, [recording_msid])
             self.assertDictEqual(result, {
                 recording_msid: {
                     "msid": recording_msid,
@@ -135,8 +136,8 @@ class DataTestCase(TimescaleTestCase):
             }
         ]
         msids = messybrainz.insert_all_in_transaction(submissions)
-        with timescale.engine.begin() as conn:
-            received = messybrainz.load_recordings_from_msids(conn, msids)
+        with timescale.engine.begin() as conn, conn.connection.cursor(cursor_factory=DictCursor) as curs:
+            received = messybrainz.load_recordings_from_msids(curs, msids)
 
         submissions[0]['track_number'] = None
         submissions[0]['duration'] = None

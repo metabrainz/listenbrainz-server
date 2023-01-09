@@ -1,0 +1,35 @@
+{%- extends 'base-react.html' -%}
+
+{% block title %}
+ListenBrainz Album covers of 2022
+{% endblock %}
+
+{% block head %}
+   {{ super() }}
+    <style type="text/css">
+        /* Allow for full-screen backgrounds using ::before and ::after elements in css
+            without ending up with horizontal scrolling  */
+        body {
+            padding-bottom: 0;
+        }
+        body>.container {
+            margin:0;
+            padding:0;
+            width: 100%;
+        }
+        section.footer{
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <div id="react-container"></div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ get_static_path('coverArtComposite.js') }}" type="text/javascript"></script>
+{% endblock %}

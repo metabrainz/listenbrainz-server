@@ -22,7 +22,6 @@
             letter-spacing: 0.6em;
         }
         .album-art {
-            preserveAspectRatio: "xMidYMid slice";
             height: 135px;
             width: 135px;
         }
@@ -49,15 +48,15 @@
             </text>
         </g>
         <g>
-            <image class="album-art" x="265" y="250" xlink:href="{{ image_urls[0] }}" />
-            <image class="album-art" x="265" y="385" xlink:href="{{ image_urls[1] }}" />
-            <image class="album-art" x="265" y="520" xlink:href="{{ image_urls[2] }}" />
-            <image class="album-art" x="400" y="250" xlink:href="{{ image_urls[3] }}" />
-            <image class="album-art" x="400" y="385" xlink:href="{{ image_urls[4] }}" />
-            <image class="album-art" x="400" y="520" xlink:href="{{ image_urls[5] }}" />
-            <image class="album-art" x="535" y="250" xlink:href="{{ image_urls[6] }}" />
-            <image class="album-art" x="535" y="385" xlink:href="{{ image_urls[7] }}" />
-            <image class="album-art" x="535" y="520" xlink:href="{{ image_urls[8] }}" />
+            <image class="album-art" preserveAspectRatio="xMidYMid slice" x="265" y="250" xlink:href="{{ image_urls[0] }}" />
+            <image class="album-art" preserveAspectRatio="xMidYMid slice" x="265" y="385" xlink:href="{{ image_urls[1] }}" />
+            <image class="album-art" preserveAspectRatio="xMidYMid slice" x="265" y="520" xlink:href="{{ image_urls[2] }}" />
+            <image class="album-art" preserveAspectRatio="xMidYMid slice" x="400" y="250" xlink:href="{{ image_urls[3] }}" />
+            <image class="album-art" preserveAspectRatio="xMidYMid slice" x="400" y="385" xlink:href="{{ image_urls[4] }}" />
+            <image class="album-art" preserveAspectRatio="xMidYMid slice" x="400" y="520" xlink:href="{{ image_urls[5] }}" />
+            <image class="album-art" preserveAspectRatio="xMidYMid slice" x="535" y="250" xlink:href="{{ image_urls[6] }}" />
+            <image class="album-art" preserveAspectRatio="xMidYMid slice" x="535" y="385" xlink:href="{{ image_urls[7] }}" />
+            <image class="album-art" preserveAspectRatio="xMidYMid slice" x="535" y="520" xlink:href="{{ image_urls[8] }}" />
             <image id="flames" x="235" y="170" width="452" height="521" xlink:href="{{ flames_image_url }}" />
         </g>
     </g>

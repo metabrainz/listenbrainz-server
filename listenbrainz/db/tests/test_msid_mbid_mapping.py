@@ -1,12 +1,13 @@
 import json
 import uuid
 
+from psycopg2.extras import DictCursor
 from sqlalchemy import text
 
 from listenbrainz import messybrainz
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items, MsidMbidModel, load_recordings_from_mbids
 from listenbrainz.db.testing import TimescaleTestCase
-from listenbrainz.db import timescale as ts
+from listenbrainz.db import timescale
 
 
 class MappingTestCase(TimescaleTestCase):
@@ -25,7 +26,7 @@ class MappingTestCase(TimescaleTestCase):
         model = MsidMbidModel(recording_msid=str(uuid.uuid4()), recording_mbid=str(uuid.uuid4()))
 
     def insert_recording_in_mapping(self, recording, match_type):
-        with ts.engine.begin() as connection:
+        with timescale.engine.begin() as connection:
             if match_type == "exact_match":
 
                 release_data = {"name": recording["release"]}
@@ -82,7 +83,9 @@ class MappingTestCase(TimescaleTestCase):
                 ],
                 "title": "The Final Confrontation, Part 1",
                 "caa_release_mbid": "a2589025-8517-45ab-9d64-fe927ba087b1-3151246737",
-                "caa_id": 3151246737
+                "caa_id": 3151246737,
+                "length": None,
+                "artist_credit_id": None,
             },
             {
                 "recording_mbid": "c5bfd98d-ccde-4cf3-8abb-63fad1b6065a",
@@ -99,7 +102,9 @@ class MappingTestCase(TimescaleTestCase):
                 ],
                 "title": "A Number and a Name",
                 "caa_id": None,
-                "caa_release_mbid": None
+                "caa_release_mbid": None,
+                "length": None,
+                "artist_credit_id": None,
             },
             {
                 "artist": "James S.A. Corey",
@@ -158,11 +163,12 @@ class MappingTestCase(TimescaleTestCase):
             recordings[0]["recording_mbid"]: recordings[0],
             recordings[1]["recording_mbid"]: recordings[1]
         }
-        with ts.engine.connect() as connection:
+        with timescale.engine.connect() as ts_conn, ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
             received = load_recordings_from_mbids(
-                connection,
+                ts_curs,
                 [recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]]
             )
+        self.maxDiff = None
         self.assertEqual(expected, received)
 
     def test_fetch_track_metadata_for_items(self):
@@ -179,7 +185,6 @@ class MappingTestCase(TimescaleTestCase):
             MsidMbidModel(recording_msid=recordings[3]["recording_msid"], recording_mbid=None),
             # test the case where user submitted a mbid for the item but its absent from mbid_mapping
             MsidMbidModel(recording_msid=recordings[4]["recording_msid"], recording_mbid="0f53fa2f-f015-40c6-a5cd-f17af596764c")
-
         ]
         models = fetch_track_metadata_for_items(models)
 
