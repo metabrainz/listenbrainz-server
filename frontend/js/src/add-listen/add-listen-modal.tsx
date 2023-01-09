@@ -49,7 +49,50 @@ export default class AddListenModal extends React.Component<
     };
   }
 
-  addTrack = () => {
+  componentDidUpdate(pp: any, ps: any, ss: any) {
+    const { SearchField } = this.state;
+    if (ps.SearchField !== SearchField) {
+      this.SearchTrack();
+    }
+  }
+
+  SearchTrack = async () => {
+    const { SearchField } = this.state;
+    try {
+      const response = await fetch(
+        "https://labs.api.listenbrainz.org/recording-search/json",
+        {
+          method: "POST",
+          body: JSON.stringify([{ query: SearchField }]),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        }
+      );
+
+      const parsedResponse = await response.json();
+      this.setState({
+        TrackResults: parsedResponse,
+      });
+    } catch (error) {
+      console.debug(error);
+    }
+  };
+
+  TrackName = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      SearchField: event.target.value,
+    });
+  };
+
+  addTrackMetadata = (track: TrackType) => {
+    this.setState({
+      SelectedTrack: track,
+      TrackIsSelected: true,
+    });
+  };
+
+  removeTrack = () => {
     this.setState({
       ListenOption: "track",
       SearchField: "",
@@ -83,43 +126,7 @@ export default class AddListenModal extends React.Component<
     });
   };
 
-  TrackName = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({
-      SearchField: event.target.value,
-    });
-  };
-
-  SearchTrack = async () => {
-    const { SearchField } = this.state;
-    try {
-      const response = await fetch(
-        "https://labs.api.listenbrainz.org/recording-search/json",
-        {
-          method: "POST",
-          body: JSON.stringify([{ query: SearchField }]),
-          headers: {
-            "Content-type": "application/json; charset=UTF-8",
-          },
-        }
-      );
-
-      const parsedResponse = await response.json();
-      this.setState({
-        TrackResults: parsedResponse,
-      });
-    } catch (error) {
-      console.debug(error);
-    }
-  };
-
-  addTrackMetadata = (track: TrackType) => {
-    this.setState({
-      SelectedTrack: track,
-      TrackIsSelected: true,
-    });
-  };
-
-  removeTrack = () => {
+  addTrack = () => {
     this.setState({
       ListenOption: "track",
       SearchField: "",
@@ -135,13 +142,6 @@ export default class AddListenModal extends React.Component<
       TrackIsSelected: false,
     });
   };
-
-  componentDidUpdate(pp: any, ps: any, ss: any) {
-    const { SearchField } = this.state;
-    if (ps.SearchField !== SearchField) {
-      this.SearchTrack();
-    }
-  }
 
   closeModal = () => {
     this.setState({
