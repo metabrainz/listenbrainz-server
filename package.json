@@ -24,7 +24,8 @@
     "test:update-snapshots": "TZ='Europe/London' jest -u",
     "test:coverage": "TZ='Europe/London' jest --coverage --colors",
     "test:debug": "TZ='Europe/London' node --inspect node_modules/.bin/jest --runInBand",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "update-snapshots": "jest --updateSnapshot"
   },
   "author": "MetaBrainz Foundation Inc.",
   "license": "GPL-2.0-only",
@@ -71,6 +72,7 @@
     "react": "^18.2.0",
     "react-bs-notifier": "^7.0.0",
     "react-date-picker": "^9.1.0",
+    "react-datepicker": "^4.8.0",
     "react-dom": "^18.2.0",
     "react-draggable": "^4.4.5",
     "react-lazy-load-image-component": "^1.5.6",
@@ -108,6 +110,7 @@
     "@types/less": "^3.0.3",
     "@types/lodash": "^4.14.149",
     "@types/react": "^18.0.25",
+    "@types/react-datepicker": "^4.8.0",
     "@types/react-dom": "^18.0.8",
     "@types/react-lazy-load-image-component": "^1.5.2",
     "@types/react-loader-spinner": "^3.1.0",
