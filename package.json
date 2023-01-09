@@ -24,8 +24,7 @@
     "test:update-snapshots": "TZ='Europe/London' jest -u",
     "test:coverage": "TZ='Europe/London' jest --coverage --colors",
     "test:debug": "TZ='Europe/London' node --inspect node_modules/.bin/jest --runInBand",
-    "type-check": "tsc --noEmit",
-    "update-snapshots": "jest -u"
+    "type-check": "tsc --noEmit"
   },
   "author": "MetaBrainz Foundation Inc.",
   "license": "GPL-2.0-only",

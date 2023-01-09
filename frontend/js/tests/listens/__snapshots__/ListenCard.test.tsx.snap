@@ -110,7 +110,7 @@ exports[`ListenCard renders correctly 1`] = `
               className="listen-time"
               title=""
             >
-              01-Jan-1970, 5:30 am
+              Jan 01, 1970, 1:00 AM
             </span>
           </div>
           <div
@@ -1422,7 +1422,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               className="listen-time"
               title=""
             >
-              01-Jan-1970, 5:30 am
+              Jan 01, 1970, 1:00 AM
             </span>
           </div>
           <div
