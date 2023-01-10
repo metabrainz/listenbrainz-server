@@ -1043,7 +1043,7 @@ export default class Listens extends React.Component<
                       }
                       newAlert={newAlert}
                     />
-                    <AddListenModal />
+                    <AddListenModal newAlert={newAlert} />
                   </>
                 )}
               </div>

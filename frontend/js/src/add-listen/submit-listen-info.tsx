@@ -1,7 +1,10 @@
 import * as React from "react";
 import DatePicker from "react-datepicker";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { getAlbumArtFromReleaseMBID } from "../utils/utils";
+import {
+  getAlbumArtFromReleaseMBID,
+  convertDateToUnixTimestamp,
+} from "../utils/utils";
 
 type TrackType = {
   artist_credit_id: number;
@@ -20,6 +23,7 @@ export type SubmitListenInfoState = {
 
 export type SubmitListenInfoProps = {
   SelectedTrack: TrackType;
+  DateToUnixTimestamp: (event: number) => void;
 };
 
 export default class SubmitListenInfo extends React.Component<
@@ -41,7 +45,22 @@ export default class SubmitListenInfo extends React.Component<
 
   componentDidMount(): void {
     this.getCoverArt();
+    this.convertToUnix();
   }
+
+  componentDidUpdate(pp: any, ps: any, ss: any) {
+    const { Timestamp } = this.state;
+    if (ps.Timestamp !== Timestamp) {
+      this.convertToUnix();
+    }
+  }
+
+  convertToUnix = () => {
+    const { DateToUnixTimestamp } = this.props;
+    const date = this.state.Timestamp;
+    const unixTimestamp = Math.floor(date.getTime() / 1000);
+    DateToUnixTimestamp(unixTimestamp);
+  };
 
   async getCoverArt() {
     const { SelectedTrack } = this.props;

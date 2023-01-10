@@ -5,6 +5,20 @@ import SearchDropDown from "./SearchDropDown";
 import ListenControl from "../listens/ListenControl";
 import SubmitListenInfo from "./submit-listen-info";
 
+type PayloadType = {
+  listened_at: number;
+  track_metadata: {
+    additional_info: {
+      release_mbid: string;
+      recording_mbid: string;
+    };
+
+    artist_name: string;
+    track_name: string;
+    release_name: string;
+  };
+};
+
 type TrackType = {
   artist_credit_id: number;
   artist_credit_name: string;
@@ -14,7 +28,13 @@ type TrackType = {
   release_name: string;
 };
 
-export interface AddListenModalProps {}
+export interface AddListenModalProps {
+  newAlert: (
+    alertType: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
+}
 
 export interface AddListenModalState {
   ListenOption: string;
@@ -22,6 +42,8 @@ export interface AddListenModalState {
   TrackResults: Array<TrackType>;
   SelectedTrack: TrackType;
   TrackIsSelected: Boolean;
+  TimestampsSubmit: number;
+  PayloadArray: Array<PayloadType>;
 }
 
 export default class AddListenModal extends React.Component<
@@ -46,7 +68,10 @@ export default class AddListenModal extends React.Component<
         release_name: "",
       },
       TrackIsSelected: false,
+      TimestampsSubmit: 0,
+      PayloadArray: [],
     };
+    console.log(this.state.TimestampsSubmit);
   }
 
   componentDidUpdate(pp: any, ps: any, ss: any) {
@@ -54,7 +79,69 @@ export default class AddListenModal extends React.Component<
     if (ps.SearchField !== SearchField) {
       this.SearchTrack();
     }
+    console.log(this.state.TimestampsSubmit);
   }
+
+  handleError = (error: string | Error, title?: string): void => {
+    const { newAlert } = this.props;
+    if (!error) {
+      return;
+    }
+    newAlert(
+      "danger",
+      title || "Error",
+      typeof error === "object" ? error.message : error
+    );
+  };
+
+  SubmitListen = async () => {
+    const { APIService, currentUser } = this.context;
+    const { SelectedTrack, TimestampsSubmit } = this.state;
+    if (currentUser?.auth_token) {
+      this.setState(
+        {
+          PayloadArray: [
+            {
+              listened_at: TimestampsSubmit,
+              track_metadata: {
+                additional_info: {
+                  release_mbid: SelectedTrack.release_mbid,
+                  recording_mbid: SelectedTrack.recording_mbid,
+                },
+
+                artist_name: SelectedTrack.artist_credit_name,
+                track_name: SelectedTrack.recording_name,
+                release_name: SelectedTrack.release_name,
+              },
+            },
+          ],
+        },
+        async () => {
+          const payload = this.state.PayloadArray;
+          try {
+            const status = await APIService.submitListens(
+              currentUser.auth_token,
+              "single",
+              payload
+            );
+            if (status.status === 200) {
+              const { newAlert } = this.props;
+              newAlert(
+                "success",
+                "You added the listen",
+                `${SelectedTrack.recording_name} - ${SelectedTrack.artist_credit_name}`
+              );
+            }
+            this.setState({
+              PayloadArray: [],
+            });
+          } catch (error) {
+            this.handleError(error, "Error while adding a listen");
+          }
+        }
+      );
+    }
+  };
 
   SearchTrack = async () => {
     const { SearchField } = this.state;
@@ -85,6 +172,12 @@ export default class AddListenModal extends React.Component<
     });
   };
 
+  DateToUnixTimestamp = (date: number) => {
+    this.setState({
+      TimestampsSubmit: date,
+    });
+  };
+
   addTrackMetadata = (track: TrackType) => {
     this.setState({
       SelectedTrack: track,
@@ -106,6 +199,7 @@ export default class AddListenModal extends React.Component<
         release_name: "",
       },
       TrackIsSelected: false,
+      TimestampsSubmit: 0,
     });
   };
 
@@ -123,6 +217,7 @@ export default class AddListenModal extends React.Component<
         release_name: "",
       },
       TrackIsSelected: false,
+      TimestampsSubmit: 0,
     });
   };
 
@@ -140,6 +235,7 @@ export default class AddListenModal extends React.Component<
         release_name: "",
       },
       TrackIsSelected: false,
+      TimestampsSubmit: 0,
     });
   };
 
@@ -157,6 +253,7 @@ export default class AddListenModal extends React.Component<
         release_name: "",
       },
       TrackIsSelected: false,
+      TimestampsSubmit: 0,
     });
   };
 
@@ -206,7 +303,7 @@ export default class AddListenModal extends React.Component<
                 >
                   Add track
                 </button>
-                <button
+                {/*<button
                   type="button"
                   className={`btn btn-primary add-listen ${
                     ListenOption === "album"
@@ -216,7 +313,7 @@ export default class AddListenModal extends React.Component<
                   onClick={this.addAlbum}
                 >
                   Add album
-                </button>
+                </button>*/}
               </div>
               {ListenOption === "track" &&
                 (TrackIsSelected === false ? (
@@ -245,7 +342,10 @@ export default class AddListenModal extends React.Component<
                         />
                       </div>
                     </div>
-                    <SubmitListenInfo SelectedTrack={SelectedTrack} />
+                    <SubmitListenInfo
+                      SelectedTrack={SelectedTrack}
+                      DateToUnixTimestamp={this.DateToUnixTimestamp}
+                    />
                   </div>
                 ))}
             </div>
@@ -254,18 +354,19 @@ export default class AddListenModal extends React.Component<
                 type="button"
                 className="btn btn-default"
                 data-dismiss="modal"
+                onClick={this.closeModal}
               >
                 Cancel
               </button>
-              {/* <button
+              <button
                 type="submit"
                 className="btn btn-success"
                 data-dismiss="modal"
-                disabled={users.length === 0}
-                onClick={this.submitPersonalRecommendation}
+                disabled={TrackIsSelected === false}
+                onClick={this.SubmitListen}
               >
-                Send Recommendation
-              </button> */}
+                Add Listen
+              </button>
             </div>
           </form>
         </div>
