@@ -245,7 +245,7 @@ export default class APIService {
      Send a POST request to the ListenBrainz server to submit a listen
    */
   submitListens = async (
-    userToken: string,
+    userToken: string | undefined,
     listenType: ListenType,
     payload: Array<Listen>,
     retries: number = 3
