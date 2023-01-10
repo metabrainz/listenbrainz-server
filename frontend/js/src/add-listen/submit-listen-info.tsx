@@ -55,12 +55,7 @@ export default class SubmitListenInfo extends React.Component<
     }
   }
 
-  convertToUnix = () => {
-    const { DateToUnixTimestamp } = this.props;
-    const date = this.state.Timestamp;
-    const unixTimestamp = Math.floor(date.getTime() / 1000);
-    DateToUnixTimestamp(unixTimestamp);
-  };
+  
 
   async getCoverArt() {
     const { SelectedTrack } = this.props;
@@ -70,7 +65,15 @@ export default class SubmitListenInfo extends React.Component<
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
     }
-  }
+  };
+
+  convertToUnix = () => {
+    const { DateToUnixTimestamp } = this.props;
+    const {Timestamp} = this.state;
+    const date = Timestamp;
+    const unixTimestamp = Math.floor(date.getTime() / 1000);
+    DateToUnixTimestamp(unixTimestamp);
+  };
 
   timestampNow = () => {
     this.setState({

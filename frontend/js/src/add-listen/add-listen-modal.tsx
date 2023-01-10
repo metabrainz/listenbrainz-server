@@ -71,7 +71,6 @@ export default class AddListenModal extends React.Component<
       TimestampsSubmit: 0,
       PayloadArray: [],
     };
-    console.log(this.state.TimestampsSubmit);
   }
 
   componentDidUpdate(pp: any, ps: any, ss: any) {
@@ -79,7 +78,6 @@ export default class AddListenModal extends React.Component<
     if (ps.SearchField !== SearchField) {
       this.SearchTrack();
     }
-    console.log(this.state.TimestampsSubmit);
   }
 
   handleError = (error: string | Error, title?: string): void => {
@@ -117,7 +115,8 @@ export default class AddListenModal extends React.Component<
           ],
         },
         async () => {
-          const payload = this.state.PayloadArray;
+          const {PayloadArray} = this.state;
+          const payload = PayloadArray;
           try {
             const status = await APIService.submitListens(
               currentUser.auth_token,
@@ -303,7 +302,7 @@ export default class AddListenModal extends React.Component<
                 >
                   Add track
                 </button>
-                {/*<button
+                {/* <button
                   type="button"
                   className={`btn btn-primary add-listen ${
                     ListenOption === "album"
@@ -313,7 +312,7 @@ export default class AddListenModal extends React.Component<
                   onClick={this.addAlbum}
                 >
                   Add album
-                </button>*/}
+                </button> */}
               </div>
               {ListenOption === "track" &&
                 (TrackIsSelected === false ? (
