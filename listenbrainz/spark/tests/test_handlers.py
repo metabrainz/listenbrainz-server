@@ -568,7 +568,8 @@ class HandlersTestCase(DatabaseTestCase):
                     "artist_name": "Katty Peri",
                     "listened_at": "2020-04-29 23:56:23",
                     "release_name": "No Place Is Home",
-                    "recording_name": "How High"
+                    "recording_name": "How High",
+                    "recording_msid": "aab9ec01-89ac-4026-a1c7-4cf6e347aec8"
                 }
             ],
             'source': 'cf'
@@ -586,7 +587,8 @@ class HandlersTestCase(DatabaseTestCase):
                     artist_name="Katty Peri",
                     listened_at="2020-04-29 23:56:23",
                     release_name="No Place Is Home",
-                    recording_name="How High"
+                    recording_name="How High",
+                    recording_msid="aab9ec01-89ac-4026-a1c7-4cf6e347aec8"
                 )]),
             'cf'
         )
