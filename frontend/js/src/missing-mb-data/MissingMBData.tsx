@@ -201,31 +201,50 @@ export default class MissingMBDataPage extends React.Component<
                 <Loader isLoading={loading} />
               </div>
               {missingData.map((data, index) => {
-                const additionalActions = (
-                  <ListenControl
-                    buttonClassName="btn btn-sm btn-success"
-                    icon={faPlus}
-                    title="Add missing recording"
-                    text=""
-                    // eslint-disable-next-line react/jsx-no-bind
-                    action={this.submitMissingData.bind(
-                      this,
-                      missingMBDataAsListen[index]
-                    )}
-                  />
-                );
-                const additionalMenuItems = [
-                  <ListenControl
-                    text="Link with MusicBrainz"
-                    icon={faLink}
-                    action={this.updateRecordingToMapToMusicbrainz.bind(
-                      this,
-                      missingMBDataAsListen[index]
-                    )}
-                    dataToggle="modal"
-                    dataTarget="#MapToMusicBrainzRecordingModal"
-                  />,
-                ];
+                let additionalActions;
+                if (currentUser?.auth_token) {
+                  const addToMB = (
+                    <ListenControl
+                      buttonClassName="btn btn-sm btn-success"
+                      icon={faPlus}
+                      title="Add missing recording"
+                      text=""
+                      // eslint-disable-next-line react/jsx-no-bind
+                      action={this.submitMissingData.bind(
+                        this,
+                        missingMBDataAsListen[index]
+                      )}
+                    />
+                  );
+
+                  if (
+                    missingMBDataAsListen[index]?.track_metadata
+                      ?.additional_info?.recording_msid
+                  ) {
+                    const linkWithMB = (
+                      <ListenControl
+                        buttonClassName="btn btn-sm"
+                        text=""
+                        title="Link with MusicBrainz"
+                        icon={faLink}
+                        action={this.updateRecordingToMapToMusicbrainz.bind(
+                          this,
+                          missingMBDataAsListen[index]
+                        )}
+                        dataToggle="modal"
+                        dataTarget="#MapToMusicBrainzRecordingModal"
+                      />
+                    );
+                    additionalActions = (
+                      <>
+                        {linkWithMB}
+                        {addToMB}
+                      </>
+                    );
+                  } else {
+                    additionalActions = addToMB;
+                  }
+                }
                 return (
                   <ListenCard
                     key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
@@ -234,9 +253,11 @@ export default class MissingMBDataPage extends React.Component<
                     newAlert={newAlert}
                     // eslint-disable-next-line react/jsx-no-useless-fragment
                     customThumbnail={<></>}
+                    // eslint-disable-next-line react/jsx-no-useless-fragment
+                    feedbackComponent={<></>}
                     listen={missingMBDataAsListen[index]}
                     additionalActions={additionalActions}
-                    additionalMenuItems={additionalMenuItems}
+                    compact
                   />
                 );
               })}
