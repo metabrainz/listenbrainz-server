@@ -1,0 +1,189 @@
+import os
+
+DEBUG = True # set to False in production mode
+
+SECRET_KEY = "CHANGE_ME"
+
+# Remember cookie is 'Strict' by default and not configurable currently
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = True
+REMEMBER_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+REMEMBER_COOKIE_HTTPONLY = True
+
+# DATABASES
+# ListenBrainz
+SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@lb_db:5432/listenbrainz"
+POSTGRES_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
+POSTGRES_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz"
+
+# Timescale
+SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@lb_db/listenbrainz_ts"
+TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
+TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz_ts"
+
+# MessyBrainz
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@lb_db:5432/messybrainz"
+MESSYBRAINZ_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
+MESSYBRAINZ_ADMIN_MSB_URI = "postgresql://postgres:postgres@lb_db/messybrainz"
+
+# MusicBrainz & others
+IS_MUSICBRAINZ_UP = True  # if set to False, login page will be blocked
+MBID_MAPPING_DATABASE_URI = ""
+MB_DATABASE_URI = ""
+
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_URI
+}
+
+# Redis
+REDIS_HOST = "redis"
+REDIS_PORT = 6379
+REDIS_NAMESPACE = "listenbrainz"
+
+# RabbitMQ
+RABBITMQ_HOST = "rabbitmq"
+RABBITMQ_PORT = 5672
+RABBITMQ_USERNAME = "guest"
+RABBITMQ_PASSWORD = "guest"
+RABBITMQ_VHOST = "/"
+MAXIMUM_RABBITMQ_CONNECTIONS = 20
+
+# RabbitMQ exchanges and queues
+INCOMING_EXCHANGE = "incoming"
+INCOMING_QUEUE = "incoming"
+UNIQUE_EXCHANGE = "unique"
+UNIQUE_QUEUE = "unique"
+WEBSOCKETS_QUEUE = "follow_list"
+PLAYING_NOW_EXCHANGE = "playing_now"
+PLAYING_NOW_QUEUE = "playing_now"
+SPOTIFY_METADATA_QUEUE = "spotify_metadata"
+
+SPARK_RESULT_EXCHANGE = "spark_result"
+SPARK_RESULT_QUEUE = "spark_result"
+SPARK_REQUEST_EXCHANGE = "spark_request"
+SPARK_REQUEST_QUEUE = "spark_request"
+
+EXTERNAL_SERVICES_EXCHANGE = "external_services"
+EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = "external_services_spotify_cache"
+
+# Typesense -- this is only needed if you plan to run the Labs API end point for MBID mapping
+TYPESENSE_HOST = "localhost"
+TYPESENSE_PORT = 8108
+TYPESENSE_API_KEY = "API_KEY"
+
+# Couchdb instance config
+COUCHDB_HOST = "couchdb"
+COUCHDB_PORT = 5984
+COUCHDB_USER = "listenbrainz"
+COUCHDB_ADMIN_KEY = "listenbrainz"
+
+# MusicBrainz OAuth
+MUSICBRAINZ_CLIENT_ID = "24QW_HlhXk3mpU2sg4KrxJSYgJbF2-0N"
+MUSICBRAINZ_CLIENT_SECRET = "ddygAH7LvULAmB9nqODqefIws1ETKIR7"
+
+# Lastfm API
+LASTFM_API_URL = "http://localhost:8100"
+LASTFM_API_KEY = "0a7773887a434108e770576144d05d79"
+
+# Libre.fm API
+LIBREFM_API_URL = "https://libre.fm/2.0/"
+LIBREFM_API_KEY = "USE_LIBREFM_API_KEY"
+
+# Stats
+STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
+STATS_CALCULATION_LOGIN_TIME = 30 # users must have logged in to LB in the past 30 days for stats to be calculated
+STATS_CALCULATION_INTERVAL = 7 # stats are calculated every 7 days
+
+
+# Max time in seconds after which the playing_now stream will expire.
+PLAYING_NOW_MAX_DURATION = 10 * 60
+
+# LOGGING
+
+# Uncomment any of the following logging stubs if you want to enable logging
+# during development. In general you shouldn't need to do this
+
+# LOG_FILE = {
+#    'filename': './logs/listenbrainz.txt',
+#    'max_bytes': 512 * 1024, # optional
+#    'backup_count': 100, # optional
+# }
+
+# LOG_SENTRY = {
+#     'dsn':'',
+#     'environment': 'development',
+#     'level': 'ERROR',
+#     'traces_sample_rate': 1.0,
+# }
+
+
+# MISCELLANEOUS
+
+
+# MAX file size to be allowed for the lastfm-backup import, default is infinite
+# Size is in bytes
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+
+# Specify the upload folder where all the lastfm-backup will be stored
+# The path must be absolute path
+UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
+
+# Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
+# without going through the process of generating the stats in local environment. Otherwise,
+# set it to "http://localhost:8100"
+API_URL = 'https://api.listenbrainz.org'
+LASTFM_PROXY_URL = 'http://localhost:8101/'
+SERVER_ROOT_URL = 'http://localhost:8100'
+MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
+LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
+
+# Flask Debug redirect
+# Set to True if you want Flask-Debug to intercept redirects
+DEBUG_TB_INTERCEPT_REDIRECTS = False
+
+# Users who are allowed to view the LB admin interface
+ADMINS = []
+# Users who are allowed to submit playlists made for someone else.
+APPROVED_PLAYLIST_BOTS = ['troi-bot', 'troi-bot-debug']
+
+# Auth tokens that are not subject to rate limits:
+WHITELISTED_AUTH_TOKENS = []
+
+# SPOTIFY
+SPOTIFY_CLIENT_ID = '55772ad131fd482f9e53c71a7cdee5c8'
+SPOTIFY_CLIENT_SECRET = '4f2397ba42384b518a78c21989a852f1'
+SPOTIFY_CALLBACK_URL = 'http://localhost:8100/profile/music-services/spotify/callback/'
+
+# CRITIQUEBRAINZ
+CRITIQUEBRAINZ_CLIENT_ID = 'SPtf3fgN5TUWSnqKOgXR'
+CRITIQUEBRAINZ_CLIENT_SECRET = '53mdOOqbRdj7HXUGMUMTMKOfmapIkj2jNF8aGDyZ'
+CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
+
+# YOUTUBE
+YOUTUBE_API_KEY = 'change me'
+
+# This is set to False to stop a warning from flask_sqlalchemy.
+# We do not use this feature at all, so it is safe to set to False.
+# See https://stackoverflow.com/a/33790196 for more details.
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+TESTING = True # this flag is used by the mail module to check if mails need to be sent or not
+
+# Mail server
+SMTP_SERVER = 'listenbrainz-mail'
+SMTP_PORT = 25
+MAIL_FROM_DOMAIN = 'listenbrainz.org'
+
+# expiration of 'Remember me' cookie
+SESSION_REMEMBER_ME_DURATION = 365
+
+# listen dumps creation dir
+LISTEN_DUMP_TEMP_DIR_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'tmp')
+
+# If set to True, reject listens from users who do not have an email
+REJECT_LISTENS_WITHOUT_USER_EMAIL = False
+
+# If set to True, do not allow new users without email to register
+REJECT_NEW_USERS_WITHOUT_EMAIL = False
