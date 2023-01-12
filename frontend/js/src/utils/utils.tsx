@@ -555,7 +555,13 @@ const getAlbumArtFromListenMetadata = async (
   const userSubmittedReleaseMBID =
     listen.track_metadata.additional_info?.release_mbid;
   if (userSubmittedReleaseMBID) {
-    return getAlbumArtFromReleaseMBID(userSubmittedReleaseMBID);
+    const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
+      userSubmittedReleaseMBID
+    );
+    // if user submitted release mbid does not have a cover art, we will try to fallback to release group cover art next
+    if (userSubmittedReleaseAlbumArt) {
+      return userSubmittedReleaseAlbumArt;
+    }
   }
   // user submitted release mbids not found, check if there is a match from mbid mapper.
   const caaId = listen.track_metadata.mbid_mapping?.caa_id;
