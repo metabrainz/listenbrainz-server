@@ -96,7 +96,7 @@ def get_missing_musicbrainz_data(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user['id'], source)
+    data, created = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user['id'], source)
 
     if not data:
         err_msg = 'Missing MusicBrainz data for {} not calculated or none exists.'.format(user_name)
@@ -107,7 +107,7 @@ def get_missing_musicbrainz_data(user_name):
     payload = {
         'payload': {
             'user_name': user_name,
-            'last_updated': int(data.created.timestamp()),
+            'last_updated': int(created.timestamp()),
             'count': len(missing_musicbrainz_data_list_filtered),
             'total_data_count': len(data),
             'offset': offset,

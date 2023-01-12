@@ -65,37 +65,30 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
             source : Source of generation of missing MusicBrainz data.
 
         Returns:
-            A dict of the following format
-            {
-                'user_id' (int): the row ID of the user in the DB,
-                'missing_musicbrainz_data'  (dict): missing musicbrainz data.
+            A tuple of the following format
+            (
+                'missing_musicbrainz_data'  (dict): missing musicbrainz data,
                 'created' (datetime): datetime object representing when the missing
                                       MusicBrainz data for this user was last updated.
-            }
+            )
 
-        A sample response from the DB would look like:
-        {
-            "created": "Tue, 18 Aug 2020 16:46:09 GMT",
-            "data": {
-                "missing_musicbrainz_data": [
-                    {
-                        "artist_name": "Katty Peri"
-                        "listened_at": 1588204593,
-                        "recording_msid": "568eeea3-9255-4878-9df8-296043344e04",
-                        "release_name": "No Place Is Home",
-                        "track_name": "How High"
-                    },
-                    {
-                        "artist_name": "Welshly Arms",
-                        "listened_at": 1588204583,
-                        "recording_msid": "b911620d-8541-44e5-a0db-977679efb37d",
-                        "release_name": "No Place Is Home",
-                        "track_name": "Sanctuary"
-                    }
-                ]
-            },
-            "user_id": 1
-        }
+        A sample response would look like:
+            ([
+                {
+                    "artist_name": "Katty Peri"
+                    "listened_at": 1588204593,
+                    "recording_msid": "568eeea3-9255-4878-9df8-296043344e04",
+                    "release_name": "No Place Is Home",
+                    "track_name": "How High"
+                },
+                {
+                    "artist_name": "Welshly Arms",
+                    "listened_at": 1588204583,
+                    "recording_msid": "b911620d-8541-44e5-a0db-977679efb37d",
+                    "release_name": "No Place Is Home",
+                    "track_name": "Sanctuary"
+                }
+            ], datetime.datetime(2020, 5, 1, 10, 0, 0))
 
     """
     with db.engine.connect() as connection:
@@ -113,16 +106,16 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
 
     try:
         if row:
-            missing_mb_data = UserMissingMusicBrainzData(**row).data.missing_musicbrainz_data
+            missing_mb_data = UserMissingMusicBrainzDataJson(missing_musicbrainz_data=row["data"]["missing_musicbrainz_data"]).missing_musicbrainz_data
             if missing_mb_data:
-                return remove_mapped_mb_data(user_id, missing_mb_data)
+                return remove_mapped_mb_data(user_id, missing_mb_data), row["created"]
         else:
-            return None
+            return None, None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting missing musicbrainz data for source "{source}"
                                  for user with user_id: {user_id}. Data: {data}""".format(source=source, user_id=user_id,
                                  data=ujson.dumps(row['data'], indent=4)), exc_info=True)
-        return None
+        return None, None
 
 
 def remove_mapped_mb_data(user_id: int, missing_musicbrainz_data: list[UserMissingMusicBrainzDataRecord]):

@@ -3,16 +3,21 @@ import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.user as db_user
 
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 from datetime import datetime
 
 
-class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase):
+class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
         self.user = db_user.get_or_create(1, 'vansika')
+
+    def tearDown(self):
+        TimescaleTestCase.tearDown(self)
+        DatabaseTestCase.tearDown(self)
 
     def insert_test_data(self):
         """ Insert test data into the database """
@@ -38,12 +43,12 @@ class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase):
         )
 
         result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user_id=self.user['id'], source='cf')
-        self.assertEqual(result.data.dict()['missing_musicbrainz_data'], missing_musicbrainz_data)
+        self.assertEqual(result, missing_musicbrainz_data)
 
     def test_get_user_missing_musicbrainz_data(self):
         data_inserted = self.insert_test_data()
         result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user_id=self.user['id'], source='cf')
-        self.assertEqual(data_inserted, result.data.dict()['missing_musicbrainz_data'])
+        self.assertEqual(data_inserted, result)
 
     def test_multiple_inserts_into_db(self):
         """ Test if data associated with a user id is updated on multiple inserts.
@@ -64,4 +69,4 @@ class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase):
         )
 
         result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user_id=self.user['id'], source='cf')
-        self.assertEqual(result.data.missing_musicbrainz_data, None)
+        self.assertIsNone(result)
