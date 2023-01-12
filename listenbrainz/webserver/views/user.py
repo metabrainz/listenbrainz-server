@@ -540,7 +540,7 @@ def year_in_music(user_name, year: int = 2022):
 def missing_mb_data(user_name: str):
     """ Shows missing musicbrainz data """
     user = _get_user(user_name)
-    missing_data = get_user_missing_musicbrainz_data(user.id, "cf")
+    missing_data, created = get_user_missing_musicbrainz_data(user.id, "cf")
 
     props = {
         "missingData": missing_data or [],
