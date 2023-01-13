@@ -3,6 +3,7 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { get, findIndex, omit } from "lodash";
+import { saveAs } from "file-saver";
 
 import { ActionMeta, InputActionMeta, ValueType } from "react-select";
 import {
@@ -579,7 +580,7 @@ export default class PlaylistPage extends React.Component<
     auth_token: string
   ) => {
     const result = await this.APIService.getPlaylist(playlistId, auth_token);
-    this.downloadFile(`${playlistTitle}.jspf`, await result.blob());
+    saveAs(await result.blob(), `${playlistTitle}.jspf`);
   };
 
   exportAsXSPF = async (
@@ -591,21 +592,7 @@ export default class PlaylistPage extends React.Component<
       auth_token,
       playlistId
     );
-    this.downloadFile(`${playlistTitle}.xspf`, result);
-  };
-
-  downloadFile = (fileName: string, blob: Blob) => {
-    // Create a dummy anchor element to force a download
-    const anchorElement = document.createElement("a");
-    anchorElement.href = URL.createObjectURL(blob);
-    anchorElement.download = fileName;
-    anchorElement.style.display = "none";
-
-    document.body.appendChild(anchorElement);
-    anchorElement.click();
-    document.body.removeChild(anchorElement);
-
-    URL.revokeObjectURL(anchorElement.href);
+    saveAs(result, `${playlistTitle}.xspf`);
   };
 
   handlePlaylistExport = async (
