@@ -205,7 +205,7 @@ export default class MissingMBDataPage extends React.Component<
                 if (currentUser?.auth_token) {
                   const addToMB = (
                     <ListenControl
-                      buttonClassName="btn btn-sm btn-success"
+                      buttonClassName="btn btn-sm"
                       icon={faPlus}
                       title="Add missing recording"
                       text=""
@@ -223,7 +223,7 @@ export default class MissingMBDataPage extends React.Component<
                   ) {
                     const linkWithMB = (
                       <ListenControl
-                        buttonClassName="btn btn-sm"
+                        buttonClassName="btn btn-sm btn-success"
                         text=""
                         title="Link with MusicBrainz"
                         icon={faLink}
