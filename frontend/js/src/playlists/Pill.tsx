@@ -4,21 +4,21 @@ import { isFunction } from "lodash";
 import ListenControl from "../listens/ListenControl";
 
 export type PillProps = {
-  title: string;
-  closeAction?: (event: React.MouseEvent) => void;
+  collaboratorName: string;
+  removeCollaborator?: (event: React.MouseEvent) => void;
 };
 
 export type PillState = {};
 
 export default class Pill extends React.Component<PillProps, PillState> {
   render() {
-    const { title, closeAction } = this.props;
+    const { collaboratorName, removeCollaborator } = this.props;
     return (
       <div className="playlistPill">
         <div>
-          <span>{title}</span>
-          {isFunction(closeAction) && (
-            <ListenControl text="" icon={faTimesCircle} action={closeAction} />
+          <span>{collaboratorName}</span>
+          {isFunction(removeCollaborator) && (
+            <ListenControl text="" icon={faTimesCircle} action={removeCollaborator} />
           )}
         </div>
       </div>

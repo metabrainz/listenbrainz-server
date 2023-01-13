@@ -28,7 +28,7 @@ type CreateOrEditPlaylistModalState = {
   isPublic: boolean;
   collaborators: string[];
   newCollaborator: string;
-  searchResults: Array<string>;
+  userSearchResults: Array<string>;
 };
 
 export default class CreateOrEditPlaylistModal extends React.Component<
@@ -47,7 +47,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       isPublic: customFields?.public ?? true,
       collaborators: customFields?.collaborators ?? [],
       newCollaborator: "",
-      searchResults: [],
+      userSearchResults: [],
     };
   }
 
@@ -82,7 +82,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       isPublic: true,
       collaborators: [],
       newCollaborator: "",
-      searchResults: [],
+      userSearchResults: [],
     });
   };
 
@@ -155,11 +155,11 @@ export default class CreateOrEditPlaylistModal extends React.Component<
         });
         const results: Array<string> = [];
         const parsedResponse = await response.json();
-        parsedResponse.users.map((user) => {
+        parsedResponse.users.map((user: any) => {
           results.push(user[0]);
         });
         this.setState({
-          searchResults: results,
+          userSearchResults: results,
         });
       } catch (error) {
         console.debug(error);
@@ -174,7 +174,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       isPublic,
       collaborators,
       newCollaborator,
-      searchResults,
+      userSearchResults,
     } = this.state;
     const { htmlId, playlist } = this.props;
     const { currentUser } = this.context;
@@ -252,8 +252,8 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                   {collaborators.map((user) => {
                     return (
                       <Pill
-                        title={user}
-                        closeAction={this.removeCollaborator.bind(this, user)}
+                        collaboratorName={user}
+                        removeCollaborator={this.removeCollaborator.bind(this, user)}
                       />
                     );
                   })}
@@ -269,8 +269,8 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                     name="newCollaborator"
                   />
                   <SearchDropDown
-                    action={this.addCollaborator}
-                    searchResults={searchResults}
+                    addCollaborator={this.addCollaborator}
+                    userSearchResults={userSearchResults}
                   />
                 </div>
               </div>
