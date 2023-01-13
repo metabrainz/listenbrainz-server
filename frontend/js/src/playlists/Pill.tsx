@@ -5,7 +5,7 @@ import ListenControl from "../listens/ListenControl";
 
 export type PillProps = {
   collaboratorName: string;
-  removeCollaborator?: (event: React.MouseEvent) => void;
+  removeCollaborator?: (event: string) => void;
 };
 
 

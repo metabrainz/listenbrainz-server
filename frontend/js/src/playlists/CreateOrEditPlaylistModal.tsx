@@ -23,7 +23,7 @@ type CreateOrEditPlaylistModalState = {
   isPublic: boolean;
   collaborators: string[];
   newCollaborator: string;
-  userSearchResults: Array<string>;
+  userSearchResults: Array<any>;
 };
 
 export default class CreateOrEditPlaylistModal extends React.Component<
@@ -150,14 +150,10 @@ export default class CreateOrEditPlaylistModal extends React.Component<
             "Content-Type": "application/json;charset=UTF-8",
           },
         });
-        const results: Array<string> = [];
+
         const parsedResponse = await response.json();
-        parsedResponse.users.map((user: any) => {
-          results.push(user[0]);
-          return;
-        });
         this.setState({
-          userSearchResults: results,
+          userSearchResults: parsedResponse.users
         });
 
       } catch (error) {

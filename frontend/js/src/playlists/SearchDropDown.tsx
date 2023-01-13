@@ -5,7 +5,7 @@ import ListenControl from "../listens/ListenControl";
 
 export type SearchDropDownProps = {
   addCollaborator: (event: string) => void;
-  userSearchResults: Array<string>;
+  userSearchResults: Array<any>;
 };
 
 export type SearchDropDownState = {};
@@ -23,7 +23,7 @@ export default class SearchDropDown extends React.Component<
         {userSearchResults?.map((user) => {
           return (
             <ListenControl
-              text={`${user}`}
+              text={`${user[0]}`}
               icon={faUser}
               action={() => {
                 addCollaborator(user);
