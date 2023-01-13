@@ -6,7 +6,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { TryCatch } from "@sentry/browser";
 import { getPlaylistExtension, getPlaylistId } from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import SearchDropDown from "./Searchdropdown";
+import SearchDropDown from "./SearchDropDown";
 import Pill from "./Pill";
 
 type CreateOrEditPlaylistModalProps = {
