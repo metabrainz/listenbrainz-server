@@ -136,3 +136,66 @@
   display: block;
   align-self: center;
 }
+
+.collaboratorsearchdropdown {
+  display: block;
+  position: absolute;
+  width: calc(100% - 40px);
+  z-index: 6;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
+  list-style: none;
+  border: 1px solid #ccc; // IE8 fallback
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background-color: @white-background;
+  max-height: 102px;
+  /*overflow: hidden;*/
+  overflow-y: scroll;
+
+  // Links within the dropdown menu
+  > a,
+  > button {
+    display: block; // necessary for <a> tags
+    width: 100%;
+    background: none;
+    color: inherit;
+    border: none;
+    padding: 5px 20px;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+    text-align: left;
+
+    &:hover {
+      color: #fff;
+      background-color: #eb743b;
+    }
+  }
+}
+.playlistPill {
+  display: inline-block;
+  background-color: @blue;
+  border-radius: 100px;
+  margin: 2px 2px 5px 2px;
+  > div {
+    display: flex;
+    margin: 5px;
+    // We want pills to be always 32px height or more
+    // Texts are 10px, hence minimum height of 22px here
+    min-height: 22px;
+    span {
+      color: @white;
+      margin-top: auto;
+      margin-bottom: auto;
+      margin-left: 6px;
+      margin-right: 6px;
+      font-style: normal;
+    }
+    button {
+      background-color: @blue;
+      color: @white;
+      border: none;
+      border-radius: 100px;
+    }
+  }
+}
+

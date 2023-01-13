@@ -3,8 +3,11 @@ import { faPlusCircle, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { TryCatch } from "@sentry/browser";
 import { getPlaylistExtension, getPlaylistId } from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import SearchDropDown from "./Searchdropdown";
+import Pill from "./Pill";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
@@ -25,6 +28,7 @@ type CreateOrEditPlaylistModalState = {
   isPublic: boolean;
   collaborators: string[];
   newCollaborator: string;
+  searchResults: Array<string>;
 };
 
 export default class CreateOrEditPlaylistModal extends React.Component<
@@ -43,12 +47,16 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       isPublic: customFields?.public ?? true,
       collaborators: customFields?.collaborators ?? [],
       newCollaborator: "",
+      searchResults: [],
     };
   }
 
   // We make the component reusable by updating the state
   // when props change (when we pass another playlist)
-  componentDidUpdate(prevProps: CreateOrEditPlaylistModalProps) {
+  componentDidUpdate(
+    prevProps: CreateOrEditPlaylistModalProps,
+    prevState: CreateOrEditPlaylistModalState
+  ) {
     const { playlist } = this.props;
 
     if (getPlaylistId(prevProps.playlist) !== getPlaylistId(playlist)) {
@@ -61,6 +69,10 @@ export default class CreateOrEditPlaylistModal extends React.Component<
         newCollaborator: "",
       });
     }
+
+    if (prevState.newCollaborator != this.state.newCollaborator) {
+      this.searchUsers();
+    }
   }
 
   clear = () => {
@@ -70,6 +82,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       isPublic: true,
       collaborators: [],
       newCollaborator: "",
+      searchResults: [],
     });
   };
 
@@ -113,18 +126,45 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     });
   };
 
-  addCollaborator = (evt: React.MouseEvent<HTMLButtonElement>): void => {
-    evt.preventDefault();
+  addCollaborator = (collaborator: string): void => {
     const { collaborators, newCollaborator } = this.state;
-    if (collaborators.indexOf(newCollaborator) !== -1) {
+    if (collaborators.indexOf(collaborator) !== -1) {
       // already in the list
       this.setState({ newCollaborator: "" });
       return;
     }
     this.setState({
-      collaborators: [...collaborators, newCollaborator],
+      collaborators: [...collaborators, collaborator],
       newCollaborator: "",
     });
+  };
+
+  searchUsers = async () => {
+    const { currentUser } = this.context;
+    const { newCollaborator } = this.state;
+    if (currentUser?.auth_token) {
+      try {
+        const url = new URL("http://localhost:8100/1/playlist/search/users/");
+        url.searchParams.append("search_term", newCollaborator);
+        const response = await fetch(url.toString(), {
+          method: "GET",
+          headers: {
+            Authorization: `Token ${currentUser.auth_token}`,
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+        });
+        const results: Array<string> = [];
+        const parsedResponse = await response.json();
+        parsedResponse.users.map((user) => {
+          results.push(user[0]);
+        });
+        this.setState({
+          searchResults: results,
+        });
+      } catch (error) {
+        console.debug(error);
+      }
+    }
   };
 
   render() {
@@ -134,6 +174,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       isPublic,
       collaborators,
       newCollaborator,
+      searchResults,
     } = this.state;
     const { htmlId, playlist } = this.props;
     const { currentUser } = this.context;
@@ -200,65 +241,37 @@ export default class CreateOrEditPlaylistModal extends React.Component<
               </div>
 
               <div className="form-group">
-                <label htmlFor="playlistcollaborators">Collaborators</label>
-                <table
-                  id="playlistcollaborators"
-                  className="table table-condensed table-striped listens-table"
-                >
-                  <tbody>
-                    {collaborators.map((user, index) => {
-                      return (
-                        <tr key={user}>
-                          <td>{user}</td>
+                <div>
+                  <label
+                    htmlFor="playlistcollaborators"
+                    style={{ display: "block" }}
+                  >
+                    Collaborators
+                  </label>
 
-                          <td
-                            style={{
-                              paddingTop: 0,
-                              paddingBottom: 0,
-                              width: "30px",
-                            }}
-                          >
-                            <button
-                              className="btn btn-link"
-                              type="button"
-                              aria-label="Remove"
-                              onClick={this.removeCollaborator.bind(this, user)}
-                            >
-                              <FontAwesomeIcon icon={faTimes as IconProp} />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                <div className="input-group input-group-flex">
-                  <span className="input-group-addon">Add collaborator</span>
+                  {collaborators.map((user) => {
+                    return (
+                      <Pill
+                        title={user}
+                        closeAction={this.removeCollaborator.bind(this, user)}
+                      />
+                    );
+                  })}
+                </div>
+
+                <div>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Username…"
-                    name="newCollaborator"
                     onChange={this.handleInputChange}
+                    placeholder="Add collaborator"
                     value={newCollaborator}
+                    name="newCollaborator"
                   />
-                  <span className="input-group-btn">
-                    <button
-                      className="btn btn-default"
-                      type="submit"
-                      onClick={this.addCollaborator}
-                      disabled={
-                        !newCollaborator ||
-                        (isEdit
-                          ? playlist?.creator.toLowerCase() ===
-                            newCollaborator.toLowerCase()
-                          : currentUser.name.toLowerCase() ===
-                            newCollaborator.toLowerCase())
-                      }
-                    >
-                      <FontAwesomeIcon icon={faPlusCircle as IconProp} /> Add
-                    </button>
-                  </span>
+                  <SearchDropDown
+                    action={this.addCollaborator}
+                    searchResults={searchResults}
+                  />
                 </div>
               </div>
             </div>
