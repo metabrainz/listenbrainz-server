@@ -10,7 +10,7 @@ export type PillProps = {
 
 
   function Pill(props:PillProps){
-    const { collaboratorName, removeCollaborator } = this.props;
+    const { collaboratorName, removeCollaborator } = props;
     return (
       <div className="playlistPill">
         <div>
@@ -22,3 +22,5 @@ export type PillProps = {
       </div>
     );
 }
+
+export default Pill;
