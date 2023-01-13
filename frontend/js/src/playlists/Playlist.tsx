@@ -567,7 +567,7 @@ export default class PlaylistPage extends React.Component<
       <>
         Successfully exported playlist:{" "}
         <a href={external_url} target="_blank" rel="noopener noreferrer">
-          {external_url}
+          {playlistTitle}
         </a>
         Heads up: the new playlist is public on Spotify.
       </>
