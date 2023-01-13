@@ -31,6 +31,26 @@ api_bp = Blueprint('api_v1', __name__)
 
 DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
+SEARCH_USER_LIMIT = 10
+
+@api_bp.route('/playlist/search/users/', methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+def search_user():
+    search_term = request.args.get("search_term")
+    user = validate_auth_header()
+    user_id = user.id
+    if search_term:
+        users = db_user.search(search_term, SEARCH_USER_LIMIT, user_id)
+    else:
+        users = []
+    return jsonify(
+        {
+            'status': 'ok',
+            'users': users
+            }
+            )
+
 
 @api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain
