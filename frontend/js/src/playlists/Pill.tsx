@@ -8,10 +8,8 @@ export type PillProps = {
   removeCollaborator?: (event: React.MouseEvent) => void;
 };
 
-export type PillState = {};
 
-export default class Pill extends React.Component<PillProps, PillState> {
-  render() {
+  function Pill(props:PillProps){
     const { collaboratorName, removeCollaborator } = this.props;
     return (
       <div className="playlistPill">
@@ -23,5 +21,4 @@ export default class Pill extends React.Component<PillProps, PillState> {
         </div>
       </div>
     );
-  }
 }

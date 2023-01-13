@@ -1,9 +1,4 @@
 import * as React from "react";
-import { faPlusCircle, faTimes } from "@fortawesome/free-solid-svg-icons";
-
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { TryCatch } from "@sentry/browser";
 import { getPlaylistExtension, getPlaylistId } from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchDropDown from "./SearchDropDown";
@@ -70,7 +65,9 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       });
     }
 
-    if (prevState.newCollaborator != this.state.newCollaborator) {
+    const {newCollaborator} = this.state;
+
+    if (prevState.newCollaborator !== newCollaborator) {
       this.searchUsers();
     }
   }
@@ -157,10 +154,12 @@ export default class CreateOrEditPlaylistModal extends React.Component<
         const parsedResponse = await response.json();
         parsedResponse.users.map((user: any) => {
           results.push(user[0]);
+          return;
         });
         this.setState({
           userSearchResults: results,
         });
+
       } catch (error) {
         console.debug(error);
       }
@@ -253,7 +252,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                     return (
                       <Pill
                         collaboratorName={user}
-                        removeCollaborator={this.removeCollaborator.bind(this, user)}
+                        removeCollaborator={this.removeCollaborator}
                       />
                     );
                   })}
