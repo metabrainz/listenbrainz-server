@@ -200,6 +200,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                     return (
                       <NamePill
                         title={user}
+                        // eslint-disable-next-line react/jsx-no-bind
                         closeAction={this.removeCollaborator.bind(this, user)}
                       />
                     );
