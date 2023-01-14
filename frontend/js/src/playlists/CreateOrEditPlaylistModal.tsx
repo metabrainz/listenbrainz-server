@@ -1,8 +1,8 @@
 import * as React from "react";
 import { getPlaylistExtension, getPlaylistId } from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import SearchDropDown from "./SearchDropDown";
-import Pill from "./Pill";
+import UserSearch from "./UserSearch";
+import NamePill from "../personal-recommendations/NamePill";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
@@ -22,8 +22,6 @@ type CreateOrEditPlaylistModalState = {
   description: string;
   isPublic: boolean;
   collaborators: string[];
-  newCollaborator: string;
-  userSearchResults: Array<any>;
 };
 
 export default class CreateOrEditPlaylistModal extends React.Component<
@@ -41,8 +39,6 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       description: props.playlist?.annotation ?? "",
       isPublic: customFields?.public ?? true,
       collaborators: customFields?.collaborators ?? [],
-      newCollaborator: "",
-      userSearchResults: [],
     };
   }
 
@@ -61,14 +57,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
         description: playlist?.annotation ?? "",
         isPublic: customFields?.public ?? true,
         collaborators: customFields?.collaborators ?? [],
-        newCollaborator: "",
       });
-    }
-
-    const {newCollaborator} = this.state;
-
-    if (prevState.newCollaborator !== newCollaborator) {
-      this.searchUsers();
     }
   }
 
@@ -78,8 +67,6 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       description: "",
       isPublic: true,
       collaborators: [],
-      newCollaborator: "",
-      userSearchResults: [],
     });
   };
 
@@ -123,54 +110,19 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     });
   };
 
-  addCollaborator = (collaborator: string): void => {
-    const { collaborators, newCollaborator } = this.state;
-    if (collaborators.indexOf(collaborator) !== -1) {
+  addCollaborator = (user: string): void => {
+    const { collaborators } = this.state;
+    if (collaborators.indexOf(user) !== -1) {
       // already in the list
-      this.setState({ newCollaborator: "" });
-      return;
-    }
-    this.setState({
-      collaborators: [...collaborators, collaborator],
-      newCollaborator: "",
-    });
-  };
-
-  searchUsers = async () => {
-    const { currentUser } = this.context;
-    const { newCollaborator } = this.state;
-    if (currentUser?.auth_token) {
-      try {
-        const url = new URL("http://localhost:8100/1/playlist/search/users/");
-        url.searchParams.append("search_term", newCollaborator);
-        const response = await fetch(url.toString(), {
-          method: "GET",
-          headers: {
-            Authorization: `Token ${currentUser.auth_token}`,
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-        });
-
-        const parsedResponse = await response.json();
-        this.setState({
-          userSearchResults: parsedResponse.users
-        });
-
-      } catch (error) {
-        console.debug(error);
-      }
+    } else {
+      this.setState({
+        collaborators: [...collaborators, user],
+      });
     }
   };
 
   render() {
-    const {
-      name,
-      description,
-      isPublic,
-      collaborators,
-      newCollaborator,
-      userSearchResults,
-    } = this.state;
+    const { name, description, isPublic, collaborators } = this.state;
     const { htmlId, playlist } = this.props;
     const { currentUser } = this.context;
     const isEdit = Boolean(getPlaylistId(playlist));
@@ -246,28 +198,18 @@ export default class CreateOrEditPlaylistModal extends React.Component<
 
                   {collaborators.map((user) => {
                     return (
-                      <Pill
-                        collaboratorName={user}
-                        removeCollaborator={this.removeCollaborator}
+                      <NamePill
+                        title={user}
+                        closeAction={this.removeCollaborator.bind(this, user)}
                       />
                     );
                   })}
                 </div>
 
-                <div>
-                  <input
-                    type="text"
-                    className="form-control"
-                    onChange={this.handleInputChange}
-                    placeholder="Add collaborator"
-                    value={newCollaborator}
-                    name="newCollaborator"
-                  />
-                  <SearchDropDown
-                    addCollaborator={this.addCollaborator}
-                    userSearchResults={userSearchResults}
-                  />
-                </div>
+                <UserSearch
+                  userClick={this.addCollaborator}
+                  placeholder="Add collaborator"
+                />
               </div>
             </div>
             <div className="modal-footer">

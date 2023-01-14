@@ -201,6 +201,27 @@ export default class APIService {
     return { status: response.status };
   };
 
+  searchUsers = async (
+    userName: string,
+    userToken: string | undefined
+  ): Promise<{ users: Array<any> }> => {
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const url = new URL(`${this.APIBaseURI}/playlist/search/users/`);
+    url.searchParams.append("search_term", userName);
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+
+    const parsedResponse = await response.json();
+    return { users: parsedResponse.users };
+  };
+
   getFollowersOfUser = async (
     username: string
   ): Promise<{ followers: Array<string> }> => {
