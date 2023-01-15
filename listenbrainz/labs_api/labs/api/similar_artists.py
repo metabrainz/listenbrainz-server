@@ -36,18 +36,18 @@ class SimilarArtistsViewerQuery(Query):
               SELECT a.gid::TEXT AS artist_mbid
                    , a.name
                    , a.comment
-                   , at.name AS type
+                   , t.name AS type
                    , g.name AS gender
-                FROM artist a
-           LEFT JOIN artist_type at
-                  ON a.id = at.id
-           LEFT JOIN gender g
+                FROM musicbrainz.artist a
+           LEFT JOIN musicbrainz.artist_type t
+                  ON t.id = a.type
+           LEFT JOIN musicbrainz.gender g
                   ON g.id = a.gender
                 JOIN mbids m
                   ON a.gid = m.gid::UUID
         """
-        result = execute_values(mb_curs, query, [(mbid,) for mbid in redirected_mbids], fetch=True)
-        metadata_idx = {row["artist_mbid"]: row for row in result}
+        results = execute_values(mb_curs, query, [(mbid,) for mbid in redirected_mbids], fetch=True)
+        metadata_idx = {row["artist_mbid"]: row for row in results}
 
         metadata = []
         for mbid in mbids:
@@ -90,7 +90,7 @@ class SimilarArtistsViewerQuery(Query):
             results = [{"type": "markup", "data": Markup("<p><b>Reference artist</b></p>")}]
             results.append(references)
 
-            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "artist", artist_mbids, algorithm, count)
+            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "artist_credit_mbids", artist_mbids, algorithm, count)
             if len(similar_mbids) == 0:
                 results.append({
                     "type": "markup",

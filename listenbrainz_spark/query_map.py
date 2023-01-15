@@ -25,7 +25,7 @@ import listenbrainz_spark.fresh_releases.fresh_releases
 import listenbrainz_spark.similarity.recording
 import listenbrainz_spark.similarity.artist
 import listenbrainz_spark.similarity.user
-import listenbrainz_spark.postgres.release
+import listenbrainz_spark.postgres
 
 functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
