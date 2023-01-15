@@ -4,6 +4,7 @@ from more_itertools import chunked
 
 import listenbrainz_spark
 from listenbrainz_spark import config
+from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME, ARTIST_CREDIT_MBID_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_dump
 
@@ -13,25 +14,24 @@ RECORDINGS_PER_MESSAGE = 10000
 DEFAULT_TRACK_LENGTH = 180
 
 
-def build_sessioned_index(listen_table, metadata_table, session, max_contribution, threshold, limit, _filter, skip_threshold):
+def build_sessioned_index(listen_table, metadata_table, artist_credit_table, session, max_contribution, threshold, limit, _filter, skip_threshold):
     # TODO: Handle case of unmatched recordings breaking sessions!
-    filter_artist_credit = "AND s1.artist_credit_id != s2.artist_credit_id" if _filter else ""
     return f"""
             WITH listens AS (
                  SELECT user_id
                       , BIGINT(listened_at)
-                      , CAST(COALESCE(recording_data.length / 1000, {DEFAULT_TRACK_LENGTH}) AS BIGINT) AS duration
-                      , artist_credit_id
-                      , explode(artist_mbids) AS artist_mbid
+                      , CAST(COALESCE(r.length / 1000, {DEFAULT_TRACK_LENGTH}) AS BIGINT) AS duration
+                      , artist_credit_mbids
+                      , explode(artist_credit_mbids) AS artist_mbid
                    FROM {listen_table} l
-              LEFT JOIN {metadata_table} mbc
+              LEFT JOIN {metadata_table} r
                   USING (recording_mbid)
                   WHERE l.recording_mbid IS NOT NULL
             ), ordered AS (
                 SELECT user_id
                      , listened_at
                      , listened_at - LAG(listened_at, 1) OVER w - LAG(duration, 1) OVER w AS difference
-                     , artist_credit_id
+                     , artist_credit_mbids
                      , artist_mbid
                   FROM listens
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
@@ -40,15 +40,16 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                      -- spark doesn't support window aggregate functions with FILTER clause
                      , COUNT_IF(difference > {session}) OVER w AS session_id
                      , LEAD(difference, 1) OVER w < {skip_threshold} AS skipped
-                     , artist_credit_id
+                     , artist_credit_mbids
                      , artist_mbid
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), sessions_filtered AS (
                 SELECT user_id
                      , session_id
-                     , artist_credit_id
+                     , artist_credit_mbids
                      , artist_mbid
+                     , concat_ws(",", artist_credit_mbids) AS artist_credit_mbids_str
                   FROM sessions
                  WHERE NOT skipped    
             ), user_grouped_mbids AS (
@@ -59,7 +60,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                   JOIN sessions_filtered s2
                  USING (user_id, session_id)
                  WHERE s1.artist_mbid != s2.artist_mbid
-                       {filter_artist_credit}
+                   AND s1.artist_credit_mbids != s2.artist_credit_mbids
             ), user_contribtion_mbids AS (
                 SELECT user_id
                      , lexical_mbid0 AS mbid0
@@ -111,15 +112,19 @@ def main(days, session, contribution, threshold, limit, filter_artist_credit, sk
     from_date = to_date + timedelta(days=-days)
 
     table = "artist_similarity_listens"
-    metadata_table = "mb_metadata_cache"
+    metadata_table = "recording_length"
+    artist_credit_table = "artist_credit"
 
     get_listens_from_dump(from_date, to_date).createOrReplaceTempView(table)
 
-    metadata_df = listenbrainz_spark.sql_context.read.json(config.HDFS_CLUSTER_URI + "/mb_metadata_cache.jsonl")
+    metadata_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + RECORDING_LENGTH_DATAFRAME)
     metadata_df.createOrReplaceTempView(metadata_table)
 
+    artist_credit_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + ARTIST_CREDIT_MBID_DATAFRAME)
+    artist_credit_df.createOrReplaceTempView(artist_credit_table)
+
     skip_threshold = -skip
-    query = build_sessioned_index(table, metadata_table, session, contribution, threshold, limit, filter_artist_credit, skip_threshold)
+    query = build_sessioned_index(table, metadata_table, artist_credit_table, session, contribution, threshold, limit, filter_artist_credit, skip_threshold)
     data = run_query(query).toLocalIterator()
 
     algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_filter_{filter_artist_credit}_skip_{skip}"
