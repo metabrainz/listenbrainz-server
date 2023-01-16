@@ -140,28 +140,8 @@ export default class MbidMappingModal extends React.Component<
                 to link it to this Listen and all others with the same metadata.
               </p>
 
-             <p
-                style={{
-                  fontSize: "20px",
-                  color: "#353070",
-                  fontWeight: "700",
-                  fontFamily: "Sintony, sans-serif",
-                  margin: "0",
-                  marginBottom: "-5px",
-                }}
-              >
-                {trackName}
-              </p>
-              <p
-                style={{
-                  fontSize: "16px",
-                  color: "#353070",
-                  fontWeight: "700",
-                  fontFamily: "Sintony, sans-serif",
-                }}
-              >
-                {artistName}
-              </p>
+              <p className="modal-track">{trackName}</p>
+              <p className="modal-artist">{artistName}</p>
 
               <div className="form-group">
                 <input
