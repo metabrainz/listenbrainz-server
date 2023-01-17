@@ -149,7 +149,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         # Setup all the needed objects
         can = CanonicalRecordingRedirect(mb_conn, lb_conn)
         can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, lb_conn)
-        can_rel = CanonicalReleaseRedirect(mb_conn, lb_conn)
+        can_rel = CanonicalReleaseRedirect(mb_conn)
         releases = CanonicalMusicBrainzDataRelease(mb_conn)
         mapping = CanonicalMusicBrainzData(mb_conn, lb_conn)
         mapping.add_additional_bulk_table(can)
@@ -168,7 +168,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
-            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
+            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             mb_conn.commit()
             lb_conn.commit()
             lb_conn.close()
