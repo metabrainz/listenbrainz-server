@@ -66,7 +66,18 @@ def send_dump_creation_notification(dump_name, dump_type):
 @cli.command(name="create_mapping")
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
               help="path to the directory where the dump should be made")
-def create_mapping(location):
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="Dump the metadata table from the listenbrainz database")
+def create_mapping(location, use_lb_conn):
+    """Create a dump of the canonical mapping tables. This includes the following items:
+        - metadata for canonical recordings
+        - canonical recording redirect
+        - canonical release redirect
+    These tables are created by the mapping `canonical-data` management command.
+    If canonical-data is called with --use-lb-conn then the canonical metadata and recording redirect tables will 
+       be in the listenbrainz timescale database connection
+    If called with --use-mb-conn then all tables will be in the musicbrainz database connection.
+    The canonical release redirect table will always be in the musicbrainz database connection.
+    """
     app = create_app()
     with app.app_context():
         end_time = datetime.now()
@@ -75,7 +86,7 @@ def create_mapping(location):
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
 
-        mapping_dump.create_mapping_dump(dump_path, end_time)
+        mapping_dump.create_mapping_dump(dump_path, end_time, use_lb_conn)
         expected_num_dumps = 1
 
         try:
