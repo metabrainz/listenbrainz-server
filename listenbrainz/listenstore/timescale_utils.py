@@ -24,9 +24,9 @@ def delete_listens():
     #
     # 1) Delete Mismatch
     #
-    # The listen_delete_metadata table holds the rows to be deleted from listen. We fetch the rows from it and delete
-    # corresponding listens from listen table. After that, we update counts and timestamps in listen_user_metadata table
-    # as necessary. Between the time rows are deleted from listen table and the time we get to clear up the
+    # The listen_delete_metadata table holds the rows to be deleted FROM listen_new. We fetch the rows from it and delete
+    # corresponding listens FROM listen_new table. After that, we update counts and timestamps in listen_user_metadata table
+    # as necessary. Between the time rows are deleted FROM listen_new table and the time we get to clear up the
     # listen_delete_metadata table, new rows may have been inserted in the latter. So, we would have deleted rows from
     # listen_delete_metadata table without deleting the actual listens.
     #
@@ -43,7 +43,7 @@ def delete_listens():
     # quite common situation, for example: the user clicking delete for the same listen twice. If we count the number of
     # deleted listens to subtract using listen_delete_metadata table, the count may become inaccurate.
     #
-    # Therefore, we use the RETURNING clause with the DELETE FROM listen statement to return the user_id and created
+    # Therefore, we use the RETURNING clause with the DELETE FROM listen_new statement to return the user_id and created
     # of the actual deletes and then calculate the deleted listen count from it and subtract it from existing count to
     # get the updated count.
     #
@@ -100,12 +100,12 @@ def delete_listens():
     # count deleted listens, checked created and update listen counts
     delete_listens_and_update_listen_counts = """
         WITH deleted_listens AS (
-            DELETE FROM listen l
+            DELETE FROM listen_new l
              USING listen_delete_metadata ldm
              WHERE ldm.id <= :max_id
                AND l.user_id = ldm.user_id
                AND l.listened_at = ldm.listened_at
-               AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = ldm.recording_msid::text
+               AND l.recording_msid = ldm.recording_msid
          RETURNING l.user_id, l.created
         ), update_counts AS (
             SELECT user_id
@@ -141,7 +141,7 @@ def delete_listens():
               -- for each user calculate the new minimum timestamp
               JOIN LATERAL (
                     SELECT min(listened_at) AS min_listened_ts
-                      FROM listen l
+                      FROM listen_new l
                         -- new minimum will be greater than the last one
                      WHERE l.listened_at >= u.min_listened_at
                        AND l.user_id = u.user_id
@@ -175,7 +175,7 @@ def delete_listens():
                 -- for each user calculate the new maximum timestamp
               JOIN LATERAL (
                     SELECT max(listened_at) AS max_listened_ts
-                      FROM listen l
+                      FROM listen_new l
                         -- new maximum will be lesser than the last one
                      WHERE l.listened_at <= u.max_listened_at
                        AND l.user_id = u.user_id
@@ -224,7 +224,7 @@ def update_user_listen_data():
                  , count(*) as count
                  , min(listened_at) AS min_listened_at
                  , max(listened_at) AS max_listened_at
-              FROM listen l
+              FROM listen_new l
               JOIN listen_user_metadata lm
              USING (user_id)
              WHERE l.created > lm.created

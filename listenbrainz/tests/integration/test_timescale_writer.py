@@ -40,7 +40,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         return response
 
     def test_dedup(self):
-
         user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1,50000))
 
         # send the same listen twice
