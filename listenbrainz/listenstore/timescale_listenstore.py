@@ -1,6 +1,7 @@
 import subprocess
 import tarfile
 import time
+from datetime import datetime, timedelta
 from typing import Dict, Tuple, Optional
 
 import psycopg2
@@ -30,14 +31,15 @@ DATA_START_YEAR = 2005
 DATA_START_YEAR_IN_SECONDS = 1104537600
 
 # How many listens to fetch on the first attempt. If we don't fetch enough, increase it by WINDOW_SIZE_MULTIPLIER
-DEFAULT_FETCH_WINDOW = 30 * 86400  # 30 days
+DEFAULT_FETCH_WINDOW = timedelta(days=30)  # 30 days
 
 # When expanding the search, how fast should the bounds be moved out
 WINDOW_SIZE_MULTIPLIER = 3
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
-MAX_FUTURE_SECONDS = 600  # 10 mins in future - max fwd clock skew
+MAX_FUTURE_SECONDS = timedelta(seconds=1)  # 10 mins in future - max fwd clock skew
+EPOCH = datetime.utcfromtimestamp(0)
 
 
 class TimescaleListenStore:
@@ -85,11 +87,11 @@ class TimescaleListenStore:
             cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), count, REDIS_USER_LISTEN_COUNT_EXPIRY)
             return count
 
-    def get_timestamps_for_user(self, user_id: int) -> Tuple[Optional[int], Optional[int]]:
+    def get_timestamps_for_user(self, user_id: int) -> Tuple[Optional[datetime], Optional[datetime]]:
         """ Return the min_ts and max_ts for the given list of users """
         query = """
-            SELECT COALESCE(min_listened_at, 0) AS min_ts
-                 , COALESCE(max_listened_at, 0) AS max_ts
+            SELECT COALESCE(min_listened_at, 'epoch'::timestamptz) AS min_ts
+                 , COALESCE(max_listened_at, 'epoch'::timestamptz) AS max_ts
               FROM listen_user_metadata
              WHERE user_id = :user_id
         """
@@ -97,8 +99,11 @@ class TimescaleListenStore:
             result = connection.execute(text(query), {"user_id": user_id})
             row = result.fetchone()
             if row is None:
-                return 0, 0
-            return row.min_ts, row.max_ts
+                min_ts = max_ts = EPOCH
+            else:
+                min_ts = row.min_ts
+                max_ts = row.max_ts
+            return min_ts.replace(tzinfo=None), max_ts.replace(tzinfo=None)
 
     def get_total_listen_count(self):
         """ Returns the total number of listens stored in the ListenStore.
@@ -172,7 +177,7 @@ class TimescaleListenStore:
 
         return inserted_rows
 
-    def fetch_listens(self, user: Dict, from_ts: int = None, to_ts: int = None, limit: int = DEFAULT_LISTENS_PER_FETCH):
+    def fetch_listens(self, user: Dict, from_ts: datetime = None, to_ts: datetime = None, limit: int = DEFAULT_LISTENS_PER_FETCH):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -194,11 +199,11 @@ class TimescaleListenStore:
 
         min_user_ts, max_user_ts = self.get_timestamps_for_user(user["id"])
 
-        if min_user_ts == 0 and max_user_ts == 0:
+        if min_user_ts == EPOCH and max_user_ts == EPOCH:
             return [], min_user_ts, max_user_ts
 
         if to_ts is None and from_ts is None:
-            to_ts = max_user_ts + 1
+            to_ts = max_user_ts + timedelta(seconds=1)
 
         window_size = DEFAULT_FETCH_WINDOW
         query = """
@@ -291,16 +296,16 @@ class TimescaleListenStore:
                             done = True
                             break
 
-                        if from_ts < min_user_ts - 1:
+                        if from_ts < min_user_ts - timedelta(seconds=1):
                             done = True
                             break
 
-                        if to_ts > int(time.time()) + MAX_FUTURE_SECONDS:
+                        if to_ts > datetime.now() + MAX_FUTURE_SECONDS:
                             done = True
                             break
 
                         if to_dynamic:
-                            from_ts += window_size - 1
+                            from_ts += window_size - timedelta(seconds=1)
                             window_size *= WINDOW_SIZE_MULTIPLIER
                             to_ts += window_size
 
@@ -343,7 +348,7 @@ class TimescaleListenStore:
 
         return listens, min_user_ts, max_user_ts
 
-    def fetch_recent_listens_for_users(self, users, min_ts: int = None, max_ts: int = None, per_user_limit=2, limit=10):
+    def fetch_recent_listens_for_users(self, users, min_ts: datetime = None, max_ts: datetime = None, per_user_limit=2, limit=10):
         """ Fetch recent listens for a list of users, given a limit which applies per user. If you
             have a limit of 3 and 3 users you should get 9 listens if they are available.
 
@@ -540,7 +545,7 @@ class TimescaleListenStore:
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise
 
-    def delete_listen(self, listened_at: int, user_id: int, recording_msid: str):
+    def delete_listen(self, listened_at: datetime, user_id: int, recording_msid: str):
         """ Delete a particular listen for user with specified MusicBrainz ID.
 
         .. note::

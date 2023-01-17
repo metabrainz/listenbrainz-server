@@ -92,7 +92,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.logstore.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=base + 11)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(base + 11))
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -119,7 +119,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.logstore.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=base + 11)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(base + 11))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -147,7 +147,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.logstore.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=1400000300)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(1400000300))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -174,7 +174,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.logstore.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=user, to_ts=1400000300)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=user, to_ts=datetime.utcfromtimestamp(1400000300))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -182,7 +182,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=1400000300)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(1400000300))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)

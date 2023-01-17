@@ -161,7 +161,7 @@ def fetch_listens(musicbrainz_id, to_ts):
         if not batch:
             break
         yield from batch
-        to_ts = batch[-1].ts_since_epoch  # new to_ts will be the the timestamp of the last listen fetched
+        to_ts = batch[-1].timestamp.replace(tzinfo=None)  # new to_ts will be the the timestamp of the last listen fetched
 
 
 def fetch_feedback(user_id):
@@ -198,7 +198,7 @@ def export_data():
         # Build a generator that streams the json response. We never load all
         # listens into memory at once, and we can start serving the response
         # immediately.
-        to_ts = int(time())
+        to_ts = datetime.utcnow()
         listens = fetch_listens(current_user.musicbrainz_id, to_ts)
         output = stream_json_array(listen.to_api() for listen in listens)
 

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import orjson
@@ -94,11 +96,13 @@ def profile(user_name):
 
     args = {}
     if max_ts:
-        args['to_ts'] = max_ts
-    else:
-        args['from_ts'] = min_ts
+        args['to_ts'] = datetime.utcfromtimestamp(max_ts)
+    elif min_ts:
+        args['from_ts'] =  datetime.utcfromtimestamp(min_ts)
     data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
+    min_ts_per_user = int(min_ts_per_user.timestamp())
+    max_ts_per_user = int(max_ts_per_user.timestamp())
 
     listens = []
     for listen in data:
@@ -112,8 +116,7 @@ def profile(user_name):
 
     already_reported_user = False
     if current_user.is_authenticated:
-        already_reported_user = db_user.is_user_reported(
-            current_user.id, user.id)
+        already_reported_user = db_user.is_user_reported(current_user.id, user.id)
 
     pin = get_current_pin_for_user(user_id=user.id)
     if pin:

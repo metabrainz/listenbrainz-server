@@ -44,7 +44,7 @@ class DumpListenStore:
             Use listened_at timestamp, since not all listens have the created timestamp.
         """
 
-        query = """SELECT listened_at, user_id, created, recording_msid::TEXT, data
+        query = """SELECT extract(epoch from listened_at) as listened_at, user_id, created, recording_msid::TEXT, data
                       FROM listen_new
                      WHERE listened_at >= :start_time
                        AND listened_at <= :end_time
@@ -62,7 +62,7 @@ class DumpListenStore:
             This uses the `created` column to fetch listens.
         """
 
-        query = """SELECT listened_at, user_id, created, recording_msid::TEXT, data
+        query = """SELECT extract(epoch from listened_at) as listened_at, user_id, created, recording_msid::TEXT, data
                       FROM listen_new
                      WHERE created > :start_ts
                        AND created <= :end_ts
@@ -182,11 +182,9 @@ class DumpListenStore:
 
             query, args = None, None
             if full_dump:
-                query, args = self.get_listens_query_for_dump(int(start_time.strftime('%s')),
-                                                              int(end_time.strftime('%s')))
+                query, args = self.get_listens_query_for_dump(start_time, end_time)
             else:
-                query, args = self.get_incremental_listens_query(
-                    start_time, end_time)
+                query, args = self.get_incremental_listens_query(start_time, end_time)
 
             rows_added = 0
             with timescale.engine.connect() as connection:
@@ -320,17 +318,12 @@ class DumpListenStore:
         # , so we can get upto date stats sooner.
         if dump_type == "full":
             criteria = "listened_at"
-            # listened_at column is bigint so need to convert datetime to timestamp
-            args = {
-                "start": int(start_time.timestamp()),
-                "end": int(end_time.timestamp())
-            }
         else:  # incremental dump
             criteria = "created"
-            args = {
-                "start": start_time,
-                "end": end_time
-            }
+        args = {
+            "start": start_time,
+            "end": end_time
+        }
 
         query = psycopg2.sql.SQL("""
         -- can't use coalesce here because we want all listen data or all mapping data to be used for a given
@@ -433,7 +426,7 @@ class DumpListenStore:
                             + len(result["m_release_mbid"] or "0") + len(str(result["m_artist_credit_mbids"] or 0)) \
                             + len(str(result["artist_credit_id"]))
 
-                    current_listened_at = datetime.utcfromtimestamp(result["listened_at"])
+                    current_listened_at = result["listened_at"]
                     data["listened_at"].append(current_listened_at)
                     data["user_id"].append(result["user_id"])
                     data["recording_msid"].append(result["recording_msid"])

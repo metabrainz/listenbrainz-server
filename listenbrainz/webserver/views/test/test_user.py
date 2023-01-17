@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+from datetime import datetime
 from unittest import mock
 
 import orjson
@@ -11,6 +12,7 @@ import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth as db_oauth, timescale
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
+from listenbrainz.listenstore.timescale_listenstore import EPOCH
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.login import User
@@ -185,30 +187,29 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
         user = self.user.to_dict()
-        timescale.return_value = ([], 0, 0)
+        timescale.return_value = ([], EPOCH, EPOCH)
 
-        # If no parameter is given, use current time as the to_ts
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call(user, limit=25, from_ts=None)
+        req_call = mock.call(user, limit=25)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # max_ts query param -> to_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'max_ts': 1520946000})
-        req_call = mock.call(user, limit=25, to_ts=1520946000)
+        req_call = mock.call(user, limit=25, to_ts=datetime.utcfromtimestamp(1520946000))
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # min_ts query param -> from_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'min_ts': 1520941000})
-        req_call = mock.call(user, limit=25, from_ts=1520941000)
+        req_call = mock.call(user, limit=25, from_ts=datetime.utcfromtimestamp(1520941000))
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # If max_ts and min_ts set, only max_ts is used
         self.client.get(url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
-        req_call = mock.call(user, limit=25, to_ts=1520946000)
+        req_call = mock.call(user, limit=25, to_ts=datetime.utcfromtimestamp(1520946000))
         timescale.assert_has_calls([req_call])
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')

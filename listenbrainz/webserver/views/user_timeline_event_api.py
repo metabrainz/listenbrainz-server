@@ -48,7 +48,7 @@ from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter
 
 MAX_LISTEN_EVENTS_PER_USER = 2  # the maximum number of listens we want to return in the feed per user
 MAX_LISTEN_EVENTS_OVERALL = 10  # the maximum number of listens we want to return in the feed overall across users
-DEFAULT_LISTEN_EVENT_WINDOW = 14 * 24 * 60 * 60  # 14 days, to limit the search space of listen events and avoid timeouts
+DEFAULT_LISTEN_EVENT_WINDOW = timedelta(days=14) # to limit the search space of listen events and avoid timeouts
 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
@@ -581,13 +581,19 @@ def get_listen_events(
     # is set, calculate the other from it using a default window length.
     # if neither is set, use current time as max_ts and subtract window
     # length to get min_ts.
-    if not min_ts and max_ts:
-        min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
-    elif min_ts and not max_ts:
-        max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW
-    elif not min_ts and not max_ts:
-        max_ts = int(datetime.now().timestamp())
-        min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
+    if min_ts and max_ts:
+        min_ts = datetime.utcfromtimestamp(min_ts)
+        max_ts = datetime.utcfromtimestamp(max_ts)
+    else:
+        if min_ts:
+            min_ts = datetime.utcfromtimestamp(min_ts)
+            max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW
+        elif max_ts:
+            max_ts = datetime.utcfromtimestamp(max_ts)
+            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
+        else:
+            max_ts = datetime.utcnow()
+            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
 
     listens = timescale_connection._ts.fetch_recent_listens_for_users(
         users,

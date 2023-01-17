@@ -1,3 +1,4 @@
+from datetime import datetime
 from operator import itemgetter
 
 import psycopg2
@@ -162,8 +163,8 @@ def get_listens(user_name):
     listens, _, max_ts_per_user = timescale_connection._ts.fetch_listens(
         user,
         limit=count,
-        from_ts=min_ts,
-        to_ts=max_ts
+        from_ts=datetime.utcfromtimestamp(min_ts) if min_ts else None,
+        to_ts=datetime.utcfromtimestamp(max_ts) if max_ts else None
     )
     listen_data = []
     for listen in listens:
@@ -173,7 +174,7 @@ def get_listens(user_name):
         'user_id': user_name,
         'count': len(listen_data),
         'listens': listen_data,
-        'latest_listen_ts': max_ts_per_user,
+        'latest_listen_ts': int(max_ts_per_user.timestamp()),
     }})
 
 
@@ -489,10 +490,9 @@ def delete_listen():
     if "listened_at" not in data:
         log_raise_400("Listen timestamp missing.")
     try:
-        listened_at = data["listened_at"]
-        listened_at = int(listened_at)
+        listened_at = datetime.utcfromtimestamp(int(data["listened_at"]))
     except ValueError:
-        log_raise_400("%s: Listen timestamp invalid." % listened_at)
+        log_raise_400("%s: Listen timestamp invalid." % data["listened_at"])
 
     if "recording_msid" not in data:
         log_raise_400("Recording MSID missing.")
