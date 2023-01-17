@@ -62,6 +62,7 @@ class RedisListenStore:
         recent = {}
         for listen in unique:
             recent[orjson.dumps(listen.to_json())] = float(listen.ts_since_epoch)
+        print(recent)
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:
