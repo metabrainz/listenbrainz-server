@@ -80,7 +80,7 @@ class Listen(object):
         else:
             if timestamp:
                 self.timestamp = timestamp
-                self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple())
+                self.ts_since_epoch = int(self.timestamp.timestamp())
             else:
                 self.timestamp = None
                 self.ts_since_epoch = None
@@ -126,7 +126,6 @@ class Listen(object):
                        ac_names=None, ac_join_phrases=None, user_name=None,
                        caa_id=None, caa_release_mbid=None):
         """Factory to make Listen() objects from a timescale dict"""
-        listened_at = datetime.utcfromtimestamp(float(listened_at))
         track_metadata["additional_info"]["recording_msid"] = recording_msid
         if recording_mbid is not None:
             track_metadata["mbid_mapping"] = {"recording_mbid": str(recording_mbid)}
@@ -195,7 +194,7 @@ class Listen(object):
         track_metadata = deepcopy(self.data)
         track_metadata['additional_info']['recording_msid'] = self.recording_msid
         del track_metadata['additional_info']['recording_msid']
-        return self.ts_since_epoch, self.user_id, self.recording_msid, orjson.dumps(track_metadata).decode("utf-8")
+        return self.timestamp, self.user_id, self.recording_msid, orjson.dumps(track_metadata).decode("utf-8")
 
     def __repr__(self):
         from pprint import pformat

@@ -48,7 +48,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
 
-        to_ts = int(time.time())
+        to_ts = datetime.utcnow()
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
@@ -68,8 +68,8 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
 
         (min_ts, max_ts) = self.ls.get_timestamps_for_user(user["id"])
-        self.assertEqual(min_ts, 1486449409)
-        self.assertEqual(max_ts, 1486449409)
+        self.assertEqual(min_ts, datetime.utcfromtimestamp(1486449409))
+        self.assertEqual(max_ts, datetime.utcfromtimestamp(1486449409))
 
 
     def test_dedup_user_special_characters(self):
@@ -81,7 +81,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assert200(r)
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        to_ts = int(time.time())
+        to_ts = datetime.utcnow()
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
@@ -92,7 +92,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         r = self.send_listen(user, 'same_batch_duplicates.json')
         self.assert200(r)
 
-        to_ts = int(time.time())
+        to_ts = datetime.utcnow()
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
@@ -111,7 +111,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         r = self.send_listen(user2, 'valid_single.json')
         self.assert200(r)
 
-        to_ts = int(time.time())
+        to_ts = datetime.utcnow()
         listens, _, _ = self.ls.fetch_listens(user1, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
@@ -139,6 +139,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         r = self.send_listen(user, 'same_timestamp_diff_track_valid_single_3.json')
         self.assert200(r)
 
-        to_ts = int(time.time())
+        to_ts = datetime.utcnow()
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 4)

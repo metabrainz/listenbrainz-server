@@ -90,7 +90,7 @@ class ListenTestCase(unittest.TestCase):
         self.assertIn('additional_info', json_data)
 
         # Check that the required fields are dumped into data
-        self.assertEqual(listened_at, listen.ts_since_epoch)
+        self.assertEqual(listened_at, listen.timestamp)
         self.assertEqual(recording_msid, listen.recording_msid)
         self.assertEqual(user_id, listen.user_id)
         self.assertEqual(json_data['artist_name'], listen.data['artist_name'])
