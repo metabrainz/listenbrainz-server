@@ -41,8 +41,7 @@ def search_user():
     user = validate_auth_header()
     user_id = user.id
     if search_term:
-        count = get_non_negative_param('count', SEARCH_USER_LIMIT)
-        users = db_user.search_user_name(search_term, count, user_id)
+        users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT, user_id)
     else:
         users = []
     return jsonify(
