@@ -62,8 +62,9 @@ def update_token(id):
             raise
 
 
-USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
-                    'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
+USER_GET_COLUMNS = ['"user".id', '"user".created', 'musicbrainz_id', 'auth_token',
+                    'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id',
+                    'login_id', '"us".timezone_name']
 
 
 def get(id: int, *, fetch_email: bool = False):
@@ -92,7 +93,9 @@ def get(id: int, *, fetch_email: bool = False):
         result = connection.execute(sqlalchemy.text("""
             SELECT {columns}
               FROM "user"
-             WHERE id = :id
+         LEFT JOIN user_setting us 
+                ON "user".id = us.user_id
+             WHERE "user".id = :id
         """.format(columns=','.join(columns))), {"id": id})
         return result.mappings().first()
 
@@ -121,6 +124,8 @@ def get_by_login_id(login_id):
         result = connection.execute(sqlalchemy.text("""
             SELECT {columns}
               FROM "user"
+         LEFT JOIN user_setting us 
+                ON "user".id = us.user_id
              WHERE login_id = :user_login_id
         """.format(columns=','.join(USER_GET_COLUMNS))), {"user_login_id": login_id})
         return result.mappings().first()
@@ -141,6 +146,8 @@ def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
         result = connection.execute(sqlalchemy.text("""
             SELECT {columns}
               FROM "user"
+         LEFT JOIN user_setting us 
+                ON "user".id = us.user_id
              WHERE LOWER(musicbrainz_id) in :mb_ids
         """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
         return {row["musicbrainz_id"].lower(): row for row in result.mappings()}
@@ -172,6 +179,8 @@ def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
         result = connection.execute(sqlalchemy.text("""
             SELECT {columns}
               FROM "user"
+         LEFT JOIN user_setting us 
+                ON "user".id = us.user_id
              WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
         """.format(columns=','.join(columns))), {"mb_id": musicbrainz_id})
         return result.mappings().first()
@@ -197,6 +206,8 @@ def get_by_token(token: str, *, fetch_email: bool = False):
         result = connection.execute(sqlalchemy.text("""
             SELECT {columns}
               FROM "user"
+         LEFT JOIN user_setting us 
+                ON "user".id = us.user_id
              WHERE auth_token = :auth_token
         """.format(columns=','.join(columns))), {"auth_token": token})
         return result.mappings().first()

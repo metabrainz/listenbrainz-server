@@ -1,5 +1,7 @@
+from datetime import datetime, timezone
 from typing import Dict, Tuple
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 import bleach
 from kombu import Producer
@@ -15,7 +17,7 @@ import sentry_sdk
 
 from flask import current_app, request
 
-from listenbrainz.listenstore import LISTEN_MINIMUM_TS
+from listenbrainz.listenstore import LISTEN_MINIMUM_TS, LISTEN_MINIMUM_DATE
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
@@ -136,7 +138,7 @@ def check_for_unicode_null_recursively(listen: Dict):
             _raise_error_if_has_unicode_null(value, listen)
 
 
-def validate_listen(listen: Dict, listen_type) -> Dict:
+def validate_listen(listen: Dict, listen_type, user_timezone: str = None) -> Dict:
     """Make sure that required keys are present, filled out and not too large.
     Also, check all keys for absence of unicode null which cannot be
     inserted into Postgres. The function may also mutate listens
@@ -146,7 +148,7 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         raise ListenValidationError("Listen is empty and cannot be validated.")
 
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
-        validate_listened_at(listen)
+        validate_listened_at(listen, user_timezone)
 
         if "track_metadata" not in listen:
             raise ListenValidationError("JSON document must contain the key track_metadata"
@@ -155,11 +157,6 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         if len(listen) > 2:
             raise ListenValidationError("JSON document may only contain listened_at and "
                                         "track_metadata top level keys", listen)
-
-        # check that listened_at value is greater than last.fm founding year.
-        if listen['listened_at'] < LISTEN_MINIMUM_TS:
-            raise ListenValidationError("Value for key listened_at is too low. listened_at timestamp "
-                                        "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if "listened_at" in listen:
@@ -329,31 +326,40 @@ def validate_multiple_mbids_field(listen, key):
         listen['track_metadata']['additional_info'][key] = mbids  # set the filtered in the listen payload
 
 
-def validate_listened_at(listen):
+def validate_listened_at(listen, user_timezone: str = None):
     """ Raises an error if the listened_at timestamp is invalid. The timestamp is invalid
     if it is lower than the minimum acceptable timestamp or if its in future beyond
     tolerable skew.
 
     Args:
         listen: the listen to be validated
+        user_timezone: the timezone of the user who submitted the listen
     """
     if "listened_at" not in listen:
         raise ListenValidationError("JSON document must contain the key listened_at at the top level.", listen)
 
     try:
-        listen["listened_at"] = int(listen["listened_at"])
+        if isinstance(listen["listened_at"], int):
+            listen["listened_at"] = datetime.fromtimestamp(listen["listened_at"])
+            if user_timezone:  # if the user has chosen a timezone in LB, apply it to the listened_at timestamp
+                listen["listened_at"] = listen["listened_at"].astimezone(ZoneInfo(user_timezone))
+        else:
+            listen["listened_at"] = datetime.fromisoformat(listen["listened_at"]) # check datetime is valid iso
     except (ValueError, TypeError):
-        raise ListenValidationError("JSON document must contain an int value for listened_at.", listen)
+        raise ListenValidationError("JSON document must contain an int or isoformat datetime value for listened_at.", listen)
 
     # raise error if timestamp is too high
     # in order to make up for possible clock skew, we allow
     # timestamps to be one hour ahead of server time
-    if listen["listened_at"] >= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW:
+    # TODO: fix both check, second should be datetime and in first need to check whether datetime is offset aware or naive
+    if listen["listened_at"].astimezone(tz=timezone.utc) >= datetime.now(tz=timezone.utc) + API_LISTENED_AT_ALLOWED_SKEW:
         raise ListenValidationError("Value for key listened_at is too high.", listen)
 
-    if listen["listened_at"] < LISTEN_MINIMUM_TS:
+    if listen["listened_at"].astimezone(tz=timezone.utc) < LISTEN_MINIMUM_DATE.astimezone(tz=timezone.utc):
         raise ListenValidationError("Value for key listened_at is too low. listened_at timestamp "
                                     "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
+
+    listen["listened_at"] = listen["listened_at"].isoformat()
 
 
 def publish_data_to_queue(data, exchange):

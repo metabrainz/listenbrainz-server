@@ -1,8 +1,10 @@
 # coding=utf-8
 import calendar
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
+import pytz
 import orjson
 
 
@@ -69,7 +71,8 @@ class Listen(object):
         'release_name',
     )
 
-    def __init__(self, user_id=None, user_name=None, timestamp=None, recording_msid=None, inserted_timestamp=None, data=None):
+    def __init__(self, user_id=None, user_name=None, user_timezone=None, timestamp=None,
+                 recording_msid=None, inserted_timestamp=None, data=None, tz_offset=None):
         self.user_id = user_id
         self.user_name = user_name
 
@@ -84,6 +87,16 @@ class Listen(object):
             else:
                 self.timestamp = None
                 self.ts_since_epoch = None
+
+        if self.timestamp is None:
+            self.local_timestamp = None
+        else:
+            if tz_offset:
+                self.local_timestamp = self.timestamp.astimezone(timezone(tz_offset)) # timezone from offset
+            elif user_timezone:
+                self.local_timestamp = self.timestamp.astimezone(ZoneInfo(user_timezone)) # timezone from name
+            else:
+                self.local_timestamp = None
 
         self.recording_msid = recording_msid
         self.inserted_timestamp = inserted_timestamp
@@ -103,14 +116,7 @@ class Listen(object):
     @classmethod
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
-        # Let's go play whack-a-mole with our lovely whicket of timestamp fields. Hopefully one will work!
-        try:
-            j['listened_at'] = datetime.utcfromtimestamp(float(j['listened_at']))
-        except KeyError:
-            try:
-                j['listened_at'] = datetime.utcfromtimestamp(float(j['timestamp']))
-            except KeyError:
-                j['listened_at'] = datetime.utcfromtimestamp(float(j['ts_since_epoch']))
+        j['listened_at'] = datetime.fromisoformat(j['listened_at'])
 
         return cls(
             user_id=j.get('user_id'),
@@ -122,8 +128,8 @@ class Listen(object):
 
     @classmethod
     def from_timescale(cls, listened_at, user_id, created, recording_msid, track_metadata,
-                       recording_mbid=None, release_mbid=None, artist_mbids=None,
-                       ac_names=None, ac_join_phrases=None, user_name=None,
+                       tz_offset=None, user_timezone=None, recording_mbid=None, release_mbid=None,
+                       artist_mbids=None, ac_names=None, ac_join_phrases=None, user_name=None,
                        caa_id=None, caa_release_mbid=None):
         """Factory to make Listen() objects from a timescale dict"""
         track_metadata["additional_info"]["recording_msid"] = recording_msid
@@ -152,6 +158,8 @@ class Listen(object):
         return cls(
             user_id=user_id,
             user_name=user_name,
+            user_timezone=user_timezone,
+            tz_offset=tz_offset,
             timestamp=listened_at,
             recording_msid=recording_msid,
             inserted_timestamp=created,
@@ -171,6 +179,7 @@ class Listen(object):
         data = {
             'track_metadata': track_metadata,
             'listened_at': self.ts_since_epoch,
+            'listened_at_iso': self.local_timestamp.isoformat() if self.local_timestamp else None,
             'recording_msid': self.recording_msid,
             'user_name': self.user_name,
             'inserted_at': int(self.inserted_timestamp.timestamp()) if self.inserted_timestamp else 0
@@ -191,7 +200,8 @@ class Listen(object):
         track_metadata = deepcopy(self.data)
         track_metadata['additional_info']['recording_msid'] = self.recording_msid
         del track_metadata['additional_info']['recording_msid']
-        return self.timestamp, self.user_id, self.recording_msid, orjson.dumps(track_metadata).decode("utf-8")
+
+        return self.timestamp, self.timestamp.utcoffset(), self.user_id, self.recording_msid, orjson.dumps(track_metadata).decode("utf-8")
 
     def __repr__(self):
         from pprint import pformat

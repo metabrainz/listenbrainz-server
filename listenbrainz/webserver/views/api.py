@@ -78,9 +78,7 @@ def submit_listen():
     raw_data = request.get_data()
 
     if len(raw_data) > MAX_LISTEN_PAYLOAD_SIZE:
-        log_raise_400(
-            "Payload too large. Payload cannot exceed %s bytes" % MAX_LISTEN_PAYLOAD_SIZE
-        )
+        log_raise_400("Payload too large. Payload cannot exceed %s bytes" % MAX_LISTEN_PAYLOAD_SIZE)
 
     try:
         data = orjson.loads(raw_data.decode("utf-8"))
@@ -89,8 +87,7 @@ def submit_listen():
 
     try:
         if not isinstance(data, dict):
-            raise APIBadRequest("Invalid JSON document submitted. Top level of "
-                                "JSON document should be a json object.")
+            raise APIBadRequest("Invalid JSON document submitted. Top level of JSON document should be a json object.")
 
         payload = data['payload']
 
@@ -98,32 +95,26 @@ def submit_listen():
             raise APIBadRequest("The payload in the JSON document should be a list of listens.", payload)
 
         if len(payload) == 0:
-            log_raise_400(
-                "JSON document does not contain any listens", payload)
+            log_raise_400("JSON document does not contain any listens", payload)
 
         if len(payload) > MAX_LISTENS_PER_REQUEST:
-            log_raise_400(
-                "Too many listens. You may not submit more than %s listens at once." % MAX_LISTENS_PER_REQUEST
-            )
+            log_raise_400("Too many listens. You may not submit more than %s listens at once." % MAX_LISTENS_PER_REQUEST)
 
         if len(raw_data) > len(payload) * MAX_LISTEN_SIZE:
-            log_raise_400("JSON document is too large. Each listens may not "
-                          "be larger than %d bytes." % MAX_LISTEN_SIZE, payload)
+            log_raise_400("JSON document is too large. Each listens may not be larger than %d bytes." % MAX_LISTEN_SIZE, payload)
 
         if data['listen_type'] not in ('playing_now', 'single', 'import'):
-            log_raise_400(
-                "JSON document requires a valid listen_type key.", payload)
+            log_raise_400("JSON document requires a valid listen_type key.", payload)
 
         listen_type = _get_listen_type(data['listen_type'])
         if (listen_type == LISTEN_TYPE_SINGLE or listen_type == LISTEN_TYPE_PLAYING_NOW) and len(payload) > 1:
-            log_raise_400("JSON document contains more than listen for a single/playing_now. "
-                          "It should contain only one.", payload)
+            log_raise_400("JSON document contains more than listen for a single/playing_now. It should contain only one.", payload)
     except KeyError:
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
     try:
         # validate listens to make sure json is okay
-        validated_payload = [validate_listen(listen, listen_type) for listen in payload]
+        validated_payload = [validate_listen(listen, listen_type, user["timezone_name"]) for listen in payload]
     except ListenValidationError as err:
         raise APIBadRequest(err.message, err.payload)
 

@@ -311,11 +311,11 @@ export default class ListenCard extends React.Component<
         <span
           className="listen-time"
           title={
-            listen.listened_at
-              ? fullLocalizedDateFromTimestampOrISODate(
+            listen.listened_at_iso
+              ? fullLocalizedDateFromTimestampOrISODate(listen.listened_at_iso)
+              : fullLocalizedDateFromTimestampOrISODate(
                   listen.listened_at * 1000
                 )
-              : fullLocalizedDateFromTimestampOrISODate(listen.listened_at_iso)
           }
         >
           {preciseTimestamp(

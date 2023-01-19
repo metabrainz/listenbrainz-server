@@ -2,6 +2,7 @@ import logging
 import os
 import pprint
 import sys
+from datetime import timedelta
 from time import sleep
 
 from brainzutils import cache, metrics, sentry
@@ -18,7 +19,7 @@ API_PREFIX = '/1'
 deploy_env = os.environ.get('DEPLOY_ENV', '')
 
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
-API_LISTENED_AT_ALLOWED_SKEW = 60 * 60  # allow a skew of 1 hour in listened_at submissions
+API_LISTENED_AT_ALLOWED_SKEW = timedelta(hours=1)  # allow a skew of 1 hour in listened_at submissions
 
 
 def load_config(app):

@@ -1,16 +1,17 @@
 BEGIN;
 
 CREATE TABLE listen (
-        listened_at     BIGINT                   NOT NULL,
-        track_name      TEXT                     NOT NULL,
-        user_name       TEXT                     NOT NULL,
-        user_id         INTEGER                  NOT NULL,
-        created         TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-        data            JSONB                    NOT NULL
+    listened_at     BIGINT                   NOT NULL,
+    track_name      TEXT                     NOT NULL,
+    user_name       TEXT                     NOT NULL,
+    user_id         INTEGER                  NOT NULL,
+    created         TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    data            JSONB                    NOT NULL
 );
 
 CREATE TABLE listen_new (
     listened_at     TIMESTAMP WITH TIME ZONE NOT NULL,
+    tz_offset       INTERVAL, -- offset to apply to listened_at to get listen's local timestamp
     created         TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
     user_id         INTEGER                  NOT NULL,
     recording_msid  UUID                     NOT NULL,
@@ -34,6 +35,8 @@ CREATE TABLE listen_user_metadata (
 
 -- 86400 seconds * 5 = 432000 seconds = 5 days
 SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => 432000);
+
+SELECT create_hypertable('listen_new', 'listened_at', chunk_time_interval => INTERVAL '30 days');
 
 -- Playlists
 

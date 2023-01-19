@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import * as timeago from "time-ago";
 import { isFinite, isUndefined, castArray } from "lodash";
 import { Rating } from "react-simple-star-rating";
+import { DateTime } from "luxon";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
@@ -301,36 +302,34 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
   return json as Listen;
 };
 
-// recieves or unix epoch timestamp int or ISO datetime string
+// receives or unix epoch timestamp int or ISO datetime string
 const preciseTimestamp = (
   listened_at: number | string,
   displaySetting?: "timeAgo" | "includeYear" | "excludeYear"
 ): string => {
-  const listenDate: Date = new Date(listened_at);
-  let display = displaySetting;
+  const listenDate: DateTime =
+    typeof listened_at === "number"
+      ? DateTime.fromMillis(listened_at)
+      : DateTime.fromISO(listened_at, { setZone: true });
 
   // invalid date
-  if (Number.isNaN(listenDate.getTime())) {
+  if (!listenDate.isValid) {
     return String(listened_at);
   }
 
+  let display = displaySetting;
   // determine which display setting based on time difference to use if no argument was provided
   if (!display) {
     // We can easily mock Date.now in our tests to mock the current dateTime
     const now = Date.now();
-    const currentDate = new Date(now);
-    const currentYear = currentDate.getFullYear();
-    const listenYear = listenDate.getFullYear();
+    const currentDate = DateTime.fromMillis(now);
+    const { days } = currentDate.diff(listenDate, ["days"]);
     // Date is today : format using timeago
-    if (
-      currentDate.getDate() === listenDate.getDate() &&
-      currentDate.getMonth() === listenDate.getMonth() &&
-      currentYear === listenYear
-    ) {
+    if (days >= -1 && days <= 1) {
       display = "timeAgo";
     }
     // Date is this current year, don't show the year
-    else if (currentYear === listenYear) {
+    else if (currentDate.year === listenDate.year) {
       display = "excludeYear";
     }
     // Not this year, show the year
@@ -341,7 +340,7 @@ const preciseTimestamp = (
 
   switch (display) {
     case "includeYear":
-      return `${listenDate.toLocaleString(undefined, {
+      return `${listenDate.toLocaleString({
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -349,7 +348,7 @@ const preciseTimestamp = (
         minute: "numeric",
       })}`;
     case "excludeYear":
-      return `${listenDate.toLocaleString(undefined, {
+      return `${listenDate.toLocaleString({
         day: "2-digit",
         month: "short",
         hour: "numeric",
@@ -359,24 +358,23 @@ const preciseTimestamp = (
       return `${timeago.ago(listened_at)}`;
   }
 };
-// recieves or unix epoch timestamp int or ISO datetime string
+// receives or unix epoch timestamp int or ISO datetime string
 const fullLocalizedDateFromTimestampOrISODate = (
   unix_epoch_timestamp: number | string | undefined | null
 ): string => {
   if (!unix_epoch_timestamp) {
     return "";
   }
-  const date: Date = new Date(unix_epoch_timestamp);
+  const date: DateTime =
+    typeof unix_epoch_timestamp === "number"
+      ? DateTime.fromMillis(unix_epoch_timestamp)
+      : DateTime.fromISO(unix_epoch_timestamp, { setZone: true });
 
   // invalid date
-  if (Number.isNaN(date.getTime())) {
+  if (!date.isValid) {
     return String(unix_epoch_timestamp);
   }
-  return date.toLocaleString(undefined, {
-    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
-    dateStyle: "full",
-    timeStyle: "long",
-  });
+  return date.toLocaleString(DateTime.DATETIME_HUGE);
 };
 
 const convertDateToUnixTimestamp = (date: Date): number => {
