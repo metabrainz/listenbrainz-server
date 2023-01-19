@@ -22,6 +22,7 @@ type CreateOrEditPlaylistModalState = {
   description: string;
   isPublic: boolean;
   collaborators: string[];
+  disabled: boolean;
 };
 
 export default class CreateOrEditPlaylistModal extends React.Component<
@@ -39,15 +40,13 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       description: props.playlist?.annotation ?? "",
       isPublic: customFields?.public ?? true,
       collaborators: customFields?.collaborators ?? [],
+      disabled: false,
     };
   }
 
   // We make the component reusable by updating the state
   // when props change (when we pass another playlist)
-  componentDidUpdate(
-    prevProps: CreateOrEditPlaylistModalProps,
-    prevState: CreateOrEditPlaylistModalState
-  ) {
+  componentDidUpdate(prevProps: CreateOrEditPlaylistModalProps) {
     const { playlist } = this.props;
 
     if (getPlaylistId(prevProps.playlist) !== getPlaylistId(playlist)) {
@@ -111,18 +110,26 @@ export default class CreateOrEditPlaylistModal extends React.Component<
   };
 
   addCollaborator = (user: string): void => {
+    const { playlist } = this.props;
+    const isEdit = Boolean(getPlaylistId(playlist));
     const { collaborators } = this.state;
+    const { currentUser } = this.context;
     if (collaborators.indexOf(user) !== -1) {
       // already in the list
     } else {
       this.setState({
         collaborators: [...collaborators, user],
+        disabled:
+          !user ||
+          (isEdit
+            ? playlist?.creator.toLowerCase() === user.toLowerCase()
+            : currentUser.name.toLowerCase() === user.toLowerCase()),
       });
     }
   };
 
   render() {
-    const { name, description, isPublic, collaborators } = this.state;
+    const { name, description, isPublic, collaborators, disabled } = this.state;
     const { htmlId, playlist } = this.props;
     const { currentUser } = this.context;
     const isEdit = Boolean(getPlaylistId(playlist));
@@ -189,12 +196,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
 
               <div className="form-group">
                 <div>
-                  <label
-                    htmlFor="playlistcollaborators"
-                    style={{ display: "block" }}
-                  >
-                    Collaborators
-                  </label>
+                  <label style={{ display: "block" }}>Collaborators</label>
 
                   {collaborators.map((user) => {
                     return (
@@ -210,6 +212,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                 <UserSearch
                   userClick={this.addCollaborator}
                   placeholder="Add collaborator"
+                  disabled={disabled}
                 />
               </div>
             </div>

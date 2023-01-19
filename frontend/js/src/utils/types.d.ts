@@ -675,3 +675,7 @@ type UserFreshReleasesResponse = {
     user_id: string;
   };
 };
+
+declare type SearchUser = {
+  user_name: string;
+}

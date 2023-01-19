@@ -572,3 +572,29 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
         else:
             search_results = [(row.musicbrainz_id, row.query_similarity, None) for row in rows]
         return search_results
+
+
+def search_user_name(search_term: str, limit: int, searcher_id: int = None) -> List[object]:
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT musicbrainz_id
+              FROM "user"
+             WHERE musicbrainz_id <% :search_term
+             LIMIT :limit
+            """), {
+            "search_term": search_term,
+            "limit": limit
+        })
+
+        rows = result.fetchall()
+
+        if not rows:
+            return []
+
+        search_results = []
+
+        for row in rows:
+            search_results.append({"user_name":row.musicbrainz_id})
+        return search_results
+

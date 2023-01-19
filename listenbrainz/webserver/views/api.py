@@ -33,7 +33,7 @@ DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 SEARCH_USER_LIMIT = 10
 
-@api_bp.route('/playlist/search/users/', methods=['GET', 'OPTIONS'])
+@api_bp.route('/search/users/', methods=['GET', 'OPTIONS'])
 @crossdomain
 @ratelimit()
 def search_user():
@@ -41,7 +41,7 @@ def search_user():
     user = validate_auth_header()
     user_id = user.id
     if search_term:
-        users = db_user.search(search_term, SEARCH_USER_LIMIT, user_id)
+        users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT,user_id)
     else:
         users = []
     return jsonify(

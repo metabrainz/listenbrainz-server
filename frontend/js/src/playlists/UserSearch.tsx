@@ -1,16 +1,19 @@
 import * as React from "react";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { throttle as _throttle } from "lodash";
+import debounceAsync from "debounce-async";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "../listens/ListenControl";
 
 export type UserSearchProps = {
   userClick: (event: string) => void;
   placeholder: string;
+  disabled: boolean;
 };
 
 export type UserSearchState = {
   newUser: string;
-  userSearchResults: Array<any>;
+  userSearchResults: Array<SearchUser>;
 };
 
 export default class UserSearch extends React.Component<
@@ -28,27 +31,15 @@ export default class UserSearch extends React.Component<
     };
   }
 
-  componentDidUpdate(prevProps: UserSearchProps, prevState: UserSearchState) {
-    const { newUser } = this.state;
-
-    if (prevState.newUser !== newUser) {
-      this.searchUsers();
-    }
-  }
-
-  handleInputChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { target } = event;
-    const value =
-      target.type === "checkbox"
-        ? (target as HTMLInputElement).checked
-        : target.value;
-    const { name } = target;
-    // @ts-ignore
-    this.setState({
-      [name]: value,
-    });
+  handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState(
+      {
+        newUser: event.target.value,
+      },
+      () => {
+        this.searchUsers();
+      }
+    );
   };
 
   searchUsers = async () => {
@@ -63,16 +54,27 @@ export default class UserSearch extends React.Component<
     });
   };
 
+  throttledHandleInputChange = _throttle(this.handleInputChange, 300);
+
+  handleResultClick = (user: string) => {
+    const { userClick } = this.props;
+    userClick(user);
+    this.setState({
+      newUser: "",
+      userSearchResults: [],
+    });
+  };
+
   render() {
     const { newUser, userSearchResults } = this.state;
-    const { placeholder, userClick } = this.props;
+    const { placeholder, userClick, disabled } = this.props;
     return (
       <div>
         <input
           type="text"
           className="form-control"
           name="newUser"
-          onChange={this.handleInputChange}
+          onChange={this.throttledHandleInputChange}
           placeholder={placeholder}
           value={newUser}
         />
@@ -80,15 +82,10 @@ export default class UserSearch extends React.Component<
           {userSearchResults?.map((user) => {
             return (
               <ListenControl
-                text={`${user[0]}`}
+                text={`${user.user_name}`}
                 icon={faUser}
-                action={() => {
-                  userClick(user[0]);
-                  this.setState({
-                    newUser: "",
-                    userSearchResults: [],
-                  });
-                }}
+                action={this.handleResultClick.bind(this, user.user_name)}
+                disabled={disabled}
               />
             );
           })}
