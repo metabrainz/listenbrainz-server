@@ -45,6 +45,7 @@ export default class UserSearch extends React.Component<
     );
   };
 
+  // eslint-disable-next-line react/sort-comp
   throttledHandleInputChange = _throttle(this.handleInputChange, 300);
 
   searchUsers = async () => {

@@ -223,8 +223,10 @@ export default class APIService {
 
     const parsedResponse = await response.json();
     return { users: parsedResponse.users };
-    } catch (error) {
-      throw error;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log("Error in parsing response in APIService searchUsers:", err);
+      throw err;
     }
   };
 

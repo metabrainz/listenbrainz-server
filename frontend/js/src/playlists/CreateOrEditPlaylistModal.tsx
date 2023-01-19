@@ -196,7 +196,9 @@ export default class CreateOrEditPlaylistModal extends React.Component<
 
               <div className="form-group">
                 <div>
-                  <label style={{ display: "block" }}>Collaborators</label>
+                 {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+                  <label
+                  style={{ display: "block" }}>Collaborators</label>
 
                   {collaborators.map((user) => {
                     return (
