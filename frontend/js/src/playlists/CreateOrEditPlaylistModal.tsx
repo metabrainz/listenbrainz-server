@@ -22,7 +22,6 @@ type CreateOrEditPlaylistModalState = {
   description: string;
   isPublic: boolean;
   collaborators: string[];
-  disabled: boolean;
 };
 
 export default class CreateOrEditPlaylistModal extends React.Component<
@@ -40,7 +39,6 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       description: props.playlist?.annotation ?? "",
       isPublic: customFields?.public ?? true,
       collaborators: customFields?.collaborators ?? [],
-      disabled: false,
     };
   }
 
@@ -114,16 +112,16 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     const isEdit = Boolean(getPlaylistId(playlist));
     const { collaborators } = this.state;
     const { currentUser } = this.context;
+    const disabled =
+      !user ||
+      (isEdit
+        ? playlist?.creator.toLowerCase() === user.toLowerCase()
+        : currentUser.name.toLowerCase() === user.toLowerCase());
     if (collaborators.indexOf(user) !== -1) {
       // already in the list
-    } else {
+    } else if (!disabled) {
       this.setState({
         collaborators: [...collaborators, user],
-        disabled:
-          !user ||
-          (isEdit
-            ? playlist?.creator.toLowerCase() === user.toLowerCase()
-            : currentUser.name.toLowerCase() === user.toLowerCase()),
       });
     }
   };

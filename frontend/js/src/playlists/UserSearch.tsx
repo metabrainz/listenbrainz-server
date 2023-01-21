@@ -8,7 +8,6 @@ import ListenControl from "../listens/ListenControl";
 export type UserSearchProps = {
   userClick: (event: string) => void;
   placeholder: string;
-  disabled: boolean;
 };
 
 export type UserSearchState = {
@@ -68,7 +67,7 @@ export default class UserSearch extends React.Component<
 
   render() {
     const { newUser, userSearchResults } = this.state;
-    const { placeholder, userClick, disabled } = this.props;
+    const { placeholder } = this.props;
     return (
       <div>
         <input
@@ -87,7 +86,6 @@ export default class UserSearch extends React.Component<
                 icon={faUser}
                 // eslint-disable-next-line react/jsx-no-bind
                 action={this.handleResultClick.bind(this, user.user_name)}
-                disabled={disabled}
               />
             );
           })}
