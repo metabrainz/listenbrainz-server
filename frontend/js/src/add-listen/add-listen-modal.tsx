@@ -115,7 +115,7 @@ export default class AddListenModal extends React.Component<
           ],
         },
         async () => {
-          const {PayloadArray} = this.state;
+          const { PayloadArray } = this.state;
           const payload = PayloadArray;
           try {
             const status = await APIService.submitListens(

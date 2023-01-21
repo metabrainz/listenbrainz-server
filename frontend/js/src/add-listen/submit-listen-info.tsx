@@ -55,8 +55,6 @@ export default class SubmitListenInfo extends React.Component<
     }
   }
 
-  
-
   async getCoverArt() {
     const { SelectedTrack } = this.props;
     const albumArtSrc = await getAlbumArtFromReleaseMBID(
@@ -65,11 +63,11 @@ export default class SubmitListenInfo extends React.Component<
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
     }
-  };
+  }
 
   convertToUnix = () => {
     const { DateToUnixTimestamp } = this.props;
-    const {Timestamp} = this.state;
+    const { Timestamp } = this.state;
     const date = Timestamp;
     const unixTimestamp = Math.floor(date.getTime() / 1000);
     DateToUnixTimestamp(unixTimestamp);
