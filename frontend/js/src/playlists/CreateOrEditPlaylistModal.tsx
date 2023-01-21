@@ -127,7 +127,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
   };
 
   render() {
-    const { name, description, isPublic, collaborators, disabled } = this.state;
+    const { name, description, isPublic, collaborators } = this.state;
     const { htmlId, playlist } = this.props;
     const { currentUser } = this.context;
     const isEdit = Boolean(getPlaylistId(playlist));
@@ -211,7 +211,6 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                 <UserSearch
                   userClick={this.addCollaborator}
                   placeholder="Add collaborator"
-                  disabled={disabled}
                 />
               </div>
             </div>
