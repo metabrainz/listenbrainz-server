@@ -23,7 +23,6 @@ export default class UserSearch extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-
   constructor(props: UserSearchProps) {
     super(props);
     this.state = {
@@ -31,8 +30,6 @@ export default class UserSearch extends React.Component<
       userSearchResults: [],
     };
   }
-
-  
 
   handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState(
@@ -59,8 +56,6 @@ export default class UserSearch extends React.Component<
       userSearchResults: response.users,
     });
   };
-
-  
 
   handleResultClick = (user: string) => {
     const { userClick } = this.props;
@@ -90,7 +85,7 @@ export default class UserSearch extends React.Component<
               <ListenControl
                 text={`${user.user_name}`}
                 icon={faUser}
-                 // eslint-disable-next-line react/jsx-no-bind
+                // eslint-disable-next-line react/jsx-no-bind
                 action={this.handleResultClick.bind(this, user.user_name)}
                 disabled={disabled}
               />
