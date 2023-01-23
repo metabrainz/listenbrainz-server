@@ -79,19 +79,12 @@ def process_recommendations(recommendation_df, limit):
     """
     recommendation_df.createOrReplaceTempView("recommendation")
     query = f"""
-        WITH distinct_recommendations AS (
-             SELECT spark_user_id
-                  , recording_id
-                  , max(prediction) AS prediction
-              FROM recommendation
-          GROUP BY spark_user_id
-                 , recording_id       
-        ), ranked_recommendation AS (
+        WITH ranked_recommendation AS (
             SELECT spark_user_id
                  , recording_id
                  , prediction AS score
                  , row_number() OVER(PARTITION BY spark_user_id ORDER BY prediction DESC) AS rank
-              FROM distinct_recommendations
+              FROM recommendation
         )
         SELECT user_id
              , array_sort(
@@ -117,7 +110,7 @@ def process_recommendations(recommendation_df, limit):
      LEFT JOIN recording_discovery rd
          USING (user_id, recording_mbid)
          WHERE rank <= {limit}
-      GROUP BY user_id
+       GROUP BY user_id
     """
     return run_query(query)
 
