@@ -1,32 +1,6 @@
 import * as React from "react";
-import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import SearchDropDown from "./SearchDropDown";
-import ListenControl from "../listens/ListenControl";
 import SubmitListenInfo from "./submit-listen-info";
-
-type PayloadType = {
-  listened_at: number;
-  track_metadata: {
-    additional_info: {
-      release_mbid: string;
-      recording_mbid: string;
-    };
-
-    artist_name: string;
-    track_name: string;
-    release_name: string;
-  };
-};
-
-type TrackType = {
-  artist_credit_id: number;
-  artist_credit_name: string;
-  recording_mbid: string;
-  recording_name: string;
-  release_mbid: string;
-  release_name: string;
-};
 
 export interface AddListenModalProps {
   newAlert: (
@@ -37,13 +11,12 @@ export interface AddListenModalProps {
 }
 
 export interface AddListenModalState {
-  ListenOption: string;
-  SearchField: string;
-  TrackResults: Array<TrackType>;
-  SelectedTrack: TrackType;
-  TrackIsSelected: Boolean;
-  TimestampsSubmit: number;
-  PayloadArray: Array<PayloadType>;
+  listenOption: string;
+  payloadArray: Array<AddListenPayload>;
+  trackDetails: ACRMSearchResult;
+  timestampsSubmit: number;
+  isTrackReset: Boolean;
+  isListenSubmit: Boolean;
 }
 
 export default class AddListenModal extends React.Component<
@@ -56,10 +29,9 @@ export default class AddListenModal extends React.Component<
   constructor(props: AddListenModalProps) {
     super(props);
     this.state = {
-      ListenOption: "track",
-      SearchField: "",
-      TrackResults: [],
-      SelectedTrack: {
+      listenOption: "track",
+      payloadArray: [],
+      trackDetails: {
         artist_credit_id: 0,
         artist_credit_name: "",
         recording_mbid: "",
@@ -67,17 +39,10 @@ export default class AddListenModal extends React.Component<
         release_mbid: "",
         release_name: "",
       },
-      TrackIsSelected: false,
-      TimestampsSubmit: 0,
-      PayloadArray: [],
+      timestampsSubmit: 0,
+      isTrackReset: false,
+      isListenSubmit: false,
     };
-  }
-
-  componentDidUpdate(pp: any, ps: any, ss: any) {
-    const { SearchField } = this.state;
-    if (ps.SearchField !== SearchField) {
-      this.SearchTrack();
-    }
   }
 
   handleError = (error: string | Error, title?: string): void => {
@@ -92,31 +57,43 @@ export default class AddListenModal extends React.Component<
     );
   };
 
+  trackMetadata = (track: ACRMSearchResult) => {
+    this.setState({
+      trackDetails: track,
+    });
+  };
+
+  dateToUnixTimestamp = (date: number) => {
+    this.setState({
+      timestampsSubmit: date,
+    });
+  };
+
   SubmitListen = async () => {
     const { APIService, currentUser } = this.context;
-    const { SelectedTrack, TimestampsSubmit } = this.state;
+    const { trackDetails, timestampsSubmit } = this.state;
     if (currentUser?.auth_token) {
       this.setState(
         {
-          PayloadArray: [
+          payloadArray: [
             {
-              listened_at: TimestampsSubmit,
+              listened_at: timestampsSubmit,
               track_metadata: {
                 additional_info: {
-                  release_mbid: SelectedTrack.release_mbid,
-                  recording_mbid: SelectedTrack.recording_mbid,
+                  release_mbid: trackDetails.release_mbid,
+                  recording_mbid: trackDetails.recording_mbid,
                 },
 
-                artist_name: SelectedTrack.artist_credit_name,
-                track_name: SelectedTrack.recording_name,
-                release_name: SelectedTrack.release_name,
+                artist_name: trackDetails.artist_credit_name,
+                track_name: trackDetails.recording_name,
+                release_name: trackDetails.release_name,
               },
             },
           ],
         },
         async () => {
-          const { PayloadArray } = this.state;
-          const payload = PayloadArray;
+          const { payloadArray } = this.state;
+          const payload = payloadArray;
           try {
             const status = await APIService.submitListens(
               currentUser.auth_token,
@@ -128,11 +105,18 @@ export default class AddListenModal extends React.Component<
               newAlert(
                 "success",
                 "You added the listen",
-                `${SelectedTrack.recording_name} - ${SelectedTrack.artist_credit_name}`
+                `${trackDetails.recording_name} - ${trackDetails.artist_credit_name}`
               );
             }
+            const { isListenSubmit } = this.state;
+            if (isListenSubmit) {
+              this.setState({ isListenSubmit: false });
+            }
+            if (!isListenSubmit) {
+              this.setState({ isListenSubmit: true });
+            }
             this.setState({
-              PayloadArray: [],
+              payloadArray: [],
             });
           } catch (error) {
             this.handleError(error, "Error while adding a listen");
@@ -142,72 +126,11 @@ export default class AddListenModal extends React.Component<
     }
   };
 
-  SearchTrack = async () => {
-    const { SearchField } = this.state;
-    try {
-      const response = await fetch(
-        "https://labs.api.listenbrainz.org/recording-search/json",
-        {
-          method: "POST",
-          body: JSON.stringify([{ query: SearchField }]),
-          headers: {
-            "Content-type": "application/json; charset=UTF-8",
-          },
-        }
-      );
-
-      const parsedResponse = await response.json();
-      this.setState({
-        TrackResults: parsedResponse,
-      });
-    } catch (error) {
-      console.debug(error);
-    }
-  };
-
-  TrackName = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({
-      SearchField: event.target.value,
-    });
-  };
-
-  DateToUnixTimestamp = (date: number) => {
-    this.setState({
-      TimestampsSubmit: date,
-    });
-  };
-
-  addTrackMetadata = (track: TrackType) => {
-    this.setState({
-      SelectedTrack: track,
-      TrackIsSelected: true,
-    });
-  };
-
-  removeTrack = () => {
-    this.setState({
-      ListenOption: "track",
-      SearchField: "",
-      TrackResults: [],
-      SelectedTrack: {
-        artist_credit_id: 0,
-        artist_credit_name: "",
-        recording_mbid: "",
-        recording_name: "",
-        release_mbid: "",
-        release_name: "",
-      },
-      TrackIsSelected: false,
-      TimestampsSubmit: 0,
-    });
-  };
-
   addAlbum = () => {
     this.setState({
-      ListenOption: "album",
-      SearchField: "",
-      TrackResults: [],
-      SelectedTrack: {
+      listenOption: "album",
+      payloadArray: [],
+      trackDetails: {
         artist_credit_id: 0,
         artist_credit_name: "",
         recording_mbid: "",
@@ -215,17 +138,16 @@ export default class AddListenModal extends React.Component<
         release_mbid: "",
         release_name: "",
       },
-      TrackIsSelected: false,
-      TimestampsSubmit: 0,
+      timestampsSubmit: 0,
     });
   };
 
-  addTrack = () => {
+  resetTrackSelection = () => {
+    const { isTrackReset } = this.state;
     this.setState({
-      ListenOption: "track",
-      SearchField: "",
-      TrackResults: [],
-      SelectedTrack: {
+      listenOption: "track",
+      payloadArray: [],
+      trackDetails: {
         artist_credit_id: 0,
         artist_credit_name: "",
         recording_mbid: "",
@@ -233,36 +155,22 @@ export default class AddListenModal extends React.Component<
         release_mbid: "",
         release_name: "",
       },
-      TrackIsSelected: false,
-      TimestampsSubmit: 0,
+      timestampsSubmit: 0,
     });
-  };
-
-  closeModal = () => {
-    this.setState({
-      ListenOption: "track",
-      SearchField: "",
-      TrackResults: [],
-      SelectedTrack: {
-        artist_credit_id: 0,
-        artist_credit_name: "",
-        recording_mbid: "",
-        recording_name: "",
-        release_mbid: "",
-        release_name: "",
-      },
-      TrackIsSelected: false,
-      TimestampsSubmit: 0,
-    });
+    if (isTrackReset) {
+      this.setState({ isTrackReset: false });
+    }
+    if (!isTrackReset) {
+      this.setState({ isTrackReset: true });
+    }
   };
 
   render() {
     const {
-      ListenOption,
-      TrackResults,
-      TrackIsSelected,
-      SelectedTrack,
-      SearchField,
+      listenOption,
+      timestampsSubmit,
+      isTrackReset,
+      isListenSubmit,
     } = this.state;
     return (
       <div
@@ -281,7 +189,7 @@ export default class AddListenModal extends React.Component<
                 className="close"
                 data-dismiss="modal"
                 aria-label="Close"
-                onClick={this.closeModal}
+                onClick={this.resetTrackSelection}
               >
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -294,11 +202,11 @@ export default class AddListenModal extends React.Component<
                 <button
                   type="button"
                   className={`btn btn-primary add-listen ${
-                    ListenOption === "track"
+                    listenOption === "track"
                       ? "option-active"
                       : "option-unactive"
                   }`}
-                  onClick={this.addTrack}
+                  onClick={this.resetTrackSelection}
                 >
                   Add track
                 </button>
@@ -314,46 +222,21 @@ export default class AddListenModal extends React.Component<
                   Add album
                 </button> */}
               </div>
-              {ListenOption === "track" &&
-                (TrackIsSelected === false ? (
-                  <div>
-                    <input
-                      type="text"
-                      className="form-control add-track-field"
-                      onChange={this.TrackName}
-                      placeholder="Add Artist name followed by Track name"
-                      value={SearchField}
-                    />
-                    <SearchDropDown
-                      TrackResults={TrackResults}
-                      action={this.addTrackMetadata}
-                    />
-                  </div>
-                ) : (
-                  <div>
-                    <div className="addtrackpill">
-                      <div>
-                        <span>{`${SelectedTrack.recording_name} - ${SelectedTrack.artist_credit_name}`}</span>
-                        <ListenControl
-                          text=""
-                          icon={faTimesCircle}
-                          action={this.removeTrack}
-                        />
-                      </div>
-                    </div>
-                    <SubmitListenInfo
-                      SelectedTrack={SelectedTrack}
-                      DateToUnixTimestamp={this.DateToUnixTimestamp}
-                    />
-                  </div>
-                ))}
+              {listenOption === "track" && (
+                <SubmitListenInfo
+                  trackMetadata={this.trackMetadata}
+                  dateToUnixTimestamp={this.dateToUnixTimestamp}
+                  isTrackReset={isTrackReset}
+                  isListenSubmit={isListenSubmit}
+                />
+              )}
             </div>
             <div className="modal-footer">
               <button
                 type="button"
                 className="btn btn-default"
                 data-dismiss="modal"
-                onClick={this.closeModal}
+                onClick={this.resetTrackSelection}
               >
                 Cancel
               </button>
@@ -361,7 +244,7 @@ export default class AddListenModal extends React.Component<
                 type="submit"
                 className="btn btn-success"
                 data-dismiss="modal"
-                disabled={TrackIsSelected === false}
+                disabled={timestampsSubmit === 0}
                 onClick={this.SubmitListen}
               >
                 Add Listen

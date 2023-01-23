@@ -1,29 +1,32 @@
 import * as React from "react";
-import DatePicker from "react-datepicker";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { throttle as _throttle } from "lodash";
+import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import ListenControl from "../listens/ListenControl";
 import {
   getAlbumArtFromReleaseMBID,
   convertDateToUnixTimestamp,
 } from "../utils/utils";
-
-type TrackType = {
-  artist_credit_id: number;
-  artist_credit_name: string;
-  recording_mbid: string;
-  recording_name: string;
-  release_mbid: string;
-  release_name: string;
-};
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 export type SubmitListenInfoState = {
   thumbnailSrc: string;
-  TimestampOption: string;
-  Timestamp: Date;
+  customTimestamp: Boolean;
+  selectedDate: Date;
+  searchField: string;
+  trackResults: Array<ACRMSearchResult>;
+  selectedTrack: ACRMSearchResult;
+  trackIsSelected: Boolean;
 };
 
 export type SubmitListenInfoProps = {
-  SelectedTrack: TrackType;
-  DateToUnixTimestamp: (event: number) => void;
+  trackMetadata: (event: ACRMSearchResult) => void;
+  dateToUnixTimestamp: (event: number) => void;
+  isTrackReset: Boolean;
+  isListenSubmit: Boolean;
 };
 
 export default class SubmitListenInfo extends React.Component<
@@ -38,143 +41,258 @@ export default class SubmitListenInfo extends React.Component<
 
     this.state = {
       thumbnailSrc: "/static/img/cover-art-placeholder.jpg",
-      TimestampOption: "now",
-      Timestamp: new Date(),
+      customTimestamp: false,
+      selectedDate: new Date(),
+      searchField: "",
+      trackResults: [],
+      selectedTrack: {
+        artist_credit_id: 0,
+        artist_credit_name: "",
+        recording_mbid: "",
+        recording_name: "",
+        release_mbid: "",
+        release_name: "",
+      },
+      trackIsSelected: false,
     };
   }
 
-  componentDidMount(): void {
-    this.getCoverArt();
+  componentDidMount() {
     this.convertToUnix();
   }
 
   componentDidUpdate(pp: any, ps: any, ss: any) {
-    const { Timestamp } = this.state;
-    if (ps.Timestamp !== Timestamp) {
+    const { trackIsSelected, selectedDate } = this.state;
+    const { isTrackReset, isListenSubmit } = this.props;
+    if (ps.TrackIsSelected !== trackIsSelected) {
+      this.getCoverArt();
+    }
+    if (ps.selectedDate !== selectedDate) {
       this.convertToUnix();
+    }
+    if (pp.isTrackReset != isTrackReset) {
+      this.removeTrack();
+    }
+    if (pp.isListenSubmit != isListenSubmit) {
+      this.removeTrack();
     }
   }
 
   async getCoverArt() {
-    const { SelectedTrack } = this.props;
+    const { selectedTrack } = this.state;
     const albumArtSrc = await getAlbumArtFromReleaseMBID(
-      SelectedTrack.release_mbid
+      selectedTrack.release_mbid
     );
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
     }
   }
 
-  convertToUnix = () => {
-    const { DateToUnixTimestamp } = this.props;
-    const { Timestamp } = this.state;
-    const date = Timestamp;
-    const unixTimestamp = Math.floor(date.getTime() / 1000);
-    DateToUnixTimestamp(unixTimestamp);
-  };
-
   timestampNow = () => {
     this.setState({
-      TimestampOption: "now",
-      Timestamp: new Date(),
+      customTimestamp: false,
+      selectedDate: new Date(),
     });
   };
 
   timestampCustom = () => {
     this.setState({
-      TimestampOption: "custom",
-      Timestamp: new Date(),
+      customTimestamp: true,
+      selectedDate: new Date(),
     });
+  };
+
+  convertToUnix = () => {
+    const { selectedDate } = this.state;
+    const { dateToUnixTimestamp } = this.props;
+    console.log(convertDateToUnixTimestamp(selectedDate));
+    dateToUnixTimestamp(convertDateToUnixTimestamp(selectedDate));
   };
 
   onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
     this.setState({
-      Timestamp: newDateTimePickerValue,
+      selectedDate: newDateTimePickerValue,
+    });
+  };
+
+  SearchTrack = async () => {
+    const { searchField } = this.state;
+    try {
+      const response = await fetch(
+        "https://labs.api.listenbrainz.org/recording-search/json",
+        {
+          method: "POST",
+          body: JSON.stringify([{ query: searchField }]),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        }
+      );
+
+      const parsedResponse = await response.json();
+      this.setState({
+        trackResults: parsedResponse,
+      });
+    } catch (error) {
+      console.debug(error);
+    }
+  };
+
+  TrackName = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState(
+      {
+        searchField: event.target.value,
+      },
+      () => {
+        this.SearchTrack();
+      }
+    );
+  };
+
+  // eslint-disable-next-line react/sort-comp
+  throttledHandleInputChange = _throttle(this.TrackName, 300);
+
+  addTrackMetadata = (track: ACRMSearchResult) => {
+    this.setState({
+      selectedTrack: track,
+      trackIsSelected: true,
+    });
+    const { trackMetadata } = this.props;
+    trackMetadata(track);
+  };
+
+  removeTrack = () => {
+    this.setState({
+      thumbnailSrc: "/static/img/cover-art-placeholder.jpg",
+      customTimestamp: false,
+      selectedDate: new Date(),
+      searchField: "",
+      trackResults: [],
+      selectedTrack: {
+        artist_credit_id: 0,
+        artist_credit_name: "",
+        recording_mbid: "",
+        recording_name: "",
+        release_mbid: "",
+        release_name: "",
+      },
+      trackIsSelected: false,
     });
   };
 
   render() {
-    const { thumbnailSrc, TimestampOption, Timestamp } = this.state;
-    const { SelectedTrack } = this.props;
+    const {
+      thumbnailSrc,
+      customTimestamp,
+      selectedDate,
+      selectedTrack,
+      trackIsSelected,
+      searchField,
+      trackResults,
+    } = this.state;
 
-    return (
-      <div className="track-info">
-        <div className="cover-art-img">
-          <img
-            src={thumbnailSrc}
-            alt={SelectedTrack?.release_name ?? "cover art"}
-          />
+    return trackIsSelected === false ? (
+      <div>
+        <input
+          type="text"
+          className="form-control add-track-field"
+          onChange={this.throttledHandleInputChange}
+          placeholder="Add Artist name followed by Track name"
+          value={searchField}
+        />
+        <div className="tracksearchdropdown">
+          {trackResults?.map((track) => {
+            return (
+              <button
+                type="button"
+                onClick={() => this.addTrackMetadata(track)}
+              >
+                {`${track.recording_name} - ${track.artist_credit_name}`}
+              </button>
+            );
+          })}
         </div>
-        <div style={{ display: "block", width: "100%" }}>
-          <div className="track-details" style={{ marginTop: "23px" }}>
-            <div className="listen-entity">
-              <span>Track</span>
-            </div>
-            <div className="entity-details">
-              <span>{`${SelectedTrack?.recording_name}`}</span>
-            </div>
+      </div>
+    ) : (
+      <div>
+        <div className="addtrackpill">
+          <div>
+            <span>{`${selectedTrack.recording_name} - ${selectedTrack.artist_credit_name}`}</span>
+            <ListenControl
+              text=""
+              icon={faTimesCircle}
+              action={this.removeTrack}
+            />
           </div>
-          <div className="track-details">
-            <div className="listen-entity">
-              <span>Artist</span>
-            </div>
-            <div className="entity-details">
-              <span>{`${SelectedTrack?.artist_credit_name}`}</span>
-            </div>
+        </div>
+        <div className="track-info">
+          <div className="cover-art-img">
+            <img
+              src={thumbnailSrc}
+              alt={selectedTrack?.release_name ?? "cover art"}
+            />
           </div>
-          <div className="track-details">
-            <div className="listen-entity">
-              <span>Album</span>
-            </div>
-            <div className="entity-details">
-              <span>{`${SelectedTrack?.release_name}`}</span>
-            </div>
-          </div>
-          <div className="timestamp">
-            <span>Timestamp</span>
-            <button
-              type="button"
-              className={`btn btn-primary add-listen ${
-                TimestampOption === "now"
-                  ? "timestamp-active"
-                  : "timestamp-unactive"
-              }`}
-              onClick={this.timestampNow}
-            >
-              Now
-            </button>
-            <button
-              type="button"
-              className={`btn btn-primary add-listen ${
-                TimestampOption === "custom"
-                  ? "timestamp-active"
-                  : "timestamp-unactive"
-              }`}
-              onClick={this.timestampCustom}
-            >
-              Custom
-            </button>
-          </div>
-          <div className="timestamp-date-picker">
-            {TimestampOption === "custom" ? (
-              <DatePicker
-                selected={Timestamp}
-                onChange={this.onChangeDateTimePicker}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={1}
-                timeCaption="time"
-                dateFormat="dd-MM-yyyy, hh:mm:ss"
-              />
-            ) : (
-              <div className="react-datepicker__input-container">
-                <input
-                  type="text"
-                  value={Timestamp.toLocaleString("es-CL")}
-                  readOnly
-                />
+          <div style={{ display: "block", width: "100%" }}>
+            <div className="track-details" style={{ marginTop: "23px" }}>
+              <div className="listen-entity">
+                <span>Track</span>
               </div>
-            )}
+              <div className="entity-details">
+                <span>{`${selectedTrack?.recording_name}`}</span>
+              </div>
+            </div>
+            <div className="track-details">
+              <div className="listen-entity">
+                <span>Artist</span>
+              </div>
+              <div className="entity-details">
+                <span>{`${selectedTrack?.artist_credit_name}`}</span>
+              </div>
+            </div>
+            <div className="track-details">
+              <div className="listen-entity">
+                <span>Album</span>
+              </div>
+              <div className="entity-details">
+                <span>{`${selectedTrack?.release_name}`}</span>
+              </div>
+            </div>
+            <div className="timestamp">
+              <span>Timestamp</span>
+              <button
+                type="button"
+                className={`btn btn-primary add-listen ${
+                  customTimestamp === false
+                    ? "timestamp-active"
+                    : "timestamp-unactive"
+                }`}
+                onClick={this.timestampNow}
+              >
+                Now
+              </button>
+              <button
+                type="button"
+                className={`btn btn-primary add-listen ${
+                  customTimestamp === true
+                    ? "timestamp-active"
+                    : "timestamp-unactive"
+                }`}
+                onClick={this.timestampCustom}
+              >
+                Custom
+              </button>
+            </div>
+            <div className="timestamp-date-picker">
+              <DateTimePicker
+                value={selectedDate}
+                onChange={this.onChangeDateTimePicker}
+                calendarIcon={<FontAwesomeIcon icon={faCalendar as IconProp} />}
+                maxDate={new Date(Date.now())}
+                clearIcon={null}
+                format="dd/MM/yyyy h:mm:ss a"
+                disabled={!customTimestamp}
+              />
+            </div>
           </div>
         </div>
       </div>

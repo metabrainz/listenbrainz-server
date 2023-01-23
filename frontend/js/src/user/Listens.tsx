@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
 
-import DatePicker from "react-date-picker/dist/entry.nostyle";
+import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
@@ -74,7 +74,7 @@ export interface ListensState {
   recordingToReview?: Listen;
   recordingToMapToMusicbrainz?: Listen;
   recordingToPersonallyRecommend?: Listen;
-  dateTimePickerValue: Date | Date[];
+  dateTimePickerValue: Date;
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
   before being removed from the state */
@@ -645,7 +645,7 @@ export default class Listens extends React.Component<
     }
   };
 
-  onChangeDateTimePicker = async (newDateTimePickerValue: Date | Date[]) => {
+  onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
     if (!newDateTimePickerValue) {
       return;
     }
@@ -960,7 +960,7 @@ export default class Listens extends React.Component<
                     </a>
                   </li>
                   <li className="date-time-picker">
-                    <DatePicker
+                    <DateTimePicker
                       onChange={this.onChangeDateTimePicker}
                       value={dateTimePickerValue}
                       clearIcon={null}
@@ -973,6 +973,8 @@ export default class Listens extends React.Component<
                       calendarIcon={
                         <FontAwesomeIcon icon={faCalendar as IconProp} />
                       }
+                      format="dd/MM/yyyy"
+                      disableClock
                     />
                   </li>
                   <li

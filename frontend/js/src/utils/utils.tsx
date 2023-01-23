@@ -357,11 +357,11 @@ const fullLocalizedDateFromTimestampOrISODate = (
   });
 };
 
-const convertDateToUnixTimestamp = (ListenDate: Date): string => {
+const convertDateToUnixTimestamp = (ListenDate: Date): number => {
   const date = new Date(ListenDate);
   const timestampInMs = date.getTime();
   const unixTimestamp = Math.floor(date.getTime() / 1000);
-  return String(unixTimestamp);
+  return unixTimestamp;
 };
 
 /** Loads a script asynchronously into the HTML page */
