@@ -117,6 +117,7 @@ def process_recommendations(recommendation_df, limit):
           FROM distinct_recommendations rm
      LEFT JOIN recording_discovery rd
          USING (user_id, recording_mbid)
+      GROUP BY user_id
     """
     return run_query(query)
 
