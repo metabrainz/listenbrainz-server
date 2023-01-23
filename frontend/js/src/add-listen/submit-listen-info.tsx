@@ -70,10 +70,10 @@ export default class SubmitListenInfo extends React.Component<
     if (ps.selectedDate !== selectedDate) {
       this.convertToUnix();
     }
-    if (pp.isTrackReset != isTrackReset) {
+    if (pp.isTrackReset !== isTrackReset) {
       this.removeTrack();
     }
-    if (pp.isListenSubmit != isListenSubmit) {
+    if (pp.isListenSubmit !== isListenSubmit) {
       this.removeTrack();
     }
   }
