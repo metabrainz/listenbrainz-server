@@ -4,6 +4,7 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "time-ago";
 declare module "debounce-async";
+// declaration typescript file doesn't exist for react-datetime-picker/dist/entry.nostyle.js so had to declare a dummy declaration.
 declare module "react-datetime-picker/dist/entry.nostyle";
 
 declare module "react-bs-notifier";

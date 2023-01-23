@@ -94,7 +94,7 @@ export default class AddListenModal extends React.Component<
         async () => {
           const { payloadArray } = this.state;
           const payload = payloadArray;
-          if (currentUser.auth_token != undefined) {
+          if (currentUser.auth_token !== undefined) {
             try {
               const status = await APIService.submitListens(
                 currentUser.auth_token,
