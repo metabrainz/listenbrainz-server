@@ -4,7 +4,7 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "time-ago";
 declare module "debounce-async";
-declare module "react-datetime-picker/dist/entry.nostyle"
+declare module "react-datetime-picker/dist/entry.nostyle";
 
 declare module "react-bs-notifier";
 declare type AlertType = "danger" | "warning" | "success" | "info";
@@ -689,4 +689,4 @@ declare type AddListenPayload = {
     track_name: string;
     release_name: string;
   };
-}
+};

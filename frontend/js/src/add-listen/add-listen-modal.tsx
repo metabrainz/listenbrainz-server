@@ -94,32 +94,34 @@ export default class AddListenModal extends React.Component<
         async () => {
           const { payloadArray } = this.state;
           const payload = payloadArray;
-          try {
-            const status = await APIService.submitListens(
-              currentUser.auth_token,
-              "single",
-              payload
-            );
-            if (status.status === 200) {
-              const { newAlert } = this.props;
-              newAlert(
-                "success",
-                "You added the listen",
-                `${trackDetails.recording_name} - ${trackDetails.artist_credit_name}`
+          if (currentUser.auth_token != undefined) {
+            try {
+              const status = await APIService.submitListens(
+                currentUser.auth_token,
+                "single",
+                payload
               );
+              if (status.status === 200) {
+                const { newAlert } = this.props;
+                newAlert(
+                  "success",
+                  "You added the listen",
+                  `${trackDetails.recording_name} - ${trackDetails.artist_credit_name}`
+                );
+              }
+              const { isListenSubmit } = this.state;
+              if (isListenSubmit) {
+                this.setState({ isListenSubmit: false });
+              }
+              if (!isListenSubmit) {
+                this.setState({ isListenSubmit: true });
+              }
+              this.setState({
+                payloadArray: [],
+              });
+            } catch (error) {
+              this.handleError(error, "Error while adding a listen");
             }
-            const { isListenSubmit } = this.state;
-            if (isListenSubmit) {
-              this.setState({ isListenSubmit: false });
-            }
-            if (!isListenSubmit) {
-              this.setState({ isListenSubmit: true });
-            }
-            this.setState({
-              payloadArray: [],
-            });
-          } catch (error) {
-            this.handleError(error, "Error while adding a listen");
           }
         }
       );
