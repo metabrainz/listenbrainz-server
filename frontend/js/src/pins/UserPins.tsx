@@ -265,7 +265,6 @@ export default class UserPins extends React.Component<
       : 0;
   };
 
-  // BrainzPlayer functions
   removePinFromPinsList = (pin: PinnedRecording) => {
     const { pins } = this.state;
     const index = pins.indexOf(pin);

@@ -45,6 +45,7 @@ const props = {
   youtube,
   spotify,
   newAlert: () => {},
+  updateRecordingToPin: () => {},
 };
 
 // Create a new instance of GlobalAppContext

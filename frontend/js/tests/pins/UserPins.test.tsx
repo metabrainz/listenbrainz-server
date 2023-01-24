@@ -6,18 +6,14 @@ import * as timeago from "time-ago";
 import { act } from "react-dom/test-utils";
 import { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
-import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 
 import * as pinsPageProps from "../__mocks__/userPinsProps.json";
 import * as APIPins from "../__mocks__/pinProps.json";
-
-import { getListenablePin } from "../../src/utils/utils";
 
 import UserPins, {
   UserPinsProps,
   UserPinsState,
 } from "../../src/pins/UserPins";
-import { waitForComponentToPaint } from "../test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -85,15 +81,11 @@ describe("UserPins", () => {
       .spyOn(global.Date, "now")
       .mockImplementation(() => mockDate.getTime());
 
+    // eslint-disable-next-line no-import-assign
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
-  });
-
-  it("contains a BrainzPlayer instance", () => {
-    wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-    expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
   });
 
   it("renders the correct number of pinned recordings", () => {
