@@ -4,26 +4,17 @@ import { createRoot } from "react-dom/client";
 import * as React from "react";
 
 import * as _ from "lodash";
-import { Integrations } from "@sentry/tracing";
-import * as Sentry from "@sentry/react";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
+
 import Loader from "../components/Loader";
 import PinnedRecordingCard from "./PinnedRecordingCard";
 import {
   getListenablePin,
-  getPageProps,
   getRecordingMBID,
   getRecordingMSID,
 } from "../utils/utils";
-import SimpleModal from "../utils/SimpleModal";
 
 export type UserPinsProps = {
   user: ListenBrainzUser;
@@ -64,7 +55,6 @@ export default class UserPins extends React.Component<
   }
 
   async componentDidMount(): Promise<void> {
-    const { currentUser } = this.context;
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     this.handleURLChange();
@@ -298,168 +288,105 @@ export default class UserPins extends React.Component<
 
     return (
       <div role="main">
-        <div className="row">
-          <div className="col-md-8 col-md-offset-2">
-            <h3>Pinned Tracks</h3>
+        <h3>
+          {user.name === currentUser.name
+            ? "Your"
+            : `${_.startCase(user.name)}'s`}{" "}
+          Pins
+        </h3>
 
-            {pins.length === 0 && (
+        {pins.length === 0 && (
+          <>
+            <div className="lead text-center">No pins yet</div>
+
+            {user.name === currentUser.name && (
               <>
-                <div className="lead text-center">No pins yet</div>
-
-                {user.name === currentUser.name && (
-                  <>
-                    Pin one of your
-                    <a href={`${profileUrl}`}> recent Listens!</a>
-                  </>
-                )}
+                Pin one of your
+                <a href={`${profileUrl ?? "/my/listens/"}`}> recent Listens!</a>
               </>
             )}
+          </>
+        )}
 
-            {pins.length > 0 && (
-              <div>
-                <div
-                  style={{
-                    height: 0,
-                    position: "sticky",
-                    top: "50%",
-                    zIndex: 1,
+        {pins.length > 0 && (
+          <div>
+            <div
+              style={{
+                height: 0,
+                position: "sticky",
+                top: "50%",
+                zIndex: 1,
+              }}
+            >
+              <Loader isLoading={loading} />
+            </div>
+            <div
+              id="pinned-recordings"
+              style={{ opacity: loading ? "0.4" : "1" }}
+            >
+              {pins?.map((pin, index) => {
+                return (
+                  <PinnedRecordingCard
+                    key={pin.created}
+                    pinnedRecording={pin}
+                    isCurrentUser={currentUser?.name === user?.name}
+                    removePinFromPinsList={this.removePinFromPinsList}
+                    newAlert={newAlert}
+                    currentFeedback={this.getFeedbackForListen(
+                      pinsAsListens[index]
+                    )}
+                    updateFeedbackCallback={this.updateFeedback}
+                  />
+                );
+              })}
+
+              {pins.length < this.DEFAULT_PINS_PER_PAGE && (
+                <h5 className="text-center">No more pins to show.</h5>
+              )}
+            </div>
+
+            <ul
+              className="pager"
+              id="navigation"
+              style={{ marginRight: "-1em", marginLeft: "1.5em" }}
+            >
+              <li
+                className={`previous ${
+                  isNewerButtonDisabled ? "disabled" : ""
+                }`}
+              >
+                <a
+                  role="button"
+                  onClick={this.handleClickNewer}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") this.handleClickNewer();
                   }}
+                  tabIndex={0}
+                  href={isNewerButtonDisabled ? undefined : `?page=${page - 1}`}
                 >
-                  <Loader isLoading={loading} />
-                </div>
-                <div
-                  id="pinned-recordings"
-                  style={{ opacity: loading ? "0.4" : "1" }}
+                  &larr; Newer
+                </a>
+              </li>
+              <li
+                className={`next ${isOlderButtonDisabled ? "disabled" : ""}`}
+                style={{ marginLeft: "auto" }}
+              >
+                <a
+                  role="button"
+                  onClick={this.handleClickOlder}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") this.handleClickOlder();
+                  }}
+                  tabIndex={0}
+                  href={isOlderButtonDisabled ? undefined : `?page=${page + 1}`}
                 >
-                  {pins?.map((pin, index) => {
-                    return (
-                      <PinnedRecordingCard
-                        key={pin.created}
-                        pinnedRecording={pin}
-                        isCurrentUser={currentUser?.name === user?.name}
-                        removePinFromPinsList={this.removePinFromPinsList}
-                        newAlert={newAlert}
-                        currentFeedback={this.getFeedbackForListen(
-                          pinsAsListens[index]
-                        )}
-                        updateFeedbackCallback={this.updateFeedback}
-                      />
-                    );
-                  })}
-
-                  {pins.length < this.DEFAULT_PINS_PER_PAGE && (
-                    <h5 className="text-center">No more pins to show.</h5>
-                  )}
-                </div>
-
-                <ul
-                  className="pager"
-                  id="navigation"
-                  style={{ marginRight: "-1em", marginLeft: "1.5em" }}
-                >
-                  <li
-                    className={`previous ${
-                      isNewerButtonDisabled ? "disabled" : ""
-                    }`}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickNewer}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickNewer();
-                      }}
-                      tabIndex={0}
-                      href={
-                        isNewerButtonDisabled ? undefined : `?page=${page - 1}`
-                      }
-                    >
-                      &larr; Newer
-                    </a>
-                  </li>
-                  <li
-                    className={`next ${
-                      isOlderButtonDisabled ? "disabled" : ""
-                    }`}
-                    style={{ marginLeft: "auto" }}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickOlder}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickOlder();
-                      }}
-                      tabIndex={0}
-                      href={
-                        isOlderButtonDisabled ? undefined : `?page=${page + 1}`
-                      }
-                    >
-                      Older &rarr;
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            )}
+                  Older &rarr;
+                </a>
+              </li>
+            </ul>
           </div>
-        </div>
-        <BrainzPlayer
-          listens={pinsAsListens}
-          newAlert={newAlert}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-        />
+        )}
       </div>
     );
   }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const {
-    api_url,
-    current_user,
-    spotify,
-    youtube,
-    sentry_dsn,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { user, pins, total_count, profile_url } = reactProps;
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const UserPinsWithAlertNotifications = withAlertNotifications(UserPins);
-
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    modal: modalRef,
-  };
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
-        <UserPinsWithAlertNotifications
-          user={user}
-          pins={pins}
-          totalCount={total_count}
-          profileUrl={profile_url}
-        />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
