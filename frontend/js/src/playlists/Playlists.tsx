@@ -305,7 +305,7 @@ export default class UserPlaylists extends React.Component<
     });
 
     return (
-      <div>
+      <div role="main" id="playlists-page">
         <h2>
           {this.isCurrentUserPage() ? "Your" : `${startCase(user.name)}'s`}{" "}
           playlists
@@ -318,20 +318,8 @@ export default class UserPlaylists extends React.Component<
           playlistCount={playlistCount}
           selectPlaylistForEdit={this.selectPlaylistForEdit}
           newAlert={newAlert}
-        />
-        <h2>Collaborative playlists</h2>
-        <PlaylistsList
-          playlists={collaborativePlaylists}
-          activeSection="collaborations"
-          user={user}
-          paginationOffset={paginationOffset}
-          playlistCount={playlistCount}
-          selectPlaylistForEdit={this.selectPlaylistForEdit}
-          newAlert={newAlert}
-        />
-
-        {this.isCurrentUserPage() && (
-          <>
+        >
+          {this.isCurrentUserPage() && (
             <Card
               className="new-playlist"
               data-toggle="modal"
@@ -342,6 +330,10 @@ export default class UserPlaylists extends React.Component<
                 <span>Create new playlist</span>
               </div>
             </Card>
+          )}
+        </PlaylistsList>
+        {this.isCurrentUserPage() && (
+          <>
             <CreateOrEditPlaylistModal
               onSubmit={this.createPlaylist}
               htmlId="playlistCreateModal"
@@ -357,6 +349,16 @@ export default class UserPlaylists extends React.Component<
             />
           </>
         )}
+        <h2>Collaborative playlists</h2>
+        <PlaylistsList
+          playlists={collaborativePlaylists}
+          activeSection="collaborations"
+          user={user}
+          paginationOffset={paginationOffset}
+          playlistCount={playlistCount}
+          selectPlaylistForEdit={this.selectPlaylistForEdit}
+          newAlert={newAlert}
+        />
       </div>
     );
   }

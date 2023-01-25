@@ -27,7 +27,7 @@ export type PlaylistsListState = {
 };
 
 export default class PlaylistsList extends React.Component<
-  PlaylistsListProps,
+  React.PropsWithChildren<PlaylistsListProps>,
   PlaylistsListState
 > {
   static contextType = GlobalAppContext;
@@ -36,7 +36,7 @@ export default class PlaylistsList extends React.Component<
   private APIService!: APIServiceClass;
   private DEFAULT_PLAYLISTS_PER_PAGE = 25;
 
-  constructor(props: PlaylistsListProps) {
+  constructor(props: React.PropsWithChildren<PlaylistsListProps>) {
     super(props);
     this.state = {
       playlists: props.playlists ?? [],
@@ -212,7 +212,12 @@ export default class PlaylistsList extends React.Component<
   };
 
   render() {
-    const { newAlert, selectPlaylistForEdit, activeSection } = this.props;
+    const {
+      newAlert,
+      selectPlaylistForEdit,
+      activeSection,
+      children,
+    } = this.props;
     const {
       playlists,
       paginationOffset,
@@ -244,6 +249,7 @@ export default class PlaylistsList extends React.Component<
               />
             );
           })}
+          {children}
         </div>
         <ul className="pager" style={{ display: "flex" }}>
           <li className={`previous ${paginationOffset <= 0 ? "disabled" : ""}`}>

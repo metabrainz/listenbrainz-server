@@ -6,13 +6,10 @@
   flex-wrap: wrap;
   padding-top: 1.5em;
 
-  .playlist,
-  .new-playlist {
+  .playlist {
     margin: 0.5em;
     width: 15em;
     height: 15em !important;
-  }
-  .playlist {
     position: relative;
     overflow: hidden;
 
@@ -72,26 +69,30 @@
       }
     }
   }
-  .new-playlist {
-    cursor: pointer;
-    // using !important to overwrite styles from Card component
-    // (not classes but DOM element.style
-    background: @blue !important;
-    height: initial !important;
-    color: white;
-    text-align: center;
-    > div {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      align-items: center;
-      font-size: 2em;
-      padding: 1em;
-      height: 100%;
-      > span {
-        // "Create new playlist" text
-        line-height: 1.2em;
-      }
+}
+
+.new-playlist {
+  margin: 0.5em;
+  width: 15em;
+  height: 15em !important;
+  cursor: pointer;
+  // using !important to overwrite styles from Card component
+  // (not classes but DOM element.style
+  background: @blue !important;
+  height: initial !important;
+  color: white;
+  text-align: center;
+  > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 2em;
+    padding: 1em;
+    height: 100%;
+    > span {
+      // "Create new playlist" text
+      line-height: 1.2em;
     }
   }
 }
