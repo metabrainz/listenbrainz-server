@@ -1199,12 +1199,12 @@ class FeedbackAPITestCase(IntegrationTestCase):
         return sample_feedback
 
     def test_feedback_view(self):
-        # user.feedback endpoint queries recording feedback with metadata which loads
+        # user.taste endpoint queries recording feedback with metadata which loads
         # data from msb so insert recordings into msb as well, otherwise the test will fail
         inserted_rows = self._insert_feedback_with_metadata(self.user["id"])
 
         # Fetch loved page
-        r = self.client.get(url_for('user.feedback', user_name=self.user['musicbrainz_id']))
+        r = self.client.get(url_for('user.taste', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
         props = json.loads(self.get_context_variable('props'))
 
@@ -1219,7 +1219,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertNotEqual(feedback[0]["created"], "")
 
         # Fetch hated page
-        r = self.client.get(url_for('user.feedback', user_name=self.user['musicbrainz_id'], score=-1))
+        r = self.client.get(url_for('user.taste', user_name=self.user['musicbrainz_id'], score=-1))
         self.assert200(r)
         props = json.loads(self.get_context_variable('props'))
 
