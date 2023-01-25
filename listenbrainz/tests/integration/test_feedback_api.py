@@ -1209,7 +1209,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         props = json.loads(self.get_context_variable('props'))
 
         self.assertEqual(props['feedback_count'], 1)
-        self.assertEqual(props['active_section'], 'feedback')
+        self.assertEqual(props['active_section'], 'taste')
         feedback = props["feedback"]
 
         self.assertEqual(len(feedback), 1)
@@ -1224,7 +1224,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         props = json.loads(self.get_context_variable('props'))
 
         self.assertEqual(props['feedback_count'], 1)
-        self.assertEqual(props['active_section'], 'feedback')
+        self.assertEqual(props['active_section'], 'taste')
         feedback = props["feedback"]
 
         self.assertEqual(len(feedback), 1)
