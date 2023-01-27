@@ -6,23 +6,17 @@
       {
         "listen_count": 424,
         "artist_name": "Bob Dylan",
-        "artist_mbids": [
-          "75c5f0fe-ff02-4f36-bd79-9db14041b6d2"
-        ]
+        "artist_mbid": "75c5f0fe-ff02-4f36-bd79-9db14041b6d2"
       },
       {
         "listen_count": 363,
         "artist_name": "Radiohead",
-        "artist_mbids": [
-          "50fa106f-e40d-49ec-bca1-9802fb2157e7"
-        ]
+        "artist_mbid": "50fa106f-e40d-49ec-bca1-9802fb2157e7"
       },
       {
         "listen_count": 286,
         "artist_name": "The Rolling Stones",
-        "artist_mbids": [
-          "e12b120c-9b69-49ac-9d22-6a904edff32b"
-        ]
+        "artist_mbid": "e12b120c-9b69-49ac-9d22-6a904edff32b"
       }
     ]
   },
@@ -33,58 +27,42 @@
       {
         "listen_count": 286,
         "artist_name": "Ariana Grande",
-        "artist_mbids": [
-          "b4ae3356-b8a7-471a-a23a-e471a69ad454"
-        ]
+        "artist_mbid": "b4ae3356-b8a7-471a-a23a-e471a69ad454"
       },
       {
         "listen_count": 207,
         "artist_name": "Rosal\u00eda",
-        "artist_mbids": [
-          "27f6c4f6-f7a3-4fe0-b02c-7f3ed494e9fb"
-        ]
+        "artist_mbid": "27f6c4f6-f7a3-4fe0-b02c-7f3ed494e9fb"
       },
       {
         "listen_count": 194,
         "artist_name": "The Beatles",
-        "artist_mbids": [
-          "62cc4b55-7b65-4676-909c-e3f221a40dfb"
-        ]
+        "artist_mbid": "62cc4b55-7b65-4676-909c-e3f221a40dfb"
       },
       {
         "listen_count": 187,
         "artist_name": "The Cure",
-        "artist_mbids": [
-          "d290cd3b-40a4-47c8-a476-7dfc2f8b3895"
-        ]
+        "artist_mbid": "d290cd3b-40a4-47c8-a476-7dfc2f8b3895"
       },
       {
         "listen_count": 166,
         "artist_name": "Lauv",
-        "artist_mbids": [
-          "e98b10b6-0208-4157-9544-36041e303f07"
-        ]
+        "artist_mbid": "e98b10b6-0208-4157-9544-36041e303f07"
       },
       {
         "listen_count": 151,
         "artist_name": "Theophilus London",
-        "artist_mbids": [
-          "1d743e65-7850-4aed-b248-650c1e8ccfc1"
-        ]
+        "artist_mbid": "1d743e65-7850-4aed-b248-650c1e8ccfc1"
       },
       {
         "listen_count": 133,
         "artist_name": "Bring Me the Horizon",
-        "artist_mbids": [
-          "855e2998-40bc-4dbb-8ea5-4b28cd9447e0"
-        ]
+        "artist_mbid": "855e2998-40bc-4dbb-8ea5-4b28cd9447e0"
       },
       {
         "listen_count": 132,
         "artist_name": "Kedr Livanskiy",
-        "artist_mbids": [
-          "e03b3c0c-f1b1-4647-aa87-c6a9a05da72e"
-        ]
+        "artist_mbid": "e03b3c0c-f1b1-4647-aa87-c6a9a05da72e"
       }
     ]
   }

@@ -225,7 +225,7 @@ declare type LastFmScrobblePage = {
 declare type UserArtistsResponse = {
   payload: {
     artists: Array<{
-      artist_mbids?: Array<string>;
+      artist_mbid: string | null;
       artist_name: string;
       listen_count: number;
     }>;

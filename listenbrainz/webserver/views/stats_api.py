@@ -36,7 +36,7 @@ stats_api_bp = Blueprint('stats_api_v1', __name__)
 @stats_api_bp.route("/user/<user_name>/artists")
 @crossdomain
 @ratelimit()
-def get_user_artist(user_name):
+def get_artist(user_name):
     """
     Get top artists for user ``user_name``.
 
@@ -243,6 +243,8 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
         raise APINoContent('')
 
     entity_list, total_entity_count = _process_user_entity(stats, offset, count)
+
+    entity = "artists" if entity == "test_artists" else entity
 
     return jsonify({"payload": {
         "user_id": user_name,
@@ -866,8 +868,8 @@ def _get_artist_map_stats(user_id, stats_range):
         # Calculate the data
         artist_mbid_counts = defaultdict(int)
         for artist in artist_stats.data.__root__:
-            for artist_mbid in artist.artist_mbids:
-                artist_mbid_counts[artist_mbid] += artist.listen_count
+            if artist.artist_mbid:
+                artist_mbid_counts[artist.artist_mbid] += artist.listen_count
 
         country_code_data = _get_country_wise_counts(artist_mbid_counts)
 
