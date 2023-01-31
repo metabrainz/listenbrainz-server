@@ -44,7 +44,7 @@ from listenbrainz.db.dump import check_ftp_dump_ages
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
 NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 30
 NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 2
-NUMBER_OF_MAPPING_DUMPS_TO_KEEP = 2
+NUMBER_OF_CANONICAL_DUMPS_TO_KEEP = 2
 
 cli = click.Group()
 
@@ -64,11 +64,11 @@ def send_dump_creation_notification(dump_name, dump_type):
         )
 
 
-@cli.command(name="create_mapping")
+@cli.command(name="create_mbcanonical")
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
               help="path to the directory where the dump should be made")
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="Dump the metadata table from the listenbrainz database")
-def create_mapping(location, use_lb_conn):
+def create_mbcanonical(location, use_lb_conn):
     """Create a dump of the canonical mapping tables. This includes the following items:
         - metadata for canonical recordings
         - canonical recording redirect
@@ -83,7 +83,7 @@ def create_mapping(location, use_lb_conn):
     with app.app_context():
         end_time = datetime.now()
         ts = end_time.strftime('%Y%m%d-%H%M%S')
-        dump_name = 'metabrainz-metadata-dump-{time}'.format(time=ts)
+        dump_name = 'musicbrainz-canonical-dump-{time}'.format(time=ts)
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
 
@@ -108,7 +108,7 @@ def create_mapping(location, use_lb_conn):
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
             # Mapping dump doesn't have a dump id (second field) as they are standalone
-            f.write("%s 0 mapping\n" % (ts, ))
+            f.write("%s 0 mbcanonical\n" % (ts, ))
 
         current_app.logger.info(
             'Dumps created and hashes written at %s' % dump_path)
@@ -422,18 +422,18 @@ def _cleanup_dumps(location):
         remove_dumps(location, spark_dumps,
                      NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP)
 
-    # Clean up mapping dumps
-    mapping_dump_re = re.compile(
-        'metabrainz-metadata-dump-[0-9]*-[0-9]*')
+    # Clean up canonical dumps
+    mbcanonical_dump_re = re.compile(
+        'musicbrainz-canonical-dump-[0-9]*-[0-9]*')
     dump_files = [x for x in os.listdir(
-        location) if mapping_dump_re.match(x)]
-    mapping_dumps = [x for x in sorted(
+        location) if mbcanonical_dump_re.match(x)]
+    mbcanonical_dumps = [x for x in sorted(
         dump_files, key=lambda dump_name: dump_name.split('-')[3] + dump_name.split('-')[4], reverse=True)]
-    if not mapping_dumps:
-        print('No mapping dumps present in specified directory!')
+    if not mbcanonical_dumps:
+        print('No canonical dumps present in specified directory!')
     else:
-        remove_dumps(location, mapping_dumps,
-                     NUMBER_OF_MAPPING_DUMPS_TO_KEEP)
+        remove_dumps(location, mbcanonical_dumps,
+                     NUMBER_OF_CANONICAL_DUMPS_TO_KEEP)
 
 
 def remove_dumps(location, dumps, remaining_count):

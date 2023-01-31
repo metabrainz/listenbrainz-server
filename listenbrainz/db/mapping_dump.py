@@ -97,7 +97,7 @@ def _create_dump(location: str, lb_engine: sqlalchemy.engine.Engine,
             the path to the archive file created
     """
 
-    archive_name = 'metabrainz-metadata-dump-{time}'.format(
+    archive_name = 'musicbrainz-canonical-dump-{time}'.format(
         time=dump_time.strftime('%Y%m%d-%H%M%S')
     )
     archive_path = os.path.join(location, '{archive_name}.tar.zst'.format(
@@ -126,7 +126,7 @@ def _create_dump(location: str, lb_engine: sqlalchemy.engine.Engine,
                     'Exception while adding dump metadata: %s', str(e), exc_info=True)
                 raise
 
-            archive_tables_dir = os.path.join(temp_dir, 'metabrainz')
+            archive_tables_dir = os.path.join(temp_dir, 'canonical')
             create_path(archive_tables_dir)
 
             for table in tables:
@@ -159,7 +159,7 @@ def _create_dump(location: str, lb_engine: sqlalchemy.engine.Engine,
             for table, tabledata in tables.items():
                 filename = tabledata['filename']
                 tar.add(os.path.join(archive_tables_dir, table),
-                        arcname=os.path.join(archive_name, 'metabrainz', filename))
+                        arcname=os.path.join(archive_name, 'canonical', filename))
 
             shutil.rmtree(temp_dir)
 

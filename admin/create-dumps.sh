@@ -94,10 +94,10 @@ elif [ "$DUMP_TYPE" == "incremental" ]; then
     SUB_DIR="incremental"
 elif [ "$DUMP_TYPE" == "feedback" ]; then
     SUB_DIR="spark"
-elif [ "$DUMP_TYPE" == "mapping" ]; then
-    SUB_DIR="mapping"
+elif [ "$DUMP_TYPE" == "mbcanonical" ]; then
+    SUB_DIR="mbcanonical"
 else
-    echo "ERROR: Dump Type $DUMP_TYPE is invalid. Dump type must be one of 'full', 'incremental', 'feedback' or 'mapping'"
+    echo "ERROR: Dump Type $DUMP_TYPE is invalid. Dump type must be one of 'full', 'incremental', 'feedback' or 'mbcanonical'"
     exit
 fi
 
@@ -127,9 +127,9 @@ elif [ "$DUMP_TYPE" == "feedback" ]; then
         echo "Feedback dump failed, exiting!"
         exit 1
     fi
-elif [ "$DUMP_TYPE" == "mapping" ]; then
-    if ! /usr/local/bin/python manage.py dump create_mapping -l "$DUMP_TEMP_DIR" "$@"; then
-        echo "Mapping dump failed, exiting!"
+elif [ "$DUMP_TYPE" == "mbcanonical" ]; then
+    if ! /usr/local/bin/python manage.py dump create_mbcanonical -l "$DUMP_TEMP_DIR" "$@"; then
+        echo "MB Canonical dump failed, exiting!"
         exit 1
     fi
 else
@@ -212,7 +212,7 @@ add_rsync_include_rule \
     "listenbrainz-statistics-dump-$DUMP_TIMESTAMP.tar.xz"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "metabrainz-metadata-dump-$DUMP_TIMESTAMP.tar.zst"
+    "musicbrainz-canonical-dump-$DUMP_TIMESTAMP.tar.zst"
 
 EXCLUDE_RULE="exclude *"
 echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
