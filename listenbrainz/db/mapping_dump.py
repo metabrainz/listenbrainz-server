@@ -47,7 +47,7 @@ PUBLIC_TABLES_MAPPING = {
         'columns': (
             'id',
             'artist_credit_id',
-            'artist_mbids',
+            SQL("array_to_string(artist_mbids, ',') AS artist_mbids"),
             'artist_credit_name',
             'release_mbid',
             'release_name',
