@@ -44,6 +44,7 @@ from listenbrainz.db.dump import check_ftp_dump_ages
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
 NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 30
 NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 2
+NUMBER_OF_MAPPING_DUMPS_TO_KEEP = 2
 
 cli = click.Group()
 
@@ -103,6 +104,11 @@ def create_mapping(location, use_lb_conn):
                 return sys.exit(-1)
         except OSError:
             sys.exit(-1)
+
+        # Write the DUMP_ID file so that the FTP sync scripts can be more robust
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            # Mapping dump doesn't have a dump id (second field) as they are standalone
+            f.write("%s 0 mapping\n" % (ts, ))
 
         current_app.logger.info(
             'Dumps created and hashes written at %s' % dump_path)
@@ -415,6 +421,19 @@ def _cleanup_dumps(location):
     else:
         remove_dumps(location, spark_dumps,
                      NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP)
+
+    # Clean up mapping dumps
+    mapping_dump_re = re.compile(
+        'metabrainz-metadata-dump-[0-9]*-[0-9]*')
+    dump_files = [x for x in os.listdir(
+        location) if mapping_dump_re.match(x)]
+    mapping_dumps = [x for x in sorted(
+        dump_files, key=lambda dump_name: dump_name.split('-')[3] + dump_name.split('-')[4], reverse=True)]
+    if not mapping_dumps:
+        print('No mapping dumps present in specified directory!')
+    else:
+        remove_dumps(location, mapping_dumps,
+                     NUMBER_OF_MAPPING_DUMPS_TO_KEEP)
 
 
 def remove_dumps(location, dumps, remaining_count):

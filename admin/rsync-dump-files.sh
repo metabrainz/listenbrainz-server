@@ -37,6 +37,9 @@ elif [ $DUMP_TYPE == "incremental" ]; then
 elif [ $DUMP_TYPE == "feedback" ]; then
     SOURCE_DIR=$RSYNC_SPARK_DIR
     SSH_KEY=$RSYNC_SPARK_KEY
+elif [ $DUMP_TYPE == "mapping" ]; then
+    SOURCE_DIR=$RSYNC_MAPPING_DIR
+    SSH_KEY=$RSYNC_MAPPING_KEY
 else
     echo "Could not determine which directory (full, incremental or feedback) to copy over, exiting!"
     exit 1
