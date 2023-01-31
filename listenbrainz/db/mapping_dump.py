@@ -176,6 +176,7 @@ def create_mapping_dump(location: str, dump_time: datetime, use_lb_conn: bool):
         lb_engine = timescale.engine
     else:
         lb_engine = None
+    musicbrainz_db.init_db_engine(current_app.config['MB_DATABASE_MAPPING_URI'])
     return _create_dump(
         location=location,
         lb_engine=lb_engine,
