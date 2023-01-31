@@ -29,7 +29,7 @@ jobs:
     if: github.event.pull_request.draft == false
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Login to Docker Hub
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
@@ -38,7 +38,7 @@ jobs:
     # We do not use this to install node but only to register problem matchers
     # so that eslint annotations work.
     - name: Setup Node.js environment to enable annotations
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
 
     - name: Build frontend containers
       run: ./test.sh fe -b
