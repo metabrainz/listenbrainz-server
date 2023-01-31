@@ -18,7 +18,7 @@ class SimilarArtistsViewerQuery(Query):
         return "similar-artists", "Similar Artists Viewer"
 
     def inputs(self):
-        return ['artist_mbid', 'algorithm']
+        return ['[artist_mbid]', 'algorithm']
 
     def introduction(self):
         return """This page allows you to view artists similar to a given artist and algorithm."""
@@ -46,7 +46,7 @@ class SimilarArtistsViewerQuery(Query):
                 JOIN mbids m
                   ON a.gid = m.gid::UUID
         """
-        results = execute_values(mb_curs, query, [(mbid,) for mbid in redirected_mbids], fetch=True)
+        results = execute_values(mb_curs, query, tuple([(mbid,) for mbid in redirected_mbids]), fetch=True)
         metadata_idx = {row["artist_mbid"]: row for row in results}
 
         metadata = []
@@ -77,7 +77,7 @@ class SimilarArtistsViewerQuery(Query):
         }
 
     def fetch(self, params, offset=-1, count=-1):
-        artist_mbids = [p["artist_credit_mbid"].strip() for p in params]
+        artist_mbids = [p["[artist_mbid]"].strip() for p in params]
         algorithm = params[0]["algorithm"].strip()
         count = count if count > 0 else 100
 
