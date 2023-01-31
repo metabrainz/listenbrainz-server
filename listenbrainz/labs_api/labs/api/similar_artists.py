@@ -77,7 +77,7 @@ class SimilarArtistsViewerQuery(Query):
         }
 
     def fetch(self, params, offset=-1, count=-1):
-        artist_mbids = [p["artist_mbid"].strip() for p in params]
+        artist_mbids = params[0]["artist_mbid"].strip().split(",")
         algorithm = params[0]["algorithm"].strip()
         count = count if count > 0 else 100
 
