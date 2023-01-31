@@ -37,12 +37,14 @@ from psycopg2.sql import SQL
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from brainzutils import musicbrainz_db
+from listenbrainz.db import timescale
 from listenbrainz.db.dump import _escape_table_columns
 from listenbrainz.utils import create_path
 
 
 PUBLIC_TABLES_MAPPING = {
     'mapping.canonical_musicbrainz_data': {
+        'engine': 'lb_if_set',
         'filename': 'canonical_musicbrainz_data.csv',
         'columns': (
             'id',
@@ -59,6 +61,7 @@ PUBLIC_TABLES_MAPPING = {
         ),
     },
     'mapping.canonical_recording_redirect': {
+        'engine': 'lb_if_set',
         'filename': 'canonical_recording_redirect.csv',
         'columns': (
             'recording_mbid',
@@ -67,6 +70,7 @@ PUBLIC_TABLES_MAPPING = {
         )
     },
     'mapping.canonical_release_redirect': {
+        'engine': 'mb',
         'filename': 'canonical_release_redirect.csv',
         'columns': (
             'release_mbid',
@@ -77,35 +81,8 @@ PUBLIC_TABLES_MAPPING = {
 }
 
 
-def dump_postgres_db(location, dump_time=datetime.today()):
-    """ Create a MusicBrainz canonical metadata postgres database dump in the specified location
-
-        Arguments:
-            location: Directory where the final dump will be stored
-            dump_time: datetime object representing when the dump was started
-
-        Returns:
-            the path to the dumped data
-    """
-    current_app.logger.info('Beginning dump of PostgreSQL database...')
-    current_app.logger.info('dump path: %s', location)
-
-    current_app.logger.info('Creating dump of canonical metadata data...')
-    try:
-        dump_location = create_mapping_dump(location, dump_time)
-    except Exception as e:
-        current_app.logger.critical(
-            'Unable to create canonical metadata dump due to error %s', str(e), exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
-        return
-
-    current_app.logger.info(
-        'MusicBrainz canonical metadata PostgreSQL data dump created at %s!', location)
-    return dump_location
-
-
-def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], tables: Optional[dict],
+def _create_dump(location: str, lb_engine: sqlalchemy.engine.Engine, 
+                mb_engine: sqlalchemy.engine.Engine, tables: dict,
                 dump_time: datetime):
     """ Creates a dump of the provided tables at the location passed
 
@@ -120,7 +97,7 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], t
             the path to the archive file created
     """
 
-    archive_name = 'metabrainz-metadata-dump-{time}'.format(
+    archive_name = 'musicbrainz-canonical-dump-{time}'.format(
         time=dump_time.strftime('%Y%m%d-%H%M%S')
     )
     archive_path = os.path.join(location, '{archive_name}.tar.zst'.format(
@@ -149,31 +126,40 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], t
                     'Exception while adding dump metadata: %s', str(e), exc_info=True)
                 raise
 
-            archive_tables_dir = os.path.join(temp_dir, 'metabrainz')
+            archive_tables_dir = os.path.join(temp_dir, 'canonical')
             create_path(archive_tables_dir)
 
-            with db_engine.connect() as connection:
-                with connection.begin() as transaction:
-                    cursor = connection.connection.cursor()
-                    for table in tables:
-                        try:
+            for table in tables:
+                try:
+                    engine_name = tables[table]['engine']
+                    if engine_name == 'mb':
+                        engine = mb_engine
+                    elif engine_name == 'lb_if_set' and lb_engine:
+                        engine = lb_engine
+                    elif engine_name == 'lb_if_set':
+                        engine = mb_engine
+                    else:
+                        raise ValueError(f'Unknown table engine name: {engine_name}')
+                    with engine.connect() as connection:
+                        with connection.begin() as transaction:
+                            cursor = connection.connection.cursor()
                             copy_table(
                                 cursor=cursor,
                                 location=archive_tables_dir,
                                 columns=tables[table]['columns'],
                                 table_name=table,
                             )
-                        except Exception as e:
-                            current_app.logger.error(
-                                'Error while copying table %s: %s', table, str(e), exc_info=True)
-                            raise
-                    transaction.rollback()
+                            transaction.rollback()
+                except Exception as e:
+                    current_app.logger.error(
+                        'Error while copying table %s: %s', table, str(e), exc_info=True)
+                    raise
 
             # Add the files to the archive in the order that they are defined in the dump definition.
             for table, tabledata in tables.items():
                 filename = tabledata['filename']
                 tar.add(os.path.join(archive_tables_dir, table),
-                        arcname=os.path.join(archive_name, 'metabrainz', filename))
+                        arcname=os.path.join(archive_name, 'canonical', filename))
 
             shutil.rmtree(temp_dir)
 
@@ -183,12 +169,18 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], t
     return archive_path
 
 
-def create_mapping_dump(location: str, dump_time: datetime):
+def create_mapping_dump(location: str, dump_time: datetime, use_lb_conn: bool):
     """ Create postgres database dump of the mapping supplemental tables.
     """
+    if use_lb_conn:
+        lb_engine = timescale.engine
+    else:
+        lb_engine = None
+    musicbrainz_db.init_db_engine(current_app.config['MB_DATABASE_MAPPING_URI'])
     return _create_dump(
         location=location,
-        db_engine=musicbrainz_db.engine,
+        lb_engine=lb_engine,
+        mb_engine=musicbrainz_db.engine,
         tables=PUBLIC_TABLES_MAPPING,
         dump_time=dump_time
     )
