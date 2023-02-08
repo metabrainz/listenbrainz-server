@@ -197,7 +197,7 @@ export default class SubmitListenInfo extends React.Component<
           type="text"
           className="form-control add-track-field"
           onChange={this.throttledHandleInputChange}
-          placeholder="Add Artist name followed by Track name"
+          placeholder="Search Track"
           value={searchField}
         />
         <div className="tracksearchdropdown">
@@ -225,40 +225,44 @@ export default class SubmitListenInfo extends React.Component<
             />
           </div>
         </div>
+
         <div className="track-info">
-          <div className="cover-art-img">
-            <img
-              src={thumbnailSrc}
-              alt={selectedTrack?.release_name ?? "cover art"}
-            />
+          <div style={{ display: "flex" }}>
+            <div className="cover-art-img">
+              <img
+                src={thumbnailSrc}
+                alt={selectedTrack?.release_name ?? "cover art"}
+              />
+            </div>
+            <div className="new-details">
+              <div style={{ display: "block", width: "100%" }}>
+                <div className="recording-heading">
+                  <h5>{`${selectedTrack?.recording_name}`}</h5>
+                </div>
+                <div className="single-entity">
+                  <h6 className="entity-heading">Artist:</h6>
+                  <h6 className="entity-details">{`${selectedTrack?.artist_credit_name}`}</h6>
+                </div>
+                <div className="single-entity">
+                  <h6 className="entity-heading">Album:</h6>
+                  <h6
+                    style={{ margin: "0px 14px" }}
+                    className="entity-details"
+                  >{`${selectedTrack?.release_name}`}</h6>
+                </div>
+              </div>
+              <div className="cross-details">
+                <ListenControl
+                  text=""
+                  icon={faTimesCircle}
+                  action={this.removeTrack}
+                />
+              </div>
+            </div>
           </div>
-          <div style={{ display: "block", width: "100%" }}>
-            <div className="track-details" style={{ marginTop: "23px" }}>
-              <div className="listen-entity">
-                <span>Track</span>
-              </div>
-              <div className="entity-details">
-                <span>{`${selectedTrack?.recording_name}`}</span>
-              </div>
-            </div>
-            <div className="track-details">
-              <div className="listen-entity">
-                <span>Artist</span>
-              </div>
-              <div className="entity-details">
-                <span>{`${selectedTrack?.artist_credit_name}`}</span>
-              </div>
-            </div>
-            <div className="track-details">
-              <div className="listen-entity">
-                <span>Album</span>
-              </div>
-              <div className="entity-details">
-                <span>{`${selectedTrack?.release_name}`}</span>
-              </div>
-            </div>
-            <div className="timestamp">
-              <span>Timestamp</span>
+          <div className="timestamp">
+            <h5>Timestamp</h5>
+            <div className="timestamp-entities">
               <button
                 type="button"
                 className={`btn btn-primary add-listen ${
@@ -281,17 +285,19 @@ export default class SubmitListenInfo extends React.Component<
               >
                 Custom
               </button>
-            </div>
-            <div className="timestamp-date-picker">
-              <DateTimePicker
-                value={selectedDate}
-                onChange={this.onChangeDateTimePicker}
-                calendarIcon={<FontAwesomeIcon icon={faCalendar as IconProp} />}
-                maxDate={new Date(Date.now())}
-                clearIcon={null}
-                format="dd/MM/yyyy h:mm:ss a"
-                disabled={!customTimestamp}
-              />
+              <div className="timestamp-date-picker">
+                <DateTimePicker
+                  value={selectedDate}
+                  onChange={this.onChangeDateTimePicker}
+                  calendarIcon={
+                    <FontAwesomeIcon icon={faCalendar as IconProp} />
+                  }
+                  maxDate={new Date(Date.now())}
+                  clearIcon={null}
+                  format="dd/MM/yyyy h:mm:ss a"
+                  disabled={!customTimestamp}
+                />
+              </div>
             </div>
           </div>
         </div>

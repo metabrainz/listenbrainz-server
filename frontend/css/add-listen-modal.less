@@ -22,7 +22,7 @@
   }
   .add-track-field {
     margin-top: 15px;
-    text-align: center;
+    padding: 5px 20px;
   }
   .tracksearchdropdown {
     display: block;
@@ -69,7 +69,7 @@
     > div {
       display: flex;
       margin: 5px;
-      justify-content: center;
+      justify-content: space-between;
       // We want pills to be always 32px height or more
       // Texts are 10px, hence minimum height of 22px here
       min-height: 22px;
@@ -90,59 +90,70 @@
     }
   }
   .track-info {
+    > div {
+      width: 100%;
+    }
+  }
+  .cross-details {
+    > button {
+      border: 0px;
+      background-color: #353070;
+      color: white;
+      margin: 5px;
+    }
+  }
+  .new-details {
+    margin: 20px 0px;
+    margin-right: 10px;
+    background-color: #353070;
+    width: 100%;
+    border-bottom-right-radius: 12px;
+    border-top-right-radius: 12px;
     display: flex;
+  }
+  .recording-heading {
+    margin: 0px 15px;
+    > h5 {
+      color: white;
+      font-weight: 700;
+    }
+  }
+  .single-entity {
+    display: flex;
+    margin: auto 15px;
+    > h6 {
+      color: white;
+    }
+  }
+  .entity-heading {
+    font-weight: 700;
+    margin: 0px;
+  }
+  .entity-details {
+    font-size: 12px;
+    margin: 0px 18px;
   }
   .cover-art-img {
     margin: 20px 10px;
+    margin-right: 0px;
     > img {
       width: 98px;
       height: 98px;
-      border-radius: 12px;
+      border-bottom-left-radius: 12px;
+      border-top-left-radius: 12px;
     }
   }
 
-  .track-details {
-    background-color: #fff;
-    outline: none;
-    display: flex;
-    margin-bottom: 2px;
-    > div {
-      padding: 2px;
-      span {
-        color: #000000;
-        margin-top: auto;
-        margin-bottom: auto;
-        margin-left: 6px;
-        margin-right: 6px;
-        font-style: normal;
-      }
-    }
-  }
-  .listen-entity {
-    border-radius: 4px;
-    border: 2px solid rgb(141, 141, 141);
-    width: 120px;
-    background-color: #f9f6f5;
-    > span {
-      padding: 15px;
-    }
-  }
-  .entity-details {
-    border-radius: 4px;
-    border: 2px solid rgb(141, 141, 141);
-    width: 100%;
-    margin-left: 2px;
-    > span {
-      padding: 4px;
-    }
-  }
   .timestamp {
-    display: flex;
-    margin-left: 60px;
-    margin-top: 5px;
-    > span {
-      margin: 5px 15px;
+    margin-left: 18px;
+    margin-top: -10px;
+    > h5 {
+      font-weight: 700;
+      font-size: 16px;
     }
+  }
+  .timestamp-entities {
+    display: flex;
     > button {
       border-radius: 15px;
       height: 30px;
@@ -168,6 +179,6 @@
   }
 }
 .timestamp-date-picker {
-  margin-left: 80px;
+  margin-left: 30px;
   margin-top: 7px;
 }
