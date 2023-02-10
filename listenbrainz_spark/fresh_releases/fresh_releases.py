@@ -9,7 +9,7 @@ import listenbrainz_spark
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.schema import fresh_releases_schema
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_new_dump
+from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_dump
 
 USERS_PER_MESSAGE = 5
 
@@ -119,7 +119,7 @@ def main(days: Optional[int], database: str):
         from_date = to_date + timedelta(days=-days)
     else:
         from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
-    get_listens_from_new_dump(from_date, to_date) \
+    get_listens_from_dump(from_date, to_date) \
         .createOrReplaceTempView("fresh_releases_listens")
 
     load_all_releases().createOrReplaceTempView("fresh_releases")

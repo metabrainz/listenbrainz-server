@@ -99,7 +99,7 @@
             <text>
                 <tspan class="track-name" x="100" y="645">X</tspan>
                 <tspan class="track-name" x="125" y="645">{{ tracks[9].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[0].artist_name|upper|e }}</tspan>
+                <tspan class="artist-name" x="125" dy="20">{{ tracks[9].artist_name|upper|e }}</tspan>
             </text>
         </g>
     </g>

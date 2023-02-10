@@ -7,12 +7,12 @@ from listenbrainz_spark.path import RELEASE_GROUPS_YEAR_DATAFRAME
 from listenbrainz_spark.postgres.release_group import create_year_release_groups
 
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_all_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
 
 def get_new_releases_of_top_artists(year):
-    get_all_listens_from_new_dump().createOrReplaceTempView("listens")
+    get_listens_from_dump().createOrReplaceTempView("listens")
     create_year_release_groups(year)
     listenbrainz_spark\
         .sql_context\

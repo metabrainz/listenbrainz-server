@@ -11,6 +11,7 @@ class UserMissingMusicBrainzDataRecord(BaseModel):
     listened_at: constr(min_length=1)
     release_name: Optional[str]
     recording_name: constr(min_length=1)
+    recording_msid: constr(min_length=1)
 
 
 class UserMissingMusicBrainzDataJson(BaseModel):

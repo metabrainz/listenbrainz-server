@@ -340,6 +340,7 @@ class DumpListenStore:
                 WITH listen_with_mbid AS (
                      SELECT listened_at
                           , l.user_id
+                          , data->'track_metadata'->'additional_info'->>'recording_msid' AS recording_msid
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
                           -- here and let psycopg2 adapt it to a python list which is what we want anyway
                           , data->'track_metadata'->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
@@ -362,6 +363,7 @@ class DumpListenStore:
                         AND {criteria} <= %(end)s
                 )    SELECT l.listened_at
                           , l.user_id
+                          , l.recording_msid
                           , l_artist_credit_mbids
                           , l_artist_name
                           , l_release_name
@@ -392,6 +394,7 @@ class DumpListenStore:
                 data = {
                     'listened_at': [],
                     'user_id': [],
+                    'recording_msid': [],
                     'artist_name': [],
                     'artist_credit_id': [],
                     'release_name': [],
@@ -433,7 +436,9 @@ class DumpListenStore:
                     current_listened_at = datetime.utcfromtimestamp(result["listened_at"])
                     data["listened_at"].append(current_listened_at)
                     data["user_id"].append(result["user_id"])
-                    approx_size += len(str(result["listened_at"])) + len(str(result["user_id"]))
+                    data["recording_msid"].append(result["recording_msid"])
+                    approx_size += len(str(result["listened_at"])) + len(str(result["user_id"])) \
+                                   + len(result["recording_msid"])
 
                     written += 1
                     listen_count += 1

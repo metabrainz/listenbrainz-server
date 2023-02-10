@@ -1,7 +1,7 @@
 from listenbrainz_spark.stats import run_query, SITEWIDE_STATS_ENTITY_LIMIT
 
 
-def get_releases(table: str, user_listen_count_limit, top_releases_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
+def get_releases(table: str, cache_table: str, user_listen_count_limit, top_releases_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     """
     Get release information (release_name, release_mbid etc) ordered by
     listen count (number of times listened to tracks which belong to a

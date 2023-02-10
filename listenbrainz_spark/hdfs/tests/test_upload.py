@@ -13,7 +13,7 @@ from listenbrainz_spark.tests import SparkNewTestCase
 
 from pyspark.sql.types import StructField, StructType, StringType
 
-from listenbrainz_spark.utils import get_listen_files_list, get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listen_files_list, get_listens_from_dump
 
 
 class HDFSDataUploaderTestCase(SparkNewTestCase):

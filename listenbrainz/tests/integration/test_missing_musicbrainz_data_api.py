@@ -57,14 +57,15 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
         self.assertEqual(received_offset, 0)
 
         received_total_count = data['total_data_count']
-        expected_total_count = len(getattr(self.data, 'data').dict()['missing_musicbrainz_data'])
+        expected_total_count = len(self.data[0])
+        self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
-        expected_ts = int(getattr(self.data, 'created').timestamp())
+        expected_ts = int(self.data[1].timestamp())
         self.assertEqual(received_ts, expected_ts)
 
         received_data = data['data']
-        expected_data = getattr(self.data, 'data').dict()['missing_musicbrainz_data'][:25]
+        expected_data = self.data[0][:25]
         self.assertEqual(expected_data, received_data)
 
     def test_missing_musicbrainz_data_with_count(self):
@@ -84,15 +85,15 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
         self.assertEqual(received_offset, 0)
 
         received_total_count = data['total_data_count']
-        expected_total_count = len(getattr(self.data, 'data').dict()['missing_musicbrainz_data'])
+        expected_total_count = len(self.data[0])
         self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
-        expected_ts = int(getattr(self.data, 'created').timestamp())
+        expected_ts = int(self.data[1].timestamp())
         self.assertEqual(received_ts, expected_ts)
 
         received_data = data['data']
-        expected_data = getattr(self.data, 'data').dict()['missing_musicbrainz_data'][:10]
+        expected_data = self.data[0][:10]
         self.assertEqual(expected_data, received_data)
 
     def test_missing_musicbrainz_data_too_many(self):
@@ -112,15 +113,15 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
         self.assertEqual(received_offset, 0)
 
         received_total_count = data['total_data_count']
-        expected_total_count = len(getattr(self.data, 'data').dict()['missing_musicbrainz_data'])
+        expected_total_count = len(self.data[0])
         self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
-        expected_ts = int(getattr(self.data, 'created').timestamp())
+        expected_ts = int(self.data[1].timestamp())
         self.assertEqual(received_ts, expected_ts)
 
         received_data = data['data']
-        expected_data = getattr(self.data, 'data').dict()['missing_musicbrainz_data'][:100]
+        expected_data = self.data[0][:100]
         self.assertEqual(expected_data, received_data)
 
     def test_missing_musicbrainz_data_with_offset(self):
@@ -141,13 +142,13 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
         self.assertEqual(received_offset, 10)
 
         received_total_count = data['total_data_count']
-        expected_total_count = len(getattr(self.data, 'data').dict()['missing_musicbrainz_data'])
+        expected_total_count = len(self.data[0])
         self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
-        expected_ts = int(getattr(self.data, 'created').timestamp())
+        expected_ts = int(self.data[1].timestamp())
         self.assertEqual(received_ts, expected_ts)
 
         received_data = data['data']
-        expected_data = getattr(self.data, 'data').dict()['missing_musicbrainz_data'][10:25]
+        expected_data = self.data[0][10:25]
         self.assertEqual(expected_data, received_data)

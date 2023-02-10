@@ -3,7 +3,7 @@ from datetime import datetime
 from listenbrainz_spark import config, path
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_new_dump
+from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_dump
 
 
 def get_recording_discovery():
@@ -11,7 +11,7 @@ def get_recording_discovery():
      for later use in recommendations. """
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
-    get_listens_from_new_dump(from_date, to_date) \
+    get_listens_from_dump(from_date, to_date) \
         .createOrReplaceTempView("recording_discovery")
 
     run_query("""
