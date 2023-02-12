@@ -678,16 +678,3 @@ type UserFreshReleasesResponse = {
   };
 };
 
-declare type AddListenPayload = {
-  listened_at: number;
-  track_metadata: {
-    additional_info: {
-      release_mbid: string;
-      recording_mbid: string;
-    };
-
-    artist_name: string;
-    track_name: string;
-    release_name: string;
-  };
-};

@@ -18,12 +18,11 @@ export type SubmitListenInfoState = {
   selectedDate: Date;
   searchField: string;
   trackResults: Array<ACRMSearchResult>;
-  selectedTrack: ACRMSearchResult;
-  trackIsSelected: Boolean;
+  selectedTrack?: ACRMSearchResult;
 };
 
 export type SubmitListenInfoProps = {
-  trackMetadata: (event: ACRMSearchResult) => void;
+  onTrackSelect: (trackMetadata: ACRMSearchResult) => void;
   dateToUnixTimestamp: (event: number) => void;
   isTrackReset: Boolean;
   isListenSubmit: Boolean;
@@ -45,15 +44,7 @@ export default class SubmitListenInfo extends React.Component<
       selectedDate: new Date(),
       searchField: "",
       trackResults: [],
-      selectedTrack: {
-        artist_credit_id: 0,
-        artist_credit_name: "",
-        recording_mbid: "",
-        recording_name: "",
-        release_mbid: "",
-        release_name: "",
-      },
-      trackIsSelected: false,
+      selectedTrack: undefined,
     };
   }
 
@@ -62,24 +53,28 @@ export default class SubmitListenInfo extends React.Component<
   }
 
   componentDidUpdate(pp: any, ps: any, ss: any) {
-    const { trackIsSelected, selectedDate } = this.state;
+    const { selectedDate } = this.state;
     const { isTrackReset, isListenSubmit } = this.props;
-    if (ps.TrackIsSelected !== trackIsSelected) {
+
+    if (ps.thumbnailSrc === "/static/img/cover-art-placeholder.jpg") {
       this.getCoverArt();
     }
     if (ps.selectedDate !== selectedDate) {
       this.convertToUnix();
     }
-    if (pp.isTrackReset !== isTrackReset) {
-      this.removeTrack();
-    }
-    if (pp.isListenSubmit !== isListenSubmit) {
+    if (
+      pp.isTrackReset !== isTrackReset ||
+      pp.isListenSubmit !== isListenSubmit
+    ) {
       this.removeTrack();
     }
   }
 
   async getCoverArt() {
     const { selectedTrack } = this.state;
+    if (!selectedTrack) {
+      return;
+    }
     const albumArtSrc = await getAlbumArtFromReleaseMBID(
       selectedTrack.release_mbid
     );
@@ -105,7 +100,6 @@ export default class SubmitListenInfo extends React.Component<
   convertToUnix = () => {
     const { selectedDate } = this.state;
     const { dateToUnixTimestamp } = this.props;
-    console.log(convertDateToUnixTimestamp(selectedDate));
     dateToUnixTimestamp(convertDateToUnixTimestamp(selectedDate));
   };
 
@@ -115,7 +109,12 @@ export default class SubmitListenInfo extends React.Component<
     });
   };
 
-  SearchTrack = async () => {
+  // eslint-disable-next-line react/sort-comp
+  throttledSearchTrack = _throttle(async () => {
+    await this.searchTrack();
+  }, 300);
+
+  searchTrack = async () => {
     const { searchField } = this.state;
     try {
       const response = await fetch(
@@ -138,27 +137,21 @@ export default class SubmitListenInfo extends React.Component<
     }
   };
 
-  TrackName = (event: React.ChangeEvent<HTMLInputElement>) => {
+  trackName = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState(
       {
         searchField: event.target.value,
       },
-      () => {
-        this.SearchTrack();
-      }
+      this.throttledSearchTrack
     );
   };
-
-  // eslint-disable-next-line react/sort-comp
-  throttledHandleInputChange = _throttle(this.TrackName, 300);
 
   addTrackMetadata = (track: ACRMSearchResult) => {
     this.setState({
       selectedTrack: track,
-      trackIsSelected: true,
     });
-    const { trackMetadata } = this.props;
-    trackMetadata(track);
+    const { onTrackSelect } = this.props;
+    onTrackSelect(track);
   };
 
   removeTrack = () => {
@@ -168,15 +161,7 @@ export default class SubmitListenInfo extends React.Component<
       selectedDate: new Date(),
       searchField: "",
       trackResults: [],
-      selectedTrack: {
-        artist_credit_id: 0,
-        artist_credit_name: "",
-        recording_mbid: "",
-        recording_name: "",
-        release_mbid: "",
-        release_name: "",
-      },
-      trackIsSelected: false,
+      selectedTrack: undefined,
     });
   };
 
@@ -186,21 +171,20 @@ export default class SubmitListenInfo extends React.Component<
       customTimestamp,
       selectedDate,
       selectedTrack,
-      trackIsSelected,
       searchField,
       trackResults,
     } = this.state;
 
-    return trackIsSelected === false ? (
+    return !selectedTrack ? (
       <div>
         <input
           type="text"
           className="form-control add-track-field"
-          onChange={this.throttledHandleInputChange}
+          onChange={this.trackName}
           placeholder="Search Track"
           value={searchField}
         />
-        <div className="tracksearchdropdown">
+        <div className="track-search-dropdown">
           {trackResults?.map((track) => {
             return (
               <button
@@ -215,7 +199,7 @@ export default class SubmitListenInfo extends React.Component<
       </div>
     ) : (
       <div>
-        <div className="addtrackpill">
+        <div className="add-track-pill">
           <div>
             <span>{`${selectedTrack.recording_name} - ${selectedTrack.artist_credit_name}`}</span>
             <ListenControl
@@ -268,7 +252,7 @@ export default class SubmitListenInfo extends React.Component<
                 className={`btn btn-primary add-listen ${
                   customTimestamp === false
                     ? "timestamp-active"
-                    : "timestamp-unactive"
+                    : "timestamp-inactive"
                 }`}
                 onClick={this.timestampNow}
               >
@@ -279,7 +263,7 @@ export default class SubmitListenInfo extends React.Component<
                 className={`btn btn-primary add-listen ${
                   customTimestamp === true
                     ? "timestamp-active"
-                    : "timestamp-unactive"
+                    : "timestamp-inactive"
                 }`}
                 onClick={this.timestampCustom}
               >
@@ -292,7 +276,7 @@ export default class SubmitListenInfo extends React.Component<
                   calendarIcon={
                     <FontAwesomeIcon icon={faCalendar as IconProp} />
                   }
-                  maxDate={new Date(Date.now())}
+                  maxDate={new Date()}
                   clearIcon={null}
                   format="dd/MM/yyyy h:mm:ss a"
                   disabled={!customTimestamp}

@@ -15,7 +15,7 @@
     color: #fff;
   }
 
-  .option-unactive {
+  .option-inactive {
     background-color: #f9f6f5;
     border: 2px solid rgb(141, 141, 141);
     color: rgb(141, 141, 141);
@@ -24,7 +24,7 @@
     margin-top: 15px;
     padding: 5px 20px;
   }
-  .tracksearchdropdown {
+  .track-search-dropdown {
     display: block;
     position: absolute;
     width: calc(100% - 40px);
@@ -58,7 +58,7 @@
       }
     }
   }
-  .addtrackpill {
+  .add-track-pill {
     display: inline-block;
     background-color: #fff;
     border-radius: 7px;
@@ -153,7 +153,6 @@
     }
   }
   .timestamp-entities {
-    display: flex;
     > button {
       border-radius: 15px;
       height: 30px;
@@ -166,19 +165,19 @@
     background-color: #353070;
     color: #fff;
   }
-  .timestamp-unactive {
+  .timestamp-inactive {
     background-color: #fff;
     border: 2px solid rgb(141, 141, 141);
     color: #000000;
   }
-  .btn-success {
-    background: #353070;
+  .timestamp-date-picker {
+    margin-left: 30px;
+    margin-top: 7px;
   }
-  .btn-success[disabled] {
-    background: #353070;
+
+  @media (min-width: 560px) {
+    .timestamp-entities {
+      display: flex;
+    }
   }
-}
-.timestamp-date-picker {
-  margin-left: 30px;
-  margin-top: 7px;
 }

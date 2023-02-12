@@ -2,6 +2,11 @@ import * as React from "react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SubmitListenInfo from "./submit-listen-info";
 
+enum SubmitListenType {
+  "track",
+  "album",
+}
+
 export interface AddListenModalProps {
   newAlert: (
     alertType: AlertType,
@@ -11,10 +16,10 @@ export interface AddListenModalProps {
 }
 
 export interface AddListenModalState {
-  listenOption: string;
-  payloadArray: Array<AddListenPayload>;
+  listenOption: SubmitListenType;
+  payloadArray: Array<BaseListenFormat>;
   trackDetails: ACRMSearchResult;
-  timestampsSubmit: number;
+  selectedTimestamp: number;
   isTrackReset: Boolean;
   isListenSubmit: Boolean;
 }
@@ -29,7 +34,7 @@ export default class AddListenModal extends React.Component<
   constructor(props: AddListenModalProps) {
     super(props);
     this.state = {
-      listenOption: "track",
+      listenOption: SubmitListenType.track,
       payloadArray: [],
       trackDetails: {
         artist_credit_id: 0,
@@ -39,7 +44,7 @@ export default class AddListenModal extends React.Component<
         release_mbid: "",
         release_name: "",
       },
-      timestampsSubmit: 0,
+      selectedTimestamp: 0,
       isTrackReset: false,
       isListenSubmit: false,
     };
@@ -65,19 +70,19 @@ export default class AddListenModal extends React.Component<
 
   dateToUnixTimestamp = (date: number) => {
     this.setState({
-      timestampsSubmit: date,
+      selectedTimestamp: date,
     });
   };
 
   SubmitListen = async () => {
     const { APIService, currentUser } = this.context;
-    const { trackDetails, timestampsSubmit } = this.state;
+    const { trackDetails, selectedTimestamp } = this.state;
     if (currentUser?.auth_token) {
       this.setState(
         {
           payloadArray: [
             {
-              listened_at: timestampsSubmit,
+              listened_at: selectedTimestamp,
               track_metadata: {
                 additional_info: {
                   release_mbid: trackDetails.release_mbid,
@@ -130,7 +135,7 @@ export default class AddListenModal extends React.Component<
 
   addAlbum = () => {
     this.setState({
-      listenOption: "album",
+      listenOption: SubmitListenType.album,
       payloadArray: [],
       trackDetails: {
         artist_credit_id: 0,
@@ -140,14 +145,14 @@ export default class AddListenModal extends React.Component<
         release_mbid: "",
         release_name: "",
       },
-      timestampsSubmit: 0,
+      selectedTimestamp: 0,
     });
   };
 
   resetTrackSelection = () => {
     const { isTrackReset } = this.state;
     this.setState({
-      listenOption: "track",
+      listenOption: SubmitListenType.track,
       payloadArray: [],
       trackDetails: {
         artist_credit_id: 0,
@@ -157,22 +162,17 @@ export default class AddListenModal extends React.Component<
         release_mbid: "",
         release_name: "",
       },
-      timestampsSubmit: 0,
+      selectedTimestamp: 0,
+      isTrackReset: !isTrackReset,
     });
-    if (isTrackReset) {
-      this.setState({ isTrackReset: false });
-    }
-    if (!isTrackReset) {
-      this.setState({ isTrackReset: true });
-    }
   };
 
   render() {
     const {
       listenOption,
-      timestampsSubmit,
       isTrackReset,
       isListenSubmit,
+      trackDetails,
     } = this.state;
     return (
       <div
@@ -204,29 +204,18 @@ export default class AddListenModal extends React.Component<
                 <button
                   type="button"
                   className={`btn btn-primary add-listen ${
-                    listenOption === "track"
+                    listenOption === SubmitListenType.track
                       ? "option-active"
-                      : "option-unactive"
+                      : "option-inactive"
                   }`}
                   onClick={this.resetTrackSelection}
                 >
                   Add track
                 </button>
-                {/* <button
-                  type="button"
-                  className={`btn btn-primary add-listen ${
-                    ListenOption === "album"
-                      ? "option-active"
-                      : "option-unactive"
-                  }`}
-                  onClick={this.addAlbum}
-                >
-                  Add album
-                </button> */}
               </div>
-              {listenOption === "track" && (
+              {listenOption === SubmitListenType.track && (
                 <SubmitListenInfo
-                  trackMetadata={this.trackMetadata}
+                  onTrackSelect={this.trackMetadata}
                   dateToUnixTimestamp={this.dateToUnixTimestamp}
                   isTrackReset={isTrackReset}
                   isListenSubmit={isListenSubmit}
@@ -246,7 +235,7 @@ export default class AddListenModal extends React.Component<
                 type="submit"
                 className="btn btn-success"
                 data-dismiss="modal"
-                disabled={timestampsSubmit === 0}
+                disabled={trackDetails.artist_credit_id === 0}
                 onClick={this.SubmitListen}
               >
                 Add Listen
