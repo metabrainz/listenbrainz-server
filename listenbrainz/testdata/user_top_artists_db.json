@@ -3,16 +3,12 @@
     "to_ts": 10,
     "data": [
         {
-            "artist_mbids": [
-                "ed6c388e-ea65-431f-8be5-4959239d8c65"
-            ],
+            "artist_mbid": "ed6c388e-ea65-431f-8be5-4959239d8c65",
             "listen_count": 230,
             "artist_name": "Kanye West"
         },
         {
-            "artist_mbids": [
-                "80ca06c7-07fb-4b3a-a315-ad584cc8eeb0"
-            ],
+            "artist_mbid": "80ca06c7-07fb-4b3a-a315-ad584cc8eeb0",
             "listen_count": 229,
             "artist_name": "Frank Ocean"
         }

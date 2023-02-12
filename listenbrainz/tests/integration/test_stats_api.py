@@ -54,6 +54,7 @@ class StatsAPITestCase(IntegrationTestCase):
         db_stats.insert_sitewide_stats('artists_all_time_20220718', 0, 5, cls.sitewide_artist_payload)
 
     def setUp(self):
+        self.maxDiff = None
         # app context
         super(StatsAPITestCase, self).setUp()
         self.app.config["DEBUG"] = True
@@ -106,7 +107,7 @@ class StatsAPITestCase(IntegrationTestCase):
 
         self.entity_endpoints = {
             "artists": {
-                "endpoint": "stats_api_v1.get_user_artist",
+                "endpoint": "stats_api_v1.get_artist",
                 "total_count_key": "total_artist_count",
                 "payload": self.user_artist_payload
             },
@@ -446,7 +447,7 @@ class StatsAPITestCase(IntegrationTestCase):
         # Overwrite the artist stats so that no artist has msids or mbids present
         artist_stats = deepcopy(self.user_artist_payload)
         for artist in artist_stats[0]["data"]:
-            artist['artist_mbids'] = []
+            artist['artist_mbid'] = None
         couchdb.create_database("artists_this_week_20220718")
         couchdb.create_database("artistmap_this_week")
         db_stats.insert("artists_this_week_20220718", 0, 5, artist_stats)

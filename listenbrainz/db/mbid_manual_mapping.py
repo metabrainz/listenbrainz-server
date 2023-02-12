@@ -1,6 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Iterable
 import uuid
 
+from psycopg2.extras import execute_values, DictCursor
+from psycopg2.sql import SQL, Literal
 from sqlalchemy import text
 
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
@@ -87,3 +89,24 @@ def get_mbid_manual_mappings(recording_msid: uuid.UUID) -> List[MbidManualMappin
             }
         )
         return [MbidManualMapping(**row) for row in result.mappings()]
+
+def check_manual_mapping_exists(user_id: int, recording_msids: Iterable[str]) -> set[str]:
+    """Check if a user has a mapping for a list of recordings
+
+    Arguments:
+        user_id: LB user id of a user
+        recording_msids: the msids of the recordings to check
+
+    Returns:
+        A set of msids for which the user has a mapping
+    """
+    query = SQL("""
+        SELECT t.msid
+          FROM mbid_manual_mapping mmm
+          JOIN (VALUES %s) AS t(msid)
+            ON mmm.recording_msid = t.msid::uuid
+         WHERE user_id = {user_id}
+        """).format(user_id=Literal(user_id))
+    with ts.engine.begin() as conn, conn.connection.cursor() as cursor:
+        result = execute_values(cursor, query, [(msid,) for msid in recording_msids], fetch=True)
+        return set(row[0] for row in result)

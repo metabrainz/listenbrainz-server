@@ -49,11 +49,10 @@ class FreshReleasesTestCase(SparkNewTestCase):
             "database": database
         })
 
-        self.assertEqual(next(itr), {
-            "type": "fresh_releases",
-            "database": database,
-            "data": expected
-        })
+        message = next(itr)
+        self.assertEqual(message["type"], "fresh_releases")
+        self.assertEqual(message["database"], database)
+        self.assertCountEqual(message["data"], expected)
 
         self.assertEqual(next(itr), {
             "type": "couchdb_data_end",

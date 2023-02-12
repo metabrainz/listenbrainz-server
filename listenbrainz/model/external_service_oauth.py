@@ -1,4 +1,5 @@
 from listenbrainz.model import db
+from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver.admin import AdminModelView
 
 
@@ -56,5 +57,5 @@ class ExternalServiceAdminView(AdminModelView):
     ]
 
     column_formatters = {
-        "user_name": lambda v, c, m, n: m.user.musicbrainz_id
+        "user_name": lambda view, context, model, name: generate_username_link(model.user.musicbrainz_id)
     }

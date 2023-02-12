@@ -52,13 +52,16 @@ IS_MUSICBRAINZ_UP = {{template "KEY_JSON" "musicbrainz_up"}}
     {{if service "pgbouncer-slave"}}
     {{with index (service "pgbouncer-slave") 0}}
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
+MB_DATABASE_MAPPING_URI = 'postgresql://mbid_mapper@{{.Address}}:{{.Port}}/musicbrainz_db'
     {{end}}
     {{else if service "pgbouncer-master"}}
     {{with index (service "pgbouncer-master") 0}}
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
+MB_DATABASE_MAPPING_URI = 'postgresql://mbid_mapper@{{.Address}}:{{.Port}}/musicbrainz_db'
     {{end}}
     {{else}}
 MB_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
+MB_DATABASE_MAPPING_URI = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
     {{end}}
 {{else}}
 MB_DATABASE_URI = ""

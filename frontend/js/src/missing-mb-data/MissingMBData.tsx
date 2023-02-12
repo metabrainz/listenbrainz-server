@@ -1,10 +1,10 @@
-/* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
+/* eslint-disable jsx-a11y/anchor-is-valid,camelcase,react/jsx-no-bind */
 
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faLink, faPlus } from "@fortawesome/free-solid-svg-icons";
 
 import {
   WithAlertNotificationsInjectedProps,
@@ -20,6 +20,7 @@ import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import Loader from "../components/Loader";
 import SimpleModal from "../utils/SimpleModal";
+import MbidMappingModal from "../mbid-mapping/MbidMappingModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
@@ -28,6 +29,8 @@ export type MissingMBDataProps = {
 
 export interface MissingMBDataState {
   missingData: Array<MissingMBData>;
+  recordingToMapToMusicbrainz?: Listen;
+
   currPage?: number;
   totalPages: number;
   loading: boolean;
@@ -81,6 +84,10 @@ export default class MissingMBDataPage extends React.Component<
       );
       window.history.pushState(null, "", `?page=${updatedPage}`);
     }
+  };
+
+  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
+    this.setState({ recordingToMapToMusicbrainz });
   };
 
   handleClickNext = () => {
@@ -155,9 +162,15 @@ export default class MissingMBDataPage extends React.Component<
   };
 
   render() {
-    const { missingData, currPage, totalPages, loading } = this.state;
+    const {
+      missingData,
+      currPage,
+      totalPages,
+      loading,
+      recordingToMapToMusicbrainz,
+    } = this.state;
     const { user, newAlert } = this.props;
-    const { APIService } = this.context;
+    const { APIService, currentUser } = this.context;
     const missingMBDataAsListen = missingData.map((data) => {
       return {
         listened_at: new Date(data.listened_at).getTime() / 1000,
@@ -166,6 +179,9 @@ export default class MissingMBDataPage extends React.Component<
           artist_name: data.artist_name,
           track_name: data.recording_name,
           release_name: data?.release_name,
+          additional_info: {
+            recording_msid: data.recording_msid,
+          },
         },
       };
     });
@@ -185,27 +201,63 @@ export default class MissingMBDataPage extends React.Component<
                 <Loader isLoading={loading} />
               </div>
               {missingData.map((data, index) => {
-                const additionalActions = (
-                  <ListenControl
-                    buttonClassName="btn btn-sm btn-success"
-                    icon={faPlus}
-                    title="Add missing recording"
-                    text=""
-                    // eslint-disable-next-line react/jsx-no-bind
-                    action={this.submitMissingData.bind(
-                      this,
-                      missingMBDataAsListen[index]
-                    )}
-                  />
-                );
+                let additionalActions;
+                if (currentUser?.auth_token) {
+                  const addToMB = (
+                    <ListenControl
+                      buttonClassName="btn btn-sm"
+                      icon={faPlus}
+                      title="Add missing recording"
+                      text=""
+                      // eslint-disable-next-line react/jsx-no-bind
+                      action={this.submitMissingData.bind(
+                        this,
+                        missingMBDataAsListen[index]
+                      )}
+                    />
+                  );
+
+                  if (
+                    missingMBDataAsListen[index]?.track_metadata
+                      ?.additional_info?.recording_msid
+                  ) {
+                    const linkWithMB = (
+                      <ListenControl
+                        buttonClassName="btn btn-sm btn-success"
+                        text=""
+                        title="Link with MusicBrainz"
+                        icon={faLink}
+                        action={this.updateRecordingToMapToMusicbrainz.bind(
+                          this,
+                          missingMBDataAsListen[index]
+                        )}
+                        dataToggle="modal"
+                        dataTarget="#MapToMusicBrainzRecordingModal"
+                      />
+                    );
+                    additionalActions = (
+                      <>
+                        {linkWithMB}
+                        {addToMB}
+                      </>
+                    );
+                  } else {
+                    additionalActions = addToMB;
+                  }
+                }
                 return (
                   <ListenCard
                     key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
                     showTimestamp
                     showUsername={false}
                     newAlert={newAlert}
+                    // eslint-disable-next-line react/jsx-no-useless-fragment
+                    customThumbnail={<></>}
+                    // eslint-disable-next-line react/jsx-no-useless-fragment
+                    feedbackComponent={<></>}
                     listen={missingMBDataAsListen[index]}
                     additionalActions={additionalActions}
+                    compact
                   />
                 );
               })}
@@ -245,6 +297,12 @@ export default class MissingMBDataPage extends React.Component<
                 </a>
               </li>
             </ul>
+            {currentUser && (
+              <MbidMappingModal
+                recordingToMap={recordingToMapToMusicbrainz}
+                newAlert={newAlert}
+              />
+            )}
           </div>
         </div>
         <BrainzPlayer

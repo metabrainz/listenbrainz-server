@@ -4,8 +4,9 @@ from more_itertools import chunked
 
 import listenbrainz_spark
 from listenbrainz_spark import config
+from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 
 
 RECORDINGS_PER_MESSAGE = 10000
@@ -15,16 +16,16 @@ DEFAULT_TRACK_LENGTH = 180
 
 def build_sessioned_index(listen_table, metadata_table, session, max_contribution, threshold, limit, _filter, skip_threshold):
     # TODO: Handle case of unmatched recordings breaking sessions!
-    filter_artist_credit = "AND NOT arrays_overlap(s1.artist_mbids, s2.artist_mbids)" if _filter else ""
+    filter_artist_credit = "AND NOT arrays_overlap(s1.artist_credit_mbids, s2.artist_credit_mbids)" if _filter else ""
     return f"""
             WITH listens AS (
                  SELECT user_id
                       , BIGINT(listened_at)
-                      , CAST(COALESCE(recording_data.length / 1000, {DEFAULT_TRACK_LENGTH}) AS BIGINT) AS duration
+                      , CAST(COALESCE(r.length / 1000, {DEFAULT_TRACK_LENGTH}) AS BIGINT) AS duration
                       , recording_mbid
-                      , artist_mbids
+                      , artist_credit_mbids
                    FROM {listen_table} l
-              LEFT JOIN {metadata_table} mbc
+              LEFT JOIN {metadata_table} r
                   USING (recording_mbid)
                   WHERE l.recording_mbid IS NOT NULL
             ), ordered AS (
@@ -32,7 +33,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                      , listened_at
                      , listened_at - LAG(listened_at, 1) OVER w - LAG(duration, 1) OVER w AS difference
                      , recording_mbid
-                     , artist_mbids
+                     , artist_credit_mbids
                   FROM listens
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), sessions AS (
@@ -41,14 +42,14 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                      , COUNT_IF(difference > {session}) OVER w AS session_id
                      , LEAD(difference, 1) OVER w < {skip_threshold} AS skipped
                      , recording_mbid
-                     , artist_mbids
+                     , artist_credit_mbids
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), sessions_filtered AS (
                 SELECT user_id
                      , session_id
                      , recording_mbid
-                     , artist_mbids
+                     , artist_credit_mbids
                   FROM sessions
                  WHERE NOT skipped    
             ), user_grouped_mbids AS (
@@ -111,11 +112,11 @@ def main(days, session, contribution, threshold, limit, filter_artist_credit, sk
     from_date = to_date + timedelta(days=-days)
 
     table = "recording_similarity_listens"
-    metadata_table = "mb_metadata_cache"
+    metadata_table = "recording_length"
 
-    get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView(table)
+    get_listens_from_dump(from_date, to_date).createOrReplaceTempView(table)
 
-    metadata_df = listenbrainz_spark.sql_context.read.json(config.HDFS_CLUSTER_URI + "/mb_metadata_cache.jsonl")
+    metadata_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + RECORDING_LENGTH_DATAFRAME)
     metadata_df.createOrReplaceTempView(metadata_table)
 
     skip_threshold = -skip
