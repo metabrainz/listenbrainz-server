@@ -553,7 +553,7 @@ const getAlbumArtFromListenMetadata = async (
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
   const userSubmittedReleaseMBID =
-    listen.track_metadata.additional_info?.release_mbid;
+    listen.track_metadata?.additional_info?.release_mbid;
   if (userSubmittedReleaseMBID) {
     const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
       userSubmittedReleaseMBID
@@ -564,8 +564,8 @@ const getAlbumArtFromListenMetadata = async (
     }
   }
   // user submitted release mbids not found, check if there is a match from mbid mapper.
-  const caaId = listen.track_metadata.mbid_mapping?.caa_id;
-  const caaReleaseMbid = listen.track_metadata.mbid_mapping?.caa_release_mbid;
+  const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
+  const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
   if (caaId && caaReleaseMbid) {
     return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
   }
