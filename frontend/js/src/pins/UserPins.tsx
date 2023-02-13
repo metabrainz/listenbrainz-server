@@ -28,6 +28,7 @@ export type UserPinsState = {
   page: number;
   maxPage: number;
   loading: boolean;
+  noMorePins: boolean;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
 };
@@ -44,52 +45,24 @@ export default class UserPins extends React.Component<
   constructor(props: UserPinsProps) {
     super(props);
     const { totalCount } = this.props;
+    const maxPage = Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE);
     this.state = {
-      maxPage: Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE),
+      maxPage,
       page: 1,
       pins: props.pins || [],
       loading: false,
+      noMorePins: maxPage <= 1,
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
     };
   }
 
-  async componentDidMount(): Promise<void> {
-    // Listen to browser previous/next events and load page accordingly
-    window.addEventListener("popstate", this.handleURLChange);
-    this.handleURLChange();
+  componentDidMount() {
     this.loadFeedback();
   }
 
-  componentWillUnmount() {
-    window.removeEventListener("popstate", this.handleURLChange);
-  }
-
-  // pagination functions
-  handleURLChange = async (): Promise<void> => {
+  handleLoadMore = async (event?: React.MouseEvent) => {
     const { page, maxPage } = this.state;
-    const url = new URL(window.location.href);
-
-    if (url.searchParams.get("page")) {
-      let newPage = Number(url.searchParams.get("page"));
-      if (newPage === page) {
-        // page didn't change
-        return;
-      }
-      newPage = Math.max(newPage, 1);
-      newPage = Math.min(newPage, maxPage);
-      await this.getPinsFromAPI(newPage, false);
-    } else if (page !== 1) {
-      // occurs on back + forward history
-      await this.getPinsFromAPI(1, false);
-    }
-  };
-
-  handleClickOlder = async (event?: React.MouseEvent) => {
-    const { page, maxPage } = this.state;
-    if (event) {
-      event.preventDefault();
-    }
     if (page >= maxPage) {
       return;
     }
@@ -97,21 +70,10 @@ export default class UserPins extends React.Component<
     await this.getPinsFromAPI(page + 1);
   };
 
-  handleClickNewer = async (event?: React.MouseEvent) => {
-    const { page } = this.state;
-    if (event) {
-      event.preventDefault();
-    }
-    if (page === 1) {
-      return;
-    }
-
-    await this.getPinsFromAPI(page - 1);
-  };
-
-  getPinsFromAPI = async (page: number, pushHistory: boolean = true) => {
+  getPinsFromAPI = async (page: number, replacePinsArray: boolean = false) => {
     const { newAlert, user } = this.props;
     const { APIService } = this.context;
+    const { pins } = this.state;
     this.setState({ loading: true });
 
     try {
@@ -121,31 +83,28 @@ export default class UserPins extends React.Component<
 
       if (!newPins.pinned_recordings.length) {
         // No pins were fetched
-        this.setState({ loading: false });
+        this.setState({
+          loading: false,
+          pins: replacePinsArray ? [] : pins,
+          noMorePins: true,
+        });
         return;
       }
 
       const totalCount = parseInt(newPins.total_count, 10);
+      const newMaxPage = Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE);
       this.setState(
         {
           loading: false,
           page,
-          maxPage: Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE),
-          pins: newPins.pinned_recordings,
+          maxPage: newMaxPage,
+          pins: replacePinsArray
+            ? newPins.pinned_recordings
+            : pins.concat(newPins.pinned_recordings),
+          noMorePins: page >= newMaxPage,
         },
         this.loadFeedback
       );
-      if (pushHistory) {
-        window.history.pushState(null, "", `?page=${[page]}`);
-      }
-
-      // Scroll window back to the top of the events container element
-      const eventContainerElement = document.querySelector(
-        "#pinned-recordings"
-      );
-      if (eventContainerElement) {
-        eventContainerElement.scrollIntoView({ behavior: "smooth" });
-      }
     } catch (error) {
       newAlert(
         "warning",
@@ -275,11 +234,8 @@ export default class UserPins extends React.Component<
 
   render() {
     const { user, profileUrl, newAlert } = this.props;
-    const { pins, page, loading, maxPage } = this.state;
-    const { currentUser, APIService } = this.context;
-
-    const isNewerButtonDisabled = page === 1;
-    const isOlderButtonDisabled = page >= maxPage;
+    const { pins, loading, noMorePins } = this.state;
+    const { currentUser } = this.context;
 
     const pinsAsListens = pins.map((pin) => {
       return getListenablePin(pin);
@@ -338,51 +294,18 @@ export default class UserPins extends React.Component<
                   />
                 );
               })}
-
-              {pins.length < this.DEFAULT_PINS_PER_PAGE && (
-                <h5 className="text-center">No more pins to show.</h5>
-              )}
+              <button
+                className="btn btn-block btn-info"
+                disabled={noMorePins}
+                type="button"
+                onClick={this.handleLoadMore}
+                title="Load more…"
+              >
+                {noMorePins || pins.length < this.DEFAULT_PINS_PER_PAGE
+                  ? "No more pins to show"
+                  : "Load more…"}
+              </button>
             </div>
-
-            <ul
-              className="pager"
-              id="navigation"
-              style={{ marginRight: "-1em", marginLeft: "1.5em" }}
-            >
-              <li
-                className={`previous ${
-                  isNewerButtonDisabled ? "disabled" : ""
-                }`}
-              >
-                <a
-                  role="button"
-                  onClick={this.handleClickNewer}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") this.handleClickNewer();
-                  }}
-                  tabIndex={0}
-                  href={isNewerButtonDisabled ? undefined : `?page=${page - 1}`}
-                >
-                  &larr; Newer
-                </a>
-              </li>
-              <li
-                className={`next ${isOlderButtonDisabled ? "disabled" : ""}`}
-                style={{ marginLeft: "auto" }}
-              >
-                <a
-                  role="button"
-                  onClick={this.handleClickOlder}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") this.handleClickOlder();
-                  }}
-                  tabIndex={0}
-                  href={isOlderButtonDisabled ? undefined : `?page=${page + 1}`}
-                >
-                  Older &rarr;
-                </a>
-              </li>
-            </ul>
           </div>
         )}
       </div>

@@ -33,6 +33,7 @@ export type UserFeedbackProps = {
 export interface UserFeedbackState {
   feedback: Array<FeedbackResponseWithTrackMetadata>;
   loading: boolean;
+  noMoreFeedback: boolean;
   page: number;
   maxPage: number;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
@@ -54,35 +55,28 @@ export default class UserFeedback extends React.Component<
     };
   };
 
-  private listensTable = React.createRef<HTMLTableElement>();
-
   declare context: React.ContextType<typeof GlobalAppContext>;
   private DEFAULT_ITEMS_PER_PAGE = 25;
 
   constructor(props: UserFeedbackProps) {
     super(props);
     const { totalCount, feedback } = props;
-
+    const maxPage = Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE);
     this.state = {
-      maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
+      maxPage,
       page: 1,
       feedback: feedback?.slice(0, this.DEFAULT_ITEMS_PER_PAGE) || [],
       loading: false,
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
       selectedFeedbackScore: feedback?.[0]?.score ?? 1,
+      noMoreFeedback: maxPage <= 1,
     };
-
-    this.listensTable = React.createRef();
   }
 
   componentDidMount(): void {
     const { currentUser } = this.context;
     const { user, feedback } = this.props;
-
-    // Listen to browser previous/next events and load page accordingly
-    window.addEventListener("popstate", this.handleURLChange);
-    document.addEventListener("keydown", this.handleKeyDown);
 
     if (currentUser?.name === user.name && feedback?.length) {
       // Logged in user is looking at their own feedback, we can build
@@ -104,60 +98,7 @@ export default class UserFeedback extends React.Component<
     }
   }
 
-  componentWillUnmount() {
-    window.removeEventListener("popstate", this.handleURLChange);
-    document.removeEventListener("keydown", this.handleKeyDown);
-  }
-
-  handleKeyDown = (event: KeyboardEvent) => {
-    const elementName = document.activeElement?.localName;
-    if (elementName && ["input", "textarea"].includes(elementName)) {
-      // Don't allow keyboard navigation if an input or textarea is currently in focus
-      return;
-    }
-    switch (event.key) {
-      case "ArrowLeft":
-        this.handleClickNewer();
-        break;
-      case "ArrowRight":
-        this.handleClickOlder();
-        break;
-      default:
-        break;
-    }
-  };
-
-  // pagination functions
-  handleURLChange = async (): Promise<void> => {
-    const { page, maxPage, selectedFeedbackScore } = this.state;
-    const url = new URL(window.location.href);
-    let newPage = Number(url.searchParams.get("page"));
-    let newScore = Number(url.searchParams.get("score"));
-    if (newScore !== 1 && newScore !== -1) {
-      newScore = 1;
-    }
-
-    if (isNaN(newPage) || !isNaN(newScore)) {
-      if (newPage === page && newScore === selectedFeedbackScore) {
-        // search params didn't change, do nothing
-        return;
-      }
-      newPage = Math.max(newPage, 1);
-      newPage = Math.min(newPage, maxPage);
-      await this.getFeedbackItemsFromAPI(
-        newPage,
-        false,
-        newScore as ListenFeedBack
-      );
-    } else if (page !== 1) {
-      // occurs on back + forward history
-      await this.getFeedbackItemsFromAPI(1, false, newScore as ListenFeedBack);
-    }
-  };
-
-  handleClickOlder = async (event?: React.MouseEvent) => {
-    handleNavigationClickEvent(event);
-
+  handleLoadMore = async (event?: React.MouseEvent) => {
     const { page, maxPage } = this.state;
     if (page >= maxPage) {
       return;
@@ -166,86 +107,49 @@ export default class UserFeedback extends React.Component<
     await this.getFeedbackItemsFromAPI(page + 1);
   };
 
-  handleClickOldest = async (event?: React.MouseEvent) => {
-    handleNavigationClickEvent(event);
-
-    const { maxPage } = this.state;
-    await this.getFeedbackItemsFromAPI(maxPage);
-  };
-
-  handleClickNewest = async (event?: React.MouseEvent) => {
-    handleNavigationClickEvent(event);
-
-    await this.getFeedbackItemsFromAPI(1);
-  };
-
-  handleClickNewer = async (event?: React.MouseEvent) => {
-    handleNavigationClickEvent(event);
-
-    const { page } = this.state;
-    if (page === 1) {
-      return;
-    }
-
-    await this.getFeedbackItemsFromAPI(page - 1);
-  };
-
   getFeedbackItemsFromAPI = async (
     page: number,
-    pushHistory: boolean = true,
-    feedbackScore?: ListenFeedBack
+    replaceFeebackArray: boolean = false
   ) => {
     const { newAlert, user } = this.props;
     const { APIService } = this.context;
-    const { selectedFeedbackScore } = this.state;
+    const { selectedFeedbackScore, feedback } = this.state;
     this.setState({ loading: true });
 
     try {
       const offset = (page - 1) * this.DEFAULT_ITEMS_PER_PAGE;
       const count = this.DEFAULT_ITEMS_PER_PAGE;
-      const score = feedbackScore ?? selectedFeedbackScore;
       const feedbackResponse = await APIService.getFeedbackForUser(
         user.name,
         offset,
         count,
-        score
+        selectedFeedbackScore
       );
 
       if (!feedbackResponse?.feedback?.length) {
         // No pins were fetched
         this.setState({
           loading: false,
-          page: 1,
-          maxPage: 1,
-          feedback: [],
-          selectedFeedbackScore: score,
+          feedback: replaceFeebackArray ? [] : feedback,
+          noMoreFeedback: true,
         });
         return;
       }
 
       const totalCount = parseInt(feedbackResponse.total_count, 10);
+      const newMaxPage = Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE);
       this.setState(
         {
           loading: false,
           page,
-          maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
-          feedback: feedbackResponse.feedback,
-          selectedFeedbackScore: score,
+          maxPage: newMaxPage,
+          noMoreFeedback: page >= newMaxPage,
+          feedback: replaceFeebackArray
+            ? feedbackResponse.feedback
+            : feedback.concat(feedbackResponse.feedback),
         },
         this.loadFeedback
       );
-      if (pushHistory) {
-        window.history.pushState(
-          null,
-          "",
-          `?page=${page}&score=${selectedFeedbackScore}`
-        );
-      }
-
-      // Scroll window back to the top of the events container element
-      if (typeof this.listensTable?.current?.scrollIntoView === "function") {
-        this.listensTable.current.scrollIntoView({ behavior: "smooth" });
-      }
     } catch (error) {
       newAlert(
         "warning",
@@ -314,10 +218,9 @@ export default class UserFeedback extends React.Component<
   };
 
   changeSelectedFeedback = (newFeedbackLevel: ListenFeedBack) => {
-    const { page } = this.state;
     this.setState(
       { selectedFeedbackScore: newFeedbackLevel },
-      this.getFeedbackItemsFromAPI.bind(this, page)
+      this.getFeedbackItemsFromAPI.bind(this, 1, true)
     );
   };
 
@@ -431,6 +334,7 @@ export default class UserFeedback extends React.Component<
     } = this.state;
     const { user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
+    const { noMoreFeedback } = this.state;
     const listensFromFeedback: BaseListenFormat[] = feedback
       // remove feedback items for which track metadata wasn't found. this usually means bad
       // msid or mbid data was submitted by the user.
@@ -439,8 +343,6 @@ export default class UserFeedback extends React.Component<
         UserFeedback.RecordingMetadataToListenFormat(feedbackItem)
       );
 
-    const canNavigateNewer = page !== 1;
-    const canNavigateOlder = page < maxPage;
     return (
       <div>
         <h3
@@ -487,11 +389,7 @@ export default class UserFeedback extends React.Component<
             >
               <Loader isLoading={loading} />
             </div>
-            <div
-              id="listens"
-              ref={this.listensTable}
-              style={{ opacity: loading ? "0.4" : "1" }}
-            >
+            <div id="listens" style={{ opacity: loading ? "0.4" : "1" }}>
               {listensFromFeedback.map((listen) => {
                 const additionalMenuItems = [
                   <ListenControl
@@ -520,67 +418,17 @@ export default class UserFeedback extends React.Component<
                 );
               })}
             </div>
-            {feedback.length < this.DEFAULT_ITEMS_PER_PAGE && (
-              <h5 className="text-center">No more feedback to show</h5>
-            )}
-            <ul className="pager" id="navigation">
-              <li className={`previous ${!canNavigateNewer ? "disabled" : ""}`}>
-                <a
-                  role="button"
-                  onClick={this.handleClickNewest}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") this.handleClickNewest();
-                  }}
-                  tabIndex={0}
-                  href={!canNavigateNewer ? undefined : "?page=1"}
-                >
-                  &#x21E4;
-                </a>
-              </li>
-              <li className={`previous ${!canNavigateNewer ? "disabled" : ""}`}>
-                <a
-                  role="button"
-                  onClick={this.handleClickNewer}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") this.handleClickNewer();
-                  }}
-                  tabIndex={0}
-                  href={!canNavigateNewer ? undefined : `?page=${page - 1}`}
-                >
-                  &larr; Newer
-                </a>
-              </li>
-
-              <li
-                className={`next ${!canNavigateOlder ? "disabled" : ""}`}
-                style={{ marginLeft: "auto" }}
-              >
-                <a
-                  role="button"
-                  onClick={this.handleClickOlder}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") this.handleClickOlder();
-                  }}
-                  tabIndex={0}
-                  href={!canNavigateOlder ? undefined : `?page=${page + 1}`}
-                >
-                  Older &rarr;
-                </a>
-              </li>
-              <li className={`next ${!canNavigateOlder ? "disabled" : ""}`}>
-                <a
-                  role="button"
-                  onClick={this.handleClickOldest}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") this.handleClickOldest();
-                  }}
-                  tabIndex={0}
-                  href={!canNavigateOlder ? undefined : `?page=${maxPage}`}
-                >
-                  &#x21E5;
-                </a>
-              </li>
-            </ul>
+            <button
+              className="btn btn-block btn-info"
+              disabled={noMoreFeedback}
+              type="button"
+              onClick={this.handleLoadMore}
+              title="Load more…"
+            >
+              {noMoreFeedback || feedback.length < this.DEFAULT_ITEMS_PER_PAGE
+                ? "No more feedback to show"
+                : "Load more…"}
+            </button>
           </div>
         )}
       </div>

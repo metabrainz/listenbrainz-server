@@ -25,7 +25,7 @@ from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 
 LISTENS_PER_PAGE = 25
-DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 50
+DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
 
 user_bp = Blueprint("user", __name__)
 redirect_bp = Blueprint("redirect", __name__)
@@ -444,21 +444,6 @@ def taste(user_name: str):
         raise BadRequest("Incorrect int argument score: %s" %
                          request.args.get("score"))
 
-    offset = request.args.get('offset', 0)
-    try:
-        offset = int(offset)
-    except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" %
-                         request.args.get("offset"))
-
-    count = request.args.get(
-        "count", DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL)
-    try:
-        count = int(count)
-    except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" %
-                         request.args.get("count"))
-
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
@@ -466,7 +451,7 @@ def taste(user_name: str):
     }
 
     feedback_count = get_feedback_count_for_user(user.id, score)
-    feedback = get_feedback_for_user(user.id, count, offset, score, True)
+    feedback = get_feedback_for_user(user.id, count=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL, offset=0, score, True)
     
     pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
     pins = [pin.to_api() for pin in fetch_track_metadata_for_items(pins)]
