@@ -1,7 +1,6 @@
 from datetime import datetime, date, time
 
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.postgres.release import create_release_metadata_cache
 from listenbrainz_spark.stats.user.entity import calculate_entity_stats
 from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
 

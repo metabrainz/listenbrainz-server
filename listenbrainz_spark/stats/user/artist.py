@@ -27,15 +27,33 @@ def get_artists(table: str, cache_table: str, number_of_results: int) -> Iterato
     """
 
     result = run_query(f"""
-        WITH intermediate_table as (
+        WITH exploded_listens AS (
             SELECT user_id
+                 , artist_name AS artist_credit_name
+                 , explode_outer(artist_credit_mbids) AS artist_mbid
+             FROM {table}
+        ), listens_with_mb_data as (
+            SELECT user_id
+                 , COALESCE(at.artist_name, el.artist_credit_name) AS artist_name
+                 , el.artist_mbid
+              FROM exploded_listens el
+         LEFT JOIN {cache_table} at
+                ON el.artist_mbid = at.artist_mbid
+        ), intermediate_table AS (
+            SELECT user_id
+            -- we group by lower(artist_name) and pick the first artist name for cases where
+            -- the artist name differs in case. for mapped listens the artist name from MB will
+            -- be used. for unmapped listens we can't know which case is correct so use any. note
+            -- that due to presence of artist mbid as the third group, mapped and unmapped listens
+            -- will always be separately grouped therefore first will work fine for unmapped
+            -- listens and doesn't matter for mapped ones.
                  , first(artist_name) AS any_artist_name
-                 , artist_credit_mbids
-                 , count(*) as listen_count
-              FROM {table}
-          GROUP BY user_id
-                 , lower(artist_name)
-                 , artist_credit_mbids
+                 , artist_mbid
+                 , count(*) AS listen_count
+             FROM listens_with_mb_data
+         GROUP BY user_id
+                , lower(artist_name)
+                , artist_mbid    
         ), entity_count as (
             SELECT user_id
                  , count(*) as artists_count
@@ -44,7 +62,7 @@ def get_artists(table: str, cache_table: str, number_of_results: int) -> Iterato
         ), ranked_stats as (
             SELECT user_id
                  , any_artist_name AS artist_name
-                 , artist_credit_mbids
+                 , artist_mbid
                  , listen_count
                  , row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rank
               FROM intermediate_table
@@ -55,7 +73,7 @@ def get_artists(table: str, cache_table: str, number_of_results: int) -> Iterato
                             struct(
                                 listen_count
                               , artist_name
-                              , coalesce(artist_credit_mbids, array()) AS artist_mbids
+                              , artist_mbid
                             )
                         )
                         , false

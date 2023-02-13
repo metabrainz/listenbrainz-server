@@ -25,7 +25,7 @@ import listenbrainz_spark.fresh_releases.fresh_releases
 import listenbrainz_spark.similarity.recording
 import listenbrainz_spark.similarity.artist
 import listenbrainz_spark.similarity.user
-import listenbrainz_spark.postgres.release
+import listenbrainz_spark.postgres
 
 functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
@@ -60,7 +60,7 @@ functions = {
     'year_in_music.new_artists_discovered_count': listenbrainz_spark.year_in_music.new_artists_discovered.get_new_artists_discovered_count,
     'year_in_music.listening_time': listenbrainz_spark.year_in_music.listening_time.get_listening_time,
     'year_in_music.artist_map': listenbrainz_spark.year_in_music.artist_map.get_artist_map_stats,
-    'import.pg_metadata_tables': listenbrainz_spark.postgres.release.create_release_metadata_cache,
+    'import.pg_metadata_tables': listenbrainz_spark.postgres.import_all_pg_tables,
     'releases.fresh': listenbrainz_spark.fresh_releases.fresh_releases.main,
 }
 

@@ -419,4 +419,4 @@ def handle_similar_recordings(message):
 
 
 def handle_similar_artists(message):
-    similarity.insert("artist", message["data"], message["algorithm"])
+    similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])

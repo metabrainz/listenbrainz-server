@@ -1,8 +1,10 @@
 from datetime import datetime
 
 from flask import current_app
+from markupsafe import Markup
 from psycopg2 import OperationalError, DatabaseError
 from listenbrainz.model import db
+from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver.admin import AdminModelView
 from listenbrainz.webserver.views.user import delete_user
 
@@ -52,6 +54,10 @@ class UserAdminView(AdminModelView):
         'musicbrainz_id',
         'musicbrainz_row_id',
     ]
+
+    column_formatters = {
+        "musicbrainz_id": lambda view, context, model, name: generate_username_link(model.musicbrainz_id)
+    }
 
     def delete_model(self, model):
         try:
