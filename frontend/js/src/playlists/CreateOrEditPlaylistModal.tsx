@@ -3,6 +3,7 @@ import { getPlaylistExtension, getPlaylistId } from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import UserSearch from "./UserSearch";
 import NamePill from "../personal-recommendations/NamePill";
+import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
@@ -15,7 +16,7 @@ type CreateOrEditPlaylistModalProps = {
     onSuccessCallback?: () => void
   ) => void;
   htmlId?: string;
-};
+} & WithAlertNotificationsInjectedProps;
 
 type CreateOrEditPlaylistModalState = {
   name: string;
@@ -117,9 +118,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       (isEdit
         ? playlist?.creator.toLowerCase() === user.toLowerCase()
         : currentUser.name.toLowerCase() === user.toLowerCase());
-    if (collaborators.indexOf(user) !== -1) {
-      // already in the list
-    } else if (!disabled) {
+    if (!disabled && collaborators.indexOf(user) === -1) {
       this.setState({
         collaborators: [...collaborators, user],
       });
@@ -128,7 +127,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
 
   render() {
     const { name, description, isPublic, collaborators } = this.state;
-    const { htmlId, playlist } = this.props;
+    const { htmlId, playlist, newAlert } = this.props;
     const { currentUser } = this.context;
     const isEdit = Boolean(getPlaylistId(playlist));
     return (
@@ -209,8 +208,9 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                 </div>
 
                 <UserSearch
-                  userClick={this.addCollaborator}
+                  onSelectUser={this.addCollaborator}
                   placeholder="Add collaborator"
+                  newAlert={newAlert}
                 />
               </div>
             </div>

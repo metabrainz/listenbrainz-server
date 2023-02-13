@@ -475,7 +475,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   render() {
-    const { user, activeSection } = this.props;
+    const { user, activeSection, newAlert } = this.props;
     const {
       playlists,
       playlistSelectedForOperation,
@@ -635,11 +635,13 @@ export default class UserPlaylists extends React.Component<
               <CreateOrEditPlaylistModal
                 onSubmit={this.createPlaylist}
                 htmlId="playlistCreateModal"
+                newAlert={newAlert}
               />
               <CreateOrEditPlaylistModal
                 onSubmit={this.editPlaylist}
                 playlist={playlistSelectedForOperation}
                 htmlId="playlistEditModal"
+                newAlert={newAlert}
               />
               <DeletePlaylistConfirmationModal
                 onConfirm={this.deletePlaylist}
