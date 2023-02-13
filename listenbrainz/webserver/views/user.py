@@ -451,7 +451,7 @@ def taste(user_name: str):
     }
 
     feedback_count = get_feedback_count_for_user(user.id, score)
-    feedback = get_feedback_for_user(user.id, count=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL, offset=0, score, True)
+    feedback = get_feedback_for_user(user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL, offset=0, score, True)
     
     pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
     pins = [pin.to_api() for pin in fetch_track_metadata_for_items(pins)]
