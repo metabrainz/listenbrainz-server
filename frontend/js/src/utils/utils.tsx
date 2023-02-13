@@ -164,7 +164,7 @@ const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
   _.get(listen, "creator", "");
 
 const getArtistLink = (listen: Listen) => {
-  const artists = listen.track_metadata.mbid_mapping?.artists;
+  const artists = listen.track_metadata?.mbid_mapping?.artists;
   if (artists?.length) {
     return (
       <>
