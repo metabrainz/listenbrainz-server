@@ -22,6 +22,13 @@ def create_artist_country_cache():
           FROM musicbrainz.artist a
           JOIN musicbrainz.iso_3166_1 iso
             ON iso.area = a.area
+        -- for the case where artist area is null
+         UNION
+        SELECT a.gid AS artist_mbid
+             , a.name AS artist_name
+             , NULL AS country_code
+          FROM musicbrainz.artist a
+         WHERE a.area IS NULL
     """
 
     save_pg_table_to_hdfs(query, ARTIST_COUNTRY_CODE_DATAFRAME)

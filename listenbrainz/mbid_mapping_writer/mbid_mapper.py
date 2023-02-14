@@ -281,6 +281,15 @@ class MBIDMapper:
             'match_type': match_type
         }
 
+    def remove_obvious_bullshit_from_recording_name(self, recording_name):
+        """
+            If recordings have clear patterns of bad data being appended to them 
+            (e.g. spotify's '- 2008 Remaster') remove that shit before feeding
+            it to the mapper.
+        """
+
+        return re.sub("\s+-\s+\d\d\d\d.*master", "", recording_name)
+
     def search(self, artist_credit_name, recording_name):
         """
             Main query body: Prepare the search query terms and prepare
@@ -289,6 +298,8 @@ class MBIDMapper:
             query terms. Return a match dict (properly formatted for this
             query) or None if not match.
         """
+
+        recording_name = self.remove_obvious_bullshit_from_recording_name(recording_name)
 
         artist_credit_name_p = prepare_query(artist_credit_name)
         recording_name_p = prepare_query(recording_name)

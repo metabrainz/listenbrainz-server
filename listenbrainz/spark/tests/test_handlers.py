@@ -296,7 +296,7 @@ class HandlersTestCase(DatabaseTestCase):
             'data': [
                 {
                     'artist_name': 'Coldplay',
-                    'artist_mbid': [],
+                    'artist_mbid': None,
                     'listen_count': 20
                 }
             ],
@@ -319,7 +319,7 @@ class HandlersTestCase(DatabaseTestCase):
             data=StatRecordList[ArtistRecord](__root__=[
                 ArtistRecord(
                     artist_name='Coldplay',
-                    artist_mbids=[],
+                    artist_mbid=None,
                     listen_count=20,
                 )
             ]),

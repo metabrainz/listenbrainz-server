@@ -214,9 +214,7 @@ export default class UserEntityChart extends React.Component<
     if (entity === "artist") {
       result = (data as UserArtistsResponse).payload.artists
         ?.map((elem, idx: number) => {
-          const entityMBID = elem.artist_mbids
-            ? elem.artist_mbids[0]
-            : undefined;
+          const entityMBID = elem.artist_mbid ?? undefined;
           return {
             id: idx.toString(),
             entity: elem.artist_name,

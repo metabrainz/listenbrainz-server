@@ -10,7 +10,7 @@ from data.model.user_artist_stat import ArtistRecord
 from data.model.user_entity import UserEntityStatMessage, UserEntityRecords
 from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_stat import ReleaseRecord
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.stats.user.artist import get_artists
@@ -32,6 +32,12 @@ entity_model_map = {
     "recordings": RecordingRecord
 }
 
+entity_cache_map = {
+    "artists": ARTIST_COUNTRY_CODE_DATAFRAME,
+    "releases": RELEASE_METADATA_CACHE_DATAFRAME,
+    "recordings": RELEASE_METADATA_CACHE_DATAFRAME
+}
+
 NUMBER_OF_TOP_ENTITIES = 1000  # number of top entities to retain for user stats
 NUMBER_OF_YIM_ENTITIES = 50  # number of top entities to retain for Year in Music stats
 
@@ -46,8 +52,10 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
     table = f"user_{entity}_{stats_range}"
     listens_df.createOrReplaceTempView(table)
 
-    df_name = "release_data_cache"
-    read_files_from_HDFS(RELEASE_METADATA_CACHE_DATAFRAME).createOrReplaceTempView(df_name)
+    df_name = "entity_data_cache"
+    cache_table_path = entity_cache_map.get(entity)
+    if cache_table_path:
+        read_files_from_HDFS(cache_table_path).createOrReplaceTempView(df_name)
 
     messages = calculate_entity_stats(
         from_date, to_date, table, df_name, entity, stats_range, message_type, database

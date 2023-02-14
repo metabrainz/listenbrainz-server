@@ -3,17 +3,16 @@
   "stats": [
     {
       "artist_name": "artist_1",
-      "artist_mbids": [],
       "listen_count": 1
     },
     {
       "artist_name": null,
-      "artist_mbids": [],
+      "artist_mbid": null,
       "listen_count": 1
     },
     {
       "artist_name": "artist_2",
-      "artist_mbids": [],
+      "artist_mbid": null,
       "listen_count": null
     }
   ]
