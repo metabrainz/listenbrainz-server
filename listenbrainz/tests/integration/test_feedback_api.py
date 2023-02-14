@@ -504,7 +504,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         data = json.loads(response.data)
 
         self.assertEqual(data["count"], 2)
-        self.assertEqual(data["total_count"], len(inserted_rows))
+        self.assertEqual(data["total_count"], 2)
         self.assertEqual(data["offset"], 0)
 
         feedback = data["feedback"]  # sorted in descending order of their creation
@@ -527,7 +527,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         data = json.loads(response.data)
 
         self.assertEqual(data["count"], 2)
-        self.assertEqual(data["total_count"], len(inserted_rows))
+        self.assertEqual(data["total_count"], 2)
         self.assertEqual(data["offset"], 0)
 
         feedback = data["feedback"]  # sorted in descending order of their creation
