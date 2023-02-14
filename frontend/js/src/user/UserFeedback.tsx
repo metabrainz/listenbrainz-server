@@ -419,15 +419,15 @@ export default class UserFeedback extends React.Component<
               })}
             </div>
             <button
-              className="btn btn-block btn-info"
+              className={`btn btn-block ${
+                noMoreFeedback ? "btn-default" : "btn-info"
+              }`}
               disabled={noMoreFeedback}
               type="button"
               onClick={this.handleLoadMore}
               title="Load more…"
             >
-              {noMoreFeedback || feedback.length < this.DEFAULT_ITEMS_PER_PAGE
-                ? "No more feedback to show"
-                : "Load more…"}
+              {noMoreFeedback ? "No more feedback to show" : "Load more…"}
             </button>
           </div>
         )}

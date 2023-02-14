@@ -295,15 +295,15 @@ export default class UserPins extends React.Component<
                 );
               })}
               <button
-                className="btn btn-block btn-info"
+                className={`btn btn-block ${
+                  noMorePins ? "btn-default" : "btn-info"
+                }`}
                 disabled={noMorePins}
                 type="button"
                 onClick={this.handleLoadMore}
                 title="Load more…"
               >
-                {noMorePins || pins.length < this.DEFAULT_PINS_PER_PAGE
-                  ? "No more pins to show"
-                  : "Load more…"}
+                {noMorePins ? "No more pins to show" : "Load more…"}
               </button>
             </div>
           </div>
