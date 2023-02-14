@@ -27,17 +27,13 @@ import PlaylistsList from "./PlaylistsList";
 export type UserPlaylistsProps = {
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
-  paginationOffset: string;
-  playlistsPerPage: string;
   playlistCount: number;
 } & WithAlertNotificationsInjectedProps;
 
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
   playlistSelectedForOperation?: JSPFPlaylist;
-  loading: boolean;
   paginationOffset: number;
-  playlistsPerPage: number;
   playlistCount: number;
 };
 
@@ -57,11 +53,8 @@ export default class UserPlaylists extends React.Component<
     const concatenatedPlaylists = props.playlists?.map((pl) => pl.playlist);
     this.state = {
       playlists: concatenatedPlaylists ?? [],
-      loading: false,
-      paginationOffset: parseInt(props.paginationOffset, 10) || 0,
+      paginationOffset: 0,
       playlistCount: props.playlistCount,
-      playlistsPerPage:
-        parseInt(props.playlistsPerPage, 10) || this.DEFAULT_PLAYLISTS_PER_PAGE,
     };
   }
 
@@ -290,9 +283,7 @@ export default class UserPlaylists extends React.Component<
       playlists,
       playlistSelectedForOperation,
       paginationOffset,
-      playlistsPerPage,
       playlistCount,
-      loading,
     } = this.state;
 
     // Separate collaborative playlists; remove mutates the original playlists array
@@ -314,7 +305,6 @@ export default class UserPlaylists extends React.Component<
           playlists={playlists}
           activeSection="playlists"
           user={user}
-          paginationOffset={paginationOffset}
           playlistCount={playlistCount}
           selectPlaylistForEdit={this.selectPlaylistForEdit}
           newAlert={newAlert}
@@ -354,7 +344,6 @@ export default class UserPlaylists extends React.Component<
           playlists={collaborativePlaylists}
           activeSection="collaborations"
           user={user}
-          paginationOffset={paginationOffset}
           playlistCount={playlistCount}
           selectPlaylistForEdit={this.selectPlaylistForEdit}
           newAlert={newAlert}
@@ -379,13 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube,
     sentry_traces_sample_rate,
   } = globalReactProps;
-  const {
-    playlists,
-    user,
-    playlist_count: playlistCount,
-    pagination_offset: paginationOffset,
-    playlists_per_page: playlistsPerPage,
-  } = reactProps;
+  const { playlists, user, playlist_count: playlistCount } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -418,8 +401,6 @@ document.addEventListener("DOMContentLoaded", () => {
           initialAlerts={optionalAlerts}
           playlistCount={playlistCount}
           playlists={playlists}
-          paginationOffset={paginationOffset}
-          playlistsPerPage={playlistsPerPage}
           user={user}
         />
       </GlobalAppContext.Provider>

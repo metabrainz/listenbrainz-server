@@ -11,7 +11,7 @@ import PlaylistCard from "./PlaylistCard";
 export type PlaylistsListProps = {
   playlists: JSPFPlaylist[];
   user: ListenBrainzUser;
-  paginationOffset: number;
+  paginationOffset?: number;
   playlistCount: number;
   activeSection: "playlists" | "recommendations" | "collaborations";
   selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
@@ -22,7 +22,6 @@ export type PlaylistsListState = {
   playlistSelectedForOperation?: JSPFPlaylist;
   loading: boolean;
   paginationOffset: number;
-  playlistsPerPage: number;
   playlistCount: number;
 };
 
@@ -43,7 +42,6 @@ export default class PlaylistsList extends React.Component<
       loading: false,
       paginationOffset: props.paginationOffset || 0,
       playlistCount: props.playlistCount,
-      playlistsPerPage: this.DEFAULT_PLAYLISTS_PER_PAGE,
     };
   }
 
@@ -81,8 +79,8 @@ export default class PlaylistsList extends React.Component<
   handleClickNext = async () => {
     const { user, activeSection, newAlert } = this.props;
     const { currentUser } = this.context;
-    const { paginationOffset, playlistsPerPage, playlistCount } = this.state;
-    const newOffset = paginationOffset + playlistsPerPage;
+    const { paginationOffset, playlistCount } = this.state;
+    const newOffset = paginationOffset + this.DEFAULT_PLAYLISTS_PER_PAGE;
     // No more playlists to fetch
     if (newOffset >= playlistCount) {
       return;
@@ -91,7 +89,7 @@ export default class PlaylistsList extends React.Component<
       user,
       currentUser,
       newOffset,
-      playlistsPerPage,
+      this.DEFAULT_PLAYLISTS_PER_PAGE,
       activeSection,
       newAlert
     );
@@ -100,17 +98,20 @@ export default class PlaylistsList extends React.Component<
   handleClickPrevious = async () => {
     const { user, activeSection, newAlert } = this.props;
     const { currentUser } = this.context;
-    const { paginationOffset, playlistsPerPage } = this.state;
+    const { paginationOffset } = this.state;
     // No more playlists to fetch
     if (paginationOffset === 0) {
       return;
     }
-    const newOffset = Math.max(0, paginationOffset - playlistsPerPage);
+    const newOffset = Math.max(
+      0,
+      paginationOffset - this.DEFAULT_PLAYLISTS_PER_PAGE
+    );
     await this.fetchPlaylists(
       user,
       currentUser,
       newOffset,
-      playlistsPerPage,
+      this.DEFAULT_PLAYLISTS_PER_PAGE,
       activeSection,
       newAlert
     );
@@ -123,12 +124,10 @@ export default class PlaylistsList extends React.Component<
     offset: string;
   }) => {
     const parsedOffset = parseInt(newPlaylists.offset, 10);
-    const parsedCount = parseInt(newPlaylists.count, 10);
     this.setState({
       playlists: newPlaylists.playlists.map((pl: JSPFObject) => pl.playlist),
       playlistCount: newPlaylists.playlist_count,
       paginationOffset: parsedOffset,
-      playlistsPerPage: parsedCount,
       loading: false,
     });
   };
@@ -170,13 +169,7 @@ export default class PlaylistsList extends React.Component<
       activeSection,
       children,
     } = this.props;
-    const {
-      playlists,
-      paginationOffset,
-      playlistsPerPage,
-      playlistCount,
-      loading,
-    } = this.state;
+    const { playlists, paginationOffset, playlistCount, loading } = this.state;
     return (
       <div>
         <Loader isLoading={loading} />
@@ -219,7 +212,8 @@ export default class PlaylistsList extends React.Component<
           <li
             className={`next ${
               playlistCount &&
-              playlistCount <= paginationOffset + playlistsPerPage
+              playlistCount <=
+                paginationOffset + this.DEFAULT_PLAYLISTS_PER_PAGE
                 ? "disabled"
                 : ""
             }`}

@@ -211,20 +211,6 @@ def reports(user_name: str):
 def playlists(user_name: str):
     """ Show user playlists """
 
-    offset = request.args.get('offset', 0)
-    try:
-        offset = int(offset)
-    except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" %
-                         request.args.get("offset"))
-
-    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-    try:
-        count = int(count)
-    except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" %
-                         request.args.get("count"))
-
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
@@ -237,16 +223,16 @@ def playlists(user_name: str):
     user_playlists, playlist_count = get_playlists_for_user(user.id,
                                                             include_private=include_private,
                                                             load_recordings=False,
-                                                            count=count,
-                                                            offset=offset)
+                                                            count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL,
+                                                            offset=0)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
     
     colalborative_playlists, collaborative_playlist_count = get_playlists_collaborated_on(user.id,
                                                                             include_private=include_private,
                                                                             load_recordings=False,
-                                                                            count=count,
-                                                                            offset=offset)
+                                                                            count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL,
+                                                                            offset=0)
     for playlist in colalborative_playlists:
         playlists.append(serialize_jspf(playlist))
 
@@ -256,8 +242,6 @@ def playlists(user_name: str):
         "active_section": "playlists",
         "playlist_count": playlist_count,
         "collaborative_playlist_count": collaborative_playlist_count,
-        "pagination_offset": offset,
-        "playlists_per_page": count,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
