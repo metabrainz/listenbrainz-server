@@ -3,7 +3,6 @@
 
 import * as React from "react";
 import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import PlaylistCard from "./PlaylistCard";
@@ -32,7 +31,6 @@ export default class PlaylistsList extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  private APIService!: APIServiceClass;
   private DEFAULT_PLAYLISTS_PER_PAGE = 25;
 
   constructor(props: React.PropsWithChildren<PlaylistsListProps>) {
@@ -144,9 +142,10 @@ export default class PlaylistsList extends React.Component<
       message: string | JSX.Element
     ) => void
   ) => {
+    const { APIService } = this.context;
     this.setState({ loading: true });
     try {
-      const newPlaylists = await this.APIService.getUserPlaylists(
+      const newPlaylists = await APIService.getUserPlaylists(
         user.name,
         currentUser?.auth_token,
         newOffset,
