@@ -504,7 +504,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         data = json.loads(response.data)
 
         self.assertEqual(data["count"], 2)
-        self.assertEqual(data["total_count"], len(inserted_rows))
+        self.assertEqual(data["total_count"], 2) # Only count feedback for this score = 1
         self.assertEqual(data["offset"], 0)
 
         feedback = data["feedback"]  # sorted in descending order of their creation
@@ -527,7 +527,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         data = json.loads(response.data)
 
         self.assertEqual(data["count"], 2)
-        self.assertEqual(data["total_count"], len(inserted_rows))
+        self.assertEqual(data["total_count"], 2) # Only count feedback for score = -1
         self.assertEqual(data["offset"], 0)
 
         feedback = data["feedback"]  # sorted in descending order of their creation
@@ -1199,17 +1199,17 @@ class FeedbackAPITestCase(IntegrationTestCase):
         return sample_feedback
 
     def test_feedback_view(self):
-        # user.feedback endpoint queries recording feedback with metadata which loads
+        # user.taste endpoint queries recording feedback with metadata which loads
         # data from msb so insert recordings into msb as well, otherwise the test will fail
         inserted_rows = self._insert_feedback_with_metadata(self.user["id"])
 
         # Fetch loved page
-        r = self.client.get(url_for('user.feedback', user_name=self.user['musicbrainz_id']))
+        r = self.client.get(url_for('user.taste', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
         props = json.loads(self.get_context_variable('props'))
 
         self.assertEqual(props['feedback_count'], 1)
-        self.assertEqual(props['active_section'], 'feedback')
+        self.assertEqual(props['active_section'], 'taste')
         feedback = props["feedback"]
 
         self.assertEqual(len(feedback), 1)
@@ -1219,12 +1219,12 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertNotEqual(feedback[0]["created"], "")
 
         # Fetch hated page
-        r = self.client.get(url_for('user.feedback', user_name=self.user['musicbrainz_id'], score=-1))
+        r = self.client.get(url_for('user.taste', user_name=self.user['musicbrainz_id'], score=-1))
         self.assert200(r)
         props = json.loads(self.get_context_variable('props'))
 
         self.assertEqual(props['feedback_count'], 1)
-        self.assertEqual(props['active_section'], 'feedback')
+        self.assertEqual(props['active_section'], 'taste')
         feedback = props["feedback"]
 
         self.assertEqual(len(feedback), 1)

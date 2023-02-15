@@ -319,7 +319,7 @@ class UserViewsTestCase(IntegrationTestCase):
             }
         }
 
-        response = self.client.get(url_for('user.pins', user_name=self.user.musicbrainz_id))
+        response = self.client.get(url_for('user.taste', user_name=self.user.musicbrainz_id))
         self.assert200(response)
 
         props = json.loads(self.get_context_variable("props"))
