@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { has, remove, startCase } from "lodash";
+import { startCase } from "lodash";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -25,16 +25,19 @@ import { getPageProps } from "../utils/utils";
 import PlaylistsList from "./PlaylistsList";
 
 export type UserPlaylistsProps = {
-  playlists?: JSPFObject[];
+  playlists: JSPFObject[];
   user: ListenBrainzUser;
   playlistCount: number;
+  collaborativePlaylists: JSPFObject[];
+  collaborativePlaylistCount: number;
 } & WithAlertNotificationsInjectedProps;
 
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
+  collaborativePlaylists: JSPFPlaylist[];
   playlistSelectedForOperation?: JSPFPlaylist;
-  paginationOffset: number;
   playlistCount: number;
+  collaborativePlaylistCount: number;
 };
 
 export default class UserPlaylists extends React.Component<
@@ -49,12 +52,18 @@ export default class UserPlaylists extends React.Component<
 
   constructor(props: UserPlaylistsProps) {
     super(props);
-
-    const concatenatedPlaylists = props.playlists?.map((pl) => pl.playlist);
+    const {
+      playlists,
+      playlistCount,
+      collaborativePlaylists,
+      collaborativePlaylistCount,
+    } = props;
     this.state = {
-      playlists: concatenatedPlaylists ?? [],
-      paginationOffset: 0,
-      playlistCount: props.playlistCount,
+      playlists: playlists?.map((pl) => pl.playlist) ?? [],
+      collaborativePlaylists:
+        collaborativePlaylists?.map((pl) => pl.playlist) ?? [],
+      playlistCount,
+      collaborativePlaylistCount,
     };
   }
 
@@ -282,18 +291,10 @@ export default class UserPlaylists extends React.Component<
     const {
       playlists,
       playlistSelectedForOperation,
-      paginationOffset,
       playlistCount,
+      collaborativePlaylists,
+      collaborativePlaylistCount,
     } = this.state;
-
-    // Separate collaborative playlists; remove mutates the original playlists array
-    const collaborativePlaylists = remove(playlists, (playlist) => {
-      return has(playlist, [
-        "extenstion",
-        MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
-        "created_for",
-      ]);
-    });
 
     return (
       <div role="main" id="playlists-page">
@@ -344,7 +345,7 @@ export default class UserPlaylists extends React.Component<
           playlists={collaborativePlaylists}
           activeSection="collaborations"
           user={user}
-          playlistCount={playlistCount}
+          playlistCount={collaborativePlaylistCount}
           selectPlaylistForEdit={this.selectPlaylistForEdit}
           newAlert={newAlert}
         />
@@ -368,7 +369,13 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube,
     sentry_traces_sample_rate,
   } = globalReactProps;
-  const { playlists, user, playlist_count: playlistCount } = reactProps;
+  const {
+    playlists,
+    user,
+    playlist_count: playlistCount,
+    collaborative_playlists: collaborativePlaylists,
+    collaborative_playlist_count: collaborativePlaylistCount,
+  } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -400,7 +407,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <UserPlaylistsWithAlertNotifications
           initialAlerts={optionalAlerts}
           playlistCount={playlistCount}
+          collaborativePlaylistCount={collaborativePlaylistCount}
           playlists={playlists}
+          collaborativePlaylists={collaborativePlaylists}
           user={user}
         />
       </GlobalAppContext.Provider>
