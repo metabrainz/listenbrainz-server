@@ -111,7 +111,7 @@ def get_feedback_for_user(user_name):
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
     feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, score=score, metadata=metadata)
-    total_count = db_feedback.get_feedback_count_for_user(user["id"])
+    total_count = db_feedback.get_feedback_count_for_user(user["id"],score)
 
     feedback = [fb.to_api() for fb in feedback]
 

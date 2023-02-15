@@ -25,7 +25,7 @@ from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 
 LISTENS_PER_PAGE = 25
-DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 50
+DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
 
 user_bp = Blueprint("user", __name__)
 redirect_bp = Blueprint("redirect", __name__)
@@ -60,8 +60,8 @@ redirect_bp.add_url_rule("/playlists/", "redirect_playlists",
 redirect_bp.add_url_rule("/recommendations/",
                          "redirect_recommendations",
                          redirect_user_page("user.recommendation_playlists"))
-redirect_bp.add_url_rule("/pins/", "redirect_pins",
-                         redirect_user_page("user.pins"))
+redirect_bp.add_url_rule("/taste/", "redirect_taste",
+                         redirect_user_page("user.taste"))
 redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
                          redirect_user_page("user.year_in_music"))
 
@@ -299,36 +299,6 @@ def recommendation_playlists(user_name: str):
 
 
 
-@user_bp.route("/<user_name>/pins/")
-def pins(user_name: str):
-    """ Show user pin history """
-
-    user = _get_user(user_name)
-    user_data = {
-        "name": user.musicbrainz_id,
-        "id": user.id,
-    }
-
-    pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
-    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(pins)]
-    total_count = get_pin_count_for_user(user_id=user.id)
-
-    props = {
-        "user": user_data,
-        "pins": pins,
-        "profile_url": url_for('user.profile', user_name=user_name),
-        "total_count": total_count,
-        "logged_in_user_follows_user": logged_in_user_follows_user(user),
-    }
-
-    return render_template(
-        "user/pins.html",
-        active_section="pins",
-        props=ujson.dumps(props),
-        user=user
-    )
-
-
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
 @api_login_required
 def report_abuse(user_name):
@@ -394,10 +364,11 @@ def logged_in_user_follows_user(user):
     return None
 
 
-@user_bp.route("/<user_name>/feedback/")
+@user_bp.route("/<user_name>/taste/")
 @web_listenstore_needed
-def feedback(user_name: str):
-    """ Show user feedback, with filter on score (love/hate).
+def taste(user_name: str):
+    """ Show user feedback(love/hate) and pins.
+    Feedback has filter on score (1 or -1).
 
     Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
@@ -412,21 +383,6 @@ def feedback(user_name: str):
         raise BadRequest("Incorrect int argument score: %s" %
                          request.args.get("score"))
 
-    offset = request.args.get('offset', 0)
-    try:
-        offset = int(offset)
-    except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" %
-                         request.args.get("offset"))
-
-    count = request.args.get(
-        "count", DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL)
-    try:
-        count = int(count)
-    except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" %
-                         request.args.get("count"))
-
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
@@ -434,19 +390,26 @@ def feedback(user_name: str):
     }
 
     feedback_count = get_feedback_count_for_user(user.id, score)
-    feedback = get_feedback_for_user(user.id, count, offset, score, True)
+    feedback = get_feedback_for_user(user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL, offset=0, score=score, metadata=True)
+    
+    pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
+    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(pins)]
+    pin_count = get_pin_count_for_user(user_id=user.id)
 
     props = {
         "feedback": [f.to_api() for f in feedback],
         "feedback_count": feedback_count,
         "user": user_data,
-        "active_section": "feedback",
+        "active_section": "taste",
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
+        "pins": pins,
+        "pin_count": pin_count,
+        "profile_url": url_for('user.profile', user_name=user_name),
     }
 
     return render_template(
-        "user/feedback.html",
-        active_section="feedback",
+        "user/taste.html",
+        active_section="taste",
         props=ujson.dumps(props),
         user=user
     )
