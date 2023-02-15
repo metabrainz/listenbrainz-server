@@ -317,10 +317,10 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                             SELECT r.gid AS recording_mbid
                                  , array_agg(jsonb_build_array(t.name, count, g.gid)) AS release_group_tags
                               FROM musicbrainz.recording r
-                              JOIN mapping.canonical_release_redirect crr
-                                ON r.gid = crr.recording_mbid
+                              JOIN mapping.canonical_recording_release_redirect crrr
+                                ON r.gid = crrr.recording_mbid
                               JOIN musicbrainz.release rel
-                                ON crr.release_mbid = rel.gid
+                                ON crrr.release_mbid = rel.gid
                               JOIN musicbrainz.release_group_tag rgt
                                 ON rgt.release_group = rel.release_group
                               JOIN musicbrainz.tag t
@@ -336,14 +336,14 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , caa_rel.gid::TEXT AS caa_release_mbid
                                  , caa.id AS caa_id
                               FROM musicbrainz.recording r
-                              JOIN mapping.canonical_release_redirect crr
-                                ON r.gid = crr.recording_mbid
+                              JOIN mapping.canonical_recording_release_redirect crrr
+                                ON r.gid = crrr.recording_mbid
                                 -- need to join twice to release, once to get the canonical release group of the recording
                                 -- and then to find the preferred cover art release for that release group
-                              JOIN musicbrainz.release crr_rel
-                                ON crr_rel.gid = crr.release_mbid   
+                              JOIN musicbrainz.release crrr_rel
+                                ON crrr_rel.gid = crrr.release_mbid   
                               JOIN musicbrainz.release_group rg
-                                ON rg.id = crr_rel.release_group
+                                ON rg.id = crrr_rel.release_group
                               JOIN musicbrainz.release caa_rel
                                 ON rg.id = caa_rel.release_group
                          LEFT JOIN (
@@ -374,14 +374,14 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                  , rel.name
                                  , rac.name AS album_artist_name
                                  , rg.gid AS release_group_mbid
-                                 , crr.release_mbid::TEXT
+                                 , crrr.release_mbid::TEXT
                                  , rgca.caa_id
                                  , rgca.caa_release_mbid
                               FROM musicbrainz.recording r
-                              JOIN mapping.canonical_release_redirect crr
-                                ON r.gid = crr.recording_mbid
+                              JOIN mapping.canonical_recording_release_redirect crrr
+                                ON r.gid = crrr.recording_mbid
                               JOIN musicbrainz.release rel
-                                ON crr.release_mbid = rel.gid
+                                ON crrr.release_mbid = rel.gid
                               JOIN musicbrainz.artist_credit rac
                                 ON rac.id = rel.artist_credit  
                               JOIN musicbrainz.release_group rg
@@ -594,9 +594,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         release_mbids_query = """
             WITH release_mbids(id) AS (
                 SELECT rel.id
-                  FROM mapping.canonical_release_redirect crr
+                  FROM mapping.canonical_recording_release_redirect crrr
                   JOIN musicbrainz.release rel
-                    ON crr.release_mbid = rel.gid
+                    ON crrr.release_mbid = rel.gid
                   JOIN musicbrainz.release_group rg
                     ON rel.release_group = rg.id
                   JOIN musicbrainz.release_group_tag rgt
@@ -609,9 +609,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                     OR   g.last_updated > %(timestamp)s
             UNION
                 SELECT rel.id
-                  FROM mapping.canonical_release_redirect crr
+                  FROM mapping.canonical_recording_release_redirect crrr
                   JOIN musicbrainz.release rel
-                    ON crr.release_mbid = rel.gid
+                    ON crrr.release_mbid = rel.gid
                   JOIN musicbrainz.release_group rg
                     ON rel.release_group = rg.id
              LEFT JOIN cover_art_archive.cover_art caa
@@ -745,7 +745,7 @@ def create_mb_metadata_cache(use_lb_conn: bool):
 
         can_rel = CanonicalRecordingReleaseRedirect(mb_conn)
         if not can_rel.table_exists():
-            log("mb metadata cache: canonical_release_redirect table doesn't exist, run `canonical-data` manage command first with --use-mb-conn option")
+            log("mb metadata cache: canonical_recording_release_redirect table doesn't exist, run `canonical-data` manage command first with --use-mb-conn option")
             return
 
         new_timestamp = datetime.now()
