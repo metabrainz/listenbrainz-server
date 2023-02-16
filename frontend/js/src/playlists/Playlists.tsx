@@ -53,8 +53,6 @@ export default class UserPlaylists extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  private APIService!: APIServiceClass;
-
   constructor(props: UserPlaylistsProps) {
     super(props);
     const { playlists, playlistCount } = props;
@@ -97,7 +95,7 @@ export default class UserPlaylists extends React.Component<
     onSuccessCallback?: () => void
   ): Promise<void> => {
     const { newAlert } = this.props;
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     if (id) {
       newAlert(
         "danger",
@@ -142,7 +140,7 @@ export default class UserPlaylists extends React.Component<
           },
         },
       };
-      const newPlaylistId = await this.APIService.createPlaylist(
+      const newPlaylistId = await APIService.createPlaylist(
         currentUser.auth_token,
         newPlaylist
       );
@@ -155,7 +153,7 @@ export default class UserPlaylists extends React.Component<
         </>
       );
       // Fetch the newly created playlist and add it to the state
-      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
+      const JSPFObject: JSPFObject = await APIService.getPlaylist(
         newPlaylistId,
         currentUser.auth_token
       );
@@ -178,7 +176,7 @@ export default class UserPlaylists extends React.Component<
     id?: string
   ): Promise<void> => {
     const { newAlert } = this.props;
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     if (!id) {
       newAlert(
         "danger",
@@ -218,7 +216,7 @@ export default class UserPlaylists extends React.Component<
           },
         },
       };
-      await this.APIService.editPlaylist(currentUser.auth_token, id, {
+      await APIService.editPlaylist(currentUser.auth_token, id, {
         playlist: editedPlaylist,
       });
 
@@ -237,7 +235,7 @@ export default class UserPlaylists extends React.Component<
 
   deletePlaylist = async (): Promise<void> => {
     const { newAlert } = this.props;
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     const { playlistSelectedForOperation: playlist, playlists } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
@@ -252,7 +250,7 @@ export default class UserPlaylists extends React.Component<
       return;
     }
     try {
-      await this.APIService.deletePlaylist(
+      await APIService.deletePlaylist(
         currentUser.auth_token,
         getPlaylistId(playlist)
       );
