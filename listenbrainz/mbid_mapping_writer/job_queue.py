@@ -159,7 +159,7 @@ class MappingJobQueue(threading.Thread):
                             FROM listen
                        LEFT JOIN mbid_mapping m
                               ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::text
-                           WHERE m.recording_msid IS NULL
+                           WHERE m.recording_mbid IS NULL
                              AND listened_at <= :max_ts
                              AND listened_at > :min_ts"""
 
