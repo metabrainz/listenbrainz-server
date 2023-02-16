@@ -2,127 +2,127 @@
   "payload": {
     "artists": [
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Coldplay", 
         "listen_count": 70
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Ellie Goulding", 
         "listen_count": 54
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Maroon 5", 
         "listen_count": 38
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "OneRepublic", 
         "listen_count": 36
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "The Fray", 
         "listen_count": 31
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Ritviz", 
         "listen_count": 26
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Imagine Dragons", 
         "listen_count": 26
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Lenka", 
         "listen_count": 25
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Vance Joy", 
         "listen_count": 20
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Taylor Swift", 
         "listen_count": 20
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Ed Sheeran", 
         "listen_count": 19
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "George Ezra", 
         "listen_count": 17
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Christina Perri", 
         "listen_count": 16
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "The Script", 
         "listen_count": 15
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "The Local train", 
         "listen_count": 13
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Tommee Profitt", 
         "listen_count": 12
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "The Chainsmokers", 
         "listen_count": 12
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Sia", 
         "listen_count": 12
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Of Monsters and Men", 
         "listen_count": 11
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "M.I.A.", 
         "listen_count": 10
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Linkin Park", 
         "listen_count": 10
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "The Weeknd", 
         "listen_count": 8
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Backstreet Boys", 
         "listen_count": 8
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "Train", 
         "listen_count": 6
       }, 
       {
-        "artist_mbids": [], 
+        "artist_mbid": null, 
         "artist_name": "The Lumineers", 
         "listen_count": 6
       }

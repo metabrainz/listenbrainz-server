@@ -6,18 +6,15 @@ import * as timeago from "time-ago";
 import { act } from "react-dom/test-utils";
 import { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
-import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 
 import * as pinsPageProps from "../__mocks__/userPinsProps.json";
 import * as APIPins from "../__mocks__/pinProps.json";
-
-import { getListenablePin } from "../../src/utils/utils";
 
 import UserPins, {
   UserPinsProps,
   UserPinsState,
 } from "../../src/pins/UserPins";
-import { waitForComponentToPaint } from "../test-utils";
+import PinnedRecordingCard from "../../src/pins/PinnedRecordingCard";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -85,32 +82,22 @@ describe("UserPins", () => {
       .spyOn(global.Date, "now")
       .mockImplementation(() => mockDate.getTime());
 
+    // eslint-disable-next-line no-import-assign
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
   });
 
-  it("contains a BrainzPlayer instance", () => {
-    wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-    expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
-  });
-
   it("renders the correct number of pinned recordings", () => {
     wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
 
-    const ulElement = wrapper.find("#pinned-recordings");
-    expect(ulElement).toHaveLength(1);
-    expect(ulElement.children()).toHaveLength(props.pins.length);
+    const wrapperElement = wrapper.find("#pinned-recordings");
+    const pinnedRecordings = wrapperElement.find(PinnedRecordingCard);
+    expect(pinnedRecordings).toHaveLength(props.pins.length);
   });
 
-  describe("Pagination", () => {
-    const pushStateSpy = jest.spyOn(window.history, "pushState");
-
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-
+  describe("handleLoadMore", () => {
     describe("handleClickOlder", () => {
       it("does nothing if page >= maxPage", async () => {
         wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
@@ -123,15 +110,14 @@ describe("UserPins", () => {
         });
 
         await act(async () => {
-          await instance.handleClickOlder();
+          await instance.handleLoadMore();
         });
 
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
-        expect(pushStateSpy).not.toHaveBeenCalled();
       });
 
-      it("calls the API to get older pins / next page", async () => {
+      it("calls the API to get next page", async () => {
         wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
         const instance = wrapper.instance();
 
@@ -144,7 +130,7 @@ describe("UserPins", () => {
 
         // second page is fetchable
         await act(async () => {
-          await instance.handleClickOlder();
+          await instance.handleLoadMore();
         });
 
         expect(getPinsFromAPISpy).toHaveBeenCalledWith(2);
@@ -152,64 +138,11 @@ describe("UserPins", () => {
 
         expect(wrapper.state("loading")).toBeFalsy();
         expect(wrapper.state("page")).toEqual(2);
-        expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?page=2`);
-        expect(wrapper.state("pins")).toEqual(
-          APIPinsPageTwo.pinned_recordings as Array<PinnedRecording>
-        );
-      });
-    });
-
-    describe("handleClickNewer", () => {
-      it("does nothing if on first page", async () => {
-        wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-        const instance = wrapper.instance();
-
-        const spy = jest.fn().mockImplementation(() => {});
-        instance.getPinsFromAPI = spy;
-
-        await act(async () => {
-          await instance.handleClickNewer();
-        });
-
-        expect(wrapper.state("loading")).toBeFalsy();
-        expect(spy).not.toHaveBeenCalled();
-        await act(() => {
-          wrapper!.setState({ page: 2 });
-        });
-        await act(async () => {
-          await instance.handleClickNewer();
-        });
-        expect(spy).toHaveBeenCalled();
-      });
-
-      it("calls the API to get newer pins / previous page", async () => {
-        wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-        const instance = wrapper.instance();
-
-        const getPinsFromAPISpy = jest.spyOn(instance, "getPinsFromAPI");
-
-        // move to page 2 before testing fetching page 1
-        const apiSpy = jest
-          .fn()
-          .mockImplementationOnce(() => Promise.resolve(APIPinsPageTwo))
-          .mockImplementationOnce(() => Promise.resolve(APIPins));
-        instance.context.APIService.getPinsForUser = apiSpy;
-        await act(async () => {
-          await instance.handleClickOlder();
-        });
-        await act(async () => {
-          await instance.handleClickNewer();
-        });
-
-        expect(getPinsFromAPISpy).toHaveBeenCalledWith(2);
-        expect(apiSpy).toHaveBeenNthCalledWith(2, props.user.name, 0, 25);
-
-        expect(wrapper.state("loading")).toBeFalsy();
-        expect(wrapper.state("page")).toEqual(1);
-        expect(pushStateSpy).toHaveBeenNthCalledWith(2, null, "", `?page=1`);
-        expect(wrapper.state("pins")).toEqual(
-          APIPins.pinned_recordings as Array<PinnedRecording>
-        );
+        // result should be combined previous pins and new pins
+        expect(wrapper.state("pins")).toEqual([
+          ...props.pins,
+          ...APIPinsPageTwo.pinned_recordings,
+        ]);
       });
     });
   });

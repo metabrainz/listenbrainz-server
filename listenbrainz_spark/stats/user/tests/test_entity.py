@@ -14,7 +14,7 @@ class UserEntityTestCase(StatsTestCase):
         super(UserEntityTestCase, cls).setUpClass()
         entity.entity_handler_map['test'] = MagicMock(return_value="sample_test_data")
 
-    @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
+    @patch('listenbrainz_spark.stats.user.entity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
     def test_get_entity_week(self, mock_create_messages, mock_get_listens):
         entity.get_entity_stats('test', 'week')
@@ -26,7 +26,7 @@ class UserEntityTestCase(StatsTestCase):
                                                 from_date=from_date, to_date=to_date, message_type="user_entity",
                                                 database=None)
 
-    @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
+    @patch('listenbrainz_spark.stats.user.entity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
     def test_get_entity_month(self, mock_create_messages, mock_get_listens):
         entity.get_entity_stats('test', 'month')
@@ -38,7 +38,7 @@ class UserEntityTestCase(StatsTestCase):
                                                 from_date=from_date, to_date=to_date, message_type="user_entity",
                                                 database=None)
 
-    @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
+    @patch('listenbrainz_spark.stats.user.entity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
     def test_get_entity_year(self, mock_create_messages, mock_get_listens):
         entity.get_entity_stats('test', 'year')
@@ -50,7 +50,7 @@ class UserEntityTestCase(StatsTestCase):
                                                 from_date=from_date, to_date=to_date, message_type="user_entity",
                                                 database=None)
 
-    @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
+    @patch('listenbrainz_spark.stats.user.entity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
     def test_get_entity_all_time(self, mock_create_messages, mock_get_listens):
         entity.get_entity_stats('test', 'all_time')

@@ -46,5 +46,9 @@ MAILTO=""
 # run daily cron job to refresh top msid-mbid mappings
 0 7 * * * root /usr/local/bin/python /code/listenbrainz/manage.py refresh-top-manual-mappings >> /logs/top_manual_mappings.log 2>&1
 
+## Trigger a canonical dump on 3rd and 17th of every month do not block to wait for lock.
+# The canonical tables are re-generated every day at 4am, so do this later in order to get today's data
+0 8 3,17 * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh mbcanonical >> /logs/dumps.log 2>&1
+
 # run weekly cron job to remove expired do not recommends
 0 8 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py clear-expired-do-not-recommends >> /logs/do_not_recommend.log 2>&1

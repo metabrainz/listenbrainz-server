@@ -1,9 +1,8 @@
 from datetime import datetime, date, time
 
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.postgres.release import create_release_metadata_cache
 from listenbrainz_spark.stats.user.entity import calculate_entity_stats
-from listenbrainz_spark.utils import get_listens_from_new_dump, read_files_from_HDFS
+from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
 
 
 def calculate_top_entity_stats(year):
@@ -11,7 +10,7 @@ def calculate_top_entity_stats(year):
     to_date = datetime.combine(date(year, 12, 31), time.max)
     table = "listens_of_year"
 
-    listens = get_listens_from_new_dump(from_date, to_date)
+    listens = get_listens_from_dump(from_date, to_date)
     listens.createOrReplaceTempView(table)
 
     df_name = "release_data_cache"

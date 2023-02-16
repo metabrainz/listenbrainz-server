@@ -45,6 +45,7 @@ const props = {
   youtube,
   spotify,
   newAlert: () => {},
+  updateRecordingToPin: () => {},
 };
 
 // Create a new instance of GlobalAppContext
@@ -373,10 +374,6 @@ describe("UserFeedback", () => {
       expect(apiGetFeedbackSpy).toHaveBeenCalledTimes(1);
       expect(apiGetFeedbackSpy).toHaveBeenCalledWith("mr_monkey", 0, 25, 1);
       apiGetFeedbackSpy.mockClear();
-
-      await instance.getFeedbackItemsFromAPI(2, false, -1);
-      expect(apiGetFeedbackSpy).toHaveBeenCalledTimes(1);
-      expect(apiGetFeedbackSpy).toHaveBeenCalledWith("mr_monkey", 25, 25, -1);
     });
 
     it("sets the state, loads feedback for user and updates browser history", async () => {
@@ -387,7 +384,6 @@ describe("UserFeedback", () => {
       );
       const instance = wrapper.instance();
       const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
-      const pushStateSpy = jest.spyOn(window.history, "pushState");
       await waitForComponentToPaint(wrapper);
 
       // Initially set to 1 page (15 listens), after API response should be 2 pages
@@ -406,7 +402,6 @@ describe("UserFeedback", () => {
       expect(instance.state.loading).toEqual(false);
 
       expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
-      expect(pushStateSpy).toHaveBeenCalledWith(null, "", "?page=1&score=1");
     });
   });
 });

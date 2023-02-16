@@ -1,7 +1,7 @@
 from listenbrainz_spark.stats import run_query, SITEWIDE_STATS_ENTITY_LIMIT
 
 
-def get_artists(table: str, user_listen_count_limit, top_artists_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
+def get_artists(table: str, cache_table: str, user_listen_count_limit, top_artists_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     """ Get artist information (artist_name etc) for every time range specified
         the "time_range" table ordered by listen count
 
@@ -17,22 +17,34 @@ def get_artists(table: str, user_listen_count_limit, top_artists_limit: int = SI
     # order of collected results is not guaranteed so sort again
     # with sort_array.
     result = run_query(f"""
-        WITH user_counts as (
+        WITH exploded_listens AS (
             SELECT user_id
-                 , first(artist_name) AS artist_name
-                 , artist_credit_mbids
+                 , artist_name AS artist_credit_name
+                 , explode_outer(artist_credit_mbids) AS artist_mbid
+             FROM {table}
+        ), listens_with_mb_data as (
+            SELECT user_id
+                 , COALESCE(at.artist_name, el.artist_credit_name) AS artist_name
+                 , el.artist_mbid
+              FROM exploded_listens el
+         LEFT JOIN {cache_table} at
+                ON el.artist_mbid = at.artist_mbid
+        ), user_counts as (
+            SELECT user_id
+                 , first(artist_name) AS any_artist_name
+                 , artist_mbid
                  , LEAST(count(*), {user_listen_count_limit}) as listen_count
-              FROM {table}
-          GROUP BY user_id
-                 , lower(artist_name)
-                 , artist_credit_mbids
+             FROM listens_with_mb_data
+         GROUP BY user_id
+                , lower(artist_name)
+                , artist_mbid
         ), intermediate_table AS (
-            SELECT first(artist_name) AS artist_name
-                 , artist_credit_mbids
+            SELECT first(any_artist_name) AS artist_name
+                 , artist_mbid
                  , SUM(listen_count) as total_listen_count
               FROM user_counts
-          GROUP BY lower(artist_name)
-                 , artist_credit_mbids
+          GROUP BY lower(any_artist_name)
+                 , artist_mbid
         ), entity_count AS (
             SELECT count(*) AS total_count
               FROM intermediate_table
@@ -47,7 +59,7 @@ def get_artists(table: str, user_listen_count_limit, top_artists_limit: int = SI
                             struct(
                                 total_listen_count AS listen_count
                               , artist_name
-                              , coalesce(artist_credit_mbids, array()) AS artist_mbids
+                              , artist_mbid
                             )
                         )
                         , false

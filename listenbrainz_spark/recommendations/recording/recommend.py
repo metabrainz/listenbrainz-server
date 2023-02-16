@@ -85,6 +85,18 @@ def process_recommendations(recommendation_df, limit):
                  , prediction AS score
                  , row_number() OVER(PARTITION BY spark_user_id ORDER BY prediction DESC) AS rank
               FROM recommendation
+        ), distinct_recommendations AS (
+            SELECT user_id
+                 , recording_mbid
+                 , max(score) AS score
+              FROM ranked_recommendation
+              JOIN recording r
+             USING (recording_id)
+              JOIN user u
+             USING (spark_user_id)
+             WHERE rank <= {limit}
+          GROUP BY user_id
+                 , recording_mbid
         )
         SELECT user_id
              , array_sort(
@@ -102,15 +114,10 @@ def process_recommendations(recommendation_df, limit):
                                      END
                     -- sort in descending order of score
                ) AS recs
-          FROM ranked_recommendation rm
-          JOIN recording r
-         USING (recording_id)
-          JOIN user u
-         USING (spark_user_id)
+          FROM distinct_recommendations rm
      LEFT JOIN recording_discovery rd
          USING (user_id, recording_mbid)
-         WHERE rank <= {limit}
-       GROUP BY user_id
+      GROUP BY user_id
     """
     return run_query(query)
 
