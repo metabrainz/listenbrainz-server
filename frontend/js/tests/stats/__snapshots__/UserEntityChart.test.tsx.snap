@@ -46035,14 +46035,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/7ddac155-91e2-4eb7-b08a-4fc584fd60f9/cover-art"
+                        href="https://musicbrainz.org/release/7ddac155-91e2-4eb7-b08a-4fc584fd60f9"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Padman"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Padman"
+                          src="https://archive.org/download/mbid-7ddac155-91e2-4eb7-b08a-4fc584fd60f9/mbid-7ddac155-91e2-4eb7-b08a-4fc584fd60f9-29717381514_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -46413,14 +46413,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/3a29d02a-d29a-40f8-86f8-c9dab6eba7ac/cover-art"
+                        href="https://musicbrainz.org/release/3a29d02a-d29a-40f8-86f8-c9dab6eba7ac"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Vicky Donor"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Vicky Donor"
+                          src="https://archive.org/download/mbid-3a29d02a-d29a-40f8-86f8-c9dab6eba7ac/mbid-3a29d02a-d29a-40f8-86f8-c9dab6eba7ac-3193866265_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -46612,14 +46612,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/32c388ff-5123-4430-8ba7-62657eea41f8/cover-art"
+                        href="https://musicbrainz.org/release/32c388ff-5123-4430-8ba7-62657eea41f8"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Revisited: Sanam"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Revisited: Sanam"
+                          src="https://archive.org/download/mbid-32c388ff-5123-4430-8ba7-62657eea41f8/mbid-32c388ff-5123-4430-8ba7-62657eea41f8-16789420179_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -46811,14 +46811,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/e9fa9c7a-ad24-4c9c-bfb2-69dfc17bbcb8/cover-art"
+                        href="https://musicbrainz.org/release/e9fa9c7a-ad24-4c9c-bfb2-69dfc17bbcb8"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Twelve"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Twelve"
+                          src="https://archive.org/download/mbid-e9fa9c7a-ad24-4c9c-bfb2-69dfc17bbcb8/mbid-e9fa9c7a-ad24-4c9c-bfb2-69dfc17bbcb8-6601655750_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -47210,14 +47210,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/4f1f8e13-656a-46bf-900e-18b28f3b3991/cover-art"
+                        href="https://musicbrainz.org/release/4f1f8e13-656a-46bf-900e-18b28f3b3991"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Table No. 21"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Table No. 21"
+                          src="https://archive.org/download/mbid-4f1f8e13-656a-46bf-900e-18b28f3b3991/mbid-4f1f8e13-656a-46bf-900e-18b28f3b3991-3197539768_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -47410,14 +47410,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/4152d958-d0d1-4464-ae7a-8fe6cc359473/cover-art"
+                        href="https://musicbrainz.org/release/4152d958-d0d1-4464-ae7a-8fe6cc359473"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Rab Ne Bana Di Jodi"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Rab Ne Bana Di Jodi"
+                          src="https://archive.org/download/mbid-4152d958-d0d1-4464-ae7a-8fe6cc359473/mbid-4152d958-d0d1-4464-ae7a-8fe6cc359473-18392173981_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -47610,14 +47610,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/3d4390e7-4f90-437e-8297-9c78ce910431/cover-art"
+                        href="https://musicbrainz.org/release/3d4390e7-4f90-437e-8297-9c78ce910431"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Mohabbatein"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Mohabbatein"
+                          src="https://archive.org/download/mbid-3d4390e7-4f90-437e-8297-9c78ce910431/mbid-3d4390e7-4f90-437e-8297-9c78ce910431-31608812704_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -47810,14 +47810,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/9fef1281-c8ac-466e-ab39-d81b9781a55f/cover-art"
+                        href="https://musicbrainz.org/release/9fef1281-c8ac-466e-ab39-d81b9781a55f"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Malang: Unleash The Madness"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Malang: Unleash The Madness"
+                          src="https://archive.org/download/mbid-9fef1281-c8ac-466e-ab39-d81b9781a55f/mbid-9fef1281-c8ac-466e-ab39-d81b9781a55f-28336130099_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -48546,14 +48546,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/9aa17de3-9496-421c-a97a-1cba83969815/cover-art"
+                        href="https://musicbrainz.org/release/9aa17de3-9496-421c-a97a-1cba83969815"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Jaane Tu Ya Jaane Na"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Jaane Tu Ya Jaane Na"
+                          src="https://archive.org/download/mbid-9aa17de3-9496-421c-a97a-1cba83969815/mbid-9aa17de3-9496-421c-a97a-1cba83969815-13007261956_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -48745,14 +48745,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/ab960442-661b-40f6-9c09-0f89f92e52a1/cover-art"
+                        href="https://musicbrainz.org/release/ab960442-661b-40f6-9c09-0f89f92e52a1"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="I, Me Aur Main"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="I, Me Aur Main"
+                          src="https://archive.org/download/mbid-ab960442-661b-40f6-9c09-0f89f92e52a1/mbid-ab960442-661b-40f6-9c09-0f89f92e52a1-4653252004_thumb250.jpg"
                         />
                       </a>
                     </div>
@@ -49302,14 +49302,14 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       className="listen-thumbnail"
                     >
                       <a
-                        href="https://musicbrainz.org/release/69bf700c-b549-4153-b42c-b76e59f111ed/cover-art"
+                        href="https://musicbrainz.org/release/69bf700c-b549-4153-b42c-b76e59f111ed"
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="Add cover art in MusicBrainz"
+                        title="Talaash"
                       >
                         <img
-                          alt="Add cover art in MusicBrainz"
-                          src="/static/img/cover-art-placeholder.jpg"
+                          alt="Talaash"
+                          src="https://archive.org/download/mbid-69bf700c-b549-4153-b42c-b76e59f111ed/mbid-69bf700c-b549-4153-b42c-b76e59f111ed-3252266924_thumb250.jpg"
                         />
                       </a>
                     </div>
