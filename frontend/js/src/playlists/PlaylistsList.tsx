@@ -6,13 +6,14 @@ import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotif
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import PlaylistCard from "./PlaylistCard";
+import { PlaylistType } from "./utils";
 
 export type PlaylistsListProps = {
   playlists: JSPFPlaylist[];
   user: ListenBrainzUser;
   paginationOffset?: number;
   playlistCount: number;
-  activeSection: "playlists" | "recommendations" | "collaborations";
+  activeSection: PlaylistType;
   selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
 } & WithAlertNotificationsInjectedProps;
 
@@ -43,6 +44,16 @@ export default class PlaylistsList extends React.Component<
     };
   }
 
+  async componentDidUpdate(
+    prevProps: React.PropsWithChildren<PlaylistsListProps>
+  ): Promise<void> {
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
+    if (prevProps.activeSection !== activeSection) {
+      await this.fetchPlaylists(0);
+    }
+  }
+
   isOwner = (playlist: JSPFPlaylist): boolean => {
     const { currentUser } = this.context;
     return Boolean(currentUser) && currentUser?.name === playlist.creator;
@@ -58,7 +69,8 @@ export default class PlaylistsList extends React.Component<
   };
 
   onCopiedPlaylist = async (newPlaylist: JSPFPlaylist): Promise<void> => {
-    if (this.isCurrentUserPage()) {
+    const { activeSection } = this.props;
+    if (this.isCurrentUserPage() && activeSection === PlaylistType.playlists) {
       this.setState((prevState) => ({
         playlists: [newPlaylist, ...prevState.playlists],
       }));
@@ -68,7 +80,7 @@ export default class PlaylistsList extends React.Component<
   isCurrentUserPage = () => {
     const { user, activeSection } = this.props;
     const { currentUser } = this.context;
-    if (activeSection === "recommendations") {
+    if (activeSection === PlaylistType.recommendations) {
       return false;
     }
     return currentUser?.name === user.name;
@@ -83,14 +95,7 @@ export default class PlaylistsList extends React.Component<
     if (newOffset >= playlistCount) {
       return;
     }
-    await this.fetchPlaylists(
-      user,
-      currentUser,
-      newOffset,
-      this.DEFAULT_PLAYLISTS_PER_PAGE,
-      activeSection,
-      newAlert
-    );
+    await this.fetchPlaylists(newOffset);
   };
 
   handleClickPrevious = async () => {
@@ -105,14 +110,7 @@ export default class PlaylistsList extends React.Component<
       0,
       paginationOffset - this.DEFAULT_PLAYLISTS_PER_PAGE
     );
-    await this.fetchPlaylists(
-      user,
-      currentUser,
-      newOffset,
-      this.DEFAULT_PLAYLISTS_PER_PAGE,
-      activeSection,
-      newAlert
-    );
+    await this.fetchPlaylists(newOffset);
   };
 
   handleAPIResponse = (newPlaylists: {
@@ -130,28 +128,18 @@ export default class PlaylistsList extends React.Component<
     });
   };
 
-  fetchPlaylists = async (
-    user: ListenBrainzUser,
-    currentUser: ListenBrainzUser,
-    newOffset: number,
-    playlistsPerPage: number,
-    activeSection: string,
-    newAlert: (
-      type: AlertType,
-      title: string,
-      message: string | JSX.Element
-    ) => void
-  ) => {
-    const { APIService } = this.context;
+  fetchPlaylists = async (newOffset: number = 0) => {
+    const { APIService, currentUser } = this.context;
+    const { user, activeSection, newAlert } = this.props;
     this.setState({ loading: true });
     try {
       const newPlaylists = await APIService.getUserPlaylists(
         user.name,
         currentUser?.auth_token,
         newOffset,
-        playlistsPerPage,
-        activeSection === "recommendations",
-        activeSection === "collaborations"
+        this.DEFAULT_PLAYLISTS_PER_PAGE,
+        activeSection === PlaylistType.recommendations,
+        activeSection === PlaylistType.collaborations
       );
 
       this.handleAPIResponse(newPlaylists);
@@ -184,7 +172,7 @@ export default class PlaylistsList extends React.Component<
 
             return (
               <PlaylistCard
-                showOptions={activeSection !== "recommendations"}
+                showOptions={activeSection !== PlaylistType.recommendations}
                 playlist={playlist}
                 isOwner={isOwner}
                 onSuccessfulCopy={this.onCopiedPlaylist}

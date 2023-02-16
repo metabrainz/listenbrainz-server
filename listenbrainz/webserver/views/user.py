@@ -227,23 +227,12 @@ def playlists(user_name: str):
                                                             offset=0)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
-    
-    colalborative_playlists = []
-    user_colalborative_playlists, collaborative_playlist_count = get_playlists_collaborated_on(user.id,
-                                                                            include_private=include_private,
-                                                                            load_recordings=False,
-                                                                            count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL,
-                                                                            offset=0)
-    for playlist in user_colalborative_playlists:
-        colalborative_playlists.append(serialize_jspf(playlist))
 
     props = {
         "playlists": playlists,
-        "collaborative_playlists": colalborative_playlists,
         "user": user_data,
         "active_section": "playlists",
         "playlist_count": playlist_count,
-        "collaborative_playlist_count": collaborative_playlist_count,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 

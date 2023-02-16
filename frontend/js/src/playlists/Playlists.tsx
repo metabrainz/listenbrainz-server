@@ -4,7 +4,11 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { startCase } from "lodash";
-import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faListAlt,
+  faPlusCircle,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -20,24 +24,26 @@ import Card from "../components/Card";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import { getPlaylistId, MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "./utils";
+import {
+  getPlaylistId,
+  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
+  PlaylistType,
+} from "./utils";
 import { getPageProps } from "../utils/utils";
 import PlaylistsList from "./PlaylistsList";
+import Pill from "../components/Pill";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
   user: ListenBrainzUser;
   playlistCount: number;
-  collaborativePlaylists: JSPFObject[];
-  collaborativePlaylistCount: number;
 } & WithAlertNotificationsInjectedProps;
 
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
-  collaborativePlaylists: JSPFPlaylist[];
   playlistSelectedForOperation?: JSPFPlaylist;
   playlistCount: number;
-  collaborativePlaylistCount: number;
+  playlistType: PlaylistType;
 };
 
 export default class UserPlaylists extends React.Component<
@@ -48,22 +54,14 @@ export default class UserPlaylists extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   private APIService!: APIServiceClass;
-  private DEFAULT_PLAYLISTS_PER_PAGE = 25;
 
   constructor(props: UserPlaylistsProps) {
     super(props);
-    const {
-      playlists,
-      playlistCount,
-      collaborativePlaylists,
-      collaborativePlaylistCount,
-    } = props;
+    const { playlists, playlistCount } = props;
     this.state = {
       playlists: playlists?.map((pl) => pl.playlist) ?? [],
-      collaborativePlaylists:
-        collaborativePlaylists?.map((pl) => pl.playlist) ?? [],
       playlistCount,
-      collaborativePlaylistCount,
+      playlistType: PlaylistType.playlists,
     };
   }
 
@@ -83,6 +81,10 @@ export default class UserPlaylists extends React.Component<
 
   selectPlaylistForEdit = (playlist: JSPFPlaylist): void => {
     this.setState({ playlistSelectedForOperation: playlist });
+  };
+
+  setPlaylistType = (type: PlaylistType) => {
+    this.setState({ playlistType: type });
   };
 
   createPlaylist = async (
@@ -292,19 +294,38 @@ export default class UserPlaylists extends React.Component<
       playlists,
       playlistSelectedForOperation,
       playlistCount,
-      collaborativePlaylists,
-      collaborativePlaylistCount,
+      playlistType,
     } = this.state;
 
     return (
       <div role="main" id="playlists-page">
-        <h2>
+        <h3
+          style={{
+            display: "inline-block",
+            marginRight: "0.5em",
+            verticalAlign: "sub",
+          }}
+        >
           {this.isCurrentUserPage() ? "Your" : `${startCase(user.name)}'s`}{" "}
           playlists
-        </h2>
+        </h3>
+        <Pill
+          active={playlistType === PlaylistType.playlists}
+          type="secondary"
+          onClick={() => this.setPlaylistType(PlaylistType.playlists)}
+        >
+          <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
+        </Pill>
+        <Pill
+          active={playlistType === PlaylistType.collaborations}
+          type="secondary"
+          onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
+        >
+          <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
+        </Pill>
         <PlaylistsList
           playlists={playlists}
-          activeSection="playlists"
+          activeSection={playlistType}
           user={user}
           playlistCount={playlistCount}
           selectPlaylistForEdit={this.selectPlaylistForEdit}
@@ -340,15 +361,6 @@ export default class UserPlaylists extends React.Component<
             />
           </>
         )}
-        <h2>Collaborative playlists</h2>
-        <PlaylistsList
-          playlists={collaborativePlaylists}
-          activeSection="collaborations"
-          user={user}
-          playlistCount={collaborativePlaylistCount}
-          selectPlaylistForEdit={this.selectPlaylistForEdit}
-          newAlert={newAlert}
-        />
       </div>
     );
   }
@@ -369,13 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube,
     sentry_traces_sample_rate,
   } = globalReactProps;
-  const {
-    playlists,
-    user,
-    playlist_count: playlistCount,
-    collaborative_playlists: collaborativePlaylists,
-    collaborative_playlist_count: collaborativePlaylistCount,
-  } = reactProps;
+  const { playlists, user, playlist_count: playlistCount } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -407,9 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <UserPlaylistsWithAlertNotifications
           initialAlerts={optionalAlerts}
           playlistCount={playlistCount}
-          collaborativePlaylistCount={collaborativePlaylistCount}
           playlists={playlists}
-          collaborativePlaylists={collaborativePlaylists}
           user={user}
         />
       </GlobalAppContext.Provider>

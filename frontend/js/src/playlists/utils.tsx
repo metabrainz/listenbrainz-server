@@ -10,6 +10,12 @@ export const PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/";
 export const PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/";
 export const PLAYLIST_ARTIST_URI_PREFIX = "https://musicbrainz.org/artist/";
 
+export enum PlaylistType {
+  "playlists",
+  "collaborations",
+  "recommendations",
+}
+
 export function getPlaylistExtension(
   playlist?: JSPFPlaylist
 ): JSPFPlaylistExtension | null {

@@ -16,6 +16,7 @@ import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import { getPageProps } from "../utils/utils";
 import PlaylistsList from "../playlists/PlaylistsList";
+import { PlaylistType } from "../playlists/utils";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -247,7 +248,7 @@ export default class RecommendationsPage extends React.Component<
         <Loader isLoading={loading} />
         <PlaylistsList
           playlists={playlists}
-          activeSection="recommendations"
+          activeSection={PlaylistType.recommendations}
           user={user}
           paginationOffset={paginationOffset}
           playlistCount={playlistCount}
