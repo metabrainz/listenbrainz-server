@@ -44,7 +44,6 @@ def redirect_user_page(target):
             return redirect(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
         else:
             return current_app.login_manager.unauthorized()
-        pass
 
     return inner
 
