@@ -296,7 +296,7 @@ class HandlersTestCase(DatabaseTestCase):
             'data': [
                 {
                     'artist_name': 'Coldplay',
-                    'artist_mbid': [],
+                    'artist_mbid': None,
                     'listen_count': 20
                 }
             ],
@@ -319,7 +319,7 @@ class HandlersTestCase(DatabaseTestCase):
             data=StatRecordList[ArtistRecord](__root__=[
                 ArtistRecord(
                     artist_name='Coldplay',
-                    artist_mbids=[],
+                    artist_mbid=None,
                     listen_count=20,
                 )
             ]),
@@ -568,7 +568,8 @@ class HandlersTestCase(DatabaseTestCase):
                     "artist_name": "Katty Peri",
                     "listened_at": "2020-04-29 23:56:23",
                     "release_name": "No Place Is Home",
-                    "recording_name": "How High"
+                    "recording_name": "How High",
+                    "recording_msid": "aab9ec01-89ac-4026-a1c7-4cf6e347aec8"
                 }
             ],
             'source': 'cf'
@@ -586,7 +587,8 @@ class HandlersTestCase(DatabaseTestCase):
                     artist_name="Katty Peri",
                     listened_at="2020-04-29 23:56:23",
                     release_name="No Place Is Home",
-                    recording_name="How High"
+                    recording_name="How High",
+                    recording_msid="aab9ec01-89ac-4026-a1c7-4cf6e347aec8"
                 )]),
             'cf'
         )

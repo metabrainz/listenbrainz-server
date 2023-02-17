@@ -7,7 +7,7 @@ class ExplainMBIDMappingQuery(Query):
        Thin wrapper around the MBIDMapper used in printing the debug info for a mapping 
     """
 
-    def __init__(self, remove_stop_words=False):
+    def __init__(self, remove_stop_words=True):
         self.mapper = MBIDMapper(remove_stop_words=remove_stop_words, debug=True)
 
     def names(self):

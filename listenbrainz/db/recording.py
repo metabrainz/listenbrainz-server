@@ -35,7 +35,7 @@ def resolve_redirect_mbids(curs, table, mbids):
             ON redirect.gid = mbids.gid::UUID
           JOIN {target_table} target
             ON target.id = redirect.new_id
-    """).format(target_table=Identifier(table), redirect_table=Identifier(redirect_table))
+    """).format(target_table=Identifier("musicbrainz", table), redirect_table=Identifier("musicbrainz", redirect_table))
     return _resolve_mbids_helper(curs, query, mbids)
 
 

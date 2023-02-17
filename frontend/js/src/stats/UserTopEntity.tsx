@@ -182,7 +182,7 @@ export default class UserTopEntity extends React.Component<
                           {getEntityLink(
                             "artist",
                             artist.artist_name,
-                            artist.artist_mbids && artist.artist_mbids[0]
+                            artist.artist_mbid ?? undefined
                           )}
                         </td>
                         <td style={{ width: "10%" }}>{artist.listen_count}</td>

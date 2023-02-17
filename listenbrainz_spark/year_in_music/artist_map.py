@@ -9,14 +9,14 @@ from listenbrainz_spark import config
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
 from listenbrainz_spark.postgres.artist import create_artist_country_cache
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_all_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 
 
 USERS_PER_MESSAGE = 100
 
 
 def get_artist_map_stats(year):
-    get_all_listens_from_new_dump().createOrReplaceTempView("listens")
+    get_listens_from_dump().createOrReplaceTempView("listens")
     create_artist_country_cache()
 
     listenbrainz_spark\

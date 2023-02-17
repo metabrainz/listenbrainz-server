@@ -34,7 +34,7 @@ class CanonicalReleaseRedirect(BulkInsertTable):
                             , cmdr.id
                             , rank() over (partition by rg.id order by cmdr.id)
                         FROM musicbrainz.release
-                        JOIN release_group rg
+                        JOIN musicbrainz.release_group rg
                           ON release.release_group = rg.id
                         JOIN mapping.canonical_musicbrainz_data_release_tmp cmdr
                           ON cmdr.release = release.id),
@@ -43,7 +43,7 @@ class CanonicalReleaseRedirect(BulkInsertTable):
                            SELECT release.gid release_mbid
                                 , rg.gid release_group_mbid
                             FROM musicbrainz.release
-                            JOIN release_group rg
+                            JOIN musicbrainz.release_group rg
                                 ON release.release_group = rg.id
                     )
                    SELECT release_rg.release_mbid

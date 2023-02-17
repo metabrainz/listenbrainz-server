@@ -6,18 +6,21 @@
             {
                 "artist_name": "Lucifer Cast, Tom Ellis",
                 "listened_at": "2021-08-09T10:07:37.000Z",
+                "recording_msid": "ae32b7dc-589f-478e-b54d-3af4218a967c",
                 "release_name": "Lucifer: Season 5 - Bloody Celestial Karaoke Jam (Special Episode Soundtrack)",
                 "recording_name": "Wicked Game (feat. Tom Ellis)"
             },
             {
                 "artist_name": "Future, Marshmello",
                 "listened_at": "2021-08-07T10:15:30.000Z",
+                "recording_msid": "e28c6920-b4ef-461c-8013-10956b4fc7cf",
                 "release_name": "Mask Off (Marshmello Remix)",
                 "recording_name": "Mask Off - Marshmello Remix"
             },
             {
                 "artist_name": "Bo Burnham",
                 "listened_at": "2021-07-21T17:07:32.000Z",
+                "recording_msid": "5479bf12-41e1-4f18-a21d-6c9a3a97e4fd",
                 "release_name": "Inside (The Songs)",
                 "recording_name": "Bezos I"
             }
@@ -31,6 +34,7 @@
             {
                 "artist_name": "Kalabi",
                 "listened_at": "2021-08-08T08:47:58.000Z",
+                "recording_msid": "2a68e463-d3b0-4850-a0d3-a895ef6c5473",
                 "release_name": "Support Network",
                 "recording_name": "Keep Falling - Sleeping on the Job Mix"
             }

@@ -32,7 +32,6 @@ export default class UserSearch extends React.Component<
     };
   }
 
-  
   throttledSearchUsers = _throttle(async () => {
     await this.searchUsers();
   }, 300);

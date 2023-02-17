@@ -2,16 +2,12 @@
     "from_ts": 1009843200,
     "data": [
         {
-            "artist_mbids": [
-                "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457"
-            ],
+            "artist_mbid": "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457",
             "listen_count": 2521,
             "artist_name": "Judas Priest"
         },
         {
-            "artist_mbids": [
-                "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457"
-            ],
+            "artist_mbid": "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457",
             "listen_count": 1354,
             "artist_name": "Judas Priest"
         }

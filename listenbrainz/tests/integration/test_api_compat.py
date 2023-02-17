@@ -49,6 +49,11 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
     def test_complete_workflow_json(self):
         """ Integration test for complete workflow to submit a listen using Last.fm compat api """
+        # login as user
+        with self.client.session_transaction() as session:
+            session['_user_id'] = self.lb_user['login_id']
+            session['_fresh'] = True
+
         data = {
             'method': 'auth.gettoken',
             'api_key': self.lfm_user.api_key,
@@ -57,11 +62,6 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
         token = r.json['token']
-
-        # login as user
-        with self.client.session_transaction() as session:
-            session['_user_id'] = self.lb_user['login_id']
-            session['_fresh'] = True
 
         r = self.client.post(
             url_for('api_compat.api_auth_approve'),

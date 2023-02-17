@@ -3,14 +3,14 @@ from datetime import datetime, date, time
 from more_itertools import chunked
 
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_all_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 
 
 ENTRIES_PER_MESSAGE = 100000
 
 def calculate_tracks_of_the_year(year):
     """ Calculate all tracks a user has listened to in the given year. """
-    get_all_listens_from_new_dump().createOrReplaceTempView("listens")
+    get_listens_from_dump().createOrReplaceTempView("listens")
 
     start = datetime.combine(date(year, 1, 1), time.min)
     end = datetime.combine(date(year, 12, 31), time.max)

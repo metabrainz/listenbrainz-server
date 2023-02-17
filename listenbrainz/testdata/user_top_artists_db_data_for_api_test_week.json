@@ -4,51 +4,37 @@
     "count": 7,
     "data": [
       {
-        "artist_mbids": [
-          "7addbcac-ae39-4b4c-a956-53da336d68e8"
-        ],
+        "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8",
         "listen_count": 21,
         "artist_name": "Ellie Goulding"
       },
       {
-        "artist_mbids": [
-          "9d5adabb-9775-4535-93eb-12b485aed8bf"
-        ],
+        "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf",
         "listen_count": 10,
         "artist_name": "Maroon 5"
       },
       {
-        "artist_mbids": [
-          "8f119e29-922e-42da-a5bf-b062f5261a3d"
-        ],
+        "artist_mbid": "8f119e29-922e-42da-a5bf-b062f5261a3d",
         "listen_count": 6,
         "artist_name": "Of Monsters and Men"
       },
       {
-        "artist_mbids": [
-          "ba64b195-01dd-4613-9534-bb87dc44cffb"
-        ],
+        "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb",
         "listen_count": 6,
         "artist_name": "Lenka"
       },
       {
-        "artist_mbids": [
-          "8cb3fd5a-2194-4c3b-8eb8-3e538d109991"
-        ],
+        "artist_mbid": "8cb3fd5a-2194-4c3b-8eb8-3e538d109991",
         "listen_count": 4,
         "artist_name": "Vance Joy"
       },
       {
-        "artist_mbids": [
-          "49ec6dae-0bd3-43f5-9acf-f3462fb3ff8f"
-        ],
+        "artist_mbid": "49ec6dae-0bd3-43f5-9acf-f3462fb3ff8f",
         "listen_count": 2,
         "artist_name": "Ritviz"
       },
       {
-        "artist_mbids": [
-          "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c"
-        ],
+        "artist_mbid": "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c",
         "listen_count": 1,
         "artist_name": "Train"
       }
@@ -59,37 +45,27 @@
     "count": 5,
     "data": [
       {
-        "artist_mbids": [
-          "6599e41e-390c-4855-a2ac-68ee798538b4"
-        ],
+        "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4",
         "listen_count": 12,
         "artist_name": "Coldplay"
       },
       {
-        "artist_mbids": [
-          "67f4ae2e-260e-4020-b957-f2df5b719501"
-        ],
+        "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501",
         "listen_count": 10,
         "artist_name": "OneRepublic"
       },
       {
-        "artist_mbids": [
-          "6817e85a-f5ae-4479-b73d-e8e320e1b927"
-        ],
+        "artist_mbid": "6817e85a-f5ae-4479-b73d-e8e320e1b927",
         "listen_count": 9,
         "artist_name": "Ed Sheeran"
       },
       {
-        "artist_mbids": [
-          "1871df1a-93b7-4e25-9d60-64102ba89913"
-        ],
+        "artist_mbid": "1871df1a-93b7-4e25-9d60-64102ba89913",
         "listen_count": 8,
         "artist_name": "The Script"
       },
       {
-        "artist_mbids": [
-          "0daecabb-f76d-4914-8726-82cefbecca52"
-        ],
+        "artist_mbid": "0daecabb-f76d-4914-8726-82cefbecca52",
         "listen_count": 1,
         "artist_name": "The Chainsmokers"
       }
