@@ -60,10 +60,6 @@ redirect_bp.add_url_rule("/playlists/", "redirect_playlists",
 redirect_bp.add_url_rule("/recommendations/",
                          "redirect_recommendations",
                          redirect_user_page("user.recommendation_playlists"))
-redirect_bp.add_url_rule("/collaborations/", "redirect_collaborations_slash",
-                         redirect_user_page("user.playlists"))
-redirect_bp.add_url_rule("/collaborations", "redirect_collaborations",
-                         redirect_user_page("user.playlists"))
 redirect_bp.add_url_rule("/taste/", "redirect_taste",
                          redirect_user_page("user.taste"))
 redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
@@ -208,6 +204,11 @@ def reports(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
+
+
+@user_bp.route("/<user_name>/collaborations/")
+def collaborations(user_name: str):
+    return redirect(url_for("user.playlists", user_name=current_user.musicbrainz_id))
 
 
 @user_bp.route("/<user_name>/playlists/")
