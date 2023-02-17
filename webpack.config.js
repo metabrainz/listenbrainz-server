@@ -81,9 +81,13 @@ module.exports = function (env, argv) {
         "src/year-in-music/2022/CoverArtComposite.tsx"
       ),
       homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
-      recommendations: path.resolve(
+      recommendationsPlayground: path.resolve(
         jsDir,
         "src/recommendations/Recommendations.tsx"
+      ),
+      recommendations: path.resolve(
+        jsDir,
+        "src/recommendations/RecommendationsPage.tsx"
       ),
       missingMBData: path.resolve(
         jsDir,
