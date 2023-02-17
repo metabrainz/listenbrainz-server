@@ -29,9 +29,11 @@ RSYNC_FULLEXPORT_PORT="{{template "KEY" "rsync_fullexport_port"}}"
 RSYNC_FULLEXPORT_DIR="$FTP_DIR/fullexport"
 RSYNC_INCREMENTAL_DIR="$FTP_DIR/incremental"
 RSYNC_SPARK_DIR="$FTP_DIR/spark"
+RSYNC_MBCANONICAL_DIR="$FTP_DIR/mbcanonical"
 RSYNC_FULLEXPORT_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-full'
 RSYNC_INCREMENTAL_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-incremental'
 RSYNC_SPARK_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-spark'
+RSYNC_MBCANONICAL_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-canonical'
 
 # Check to make sure that this container is the prod cron container, otherwise never rsync anything!
 # these variables may also be read by the dump command in python so export to ensure availability

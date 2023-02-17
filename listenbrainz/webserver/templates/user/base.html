@@ -21,11 +21,9 @@
         <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
         <li {{ 'class=active' if active_section=='reports' }}><a href="{{ url_for('user.reports', user_name=user.musicbrainz_id) }}">Reports</a></li>
         <li {{ 'class=active' if active_section=='charts' }}><a href="{{ url_for('user.charts', user_name=user.musicbrainz_id) }}">Charts</a></li>
-        <li {{ 'class=active' if active_section=='feedback' }}><a href="{{ url_for('user.feedback', user_name=user.musicbrainz_id) }}">Love/Hate</a></li>
-        <li {{ 'class=active' if active_section=='pins' }}><a href="{{ url_for('user.pins', user_name=user.musicbrainz_id) }}">Pins</a></li>
+        <li {{ 'class=active' if active_section=='taste' }}><a href="{{ url_for('user.taste', user_name=user.musicbrainz_id) }}">Taste</a></li>
         <li {{ 'class=active' if active_section=='playlists' }}><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) }}">Playlists</a></li>
         <li {{ 'class=active' if active_section=='recommendations' }}><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) }}">Recommendations</a></li>
-        <li {{ 'class=active' if active_section=='collaborations' }}><a href="{{ url_for('user.collaborations', user_name=user.musicbrainz_id) }}">Collaborations</a></li>
       </ul>
 
     {% block profile_content %} {% endblock %}

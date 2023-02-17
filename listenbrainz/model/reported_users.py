@@ -1,4 +1,5 @@
 from listenbrainz.model import db
+from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver.admin import AdminModelView
 
 
@@ -22,3 +23,8 @@ class ReportedUserAdminView(AdminModelView):
         'reason',
         'reported_at'
     ]
+
+    column_formatters = {
+        "reporter.musicbrainz_id": lambda view, context, model, name: generate_username_link(model.reporter.musicbrainz_id),
+        "reported.musicbrainz_id": lambda view, context, model, name: generate_username_link(model.reported.musicbrainz_id)
+    }

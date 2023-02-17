@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 
 from listenbrainz_spark.stats.common.listening_activity import _create_time_range_df
 from listenbrainz_spark.stats.user.listening_activity import calculate_listening_activity, create_messages
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.utils import get_listens_from_dump
 
 
 def calculate_listens_per_day(year):
@@ -15,7 +15,7 @@ def calculate_listens_per_day(year):
     spark_date_format = "dd MMMM y"
 
     _create_time_range_df(from_date, to_date, step, date_format, spark_date_format)
-    listens = get_listens_from_new_dump(from_date, to_date)
+    listens = get_listens_from_dump(from_date, to_date)
     listens.createOrReplaceTempView("listens")
 
     data = calculate_listening_activity()

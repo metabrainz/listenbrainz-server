@@ -2,7 +2,7 @@ import errno
 import logging
 import os
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import DataFrame, functions
@@ -11,7 +11,6 @@ from pyspark.sql.utils import AnalysisException
 import listenbrainz_spark
 from hdfs.util import HdfsError
 from listenbrainz_spark import config, hdfs_connection, path
-from listenbrainz_spark.schema import listens_new_schema
 from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            DataFrameNotCreatedException,
                                            FileNotFetchedException,
@@ -19,6 +18,8 @@ from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            HDFSDirectoryNotDeletedException,
                                            PathNotFoundException,
                                            ViewNotRegisteredException)
+from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, INCREMENTAL_DUMPS_SAVE_PATH
+from listenbrainz_spark.schema import listens_new_schema
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +115,7 @@ def get_listen_files_list() -> List[str]:
     """ Get list of name of parquet files containing the listens.
     The list of file names is in order of newest to oldest listens.
     """
-    files = hdfs_connection.client.list(path.LISTENBRAINZ_NEW_DATA_DIRECTORY)
+    files = hdfs_connection.client.list(LISTENBRAINZ_NEW_DATA_DIRECTORY)
     has_incremental = False
     file_names = []
 
@@ -144,7 +145,7 @@ def get_listen_files_list() -> List[str]:
     return file_names
 
 
-def get_listens_from_new_dump(start: datetime, end: datetime) -> DataFrame:
+def get_listens_from_dump(start: Optional[datetime], end: Optional[datetime]) -> DataFrame:
     """ Load listens with listened_at between from_ts and to_ts from HDFS in a spark dataframe.
 
         Args:
@@ -154,44 +155,25 @@ def get_listens_from_new_dump(start: datetime, end: datetime) -> DataFrame:
         Returns:
             dataframe of listens with listened_at between start and end
     """
-    files = get_listen_files_list()
+    df = listenbrainz_spark.session.createDataFrame([], listens_new_schema)
 
-    # create empty dataframe for merging loaded files into it
-    dfs = listenbrainz_spark.session.createDataFrame([], listens_new_schema)
+    # full dump directory always exists because the incremental dumps are stored in a nested dir inside it
+    # therefore to check existence of full dump, we instead need to check whether a parquet file of the full
+    # dump exists. since files are number from 0, we check for 0.parquet
+    full_dump_test_path = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "0.parquet")
+    if hdfs_connection.client.status(full_dump_test_path, strict=False):
+        full_df = read_files_from_HDFS(LISTENBRAINZ_NEW_DATA_DIRECTORY)
+        df = df.union(full_df)
+    if hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
+        inc_df = read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH)
+        df = df.union(inc_df)
 
-    for file_name in files:
-        df = read_files_from_HDFS(
-            os.path.join(path.LISTENBRAINZ_NEW_DATA_DIRECTORY, file_name)
-        )
-
-        # check if the currently loaded file has any listens newer than the starting
-        # timestamp. if not stop trying to load more files, because listens are sorted
-        # by listened_at in ascending order and we are traversing the files in reverse
-        # order. that is we are loading listens from latest to oldest so if the current
-        # file does not have any listens newer than from_ts, the remaining files will
-        # not have those either.
+    if start:
         df = df.where(f"listened_at >= to_timestamp('{start}')")
-        if df.count() == 0:
-            break
-
-        # cannot merge this condition with the above one because, consider the following case:
-        # we want listens between the time range - 14 days ago to 7 days ago. the latest file
-        # might have listens only from last 4 days. if the conditions were merged, we would
-        # have stopped looking in other files which is wrong. it is quite possible that the 2nd
-        # or some subsequent file has listens older than to_ts but newer than from_ts
+    if end:
         df = df.where(f"listened_at <= to_timestamp('{end}')")
 
-        dfs = dfs.union(df)
-
-    return dfs
-
-
-def get_all_listens_from_new_dump() -> DataFrame:
-    full_df = read_files_from_HDFS(path.LISTENBRAINZ_NEW_DATA_DIRECTORY)
-    if hdfs_connection.client.status(path.INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
-        inc_df = read_files_from_HDFS(path.INCREMENTAL_DUMPS_SAVE_PATH)
-        full_df = full_df.union(inc_df)
-    return full_df
+    return df
 
 
 def get_latest_listen_ts() -> datetime:
@@ -200,7 +182,7 @@ def get_latest_listen_ts() -> datetime:
      """
     latest_listen_file = get_listen_files_list()[0]
     df = read_files_from_HDFS(
-        os.path.join(path.LISTENBRAINZ_NEW_DATA_DIRECTORY, latest_listen_file)
+        os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, latest_listen_file)
     )
     return df \
         .select('listened_at') \
