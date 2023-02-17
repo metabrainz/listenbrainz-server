@@ -348,7 +348,7 @@ export default class UserPlaylists extends React.Component<
               onSubmit={this.createPlaylist}
               htmlId="playlistCreateModal"
               newAlert={newAlert}
-              />
+            />
             <CreateOrEditPlaylistModal
               onSubmit={this.editPlaylist}
               playlist={playlistSelectedForOperation}
