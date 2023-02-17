@@ -202,21 +202,13 @@ export default class APIService {
   };
 
   searchUsers = async (
-    userName: string,
-    userToken: string | undefined
+    userName: string
   ): Promise<{ users: Array<SearchUser> }> => {
     try {
-      if (!userToken) {
-        throw new SyntaxError("User token missing");
-      }
       const url = new URL(`${this.APIBaseURI}/search/users/`);
       url.searchParams.append("search_term", userName);
       const response = await fetch(url.toString(), {
         method: "GET",
-        headers: {
-          Authorization: `Token ${userToken}`,
-          "Content-Type": "application/json;charset=UTF-8",
-        },
       });
 
       await this.checkStatus(response);

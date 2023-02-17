@@ -37,13 +37,10 @@ export default class UserSearch extends React.Component<
   }, 300);
 
   searchUsers = async () => {
-    const { currentUser, APIService } = this.context;
+    const { APIService } = this.context;
     const { newUser } = this.state;
     try {
-      const response = await APIService.searchUsers(
-        newUser,
-        currentUser.auth_token
-      );
+      const response = await APIService.searchUsers(newUser);
       this.setState({
         userSearchResults: response.users,
       });
