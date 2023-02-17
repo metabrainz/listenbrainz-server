@@ -531,8 +531,8 @@ def update_user_details(lb_id: int, musicbrainz_id: str, email: str):
             raise DatabaseException(
                 "Couldn't update user's email: %s" % str(err))
 
-def search_query(search_term:str, limit:int):
-    result = db.engine.connect().execute(sqlalchemy.text("""
+def search_query(search_term:str, limit:int, connection:any):
+    result = connection.execute(sqlalchemy.text("""
             SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
               FROM "user"
              WHERE musicbrainz_id <% :search_term
@@ -562,7 +562,7 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
           calculated by spark
     """
     with db.engine.connect() as connection:
-        rows = search_query(search_term,limit)
+        rows = search_query(search_term,limit,connection)
         if not rows:
             return []
         similar_users = get_similar_users(searcher_id) if searcher_id else None
@@ -580,7 +580,7 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
 def search_user_name(search_term: str, limit: int) -> List[object]:
 
     with db.engine.connect() as connection:
-        rows = search_query(search_term,limit)
+        rows = search_query(search_term,limit,connection)
 
         if not rows:
             return []
