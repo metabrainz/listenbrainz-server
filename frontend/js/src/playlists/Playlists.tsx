@@ -288,7 +288,11 @@ export default class UserPlaylists extends React.Component<
 
   render() {
 <<<<<<< HEAD
+<<<<<<< HEAD
     const { user, activeSection, newAlert } = this.props;
+=======
+    const { user, newAlert } = this.props;
+>>>>>>> cc049d73f497321e84c1fb1708b5ed7795beafee
 =======
     const { user, newAlert } = this.props;
 >>>>>>> cc049d73f497321e84c1fb1708b5ed7795beafee
@@ -363,6 +367,7 @@ export default class UserPlaylists extends React.Component<
             />
           </>
         )}
+<<<<<<< HEAD
 <<<<<<< HEAD
         {isCollaborations && <h2>Collaborative playlists</h2>}
         {!playlists.length && (
@@ -550,6 +555,8 @@ export default class UserPlaylists extends React.Component<
             </a>
           </li>
         </ul>
+=======
+>>>>>>> cc049d73f497321e84c1fb1708b5ed7795beafee
 =======
 >>>>>>> cc049d73f497321e84c1fb1708b5ed7795beafee
       </div>
