@@ -26,7 +26,6 @@ import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 export type YoutubePlayerState = {
   currentListen?: Listen;
-  reduced: boolean;
 };
 
 export type YoutubePlayerProps = DataSourceProps & {
@@ -112,12 +111,6 @@ export default class YoutubePlayer
   public icon = faYoutube;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
-
-  constructor(props: YoutubePlayerProps) {
-    super(props);
-    this.state = { reduced: false };
-    this.toggleReduceYoutubeWindow = this.toggleReduceYoutubeWindow.bind(this);
-  }
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
@@ -380,15 +373,8 @@ export default class YoutubePlayer
     onTrackNotFound();
   };
 
-  toggleReduceYoutubeWindow() {
-    this.setState((prevState) => {
-      return { reduced: !prevState.reduced };
-    });
-  }
-
   render() {
     const { show } = this.props;
-    const { reduced } = this.state;
     const options: Options = {
       playerVars: {
         autoplay: 1,
@@ -416,22 +402,9 @@ export default class YoutubePlayer
           bottom: -draggableBoundPadding,
         }}
       >
-        <div
-          className={`youtube-wrapper${!show ? " hidden" : ""}${
-            reduced ? " reduced" : ""
-          }`}
-        >
+        <div className={`youtube-wrapper${!show ? " hidden" : ""}`}>
           <button className="btn btn-sm youtube-drag-handle" type="button">
             <FontAwesomeIcon icon={faArrowsAlt} />
-          </button>
-          <button
-            className="btn btn-sm youtube-reduce-button"
-            type="button"
-            onClick={this.toggleReduceYoutubeWindow}
-          >
-            <FontAwesomeIcon
-              icon={reduced ? faWindowMaximize : faWindowMinimize}
-            />
           </button>
           <YouTube
             className="youtube-player"
