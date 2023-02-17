@@ -574,7 +574,7 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
         return search_results
 
 
-def search_user_name(search_term: str, limit: int, searcher_id: int = None) -> List[object]:
+def search_user_name(search_term: str, limit: int) -> List[object]:
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""

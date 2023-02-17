@@ -38,10 +38,9 @@ SEARCH_USER_LIMIT = 10
 @ratelimit()
 def search_user():
     search_term = request.args.get("search_term")
-    user = validate_auth_header()
-    user_id = user.id
+    validate_auth_header()
     if search_term:
-        users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT, user_id)
+        users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT)
     else:
         users = []
     return jsonify(
