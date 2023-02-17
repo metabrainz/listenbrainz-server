@@ -287,15 +287,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   render() {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const { user, activeSection, newAlert } = this.props;
-=======
     const { user, newAlert } = this.props;
->>>>>>> cc049d73f497321e84c1fb1708b5ed7795beafee
-=======
-    const { user, newAlert } = this.props;
->>>>>>> cc049d73f497321e84c1fb1708b5ed7795beafee
     const {
       playlists,
       playlistSelectedForOperation,
@@ -355,11 +347,13 @@ export default class UserPlaylists extends React.Component<
             <CreateOrEditPlaylistModal
               onSubmit={this.createPlaylist}
               htmlId="playlistCreateModal"
-            />
+              newAlert={newAlert}
+              />
             <CreateOrEditPlaylistModal
               onSubmit={this.editPlaylist}
               playlist={playlistSelectedForOperation}
               htmlId="playlistEditModal"
+              newAlert={newAlert}
             />
             <DeletePlaylistConfirmationModal
               onConfirm={this.deletePlaylist}
@@ -367,198 +361,6 @@ export default class UserPlaylists extends React.Component<
             />
           </>
         )}
-<<<<<<< HEAD
-<<<<<<< HEAD
-        {isCollaborations && <h2>Collaborative playlists</h2>}
-        {!playlists.length && (
-          <p>No playlists to show yet. Come back later !</p>
-        )}
-        <div
-          id="playlists-container"
-          style={{ opacity: loading ? "0.4" : "1" }}
-        >
-          {playlists.map((playlist: JSPFPlaylist) => {
-            const isOwner = this.isOwner(playlist);
-            const playlistId = getPlaylistId(playlist);
-            const customFields = getPlaylistExtension(playlist);
-            return (
-              <Card className="playlist" key={playlistId}>
-                {isRecommendations ? (
-                  <button
-                    className="playlist-card-action-button"
-                    onClick={this.copyPlaylist.bind(
-                      this,
-                      playlistId,
-                      playlist.title
-                    )}
-                    type="button"
-                  >
-                    <FontAwesomeIcon
-                      icon={faSave as IconProp}
-                      title="Save to my playlists"
-                    />
-                    &nbsp;Save
-                  </button>
-                ) : (
-                  <div className="dropup playlist-card-action-dropdown">
-                    <button
-                      className="dropdown-toggle playlist-card-action-button"
-                      type="button"
-                      id="playlistOptionsDropdown"
-                      data-toggle="dropdown"
-                      aria-haspopup="true"
-                      aria-expanded="true"
-                      onClick={this.selectPlaylistForEdit.bind(this, playlist)}
-                    >
-                      <FontAwesomeIcon
-                        icon={faCog as IconProp}
-                        title="More options"
-                      />
-                      &nbsp;Options
-                    </button>
-                    <ul
-                      className="dropdown-menu"
-                      aria-labelledby="playlistOptionsDropdown"
-                    >
-                      <li>
-                        <button
-                          onClick={this.copyPlaylist.bind(
-                            this,
-                            playlistId,
-                            playlist.title
-                          )}
-                          type="button"
-                        >
-                          Duplicate
-                        </button>
-                      </li>
-                      {isOwner && (
-                        <>
-                          <li role="separator" className="divider" />
-                          <li>
-                            <button
-                              type="button"
-                              data-toggle="modal"
-                              data-target="#playlistEditModal"
-                            >
-                              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-                            </button>
-                          </li>
-                          <li>
-                            <button
-                              type="button"
-                              data-toggle="modal"
-                              data-target="#confirmDeleteModal"
-                            >
-                              <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
-                              Delete
-                            </button>
-                          </li>
-                        </>
-                      )}
-                    </ul>
-                  </div>
-                )}
-                <a className="info" href={`/playlist/${sanitize(playlistId)}`}>
-                  <h4>{playlist.title}</h4>
-                  {playlist.annotation && (
-                    <div
-                      className="description"
-                      // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
-                      // eslint-disable-next-line react/no-danger
-                      dangerouslySetInnerHTML={{
-                        __html: sanitize(playlist.annotation),
-                      }}
-                    />
-                  )}
-                  <div>
-                    Created:{" "}
-                    {new Date(playlist.date).toLocaleString(undefined, {
-                      // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
-                      dateStyle: "short",
-                    })}
-                  </div>
-                  <div>
-                    {customFields?.last_modified_at &&
-                      `Last Modified: ${new Date(
-                        customFields.last_modified_at
-                      ).toLocaleString(undefined, {
-                        // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
-                        dateStyle: "short",
-                      })}`}
-                  </div>
-                </a>
-              </Card>
-            );
-          })}
-          {!isRecommendations && !isCollaborations && this.isCurrentUserPage() && (
-            <>
-              <Card
-                className="new-playlist"
-                data-toggle="modal"
-                data-target="#playlistCreateModal"
-              >
-                <div>
-                  <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
-                  <span>Create new playlist</span>
-                </div>
-              </Card>
-              <CreateOrEditPlaylistModal
-                onSubmit={this.createPlaylist}
-                htmlId="playlistCreateModal"
-                newAlert={newAlert}
-              />
-              <CreateOrEditPlaylistModal
-                onSubmit={this.editPlaylist}
-                playlist={playlistSelectedForOperation}
-                htmlId="playlistEditModal"
-                newAlert={newAlert}
-              />
-              <DeletePlaylistConfirmationModal
-                onConfirm={this.deletePlaylist}
-                playlist={playlistSelectedForOperation}
-              />
-            </>
-          )}
-        </div>
-        <ul className="pager" style={{ display: "flex" }}>
-          <li className={`previous ${paginationOffset <= 0 ? "disabled" : ""}`}>
-            <a
-              role="button"
-              onClick={this.handleClickPrevious}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") this.handleClickPrevious();
-              }}
-              tabIndex={0}
-            >
-              &larr; Previous
-            </a>
-          </li>
-          <li
-            className={`next ${
-              playlistCount &&
-              playlistCount <= paginationOffset + playlistsPerPage
-                ? "disabled"
-                : ""
-            }`}
-            style={{ marginLeft: "auto" }}
-          >
-            <a
-              role="button"
-              onClick={this.handleClickNext}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") this.handleClickNext();
-              }}
-              tabIndex={0}
-            >
-              Next &rarr;
-            </a>
-          </li>
-        </ul>
-=======
->>>>>>> cc049d73f497321e84c1fb1708b5ed7795beafee
-=======
->>>>>>> cc049d73f497321e84c1fb1708b5ed7795beafee
       </div>
     );
   }
