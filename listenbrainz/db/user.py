@@ -578,9 +578,10 @@ def search_user_name(search_term: str, limit: int) -> List[object]:
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT musicbrainz_id
+           SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
               FROM "user"
              WHERE musicbrainz_id <% :search_term
+          ORDER BY query_similarity DESC
              LIMIT :limit
             """), {
             "search_term": search_term,
