@@ -76,14 +76,6 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
              ORDER BY ac.id, rpr.id
         """)]
 
-    def get_index_names(self):
-        table = self.table_name.split(".")[-1]
-        return [
-            (f"{table}_idx_combined_lookup",              "combined_lookup", False),
-            (f"{table}_idx_artist_credit_recording_name_release_name", "artist_credit_name, recording_name, release_name", False),
-            (f"{table}_idx_recording_mbid", "recording_mbid", True)
-        ]
-
     def get_combined_lookup(self, row):
         pass
 
@@ -103,56 +95,3 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
                 row["year"]
             )]
         }
-
-
-
-def create_canonical_musicbrainz_data(use_lb_conn: bool):
-    """
-        Main function for creating the MBID mapping and its related tables.
-
-        Arguments:
-            use_lb_conn: whether to use LB conn or not
-    """
-    mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
-
-    with psycopg2.connect(mb_uri) as mb_conn:
-
-        lb_conn = None
-        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
-
-        # Setup all the needed objects
-        can = CanonicalRecordingRedirect(mb_conn, lb_conn)
-        can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, lb_conn)
-        can_rel = CanonicalReleaseRedirect(mb_conn)
-        releases = CanonicalRelease(mb_conn)
-        mapping = CanonicalMusicBrainzData(mb_conn, lb_conn)
-        mapping.add_additional_bulk_table(can)
-
-        # Carry out the bulk of the work
-        create_custom_sort_tables(mb_conn)
-        releases.run(no_swap=True)
-        mapping.run(no_swap=True)
-        can_rec_rel.run(no_swap=True)
-        can_rel.run(no_swap=True)
-
-        # Now swap everything into production in a single transaction
-        log("canonical_musicbrainz_data: Swap into production")
-        if lb_conn:
-            releases.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
-            mapping.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
-            can.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
-            can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
-            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
-            mb_conn.commit()
-            lb_conn.commit()
-            lb_conn.close()
-        else:
-            releases.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
-            mapping.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
-            can.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
-            can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
-            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
-            mb_conn.commit()
-
-        log("canonical_musicbrainz_data: done done done!")

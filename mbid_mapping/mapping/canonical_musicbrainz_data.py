@@ -108,6 +108,14 @@ class CanonicalMusicBrainzData(CanonicalMusicBrainzDataBase):
     def get_combined_lookup(self, row):
         return unidecode(re.sub(r'[^\w]+', '', row['artist_credit_name'] + row['recording_name']).lower())
 
+    def get_index_names(self):
+        table = self.table_name.split(".")[-1]
+        return [
+            (f"{table}_idx_combined_lookup",              "combined_lookup", False),
+            (f"{table}_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False),
+            (f"{table}_idx_recording_mbid", "recording_mbid", True)
+        ]
+
 
 def create_canonical_musicbrainz_data(use_lb_conn: bool):
     """
