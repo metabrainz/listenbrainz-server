@@ -21,7 +21,15 @@ class CanonicalMusicBrainzDataRelease(CanonicalMusicBrainzDataBase):
         ]
 
     def get_post_process_queries(self):
-        return []
+        return ["""
+            WITH all_recs AS (
+                SELECT *
+                     , row_number() OVER (PARTITION BY combined_lookup ORDER BY score) AS rnum
+                  FROM mapping.canonical_musicbrainz_data_release_tmp
+            )   DELETE
+                  FROM mapping.canonical_musicbrainz_data_release_tmp
+                 WHERE id IN (SELECT id FROM all_recs WHERE rnum > 1)
+        """]
 
     def get_combined_lookup(self, row):
         return unidecode(re.sub(r'[^\w]+', '', row['artist_credit_name'] + row['recording_name'] + row['release_name']).lower())

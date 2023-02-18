@@ -100,7 +100,7 @@ class CanonicalMusicBrainzData(CanonicalMusicBrainzDataBase):
                  -- some recording mbids appear on multiple releases and the insert query inserts them once for
                  -- for each appearance with the appropriate release mbid. the deletion criteria is combined_lookup
                  -- which is unavailable in the insert sql query so we cannot easily apply a filter there itself.
-                 -- such rows  cleaned up in the deleted_recs with above so to above adding a redirect to the same
+                 -- such rows cleaned up in the deleted_recs with above so to above adding a redirect to the same
                  -- recording as a canonical_recording, this condition.
                    AND t1.recording_mbid != t2.recording_mbid;
         """]
