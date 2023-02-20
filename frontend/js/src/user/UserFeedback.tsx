@@ -345,21 +345,22 @@ export default class UserFeedback extends React.Component<
 
     return (
       <div>
-        <Pill
-          active={selectedFeedbackScore === 1}
-          type="secondary"
-          onClick={() => this.changeSelectedFeedback(1)}
-        >
-          <FontAwesomeIcon icon={faHeart as IconProp} /> Loved
-        </Pill>
-        <Pill
-          active={selectedFeedbackScore === -1}
-          type="secondary"
-          onClick={() => this.changeSelectedFeedback(-1)}
-        >
-          <FontAwesomeIcon icon={faHeartBroken as IconProp} /> Hated
-        </Pill>
-
+        <div style={{ marginTop: "1em" }}>
+          <Pill
+            active={selectedFeedbackScore === 1}
+            type="secondary"
+            onClick={() => this.changeSelectedFeedback(1)}
+          >
+            <FontAwesomeIcon icon={faHeart as IconProp} /> Loved
+          </Pill>
+          <Pill
+            active={selectedFeedbackScore === -1}
+            type="secondary"
+            onClick={() => this.changeSelectedFeedback(-1)}
+          >
+            <FontAwesomeIcon icon={faHeartBroken as IconProp} /> Hated
+          </Pill>
+        </div>
         {!feedback.length && (
           <div className="lead text-center">
             <p>
