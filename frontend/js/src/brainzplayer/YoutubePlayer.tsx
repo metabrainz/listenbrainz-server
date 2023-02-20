@@ -274,9 +274,9 @@ export default class YoutubePlayer
       return;
     }
     if (videoId.startsWith("http")) {
-      this.youtubePlayer.loadVideoByUrl(videoId);
+      this.youtubePlayer.cueVideoByUrl(videoId);
     } else {
-      this.youtubePlayer.loadVideoById(videoId);
+      this.youtubePlayer.cueVideoById(videoId);
     }
   };
 
