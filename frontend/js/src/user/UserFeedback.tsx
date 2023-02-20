@@ -345,15 +345,6 @@ export default class UserFeedback extends React.Component<
 
     return (
       <div>
-        <h3
-          style={{
-            display: "inline-block",
-            marginRight: "0.5em",
-            verticalAlign: "sub",
-          }}
-        >
-          Tracks {user.name === currentUser.name ? "you" : user.name}
-        </h3>
         <Pill
           active={selectedFeedbackScore === 1}
           type="secondary"

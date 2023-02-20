@@ -297,16 +297,6 @@ export default class UserPlaylists extends React.Component<
 
     return (
       <div role="main" id="playlists-page">
-        <h3
-          style={{
-            display: "inline-block",
-            marginRight: "0.5em",
-            verticalAlign: "sub",
-          }}
-        >
-          {this.isCurrentUserPage() ? "Your" : `${startCase(user.name)}'s`}{" "}
-          playlists
-        </h3>
         <Pill
           active={playlistType === PlaylistType.playlists}
           type="secondary"
