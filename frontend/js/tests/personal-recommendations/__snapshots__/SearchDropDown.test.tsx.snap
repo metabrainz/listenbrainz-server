@@ -11,7 +11,7 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
   }
 >
   <div
-    className="searchdropdown"
+    className="search-dropdown"
   >
     <ListenControl
       action={[Function]}

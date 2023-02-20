@@ -44,7 +44,6 @@ def redirect_user_page(target):
             return redirect(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
         else:
             return current_app.login_manager.unauthorized()
-        pass
 
     return inner
 
@@ -57,8 +56,6 @@ redirect_bp.add_url_rule("/reports/", "redirect_reports",
                          redirect_user_page("user.reports"))
 redirect_bp.add_url_rule("/playlists/", "redirect_playlists",
                          redirect_user_page("user.playlists"))
-redirect_bp.add_url_rule("/collaborations/", "redirect_collaborations",
-                         redirect_user_page("user.collaborations"))
 redirect_bp.add_url_rule("/recommendations/",
                          "redirect_recommendations",
                          redirect_user_page("user.recommendation_playlists"))
@@ -208,24 +205,15 @@ def reports(user_name: str):
     )
 
 
+@user_bp.route("/<user_name>/collaborations/")
+def collaborations(user_name: str):
+    return redirect(url_for("user.playlists", user_name=current_user.musicbrainz_id))
+
+
 @user_bp.route("/<user_name>/playlists/")
 @web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
-
-    offset = request.args.get('offset', 0)
-    try:
-        offset = int(offset)
-    except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" %
-                         request.args.get("offset"))
-
-    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-    try:
-        count = int(count)
-    except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" %
-                         request.args.get("count"))
 
     user = _get_user(user_name)
     user_data = {
@@ -239,8 +227,8 @@ def playlists(user_name: str):
     user_playlists, playlist_count = get_playlists_for_user(user.id,
                                                             include_private=include_private,
                                                             load_recordings=False,
-                                                            count=count,
-                                                            offset=offset)
+                                                            count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL,
+                                                            offset=0)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
 
@@ -249,8 +237,6 @@ def playlists(user_name: str):
         "user": user_data,
         "active_section": "playlists",
         "playlist_count": playlist_count,
-        "pagination_offset": offset,
-        "playlists_per_page": count,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
@@ -295,69 +281,17 @@ def recommendation_playlists(user_name: str):
     props = {
         "playlists": playlists,
         "user": user_data,
-        "active_section": "recommendations",
         "playlist_count": playlist_count,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return render_template(
-        "playlists/playlists.html",
+        "playlists/recommendations.html",
         active_section="recommendations",
         props=ujson.dumps(props),
         user=user
     )
 
-
-@user_bp.route("/<user_name>/collaborations/")
-@web_listenstore_needed
-def collaborations(user_name: str):
-    """ Show playlists a user collaborates on """
-
-    offset = request.args.get('offset', 0)
-    try:
-        offset = int(offset)
-    except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" %
-                         request.args.get("offset"))
-
-    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-    try:
-        count = int(count)
-    except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" %
-                         request.args.get("count"))
-
-    user = _get_user(user_name)
-    user_data = {
-        "name": user.musicbrainz_id,
-        "id": user.id,
-    }
-
-    include_private = current_user.is_authenticated and current_user.id == user.id
-
-    playlists = []
-    colalborative_playlists, playlist_count = get_playlists_collaborated_on(user.id,
-                                                                            include_private=include_private,
-                                                                            load_recordings=False,
-                                                                            count=count,
-                                                                            offset=offset)
-    for playlist in colalborative_playlists:
-        playlists.append(serialize_jspf(playlist))
-
-    props = {
-        "playlists": playlists,
-        "user": user_data,
-        "active_section": "collaborations",
-        "playlist_count": playlist_count,
-        "logged_in_user_follows_user": logged_in_user_follows_user(user),
-    }
-
-    return render_template(
-        "playlists/playlists.html",
-        active_section="collaborations",
-        props=ujson.dumps(props),
-        user=user
-    )
 
 
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
