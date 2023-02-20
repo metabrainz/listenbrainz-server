@@ -10,7 +10,7 @@ class CanonicalMusicBrainzDataRelease(CanonicalMusicBrainzDataBase):
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_musicbrainz_data_release", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_musicbrainz_data_release_support", mb_conn, lb_conn, batch_size)
 
     def get_index_names(self):
         table = self.table_name.split(".")[-1]
