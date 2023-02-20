@@ -827,6 +827,7 @@ export default class PlaylistPage extends React.Component<
                 <CreateOrEditPlaylistModal
                   onSubmit={this.editPlaylist}
                   playlist={playlist}
+                  newAlert={newAlert}
                 />
                 <DeletePlaylistConfirmationModal
                   onConfirm={this.deletePlaylist}

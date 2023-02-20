@@ -31,6 +31,23 @@ api_bp = Blueprint('api_v1', __name__)
 
 DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
+SEARCH_USER_LIMIT = 10
+
+@api_bp.route('/search/users/', methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+def search_user():
+    search_term = request.args.get("search_term")
+    if search_term:
+        users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT)
+    else:
+        users = []
+    return jsonify(
+        {
+            'users': users
+            }
+            )
+
 
 @api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain
