@@ -14,7 +14,7 @@ class ExplainMBIDMappingQuery(Query):
         return ("explain-mbid-mapping", "Explain MusicBrainz ID Mapping lookup")
 
     def inputs(self):
-        return ['artist_credit_name', 'recording_name']
+        return ['artist_credit_name', 'recording_name', 'release_name']
 
     def introduction(self):
         return """Given the name of an artist and the name of a recording (track)
@@ -25,7 +25,7 @@ class ExplainMBIDMappingQuery(Query):
 
     def fetch(self, params, offset=-1, count=-1):
         """ Call the MBIDMapper and carry out this mapping search """
-        hit = self.mapper.search(params[0]["artist_credit_name"], params[0]["recording_name"])
+        hit = self.mapper.search(params[0]["artist_credit_name"], params[0]["recording_name"], params[0].get("release_name"))
 
         results = [
             {
