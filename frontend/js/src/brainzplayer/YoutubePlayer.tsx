@@ -171,7 +171,7 @@ export default class YoutubePlayer
       onTrackEnd();
       return;
     }
-    // New track being played
+    // New track loaded
     if (state === YouTube.PlayerState.UNSTARTED) {
       const title = _get(player, "playerInfo.videoData.title", "");
       const videoId = _get(player, "playerInfo.videoData.video_id", "");
@@ -185,13 +185,6 @@ export default class YoutubePlayer
         );
         onTrackInfoChange(title, videoId, undefined, undefined, images);
       }
-      player.playVideo();
-    }
-    if (
-      state === YouTube.PlayerState.UNSTARTED ||
-      state === YouTube.PlayerState.BUFFERING
-    ) {
-      onPlayerPausedChange(false);
     }
     if (state === YouTube.PlayerState.PAUSED) {
       onPlayerPausedChange(true);
