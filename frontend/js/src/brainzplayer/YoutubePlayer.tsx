@@ -377,7 +377,6 @@ export default class YoutubePlayer
     const { show } = this.props;
     const options: Options = {
       playerVars: {
-        autoplay: 1,
         controls: 0,
         showinfo: 0,
         fs: 0,
