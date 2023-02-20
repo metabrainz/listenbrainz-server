@@ -297,30 +297,22 @@ export default class UserPlaylists extends React.Component<
 
     return (
       <div role="main" id="playlists-page">
-        <h3
-          style={{
-            display: "inline-block",
-            marginRight: "0.5em",
-            verticalAlign: "sub",
-          }}
-        >
-          {this.isCurrentUserPage() ? "Your" : `${startCase(user.name)}'s`}{" "}
-          playlists
-        </h3>
-        <Pill
-          active={playlistType === PlaylistType.playlists}
-          type="secondary"
-          onClick={() => this.setPlaylistType(PlaylistType.playlists)}
-        >
-          <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
-        </Pill>
-        <Pill
-          active={playlistType === PlaylistType.collaborations}
-          type="secondary"
-          onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
-        >
-          <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
-        </Pill>
+        <div style={{ marginTop: "1em" }}>
+          <Pill
+            active={playlistType === PlaylistType.playlists}
+            type="secondary"
+            onClick={() => this.setPlaylistType(PlaylistType.playlists)}
+          >
+            <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
+          </Pill>
+          <Pill
+            active={playlistType === PlaylistType.collaborations}
+            type="secondary"
+            onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
+          >
+            <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
+          </Pill>
+        </div>
         <PlaylistsList
           playlists={playlists}
           activeSection={playlistType}
