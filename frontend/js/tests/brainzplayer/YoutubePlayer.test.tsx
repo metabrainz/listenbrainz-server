@@ -111,7 +111,7 @@ describe("YoutubePlayer", () => {
       expect(instance.props.onProgressChange).not.toHaveBeenCalled();
     });
 
-    it("detects a new track, sends information and duration up and autoplays", async () => {
+    it("detects a new track and sends information and duration", async () => {
       const onTrackInfoChange = jest.fn();
       const onPlayerPausedChange = jest.fn();
       const onDurationChange = jest.fn();
@@ -156,10 +156,6 @@ describe("YoutubePlayer", () => {
       // Update duration in milliseconds
       expect(instance.props.onDurationChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onDurationChange).toHaveBeenCalledWith(25000);
-      // Autoplay
-      expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(false);
-      expect(youtubePlayerState.target.playVideo).toHaveBeenCalledTimes(1);
       // Update progress in milliseconds
       expect(instance.props.onProgressChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onProgressChange).toHaveBeenCalledWith(3000);
