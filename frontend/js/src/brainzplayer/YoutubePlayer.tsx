@@ -26,7 +26,6 @@ import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 export type YoutubePlayerState = {
   currentListen?: Listen;
-  reduced: boolean;
 };
 
 export type YoutubePlayerProps = DataSourceProps & {
@@ -113,12 +112,6 @@ export default class YoutubePlayer
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
-  constructor(props: YoutubePlayerProps) {
-    super(props);
-    this.state = { reduced: false };
-    this.toggleReduceYoutubeWindow = this.toggleReduceYoutubeWindow.bind(this);
-  }
-
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
     if (prevProps.show && !show && this.youtubePlayer) {
@@ -178,7 +171,7 @@ export default class YoutubePlayer
       onTrackEnd();
       return;
     }
-    // New track being played
+    // New track loaded
     if (state === YouTube.PlayerState.UNSTARTED) {
       const title = _get(player, "playerInfo.videoData.title", "");
       const videoId = _get(player, "playerInfo.videoData.video_id", "");
@@ -192,13 +185,6 @@ export default class YoutubePlayer
         );
         onTrackInfoChange(title, videoId, undefined, undefined, images);
       }
-      player.playVideo();
-    }
-    if (
-      state === YouTube.PlayerState.UNSTARTED ||
-      state === YouTube.PlayerState.BUFFERING
-    ) {
-      onPlayerPausedChange(false);
     }
     if (state === YouTube.PlayerState.PAUSED) {
       onPlayerPausedChange(true);
@@ -288,9 +274,9 @@ export default class YoutubePlayer
       return;
     }
     if (videoId.startsWith("http")) {
-      this.youtubePlayer.loadVideoByUrl(videoId);
+      this.youtubePlayer.cueVideoByUrl(videoId);
     } else {
-      this.youtubePlayer.loadVideoById(videoId);
+      this.youtubePlayer.cueVideoById(videoId);
     }
   };
 
@@ -380,18 +366,10 @@ export default class YoutubePlayer
     onTrackNotFound();
   };
 
-  toggleReduceYoutubeWindow() {
-    this.setState((prevState) => {
-      return { reduced: !prevState.reduced };
-    });
-  }
-
   render() {
     const { show } = this.props;
-    const { reduced } = this.state;
     const options: Options = {
       playerVars: {
-        autoplay: 1,
         controls: 0,
         showinfo: 0,
         fs: 0,
@@ -416,22 +394,9 @@ export default class YoutubePlayer
           bottom: -draggableBoundPadding,
         }}
       >
-        <div
-          className={`youtube-wrapper${!show ? " hidden" : ""}${
-            reduced ? " reduced" : ""
-          }`}
-        >
+        <div className={`youtube-wrapper${!show ? " hidden" : ""}`}>
           <button className="btn btn-sm youtube-drag-handle" type="button">
             <FontAwesomeIcon icon={faArrowsAlt} />
-          </button>
-          <button
-            className="btn btn-sm youtube-reduce-button"
-            type="button"
-            onClick={this.toggleReduceYoutubeWindow}
-          >
-            <FontAwesomeIcon
-              icon={reduced ? faWindowMaximize : faWindowMinimize}
-            />
           </button>
           <YouTube
             className="youtube-player"
