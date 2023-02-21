@@ -280,8 +280,14 @@ class MBIDMapper:
         return hits["hits"][0]
 
     def lookup_and_evaluate_hit(self, artist_credit_name_p, recording_name_p, release_name_p, is_ac_detuned, is_r_detuned, is_rel_detuned):
-        collection = COLLECTION_NAME_WITH_RELEASE if release_name_p else COLLECTION_NAME_WITHOUT_RELEASE
-        query = self.clean_query(artist_credit_name_p + " " + recording_name_p)
+        if release_name_p:
+            collection = COLLECTION_NAME_WITH_RELEASE
+            query = artist_credit_name_p + " " + recording_name_p + " " + release_name_p
+        else:
+            collection = COLLECTION_NAME_WITHOUT_RELEASE
+            query = artist_credit_name_p + " " + recording_name_p
+
+        query = self.clean_query(query)
         hit = self.lookup(collection, query)
         if not hit:
             return None
