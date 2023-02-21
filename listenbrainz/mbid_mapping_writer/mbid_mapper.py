@@ -106,7 +106,7 @@ class MBIDMapper:
             Compare the fields, print debug info if turned on, and return edit distance as (a_dist, r_dist)
         """
         self._log(Markup(f"""QUERY: artist: <b>{artist_credit_name}</b> recording: <b>{recording_name}</b> release: <b>{release_name}</b>"""))
-        self._log(Markup(f"""HIT: artist: <b>{artist_credit_name_hit}</b> recording: <b>{recording_name_hit}</b> recording: <b>{release_name_hit}</b>"""))
+        self._log(Markup(f"""HIT: artist: <b>{artist_credit_name_hit}</b> recording: <b>{recording_name_hit}</b> release: <b>{release_name_hit}</b>"""))
 
         if release_name is not None and release_name_hit is not None:
             release_distance = distance(release_name, release_name_hit)
@@ -179,10 +179,10 @@ class MBIDMapper:
         ac_dist, r_dist, rel_dist, match_type = self.check_hit_in_threshold(
             artist_credit_name,
             recording_name,
-            rel_hit,
+            release_name,
             ac_hit,
             r_hit,
-            rel_hit_detuned,
+            rel_hit,
             is_ac_detuned,
             is_r_detuned,
             is_rel_detuned
@@ -235,7 +235,7 @@ class MBIDMapper:
                 release_name,
                 ac_hit_detuned,
                 r_hit_detuned,
-                rel_hit_detuned,
+                rel_hit,
                 True,
                 True,
                 is_rel_detuned
@@ -338,12 +338,15 @@ class MBIDMapper:
         rel_detuned = prepare_query(self.detune_query_string(release_name, False)) if release_name else None
         self._log(f"ac_detuned: '{ac_detuned}' r_detuned: '{r_detuned}' rel_detuned: '{rel_detuned}'")
 
-        # lookup without any detunings, with release name
         if release_name_p:
+            self._log(f"looking up with release name")
+            # lookup without any detunings, with release name
             hit = self.lookup_and_evaluate_hit(artist_credit_name_p, recording_name_p, release_name_p, False, False, False)
             if hit:
                 return hit
 
+
+        self._log(f"looking up without release name")
         # lookup without any detuning
         hit = self.lookup_and_evaluate_hit(artist_credit_name_p, recording_name_p, None, False, False, False)
         if hit:
