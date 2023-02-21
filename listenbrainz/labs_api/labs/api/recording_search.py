@@ -3,7 +3,7 @@ import typesense.exceptions
 from datasethoster import Query
 
 from listenbrainz import config
-from listenbrainz.mbid_mapping_writer.mbid_mapper import prepare_query, COLLECTION_NAME
+from listenbrainz.mbid_mapping_writer.mbid_mapper import prepare_query, COLLECTION_NAME_WITHOUT_RELEASE
 
 
 NUM_TYPOS = 5
@@ -55,8 +55,7 @@ class RecordingSearchQuery(Query):
             'num_typos': NUM_TYPOS
         }
 
-        hits = self.client.collections[COLLECTION_NAME].documents.search(
-            search_parameters)
+        hits = self.client.collections[COLLECTION_NAME_WITHOUT_RELEASE].documents.search(search_parameters)
 
         output = []
         for hit in hits['hits']:

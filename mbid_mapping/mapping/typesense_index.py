@@ -134,5 +134,5 @@ def build_all():
         return document['recording_name'] + " " + document['artist_credit_name'] + " " + document['release_name']
 
     build_index("canonical_musicbrainz_data_", "mapping.canonical_musicbrainz_data", combine_artist_recording)
-    build_index("canonical_musicbrainz_data_release_", "mapping.canonical_musicbrainz_data_release", combine_artist_recording_release)
+    build_index("canonical_musicbrainz_data_release_", "mapping.canonical_musicbrainz_data_release_support", combine_artist_recording_release)
 

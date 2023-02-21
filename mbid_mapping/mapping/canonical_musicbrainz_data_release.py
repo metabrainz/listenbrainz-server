@@ -13,21 +13,21 @@ class CanonicalMusicBrainzDataRelease(CanonicalMusicBrainzDataBase):
         super().__init__("mapping.canonical_musicbrainz_data_release_support", mb_conn, lb_conn, batch_size)
 
     def get_index_names(self):
-        table = self.table_name.split(".")[-1]
+        table = "can_mb_data_release"
         return [
             (f"{table}_idx_combined_lookup",              "combined_lookup", False),
-            (f"{table}_idx_artist_credit_recording_name_release_name", "artist_credit_name, recording_name, release_name", False),
+            (f"{table}_idx_ac_rec_rel", "artist_credit_name, recording_name, release_name", False),
             (f"{table}_idx_recording_mbid_release_mbid", "recording_mbid, release_mbid", True)
         ]
 
     def get_post_process_queries(self):
         return ["""
             WITH all_recs AS (
-                SELECT *
+                SELECT id
                      , row_number() OVER (PARTITION BY combined_lookup ORDER BY score) AS rnum
-                  FROM mapping.canonical_musicbrainz_data_release_tmp
+                  FROM mapping.canonical_musicbrainz_data_release_support_tmp
             )   DELETE
-                  FROM mapping.canonical_musicbrainz_data_release_tmp
+                  FROM mapping.canonical_musicbrainz_data_release_support_tmp
                  WHERE id IN (SELECT id FROM all_recs WHERE rnum > 1)
         """]
 
