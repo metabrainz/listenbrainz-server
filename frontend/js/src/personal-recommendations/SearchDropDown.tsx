@@ -10,7 +10,7 @@ export type SearchDropDownProps = {
 function SearchDropDown(props: SearchDropDownProps) {
   const { suggestions, action } = props;
   return (
-    <div className="searchdropdown">
+    <div className="search-dropdown">
       {suggestions?.map((name) => {
         return (
           <ListenControl

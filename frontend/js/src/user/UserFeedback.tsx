@@ -1,8 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -12,43 +10,34 @@ import {
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
 import { clone, get, has, isNaN } from "lodash";
-import { Integrations } from "@sentry/tracing";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
 
 import Pill from "../components/Pill";
-import APIServiceClass from "../utils/APIService";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
-import PinRecordingModal from "../pins/PinRecordingModal";
 import {
-  getPageProps,
   getRecordingMBID,
   getRecordingMSID,
   handleNavigationClickEvent,
 } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
-import SimpleModal from "../utils/SimpleModal";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
   totalCount: number;
   user: ListenBrainzUser;
+  updateRecordingToPin: (recordingToPin: BaseListenFormat) => void;
 } & WithAlertNotificationsInjectedProps;
 
 export interface UserFeedbackState {
   feedback: Array<FeedbackResponseWithTrackMetadata>;
   loading: boolean;
+  noMoreFeedback: boolean;
   page: number;
   maxPage: number;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
-  recordingToPin?: BaseListenFormat;
   selectedFeedbackScore: ListenFeedBack;
 }
 
@@ -66,35 +55,28 @@ export default class UserFeedback extends React.Component<
     };
   };
 
-  private listensTable = React.createRef<HTMLTableElement>();
-
   declare context: React.ContextType<typeof GlobalAppContext>;
   private DEFAULT_ITEMS_PER_PAGE = 25;
 
   constructor(props: UserFeedbackProps) {
     super(props);
     const { totalCount, feedback } = props;
-
+    const maxPage = Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE);
     this.state = {
-      maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
+      maxPage,
       page: 1,
       feedback: feedback?.slice(0, this.DEFAULT_ITEMS_PER_PAGE) || [],
       loading: false,
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
       selectedFeedbackScore: feedback?.[0]?.score ?? 1,
+      noMoreFeedback: maxPage <= 1,
     };
-
-    this.listensTable = React.createRef();
   }
 
   componentDidMount(): void {
     const { currentUser } = this.context;
     const { user, feedback } = this.props;
-
-    // Listen to browser previous/next events and load page accordingly
-    window.addEventListener("popstate", this.handleURLChange);
-    document.addEventListener("keydown", this.handleKeyDown);
 
     if (currentUser?.name === user.name && feedback?.length) {
       // Logged in user is looking at their own feedback, we can build
@@ -116,60 +98,7 @@ export default class UserFeedback extends React.Component<
     }
   }
 
-  componentWillUnmount() {
-    window.removeEventListener("popstate", this.handleURLChange);
-    document.removeEventListener("keydown", this.handleKeyDown);
-  }
-
-  handleKeyDown = (event: KeyboardEvent) => {
-    const elementName = document.activeElement?.localName;
-    if (elementName && ["input", "textarea"].includes(elementName)) {
-      // Don't allow keyboard navigation if an input or textarea is currently in focus
-      return;
-    }
-    switch (event.key) {
-      case "ArrowLeft":
-        this.handleClickNewer();
-        break;
-      case "ArrowRight":
-        this.handleClickOlder();
-        break;
-      default:
-        break;
-    }
-  };
-
-  // pagination functions
-  handleURLChange = async (): Promise<void> => {
-    const { page, maxPage, selectedFeedbackScore } = this.state;
-    const url = new URL(window.location.href);
-    let newPage = Number(url.searchParams.get("page"));
-    let newScore = Number(url.searchParams.get("score"));
-    if (newScore !== 1 && newScore !== -1) {
-      newScore = 1;
-    }
-
-    if (isNaN(newPage) || !isNaN(newScore)) {
-      if (newPage === page && newScore === selectedFeedbackScore) {
-        // search params didn't change, do nothing
-        return;
-      }
-      newPage = Math.max(newPage, 1);
-      newPage = Math.min(newPage, maxPage);
-      await this.getFeedbackItemsFromAPI(
-        newPage,
-        false,
-        newScore as ListenFeedBack
-      );
-    } else if (page !== 1) {
-      // occurs on back + forward history
-      await this.getFeedbackItemsFromAPI(1, false, newScore as ListenFeedBack);
-    }
-  };
-
-  handleClickOlder = async (event?: React.MouseEvent) => {
-    handleNavigationClickEvent(event);
-
+  handleLoadMore = async (event?: React.MouseEvent) => {
     const { page, maxPage } = this.state;
     if (page >= maxPage) {
       return;
@@ -178,86 +107,49 @@ export default class UserFeedback extends React.Component<
     await this.getFeedbackItemsFromAPI(page + 1);
   };
 
-  handleClickOldest = async (event?: React.MouseEvent) => {
-    handleNavigationClickEvent(event);
-
-    const { maxPage } = this.state;
-    await this.getFeedbackItemsFromAPI(maxPage);
-  };
-
-  handleClickNewest = async (event?: React.MouseEvent) => {
-    handleNavigationClickEvent(event);
-
-    await this.getFeedbackItemsFromAPI(1);
-  };
-
-  handleClickNewer = async (event?: React.MouseEvent) => {
-    handleNavigationClickEvent(event);
-
-    const { page } = this.state;
-    if (page === 1) {
-      return;
-    }
-
-    await this.getFeedbackItemsFromAPI(page - 1);
-  };
-
   getFeedbackItemsFromAPI = async (
     page: number,
-    pushHistory: boolean = true,
-    feedbackScore?: ListenFeedBack
+    replaceFeebackArray: boolean = false
   ) => {
     const { newAlert, user } = this.props;
     const { APIService } = this.context;
-    const { selectedFeedbackScore } = this.state;
+    const { selectedFeedbackScore, feedback } = this.state;
     this.setState({ loading: true });
 
     try {
       const offset = (page - 1) * this.DEFAULT_ITEMS_PER_PAGE;
       const count = this.DEFAULT_ITEMS_PER_PAGE;
-      const score = feedbackScore ?? selectedFeedbackScore;
       const feedbackResponse = await APIService.getFeedbackForUser(
         user.name,
         offset,
         count,
-        score
+        selectedFeedbackScore
       );
 
       if (!feedbackResponse?.feedback?.length) {
         // No pins were fetched
         this.setState({
           loading: false,
-          page: 1,
-          maxPage: 1,
-          feedback: [],
-          selectedFeedbackScore: score,
+          feedback: replaceFeebackArray ? [] : feedback,
+          noMoreFeedback: true,
         });
         return;
       }
 
       const totalCount = parseInt(feedbackResponse.total_count, 10);
+      const newMaxPage = Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE);
       this.setState(
         {
           loading: false,
           page,
-          maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
-          feedback: feedbackResponse.feedback,
-          selectedFeedbackScore: score,
+          maxPage: newMaxPage,
+          noMoreFeedback: page >= newMaxPage,
+          feedback: replaceFeebackArray
+            ? feedbackResponse.feedback
+            : feedback.concat(feedbackResponse.feedback),
         },
         this.loadFeedback
       );
-      if (pushHistory) {
-        window.history.pushState(
-          null,
-          "",
-          `?page=${page}&score=${selectedFeedbackScore}`
-        );
-      }
-
-      // Scroll window back to the top of the events container element
-      if (typeof this.listensTable?.current?.scrollIntoView === "function") {
-        this.listensTable.current.scrollIntoView({ behavior: "smooth" });
-      }
     } catch (error) {
       newAlert(
         "warning",
@@ -326,10 +218,9 @@ export default class UserFeedback extends React.Component<
   };
 
   changeSelectedFeedback = (newFeedbackLevel: ListenFeedBack) => {
-    const { page } = this.state;
     this.setState(
       { selectedFeedbackScore: newFeedbackLevel },
-      this.getFeedbackItemsFromAPI.bind(this, page)
+      this.getFeedbackItemsFromAPI.bind(this, 1, true)
     );
   };
 
@@ -407,7 +298,8 @@ export default class UserFeedback extends React.Component<
   };
 
   updateRecordingToPin = (recordingToPin: BaseListenFormat) => {
-    this.setState({ recordingToPin });
+    const { updateRecordingToPin } = this.props;
+    updateRecordingToPin(recordingToPin);
   };
 
   getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
@@ -438,11 +330,11 @@ export default class UserFeedback extends React.Component<
       loading,
       maxPage,
       page,
-      recordingToPin,
       selectedFeedbackScore,
     } = this.state;
     const { user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
+    const { noMoreFeedback } = this.state;
     const listensFromFeedback: BaseListenFormat[] = feedback
       // remove feedback items for which track metadata wasn't found. this usually means bad
       // msid or mbid data was submitted by the user.
@@ -451,234 +343,87 @@ export default class UserFeedback extends React.Component<
         UserFeedback.RecordingMetadataToListenFormat(feedbackItem)
       );
 
-    const canNavigateNewer = page !== 1;
-    const canNavigateOlder = page < maxPage;
     return (
-      <div role="main">
-        <div className="row">
-          <div className="col-md-8 col-md-offset-2">
-            <h3
+      <div>
+        <div style={{ marginTop: "1em" }}>
+          <Pill
+            active={selectedFeedbackScore === 1}
+            type="secondary"
+            onClick={() => this.changeSelectedFeedback(1)}
+          >
+            <FontAwesomeIcon icon={faHeart as IconProp} /> Loved
+          </Pill>
+          <Pill
+            active={selectedFeedbackScore === -1}
+            type="secondary"
+            onClick={() => this.changeSelectedFeedback(-1)}
+          >
+            <FontAwesomeIcon icon={faHeartBroken as IconProp} /> Hated
+          </Pill>
+        </div>
+        {!feedback.length && (
+          <div className="lead text-center">
+            <p>
+              No {selectedFeedbackScore === 1 ? "loved" : "hated"} tracks to
+              show yet
+            </p>
+          </div>
+        )}
+        {feedback.length > 0 && (
+          <div>
+            <div
               style={{
-                display: "inline-block",
-                marginRight: "0.5em",
-                verticalAlign: "sub",
+                height: 0,
+                position: "sticky",
+                top: "50%",
+                zIndex: 1,
               }}
             >
-              Tracks {user.name === currentUser.name ? "you" : user.name}
-            </h3>
-            <Pill
-              active={selectedFeedbackScore === 1}
-              type="secondary"
-              onClick={() => this.changeSelectedFeedback(1)}
-            >
-              <FontAwesomeIcon icon={faHeart as IconProp} /> Loved
-            </Pill>
-            <Pill
-              active={selectedFeedbackScore === -1}
-              type="secondary"
-              onClick={() => this.changeSelectedFeedback(-1)}
-            >
-              <FontAwesomeIcon icon={faHeartBroken as IconProp} /> Hated
-            </Pill>
-
-            {!feedback.length && (
-              <div className="lead text-center">
-                <p>
-                  No {selectedFeedbackScore === 1 ? "loved" : "hated"} tracks to
-                  show yet
-                </p>
-              </div>
-            )}
-            {feedback.length > 0 && (
-              <div>
-                <div
-                  style={{
-                    height: 0,
-                    position: "sticky",
-                    top: "50%",
-                    zIndex: 1,
-                  }}
-                >
-                  <Loader isLoading={loading} />
-                </div>
-                <div
-                  id="listens"
-                  ref={this.listensTable}
-                  style={{ opacity: loading ? "0.4" : "1" }}
-                >
-                  {listensFromFeedback.map((listen) => {
-                    const additionalMenuItems = [
-                      <ListenControl
-                        title="Pin this recording"
-                        text="Pin this track"
-                        icon={faThumbtack}
-                        // eslint-disable-next-line react/jsx-no-bind
-                        action={this.updateRecordingToPin.bind(this, listen)}
-                        dataToggle="modal"
-                        dataTarget="#PinRecordingModal"
-                      />,
-                    ];
-                    const recording_msid = getRecordingMSID(listen);
-                    const recording_mbid = getRecordingMBID(listen);
-                    return (
-                      <ListenCard
-                        showUsername={false}
-                        showTimestamp
-                        key={`${listen.listened_at}-${recording_msid}-${recording_mbid}`}
-                        listen={listen}
-                        currentFeedback={this.getFeedbackForListen(listen)}
-                        updateFeedbackCallback={this.updateFeedback}
-                        additionalMenuItems={additionalMenuItems}
-                        newAlert={newAlert}
-                      />
-                    );
-                  })}
-                </div>
-                {feedback.length < this.DEFAULT_ITEMS_PER_PAGE && (
-                  <h5 className="text-center">No more feedback to show</h5>
-                )}
-                <ul className="pager" id="navigation">
-                  <li
-                    className={`previous ${
-                      !canNavigateNewer ? "disabled" : ""
-                    }`}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickNewest}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickNewest();
-                      }}
-                      tabIndex={0}
-                      href={!canNavigateNewer ? undefined : "?page=1"}
-                    >
-                      &#x21E4;
-                    </a>
-                  </li>
-                  <li
-                    className={`previous ${
-                      !canNavigateNewer ? "disabled" : ""
-                    }`}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickNewer}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickNewer();
-                      }}
-                      tabIndex={0}
-                      href={!canNavigateNewer ? undefined : `?page=${page - 1}`}
-                    >
-                      &larr; Newer
-                    </a>
-                  </li>
-
-                  <li
-                    className={`next ${!canNavigateOlder ? "disabled" : ""}`}
-                    style={{ marginLeft: "auto" }}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickOlder}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickOlder();
-                      }}
-                      tabIndex={0}
-                      href={!canNavigateOlder ? undefined : `?page=${page + 1}`}
-                    >
-                      Older &rarr;
-                    </a>
-                  </li>
-                  <li className={`next ${!canNavigateOlder ? "disabled" : ""}`}>
-                    <a
-                      role="button"
-                      onClick={this.handleClickOldest}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickOldest();
-                      }}
-                      tabIndex={0}
-                      href={!canNavigateOlder ? undefined : `?page=${maxPage}`}
-                    >
-                      &#x21E5;
-                    </a>
-                  </li>
-                </ul>
-                {currentUser && (
-                  <PinRecordingModal
-                    recordingToPin={recordingToPin || listensFromFeedback[0]}
+              <Loader isLoading={loading} />
+            </div>
+            <div id="listens" style={{ opacity: loading ? "0.4" : "1" }}>
+              {listensFromFeedback.map((listen) => {
+                const additionalMenuItems = [
+                  <ListenControl
+                    title="Pin this recording"
+                    text="Pin this track"
+                    icon={faThumbtack}
+                    // eslint-disable-next-line react/jsx-no-bind
+                    action={this.updateRecordingToPin.bind(this, listen)}
+                    dataToggle="modal"
+                    dataTarget="#PinRecordingModal"
+                  />,
+                ];
+                const recording_msid = getRecordingMSID(listen);
+                const recording_mbid = getRecordingMBID(listen);
+                return (
+                  <ListenCard
+                    showUsername={false}
+                    showTimestamp
+                    key={`${listen.listened_at}-${recording_msid}-${recording_mbid}`}
+                    listen={listen}
+                    currentFeedback={this.getFeedbackForListen(listen)}
+                    updateFeedbackCallback={this.updateFeedback}
+                    additionalMenuItems={additionalMenuItems}
                     newAlert={newAlert}
                   />
-                )}
-              </div>
-            )}
+                );
+              })}
+            </div>
+            <button
+              className={`btn btn-block ${
+                noMoreFeedback ? "btn-default" : "btn-info"
+              }`}
+              disabled={noMoreFeedback}
+              type="button"
+              onClick={this.handleLoadMore}
+              title="Load more…"
+            >
+              {noMoreFeedback ? "No more feedback to show" : "Load more…"}
+            </button>
           </div>
-        </div>
-        <BrainzPlayer
-          listens={listensFromFeedback}
-          newAlert={newAlert}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-        />
+        )}
       </div>
     );
   }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalReactProps,
-    optionalAlerts,
-  } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { feedback, feedback_count, user } = reactProps;
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const UserFeedbackWithAlertNotifications = withAlertNotifications(
-    UserFeedback
-  );
-
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    modal: modalRef,
-  };
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
-        <UserFeedbackWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          feedback={feedback}
-          user={user}
-          totalCount={feedback_count}
-        />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

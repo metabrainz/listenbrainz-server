@@ -106,6 +106,9 @@ export default class MbidMappingModal extends React.Component<
     }
     const { recordingMBIDInput, recordingMBIDValid } = this.state;
 
+    const trackName = getTrackName(recordingToMap);
+    const artistName = getArtistName(recordingToMap);
+
     return (
       <div
         className="modal fade"
@@ -136,6 +139,10 @@ export default class MbidMappingModal extends React.Component<
                 recording, you can do so manually here. Paste a Recording MBID
                 to link it to this Listen and all others with the same metadata.
               </p>
+
+              <p className="modal-track">{trackName}</p>
+              <p className="modal-artist">{artistName}</p>
+
               <div className="form-group">
                 <input
                   type="text"

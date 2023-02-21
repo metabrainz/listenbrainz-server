@@ -63,8 +63,7 @@ module.exports = function (env, argv) {
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
       userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
       userPageHeading: path.resolve(jsDir, "src/user/UserPageHeading.tsx"),
-      userFeedback: path.resolve(jsDir, "src/user/UserFeedback.tsx"),
-      userPins: path.resolve(jsDir, "src/pins/UserPins.tsx"),
+      userTaste: path.resolve(jsDir, "src/user/UserTaste.tsx"),
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
       playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
@@ -82,9 +81,13 @@ module.exports = function (env, argv) {
         "src/year-in-music/2022/CoverArtComposite.tsx"
       ),
       homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
-      recommendations: path.resolve(
+      recommendationsPlayground: path.resolve(
         jsDir,
         "src/recommendations/Recommendations.tsx"
+      ),
+      recommendations: path.resolve(
+        jsDir,
+        "src/recommendations/RecommendationsPage.tsx"
       ),
       missingMBData: path.resolve(
         jsDir,

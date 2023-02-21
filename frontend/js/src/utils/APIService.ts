@@ -201,6 +201,27 @@ export default class APIService {
     return { status: response.status };
   };
 
+  searchUsers = async (
+    userName: string
+  ): Promise<{ users: Array<SearchUser> }> => {
+    try {
+      const url = new URL(`${this.APIBaseURI}/search/users/`);
+      url.searchParams.append("search_term", userName);
+      const response = await fetch(url.toString(), {
+        method: "GET",
+      });
+
+      await this.checkStatus(response);
+
+      const parsedResponse = await response.json();
+      return { users: parsedResponse.users };
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log("Error in parsing response in APIService searchUsers:", err);
+      throw err;
+    }
+  };
+
   getFollowersOfUser = async (
     username: string
   ): Promise<{ followers: Array<string> }> => {

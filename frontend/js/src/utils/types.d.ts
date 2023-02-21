@@ -679,3 +679,9 @@ type UserFreshReleasesResponse = {
   };
 };
 
+<<<<<<< HEAD
+=======
+declare type SearchUser = {
+  user_name: string;
+}
+>>>>>>> 64ae1ccadfc2954f64fe08e4ccad7ee35877ff69
