@@ -142,8 +142,8 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         mapping_release = CanonicalMusicBrainzDataRelease(mb_conn, lb_conn)
 
         # Carry out the bulk of the work
-        # create_custom_sort_tables(mb_conn)
-        # releases.run(no_swap=True)
+        create_custom_sort_tables(mb_conn)
+        releases.run(no_swap=True)
         mapping_release.run(no_swap=True)
         mapping.run(no_swap=True)
         can_rec_rel.run(no_swap=True)
