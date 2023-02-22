@@ -2,6 +2,7 @@ import * as React from "react";
 import { get as _get } from "lodash";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getArtistName, getTrackName } from "../utils/utils";
+import ListenCard from "../listens/ListenCard";
 
 const RECORDING_MBID_RE = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 
@@ -20,6 +21,7 @@ export interface MbidMappingModalState {
   // If the input is valid, the extracted UUID
   recordingMBIDSubmit: string;
   recordingMBIDValid: boolean;
+  selectedRecording?: MusicBrainzRecording;
 }
 
 export default class MbidMappingModal extends React.Component<
@@ -73,17 +75,36 @@ export default class MbidMappingModal extends React.Component<
     }
   };
 
-  handleMbidInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  handleMbidInputChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { APIService } = this.context;
+    const { newAlert } = this.props;
     event.preventDefault();
     const input = event.target.value;
     const isValidUUID = RECORDING_MBID_RE.test(input);
     const recordingMBIDSubmit = isValidUUID
       ? RECORDING_MBID_RE.exec(input)![2].toLowerCase()
       : "";
+    let selectedRecording;
+    if (isValidUUID) {
+      try {
+        selectedRecording = await APIService.lookupMBRecording(
+          recordingMBIDSubmit
+        );
+      } catch (error) {
+        newAlert(
+          "warning",
+          "Could not find recording",
+          `We could not find a recording on MusicBrainz with the MBID ${recordingMBIDSubmit} ('${error.message}')`
+        );
+      }
+    }
     this.setState({
       recordingMBIDInput: input,
       recordingMBIDSubmit,
       recordingMBIDValid: isValidUUID,
+      selectedRecording,
     });
   };
 
@@ -99,8 +120,34 @@ export default class MbidMappingModal extends React.Component<
     );
   };
 
+  getListenFromSelectedRecording = (): Listen | undefined => {
+    const { selectedRecording } = this.state;
+    if (!selectedRecording) {
+      return undefined;
+    }
+    return {
+      listened_at: 0,
+      track_metadata: {
+        track_name: selectedRecording.title,
+        artist_name: selectedRecording["artist-credit"]
+          .map((ac) => ac.name + ac.joinphrase)
+          .join(""),
+        additional_info: {
+          duration_ms: selectedRecording.length,
+          artist_mbids: selectedRecording["artist-credit"].map(
+            (ac) => ac.artist.id
+          ),
+          release_artist_names: selectedRecording["artist-credit"].map(
+            (ac) => ac.artist.name
+          ),
+          recording_mbid: selectedRecording.id,
+        },
+      },
+    };
+  };
+
   render() {
-    const { recordingToMap } = this.props;
+    const { recordingToMap, newAlert } = this.props;
     if (!recordingToMap) {
       return null;
     }
@@ -108,6 +155,7 @@ export default class MbidMappingModal extends React.Component<
 
     const trackName = getTrackName(recordingToMap);
     const artistName = getArtistName(recordingToMap);
+    const listenFromSelectedRecording = this.getListenFromSelectedRecording();
 
     return (
       <div
@@ -140,8 +188,9 @@ export default class MbidMappingModal extends React.Component<
                 to link it to this Listen and all others with the same metadata.
               </p>
 
-              <p className="modal-track">{trackName}</p>
-              <p className="modal-artist">{artistName}</p>
+              <p>
+                Linking: {trackName} — {artistName}
+              </p>
 
               <div className="form-group">
                 <input
@@ -151,12 +200,25 @@ export default class MbidMappingModal extends React.Component<
                   id="recording-mbid"
                   name="recording-mbid"
                   onChange={this.handleMbidInputChange}
+                  required
+                  minLength={36}
                 />
               </div>
               {recordingMBIDInput.length > 0 && !recordingMBIDValid && (
                 <div className="has-error small">
                   Not a valid recording MBID
                 </div>
+              )}
+              {listenFromSelectedRecording && (
+                <ListenCard
+                  listen={listenFromSelectedRecording}
+                  showTimestamp={false}
+                  showUsername={false}
+                  newAlert={newAlert}
+                  // eslint-disable-next-line react/jsx-no-useless-fragment
+                  customThumbnail={<></>}
+                  compact
+                />
               )}
             </div>
             <div className="modal-footer">
