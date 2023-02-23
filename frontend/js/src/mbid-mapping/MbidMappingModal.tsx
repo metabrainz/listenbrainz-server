@@ -7,7 +7,7 @@ import ListenCard from "../listens/ListenCard";
 const RECORDING_MBID_RE = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 
 export type MbidMappingModalProps = {
-  recordingToMap?: Listen;
+  listenToMap?: Listen;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -41,13 +41,13 @@ export default class MbidMappingModal extends React.Component<
   }
 
   submitMbidMapping = async () => {
-    const { recordingToMap, newAlert } = this.props;
+    const { listenToMap, newAlert } = this.props;
     const { recordingMBIDSubmit } = this.state;
     const { APIService, currentUser } = this.context;
 
-    if (recordingToMap && currentUser?.auth_token) {
+    if (listenToMap && currentUser?.auth_token) {
       const recordingMSID = _get(
-        recordingToMap,
+        listenToMap,
         "track_metadata.additional_info.recording_msid"
       );
 
@@ -65,7 +65,7 @@ export default class MbidMappingModal extends React.Component<
       newAlert(
         "success",
         `You linked a track!`,
-        `${getArtistName(recordingToMap)} - ${getTrackName(recordingToMap)}`
+        `${getArtistName(listenToMap)} - ${getTrackName(listenToMap)}`
       );
       this.setState({
         recordingMBIDInput: "",
@@ -147,8 +147,8 @@ export default class MbidMappingModal extends React.Component<
   };
 
   render() {
-    const { recordingToMap, newAlert } = this.props;
-    if (!recordingToMap) {
+    const { listenToMap, newAlert } = this.props;
+    if (!listenToMap) {
       return null;
     }
     const { recordingMBIDInput, recordingMBIDValid } = this.state;
