@@ -22,6 +22,20 @@ declare type MusicBrainzArtistCredit = {
   };
 };
 
+declare type MusicBrainzRelease = {
+  title: string;
+  id: string;
+  packaging: string;
+  "packaging-id": string;
+  date: string;
+  status: string;
+  barcode: string | number;
+  "status-id": string;
+  disambiguation: string;
+  quality: string;
+  country: string;
+};
+
 declare type MusicBrainzRecording = {
   title: string;
   id: string;
@@ -30,6 +44,7 @@ declare type MusicBrainzRecording = {
   video: boolean;
   disambiguation: string;
   "artist-credit": Array<MusicBrainzArtistCredit>;
+  releases?: Array<MusicBrainzRelease>;
 };
 
 declare type MusicBrainzRecordingRel = {
