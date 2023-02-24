@@ -299,7 +299,7 @@ export default class MissingMBDataPage extends React.Component<
             </ul>
             {currentUser && (
               <MbidMappingModal
-                recordingToMap={recordingToMapToMusicbrainz}
+                listenToMap={recordingToMapToMusicbrainz}
                 newAlert={newAlert}
               />
             )}

@@ -9,6 +9,44 @@ declare type MusicBrainzArtist = {
   type: string;
 };
 
+declare type MusicBrainzArtistCredit = {
+  name: string;
+  joinphrase: string;
+  artist: {
+    name: string;
+    "sort-name": string;
+    id: string;
+    disambiguation: string;
+    type: string | null;
+    "type-id": string;
+  };
+};
+
+declare type MusicBrainzRelease = {
+  title: string;
+  id: string;
+  packaging: string;
+  "packaging-id": string;
+  date: string;
+  status: string;
+  barcode: string | number;
+  "status-id": string;
+  disambiguation: string;
+  quality: string;
+  country: string;
+};
+
+declare type MusicBrainzRecording = {
+  title: string;
+  id: string;
+  "first-release-date": string;
+  length: number;
+  video: boolean;
+  disambiguation: string;
+  "artist-credit": Array<MusicBrainzArtistCredit>;
+  releases?: Array<MusicBrainzRelease>;
+};
+
 declare type MusicBrainzRecordingRel = {
   artist_mbid: string;
   artist_name: string;
