@@ -113,11 +113,7 @@ export default class MbidMappingModal extends React.Component<
         `You linked a track!`,
         `${getArtistName(listenToMap)} - ${getTrackName(listenToMap)}`
       );
-      this.setState({
-        recordingMBIDInput: "",
-        recordingMBIDSubmit: "",
-        recordingMBIDValid: true,
-      });
+      this.reset();
     }
   };
 
