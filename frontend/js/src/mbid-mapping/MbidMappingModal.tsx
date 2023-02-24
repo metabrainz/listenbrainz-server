@@ -11,6 +11,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import { getArtistName, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
+import { COLOR_LB_LIGHT_GRAY, COLOR_LB_GREEN } from "../utils/constants";
 
 const RECORDING_MBID_RE = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 
@@ -245,10 +246,12 @@ export default class MbidMappingModal extends React.Component<
                   icon={faExchangeAlt}
                   rotation={90}
                   size="lg"
-                  color="lightgrey"
+                  color={
+                    selectedRecording ? COLOR_LB_GREEN : COLOR_LB_LIGHT_GRAY
+                  }
                 />
               </div>
-              {selectedRecording && listenFromSelectedRecording ? (
+              {listenFromSelectedRecording ? (
                 <ListenCard
                   listen={listenFromSelectedRecording}
                   showTimestamp={false}
