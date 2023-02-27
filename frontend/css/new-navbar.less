@@ -1,0 +1,66 @@
+// Height of the BrainzPlayer component (fixed at the bottom of the page)
+@sidenav-width: 190px;
+@brainzplayer-height: 60px;
+
+
+body {
+	display: flex;
+	> nav {
+		min-width: @sidenav-width;
+		height: 100vh;
+		display: flex;
+		position: sticky;
+		left: 0;
+		top: 0;
+		text-align: right;
+		flex-direction: column;
+		align-items: flex-end;
+		border-image: linear-gradient(
+		  to bottom,
+		  @blue,
+		  @orange
+		) 1 100%;
+		border-right: 9px solid;
+		padding: 2em 1em;
+		
+		a {
+			display: block;
+			font-weight: 500;
+			&, &:visited, &:hover, &:visited:hover
+			{
+				/* Annoyingly we need this not-button because of Bootstrap 3*/
+				&, &:not(.button){
+					color: @blue;
+				}
+			}
+			&.active{
+				text-decoration: underline;
+				text-underline-offset: 6px;
+				font-style: italic;
+				font-weight: 700;
+			}
+		}
+		
+		/* Sections of the sidebar navigation */
+		.navbar-logo {
+			height: auto;
+			width: 40px;
+			margin-bottom:1.5em;
+		}
+
+		.navbar-nav {
+			line-height: 2.5em;
+			font-size: 18px;
+		}
+		.navbar-bottom {
+			margin-top:auto;
+			font-size: 12px;
+		}
+	}
+	/* main content */
+	> :not(nav){
+		margin-left: 1em;
+		// Leave some space for BrainzPlayer
+		padding-bottom: @brainzplayer-height;
+	}
+}
