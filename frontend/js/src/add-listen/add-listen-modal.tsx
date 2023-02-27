@@ -96,37 +96,43 @@ export default class AddListenModal extends React.Component<
   };
 
   SubmitListen = async () => {
+    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { selectedTrack, selectedDate } = this.state;
     if (currentUser?.auth_token) {
       if (selectedTrack) {
-        console.log(selectedTrack);
         const payload = AddListenModal.getListenFromTrack(
           selectedDate,
           selectedTrack
         );
-        console.log(payload);
 
         if (currentUser.auth_token !== undefined) {
           try {
+            if(payload){
             const status = await APIService.submitListens(
               currentUser.auth_token,
               "single",
               [payload]
             );
             if (status.status === 200) {
-              const { newAlert } = this.props;
               newAlert(
                 "success",
                 "You added the listen",
                 `${selectedTrack.recording_name} - ${selectedTrack.artist_credit_name}`
               );
+              this.resetTrackSelection();
             }
-          } catch (error) {
+          }} catch (error) {
             this.handleError(error, "Error while adding a listen");
           }
         }
       }
+    } else {
+      newAlert(
+        "danger",
+        "You need to be logged in to Add a Listen",
+        <a href="/login">Log in here</a>
+      );
     }
   };
 
