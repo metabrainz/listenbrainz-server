@@ -67,18 +67,19 @@ module.exports = function (env, argv) {
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
       playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
-      huesound: path.resolve(jsDir, "src/huesound/ColorPlay.tsx"),
+      explore: path.resolve(jsDir, "src/explore/ExploreIndex.tsx"),
+      huesound: path.resolve(jsDir, "src/explore/huesound/ColorPlay.tsx"),
       yearInMusic2021: path.resolve(
         jsDir,
-        "src/year-in-music/2021/YearInMusic.tsx"
+        "src/explore/year-in-music/2021/YearInMusic.tsx"
       ),
       yearInMusic2022: path.resolve(
         jsDir,
-        "src/year-in-music/2022/YearInMusic.tsx"
+        "src/explore/year-in-music/2022/YearInMusic.tsx"
       ),
       coverArtComposite: path.resolve(
         jsDir,
-        "src/year-in-music/2022/CoverArtComposite.tsx"
+        "src/explore/year-in-music/2022/CoverArtComposite.tsx"
       ),
       homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
       recommendationsPlayground: path.resolve(
@@ -100,7 +101,7 @@ module.exports = function (env, argv) {
       ),
       freshReleases: path.resolve(
         jsDir,
-        "src/fresh-releases/FreshReleases.tsx"
+        "src/explore/fresh-releases/FreshReleases.tsx"
       ),
       selectTimezone: path.resolve(
         jsDir,
