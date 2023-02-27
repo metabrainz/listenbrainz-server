@@ -54,6 +54,29 @@ export default class AddListenModal extends React.Component<
     };
   }
 
+  static getListenFromTrack = (
+    selectedDate: Date,
+    selectedTrack?: ACRMSearchResult
+  ): Listen | undefined => {
+    if (!selectedTrack) {
+      return undefined;
+    }
+
+    return {
+      listened_at: convertDateToUnixTimestamp(selectedDate),
+      track_metadata: {
+        additional_info: {
+          release_mbid: selectedTrack.release_mbid,
+          recording_mbid: selectedTrack.recording_mbid,
+        },
+
+        artist_name: selectedTrack.artist_credit_name,
+        track_name: selectedTrack.recording_name,
+        release_name: selectedTrack.release_name,
+      },
+    };
+  };
+
   handleError = (error: string | Error, title?: string): void => {
     const { newAlert } = this.props;
     if (!error) {
@@ -72,59 +95,40 @@ export default class AddListenModal extends React.Component<
     });
   };
 
-  /*SubmitListen = async () => {
+  SubmitListen = async () => {
     const { APIService, currentUser } = this.context;
-    const { selectedTrack, selectedTimestamp } = this.state;
+    const { selectedTrack, selectedDate } = this.state;
     if (currentUser?.auth_token) {
       if (selectedTrack) {
-        this.setState(
-          {
-            payloadArray: [
-              {
-                listened_at: selectedTimestamp,
-                track_metadata: {
-                  additional_info: {
-                    release_mbid: selectedTrack.release_mbid,
-                    recording_mbid: selectedTrack.recording_mbid,
-                  },
-
-                  artist_name: selectedTrack.artist_credit_name,
-                  track_name: selectedTrack.recording_name,
-                  release_name: selectedTrack.release_name,
-                },
-              },
-            ],
-          },
-          async () => {
-            const { payloadArray } = this.state;
-            const payload = payloadArray;
-            if (currentUser.auth_token !== undefined) {
-              try {
-                const status = await APIService.submitListens(
-                  currentUser.auth_token,
-                  "single",
-                  payload
-                );
-                if (status.status === 200) {
-                  const { newAlert } = this.props;
-                  newAlert(
-                    "success",
-                    "You added the listen",
-                    `${selectedTrack.recording_name} - ${selectedTrack.artist_credit_name}`
-                  );
-                }
-                this.setState({
-                  payloadArray: [],
-                });
-              } catch (error) {
-                this.handleError(error, "Error while adding a listen");
-              }
-            }
-          }
+        console.log(selectedTrack);
+        const payload = AddListenModal.getListenFromTrack(
+          selectedDate,
+          selectedTrack
         );
+        console.log(payload);
+
+        if (currentUser.auth_token !== undefined) {
+          try {
+            const status = await APIService.submitListens(
+              currentUser.auth_token,
+              "single",
+              [payload]
+            );
+            if (status.status === 200) {
+              const { newAlert } = this.props;
+              newAlert(
+                "success",
+                "You added the listen",
+                `${selectedTrack.recording_name} - ${selectedTrack.artist_credit_name}`
+              );
+            }
+          } catch (error) {
+            this.handleError(error, "Error while adding a listen");
+          }
+        }
       }
     }
-  };*/
+  };
 
   addAlbum = () => {
     this.setState({
@@ -198,27 +202,6 @@ export default class AddListenModal extends React.Component<
     });
   };
 
-  getListenFromTrack = () : Listen | undefined => {
-    const { selectedDate, selectedTrack } = this.state;
-    if(!selectedTrack){
-      return undefined;
-    }
-
-    return {
-                 listened_at: convertDateToUnixTimestamp(selectedDate),
-                 track_metadata: {
-                  additional_info: {
-                    release_mbid: selectedTrack.release_mbid,
-                    recording_mbid: selectedTrack.recording_mbid,
-                  },
-
-                  artist_name: selectedTrack.artist_credit_name,
-                  track_name: selectedTrack.recording_name,
-                  release_name: selectedTrack.release_name,
-                },
-    }
-  };
-
   render() {
     const {
       listenOption,
@@ -229,7 +212,12 @@ export default class AddListenModal extends React.Component<
       selectedDate,
     } = this.state;
 
-    const listenFromSelectedTrack = this.getListenFromTrack;
+    const { newAlert } = this.props;
+
+    const listenFromSelectedTrack = AddListenModal.getListenFromTrack(
+      selectedDate,
+      selectedTrack
+    );
     return (
       <div
         className="modal fade"
@@ -300,64 +288,33 @@ export default class AddListenModal extends React.Component<
                         <ListenControl
                           text=""
                           icon={faTimesCircle}
-                          // action={}
+                          action={this.resetTrackSelection}
                         />
                       </div>
                     </div>
 
                     <div className="track-info">
-                      <div style={{ display: "flex" }}>
-                        {/* <div className="cover-art-img">
-                          <img
-                            src={thumbnailSrc}
-                            alt={selectedTrack?.release_name ?? "cover art"}
+                      <div style={{ margin: "10px 0px" }}>
+                        {listenFromSelectedTrack && (
+                          <ListenCard
+                            listen={listenFromSelectedTrack}
+                            showTimestamp={false}
+                            showUsername={false}
+                            newAlert={newAlert}
+                            feedbackComponent={<></>}
+                            compact
+                            additionalActions={
+                              <ListenControl
+                                buttonClassName="btn-transparent"
+                                text=""
+                                title="Reset"
+                                icon={faTimesCircle}
+                                iconSize="lg"
+                                action={this.resetTrackSelection}
+                              />
+                            }
                           />
-                        </div>
-                        <div className="new-details">
-                          <div style={{ display: "block", width: "100%" }}>
-                            <div className="recording-heading">
-                              <h5>{`${selectedTrack?.recording_name}`}</h5>
-                            </div>
-                            <div className="single-entity">
-                              <h6 className="entity-heading">Artist:</h6>
-                              <h6 className="entity-details">{`${selectedTrack?.artist_credit_name}`}</h6>
-                            </div>
-                            <div className="single-entity">
-                              <h6 className="entity-heading">Album:</h6>
-                              <h6
-                                style={{ margin: "0px 14px" }}
-                                className="entity-details"
-                              >{`${selectedTrack?.release_name}`}</h6>
-                            </div>
-                          </div>
-                          <div className="cross-details">
-                            <ListenControl
-                              text=""
-                              icon={faTimesCircle}
-                              // action={}
-                            />
-                          </div> 
-                        </div>*/}
-
-                        {listenFromSelectedTrack != undefined && (
-                          <ListenCard 
-                          listen={listenFromSelectedTrack}
-                          showTimestamp={false}
-                          showUsername={false}
-                          newAlert={newAlert}
-                          compact
-                          additionalActions={
-                          <ListenControl
-                          buttonClassName="btn-transparent"
-                           text=""
-                          title="Reset"
-                          icon={faTimesCircle}
-                          iconSize="lg"
-                          //action={this.reset}
-                    />
-                  } />
                         )}
-
                       </div>
                       <div className="timestamp">
                         <h5>Timestamp</h5>

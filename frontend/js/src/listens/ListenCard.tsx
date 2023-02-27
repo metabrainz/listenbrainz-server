@@ -127,6 +127,8 @@ export default class ListenCard extends React.Component<
     );
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
+    } else {
+      this.setState({ thumbnailSrc: undefined });
     }
   }
 

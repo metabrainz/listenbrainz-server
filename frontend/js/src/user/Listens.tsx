@@ -1031,7 +1031,7 @@ export default class Listens extends React.Component<
                       }
                     />
                     <MbidMappingModal
-                      recordingToMap={recordingToMapToMusicbrainz}
+                      listenToMap={recordingToMapToMusicbrainz}
                       newAlert={newAlert}
                     />
                     <CBReviewModal
