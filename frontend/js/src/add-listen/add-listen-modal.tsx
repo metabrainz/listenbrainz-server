@@ -11,6 +11,7 @@ import {
   getAlbumArtFromReleaseMBID,
   convertDateToUnixTimestamp,
 } from "../utils/utils";
+import ListenCard from "../listens/ListenCard";
 
 enum SubmitListenType {
   "track",
@@ -27,10 +28,7 @@ export interface AddListenModalProps {
 
 export interface AddListenModalState {
   listenOption: SubmitListenType;
-  payloadArray: Array<BaseListenFormat>;
   selectedTrack?: ACRMSearchResult;
-  selectedTimestamp: number;
-  thumbnailSrc: string;
   customTimestamp: Boolean;
   selectedDate: Date;
   searchField: string;
@@ -48,10 +46,7 @@ export default class AddListenModal extends React.Component<
     super(props);
     this.state = {
       listenOption: SubmitListenType.track,
-      payloadArray: [],
       selectedTrack: undefined,
-      selectedTimestamp: 0,
-      thumbnailSrc: "/static/img/cover-art-placeholder.jpg",
       customTimestamp: false,
       selectedDate: new Date(),
       searchField: "",
@@ -77,7 +72,7 @@ export default class AddListenModal extends React.Component<
     });
   };
 
-  SubmitListen = async () => {
+  /*SubmitListen = async () => {
     const { APIService, currentUser } = this.context;
     const { selectedTrack, selectedTimestamp } = this.state;
     if (currentUser?.auth_token) {
@@ -129,23 +124,19 @@ export default class AddListenModal extends React.Component<
         );
       }
     }
-  };
+  };*/
 
   addAlbum = () => {
     this.setState({
       listenOption: SubmitListenType.album,
-      payloadArray: [],
       selectedTrack: undefined,
-      selectedTimestamp: 0,
     });
   };
 
   resetTrackSelection = () => {
     this.setState({
       listenOption: SubmitListenType.track,
-      payloadArray: [],
       selectedTrack: undefined,
-      selectedTimestamp: 0,
     });
   };
 
@@ -186,19 +177,6 @@ export default class AddListenModal extends React.Component<
     );
   };
 
-  async getCoverArt() {
-    const { selectedTrack } = this.state;
-    if (!selectedTrack) {
-      return;
-    }
-    const albumArtSrc = await getAlbumArtFromReleaseMBID(
-      selectedTrack.release_mbid
-    );
-    if (albumArtSrc) {
-      this.setState({ thumbnailSrc: albumArtSrc });
-    }
-  }
-
   timestampNow = () => {
     this.setState({
       customTimestamp: false,
@@ -217,8 +195,28 @@ export default class AddListenModal extends React.Component<
     const { selectedDate } = this.state;
     this.setState({
       selectedDate: newDateTimePickerValue,
-      selectedTimestamp: convertDateToUnixTimestamp(selectedDate),
     });
+  };
+
+  getListenFromTrack = () : Listen | undefined => {
+    const { selectedDate, selectedTrack } = this.state;
+    if(!selectedTrack){
+      return undefined;
+    }
+
+    return {
+                 listened_at: convertDateToUnixTimestamp(selectedDate),
+                 track_metadata: {
+                  additional_info: {
+                    release_mbid: selectedTrack.release_mbid,
+                    recording_mbid: selectedTrack.recording_mbid,
+                  },
+
+                  artist_name: selectedTrack.artist_credit_name,
+                  track_name: selectedTrack.recording_name,
+                  release_name: selectedTrack.release_name,
+                },
+    }
   };
 
   render() {
@@ -227,10 +225,11 @@ export default class AddListenModal extends React.Component<
       selectedTrack,
       searchField,
       trackResults,
-      thumbnailSrc,
       customTimestamp,
       selectedDate,
     } = this.state;
+
+    const listenFromSelectedTrack = this.getListenFromTrack;
     return (
       <div
         className="modal fade"
@@ -308,7 +307,7 @@ export default class AddListenModal extends React.Component<
 
                     <div className="track-info">
                       <div style={{ display: "flex" }}>
-                        <div className="cover-art-img">
+                        {/* <div className="cover-art-img">
                           <img
                             src={thumbnailSrc}
                             alt={selectedTrack?.release_name ?? "cover art"}
@@ -337,8 +336,28 @@ export default class AddListenModal extends React.Component<
                               icon={faTimesCircle}
                               // action={}
                             />
-                          </div>
-                        </div>
+                          </div> 
+                        </div>*/}
+
+                        {listenFromSelectedTrack != undefined && (
+                          <ListenCard 
+                          listen={listenFromSelectedTrack}
+                          showTimestamp={false}
+                          showUsername={false}
+                          newAlert={newAlert}
+                          compact
+                          additionalActions={
+                          <ListenControl
+                          buttonClassName="btn-transparent"
+                           text=""
+                          title="Reset"
+                          icon={faTimesCircle}
+                          iconSize="lg"
+                          //action={this.reset}
+                    />
+                  } />
+                        )}
+
                       </div>
                       <div className="timestamp">
                         <h5>Timestamp</h5>
