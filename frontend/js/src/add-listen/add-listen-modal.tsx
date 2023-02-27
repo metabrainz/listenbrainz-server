@@ -307,6 +307,7 @@ export default class AddListenModal extends React.Component<
                             showTimestamp={false}
                             showUsername={false}
                             newAlert={newAlert}
+                            // eslint-disable-next-line react/jsx-no-useless-fragment
                             feedbackComponent={<></>}
                             compact
                             additionalActions={
