@@ -11,10 +11,20 @@ import SimpleModal from "../utils/SimpleModal";
 import APIServiceClass from "../utils/APIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
-function ExploreIndex() {
+type ExplorePageProps = {
+  name: string;
+  desc: string;
+  img_name: string;
+  url: string;
+};
+
+function ExploreIndex(props: ExplorePageProps) {
+  const { name, desc, img_name, url } = props;
   return (
     <div className="explore-card">
-      <h3>Explore card title</h3>
+      <img src={`/static/img/explore/${img_name}`} alt={name} />
+      <h3>{name}</h3>
+      <p>{desc}</p>
     </div>
   );
 }
@@ -40,7 +50,52 @@ document.addEventListener("DOMContentLoaded", () => {
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <ExploreIndex />
+        <div className="row">
+          <div className="col-md-4">
+            <ExploreIndex
+              name="Fresh Releases"
+              desc="Discover"
+              img_name="fresh-releases.png"
+              url="/explore/fresh-releases"
+            />
+          </div>
+          <div className="col-md-4">
+            <ExploreIndex
+              name="Hue Sound"
+              desc="Discover"
+              img_name="huesound.png"
+              url="/explore/huesound"
+            />
+          </div>
+          <div className="col-md-4">
+            <ExploreIndex
+              name="Cover Art Collage"
+              desc="Discover"
+              img_name="cover-art-collage.png"
+              url="/explore/cover-art-collage"
+            />
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-md-4">
+            <ExploreIndex
+              name="Top Similar Users"
+              desc="Social"
+              img_name="similar-users.png"
+              url="/explore/similar-users"
+            />
+          </div>
+          {current_user?.name && (
+            <div className="col-md-4">
+              <ExploreIndex
+                name="Your Year in Music"
+                desc="Review"
+                img_name="year-in-music.png"
+                url="/user/rob/year-in-music"
+              />
+            </div>
+          )}
+        </div>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );
