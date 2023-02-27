@@ -71,11 +71,8 @@
     "rc-slider": "^10.1.0",
     "react": "^18.2.0",
     "react-bs-notifier": "^7.0.0",
-<<<<<<< HEAD
     "react-datetime-picker": "^4.2.0",
-=======
     "react-date-picker": "^9.2.0",
->>>>>>> 64ae1ccadfc2954f64fe08e4ccad7ee35877ff69
     "react-dom": "^18.2.0",
     "react-draggable": "^4.4.5",
     "react-lazy-load-image-component": "^1.5.6",
