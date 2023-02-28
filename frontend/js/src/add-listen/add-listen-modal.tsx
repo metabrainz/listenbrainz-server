@@ -95,7 +95,7 @@ export default class AddListenModal extends React.Component<
     });
   };
 
-  SubmitListen = async () => {
+  submitListen = async () => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { selectedTrack, selectedDate } = this.state;
