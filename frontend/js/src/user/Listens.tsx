@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
 
-import DatePicker from "react-date-picker/dist/entry.nostyle";
+import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
@@ -33,6 +33,7 @@ import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
 import PinRecordingModal from "../pins/PinRecordingModal";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+import AddListenModal from "../add-listen/add-listen-modal";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
@@ -73,7 +74,7 @@ export interface ListensState {
   recordingToReview?: Listen;
   recordingToMapToMusicbrainz?: Listen;
   recordingToPersonallyRecommend?: Listen;
-  dateTimePickerValue: Date | Date[];
+  dateTimePickerValue: Date;
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
   before being removed from the state */
@@ -644,7 +645,7 @@ export default class Listens extends React.Component<
     }
   };
 
-  onChangeDateTimePicker = async (newDateTimePickerValue: Date | Date[]) => {
+  onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
     if (!newDateTimePickerValue) {
       return;
     }
@@ -840,7 +841,18 @@ export default class Listens extends React.Component<
       listens[listens.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
-        {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
+        <div className="listen-header">
+          {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
+          <button
+            type="button"
+            className="btn btn-primary add-listen-btn"
+            data-Toggle="modal"
+            data-Target="#AddListenModal"
+          >
+            Add listen
+          </button>
+        </div>
+
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {playingNowListen && this.getListenCard(playingNowListen)}
@@ -948,7 +960,7 @@ export default class Listens extends React.Component<
                     </a>
                   </li>
                   <li className="date-time-picker">
-                    <DatePicker
+                    <DateTimePicker
                       onChange={this.onChangeDateTimePicker}
                       value={dateTimePickerValue}
                       clearIcon={null}
@@ -961,6 +973,8 @@ export default class Listens extends React.Component<
                       calendarIcon={
                         <FontAwesomeIcon icon={faCalendar as IconProp} />
                       }
+                      format="dd/MM/yyyy"
+                      disableClock
                     />
                   </li>
                   <li
@@ -1037,6 +1051,7 @@ export default class Listens extends React.Component<
             )}
           </div>
         </div>
+        {currentUser && <AddListenModal newAlert={newAlert} />}
         <BrainzPlayer
           listens={allListenables}
           newAlert={newAlert}
