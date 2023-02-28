@@ -22,9 +22,16 @@ function ExploreIndex(props: ExplorePageProps) {
   const { name, desc, img_name, url } = props;
   return (
     <div className="explore-card">
-      <img src={`/static/img/explore/${img_name}`} alt={name} />
-      <h3>{name}</h3>
-      <p>{desc}</p>
+      <img
+        src={`/static/img/explore/${img_name}`}
+        alt={name}
+        className="explore-card-img"
+      />
+      <div className="explore-card-img-overlay"> </div>
+      <div className="explore-card-text">
+        <div className="explore-card-text-name color-purple">{name}</div>
+        <div>{desc}</div>
+      </div>
     </div>
   );
 }
@@ -51,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <div className="row">
-          <div className="col-md-4">
+          <div className="col-lg-4 col-md-6">
             <ExploreIndex
               name="Fresh Releases"
               desc="Discover"
@@ -59,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
               url="/explore/fresh-releases"
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-lg-4 col-md-6">
             <ExploreIndex
               name="Hue Sound"
               desc="Discover"
@@ -67,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
               url="/explore/huesound"
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-lg-4 col-md-6">
             <ExploreIndex
               name="Cover Art Collage"
               desc="Discover"
@@ -77,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
         <div className="row">
-          <div className="col-md-4">
+          <div className="col-lg-4 col-md-6">
             <ExploreIndex
               name="Top Similar Users"
               desc="Social"
@@ -86,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
             />
           </div>
           {current_user?.name && (
-            <div className="col-md-4">
+            <div className="col-lg-4 col-md-6">
               <ExploreIndex
                 name="Your Year in Music"
                 desc="Review"
