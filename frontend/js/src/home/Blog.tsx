@@ -1,24 +1,5 @@
 import React, { useEffect, useState } from "react";
-
-const decodeEntities = (function () {
-  // this prevents any overhead from creating the object each time
-  const element = document.createElement("div");
-
-  function decodeHTMLEntities(str: string) {
-    if (str && typeof str === "string") {
-      // strip script/html tags
-      str = str.replace(/<script[^>]*>([\S\s]*?)<\/script>/gim, "");
-      str = str.replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gim, "");
-      element.innerHTML = str;
-      str = String(element.textContent);
-      element.textContent = "";
-    }
-
-    return str;
-  }
-
-  return decodeHTMLEntities;
-})();
+import he from "he";
 
 function Blog({ apiUrl }: { apiUrl: string }) {
   const [blogDetails, setBlogDetails] = useState<object[]>();
@@ -32,7 +13,7 @@ function Blog({ apiUrl }: { apiUrl: string }) {
         for (let postIndex = 0; postIndex <= 6; postIndex += 1) {
           const object: any = {};
           object.id = response.posts[postIndex].ID;
-          object.title = decodeEntities(response.posts[postIndex].title);
+          object.title = he.decode(response.posts[postIndex].title);
           object.link = response.posts[postIndex].URL;
           objectArray.push(object);
         }
