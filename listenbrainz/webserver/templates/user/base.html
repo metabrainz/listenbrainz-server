@@ -11,7 +11,7 @@
 
 {% block content %}
   <div id="user-profile">
-      <p style="float: right">
+      <div class="profile-on-mb">
           See profile on&nbsp;
           <img
                   src="/static/img/musicbrainz-16.svg"
@@ -20,9 +20,9 @@
           <a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">
               MusicBrainz
           </a>
-      </p>
-    <div id="user-page-heading-container"></div>
+      </div>
     <ul class="nav nav-tabs" role="tablist">
+        <li class="username"><div>{{ user.musicbrainz_id }}</div></li>
         <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
         <li {{ 'class=active' if active_section=='reports' }}><a href="{{ url_for('user.reports', user_name=user.musicbrainz_id) }}">Reports</a></li>
         <li {{ 'class=active' if active_section=='charts' }}><a href="{{ url_for('user.charts', user_name=user.musicbrainz_id) }}">Charts</a></li>
