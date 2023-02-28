@@ -95,7 +95,7 @@ export default class AddListenModal extends React.Component<
     });
   };
 
-  SubmitListen = async () => {
+  submitListen = async () => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { selectedTrack, selectedDate } = this.state;
@@ -378,7 +378,7 @@ export default class AddListenModal extends React.Component<
                 className="btn btn-success"
                 data-dismiss="modal"
                 disabled={!selectedTrack}
-                onClick={this.SubmitListen}
+                onClick={this.submitListen}
               >
                 Add Listen
               </button>
