@@ -72,7 +72,6 @@
     "react": "^18.2.0",
     "react-bs-notifier": "^7.0.0",
     "react-datetime-picker": "^4.2.0",
-    "react-date-picker": "^9.2.0",
     "react-dom": "^18.2.0",
     "react-draggable": "^4.4.5",
     "react-lazy-load-image-component": "^1.5.6",

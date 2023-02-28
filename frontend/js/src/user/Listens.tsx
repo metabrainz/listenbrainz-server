@@ -1045,13 +1045,13 @@ export default class Listens extends React.Component<
                       }
                       newAlert={newAlert}
                     />
-                    <AddListenModal newAlert={newAlert} />
                   </>
                 )}
               </div>
             )}
           </div>
         </div>
+        {currentUser && <AddListenModal newAlert={newAlert} />}
         <BrainzPlayer
           listens={allListenables}
           newAlert={newAlert}

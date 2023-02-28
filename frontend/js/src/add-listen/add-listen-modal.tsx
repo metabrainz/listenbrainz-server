@@ -89,7 +89,7 @@ export default class AddListenModal extends React.Component<
     );
   };
 
-  trackMetadata = (track: ACRMSearchResult) => {
+  setSelectedTrack = (track: ACRMSearchResult) => {
     this.setState({
       selectedTrack: track,
     });
@@ -104,27 +104,23 @@ export default class AddListenModal extends React.Component<
         const payload = AddListenModal.getListenFromTrack(
           selectedDate,
           selectedTrack
-        );
+        )!;
 
-        if (currentUser.auth_token !== undefined) {
-          try {
-            if(payload){
-            const status = await APIService.submitListens(
-              currentUser.auth_token,
-              "single",
-              [payload]
-            );
-            if (status.status === 200) {
-              newAlert(
-                "success",
-                "You added the listen",
-                `${selectedTrack.recording_name} - ${selectedTrack.artist_credit_name}`
-              );
-              this.resetTrackSelection();
-            }
-          }} catch (error) {
-            this.handleError(error, "Error while adding a listen");
-          }
+        try {
+          const response = await APIService.submitListens(
+            currentUser.auth_token,
+            "single",
+            [payload]
+          );
+          await APIService.checkStatus(response);
+          newAlert(
+            "success",
+            "You added the listen",
+            `${selectedTrack.recording_name} - ${selectedTrack.artist_credit_name}`
+          );
+          this.resetTrackSelection();
+        } catch (error) {
+          this.handleError(error, "Error while adding a listen");
         }
       }
     } else {
@@ -178,7 +174,7 @@ export default class AddListenModal extends React.Component<
     }
   };
 
-  trackName = (event: React.ChangeEvent<HTMLInputElement>) => {
+  setSearchField = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState(
       {
         searchField: event.target.value,
@@ -202,7 +198,6 @@ export default class AddListenModal extends React.Component<
   };
 
   onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
-    const { selectedDate } = this.state;
     this.setState({
       selectedDate: newDateTimePickerValue,
     });
@@ -269,7 +264,7 @@ export default class AddListenModal extends React.Component<
                     <input
                       type="text"
                       className="form-control add-track-field"
-                      onChange={this.trackName}
+                      onChange={this.setSearchField}
                       placeholder="Search Track"
                       value={searchField}
                     />
@@ -278,7 +273,7 @@ export default class AddListenModal extends React.Component<
                         return (
                           <button
                             type="button"
-                            onClick={() => this.trackMetadata(track)}
+                            onClick={() => this.setSelectedTrack(track)}
                           >
                             {`${track.recording_name} - ${track.artist_credit_name}`}
                           </button>
@@ -300,7 +295,7 @@ export default class AddListenModal extends React.Component<
                     </div>
 
                     <div className="track-info">
-                      <div style={{ margin: "10px 0px" }}>
+                      <div>
                         {listenFromSelectedTrack && (
                           <ListenCard
                             listen={listenFromSelectedTrack}
