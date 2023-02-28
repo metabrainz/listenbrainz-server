@@ -27,9 +27,13 @@ function ExploreIndex(props: ExplorePageProps) {
         alt={name}
         className="explore-card-img"
       />
-      <div className="explore-card-img-overlay"> </div>
+      <a href={`${url}`}>
+        <div className="explore-card-img-overlay"> </div>
+      </a>
       <div className="explore-card-text">
-        <div className="explore-card-text-name color-purple">{name}</div>
+        <div className="explore-card-text-name color-purple">
+          <a href={`${url}`}>{name}</a>
+        </div>
         <div>{desc}</div>
       </div>
     </div>
@@ -82,8 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
               url="/explore/cover-art-collage"
             />
           </div>
-        </div>
-        <div className="row">
           <div className="col-lg-4 col-md-6">
             <ExploreIndex
               name="Top Similar Users"
