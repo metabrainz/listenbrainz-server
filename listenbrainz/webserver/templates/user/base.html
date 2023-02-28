@@ -4,6 +4,11 @@
     User "{{ user.musicbrainz_id }}" - ListenBrainz
 {% endblock %}
 
+<!-- these props are used in the navbar to highlight the navbar items -->
+{% set user = user %}
+{% set active_page = "profile" %}
+{% set my_profile = current_user.id == user.id %}
+
 {% block content %}
   <div id="user-profile">
       <p style="float: right">

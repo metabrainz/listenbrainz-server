@@ -1,5 +1,7 @@
 {%- extends 'base-react.html' -%} {%- block title -%}Feed - ListenBrainz{%-
-endblock -%} {% block scripts %} {{ super() }}
+endblock -%}
+{% set active_page = "feed" %}
+{% block scripts %} {{ super() }}
 <script
   src="{{ get_static_path('userFeed.js') }}"
   type="text/javascript"
