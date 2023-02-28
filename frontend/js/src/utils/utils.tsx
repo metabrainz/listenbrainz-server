@@ -357,6 +357,13 @@ const fullLocalizedDateFromTimestampOrISODate = (
   });
 };
 
+const convertDateToUnixTimestamp = (date: Date): number => {
+  const newDate = new Date(date);
+  const timestampInMs = newDate.getTime();
+  const unixTimestamp = Math.floor(newDate.getTime() / 1000);
+  return unixTimestamp;
+};
+
 /** Loads a script asynchronously into the HTML page */
 export function loadScriptAsync(document: any, scriptSrc: string): void {
   const el = document.createElement("script");
@@ -746,6 +753,7 @@ export {
   formatWSMessageToListen,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
+  convertDateToUnixTimestamp,
   getPageProps,
   searchForYoutubeTrack,
   createAlert,

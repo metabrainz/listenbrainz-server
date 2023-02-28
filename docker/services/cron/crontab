@@ -30,7 +30,7 @@ MAILTO=""
 15 2 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
 
 # Request user fresh releases daily
-0 3 * * * root /usr/local/bin/python /code/listenbrainz/manage.py request_fresh_releases --days 30 >> /logs/fresh_releases 2>&1
+0 3 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_fresh_releases --days 30 >> /logs/fresh_releases.log 2>&1
 
 # Run spotify metadata cache seeder
 0 4 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark run-spotify-metadata-cache-seeder >> /logs/spotify_metadata_cache.log 2>&1
