@@ -22,16 +22,18 @@ function ExploreIndex(props: ExplorePageProps) {
   const { name, desc, img_name, url } = props;
   return (
     <div className="explore-card">
-      <img
-        src={`/static/img/explore/${img_name}`}
-        alt={name}
-        className="explore-card-img"
-      />
       <a href={`${url}`}>
         <div className="explore-card-img-overlay"> </div>
       </a>
+      <div className="explore-card-img-clip">
+        <img
+          src={`/static/img/explore/${img_name}`}
+          alt={name}
+          className="explore-card-img"
+        />
+      </div>
       <div className="explore-card-text">
-        <div className="explore-card-text-name color-purple">
+        <div className="explore-card-text-name">
           <a href={`${url}`}>{name}</a>
         </div>
         <div>{desc}</div>
