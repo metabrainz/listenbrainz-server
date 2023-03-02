@@ -1056,5 +1056,7 @@
     "youtube": {
         "api_key": "fake-api-key"
     },
-    "searchLargerTimeRange": 0
+    "searchLargerTimeRange": 0,
+    "globalListenCount": 666,
+    "globalUserCount": "42"
 }

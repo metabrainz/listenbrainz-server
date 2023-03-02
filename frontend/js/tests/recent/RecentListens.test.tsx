@@ -43,6 +43,8 @@ const {
   youtube,
   user,
   userPinnedRecording,
+  globalListenCount,
+  globalUserCount,
 } = recentListensProps;
 
 const props = {
@@ -54,6 +56,8 @@ const props = {
   profileUrl,
   user,
   userPinnedRecording,
+  globalListenCount,
+  globalUserCount,
   newAlert: () => {},
 };
 
