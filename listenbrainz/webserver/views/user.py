@@ -176,7 +176,7 @@ def charts(user_name):
 
     return render_template(
         "user/charts.html",
-        active_section="charts",
+        active_section="reports",
         props=ujson.dumps(props),
         user=user
     )
