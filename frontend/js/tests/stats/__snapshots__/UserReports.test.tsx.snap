@@ -82,6 +82,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="artist"
+            newAlert={[Function]}
             range="week"
             terminology="artist"
           />
@@ -94,6 +95,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="release"
+            newAlert={[Function]}
             range="week"
             terminology="album"
           />
@@ -106,6 +108,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="recording"
+            newAlert={[Function]}
             range="week"
             terminology="track"
           />
@@ -213,6 +216,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="artist"
+            newAlert={[Function]}
             range="week"
             terminology="artist"
             user={
@@ -230,6 +234,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="release"
+            newAlert={[Function]}
             range="week"
             terminology="album"
             user={
@@ -247,6 +252,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="recording"
+            newAlert={[Function]}
             range="week"
             terminology="track"
             user={
