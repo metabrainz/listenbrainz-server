@@ -244,10 +244,10 @@ export default class ListenCard extends React.Component<
       currentFeedback,
       newAlert,
       updateFeedbackCallback,
+      additionalActions,
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
-    const { additionalActions } = this.props;
     const { modal } = this.context;
 
     const recordingMSID = getRecordingMSID(listen);
@@ -517,6 +517,7 @@ export default class ListenCard extends React.Component<
                   </ul>
                 </>
               )}
+              {additionalActions}
               <button
                 title="Play"
                 className="btn-transparent play-button"
@@ -529,7 +530,6 @@ export default class ListenCard extends React.Component<
                   <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
                 )}
               </button>
-              {additionalActions}
             </div>
           </div>
         </div>

@@ -11,11 +11,15 @@ import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
 import { getPageProps } from "../utils/utils";
 import { getAllStatRanges } from "./utils";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "../notifications/AlertNotificationsHOC";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
   apiUrl: string;
-};
+} & WithAlertNotificationsInjectedProps;
 
 export type UserReportsState = {
   range: UserStatsAPIRange;
@@ -76,7 +80,7 @@ export default class UserReports extends React.Component<
 
   render() {
     const { range } = this.state;
-    const { apiUrl, user } = this.props;
+    const { apiUrl, user, newAlert } = this.props;
 
     const ranges = getAllStatRanges();
     return (
@@ -111,6 +115,7 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="artist"
+                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -122,6 +127,7 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="album"
+                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -133,6 +139,7 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="track"
+                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -167,11 +174,14 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
+  const UserReportsPageWithAlertNotifications = withAlertNotifications(
+    UserReports
+  );
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <UserReports apiUrl={api_url} user={user} />
+      <UserReportsPageWithAlertNotifications apiUrl={api_url} user={user} />
     </ErrorBoundary>
   );
 });
