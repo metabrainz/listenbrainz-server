@@ -11,9 +11,7 @@ import {
   isInvalidStatRange,
   userChartEntityToListen,
 } from "./utils";
-import { COLOR_LB_ASPHALT } from "../utils/constants";
 import ListenCard from "../listens/ListenCard";
-import Pill from "../components/Pill";
 
 export type UserTopEntityProps = {
   range: UserStatsAPIRange;
@@ -145,8 +143,6 @@ export default class UserTopEntity extends React.Component<
                     entity: artist.artist_name,
                     entityType: "artist" as Entity,
                     entityMBID: artist.artist_mbid ?? "",
-                    artist: artist.artist_name,
-                    artistMBID: [artist.artist_mbid!],
                     idx: index + 1,
                     count: artist.listen_count,
                   };
@@ -163,8 +159,13 @@ export default class UserTopEntity extends React.Component<
                       currentFeedback={0}
                       newAlert={newAlert}
                       additionalActions={
-                        <span className="badge">{artist.listen_count}</span>
+                        <span className="badge badge-info">
+                          {artist.listen_count}
+                        </span>
                       }
+                      // no thumbnail for artist entities
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      customThumbnail={<></>}
                       // eslint-disable-next-line react/jsx-no-useless-fragment
                       feedbackComponent={<></>}
                       compact
@@ -201,7 +202,9 @@ export default class UserTopEntity extends React.Component<
                       currentFeedback={0}
                       newAlert={newAlert}
                       additionalActions={
-                        <span className="badge">{release.listen_count}</span>
+                        <span className="badge badge-info">
+                          {release.listen_count}
+                        </span>
                       }
                       // eslint-disable-next-line react/jsx-no-useless-fragment
                       feedbackComponent={<></>}
@@ -251,8 +254,11 @@ export default class UserTopEntity extends React.Component<
                       showUsername={false}
                       newAlert={newAlert}
                       additionalActions={
-                        <span className="badge">{listen_count}</span>
+                        <span className="badge badge-info">{listen_count}</span>
                       }
+                      // Disabling the feedback component here because of display issues with the badge
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      feedbackComponent={<></>}
                       compact
                     />
                   );

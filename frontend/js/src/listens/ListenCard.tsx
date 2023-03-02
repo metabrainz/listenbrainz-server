@@ -368,7 +368,10 @@ export default class ListenCard extends React.Component<
           ) : (
             <div className="listen-details">
               <div className="title-duration">
-                <div title={trackName} className="ellipsis-2-lines">
+                <div
+                  title={trackName}
+                  className={compact ? "ellipsis" : "ellipsis-2-lines"}
+                >
                   {getTrackLink(listen)}
                 </div>
                 {trackDurationMs && (
@@ -517,7 +520,6 @@ export default class ListenCard extends React.Component<
                   </ul>
                 </>
               )}
-              {additionalActions}
               <button
                 title="Play"
                 className="btn-transparent play-button"
@@ -530,6 +532,7 @@ export default class ListenCard extends React.Component<
                   <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
                 )}
               </button>
+              {additionalActions}
             </div>
           </div>
         </div>
