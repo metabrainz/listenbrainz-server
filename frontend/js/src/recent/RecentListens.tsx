@@ -35,9 +35,12 @@ import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import SimpleModal from "../utils/SimpleModal";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+import Card from "../components/Card";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
+  globalListenCount: number;
+  globalUserCount: string;
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
@@ -201,14 +204,30 @@ export default class RecentListens extends React.Component<
       recordingToMapToMusicbrainz,
       recordingToPersonallyRecommend,
     } = this.state;
-    const { newAlert } = this.props;
+    const { newAlert, globalListenCount, globalUserCount } = this.props;
     const { APIService, currentUser } = this.context;
 
     return (
       <div role="main">
-        <h3>Recent listens</h3>
+        <h3>Global listens</h3>
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-4 col-md-push-8">
+            <Card id="listen-count-card">
+              <div>
+                {globalListenCount?.toLocaleString() ?? "-"}
+                <br />
+                <small className="text-muted">songs played</small>
+              </div>
+            </Card>
+            <Card id="listen-count-card">
+              <div>
+                {globalUserCount ?? "-"}
+                <br />
+                <small className="text-muted">users</small>
+              </div>
+            </Card>
+          </div>
+          <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
               <h5 className="text-center">No listens to show</h5>
             )}
@@ -301,7 +320,6 @@ export default class RecentListens extends React.Component<
               </div>
             )}
           </div>
-          <div className="col-md-4" />
           {currentUser && (
             <>
               <PinRecordingModal
@@ -356,7 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sentry_traces_sample_rate,
   } = globalReactProps;
 
-  const { listens } = reactProps;
+  const { listens, globalListenCount, globalUserCount } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -392,6 +410,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <RecentListensWithAlertNotifications
           initialAlerts={optionalAlerts}
           listens={listens}
+          globalListenCount={globalListenCount}
+          globalUserCount={globalUserCount}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>

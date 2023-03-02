@@ -162,9 +162,17 @@ def recent_listens():
                 "listened_at": listen.ts_since_epoch,
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
+            
+    listen_count = _ts.get_total_listen_count()
+    try:
+        user_count = format(int(_get_user_count()), ',d')
+    except DatabaseException as e:
+        user_count = 'Unknown'
 
     props = {
         "listens": recent,
+        "globalListenCount":listen_count,
+        "globalUserCount": user_count
     }
 
     return render_template("index/recent.html", props=ujson.dumps(props))

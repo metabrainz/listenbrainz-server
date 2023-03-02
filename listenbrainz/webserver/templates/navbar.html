@@ -7,7 +7,7 @@
   {#- Collect the nav links, forms, and other content for toggling -#}
 
   {% if not hide_navbar_user_menu %}
-    <div class="navbar-nav">
+    <div class="main-nav">
       {% if current_user.is_authenticated %}
       <a href="{{ url_for('index.feed') }}" {{ 'class=active' if active_page == 'feed'}}>Feed</a>
       <a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}"  {{ 'class=active' if active_page=='profile' and my_profile }}>Profile</a>
