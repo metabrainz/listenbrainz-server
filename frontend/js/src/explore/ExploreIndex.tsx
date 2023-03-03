@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <ExploreIndex
               name="Fresh Releases"
               desc="Discover"
-              img_name="fresh-releases.png"
+              img_name="fresh-releases.jpg"
               url="/explore/fresh-releases"
             />
           </div>
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <ExploreIndex
               name="Hue Sound"
               desc="Discover"
-              img_name="huesound.png"
+              img_name="huesound.jpg"
               url="/explore/huesound"
             />
           </div>
@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <ExploreIndex
               name="Cover Art Collage"
               desc="Discover"
-              img_name="cover-art-collage.png"
+              img_name="cover-art-collage.jpg"
               url="/explore/cover-art-collage"
             />
           </div>
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <ExploreIndex
               name="Top Similar Users"
               desc="Social"
-              img_name="similar-users.png"
+              img_name="similar-users.jpg"
               url="/explore/similar-users"
             />
           </div>
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <ExploreIndex
                 name="Your Year in Music"
                 desc="Review"
-                img_name="year-in-music.png"
+                img_name="year-in-music.jpg"
                 url="/user/rob/year-in-music"
               />
             </div>
