@@ -5,7 +5,7 @@ MarkupSafe==2.0.1
 itsdangerous==2.0.1
 kombu==5.1.0
 python-dateutil==2.8.0
-numpy==1.22.3
+numpy==1.24.1
 pydantic == 1.8.2
 sentry-sdk == 0.20.3
 unidecode == 1.2.0
