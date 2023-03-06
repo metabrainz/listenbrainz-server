@@ -1,11 +1,11 @@
 {% extends 'user/base.html' %}
 {%- block title -%}
-  {% if current_user.is_authenticated %}
+  {% if current_user.musicbrainz_id == user.musicbrainz_id %}
   Your 
   {% else %}
-  {{ user.musicbrainz_id }}'s
+  {{ user.musicbrainz_id }}'s&nbsp;
   {%- endif -%}
-  Playlists - ListenBrainz
+   Playlists - ListenBrainz
 {%- endblock-%}
 
 {% block profile_content %}
