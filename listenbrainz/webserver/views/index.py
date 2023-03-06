@@ -311,6 +311,6 @@ def charts():
 
 
 @index_bp.route("/statistics/")
-def reports():
-    """ Show sitewide reports """
-    return render_template("index/reports.html")
+def stats():
+    """ Show sitewide stats """
+    return render_template("index/stats.html")
