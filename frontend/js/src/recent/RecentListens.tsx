@@ -35,7 +35,6 @@ import {
 import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import SimpleModal from "../utils/SimpleModal";
-import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -47,7 +46,6 @@ export interface RecentListensState {
   recordingToPin?: Listen;
   recordingToReview?: Listen;
   recordingToMapToMusicbrainz?: Listen;
-  recordingToPersonallyRecommend: Listen;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
 }
@@ -66,7 +64,6 @@ export default class RecentListens extends React.Component<
       recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
       recordingToMapToMusicbrainz: props.listens?.[0],
-      recordingToPersonallyRecommend: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
     };
@@ -78,12 +75,6 @@ export default class RecentListens extends React.Component<
 
   updateRecordingToPin = (recordingToPin: Listen) => {
     this.setState({ recordingToPin });
-  };
-
-  updateRecordingToPersonallyRecommend = (
-    recordingToPersonallyRecommend: Listen
-  ) => {
-    this.setState({ recordingToPersonallyRecommend });
   };
 
   updateRecordingToReview = (recordingToReview: Listen) => {
@@ -200,7 +191,6 @@ export default class RecentListens extends React.Component<
       recordingToPin,
       recordingToReview,
       recordingToMapToMusicbrainz,
-      recordingToPersonallyRecommend,
     } = this.state;
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -269,20 +259,6 @@ export default class RecentListens extends React.Component<
                     />
                   );
 
-                  if (isListenPersonallyRecommendable) {
-                    additionalMenuItems.push(
-                      <ListenControl
-                        text="Personally recommend"
-                        icon={faPaperPlane}
-                        action={this.updateRecordingToPersonallyRecommend.bind(
-                          this,
-                          listen
-                        )}
-                        dataToggle="modal"
-                        dataTarget="#PersonalRecommendationModal"
-                      />
-                    );
-                  }
                   /* eslint-enable react/jsx-no-bind */
                   return (
                     <ListenCard
@@ -319,10 +295,6 @@ export default class RecentListens extends React.Component<
               <CBReviewModal
                 listen={recordingToReview}
                 isCurrentUser
-                newAlert={newAlert}
-              />
-              <PersonalRecommendationModal
-                recordingToPersonallyRecommend={recordingToPersonallyRecommend}
                 newAlert={newAlert}
               />
             </>
