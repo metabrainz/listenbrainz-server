@@ -51,11 +51,11 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for("redirect.redirect_listens"))
         self.assertRedirects(response, "/user/iliekcomputers/")
 
-        response = self.client.get(url_for("redirect.redirect_charts"))
-        self.assertRedirects(response, "/user/iliekcomputers/charts/")
+        response = self.client.get(url_for("redirect.redirect_stats"))
+        self.assertRedirects(response, "/user/iliekcomputers/stats/")
 
-        response = self.client.get(url_for("redirect.redirect_charts") + "?foo=bar")
-        self.assertRedirects(response, "/user/iliekcomputers/charts/?foo=bar")
+        response = self.client.get(url_for("redirect.redirect_stats") + "?foo=bar")
+        self.assertRedirects(response, "/user/iliekcomputers/stats/?foo=bar")
 
     def test_user_redirects(self):
         response = self.client.get('/user/iliekcomputers/')
