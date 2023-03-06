@@ -27,7 +27,7 @@ export interface PersonalRecommendationModalState {
   suggestions: Array<string>;
 }
 
-const maxBlurbContentLength = 280;
+export const maxBlurbContentLength = 280;
 
 /** A note about this modal:
  * We use Bootstrap 3 modals, which work with jQuery and data- attributes
@@ -119,39 +119,43 @@ export default NiceModal.create(
       setTimeout(modal.remove, 1000);
     };
 
-    const submitPersonalRecommendation = useCallback(async () => {
-      if (currentUser?.auth_token) {
-        const metadata: UserTrackPersonalRecommendationMetadata = {
-          artist_name: getArtistName(listenToPersonallyRecommend),
-          track_name: getTrackName(listenToPersonallyRecommend),
-          release_name: listenToPersonallyRecommend!.track_metadata
-            .release_name,
-          recording_mbid: getRecordingMBID(listenToPersonallyRecommend),
-          recording_msid: getRecordingMSID(listenToPersonallyRecommend),
-          users,
-          blurb_content: blurbContent,
-        };
-        try {
-          const status = await APIService.submitPersonalRecommendation(
-            currentUser.auth_token,
-            currentUser.name,
-            metadata
-          );
-          if (status === 200) {
-            newAlert(
-              "success",
-              `You recommended this track to ${users.length} user${
-                users.length > 1 ? "s" : ""
-              }`,
-              `${metadata.artist_name} - ${metadata.track_name}`
+    const submitPersonalRecommendation = useCallback(
+      async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        if (currentUser?.auth_token) {
+          const metadata: UserTrackPersonalRecommendationMetadata = {
+            artist_name: getArtistName(listenToPersonallyRecommend),
+            track_name: getTrackName(listenToPersonallyRecommend),
+            release_name: listenToPersonallyRecommend!.track_metadata
+              .release_name,
+            recording_mbid: getRecordingMBID(listenToPersonallyRecommend),
+            recording_msid: getRecordingMSID(listenToPersonallyRecommend),
+            users,
+            blurb_content: blurbContent,
+          };
+          try {
+            const status = await APIService.submitPersonalRecommendation(
+              currentUser.auth_token,
+              currentUser.name,
+              metadata
             );
-            closeModal();
+            if (status === 200) {
+              newAlert(
+                "success",
+                `You recommended this track to ${users.length} user${
+                  users.length > 1 ? "s" : ""
+                }`,
+                `${metadata.artist_name} - ${metadata.track_name}`
+              );
+              closeModal();
+            }
+          } catch (error) {
+            handleError(error, "Error while recommending a track");
           }
-        } catch (error) {
-          handleError(error, "Error while recommending a track");
         }
-      }
-    }, [listenToPersonallyRecommend, blurbContent, users]);
+      },
+      [listenToPersonallyRecommend, blurbContent, users]
+    );
 
     const {
       track_name,
@@ -230,7 +234,7 @@ export default NiceModal.create(
                 Cancel
               </button>
               <button
-                type="button"
+                type="submit"
                 className="btn btn-success"
                 data-dismiss="modal"
                 disabled={users.length === 0}
