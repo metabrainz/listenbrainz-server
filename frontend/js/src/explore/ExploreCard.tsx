@@ -87,7 +87,7 @@ function ExplorePage() {
             name="Your Year in Music 2022"
             desc="Review"
             img_name="year-in-music-2022.jpg"
-            url="/user/rob/year-in-music/2022"
+            url={`/user/${currentUser.name}/year-in-music/2022`}
           />
         </div>
       )}
@@ -97,7 +97,7 @@ function ExplorePage() {
             name="Your Year in Music 2021"
             desc="Review"
             img_name="year-in-music-2021.jpg"
-            url="/user/rob/year-in-music/2021"
+            url={`/user/${currentUser.name}/year-in-music/2021`}
           />
         </div>
       )}
