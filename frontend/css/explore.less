@@ -1,3 +1,16 @@
+.explore-card-container {
+  width: 100%;
+  float: left;
+  padding: 0 15px;
+
+  @media (min-width: 600px) {
+    width: 50%;
+  }
+  @media (min-width: 900px) {
+    width: 33%;
+  }
+}
+
 .explore-card {
     max-width: 600px;
     margin-bottom: 2em;
@@ -5,7 +18,7 @@
 }
 
 .explore-card-img-clip {
-    max-height: 171px;
+    height: 171px;
     overflow: hidden;
     position: relative;
 }

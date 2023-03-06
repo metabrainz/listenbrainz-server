@@ -21,22 +21,24 @@ type ExplorePageProps = {
 function ExploreIndex(props: ExplorePageProps) {
   const { name, desc, img_name, url } = props;
   return (
-    <div className="explore-card">
-      <a href={`${url}`}>
-        <div className="explore-card-img-overlay"> </div>
-      </a>
-      <div className="explore-card-img-clip">
-        <img
-          src={`/static/img/explore/${img_name}`}
-          alt={name}
-          className="explore-card-img"
-        />
-      </div>
-      <div className="explore-card-text">
-        <div className="explore-card-text-name">
-          <a href={`${url}`}>{name}</a>
+    <div className="explore-card-container">
+      <div className="explore-card">
+        <a href={`${url}`}>
+          <div className="explore-card-img-overlay"> </div>
+        </a>
+        <div className="explore-card-img-clip flex-center">
+          <img
+            src={`/static/img/explore/${img_name}`}
+            alt={name}
+            className="explore-card-img"
+          />
         </div>
-        <div>{desc}</div>
+        <div className="explore-card-text">
+          <div className="explore-card-text-name">
+            <a href={`${url}`}>{name}</a>
+          </div>
+          <div>{desc}</div>
+        </div>
       </div>
     </div>
   );
@@ -64,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <div className="row">
-          <div className="col-lg-4 col-md-6">
+          <div>
             <ExploreIndex
               name="Fresh Releases"
               desc="Discover"
@@ -72,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
               url="/explore/fresh-releases"
             />
           </div>
-          <div className="col-lg-4 col-md-6">
+          <div>
             <ExploreIndex
               name="Hue Sound"
               desc="Discover"
@@ -80,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
               url="/explore/huesound"
             />
           </div>
-          <div className="col-lg-4 col-md-6">
+          <div>
             <ExploreIndex
               name="Cover Art Collage"
               desc="Discover"
@@ -88,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
               url="/explore/cover-art-collage"
             />
           </div>
-          <div className="col-lg-4 col-md-6">
+          <div>
             <ExploreIndex
               name="Top Similar Users"
               desc="Social"
@@ -97,12 +99,22 @@ document.addEventListener("DOMContentLoaded", () => {
             />
           </div>
           {current_user?.name && (
-            <div className="col-lg-4 col-md-6">
+            <div>
               <ExploreIndex
-                name="Your Year in Music"
+                name="Your Year in Music 2022"
                 desc="Review"
-                img_name="year-in-music.jpg"
-                url="/user/rob/year-in-music"
+                img_name="year-in-music-2022.jpg"
+                url="/user/rob/year-in-music/2022"
+              />
+            </div>
+          )}
+          {current_user?.name && (
+            <div>
+              <ExploreIndex
+                name="Your Year in Music 2021"
+                desc="Review"
+                img_name="year-in-music-2021.jpg"
+                url="/user/rob/year-in-music/2021"
               />
             </div>
           )}
