@@ -4,16 +4,18 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import { withAlertNotifications } from "../../notifications/AlertNotificationsHOC";
+import APIServiceClass from "../../utils/APIService";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../utils/GlobalAppContext";
 
-import { getPageProps } from "../utils/utils";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import { getPageProps } from "../../utils/utils";
+import ErrorBoundary from "../../utils/ErrorBoundary";
 import ReleaseCard from "./ReleaseCard";
 import ReleaseFilters from "./ReleaseFilters";
 import ReleaseTimeline from "./ReleaseTimeline";
-import Pill from "../components/Pill";
+import Pill from "../../components/Pill";
 
 export type FreshReleasesProps = {
   newAlert: (
