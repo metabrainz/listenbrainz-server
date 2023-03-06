@@ -839,18 +839,21 @@ export default class Listens extends React.Component<
     const isOldestButtonDisabled =
       listens?.length > 0 &&
       listens[listens.length - 1]?.listened_at <= oldestListenTs;
+    const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
       <div role="main">
         <div className="listen-header">
           {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
-          <button
-            type="button"
-            className="btn btn-primary add-listen-btn"
-            data-Toggle="modal"
-            data-Target="#AddListenModal"
-          >
-            Add listen
-          </button>
+          {isCurrentUsersPage && (
+            <button
+              type="button"
+              className="btn btn-primary add-listen-btn"
+              data-Toggle="modal"
+              data-Target="#AddListenModal"
+            >
+              Add listen
+            </button>
+          )}
         </div>
 
         <div className="row">
@@ -859,7 +862,7 @@ export default class Listens extends React.Component<
             {userPinnedRecording && (
               <PinnedRecordingCard
                 pinnedRecording={userPinnedRecording}
-                isCurrentUser={currentUser?.name === user?.name}
+                isCurrentUser={isCurrentUsersPage}
                 currentFeedback={userPinnedRecordingFeedback}
                 updateFeedbackCallback={this.updateFeedback}
                 removePinFromPinsList={() => {}}
@@ -873,7 +876,7 @@ export default class Listens extends React.Component<
             {!listens.length && (
               <div className="empty-listens">
                 <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
-                {currentUser?.name === user?.name ? (
+                {isCurrentUsersPage ? (
                   <div className="lead empty-text">Get listening</div>
                 ) : (
                   <div className="lead empty-text">
@@ -881,7 +884,7 @@ export default class Listens extends React.Component<
                   </div>
                 )}
 
-                {currentUser?.name === user?.name && (
+                {isCurrentUsersPage && (
                   <div className="empty-action">
                     Import <a href="/profile/import/">your listening history</a>{" "}
                     from last.fm/libre.fm and track your listens by{" "}
@@ -1036,7 +1039,7 @@ export default class Listens extends React.Component<
                     />
                     <CBReviewModal
                       listen={recordingToReview}
-                      isCurrentUser={currentUser?.name === user?.name}
+                      isCurrentUser={isCurrentUsersPage}
                       newAlert={newAlert}
                     />
                     <PersonalRecommendationModal
