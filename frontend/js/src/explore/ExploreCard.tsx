@@ -24,7 +24,7 @@ function ExploreCard(props: ExploreCardProps) {
   return (
     <div className="explore-card-container">
       <div className="explore-card">
-        <a href={`${url}`}>
+        <a href={url}>
           <div className="explore-card-img-overlay"> </div>
         </a>
         <div className="explore-card-img-clip flex-center">
@@ -36,7 +36,7 @@ function ExploreCard(props: ExploreCardProps) {
         </div>
         <div className="explore-card-text">
           <div className="explore-card-text-name">
-            <a href={`${url}`}>{name}</a>
+            <a href={url}>{name}</a>
           </div>
           <div>{desc}</div>
         </div>
