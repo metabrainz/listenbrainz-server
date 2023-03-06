@@ -68,10 +68,10 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get('/user/iliekcomputers/charts')
         self.assertRedirects(response, '/user/iliekcomputers/charts/', permanent=True)
 
-        response = self.client.get('/user/iliekcomputers/reports/')
+        response = self.client.get('/user/iliekcomputers/stats/')
         self.assert200(response)
-        response = self.client.get('/user/iliekcomputers/reports')
-        self.assertRedirects(response, '/user/iliekcomputers/reports/', permanent=True)
+        response = self.client.get('/user/iliekcomputers/stats')
+        self.assertRedirects(response, '/user/iliekcomputers/stats/', permanent=True)
 
         # these are permanent redirects to user/<username>/charts
 
