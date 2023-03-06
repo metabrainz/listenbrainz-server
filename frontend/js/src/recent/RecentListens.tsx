@@ -11,6 +11,7 @@ import {
   faThumbtack,
   faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -389,10 +390,12 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <RecentListensWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          listens={listens}
-        />
+        <NiceModal.Provider>
+          <RecentListensWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            listens={listens}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

@@ -20,6 +20,7 @@ import {
   faTrashAlt,
   faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -1116,14 +1117,16 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <ListensWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          latestListenTs={latest_listen_ts}
-          listens={listens}
-          userPinnedRecording={userPinnedRecording}
-          oldestListenTs={oldest_listen_ts}
-          user={user}
-        />
+        <NiceModal.Provider>
+          <ListensWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            latestListenTs={latest_listen_ts}
+            listens={listens}
+            userPinnedRecording={userPinnedRecording}
+            oldestListenTs={oldest_listen_ts}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

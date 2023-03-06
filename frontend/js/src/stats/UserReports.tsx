@@ -3,6 +3,7 @@ import * as React from "react";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
@@ -171,7 +172,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <UserReports apiUrl={api_url} user={user} />
+      <NiceModal.Provider>
+        <UserReports apiUrl={api_url} user={user} />
+      </NiceModal.Provider>
     </ErrorBoundary>
   );
 });

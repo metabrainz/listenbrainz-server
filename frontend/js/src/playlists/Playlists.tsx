@@ -14,6 +14,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -402,12 +403,14 @@ document.addEventListener("DOMContentLoaded", () => {
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <UserPlaylistsWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          playlistCount={playlistCount}
-          playlists={playlists}
-          user={user}
-        />
+        <NiceModal.Provider>
+          <UserPlaylistsWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            playlistCount={playlistCount}
+            playlists={playlists}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

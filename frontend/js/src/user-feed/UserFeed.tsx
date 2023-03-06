@@ -27,6 +27,7 @@ import { get as _get, reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import * as _ from "lodash";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -945,10 +946,12 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <UserFeedPageWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          events={events}
-        />
+        <NiceModal.Provider>
+          <UserFeedPageWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            events={events}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

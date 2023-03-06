@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
+import NiceModal from "@ebay/nice-modal-react";
 import ColorWheel from "./ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -264,7 +265,9 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <ColorPlayWithAlertNotifications user={user} />
+        <NiceModal.Provider>
+          <ColorPlayWithAlertNotifications user={user} />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

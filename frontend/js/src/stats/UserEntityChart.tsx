@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual, isNil } from "lodash";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
@@ -708,10 +709,12 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <UserEntityChartWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          user={user}
-        />
+        <NiceModal.Provider>
+          <UserEntityChartWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

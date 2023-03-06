@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -310,14 +311,16 @@ document.addEventListener("DOMContentLoaded", () => {
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <RecommendationsPageWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          playlistCount={playlistCount}
-          playlists={playlists}
-          paginationOffset={paginationOffset}
-          playlistsPerPage={playlistsPerPage}
-          user={user}
-        />
+        <NiceModal.Provider>
+          <RecommendationsPageWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            playlistCount={playlistCount}
+            playlists={playlists}
+            paginationOffset={paginationOffset}
+            playlistsPerPage={playlistsPerPage}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );
