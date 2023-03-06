@@ -10,8 +10,8 @@ import APIService from "../../src/utils/APIService";
 
 import FreshReleases, {
   FreshReleasesProps,
-} from "../../src/fresh-releases/FreshReleases";
-import ReleaseFilters from "../../src/fresh-releases/ReleaseFilters";
+} from "../../src/explore/fresh-releases/FreshReleases";
+import ReleaseFilters from "../../src/explore/fresh-releases/ReleaseFilters";
 
 import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
 import * as userData from "../__mocks__/freshReleasesUserData.json";

@@ -7,6 +7,16 @@ from listenbrainz.db.similar_users import get_top_similar_users
 explore_bp = Blueprint('explore', __name__)
 
 
+@explore_bp.route("/")
+def index():
+    """ Main explore page for users to browse the various explore features """
+
+    return render_template(
+        "explore/index.html",
+        props=ujson.dumps({})
+    )
+
+
 @explore_bp.route("/huesound/")
 def huesound():
     """ Hue Sound browse music by color of cover art """

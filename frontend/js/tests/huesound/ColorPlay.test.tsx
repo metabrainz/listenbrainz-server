@@ -7,8 +7,8 @@ import { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 import * as colorPlayProps from "../__mocks__/colorPlayProps.json";
-import ColorPlay from "../../src/huesound/ColorPlay";
-import ColorWheel from "../../src/huesound/ColorWheel";
+import ColorPlay from "../../src/explore/huesound/ColorPlay";
+import ColorWheel from "../../src/explore/huesound/ColorWheel";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
