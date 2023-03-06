@@ -6,7 +6,7 @@ exports[`NamePill renders correctly 1`] = `
   title="foobar"
 >
   <div
-    className="pill secondary name-pill active"
+    className="pill secondary active"
   >
     <span>
       foobar

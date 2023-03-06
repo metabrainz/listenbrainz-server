@@ -11,7 +11,7 @@ export type NamePillProps = {
 function NamePill(props: NamePillProps) {
   const { title, closeAction } = props;
   return (
-    <div className="pill secondary name-pill active">
+    <div className="pill secondary active">
       <span>{title}</span>
       {isFunction(closeAction) && (
         <ListenControl text="" icon={faTimesCircle} action={closeAction} />
