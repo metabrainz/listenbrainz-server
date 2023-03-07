@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, isEqual, isNil, isNumber } from "lodash";
+import { get, get as _get, isEqual, isNil, isNumber } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -10,6 +10,7 @@ import {
   faCopy,
   faPaperPlane,
   faThumbtack,
+  faPencilAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSoundcloud,
@@ -32,6 +33,8 @@ import {
   getTrackName,
   getTrackDurationInMs,
   getRecordingMSID,
+  getArtistMBIDs,
+  getReleaseGroupMBID,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
@@ -43,6 +46,7 @@ import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import { millisecondsToStr } from "../playlists/utils";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 import PinRecordingModal from "../pins/PinRecordingModal";
+import CBReviewModal from "../cb-review/CBReviewModal";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -257,7 +261,10 @@ export default class ListenCard extends React.Component<
 
     const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
+    const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
     const releaseMBID = getReleaseMBID(listen);
+    const releaseGroupMBID = getReleaseGroupMBID(listen);
+    const artistMBIDs = getArtistMBIDs(listen);
     const spotifyURL = SpotifyPlayer.getURLFromListen(listen);
     const youtubeURL = YoutubePlayer.getURLFromListen(listen);
     const soundcloudURL = SoundcloudPlayer.getURLFromListen(listen);
@@ -270,6 +277,11 @@ export default class ListenCard extends React.Component<
     const hasRecordingMBID = Boolean(recordingMBID);
     const hasInfoAndMBID =
       artistName && trackName && (hasRecordingMSID || hasRecordingMBID);
+    const isListenReviewable =
+      Boolean(recordingMBID) ||
+      artistMBIDs?.length ||
+      Boolean(trackMBID) ||
+      Boolean(releaseGroupMBID);
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
@@ -513,6 +525,20 @@ export default class ListenCard extends React.Component<
                         }}
                         dataToggle="modal"
                         dataTarget="#PersonalRecommendationModal"
+                      />
+                    )}
+                    {isListenReviewable && (
+                      <ListenControl
+                        text="Write a review"
+                        icon={faPencilAlt}
+                        action={() => {
+                          NiceModal.show(CBReviewModal, {
+                            listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#CBReviewModal"
                       />
                     )}
                     {additionalMenuItems}
