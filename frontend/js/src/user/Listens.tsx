@@ -42,7 +42,6 @@ import {
   getTrackName,
   getRecordingMSID,
 } from "../utils/utils";
-import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCountCard from "../listens/ListenCountCard";
@@ -66,7 +65,6 @@ export interface ListensState {
   previousListenTs?: number;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
-  recordingToReview?: Listen;
   recordingToMapToMusicbrainz?: Listen;
   dateTimePickerValue: Date;
   /* This is used to mark a listen as deleted
@@ -103,7 +101,6 @@ export default class Listens extends React.Component<
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
-      recordingToReview: props.listens?.[0],
       recordingToMapToMusicbrainz: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
@@ -544,10 +541,6 @@ export default class Listens extends React.Component<
       : 0;
   };
 
-  updateRecordingToReview = (recordingToReview: Listen) => {
-    this.setState({ recordingToReview });
-  };
-
   updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
     this.setState({ recordingToMapToMusicbrainz });
   };
@@ -679,35 +672,16 @@ export default class Listens extends React.Component<
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
     const listenedAt = get(listen, "listened_at");
     const recordingMSID = getRecordingMSID(listen);
-    const recordingMBID = getRecordingMBID(listen);
-    const artistMBIDs = getArtistMBIDs(listen);
-    const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
-    const releaseGroupMBID = getReleaseGroupMBID(listen);
     const canDelete =
       isCurrentUser &&
       (Boolean(listenedAt) || listenedAt === 0) &&
       Boolean(recordingMSID);
 
-    const isListenReviewable =
-      Boolean(recordingMBID) ||
-      artistMBIDs?.length ||
-      Boolean(trackMBID) ||
-      Boolean(releaseGroupMBID);
     const canManuallyMap = Boolean(recordingMSID);
 
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
-    if (isListenReviewable) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Write a review"
-          icon={faPencilAlt}
-          action={this.updateRecordingToReview.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#CBReviewModal"
-        />
-      );
-    }
+
     if (canManuallyMap) {
       additionalMenuItems.push(
         <ListenControl
@@ -768,7 +742,6 @@ export default class Listens extends React.Component<
       previousListenTs,
       dateTimePickerValue,
       recordingToMapToMusicbrainz,
-      recordingToReview,
       userPinnedRecording,
       playingNowListen,
     } = this.state;
@@ -977,17 +950,10 @@ export default class Listens extends React.Component<
                   </li>
                 </ul>
                 {currentUser && (
-                  <>
-                    <MbidMappingModal
-                      listenToMap={recordingToMapToMusicbrainz}
-                      newAlert={newAlert}
-                    />
-                    <CBReviewModal
-                      listen={recordingToReview}
-                      isCurrentUser={isCurrentUsersPage}
-                      newAlert={newAlert}
-                    />
-                  </>
+                  <MbidMappingModal
+                    listenToMap={recordingToMapToMusicbrainz}
+                    newAlert={newAlert}
+                  />
                 )}
               </div>
             )}

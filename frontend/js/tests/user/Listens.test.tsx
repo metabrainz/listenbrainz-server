@@ -15,7 +15,6 @@ import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOne
 import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
 import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
-import CBReviewModal from "../../src/cb-review/CBReviewModal";
 import { waitForComponentToPaint } from "../test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
@@ -563,21 +562,6 @@ describe("Listens page", () => {
     });
   });
 
-  describe("updateRecordingToReview", () => {
-    it("sets the recordingToReview in the state", async () => {
-      wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
-      const instance = wrapper.instance();
-      const recordingToReview = props.listens[1];
-
-      expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
-      await act(() => {
-        instance.updateRecordingToReview(recordingToReview);
-      });
-      await waitForComponentToPaint(wrapper);
-      expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
-    });
-  });
-
   describe("Pagination", () => {
     const pushStateSpy = jest.spyOn(window.history, "pushState");
 
@@ -1022,38 +1006,6 @@ describe("Listens page", () => {
         expect(wrapper.state("previousListenTs")).toEqual(undefined);
         expect(pushStateSpy).toHaveBeenCalledWith(null, "", "");
         expect(scrollSpy).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe("CBReviewModal", () => {
-    it("renders the CBReviewModal component with the correct props", async () => {
-      wrapper = mount<Listens>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const listen = props.listens[0];
-      let cbReviewModal = wrapper.find(CBReviewModal).first();
-
-      // recentListens renders CBReviewModal with listens[0] as listen by default
-      expect(cbReviewModal.props()).toEqual({
-        isCurrentUser: true,
-        listen: props.listens[0],
-        newAlert: props.newAlert,
-      });
-
-      await act(() => {
-        instance.updateRecordingToReview(listen);
-      });
-      await waitForComponentToPaint(wrapper);
-
-      cbReviewModal = wrapper.find(CBReviewModal).first();
-      expect(cbReviewModal.props()).toEqual({
-        isCurrentUser: true,
-        listen,
-        newAlert: props.newAlert,
       });
     });
   });
