@@ -56,7 +56,6 @@ const getFollowersSpy = jest
 const submitPersonalRecommendationSpy = jest
   .spyOn(testAPIService, "submitPersonalRecommendation")
   .mockImplementation((userToken, userName, metadata) => {
-    console.log("submitPersonalRecommendation called");
     return Promise.resolve(200);
   });
 
