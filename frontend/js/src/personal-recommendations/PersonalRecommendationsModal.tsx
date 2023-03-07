@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import * as React from "react";
 import { uniq, includes, lowerCase } from "lodash";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -45,15 +45,15 @@ export default NiceModal.create(
   }: PersonalRecommendationModalProps) => {
     // Use a hook to manage the modal state
     const modal = useModal();
-    const [users, setUsers] = useState<string[]>([]);
-    const [followers, setFollowers] = useState<string[]>([]);
-    const [suggestions, setSuggestions] = useState<string[]>([]);
-    const [blurbContent, setBlurbContent] = useState("");
+    const [users, setUsers] = React.useState<string[]>([]);
+    const [followers, setFollowers] = React.useState<string[]>([]);
+    const [suggestions, setSuggestions] = React.useState<string[]>([]);
+    const [blurbContent, setBlurbContent] = React.useState("");
 
-    const { APIService, currentUser } = useContext(GlobalAppContext);
+    const { APIService, currentUser } = React.useContext(GlobalAppContext);
     const { name: currentUserName } = currentUser;
 
-    const handleError = useCallback(
+    const handleError = React.useCallback(
       (error: string | Error, title?: string): void => {
         if (!error) {
           return;
@@ -68,7 +68,7 @@ export default NiceModal.create(
     );
 
     /* On load, get the current user's followers */
-    useEffect(() => {
+    React.useEffect(() => {
       APIService.getFollowersOfUser(currentUserName)
         .then((response) => {
           setFollowers(response.followers);
@@ -78,7 +78,7 @@ export default NiceModal.create(
         });
     }, [currentUserName, setFollowers]);
 
-    const handleBlurbInputChange = useCallback(
+    const handleBlurbInputChange = React.useCallback(
       (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         event.preventDefault();
         const input = event.target.value.replace(/\s\s+/g, " "); // remove line breaks and excessive spaces
@@ -98,7 +98,7 @@ export default NiceModal.create(
       setUsers((prevUsers) => prevUsers.filter((element) => element !== user));
     };
 
-    const searchUsers = useCallback(
+    const searchUsers = React.useCallback(
       (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event?.target?.value) {
           const newSuggestions = followers
@@ -116,10 +116,10 @@ export default NiceModal.create(
 
     const closeModal = () => {
       modal.hide();
-      setTimeout(modal.remove, 1000);
+      setTimeout(modal.remove, 500);
     };
 
-    const submitPersonalRecommendation = useCallback(
+    const submitPersonalRecommendation = React.useCallback(
       async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         if (currentUser?.auth_token) {
