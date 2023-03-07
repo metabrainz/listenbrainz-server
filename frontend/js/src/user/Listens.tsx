@@ -16,7 +16,6 @@ import {
   faCompactDisc,
   faLink,
   faPencilAlt,
-  faThumbtack,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
@@ -31,7 +30,6 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
-import PinRecordingModal from "../pins/PinRecordingModal";
 import AddListenModal from "../add-listen/add-listen-modal";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
@@ -42,7 +40,6 @@ import {
   getArtistMBIDs,
   getReleaseGroupMBID,
   getTrackName,
-  getArtistName,
   getRecordingMSID,
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";

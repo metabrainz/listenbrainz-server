@@ -15,7 +15,6 @@ import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOne
 import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
 import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
-import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 import { waitForComponentToPaint } from "../test-utils";
 

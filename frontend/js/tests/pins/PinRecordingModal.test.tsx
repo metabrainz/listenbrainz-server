@@ -5,7 +5,6 @@ import { act } from "react-dom/test-utils";
 import NiceModal, { NiceModalHocProps } from "@ebay/nice-modal-react";
 import PinRecordingModal, {
   maxBlurbContentLength,
-  PinRecordingModalProps,
 } from "../../src/pins/PinRecordingModal";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";

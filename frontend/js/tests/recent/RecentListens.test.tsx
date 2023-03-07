@@ -17,7 +17,6 @@ import RecentListens, {
   RecentListensProps,
   RecentListensState,
 } from "../../src/recent/RecentListens";
-import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 import { waitForComponentToPaint } from "../test-utils";
 
