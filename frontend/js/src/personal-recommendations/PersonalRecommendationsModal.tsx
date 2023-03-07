@@ -20,13 +20,6 @@ export type PersonalRecommendationModalProps = {
   ) => void;
 };
 
-export interface PersonalRecommendationModalState {
-  blurbContent: string;
-  users: Array<string>;
-  followers: Array<string>;
-  suggestions: Array<string>;
-}
-
 export const maxBlurbContentLength = 280;
 
 /** A note about this modal:

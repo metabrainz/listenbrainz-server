@@ -3,6 +3,7 @@ import { mount, ReactWrapper } from "enzyme";
 
 import { omit, set } from "lodash";
 import { act } from "react-dom/test-utils";
+import NiceModal from "@ebay/nice-modal-react";
 import ListenCard, {
   ListenCardProps,
   ListenCardState,
@@ -10,6 +11,8 @@ import ListenCard, {
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import PinRecordingModal from "../../src/pins/PinRecordingModal";
+import { waitForComponentToPaint } from "../test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -299,6 +302,34 @@ describe("ListenCard", () => {
         error,
         "We encountered an error when trying to recommend the track to your followers"
       );
+    });
+  });
+  describe("pinRecordingModal", () => {
+    it("renders the PinRecordingModal component with the correct props", async () => {
+      const newAlert = jest.fn();
+      wrapper = mount(
+        <GlobalAppContext.Provider value={globalProps}>
+          <NiceModal.Provider>
+            <ListenCard {...props} newAlert={newAlert} />
+          </NiceModal.Provider>
+        </GlobalAppContext.Provider>
+      );
+      await waitForComponentToPaint(wrapper);
+      expect(wrapper.find(PinRecordingModal)).toHaveLength(0);
+
+      await act(() => {
+        const button = wrapper!.find("button[title='Pin this track']").first();
+        button?.simulate("click");
+      });
+      await waitForComponentToPaint(wrapper);
+
+      expect(wrapper.find(PinRecordingModal)).toHaveLength(1);
+      expect(
+        wrapper.find(PinRecordingModal).first().childAt(0).props()
+      ).toEqual({
+        recordingToPin: props.listen,
+        newAlert,
+      });
     });
   });
 });

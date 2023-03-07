@@ -6,11 +6,7 @@ import * as Sentry from "@sentry/react";
 import { get } from "lodash";
 
 import { Integrations } from "@sentry/tracing";
-import {
-  faPencilAlt,
-  faThumbtack,
-  faPaperPlane,
-} from "@fortawesome/free-solid-svg-icons";
+import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
@@ -23,7 +19,6 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 
-import PinRecordingModal from "../pins/PinRecordingModal";
 import {
   getPageProps,
   getRecordingMBID,
@@ -43,7 +38,6 @@ export type RecentListensProps = {
 export interface RecentListensState {
   listens: Array<Listen>;
   listenCount?: number;
-  recordingToPin?: Listen;
   recordingToReview?: Listen;
   recordingToMapToMusicbrainz?: Listen;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
@@ -61,7 +55,6 @@ export default class RecentListens extends React.Component<
     super(props);
     this.state = {
       listens: props.listens || [],
-      recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
       recordingToMapToMusicbrainz: props.listens?.[0],
       recordingMsidFeedbackMap: {},
@@ -72,10 +65,6 @@ export default class RecentListens extends React.Component<
   componentDidMount(): void {
     this.loadFeedback();
   }
-
-  updateRecordingToPin = (recordingToPin: Listen) => {
-    this.setState({ recordingToPin });
-  };
 
   updateRecordingToReview = (recordingToReview: Listen) => {
     this.setState({ recordingToReview });
@@ -188,7 +177,6 @@ export default class RecentListens extends React.Component<
   render() {
     const {
       listens,
-      recordingToPin,
       recordingToReview,
       recordingToMapToMusicbrainz,
     } = this.state;
@@ -226,15 +214,7 @@ export default class RecentListens extends React.Component<
                   // On the Recent page listens should have either an MSID or MBID or both,
                   // so we can assume we can pin them
                   /* eslint-disable react/jsx-no-bind */
-                  const additionalMenuItems = [
-                    <ListenControl
-                      text="Pin this track"
-                      icon={faThumbtack}
-                      action={this.updateRecordingToPin.bind(this, listen)}
-                      dataToggle="modal"
-                      dataTarget="#PinRecordingModal"
-                    />,
-                  ];
+                  const additionalMenuItems = [];
                   if (isListenReviewable) {
                     additionalMenuItems.push(
                       <ListenControl
@@ -280,24 +260,11 @@ export default class RecentListens extends React.Component<
           </div>
           <div className="col-md-4" />
           {currentUser && (
-            <>
-              <PinRecordingModal
-                recordingToPin={recordingToPin}
-                newAlert={newAlert}
-                onSuccessfulPin={(pinnedListen) =>
-                  newAlert(
-                    "success",
-                    "",
-                    `Successfully pinned ${getTrackName(pinnedListen)}`
-                  )
-                }
-              />
-              <CBReviewModal
-                listen={recordingToReview}
-                isCurrentUser
-                newAlert={newAlert}
-              />
-            </>
+            <CBReviewModal
+              listen={recordingToReview}
+              isCurrentUser
+              newAlert={newAlert}
+            />
           )}
         </div>
         <BrainzPlayer

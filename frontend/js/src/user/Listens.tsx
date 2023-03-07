@@ -16,7 +16,6 @@ import {
   faCompactDisc,
   faLink,
   faPencilAlt,
-  faThumbtack,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
@@ -31,7 +30,6 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
-import PinRecordingModal from "../pins/PinRecordingModal";
 import AddListenModal from "../add-listen/add-listen-modal";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
@@ -42,7 +40,6 @@ import {
   getArtistMBIDs,
   getReleaseGroupMBID,
   getTrackName,
-  getArtistName,
   getRecordingMSID,
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
@@ -69,7 +66,6 @@ export interface ListensState {
   previousListenTs?: number;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
-  recordingToPin?: Listen;
   recordingToReview?: Listen;
   recordingToMapToMusicbrainz?: Listen;
   dateTimePickerValue: Date;
@@ -107,7 +103,6 @@ export default class Listens extends React.Component<
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
-      recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
       recordingToMapToMusicbrainz: props.listens?.[0],
       recordingMsidFeedbackMap: {},
@@ -200,10 +195,6 @@ export default class Listens extends React.Component<
       this.afterListensFetch
     );
   };
-
-  handlePinnedRecording(pinnedRecording: PinnedRecording) {
-    this.setState({ userPinnedRecording: pinnedRecording });
-  }
 
   connectWebsockets = (): void => {
     this.createWebsocketsConnection();
@@ -553,10 +544,6 @@ export default class Listens extends React.Component<
       : 0;
   };
 
-  updateRecordingToPin = (recordingToPin: Listen) => {
-    this.setState({ recordingToPin });
-  };
-
   updateRecordingToReview = (recordingToReview: Listen) => {
     this.setState({ recordingToReview });
   };
@@ -706,23 +693,10 @@ export default class Listens extends React.Component<
       artistMBIDs?.length ||
       Boolean(trackMBID) ||
       Boolean(releaseGroupMBID);
-    const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
-    const canPersonallyRecommend = Boolean(recordingMSID);
     const canManuallyMap = Boolean(recordingMSID);
 
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
-    if (canPin) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Pin this track"
-          icon={faThumbtack}
-          action={this.updateRecordingToPin.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#PinRecordingModal"
-        />
-      );
-    }
     if (isListenReviewable) {
       additionalMenuItems.push(
         <ListenControl
@@ -793,7 +767,6 @@ export default class Listens extends React.Component<
       nextListenTs,
       previousListenTs,
       dateTimePickerValue,
-      recordingToPin,
       recordingToMapToMusicbrainz,
       recordingToReview,
       userPinnedRecording,
@@ -1005,13 +978,6 @@ export default class Listens extends React.Component<
                 </ul>
                 {currentUser && (
                   <>
-                    <PinRecordingModal
-                      recordingToPin={recordingToPin}
-                      newAlert={newAlert}
-                      onSuccessfulPin={(pinnedListen) =>
-                        this.handlePinnedRecording(pinnedListen)
-                      }
-                    />
                     <MbidMappingModal
                       listenToMap={recordingToMapToMusicbrainz}
                       newAlert={newAlert}
