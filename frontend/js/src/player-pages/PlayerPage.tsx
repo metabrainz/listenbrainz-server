@@ -11,6 +11,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -365,10 +366,12 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <PlayerPageWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          playlist={playlist}
-        />
+        <NiceModal.Provider>
+          <PlayerPageWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            playlist={playlist}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

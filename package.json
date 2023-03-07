@@ -36,6 +36,7 @@
     "@babel/runtime": "^7.20.6",
     "@braintree/sanitize-url": "^6.0.0",
     "@cospired/i18n-iso-languages": "^3.0.0",
+    "@ebay/nice-modal-react": "^1.2.9",
     "@fortawesome/fontawesome-svg-core": "^1.2.22",
     "@fortawesome/free-brands-svg-icons": "^5.13.0",
     "@fortawesome/free-regular-svg-icons": "^5.13.0",

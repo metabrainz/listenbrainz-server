@@ -15,6 +15,7 @@ import {
   capitalize,
   toPairs,
 } from "lodash";
+import NiceModal from "@ebay/nice-modal-react";
 import ErrorBoundary from "../../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -1005,10 +1006,12 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <YearInMusicWithAlertNotifications
-          user={user}
-          yearInMusicData={yearInMusicData}
-        />
+        <NiceModal.Provider>
+          <YearInMusicWithAlertNotifications
+            user={user}
+            yearInMusicData={yearInMusicData}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

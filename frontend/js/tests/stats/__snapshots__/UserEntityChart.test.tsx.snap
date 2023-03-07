@@ -6738,6 +6738,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -7573,6 +7655,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -8213,6 +8377,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -8861,6 +9107,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -9505,6 +9833,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -10145,6 +10555,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -11175,6 +11667,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -11815,6 +12389,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -12654,6 +13310,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -13296,6 +14034,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -15090,6 +15910,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -15925,6 +16827,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -16756,6 +17740,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -33187,6 +34253,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -34022,6 +35170,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -34662,6 +35892,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -35310,6 +36622,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -35954,6 +37348,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -36594,6 +38070,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -37624,6 +39182,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -38264,6 +39904,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -39103,6 +40825,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -39745,6 +41549,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -41539,6 +43425,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -42374,6 +44342,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -43205,6 +45255,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Recommend to my followers
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#PersonalRecommendationModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f1d8",
+                                  "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                ],
+                                "iconName": "paper-plane",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Personally recommend"
+                          >
+                            <button
+                              aria-label="Personally recommend"
+                              data-target="#PersonalRecommendationModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Personally recommend"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f1d8",
+                                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                                    ],
+                                    "iconName": "paper-plane",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-paper-plane fa-w-16 "
+                                  data-icon="paper-plane"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Personally recommend
                             </button>
                           </ListenControl>
                           <ListenControl

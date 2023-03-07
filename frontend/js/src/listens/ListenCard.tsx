@@ -8,6 +8,7 @@ import {
   faExternalLinkAlt,
   faCode,
   faCopy,
+  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSoundcloud,
@@ -17,6 +18,7 @@ import {
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   getArtistLink,
   getTrackLink,
@@ -38,6 +40,7 @@ import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import { millisecondsToStr } from "../playlists/utils";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -480,6 +483,20 @@ export default class ListenCard extends React.Component<
                         title="Recommend to my followers"
                         text="Recommend to my followers"
                         action={this.recommendListenToFollowers}
+                      />
+                    )}
+                    {enableRecommendButton && (
+                      <ListenControl
+                        text="Personally recommend"
+                        icon={faPaperPlane}
+                        action={() => {
+                          NiceModal.show(PersonalRecommendationModal, {
+                            listenToPersonallyRecommend: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#PersonalRecommendationModal"
                       />
                     )}
                     {additionalMenuItems}

@@ -23,6 +23,7 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { isEmpty, isNil } from "lodash";
+import NiceModal from "@ebay/nice-modal-react";
 import FollowButton from "../follow/FollowButton";
 import APIService from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
@@ -100,12 +101,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <GlobalAppContext.Provider value={globalProps}>
-      <UserPageHeading
-        user={user}
-        loggedInUser={current_user || null}
-        loggedInUserFollowsUser={logged_in_user_follows_user}
-        alreadyReportedUser={already_reported_user}
-      />
+      <NiceModal.Provider>
+        <UserPageHeading
+          user={user}
+          loggedInUser={current_user || null}
+          loggedInUserFollowsUser={logged_in_user_follows_user}
+          alreadyReportedUser={already_reported_user}
+        />
+      </NiceModal.Provider>
     </GlobalAppContext.Provider>
   );
 });

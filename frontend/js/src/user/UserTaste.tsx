@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { clone, get, has, isNaN } from "lodash";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   withAlertNotifications,
@@ -172,14 +173,16 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <UserTasteWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          user={user}
-          feedback={feedback}
-          totalFeedbackCount={feedback_count}
-          pins={pins}
-          totalPinsCount={pin_count}
-        />
+        <NiceModal.Provider>
+          <UserTasteWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            user={user}
+            feedback={feedback}
+            totalFeedbackCount={feedback_count}
+            pins={pins}
+            totalPinsCount={pin_count}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

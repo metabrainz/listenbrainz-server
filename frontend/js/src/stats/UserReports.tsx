@@ -3,6 +3,7 @@ import * as React from "react";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import { faGlobe, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -234,7 +235,9 @@ document.addEventListener("DOMContentLoaded", () => {
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <UserReportsPageWithAlertNotifications apiUrl={api_url} user={user} />
+        <NiceModal.Provider>
+          <UserReportsPageWithAlertNotifications apiUrl={api_url} user={user} />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );
