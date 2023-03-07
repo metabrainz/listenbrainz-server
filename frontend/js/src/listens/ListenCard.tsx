@@ -9,6 +9,7 @@ import {
   faCode,
   faCopy,
   faPaperPlane,
+  faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSoundcloud,
@@ -41,6 +42,7 @@ import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import { millisecondsToStr } from "../playlists/utils";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+import PinRecordingModal from "../pins/PinRecordingModal";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -266,13 +268,13 @@ export default class ListenCard extends React.Component<
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const hasRecordingMBID = Boolean(recordingMBID);
-    const enableRecommendButton =
+    const hasInfoAndMBID =
       artistName && trackName && (hasRecordingMSID || hasRecordingMBID);
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
       additionalMenuItems?.length ||
-      enableRecommendButton ||
+      hasInfoAndMBID ||
       recordingMBID ||
       spotifyURL ||
       youtubeURL ||
@@ -477,7 +479,21 @@ export default class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    {enableRecommendButton && (
+                    {hasInfoAndMBID && (
+                      <ListenControl
+                        text="Pin this track"
+                        icon={faThumbtack}
+                        action={() => {
+                          NiceModal.show(PinRecordingModal, {
+                            recordingToPin: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
+                      />
+                    )}
+                    {hasInfoAndMBID && (
                       <ListenControl
                         icon={faCommentDots}
                         title="Recommend to my followers"
@@ -485,7 +501,7 @@ export default class ListenCard extends React.Component<
                         action={this.recommendListenToFollowers}
                       />
                     )}
-                    {enableRecommendButton && (
+                    {hasInfoAndMBID && (
                       <ListenControl
                         text="Personally recommend"
                         icon={faPaperPlane}
