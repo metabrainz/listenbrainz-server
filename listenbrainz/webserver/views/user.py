@@ -50,10 +50,8 @@ def redirect_user_page(target):
 
 redirect_bp.add_url_rule("/listens/", "redirect_listens",
                          redirect_user_page("user.profile"))
-redirect_bp.add_url_rule("/charts/", "redirect_charts",
-                         redirect_user_page("user.charts"))
-redirect_bp.add_url_rule("/reports/", "redirect_reports",
-                         redirect_user_page("user.reports"))
+redirect_bp.add_url_rule("/stats/", "redirect_stats",
+                         redirect_user_page("user.stats"))
 redirect_bp.add_url_rule("/playlists/", "redirect_playlists",
                          redirect_user_page("user.playlists"))
 redirect_bp.add_url_rule("/recommendations/",
@@ -176,15 +174,20 @@ def charts(user_name):
 
     return render_template(
         "user/charts.html",
-        active_section="charts",
+        active_section="stats",
         props=ujson.dumps(props),
         user=user
     )
 
-
 @user_bp.route("/<user_name>/reports/")
-def reports(user_name: str):
-    """ Show user reports """
+def reports(user_name):
+    """ Redirect to stats page """
+    return redirect(url_for('user.stats', user_name=user_name), code=301)
+
+
+@user_bp.route("/<user_name>/stats/")
+def stats(user_name: str):
+    """ Show user stats """
     user = _get_user(user_name)
 
     user_data = {
@@ -198,8 +201,8 @@ def reports(user_name: str):
     }
 
     return render_template(
-        "user/reports.html",
-        active_section="reports",
+        "user/stats.html",
+        active_section="stats",
         props=ujson.dumps(props),
         user=user
     )

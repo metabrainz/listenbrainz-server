@@ -7,21 +7,23 @@ import tinycolor from "tinycolor2";
 import NiceModal from "@ebay/nice-modal-react";
 import ColorWheel from "./ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import ErrorBoundary from "../../utils/ErrorBoundary";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+} from "../../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import Loader from "../components/Loader";
-import { getPageProps } from "../utils/utils";
-import ListenCard from "../listens/ListenCard";
-import Card from "../components/Card";
-import { COLOR_WHITE } from "../utils/constants";
-import SimpleModal from "../utils/SimpleModal";
+import APIServiceClass from "../../utils/APIService";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import Loader from "../../components/Loader";
+import { getPageProps } from "../../utils/utils";
+import ListenCard from "../../listens/ListenCard";
+import Card from "../../components/Card";
+import { COLOR_WHITE } from "../../utils/constants";
+import SimpleModal from "../../utils/SimpleModal";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;

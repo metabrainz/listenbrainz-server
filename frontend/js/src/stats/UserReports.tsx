@@ -4,6 +4,8 @@ import * as React from "react";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
+import { faGlobe, faUser } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
@@ -12,11 +14,17 @@ import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
 import { getPageProps } from "../utils/utils";
 import { getAllStatRanges } from "./utils";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "../notifications/AlertNotificationsHOC";
+import APIServiceClass from "../utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
   apiUrl: string;
-};
+} & WithAlertNotificationsInjectedProps;
 
 export type UserReportsState = {
   range: UserStatsAPIRange;
@@ -26,6 +34,9 @@ export default class UserReports extends React.Component<
   UserReportsProps,
   UserReportsState
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   constructor(props: UserReportsProps) {
     super(props);
 
@@ -77,13 +88,23 @@ export default class UserReports extends React.Component<
 
   render() {
     const { range } = this.state;
-    const { apiUrl, user } = this.props;
+    const { apiUrl, user, newAlert } = this.props;
+    const { currentUser } = this.context;
 
     const ranges = getAllStatRanges();
+    let userStatsUrl: string | undefined;
+    if (user?.name) {
+      userStatsUrl = `${window.location.origin}/user/${user.name}/stats/?range=${range}`;
+    } else if (currentUser?.name) {
+      userStatsUrl = `${window.location.origin}/user/${currentUser.name}/stats/?range=${range}`;
+    }
+
+    const globalStatsUrl = `${window.location.origin}/statistics/?range=${range}`;
+
     return (
       <div>
-        <div className="row mt-15">
-          <div className="col-xs-12">
+        <div className="row mt-15 flex flex-wrap">
+          <div style={{ flex: "initial" }}>
             {Array.from(ranges, ([stat_type, stat_name]) => {
               return (
                 <Pill
@@ -95,6 +116,23 @@ export default class UserReports extends React.Component<
                 </Pill>
               );
             })}
+          </div>
+          <div style={{ flex: "initial", marginLeft: "auto" }}>
+            {Boolean(userStatsUrl) && (
+              <a
+                href={userStatsUrl}
+                className={`pill secondary ${user ? "active" : ""}`}
+              >
+                <FontAwesomeIcon icon={faUser} />{" "}
+                {user?.name ?? currentUser?.name}
+              </a>
+            )}
+            <a
+              href={globalStatsUrl}
+              className={`pill secondary ${!user ? "active" : ""}`}
+            >
+              <FontAwesomeIcon icon={faGlobe} /> Global
+            </a>
           </div>
         </div>
         <section id="listening-activity">
@@ -112,6 +150,7 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="artist"
+                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -123,6 +162,7 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="album"
+                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -134,6 +174,7 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="track"
+                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -158,7 +199,14 @@ export default class UserReports extends React.Component<
 
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, sentry_dsn, sentry_traces_sample_rate } = globalReactProps;
+  const {
+    api_url,
+    sentry_dsn,
+    current_user,
+    spotify,
+    youtube,
+    sentry_traces_sample_rate,
+  } = globalReactProps;
   const { user } = reactProps;
 
   if (sentry_dsn) {
@@ -168,13 +216,29 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
+  const UserReportsPageWithAlertNotifications = withAlertNotifications(
+    UserReports
+  );
+
+  const apiService = new APIServiceClass(
+    api_url || `${window.location.origin}/1`
+  );
+
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+    youtubeAuth: youtube,
+  };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <NiceModal.Provider>
-        <UserReports apiUrl={api_url} user={user} />
-      </NiceModal.Provider>
+      <GlobalAppContext.Provider value={globalProps}>
+        <NiceModal.Provider>
+          <UserReportsPageWithAlertNotifications apiUrl={api_url} user={user} />
+        </NiceModal.Provider>
+      </GlobalAppContext.Provider>
     </ErrorBoundary>
   );
 });

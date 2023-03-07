@@ -31,19 +31,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Artists
@@ -55,19 +44,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Albums
@@ -79,19 +57,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Tracks
@@ -6100,19 +6067,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Artists
@@ -6124,19 +6080,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Albums
@@ -6148,19 +6093,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Tracks
@@ -19905,19 +19839,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Artists
@@ -19929,19 +19852,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Albums
@@ -19953,19 +19865,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Tracks
@@ -26669,20 +26570,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
               type="secondary"
             >
               <button
+                className="pill secondary active"
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "#353070",
-                    "border": "2px solid #353070",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#fff",
-                    "fontWeight": 700,
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Artists
@@ -26694,19 +26583,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Albums
@@ -26718,19 +26596,8 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Tracks
@@ -27673,19 +27540,8 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Artists
@@ -27697,19 +27553,8 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Albums
@@ -27721,19 +27566,8 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Tracks
@@ -33748,19 +33582,8 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Artists
@@ -33772,19 +33595,8 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Albums
@@ -33796,19 +33608,8 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Tracks
@@ -47559,19 +47360,8 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Artists
@@ -47583,19 +47373,8 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Albums
@@ -47607,19 +47386,8 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Tracks
@@ -54329,20 +54097,8 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
               type="secondary"
             >
               <button
+                className="pill secondary active"
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "#353070",
-                    "border": "2px solid #353070",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#fff",
-                    "fontWeight": 700,
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Artists
@@ -54354,19 +54110,8 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Albums
@@ -54378,19 +54123,8 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
               type="secondary"
             >
               <button
+                className="pill secondary "
                 onClick={[Function]}
-                style={
-                  Object {
-                    "background": "transparent",
-                    "border": "2px solid #8d8d8d",
-                    "borderRadius": "24px",
-                    "boxSizing": "border-box",
-                    "color": "#8d8d8d",
-                    "margin": "2px 6px 12px 6px",
-                    "outline": "none",
-                    "padding": "3px 12px",
-                  }
-                }
                 type="button"
               >
                 Tracks

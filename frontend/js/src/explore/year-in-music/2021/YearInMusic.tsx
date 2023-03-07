@@ -16,31 +16,31 @@ import {
   toPairs,
 } from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
-import ErrorBoundary from "../../utils/ErrorBoundary";
+import ErrorBoundary from "../../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
-} from "../../utils/GlobalAppContext";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+} from "../../../utils/GlobalAppContext";
+import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
 
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../../notifications/AlertNotificationsHOC";
+} from "../../../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../../utils/APIService";
-import { getPageProps } from "../../utils/utils";
-import { getEntityLink } from "../../stats/utils";
+import APIServiceClass from "../../../utils/APIService";
+import { getPageProps } from "../../../utils/utils";
+import { getEntityLink } from "../../../stats/utils";
 import ComponentToImage from "./ComponentToImage";
 
-import ListenCard from "../../listens/ListenCard";
-import UserListModalEntry from "../../follow/UserListModalEntry";
+import ListenCard from "../../../listens/ListenCard";
+import UserListModalEntry from "../../../follow/UserListModalEntry";
 import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
-} from "../../playlists/utils";
-import FollowButton from "../../follow/FollowButton";
-import { COLOR_LB_ORANGE } from "../../utils/constants";
-import SimpleModal from "../../utils/SimpleModal";
+} from "../../../playlists/utils";
+import FollowButton from "../../../follow/FollowButton";
+import { COLOR_LB_ORANGE } from "../../../utils/constants";
+import SimpleModal from "../../../utils/SimpleModal";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;

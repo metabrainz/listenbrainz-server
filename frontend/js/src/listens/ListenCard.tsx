@@ -247,10 +247,10 @@ export default class ListenCard extends React.Component<
       currentFeedback,
       newAlert,
       updateFeedbackCallback,
+      additionalActions,
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
-    const { additionalActions } = this.props;
     const { modal } = this.context;
 
     const recordingMSID = getRecordingMSID(listen);
@@ -371,7 +371,10 @@ export default class ListenCard extends React.Component<
           ) : (
             <div className="listen-details">
               <div className="title-duration">
-                <div title={trackName} className="ellipsis-2-lines">
+                <div
+                  title={trackName}
+                  className={compact ? "ellipsis" : "ellipsis-2-lines"}
+                >
                   {getTrackLink(listen)}
                 </div>
                 {trackDurationMs && (

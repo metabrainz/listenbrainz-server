@@ -20,13 +20,15 @@ const userProps: UserTopEntityProps = {
   user: {
     name: "test_user",
   },
+  newAlert: (): any => {},
 };
 
 const sitewideProps: UserTopEntityProps = {
   range: "week",
   entity: "artist",
   apiUrl: "foobar",
-  terminology : "artist",
+  terminology: "artist",
+  newAlert: (): any => {},
 };
 
 describe.each([

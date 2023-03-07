@@ -4,8 +4,8 @@ import { createRoot } from "react-dom/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHandPointRight, faSyncAlt } from "@fortawesome/free-solid-svg-icons";
 import jsonMap from "./rainbow1-100-7.json";
-import { getPageProps } from "../../utils/utils";
-import ErrorBoundary from "../../utils/ErrorBoundary";
+import { getPageProps } from "../../../utils/utils";
+import ErrorBoundary from "../../../utils/ErrorBoundary";
 
 type CoverDef = {
   x1: number;
