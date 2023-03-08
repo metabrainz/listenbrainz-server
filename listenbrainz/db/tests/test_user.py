@@ -6,7 +6,7 @@ import listenbrainz.db.external_service_oauth as db_oauth
 import listenbrainz.db.stats as db_stats
 import sqlalchemy
 import time
-import ujson
+import orjson
 
 from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType

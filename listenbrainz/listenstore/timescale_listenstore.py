@@ -6,7 +6,7 @@ from typing import Dict, Tuple, Optional
 import psycopg2
 import psycopg2.sql
 import sqlalchemy
-import ujson
+import orjson
 from brainzutils import cache
 from psycopg2.errors import UntranslatableCharacter
 from psycopg2.extras import execute_values
@@ -493,7 +493,7 @@ class TimescaleListenStore:
                             if not line:
                                 break
 
-                            listen = Listen.from_json(ujson.loads(line))
+                            listen = Listen.from_json(orjson.loads(line))
                             listens.append(listen)
 
                             if len(listens) > DUMP_CHUNK_SIZE:

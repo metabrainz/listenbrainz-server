@@ -1,10 +1,10 @@
 import json
 import unittest
-from io import StringIO
+from io import StringIO, BytesIO
 from unittest.mock import patch
 
 import requests
-import ujson
+import orjson
 
 from listenbrainz import config
 from listenbrainz.db import couchdb
@@ -58,7 +58,7 @@ class CouchdbTestCase(unittest.TestCase):
             }
         ])
 
-        dumped = StringIO()
+        dumped = BytesIO()
         couchdb.dump_database("couchdb_dump_test_db", dumped)
         dumped.seek(0)
         received = dumped.read().splitlines()

@@ -21,7 +21,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-import ujson
+import orjson
 import sqlalchemy
 
 from listenbrainz import db
@@ -62,7 +62,7 @@ def insert_user_recommendation(user_id: int, recommendations: UserRecommendation
                         created = NOW()
             """), {
                 'user_id': user_id,
-                'recommendation': ujson.dumps(recommendations.dict()),
+                'recommendation': orjson.dumps(recommendations.dict()).decode("utf-8"),
             }
         )
 
@@ -102,5 +102,5 @@ def get_user_recommendation(user_id):
         return UserRecommendationsData(**row) if row else None
     except ValidationError:
         current_app.logger.error(f"ValidationError when getting recommendations for user with user_id: {user_id}."
-                                 f" Data: {ujson.dumps(row)}", exc_info=True)
+                                 f" Data: {orjson.dumps(row).decode('utf-8')}", exc_info=True)
         return None

@@ -4,7 +4,7 @@ import time
 import psycopg2
 from psycopg2.errors import OperationalError
 from psycopg2.extras import execute_values
-import ujson
+import orjson
 from flask import current_app
 from sqlalchemy import text
 
@@ -39,7 +39,7 @@ def import_user_similarities(data):
             query = "INSERT INTO recommendation.similar_user_import VALUES %s"
             values = []
             for user, similar in data.items():
-                values.append((user, ujson.dumps(similar)))
+                values.append((user, orjson.dumps(similar).decode("utf-8")))
                 user_count += 1
                 target_user_count += len(similar.keys())
                 if len(values) == ROWS_PER_BATCH:

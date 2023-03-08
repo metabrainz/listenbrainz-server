@@ -11,7 +11,7 @@ from typing import List
 from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
-import ujson
+import orjson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
@@ -167,7 +167,7 @@ def recent_listens():
         "listens": recent,
     }
 
-    return render_template("index/recent.html", props=ujson.dumps(props))
+    return render_template("index/recent.html", props=orjson.dumps(props).decode("utf-8"))
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required

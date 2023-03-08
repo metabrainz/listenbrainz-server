@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 import requests
-import ujson
+import orjson
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
@@ -222,7 +222,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assert200(response)
 
         sent = request[0]
-        received = ujson.loads(response.data)['payload']
+        received = orjson.loads(response.data)['payload']
 
         if not user_name:
             user_name = self.user['musicbrainz_id']
@@ -238,7 +238,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def assertSitewideStatEqual(self, sent, response, entity, stats_range, count, offset: int = 0):
         self.assert200(response)
 
-        received = ujson.loads(response.data)['payload']
+        received = orjson.loads(response.data)['payload']
 
         self.assertEqual(sent['count'], received['count'])
         self.assertEqual(sent['from_ts'], received['from_ts'])

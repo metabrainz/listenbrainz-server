@@ -2,7 +2,6 @@ from operator import itemgetter
 
 import psycopg2
 import orjson
-import ujson
 from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify, current_app
@@ -367,7 +366,7 @@ def latest_import():
         user = validate_auth_header()
 
         try:
-            data = ujson.loads(request.get_data())
+            data = orjson.loads(request.get_data())
             ts = int(data.get('ts', 0))
             service_name = data.get('service', 'lastfm')
             service = ExternalServiceType[service_name.upper()]

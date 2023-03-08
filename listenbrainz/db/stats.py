@@ -24,7 +24,7 @@
 from datetime import datetime
 from typing import Optional
 
-import ujson
+import orjson
 from flask import current_app
 from pydantic import ValidationError
 from requests import HTTPError
@@ -87,7 +87,7 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
     except (ValidationError, KeyError) as e:
         current_app.logger.error(
             f"{e}. Occurred while processing {stats_range} top artists for user_id: {user_id}"
-            f" and data: {ujson.dumps(data, indent=4)}", exc_info=True)
+            f" and data: {orjson.dumps(data, indent=4).decode('utf-8')}", exc_info=True)
     return None
 
 

@@ -2,7 +2,7 @@ import requests_mock
 
 import listenbrainz.db.user as db_user
 import time
-import ujson
+import orjson
 
 from flask import url_for, g
 
@@ -249,7 +249,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(r)
 
         # r.json returns None, so we decode the response manually.
-        results = ujson.loads(r.data.decode('utf-8'))
+        results = orjson.loads(r.data)
 
         self.assertDictEqual(results[0], {
             'inserted_at': 0,
@@ -316,7 +316,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(r)
 
         # r.json returns None, so we decode the response manually.
-        results = ujson.loads(r.data.decode('utf-8'))
+        results = orjson.loads(r.data)
 
         self.assertDictEqual(results[0], {
             'recording_mbid': None,

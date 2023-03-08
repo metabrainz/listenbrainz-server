@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 import redis
-import ujson
+import orjson
 from brainzutils import cache
 
 from listenbrainz.listen import Listen, NowPlayingListen
@@ -32,7 +32,7 @@ class RedisListenStore:
         data = cache.get(self.PLAYING_NOW_KEY + str(user_id))
         if not data:
             return None
-        data = ujson.loads(data)
+        data = orjson.loads(data)
         return NowPlayingListen(user_id=data['user_id'], user_name=data['user_name'], data=data['track_metadata'])
 
     def put_playing_now(self, user_id, listen, expire_time):
@@ -43,7 +43,7 @@ class RedisListenStore:
             listen (dict): the listen data
             expire_time (int): the time in seconds in which the `playing_now` listen should expire
         """
-        cache.set(self.PLAYING_NOW_KEY + str(user_id), ujson.dumps(listen).encode('utf-8'), expirein=expire_time)
+        cache.set(self.PLAYING_NOW_KEY + str(user_id), orjson.dumps(listen), expirein=expire_time)
 
     def check_connection(self):
         """ Pings the redis server to check if the connection works or not """
@@ -61,7 +61,7 @@ class RedisListenStore:
 
         recent = {}
         for listen in unique:
-            recent[ujson.dumps(listen.to_json()).encode('utf-8')] = float(listen.ts_since_epoch)
+            recent[orjson.dumps(listen.to_json())] = float(listen.ts_since_epoch)
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:
@@ -78,7 +78,7 @@ class RedisListenStore:
         """
         recent = []
         for listen in cache._r.zrevrange(cache._prep_key(self.RECENT_LISTENS_KEY), 0, max - 1):
-            recent.append(Listen.from_json(ujson.loads(listen)))
+            recent.append(Listen.from_json(orjson.loads(listen)))
 
         return recent
 
