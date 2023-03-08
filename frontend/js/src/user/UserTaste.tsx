@@ -4,15 +4,8 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import {
-  faHeart,
-  faHeartBroken,
-  faThumbtack,
-} from "@fortawesome/free-solid-svg-icons";
-import { clone, get, has, isNaN } from "lodash";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   withAlertNotifications,
@@ -22,7 +15,6 @@ import {
 import APIServiceClass from "../utils/APIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import PinRecordingModal from "../pins/PinRecordingModal";
 import { getListenablePin, getPageProps } from "../utils/utils";
 import SimpleModal from "../utils/SimpleModal";
 import UserFeedback from "./UserFeedback";
@@ -36,14 +28,7 @@ export type UserTasteProps = {
   user: ListenBrainzUser;
 } & WithAlertNotificationsInjectedProps;
 
-export interface UserTasteState {
-  recordingToPin?: BaseListenFormat;
-}
-
-export default class UserTaste extends React.Component<
-  UserTasteProps,
-  UserTasteState
-> {
+export default class UserTaste extends React.Component<UserTasteProps> {
   static contextType = GlobalAppContext;
   static RecordingMetadataToListenFormat = (
     feedbackItem: FeedbackResponseWithTrackMetadata
@@ -56,17 +41,7 @@ export default class UserTaste extends React.Component<
 
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  constructor(props: UserTasteProps) {
-    super(props);
-    this.state = {};
-  }
-
-  updateRecordingToPin = (recordingToPin: BaseListenFormat) => {
-    this.setState({ recordingToPin });
-  };
-
   render() {
-    const { recordingToPin } = this.state;
     const {
       feedback,
       user,
@@ -97,7 +72,6 @@ export default class UserTaste extends React.Component<
               newAlert={newAlert}
               totalCount={totalFeedbackCount}
               user={user}
-              updateRecordingToPin={this.updateRecordingToPin}
             />
           </div>
           <div className="col-md-5">
@@ -109,12 +83,6 @@ export default class UserTaste extends React.Component<
             />
           </div>
         </div>
-        {currentUser && (
-          <PinRecordingModal
-            recordingToPin={recordingToPin || listenables[0]}
-            newAlert={newAlert}
-          />
-        )}
         <BrainzPlayer
           listens={listenables}
           newAlert={newAlert}
@@ -172,14 +140,16 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <UserTasteWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          user={user}
-          feedback={feedback}
-          totalFeedbackCount={feedback_count}
-          pins={pins}
-          totalPinsCount={pin_count}
-        />
+        <NiceModal.Provider>
+          <UserTasteWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            user={user}
+            feedback={feedback}
+            totalFeedbackCount={feedback_count}
+            pins={pins}
+            totalPinsCount={pin_count}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

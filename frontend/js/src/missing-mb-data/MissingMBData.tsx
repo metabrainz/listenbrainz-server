@@ -6,6 +6,7 @@ import * as Sentry from "@sentry/react";
 
 import { faLink, faPlus } from "@fortawesome/free-solid-svg-icons";
 
+import NiceModal from "@ebay/nice-modal-react";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -299,7 +300,7 @@ export default class MissingMBDataPage extends React.Component<
             </ul>
             {currentUser && (
               <MbidMappingModal
-                recordingToMap={recordingToMapToMusicbrainz}
+                listenToMap={recordingToMapToMusicbrainz}
                 newAlert={newAlert}
               />
             )}
@@ -358,11 +359,13 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <MissingMBDataPageWithAlertNotification
-          initialAlerts={optionalAlerts}
-          missingData={missingData}
-          user={user}
-        />
+        <NiceModal.Provider>
+          <MissingMBDataPageWithAlertNotification
+            initialAlerts={optionalAlerts}
+            missingData={missingData}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

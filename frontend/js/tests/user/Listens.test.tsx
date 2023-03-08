@@ -15,7 +15,6 @@ import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOne
 import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
 import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
-import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 import { waitForComponentToPaint } from "../test-utils";
 
@@ -385,25 +384,6 @@ describe("Listens page", () => {
       expect(wrapper.state("listens")).toEqual(result);
       expect(wrapper.state("playingNowListen")).toEqual(mockListenOne);
       spy.mockRestore();
-    });
-  });
-
-  // Will re-add this test when feature flag is removed
-
-  describe("updateRecordingToPin", () => {
-    it("sets the recordingToPin in the state", async () => {
-      wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
-
-      const instance = wrapper.instance();
-      const recordingToPin = props.listens[1];
-
-      expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
-
-      await act(() => {
-        instance.updateRecordingToPin(recordingToPin);
-      });
-      await waitForComponentToPaint(wrapper);
-      expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
     });
   });
 
@@ -1046,39 +1026,6 @@ describe("Listens page", () => {
     });
   });
 
-  // Will re-add this test when feature flag is removed
-
-  describe("pinRecordingModal", () => {
-    it("renders the PinRecordingModal component with the correct props", async () => {
-      wrapper = mount<Listens>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const recordingToPin = props.listens[0];
-      let pinRecordingModal = wrapper.find(PinRecordingModal).first();
-
-      // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
-      expect(pinRecordingModal.props()).toEqual({
-        recordingToPin: props.listens[0],
-        newAlert: props.newAlert,
-        onSuccessfulPin: expect.any(Function),
-      });
-      await act(() => {
-        instance.updateRecordingToPin(recordingToPin);
-      });
-      await waitForComponentToPaint(wrapper);
-
-      pinRecordingModal = wrapper.find(PinRecordingModal).first();
-      expect(pinRecordingModal.props()).toEqual({
-        recordingToPin,
-        newAlert: props.newAlert,
-        onSuccessfulPin: expect.any(Function),
-      });
-    });
-  });
-
   describe("CBReviewModal", () => {
     it("renders the CBReviewModal component with the correct props", async () => {
       wrapper = mount<Listens>(
@@ -1098,7 +1045,7 @@ describe("Listens page", () => {
       });
 
       await act(() => {
-        instance.updateRecordingToPin(listen);
+        instance.updateRecordingToReview(listen);
       });
       await waitForComponentToPaint(wrapper);
 

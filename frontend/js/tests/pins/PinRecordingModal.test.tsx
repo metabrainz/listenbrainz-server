@@ -2,9 +2,9 @@ import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 
 import { act } from "react-dom/test-utils";
+import NiceModal, { NiceModalHocProps } from "@ebay/nice-modal-react";
 import PinRecordingModal, {
-  PinRecordingModalProps,
-  PinRecordingModalState,
+  maxBlurbContentLength,
 } from "../../src/pins/PinRecordingModal";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
@@ -46,26 +46,34 @@ const user = {
   name: "name",
   auth_token: "auth_token",
 };
-
+const APIService = new APIServiceClass("");
 const globalProps = {
-  APIService: new APIServiceClass(""),
+  APIService,
   currentUser: user,
   spotifyAuth: {},
   youtubeAuth: {},
 };
 
+const niceModalProps: NiceModalHocProps = {
+  id: "fnord",
+  defaultVisible: true,
+};
+
+const newAlert = jest.fn();
+const submitPinRecordingSpy = jest
+  .spyOn(APIService, "submitPinRecording")
+  .mockImplementation(() =>
+    Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
+  );
+
 describe("PinRecordingModal", () => {
-  let wrapper:
-    | ReactWrapper<
-        PinRecordingModalProps,
-        PinRecordingModalState,
-        PinRecordingModal
-      >
-    | undefined;
+  let wrapper: ReactWrapper<any>;
   beforeEach(() => {
-    wrapper = undefined;
+    wrapper = undefined!;
   });
   afterEach(() => {
+    submitPinRecordingSpy.mockClear();
+    newAlert.mockClear();
     if (wrapper) {
       /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
         related to async lifecycle methods run against a missing dom 'document'.
@@ -82,8 +90,16 @@ describe("PinRecordingModal", () => {
       .spyOn(global.Date, "now")
       .mockImplementation(() => mockDate.getTime());
 
-    wrapper = mount<PinRecordingModal>(
-      <PinRecordingModal recordingToPin={recordingToPin} newAlert={jest.fn()} />
+    wrapper = mount(
+      <GlobalAppContext.Provider value={globalProps}>
+        <NiceModal.Provider>
+          <PinRecordingModal
+            {...niceModalProps}
+            recordingToPin={recordingToPin}
+            newAlert={newAlert}
+          />
+        </NiceModal.Provider>
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
@@ -91,209 +107,206 @@ describe("PinRecordingModal", () => {
 
   describe("submitPinRecording", () => {
     it("calls API, and creates a new alert on success", async () => {
-      wrapper = mount<PinRecordingModal>(
+      wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinRecordingModal
-            recordingToPin={recordingToPin}
-            newAlert={jest.fn()}
-          />
+          <NiceModal.Provider>
+            <PinRecordingModal
+              {...niceModalProps}
+              recordingToPin={recordingToPin}
+              newAlert={newAlert}
+            />
+          </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
 
-      const spy = jest.spyOn(instance.context.APIService, "submitPinRecording");
-      spy.mockImplementation(() =>
-        Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
-      );
       await act(async () => {
-        await instance.submitPinRecording();
+        const submitButton = wrapper.find("button[type='submit']").first();
+        submitButton?.simulate("click");
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
+      expect(submitPinRecordingSpy).toHaveBeenCalledTimes(1);
+      expect(submitPinRecordingSpy).toHaveBeenCalledWith(
         "auth_token",
         "recording_msid",
         "recording_mbid",
         undefined
       );
-      expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
+      expect(newAlert).toHaveBeenCalledTimes(1);
     });
 
     it("sets default blurbContent in state on success", async () => {
-      wrapper = mount<PinRecordingModal>(
+      wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinRecordingModal
-            recordingToPin={recordingToPin}
-            newAlert={jest.fn()}
-          />
+          <NiceModal.Provider>
+            <PinRecordingModal
+              {...niceModalProps}
+              recordingToPin={recordingToPin}
+              newAlert={newAlert}
+            />
+          </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
-
-      const instance = wrapper.instance();
-      instance.context.APIService.submitPinRecording = jest
-        .fn()
-        .mockImplementation(() =>
-          Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
-        );
-      await act(() => {
-        wrapper!.setState({ blurbContent: "foobar" }); // submit with this blurbContent
-      });
-
-      // submitPinRecording and check that blurbContent was reset
-      const setStateSpy = jest.spyOn(instance, "setState");
       await act(async () => {
-        await instance.submitPinRecording();
+        const blurbTextArea = wrapper
+          .find("textarea[name='blurb-content']")
+          .first();
+        blurbTextArea.simulate("change", { target: { value: "foobar" } });
+      });
+      await act(async () => {
+        const submitButton = wrapper.find("button[type='submit']").first();
+        submitButton?.simulate("click");
       });
       await waitForComponentToPaint(wrapper);
-
-      expect(setStateSpy).toHaveBeenCalledTimes(1);
-      expect(wrapper.state("blurbContent")).toEqual("");
+      expect(submitPinRecordingSpy).toHaveBeenCalledWith(
+        "auth_token",
+        "recording_msid",
+        "recording_mbid",
+        "foobar"
+      );
+      expect(
+        wrapper.find("textarea[name='blurb-content']").first().props().value
+      ).toEqual("");
     });
 
-    it("does nothing if CurrentUser.authtoken is not set", async () => {
-      wrapper = mount<PinRecordingModal>(
+    it("does nothing if currentUser.authtoken is not set", async () => {
+      wrapper = mount(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
             currentUser: { auth_token: undefined, id: 1, name: "test" }, // auth token not set
           }}
         >
-          <PinRecordingModal
-            recordingToPin={recordingToPin}
-            newAlert={jest.fn()}
-          />
+          <NiceModal.Provider>
+            <PinRecordingModal
+              {...niceModalProps}
+              recordingToPin={recordingToPin}
+              newAlert={newAlert}
+            />
+          </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
 
-      const spy = jest.spyOn(instance.context.APIService, "submitPinRecording");
-      spy.mockImplementation(() =>
-        Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
-      );
-
       await act(async () => {
-        await instance.submitPinRecording();
+        const submitButton = wrapper.find("button[type='submit']").first();
+        submitButton?.simulate("click");
       });
       await waitForComponentToPaint(wrapper);
-      expect(spy).toHaveBeenCalledTimes(0);
+      expect(submitPinRecordingSpy).toHaveBeenCalledTimes(0);
     });
 
     it("calls handleError if error is returned", async () => {
-      wrapper = mount<PinRecordingModal>(
+      wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinRecordingModal
-            recordingToPin={recordingToPin}
-            newAlert={jest.fn()}
-          />
+          <NiceModal.Provider>
+            <PinRecordingModal
+              {...niceModalProps}
+              recordingToPin={recordingToPin}
+              newAlert={newAlert}
+            />
+          </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
-      instance.handleError = jest.fn();
 
       const error = new Error("error");
-      const spy = jest.spyOn(instance.context.APIService, "submitPinRecording");
-      spy.mockImplementation(() => {
+      submitPinRecordingSpy.mockImplementationOnce(() => {
         throw error;
       });
 
       await act(async () => {
-        await instance.submitPinRecording();
+        const submitButton = wrapper.find("button[type='submit']").first();
+        submitButton?.simulate("click");
       });
       await waitForComponentToPaint(wrapper);
-      expect(instance.handleError).toHaveBeenCalledTimes(1);
-      expect(instance.handleError).toHaveBeenCalledWith(
-        error,
-        "Error while pinning track"
+      expect(newAlert).toHaveBeenCalledTimes(1);
+      expect(newAlert).toHaveBeenCalledWith(
+        "danger",
+        "Error while pinning track",
+        "error"
       );
     });
   });
 
   describe("handleBlurbInputChange", () => {
     it("removes line breaks and excessive spaces from input before setting blurbContent in state ", async () => {
-      wrapper = mount<PinRecordingModal>(
+      wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinRecordingModal
-            recordingToPin={recordingToPin}
-            newAlert={jest.fn()}
-          />
+          <NiceModal.Provider>
+            <PinRecordingModal
+              {...niceModalProps}
+              recordingToPin={recordingToPin}
+              newAlert={newAlert}
+            />
+          </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
 
       const unparsedInput =
         "This string contains \n\n line breaks and multiple   consecutive   spaces.";
-      const setStateSpy = jest.spyOn(instance, "setState");
 
       // simulate writing in the textArea
-      const blurbContentInput = wrapper.find("#blurb-content").first();
       await act(() => {
-        blurbContentInput.simulate("change", {
-          target: { value: unparsedInput },
-        });
+        wrapper
+          .find("#blurb-content")
+          .first()
+          .simulate("change", {
+            target: { value: unparsedInput },
+          });
       });
+      await waitForComponentToPaint(wrapper);
 
       // the string should have been parsed and cleaned up
-      expect(wrapper.state("blurbContent")).toEqual(
+      const blurbTextArea = wrapper
+        .find("textarea[name='blurb-content']")
+        .first();
+      expect(blurbTextArea.props().value).toEqual(
         "This string contains line breaks and multiple consecutive spaces."
       );
-      expect(setStateSpy).toHaveBeenCalledTimes(1);
     });
 
     it("does not set blurbContent in state if input length is greater than MAX_BLURB_CONTENT_LENGTH ", async () => {
-      wrapper = mount<PinRecordingModal>(
+      wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinRecordingModal
-            recordingToPin={recordingToPin}
-            newAlert={jest.fn()}
-          />
+          <NiceModal.Provider>
+            <PinRecordingModal
+              {...niceModalProps}
+              recordingToPin={recordingToPin}
+              newAlert={newAlert}
+            />
+          </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
-
-      // simulate writing in the textArea
-      const blurbContentInput = wrapper.find("#blurb-content").first();
-      await act(() => {
-        blurbContentInput.simulate("change", {
-          target: { value: "This string is valid." },
-        });
+      await act(async () => {
+        wrapper
+          .find("textarea[name='blurb-content']")
+          .first()
+          .simulate("change", {
+            target: { value: "This string is valid." },
+          });
       });
+      await waitForComponentToPaint(wrapper);
 
-      const invalidInputLength = "a".repeat(instance.maxBlurbContentLength + 1);
-      expect(invalidInputLength.length).toBeGreaterThan(
-        instance.maxBlurbContentLength
-      );
+      const blurbTextArea = wrapper
+        .find("textarea[name='blurb-content']")
+        .first();
+      expect(blurbTextArea.props().value).toEqual("This string is valid.");
 
-      const setStateSpy = jest.spyOn(instance, "setState");
+      const invalidInputString = "a".repeat(maxBlurbContentLength + 1);
+      expect(invalidInputString.length).toBeGreaterThan(maxBlurbContentLength);
 
-      await act(() => {
-        blurbContentInput.simulate("change", {
-          target: { value: invalidInputLength },
-        });
+      await act(async () => {
+        wrapper
+          .find("textarea[name='blurb-content']")
+          .first()
+          .simulate("change", {
+            target: { value: invalidInputString },
+          });
       });
+      await waitForComponentToPaint(wrapper);
 
       // blurbContent should not have changed
-      expect(setStateSpy).not.toHaveBeenCalled();
-      expect(wrapper.state("blurbContent")).toEqual("This string is valid.");
-    });
-  });
-
-  describe("handleError", () => {
-    it("calls newAlert", async () => {
-      wrapper = mount<PinRecordingModal>(
-        <PinRecordingModal
-          recordingToPin={recordingToPin}
-          newAlert={jest.fn()}
-        />
-      );
-      const instance = wrapper.instance();
-
-      instance.handleError("error");
-      expect(instance.props.newAlert).toHaveBeenCalledWith(
-        "danger",
-        "Error",
-        "error"
-      );
+      expect(blurbTextArea.props().value).toEqual("This string is valid.");
     });
   });
 });

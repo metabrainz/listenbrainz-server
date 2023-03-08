@@ -275,3 +275,52 @@ def get_pins_for_user_following(user_name):
             "user_name": user_name,
         }
     )
+
+
+@pinned_recording_api_bp.route("/<user_name>/pins/current", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def get_current_pin_for_user(user_name):
+    """
+    Get the currently pinned recording by a user with given ``user_name``. The JSON returned by the API will look
+    like the following:
+
+    .. code-block:: json
+
+        {
+            "pinned_recording": {
+                "blurb_content": "Awesome recording!",
+                "created": 1623997168,
+                "row_id": 10,
+                "pinned_until": 1623997485,
+                "recording_mbid": null,
+                "recording_msid": "fd7d9162-a284-4a10-906c-faae4f1e166b"
+                "track_metadata": {
+                "artist_name": "Rick Astley",
+                    "track_name": "Never Gonna Give You Up"
+                }
+            },
+            "user_name": "-- the MusicBrainz ID of the user --"
+        }
+
+
+    If there is no current pin for the user, "pinned_recording" field will be null.
+
+    :param user_name: the MusicBrainz ID of the user whose pin track history requested.
+    :type user_name: ``str``
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: The requested user was not found.
+    :resheader Content-Type: *application/json*
+    """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    pin = db_pinned_rec.get_current_pin_for_user(user_id=user.id)
+    if pin:
+        pin = fetch_track_metadata_for_items([pin])[0].to_api()
+
+    return jsonify({
+        "pinned_recording": pin,
+        "user_name": user_name,
+    })

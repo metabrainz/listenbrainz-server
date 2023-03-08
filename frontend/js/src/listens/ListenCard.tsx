@@ -8,6 +8,8 @@ import {
   faExternalLinkAlt,
   faCode,
   faCopy,
+  faPaperPlane,
+  faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSoundcloud,
@@ -17,6 +19,7 @@ import {
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   getArtistLink,
   getTrackLink,
@@ -38,6 +41,8 @@ import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import { millisecondsToStr } from "../playlists/utils";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+import PinRecordingModal from "../pins/PinRecordingModal";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -127,6 +132,8 @@ export default class ListenCard extends React.Component<
     );
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
+    } else {
+      this.setState({ thumbnailSrc: undefined });
     }
   }
 
@@ -242,10 +249,10 @@ export default class ListenCard extends React.Component<
       currentFeedback,
       newAlert,
       updateFeedbackCallback,
+      additionalActions,
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
-    const { additionalActions } = this.props;
     const { modal } = this.context;
 
     const recordingMSID = getRecordingMSID(listen);
@@ -261,13 +268,13 @@ export default class ListenCard extends React.Component<
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const hasRecordingMBID = Boolean(recordingMBID);
-    const enableRecommendButton =
+    const hasInfoAndMBID =
       artistName && trackName && (hasRecordingMSID || hasRecordingMBID);
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
       additionalMenuItems?.length ||
-      enableRecommendButton ||
+      hasInfoAndMBID ||
       recordingMBID ||
       spotifyURL ||
       youtubeURL ||
@@ -366,7 +373,10 @@ export default class ListenCard extends React.Component<
           ) : (
             <div className="listen-details">
               <div className="title-duration">
-                <div title={trackName} className="ellipsis-2-lines">
+                <div
+                  title={trackName}
+                  className={compact ? "ellipsis" : "ellipsis-2-lines"}
+                >
                   {getTrackLink(listen)}
                 </div>
                 {trackDurationMs && (
@@ -469,12 +479,40 @@ export default class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    {enableRecommendButton && (
+                    {hasInfoAndMBID && (
+                      <ListenControl
+                        text="Pin this track"
+                        icon={faThumbtack}
+                        action={() => {
+                          NiceModal.show(PinRecordingModal, {
+                            recordingToPin: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
+                      />
+                    )}
+                    {hasInfoAndMBID && (
                       <ListenControl
                         icon={faCommentDots}
                         title="Recommend to my followers"
                         text="Recommend to my followers"
                         action={this.recommendListenToFollowers}
+                      />
+                    )}
+                    {hasInfoAndMBID && (
+                      <ListenControl
+                        text="Personally recommend"
+                        icon={faPaperPlane}
+                        action={() => {
+                          NiceModal.show(PersonalRecommendationModal, {
+                            listenToPersonallyRecommend: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#PersonalRecommendationModal"
                       />
                     )}
                     {additionalMenuItems}

@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
 
-import DatePicker from "react-date-picker/dist/entry.nostyle";
+import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
@@ -16,10 +16,9 @@ import {
   faCompactDisc,
   faLink,
   faPencilAlt,
-  faThumbtack,
   faTrashAlt,
-  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -31,8 +30,7 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
-import PinRecordingModal from "../pins/PinRecordingModal";
-import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+import AddListenModal from "../add-listen/add-listen-modal";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
@@ -42,7 +40,6 @@ import {
   getArtistMBIDs,
   getReleaseGroupMBID,
   getTrackName,
-  getArtistName,
   getRecordingMSID,
 } from "../utils/utils";
 import CBReviewModal from "../cb-review/CBReviewModal";
@@ -69,11 +66,9 @@ export interface ListensState {
   previousListenTs?: number;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
-  recordingToPin?: Listen;
   recordingToReview?: Listen;
   recordingToMapToMusicbrainz?: Listen;
-  recordingToPersonallyRecommend?: Listen;
-  dateTimePickerValue: Date | Date[];
+  dateTimePickerValue: Date;
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
   before being removed from the state */
@@ -108,10 +103,8 @@ export default class Listens extends React.Component<
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
-      recordingToPin: props.listens?.[0],
       recordingToReview: props.listens?.[0],
       recordingToMapToMusicbrainz: props.listens?.[0],
-      recordingToPersonallyRecommend: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
       dateTimePickerValue: nextListenTs
@@ -202,10 +195,6 @@ export default class Listens extends React.Component<
       this.afterListensFetch
     );
   };
-
-  handlePinnedRecording(pinnedRecording: PinnedRecording) {
-    this.setState({ userPinnedRecording: pinnedRecording });
-  }
 
   connectWebsockets = (): void => {
     this.createWebsocketsConnection();
@@ -555,22 +544,12 @@ export default class Listens extends React.Component<
       : 0;
   };
 
-  updateRecordingToPin = (recordingToPin: Listen) => {
-    this.setState({ recordingToPin });
-  };
-
   updateRecordingToReview = (recordingToReview: Listen) => {
     this.setState({ recordingToReview });
   };
 
   updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
     this.setState({ recordingToMapToMusicbrainz });
-  };
-
-  updateRecordingToPersonallyRecommend = (
-    recordingToPersonallyRecommend: Listen
-  ) => {
-    this.setState({ recordingToPersonallyRecommend });
   };
 
   deleteListen = async (listen: Listen) => {
@@ -644,7 +623,7 @@ export default class Listens extends React.Component<
     }
   };
 
-  onChangeDateTimePicker = async (newDateTimePickerValue: Date | Date[]) => {
+  onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
     if (!newDateTimePickerValue) {
       return;
     }
@@ -714,34 +693,10 @@ export default class Listens extends React.Component<
       artistMBIDs?.length ||
       Boolean(trackMBID) ||
       Boolean(releaseGroupMBID);
-    const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
-    const canPersonallyRecommend = Boolean(recordingMSID);
     const canManuallyMap = Boolean(recordingMSID);
 
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
-    if (canPersonallyRecommend) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Personally recommend"
-          icon={faPaperPlane}
-          action={this.updateRecordingToPersonallyRecommend.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#PersonalRecommendationModal"
-        />
-      );
-    }
-    if (canPin) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Pin this track"
-          icon={faThumbtack}
-          action={this.updateRecordingToPin.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#PinRecordingModal"
-        />
-      );
-    }
     if (isListenReviewable) {
       additionalMenuItems.push(
         <ListenControl
@@ -812,10 +767,8 @@ export default class Listens extends React.Component<
       nextListenTs,
       previousListenTs,
       dateTimePickerValue,
-      recordingToPin,
       recordingToMapToMusicbrainz,
       recordingToReview,
-      recordingToPersonallyRecommend,
       userPinnedRecording,
       playingNowListen,
     } = this.state;
@@ -838,16 +791,30 @@ export default class Listens extends React.Component<
     const isOldestButtonDisabled =
       listens?.length > 0 &&
       listens[listens.length - 1]?.listened_at <= oldestListenTs;
+    const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
       <div role="main">
-        {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
+        <div className="listen-header">
+          {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
+          {isCurrentUsersPage && (
+            <button
+              type="button"
+              className="btn btn-primary add-listen-btn"
+              data-Toggle="modal"
+              data-Target="#AddListenModal"
+            >
+              Add listen
+            </button>
+          )}
+        </div>
+
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {playingNowListen && this.getListenCard(playingNowListen)}
             {userPinnedRecording && (
               <PinnedRecordingCard
                 pinnedRecording={userPinnedRecording}
-                isCurrentUser={currentUser?.name === user?.name}
+                isCurrentUser={isCurrentUsersPage}
                 currentFeedback={userPinnedRecordingFeedback}
                 updateFeedbackCallback={this.updateFeedback}
                 removePinFromPinsList={() => {}}
@@ -861,7 +828,7 @@ export default class Listens extends React.Component<
             {!listens.length && (
               <div className="empty-listens">
                 <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
-                {currentUser?.name === user?.name ? (
+                {isCurrentUsersPage ? (
                   <div className="lead empty-text">Get listening</div>
                 ) : (
                   <div className="lead empty-text">
@@ -869,7 +836,7 @@ export default class Listens extends React.Component<
                   </div>
                 )}
 
-                {currentUser?.name === user?.name && (
+                {isCurrentUsersPage && (
                   <div className="empty-action">
                     Import <a href="/profile/import/">your listening history</a>{" "}
                     from last.fm/libre.fm and track your listens by{" "}
@@ -948,7 +915,7 @@ export default class Listens extends React.Component<
                     </a>
                   </li>
                   <li className="date-time-picker">
-                    <DatePicker
+                    <DateTimePicker
                       onChange={this.onChangeDateTimePicker}
                       value={dateTimePickerValue}
                       clearIcon={null}
@@ -961,6 +928,8 @@ export default class Listens extends React.Component<
                       calendarIcon={
                         <FontAwesomeIcon icon={faCalendar as IconProp} />
                       }
+                      format="dd/MM/yyyy"
+                      disableClock
                     />
                   </li>
                   <li
@@ -1009,26 +978,13 @@ export default class Listens extends React.Component<
                 </ul>
                 {currentUser && (
                   <>
-                    <PinRecordingModal
-                      recordingToPin={recordingToPin}
-                      newAlert={newAlert}
-                      onSuccessfulPin={(pinnedListen) =>
-                        this.handlePinnedRecording(pinnedListen)
-                      }
-                    />
                     <MbidMappingModal
-                      recordingToMap={recordingToMapToMusicbrainz}
+                      listenToMap={recordingToMapToMusicbrainz}
                       newAlert={newAlert}
                     />
                     <CBReviewModal
                       listen={recordingToReview}
-                      isCurrentUser={currentUser?.name === user?.name}
-                      newAlert={newAlert}
-                    />
-                    <PersonalRecommendationModal
-                      recordingToPersonallyRecommend={
-                        recordingToPersonallyRecommend
-                      }
+                      isCurrentUser={isCurrentUsersPage}
                       newAlert={newAlert}
                     />
                   </>
@@ -1037,6 +993,7 @@ export default class Listens extends React.Component<
             )}
           </div>
         </div>
+        {currentUser && <AddListenModal newAlert={newAlert} />}
         <BrainzPlayer
           listens={allListenables}
           newAlert={newAlert}
@@ -1101,14 +1058,16 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <ListensWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          latestListenTs={latest_listen_ts}
-          listens={listens}
-          userPinnedRecording={userPinnedRecording}
-          oldestListenTs={oldest_listen_ts}
-          user={user}
-        />
+        <NiceModal.Provider>
+          <ListensWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            latestListenTs={latest_listen_ts}
+            listens={listens}
+            userPinnedRecording={userPinnedRecording}
+            oldestListenTs={oldest_listen_ts}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

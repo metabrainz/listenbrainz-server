@@ -17,7 +17,6 @@ import RecentListens, {
   RecentListensProps,
   RecentListensState,
 } from "../../src/recent/RecentListens";
-import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 import { waitForComponentToPaint } from "../test-utils";
 
@@ -104,6 +103,7 @@ describe("Recentlistens", () => {
       .spyOn(global.Date, "now")
       .mockImplementation(() => mockDate.getTime());
 
+    // eslint-disable-next-line no-import-assign
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
@@ -112,24 +112,6 @@ describe("Recentlistens", () => {
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
-  });
-  describe("updateRecordingToPin", () => {
-    it("sets the recordingToPin in the state", async () => {
-      wrapper = mount<RecentListens>(
-        <RecentListens {...props} />,
-        mountOptions
-      );
-
-      const instance = wrapper.instance();
-      const recordingToPin = props.listens[1];
-
-      expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
-      await act(() => {
-        instance.updateRecordingToPin(recordingToPin);
-      });
-      await waitForComponentToPaint(wrapper);
-      expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
-    });
   });
 
   describe("updateRecordingToReview", () => {
@@ -147,37 +129,6 @@ describe("Recentlistens", () => {
       });
       await waitForComponentToPaint(wrapper);
       expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
-    });
-  });
-
-  describe("pinRecordingModal", () => {
-    it("renders the PinRecordingModal component with the correct props", async () => {
-      wrapper = mount<RecentListens>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <RecentListens {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const recordingToPin = props.listens[0];
-      let pinRecordingModal = wrapper.find(PinRecordingModal).first();
-
-      // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
-      expect(pinRecordingModal.props()).toEqual({
-        recordingToPin: props.listens[0],
-        newAlert: props.newAlert,
-        onSuccessfulPin: expect.any(Function),
-      });
-      await act(() => {
-        instance.updateRecordingToPin(recordingToPin);
-      });
-      await waitForComponentToPaint(wrapper);
-
-      pinRecordingModal = wrapper.find(PinRecordingModal).first();
-      expect(pinRecordingModal.props()).toEqual({
-        recordingToPin,
-        newAlert: props.newAlert,
-        onSuccessfulPin: expect.any(Function),
-      });
     });
   });
 
@@ -199,7 +150,7 @@ describe("Recentlistens", () => {
         newAlert: props.newAlert,
       });
       await act(() => {
-        instance.updateRecordingToPin(listen);
+        instance.updateRecordingToReview(listen);
       });
       await waitForComponentToPaint(wrapper);
 

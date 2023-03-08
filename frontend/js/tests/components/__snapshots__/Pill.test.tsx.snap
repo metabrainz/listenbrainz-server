@@ -3,18 +3,7 @@
 exports[`Pill renders correctly for inactive 1`] = `
 <Pill>
   <button
-    style={
-      Object {
-        "background": "transparent",
-        "border": "2px solid #8d8d8d",
-        "borderRadius": "24px",
-        "boxSizing": "border-box",
-        "color": "#8d8d8d",
-        "margin": "2px 6px 12px 6px",
-        "outline": "none",
-        "padding": "3px 12px",
-      }
-    }
+    className="pill  "
     type="button"
   />
 </Pill>
@@ -26,19 +15,7 @@ exports[`Pill renders correctly for primary active 1`] = `
   type="primary"
 >
   <button
-    style={
-      Object {
-        "background": "#eb743b",
-        "border": "2px solid #eb743b",
-        "borderRadius": "24px",
-        "boxSizing": "border-box",
-        "color": "#fff",
-        "fontWeight": 700,
-        "margin": "2px 6px 12px 6px",
-        "outline": "none",
-        "padding": "3px 12px",
-      }
-    }
+    className="pill  active"
     type="button"
   />
 </Pill>
@@ -50,19 +27,7 @@ exports[`Pill renders correctly for secondary active 1`] = `
   type="secondary"
 >
   <button
-    style={
-      Object {
-        "background": "#353070",
-        "border": "2px solid #353070",
-        "borderRadius": "24px",
-        "boxSizing": "border-box",
-        "color": "#fff",
-        "fontWeight": 700,
-        "margin": "2px 6px 12px 6px",
-        "outline": "none",
-        "padding": "3px 12px",
-      }
-    }
+    className="pill secondary active"
     type="button"
   />
 </Pill>

@@ -23,6 +23,7 @@ import { sanitizeUrl } from "@braintree/sanitize-url";
 import * as Sentry from "@sentry/react";
 import { io, Socket } from "socket.io-client";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -896,11 +897,13 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <PlaylistPageWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          labsApiUrl={labs_api_url}
-          playlist={playlist}
-        />
+        <NiceModal.Provider>
+          <PlaylistPageWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            labsApiUrl={labs_api_url}
+            playlist={playlist}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

@@ -406,6 +406,88 @@ exports[`ListenCard renders correctly 1`] = `
               </ListenControl>
               <ListenControl
                 action={[Function]}
+                dataTarget="#PinRecordingModal"
+                dataToggle="modal"
+                icon={
+                  Object {
+                    "icon": Array [
+                      384,
+                      512,
+                      Array [],
+                      "f08d",
+                      "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
+                    ],
+                    "iconName": "thumbtack",
+                    "prefix": "fas",
+                  }
+                }
+                text="Pin this track"
+              >
+                <button
+                  aria-label="Pin this track"
+                  data-target="#PinRecordingModal"
+                  data-toggle="modal"
+                  disabled={false}
+                  onClick={[Function]}
+                  role="menuitem"
+                  title="Pin this track"
+                  type="button"
+                >
+                  <FontAwesomeIcon
+                    border={false}
+                    className=""
+                    fixedWidth={false}
+                    flip={null}
+                    icon={
+                      Object {
+                        "icon": Array [
+                          384,
+                          512,
+                          Array [],
+                          "f08d",
+                          "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
+                        ],
+                        "iconName": "thumbtack",
+                        "prefix": "fas",
+                      }
+                    }
+                    inverse={false}
+                    listItem={false}
+                    mask={null}
+                    pull={null}
+                    pulse={false}
+                    rotation={null}
+                    size={null}
+                    spin={false}
+                    swapOpacity={false}
+                    symbol={false}
+                    title=""
+                    transform={null}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="svg-inline--fa fa-thumbtack fa-w-12 "
+                      data-icon="thumbtack"
+                      data-prefix="fas"
+                      focusable="false"
+                      role="img"
+                      style={Object {}}
+                      viewBox="0 0 384 512"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z"
+                        fill="currentColor"
+                        style={Object {}}
+                      />
+                    </svg>
+                  </FontAwesomeIcon>
+                   
+                  Pin this track
+                </button>
+              </ListenControl>
+              <ListenControl
+                action={[Function]}
                 icon={
                   Object {
                     "icon": Array [
@@ -481,6 +563,88 @@ exports[`ListenCard renders correctly 1`] = `
                   </FontAwesomeIcon>
                    
                   Recommend to my followers
+                </button>
+              </ListenControl>
+              <ListenControl
+                action={[Function]}
+                dataTarget="#PersonalRecommendationModal"
+                dataToggle="modal"
+                icon={
+                  Object {
+                    "icon": Array [
+                      512,
+                      512,
+                      Array [],
+                      "f1d8",
+                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                    ],
+                    "iconName": "paper-plane",
+                    "prefix": "fas",
+                  }
+                }
+                text="Personally recommend"
+              >
+                <button
+                  aria-label="Personally recommend"
+                  data-target="#PersonalRecommendationModal"
+                  data-toggle="modal"
+                  disabled={false}
+                  onClick={[Function]}
+                  role="menuitem"
+                  title="Personally recommend"
+                  type="button"
+                >
+                  <FontAwesomeIcon
+                    border={false}
+                    className=""
+                    fixedWidth={false}
+                    flip={null}
+                    icon={
+                      Object {
+                        "icon": Array [
+                          512,
+                          512,
+                          Array [],
+                          "f1d8",
+                          "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                        ],
+                        "iconName": "paper-plane",
+                        "prefix": "fas",
+                      }
+                    }
+                    inverse={false}
+                    listItem={false}
+                    mask={null}
+                    pull={null}
+                    pulse={false}
+                    rotation={null}
+                    size={null}
+                    spin={false}
+                    swapOpacity={false}
+                    symbol={false}
+                    title=""
+                    transform={null}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="svg-inline--fa fa-paper-plane fa-w-16 "
+                      data-icon="paper-plane"
+                      data-prefix="fas"
+                      focusable="false"
+                      role="img"
+                      style={Object {}}
+                      viewBox="0 0 512 512"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                        fill="currentColor"
+                        style={Object {}}
+                      />
+                    </svg>
+                  </FontAwesomeIcon>
+                   
+                  Personally recommend
                 </button>
               </ListenControl>
               <ListenControl
@@ -1088,6 +1252,88 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               </ListenControl>
               <ListenControl
                 action={[Function]}
+                dataTarget="#PinRecordingModal"
+                dataToggle="modal"
+                icon={
+                  Object {
+                    "icon": Array [
+                      384,
+                      512,
+                      Array [],
+                      "f08d",
+                      "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
+                    ],
+                    "iconName": "thumbtack",
+                    "prefix": "fas",
+                  }
+                }
+                text="Pin this track"
+              >
+                <button
+                  aria-label="Pin this track"
+                  data-target="#PinRecordingModal"
+                  data-toggle="modal"
+                  disabled={false}
+                  onClick={[Function]}
+                  role="menuitem"
+                  title="Pin this track"
+                  type="button"
+                >
+                  <FontAwesomeIcon
+                    border={false}
+                    className=""
+                    fixedWidth={false}
+                    flip={null}
+                    icon={
+                      Object {
+                        "icon": Array [
+                          384,
+                          512,
+                          Array [],
+                          "f08d",
+                          "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
+                        ],
+                        "iconName": "thumbtack",
+                        "prefix": "fas",
+                      }
+                    }
+                    inverse={false}
+                    listItem={false}
+                    mask={null}
+                    pull={null}
+                    pulse={false}
+                    rotation={null}
+                    size={null}
+                    spin={false}
+                    swapOpacity={false}
+                    symbol={false}
+                    title=""
+                    transform={null}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="svg-inline--fa fa-thumbtack fa-w-12 "
+                      data-icon="thumbtack"
+                      data-prefix="fas"
+                      focusable="false"
+                      role="img"
+                      style={Object {}}
+                      viewBox="0 0 384 512"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z"
+                        fill="currentColor"
+                        style={Object {}}
+                      />
+                    </svg>
+                  </FontAwesomeIcon>
+                   
+                  Pin this track
+                </button>
+              </ListenControl>
+              <ListenControl
+                action={[Function]}
                 icon={
                   Object {
                     "icon": Array [
@@ -1163,6 +1409,88 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   </FontAwesomeIcon>
                    
                   Recommend to my followers
+                </button>
+              </ListenControl>
+              <ListenControl
+                action={[Function]}
+                dataTarget="#PersonalRecommendationModal"
+                dataToggle="modal"
+                icon={
+                  Object {
+                    "icon": Array [
+                      512,
+                      512,
+                      Array [],
+                      "f1d8",
+                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                    ],
+                    "iconName": "paper-plane",
+                    "prefix": "fas",
+                  }
+                }
+                text="Personally recommend"
+              >
+                <button
+                  aria-label="Personally recommend"
+                  data-target="#PersonalRecommendationModal"
+                  data-toggle="modal"
+                  disabled={false}
+                  onClick={[Function]}
+                  role="menuitem"
+                  title="Personally recommend"
+                  type="button"
+                >
+                  <FontAwesomeIcon
+                    border={false}
+                    className=""
+                    fixedWidth={false}
+                    flip={null}
+                    icon={
+                      Object {
+                        "icon": Array [
+                          512,
+                          512,
+                          Array [],
+                          "f1d8",
+                          "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                        ],
+                        "iconName": "paper-plane",
+                        "prefix": "fas",
+                      }
+                    }
+                    inverse={false}
+                    listItem={false}
+                    mask={null}
+                    pull={null}
+                    pulse={false}
+                    rotation={null}
+                    size={null}
+                    spin={false}
+                    swapOpacity={false}
+                    symbol={false}
+                    title=""
+                    transform={null}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="svg-inline--fa fa-paper-plane fa-w-16 "
+                      data-icon="paper-plane"
+                      data-prefix="fas"
+                      focusable="false"
+                      role="img"
+                      style={Object {}}
+                      viewBox="0 0 512 512"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                        fill="currentColor"
+                        style={Object {}}
+                      />
+                    </svg>
+                  </FontAwesomeIcon>
+                   
+                  Personally recommend
                 </button>
               </ListenControl>
               <ListenControl
@@ -1718,6 +2046,88 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               </ListenControl>
               <ListenControl
                 action={[Function]}
+                dataTarget="#PinRecordingModal"
+                dataToggle="modal"
+                icon={
+                  Object {
+                    "icon": Array [
+                      384,
+                      512,
+                      Array [],
+                      "f08d",
+                      "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
+                    ],
+                    "iconName": "thumbtack",
+                    "prefix": "fas",
+                  }
+                }
+                text="Pin this track"
+              >
+                <button
+                  aria-label="Pin this track"
+                  data-target="#PinRecordingModal"
+                  data-toggle="modal"
+                  disabled={false}
+                  onClick={[Function]}
+                  role="menuitem"
+                  title="Pin this track"
+                  type="button"
+                >
+                  <FontAwesomeIcon
+                    border={false}
+                    className=""
+                    fixedWidth={false}
+                    flip={null}
+                    icon={
+                      Object {
+                        "icon": Array [
+                          384,
+                          512,
+                          Array [],
+                          "f08d",
+                          "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
+                        ],
+                        "iconName": "thumbtack",
+                        "prefix": "fas",
+                      }
+                    }
+                    inverse={false}
+                    listItem={false}
+                    mask={null}
+                    pull={null}
+                    pulse={false}
+                    rotation={null}
+                    size={null}
+                    spin={false}
+                    swapOpacity={false}
+                    symbol={false}
+                    title=""
+                    transform={null}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="svg-inline--fa fa-thumbtack fa-w-12 "
+                      data-icon="thumbtack"
+                      data-prefix="fas"
+                      focusable="false"
+                      role="img"
+                      style={Object {}}
+                      viewBox="0 0 384 512"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z"
+                        fill="currentColor"
+                        style={Object {}}
+                      />
+                    </svg>
+                  </FontAwesomeIcon>
+                   
+                  Pin this track
+                </button>
+              </ListenControl>
+              <ListenControl
+                action={[Function]}
                 icon={
                   Object {
                     "icon": Array [
@@ -1793,6 +2203,88 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                   </FontAwesomeIcon>
                    
                   Recommend to my followers
+                </button>
+              </ListenControl>
+              <ListenControl
+                action={[Function]}
+                dataTarget="#PersonalRecommendationModal"
+                dataToggle="modal"
+                icon={
+                  Object {
+                    "icon": Array [
+                      512,
+                      512,
+                      Array [],
+                      "f1d8",
+                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                    ],
+                    "iconName": "paper-plane",
+                    "prefix": "fas",
+                  }
+                }
+                text="Personally recommend"
+              >
+                <button
+                  aria-label="Personally recommend"
+                  data-target="#PersonalRecommendationModal"
+                  data-toggle="modal"
+                  disabled={false}
+                  onClick={[Function]}
+                  role="menuitem"
+                  title="Personally recommend"
+                  type="button"
+                >
+                  <FontAwesomeIcon
+                    border={false}
+                    className=""
+                    fixedWidth={false}
+                    flip={null}
+                    icon={
+                      Object {
+                        "icon": Array [
+                          512,
+                          512,
+                          Array [],
+                          "f1d8",
+                          "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                        ],
+                        "iconName": "paper-plane",
+                        "prefix": "fas",
+                      }
+                    }
+                    inverse={false}
+                    listItem={false}
+                    mask={null}
+                    pull={null}
+                    pulse={false}
+                    rotation={null}
+                    size={null}
+                    spin={false}
+                    swapOpacity={false}
+                    symbol={false}
+                    title=""
+                    transform={null}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="svg-inline--fa fa-paper-plane fa-w-16 "
+                      data-icon="paper-plane"
+                      data-prefix="fas"
+                      focusable="false"
+                      role="img"
+                      style={Object {}}
+                      viewBox="0 0 512 512"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                        fill="currentColor"
+                        style={Object {}}
+                      />
+                    </svg>
+                  </FontAwesomeIcon>
+                   
+                  Personally recommend
                 </button>
               </ListenControl>
               <ListenControl

@@ -6,6 +6,7 @@ import * as Sentry from "@sentry/react";
 
 import { get, isEqual, isInteger } from "lodash";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -389,11 +390,13 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <RecommendationsWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          recommendations={recommendations}
-          user={user}
-        />
+        <NiceModal.Provider>
+          <RecommendationsWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            recommendations={recommendations}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

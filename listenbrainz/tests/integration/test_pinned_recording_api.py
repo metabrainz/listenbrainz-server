@@ -328,6 +328,25 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assertEqual(pins[1]["recording_mbid"], self.pinned_rec_samples[0]["recording_mbid"])
         self.assertEqual(pins[1]["blurb_content"], self.pinned_rec_samples[0]["blurb_content"])
 
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
+    def test_get_current_pin_for_user(self):
+        """Test that valid response is received with 200 code"""
+        response = self.client.get(url_for("pinned_rec_api_bp_v1.get_current_pin_for_user", user_name=self.user["musicbrainz_id"]))
+        self.assert200(response)
+        data = json.loads(response.data)
+        self.assertEqual(data["pinned_recording"], None)
+        self.assertEqual(data["user_name"], self.user["musicbrainz_id"])
+
+        self.insert_test_data(self.user["id"], 2)  # pin 2 recordings
+        response = self.client.get(url_for("pinned_rec_api_bp_v1.get_current_pin_for_user", user_name=self.user["musicbrainz_id"]))
+        self.assert200(response)
+        data = json.loads(response.data)
+
+        pin = data["pinned_recording"]
+        self.assertEqual(pin["recording_msid"], self.pinned_rec_samples[1]["recording_msid"])
+        self.assertEqual(pin["recording_mbid"], self.pinned_rec_samples[1]["recording_mbid"])
+        self.assertEqual(pin["blurb_content"], self.pinned_rec_samples[1]["blurb_content"])
+
     def test_get_pins_for_user_invalid_username(self):
         """Tests that endpoint returns 404 when no user with given user_name is found"""
         self.insert_test_data(self.user["id"])  # pin 4 recordings for user

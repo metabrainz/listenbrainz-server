@@ -1042,6 +1042,16 @@ export default class APIService {
     return response.json();
   };
 
+  lookupMBRecording = async (
+    recordingMBID: string,
+    inc = "artists"
+  ): Promise<any> => {
+    const url = `${this.MBBaseURI}/recording/${recordingMBID}?fmt=json&inc=${inc}`;
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   lookupMBRelease = async (releaseMBID: string): Promise<any> => {
     const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
     const response = await fetch(encodeURI(url));

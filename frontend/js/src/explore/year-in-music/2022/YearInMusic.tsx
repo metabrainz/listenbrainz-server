@@ -23,28 +23,32 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import ErrorBoundary from "../../utils/ErrorBoundary";
+import NiceModal from "@ebay/nice-modal-react";
+import ErrorBoundary from "../../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
-} from "../../utils/GlobalAppContext";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+} from "../../../utils/GlobalAppContext";
+import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
 
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../../notifications/AlertNotificationsHOC";
+} from "../../../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../../utils/APIService";
-import { generateAlbumArtThumbnailLink, getPageProps } from "../../utils/utils";
-import { getEntityLink } from "../../stats/utils";
+import APIServiceClass from "../../../utils/APIService";
+import {
+  generateAlbumArtThumbnailLink,
+  getPageProps,
+} from "../../../utils/utils";
+import { getEntityLink } from "../../../stats/utils";
 import MagicShareButton from "./MagicShareButton";
 
-import ListenCard from "../../listens/ListenCard";
-import UserListModalEntry from "../../follow/UserListModalEntry";
-import { JSPFTrackToListen } from "../../playlists/utils";
-import { COLOR_LB_ORANGE } from "../../utils/constants";
-import SimpleModal from "../../utils/SimpleModal";
-import CustomChoropleth from "../../stats/Choropleth";
+import ListenCard from "../../../listens/ListenCard";
+import UserListModalEntry from "../../../follow/UserListModalEntry";
+import { JSPFTrackToListen } from "../../../playlists/utils";
+import { COLOR_LB_ORANGE } from "../../../utils/constants";
+import SimpleModal from "../../../utils/SimpleModal";
+import CustomChoropleth from "../../../stats/Choropleth";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -1260,10 +1264,12 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
-        <YearInMusicWithAlertNotifications
-          user={user}
-          yearInMusicData={yearInMusicData}
-        />
+        <NiceModal.Provider>
+          <YearInMusicWithAlertNotifications
+            user={user}
+            yearInMusicData={yearInMusicData}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );
