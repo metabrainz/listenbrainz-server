@@ -30,14 +30,6 @@ const listen: Listen = {
   listened_at_iso: "2021-08-10T22:25:57Z",
 };
 
-const differentListen: Listen = {
-  track_metadata: {
-    artist_name: "Marina and the Diamonds",
-    release_name: "Electra Heart",
-    track_name: "Primadonna",
-  },
-  listened_at: 1628634357,
-};
 const testAPIService = new APIServiceClass("");
 const globalProps = {
   APIService: testAPIService,
@@ -89,11 +81,7 @@ describe("CBReviewModal", () => {
     wrapper = undefined!;
   });
   afterEach(() => {
-    submitReviewToCBSpy.mockClear();
-    lookupMBReleaseFromTrackSpy.mockClear();
-    lookupMBReleaseSpy.mockClear();
-    apiRefreshSpy.mockClear();
-    newAlert.mockClear();
+    jest.clearAllMocks();
     if (wrapper) {
       /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
         related to async lifecycle methods run against a missing dom 'document'.
@@ -199,8 +187,8 @@ describe("CBReviewModal", () => {
       expect(lookupMBReleaseSpy).toHaveBeenCalledTimes(1);
       expect(lookupMBReleaseSpy).toHaveBeenCalledWith(releaseMBID);
 
-      /** Can't get this to work ! Enzyme doesn't seem to re-render the component
-       * after the entityToReview state gets updated
+      /** Can't get this to work ! Enzyme doesn't really support the useEffect hooks and
+       * does not re-render the component after the entityToReview state gets updated
        */
       // const realeaseGroupMBID = "9ecc1aea-289d-4d03-b476-6bbcd1e749d7";
       // const selectRGButton = wrapper.find(
@@ -234,15 +222,10 @@ describe("CBReviewModal", () => {
       );
       await waitForComponentToPaint(wrapper);
 
-      // const result = await instance.getRecordingMBIDFromTrack(mbid, trackName);
-      // expect(result).toEqual(
-      //   lookupMBReleaseFromTrack.releases[0].media[0].tracks[11].recording.id
-      // );
-
       expect(lookupMBReleaseFromTrackSpy).toHaveBeenCalledTimes(1);
       expect(lookupMBReleaseFromTrackSpy).toHaveBeenCalledWith(mbid);
-      /** Can't get this to work ! Enzyme doesn't seem to re-render the component
-       * after the entityToReview state gets updated
+      /** Can't get this to work ! Enzyme doesn't really support the useEffect hooks and
+       * does not re-render the component after the entityToReview state gets updated
        */
       // const selectRecordingButton = wrapper.find(
       //   "button[name='select-recording']"
