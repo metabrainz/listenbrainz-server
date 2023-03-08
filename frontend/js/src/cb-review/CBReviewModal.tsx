@@ -9,6 +9,7 @@ import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { kebabCase, lowerCase } from "lodash";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
@@ -82,7 +83,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
         setBlurbContent(input);
       }
     },
-    []
+    [setBlurbContent]
   );
 
   const handleError = (error: string | Error, title?: string): void => {
@@ -253,71 +254,80 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
     [setRating]
   );
 
-  const submitReviewToCB = async (
-    event?: React.FormEvent<HTMLFormElement>,
-    access_token?: string,
-    maxRetries: number = 1
-  ): Promise<any> => {
-    if (event) {
-      event.preventDefault();
-    }
-    const accessToken = access_token ?? critiquebrainzAuth?.access_token;
-    if (!accessToken || !reviewValid) {
-      return;
-    }
-    const { name, auth_token } = currentUser;
-
-    if (accessToken && entityToReview && acceptLicense && auth_token) {
-      setLoading(true);
-
-      /* do not include rating if it wasn't set */
-      let nonZeroRating;
-      if (rating !== 0) {
-        nonZeroRating = rating;
+  const submitReviewToCB = React.useCallback(
+    async (
+      event?: React.FormEvent<HTMLFormElement>,
+      access_token?: string,
+      maxRetries: number = 1
+    ): Promise<any> => {
+      if (event) {
+        event.preventDefault();
       }
+      // The access token is not actually used, since the submission is handled server-side
+      // We only want to know if the user has their account linked and authed
+      const accessToken = access_token ?? critiquebrainzAuth?.access_token;
 
-      const reviewToSubmit: CritiqueBrainzReview = {
-        entity_name: entityToReview.name ?? "",
-        entity_id: entityToReview.mbid,
-        entity_type: entityToReview.type,
-        text: blurbContent,
-        languageCode: language,
-        rating: nonZeroRating,
-      };
+      if (!accessToken || !reviewValid) {
+        return;
+      }
+      const { name, auth_token } = currentUser;
 
-      try {
-        const response = await APIService.submitReviewToCB(
-          name,
-          auth_token,
-          reviewToSubmit
-        );
-        if (response) {
-          newAlert(
-            "success",
-            `Your review was submitted to CritiqueBrainz!`,
-            <a
-              href={response.metadata.review_id}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {getArtistName(listen)} - {entityToReview.name}
-            </a>
+      if (accessToken && entityToReview && acceptLicense && auth_token) {
+        setLoading(true);
+
+        /* do not include rating if it wasn't set */
+        let nonZeroRating;
+        if (rating !== 0) {
+          nonZeroRating = rating;
+        }
+
+        const reviewToSubmit: CritiqueBrainzReview = {
+          entity_name: entityToReview.name ?? "",
+          entity_id: entityToReview.mbid,
+          entity_type: entityToReview.type,
+          text: blurbContent,
+          languageCode: language,
+          rating: nonZeroRating,
+        };
+
+        try {
+          const response = await APIService.submitReviewToCB(
+            name,
+            auth_token,
+            reviewToSubmit
           );
-          closeModal();
-        }
-      } catch (error) {
-        if (maxRetries > 0 && error.message === "invalid_token") {
-          /* Need to refresh token and retry with new token */
-          const newToken = await refreshCritiquebrainzToken();
-          // eslint-disable-next-line no-return-await
-          await submitReviewToCB(undefined, newToken, maxRetries - 1);
-        } else {
-          handleError(error, "Error while submitting review to CritiqueBrainz");
-          setLoading(false);
+          if (response) {
+            newAlert(
+              "success",
+              "Your review was submitted to CritiqueBrainz!",
+              <a
+                href={response.metadata.review_id}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {`${getArtistName(listen)} - ${entityToReview.name}`}
+              </a>
+            );
+            closeModal();
+          }
+        } catch (error) {
+          if (maxRetries > 0 && error.message === "invalid_token") {
+            /* Need to refresh token and retry with new token */
+            const newToken = await refreshCritiquebrainzToken();
+            // eslint-disable-next-line no-return-await
+            await submitReviewToCB(event, newToken, maxRetries - 1);
+          } else {
+            handleError(
+              error,
+              "Error while submitting review to CritiqueBrainz"
+            );
+            setLoading(false);
+          }
         }
       }
-    }
-  };
+    },
+    [critiquebrainzAuth, entityToReview, acceptLicense, currentUser, setLoading]
+  );
   const CBInfoButton = React.useMemo(() => {
     return (
       <span>
@@ -347,7 +357,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
     );
   }, []);
 
-  const getModalBody = () => {
+  const modalBody = React.useMemo(() => {
     /* User hasn't logged into CB yet, prompt them to authenticate */
     if (!hasPermissions) {
       return (
@@ -370,7 +380,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
     /* None of the three entities were found for the Listen */
     if (!entityToReview) {
       return (
-        <div>
+        <div id="no-entity">
           We could not link <b>{getTrackName(listen)}</b> by{" "}
           <b>{getArtistName(listen)}</b> to any recording, artist, or release
           group on MusicBrainz.
@@ -392,7 +402,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
 
     return (
       <div>
-        {/* Show warning when recordingEntity is not availible */}
+        {/* Show warning when recordingEntity is not available */}
         {!recordingEntity && (
           <div className="alert alert-danger">
             We could not find a recording for <b>{getTrackName(listen)}</b>.
@@ -407,10 +417,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
               data-toggle="dropdown"
               type="button"
             >
-              {`${entityToReview.name} (${entityToReview.type.replace(
-                "_",
-                " "
-              )})`}
+              {`${entityToReview.name} (${lowerCase(entityToReview.type)})`}
               <span className="caret" />
             </button>
 
@@ -421,6 +428,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
                   return (
                     <button
                       key={entity.mbid}
+                      name={`select-${kebabCase(entityToReview.type)}`}
                       onClick={() => setEntityToReview(entity)}
                       type="button"
                     >
@@ -512,15 +520,27 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
           </label>
         </div>
         {!reviewValid && (
-          <div className="alert alert-danger">
+          <div id="text-too-short-alert" className="alert alert-danger">
             Your review needs to be longer than {minTextLength} characters.
           </div>
         )}
       </div>
     );
-  };
+  }, [
+    hasPermissions,
+    reviewValid,
+    entityToReview,
+    recordingEntity,
+    artistEntity,
+    releaseGroupEntity,
+    blurbContent,
+    handleBlurbInputChange,
+    acceptLicense,
+    handleLicenseChange,
+    setEntityToReview,
+  ]);
 
-  const getModalFooter = () => {
+  const modalFooter = React.useMemo(() => {
     /* User hasn't logged into CB yet: prompt them to authenticate */
     if (!hasPermissions)
       return (
@@ -541,7 +561,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
           type="submit"
           id="submitReviewButton"
           className="btn btn-success"
-          disabled={!reviewValid}
+          disabled={!reviewValid || !acceptLicense}
         >
           Submit Review to CritiqueBrainz
         </button>
@@ -559,10 +579,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
         Cancel
       </button>
     );
-  };
-
-  const modalBody = getModalBody();
-  const modalFooter = getModalFooter();
+  }, [hasPermissions, entityToReview, reviewValid, acceptLicense, closeModal]);
 
   return (
     <div
