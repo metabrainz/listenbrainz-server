@@ -107,7 +107,7 @@ export default class SelectTimezone extends React.Component<
         <div>
           <form onSubmit={this.submitTimezone}>
             <label>
-              Select you local timezone:
+              Select your local timezone:
               <select
                 defaultValue={userTimezone}
                 onChange={(e) => this.zoneSelection(e.target.value)}
