@@ -16,7 +16,10 @@ USERS_PER_MESSAGE = 100
 
 
 def get_artist_map_stats(year):
-    get_listens_from_dump().createOrReplaceTempView("listens")
+    start = datetime.combine(date(year, 1, 1), time.min)
+    end = datetime.combine(date(year, 12, 31), time.max)
+    get_listens_from_dump(start, end).createOrReplaceTempView("listens")
+
     create_artist_country_cache()
 
     listenbrainz_spark\
@@ -26,9 +29,6 @@ def get_artist_map_stats(year):
         .createOrReplaceTempView("artist_metadata_cache")
 
     create_iso_country_codes_df()
-
-    start = datetime.combine(date(year, 1, 1), time.min)
-    end = datetime.combine(date(year, 12, 31), time.max)
 
     query = f"""
           WITH exploded_listens as (
