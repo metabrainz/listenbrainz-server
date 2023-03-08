@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get, get as _get, isEqual, isNil, isNumber } from "lodash";
+import { get, isEqual, isNil, isNumber } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -189,7 +189,7 @@ export default class ListenCard extends React.Component<
       const metadata: UserTrackRecommendationMetadata = {
         artist_name: getArtistName(listen),
         track_name: getTrackName(listen),
-        release_name: _get(listen, "track_metadata.release_name"),
+        release_name: get(listen, "track_metadata.release_name"),
       };
 
       const recording_mbid = getRecordingMBID(listen);
