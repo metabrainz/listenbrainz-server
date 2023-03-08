@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required
 from werkzeug.exceptions import BadRequest, ServiceUnavailable, NotFound
-import ujson
+import orjson
 
 from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.musicbrainz_db.release import get_release_by_mbid
@@ -31,7 +31,7 @@ def load():
         )
 
     try:
-        listens = ujson.loads(raw_listens)
+        listens = orjson.loads(raw_listens)
     except ValueError as e:
         return render_template(
             "index/player.html",
@@ -62,7 +62,7 @@ def load():
 
     return render_template(
         "index/player.html",
-        props=ujson.dumps(props),
+        props=orjson.dumps(props).decode("utf-8"),
         user=current_user
     )
 
@@ -118,7 +118,7 @@ def load_instant():
 
     return render_template(
         "player/player-page.html",
-        props=ujson.dumps({"playlist": serialize_jspf(playlist)})
+        props=orjson.dumps({"playlist": serialize_jspf(playlist)}).decode("utf-8")
     )
 
 
@@ -170,5 +170,5 @@ def load_release(release_mbid):
 
     return render_template(
         "player/player-page.html",
-        props=ujson.dumps({"playlist": serialize_jspf(playlist) if playlist is not None else {}})
+        props=orjson.dumps({"playlist": serialize_jspf(playlist) if playlist is not None else {}}).decode("utf-8")
     )

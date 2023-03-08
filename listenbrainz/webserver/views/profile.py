@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import time
 
-import ujson
+import orjson
 from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
@@ -64,7 +64,7 @@ def select_timezone():
     }
     return render_template(
         "profile/selecttimezone.html",
-        props=ujson.dumps(props),
+        props=orjson.dumps(props).decode("utf-8"),
     )
 
 
@@ -74,7 +74,7 @@ def set_troi_prefs():
     current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
     return render_template(
         "profile/troi_prefs.html",
-        props=ujson.dumps({"troi_prefs": current_troi_prefs})
+        props=orjson.dumps({"troi_prefs": current_troi_prefs}).decode("utf-8")
     )
 
 
@@ -146,7 +146,7 @@ def import_data():
         "user/import.html",
         user=current_user,
         user_has_email=user_has_email,
-        props=ujson.dumps(props),
+        props=orjson.dumps(props).decode("utf-8"),
     )
 
 
@@ -183,7 +183,7 @@ def stream_json_array(elements):
     """ Return a generator of string fragments of the elements encoded as array. """
     for i, element in enumerate(elements):
         yield '[' if i == 0 else ','
-        yield ujson.dumps(element)
+        yield orjson.dumps(element).decode("utf-8")
     yield ']'
 
 

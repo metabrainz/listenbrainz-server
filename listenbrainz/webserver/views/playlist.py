@@ -1,4 +1,4 @@
-import ujson
+import orjson
 from werkzeug.exceptions import NotFound, BadRequest
 
 from flask import Blueprint, render_template, current_app
@@ -36,5 +36,5 @@ def load_playlist(playlist_mbid: str):
 
     return render_template(
         "playlists/playlist.html",
-        props=ujson.dumps(props)
+        props=orjson.dumps(props).decode("utf-8")
     )

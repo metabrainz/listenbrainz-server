@@ -3,7 +3,7 @@ from listenbrainz.listen import Listen
 from datetime import datetime
 import time
 import uuid
-import ujson
+import orjson
 
 class ListenTestCase(unittest.TestCase):
 
@@ -92,7 +92,7 @@ class ListenTestCase(unittest.TestCase):
         self.assertIsInstance(data, str)
 
         # Convert returned data to json
-        json_data = ujson.loads(data)
+        json_data = orjson.loads(data)
 
         # Check that the required fields are dumped into data
         self.assertIn('track_metadata', json_data)

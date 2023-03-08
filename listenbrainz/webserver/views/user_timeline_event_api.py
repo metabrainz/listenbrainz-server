@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 from typing import List, Tuple, Dict, Iterable
 
 import pydantic
-import ujson
+import orjson
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request, current_app
 
@@ -88,7 +88,7 @@ def create_user_recording_recommendation_event(user_name):
         raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -141,7 +141,7 @@ def create_user_notification_event(user_name):
         raise APINotFound(f"Cannot find user: {user_name}")
 
     try:
-        data = ujson.loads(request.get_data())['metadata']
+        data = orjson.loads(request.get_data())['metadata']
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -195,7 +195,7 @@ def create_user_cb_review_event(user_name):
         raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -380,7 +380,7 @@ def delete_feed_events(user_name):
         raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
 
     try:
-        event = ujson.loads(request.get_data())
+        event = orjson.loads(request.get_data())
 
         if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
                 UserTimelineEventType.NOTIFICATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
@@ -439,7 +439,7 @@ def hide_user_timeline_event(user_name):
         raise APIUnauthorized("You don't have permissions to hide events from this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -494,7 +494,7 @@ def unhide_user_timeline_event(user_name):
         raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -545,7 +545,7 @@ def create_personal_recommendation_event(user_name):
         raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 

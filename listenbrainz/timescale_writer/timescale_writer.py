@@ -4,7 +4,7 @@ from datetime import datetime
 from time import monotonic
 
 import psycopg2
-import ujson
+import orjson
 from brainzutils import metrics
 from flask import current_app
 from kombu import Exchange, Queue, Consumer, Message, Connection
@@ -50,7 +50,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         ]
 
     def callback(self, message: Message):
-        listens = ujson.loads(message.body)
+        listens = orjson.loads(message.body)
 
         msb_listens = []
         for chunk in chunked(listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
@@ -162,7 +162,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         self.producer.publish(
             exchange=self.unique_exchange,
             routing_key="",
-            body=ujson.dumps([listen.to_json() for listen in unique]),
+            body=orjson.dumps([listen.to_json() for listen in unique]).decode("utf-8"),
             delivery_mode=PERSISTENT_DELIVERY_MODE
         )
 

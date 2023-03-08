@@ -9,7 +9,7 @@ import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
 import listenbrainz.db.user as db_user
 import time
-import ujson
+import orjson
 import uuid
 import sentry_sdk
 
@@ -255,7 +255,7 @@ def log_raise_400(msg, data=""):
     """
 
     if isinstance(data, dict):
-        data = ujson.dumps(data)
+        data = orjson.dumps(data).decode("utf-8")
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
     raise APIBadRequest(msg)
@@ -368,7 +368,7 @@ def publish_data_to_queue(data, exchange):
             producer.publish(
                 exchange=exchange,
                 routing_key='',
-                body=ujson.dumps(data),
+                body=orjson.dumps(data),
                 delivery_mode=PERSISTENT_DELIVERY_MODE,
                 retry=True,
                 retry_policy={"max_retries": 5},

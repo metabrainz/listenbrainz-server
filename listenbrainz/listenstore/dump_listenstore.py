@@ -13,7 +13,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import sqlalchemy
 import tempfile
-import ujson
+import orjson
 from psycopg2.extras import execute_values
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH, db
@@ -210,7 +210,7 @@ class DumpListenStore:
                                 data=result.data,
                                 user_name=user_name
                             ).to_json()
-                            out_file.write(ujson.dumps(listen) + "\n")
+                            out_file.write(orjson.dumps(listen).decode("utf-8") + "\n")
                             rows_added += 1
                     tar_file.add(filename, arcname=os.path.join(
                         archive_name, 'listens', str(year), "%d.listens" % month))

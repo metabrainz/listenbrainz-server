@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import ujson
+import orjson
 import sqlalchemy
 
 from listenbrainz import db
@@ -50,7 +50,7 @@ def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data:
                         created = NOW()
             """), {
                 'user_id': user_id,
-                'missing_musicbrainz_data': ujson.dumps(missing_musicbrainz_data.dict()),
+                'missing_musicbrainz_data': orjson.dumps(missing_musicbrainz_data.dict()).decode("utf-8"),
                 'source': source
             }
         )
@@ -114,7 +114,7 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
     except ValidationError:
         current_app.logger.error("""ValidationError when getting missing musicbrainz data for source "{source}"
                                  for user with user_id: {user_id}. Data: {data}""".format(source=source, user_id=user_id,
-                                 data=ujson.dumps(row['data'], indent=4)), exc_info=True)
+                                 data=orjson.dumps(row['data'], indent=4)), exc_info=True)
         return None, None
 
 
