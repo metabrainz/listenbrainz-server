@@ -86,10 +86,11 @@ class MBIDMapper:
             after it is removed.
         """
 
-        strings = ["(", "[", " ft ", " ft. ", " feat ", " feat. ", " featuring ", " - ", " & "]
+        strings = ["(", "[", " ft ", " ft. ", " feat ", " feat. ", " featuring ", " - "]
         if is_artist_credit:
             strings.insert(0, ",")
             strings.append(" with ")
+            strings.append(" & ")
 
         for s in strings:
             index = query.find(s)
