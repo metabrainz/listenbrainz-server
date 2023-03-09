@@ -45,10 +45,10 @@ const allLanguagesKeyValue = Object.entries(iso.getNames("en"));
 export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
   const modal = useModal();
 
-  const closeModal = () => {
+  const closeModal = React.useCallback(() => {
     modal.hide();
     setTimeout(modal.remove, 500);
-  };
+  }, [modal]);
 
   const { APIService, currentUser, critiquebrainzAuth } = React.useContext(
     GlobalAppContext
@@ -86,18 +86,21 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
     [setBlurbContent]
   );
 
-  const handleError = (error: string | Error, title?: string): void => {
-    if (!error) {
-      return;
-    }
-    newAlert(
-      "danger",
-      title || "Error",
-      typeof error === "object" ? error.message : error
-    );
-  };
+  const handleError = React.useCallback(
+    (error: string | Error, title?: string): void => {
+      if (!error) {
+        return;
+      }
+      newAlert(
+        "danger",
+        title || "Error",
+        typeof error === "object" ? error.message : error
+      );
+    },
+    [newAlert]
+  );
 
-  const refreshCritiquebrainzToken = async () => {
+  const refreshCritiquebrainzToken = React.useCallback(async () => {
     try {
       const newToken = await APIService.refreshCritiquebrainzToken();
       return newToken;
@@ -108,47 +111,50 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
       );
     }
     return "";
-  };
+  }, [APIService, handleError]);
 
   /* MBID lookup functions */
-  const getGroupMBIDFromRelease = async (mbid: string): Promise<string> => {
-    try {
-      const response = await APIService.lookupMBRelease(mbid);
-      return response["release-group"].id;
-    } catch (error) {
-      handleError(error, "Could not fetch release group MBID");
-      return "";
-    }
-  };
-
-  const getRecordingMBIDFromTrack = async (
-    mbid: string,
-    track_name: string
-  ): Promise<string> => {
-    try {
-      const response = await APIService.lookupMBReleaseFromTrack(mbid);
-      // MusicBrainz API returns multiple releases, medias, and tracks, so we need to
-      // search for the track with a name that matches the supplied track_name
-
-      // Select medias from first release
-      const releaseMedias = response.releases[0].media;
-      // Select the first release media that has tracks
-      const mediaWithTracks = releaseMedias.find((res: any) => res.tracks);
-
-      if (mediaWithTracks) {
-        // find track with matching track_name in media
-        const matchingNameTrack = mediaWithTracks.tracks.find(
-          (res: any) =>
-            res.recording.title.toLowerCase() === track_name.toLowerCase()
-        );
-        if (matchingNameTrack) return matchingNameTrack.recording.id;
+  const getGroupMBIDFromRelease = React.useCallback(
+    async (mbid: string): Promise<string> => {
+      try {
+        const response = await APIService.lookupMBRelease(mbid);
+        return response["release-group"].id;
+      } catch (error) {
+        handleError(error, "Could not fetch release group MBID");
+        return "";
       }
-      return "";
-    } catch (error) {
-      handleError(error, "Could not fetch recording MBID");
-      return "";
-    }
-  };
+    },
+    [APIService, handleError]
+  );
+
+  const getRecordingMBIDFromTrack = React.useCallback(
+    async (mbid: string, track_name: string): Promise<string> => {
+      try {
+        const response = await APIService.lookupMBReleaseFromTrack(mbid);
+        // MusicBrainz API returns multiple releases, medias, and tracks, so we need to
+        // search for the track with a name that matches the supplied track_name
+
+        // Select medias from first release
+        const releaseMedias = response.releases[0].media;
+        // Select the first release media that has tracks
+        const mediaWithTracks = releaseMedias.find((res: any) => res.tracks);
+
+        if (mediaWithTracks) {
+          // find track with matching track_name in media
+          const matchingNameTrack = mediaWithTracks.tracks.find(
+            (res: any) =>
+              res.recording.title.toLowerCase() === track_name.toLowerCase()
+          );
+          if (matchingNameTrack) return matchingNameTrack.recording.id;
+        }
+        return "";
+      } catch (error) {
+        handleError(error, "Could not fetch recording MBID");
+        return "";
+      }
+    },
+    [APIService, handleError]
+  );
 
   React.useEffect(() => {
     /* determine entity functions */
@@ -228,7 +234,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
     } catch (err) {
       handleError(err, "Please try again");
     }
-  }, [listen]);
+  }, [listen, getGroupMBIDFromRelease, getRecordingMBIDFromTrack, handleError]);
 
   /* input handling */
   const handleLanguageChange = React.useCallback(
@@ -326,7 +332,23 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
         }
       }
     },
-    [critiquebrainzAuth, entityToReview, acceptLicense, currentUser, setLoading]
+    [
+      critiquebrainzAuth,
+      entityToReview,
+      acceptLicense,
+      currentUser,
+      reviewValid,
+      APIService,
+      blurbContent,
+      language,
+      listen,
+      rating,
+      setLoading,
+      refreshCritiquebrainzToken,
+      newAlert,
+      closeModal,
+      handleError,
+    ]
   );
   const CBInfoButton = React.useMemo(() => {
     return (
@@ -527,6 +549,7 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
       </div>
     );
   }, [
+    CBInfoButton,
     hasPermissions,
     reviewValid,
     entityToReview,
@@ -534,7 +557,12 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
     artistEntity,
     releaseGroupEntity,
     blurbContent,
+    language,
+    listen,
+    rating,
     handleBlurbInputChange,
+    handleLanguageChange,
+    onRateCallback,
     acceptLicense,
     handleLicenseChange,
     setEntityToReview,
