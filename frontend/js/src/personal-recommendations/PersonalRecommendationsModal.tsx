@@ -1,5 +1,5 @@
 import * as React from "react";
-import { uniq, includes, lowerCase } from "lodash";
+import { uniq, includes, toLower } from "lodash";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import NamePill from "./NamePill";
@@ -95,7 +95,7 @@ export default NiceModal.create(
       (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event?.target?.value) {
           const newSuggestions = followers.filter((username) =>
-            includes(lowerCase(username), lowerCase(event.target.value))
+            includes(toLower(username), toLower(event.target.value))
           );
           setSuggestions(newSuggestions);
         } else {
