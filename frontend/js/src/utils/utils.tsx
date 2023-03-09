@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import { isFinite, isUndefined } from "lodash";
+import { isFinite, isUndefined, castArray } from "lodash";
 import { Rating } from "react-simple-star-rating";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
@@ -134,9 +134,29 @@ const searchForYoutubeTrack = async (
 const getAdditionalContent = (metadata: EventMetadata): string =>
   _.get(metadata, "blurb_content") ?? _.get(metadata, "text") ?? "";
 
-const getArtistMBIDs = (listen: Listen): string[] | undefined =>
-  _.get(listen, "track_metadata.additional_info.artist_mbids") ??
-  _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
+const getArtistMBIDs = (listen: Listen): string[] | undefined => {
+  const additionalInfoArtistMBIDs = _.get(
+    listen,
+    "track_metadata.additional_info.artist_mbids"
+  );
+  const mbidMappingArtistMBIDs = _.get(
+    listen,
+    "track_metadata.mbid_mapping.artist_mbids"
+  );
+  if (additionalInfoArtistMBIDs || mbidMappingArtistMBIDs) {
+    return additionalInfoArtistMBIDs ?? mbidMappingArtistMBIDs;
+  }
+
+  // Backup: cast artist_mbid as an array if it exists
+  const additionalInfoArtistMBID = _.get(
+    listen,
+    "track_metadata.additional_info.artist_mbid"
+  );
+  if (additionalInfoArtistMBID) {
+    return [additionalInfoArtistMBID];
+  }
+  return undefined;
+};
 
 const getRecordingMSID = (listen: Listen): string =>
   _.get(listen, "track_metadata.additional_info.recording_msid");

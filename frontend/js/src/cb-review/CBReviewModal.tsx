@@ -169,14 +169,11 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
       const artist_mbid = getArtistMBIDs(listen)?.[0];
       let artistEntityToSet: ReviewableEntity;
       if (artist_mbid) {
-        const artist_mbids = getArtistMBIDs(listen);
-        if (artist_mbids) {
-          artistEntityToSet = {
-            type: "artist",
-            mbid: artist_mbids[0],
-            name: getArtistName(listen),
-          };
-        }
+        artistEntityToSet = {
+          type: "artist",
+          mbid: artist_mbid,
+          name: getArtistName(listen),
+        };
       }
 
       /** Get recording entity */
