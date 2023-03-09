@@ -25,8 +25,7 @@ import { Integrations } from "@sentry/tracing";
 import { isEmpty, isNil } from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
 import FollowButton from "../follow/FollowButton";
-import APIService from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import ReportUserButton from "../report-user/ReportUser";
 import { getPageProps } from "../utils/utils";
 
@@ -65,24 +64,8 @@ export default UserPageHeading;
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#user-page-heading-container");
-  const { reactProps, globalReactProps } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const {
-    user,
-    already_reported_user,
-    logged_in_user_follows_user,
-  } = reactProps;
-
-  const apiService: APIService = new APIService(
-    api_url || `${window.location.origin}/1`
-  );
+  const { reactProps, globalAppContext, sentryProps } = getPageProps();
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -91,20 +74,19 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-  };
+  const {
+    user,
+    already_reported_user,
+    logged_in_user_follows_user,
+  } = reactProps;
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
-    <GlobalAppContext.Provider value={globalProps}>
+    <GlobalAppContext.Provider value={globalAppContext}>
       <NiceModal.Provider>
         <UserPageHeading
           user={user}
-          loggedInUser={current_user || null}
+          loggedInUser={globalAppContext.currentUser || null}
           loggedInUserFollowsUser={logged_in_user_follows_user}
           alreadyReportedUser={already_reported_user}
         />

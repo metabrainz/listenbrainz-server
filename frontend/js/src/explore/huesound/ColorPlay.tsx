@@ -16,7 +16,6 @@ import {
   withAlertNotifications,
 } from "../../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../../utils/APIService";
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import { getPageProps } from "../../utils/utils";
@@ -243,22 +242,20 @@ export default class ColorPlay extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, current_user, spotify, youtube } = globalReactProps;
-  const { user } = reactProps;
+  const {
+    domContainer,
+    reactProps,
+    globalAppContext,
+    optionalAlerts,
+  } = getPageProps();
 
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
+  const { user } = reactProps;
 
   const ColorPlayWithAlertNotifications = withAlertNotifications(ColorPlay);
 
   const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
+    ...globalAppContext,
     modal: modalRef,
   };
 
@@ -268,7 +265,10 @@ document.addEventListener("DOMContentLoaded", () => {
       <SimpleModal ref={modalRef} />
       <GlobalAppContext.Provider value={globalProps}>
         <NiceModal.Provider>
-          <ColorPlayWithAlertNotifications user={user} />
+          <ColorPlayWithAlertNotifications
+            user={user}
+            initialAlerts={optionalAlerts}
+          />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

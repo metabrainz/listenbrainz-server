@@ -12,7 +12,7 @@ import {
   WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import { getPageProps } from "../utils/utils";
@@ -265,24 +265,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const {
-    playlists,
-    user,
-    playlist_count: playlistCount,
-    pagination_offset: paginationOffset,
-    playlists_per_page: playlistsPerPage,
-  } = reactProps;
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -291,26 +278,22 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
+  const {
+    playlists,
+    user,
+    playlist_count: playlistCount,
+    pagination_offset: paginationOffset,
+    playlists_per_page: playlistsPerPage,
+  } = reactProps;
 
   const RecommendationsPageWithAlertNotifications = withAlertNotifications(
     RecommendationsPage
   );
 
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <RecommendationsPageWithAlertNotifications
             initialAlerts={optionalAlerts}
