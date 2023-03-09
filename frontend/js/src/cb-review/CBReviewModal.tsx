@@ -302,12 +302,12 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
             auth_token,
             reviewToSubmit
           );
-          if (response) {
+          if (response?.metadata?.review_id) {
             newAlert(
               "success",
               "Your review was submitted to CritiqueBrainz!",
               <a
-                href={response.metadata.review_id}
+                href={`${CBBaseUrl}/review/${response.metadata.review_id}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
