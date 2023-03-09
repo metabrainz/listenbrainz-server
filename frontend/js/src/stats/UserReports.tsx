@@ -18,8 +18,7 @@ import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
@@ -198,16 +197,14 @@ export default class UserReports extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
   const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { user } = reactProps;
+    domContainer,
+    reactProps,
+    globalAppContext,
+    sentryProps,
+    optionalAlerts,
+  } = getPageProps();
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -216,27 +213,21 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
+  const { user } = reactProps;
   const UserReportsPageWithAlertNotifications = withAlertNotifications(
     UserReports
   );
 
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <UserReportsPageWithAlertNotifications apiUrl={api_url} user={user} />
+          <UserReportsPageWithAlertNotifications
+            apiUrl={globalAppContext.APIService.APIBaseURI}
+            user={user}
+            initialAlerts={optionalAlerts}
+          />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

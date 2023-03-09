@@ -27,7 +27,6 @@ import {
   withAlertNotifications,
 } from "../../../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../../../utils/APIService";
 import { getPageProps } from "../../../utils/utils";
 import { getEntityLink } from "../../../stats/utils";
 import ComponentToImage from "./ComponentToImage";
@@ -982,22 +981,19 @@ export default class YearInMusic extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, current_user, spotify, youtube } = globalReactProps;
+  const {
+    domContainer,
+    reactProps,
+    globalAppContext,
+    optionalAlerts,
+  } = getPageProps();
   const { user, data: yearInMusicData } = reactProps;
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
 
   const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
 
   const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
+    ...globalAppContext,
     modal: modalRef,
   };
 
@@ -1010,6 +1006,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <YearInMusicWithAlertNotifications
             user={user}
             yearInMusicData={yearInMusicData}
+            initialAlerts={optionalAlerts}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

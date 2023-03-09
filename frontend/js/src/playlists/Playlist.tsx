@@ -854,18 +854,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { labs_api_url, playlist } = reactProps;
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -874,21 +867,15 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
+  const { labs_api_url, playlist } = reactProps;
 
   const PlaylistPageWithAlertNotifications = withAlertNotifications(
     PlaylistPage
   );
 
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
   const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
+    ...globalAppContext,
     modal: modalRef,
   };
 

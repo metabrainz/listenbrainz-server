@@ -14,7 +14,6 @@ import {
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
@@ -22,12 +21,9 @@ import ListenCard from "../listens/ListenCard";
 import {
   getPageProps,
   getRecordingMBID,
-  getArtistMBIDs,
-  getReleaseGroupMBID,
   getTrackName,
   getRecordingMSID,
 } from "../utils/utils";
-import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import SimpleModal from "../utils/SimpleModal";
 
@@ -38,7 +34,6 @@ export type RecentListensProps = {
 export interface RecentListensState {
   listens: Array<Listen>;
   listenCount?: number;
-  recordingToReview?: Listen;
   recordingToMapToMusicbrainz?: Listen;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
@@ -55,7 +50,6 @@ export default class RecentListens extends React.Component<
     super(props);
     this.state = {
       listens: props.listens || [],
-      recordingToReview: props.listens?.[0],
       recordingToMapToMusicbrainz: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
@@ -65,10 +59,6 @@ export default class RecentListens extends React.Component<
   componentDidMount(): void {
     this.loadFeedback();
   }
-
-  updateRecordingToReview = (recordingToReview: Listen) => {
-    this.setState({ recordingToReview });
-  };
 
   updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
     this.setState({ recordingToMapToMusicbrainz });
@@ -175,13 +165,9 @@ export default class RecentListens extends React.Component<
   };
 
   render() {
-    const {
-      listens,
-      recordingToReview,
-      recordingToMapToMusicbrainz,
-    } = this.state;
+    const { listens, recordingToMapToMusicbrainz } = this.state;
     const { newAlert } = this.props;
-    const { APIService, currentUser } = this.context;
+    const { APIService } = this.context;
 
     return (
       <div role="main">
@@ -194,38 +180,8 @@ export default class RecentListens extends React.Component<
             {listens.length > 0 && (
               <div id="listens">
                 {listens.map((listen) => {
-                  const recordingMBID = getRecordingMBID(listen);
-                  const artistMBIDs = getArtistMBIDs(listen);
-                  const trackMBID = get(
-                    listen,
-                    "track_metadata.additional_info.track_mbid"
-                  );
-                  const releaseGroupMBID = getReleaseGroupMBID(listen);
-
-                  const isListenReviewable =
-                    Boolean(recordingMBID) ||
-                    artistMBIDs?.length ||
-                    Boolean(trackMBID) ||
-                    Boolean(releaseGroupMBID);
-
-                  const isListenPersonallyRecommendable = Boolean(
-                    getRecordingMBID(listen)
-                  );
-                  // On the Recent page listens should have either an MSID or MBID or both,
-                  // so we can assume we can pin them
                   /* eslint-disable react/jsx-no-bind */
                   const additionalMenuItems = [];
-                  if (isListenReviewable) {
-                    additionalMenuItems.push(
-                      <ListenControl
-                        text="Write a review"
-                        icon={faPencilAlt}
-                        action={this.updateRecordingToReview.bind(this, listen)}
-                        dataToggle="modal"
-                        dataTarget="#CBReviewModal"
-                      />
-                    );
-                  }
                   additionalMenuItems.push(
                     <ListenControl
                       text="Map to a Recording"
@@ -259,13 +215,6 @@ export default class RecentListens extends React.Component<
             )}
           </div>
           <div className="col-md-4" />
-          {currentUser && (
-            <CBReviewModal
-              listen={recordingToReview}
-              isCurrentUser
-              newAlert={newAlert}
-            />
-          )}
         </div>
         <BrainzPlayer
           listens={listens}
@@ -283,24 +232,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    critiquebrainz,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-
-  const { listens } = reactProps;
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -310,17 +246,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const { listens } = reactProps;
+
   const RecentListensWithAlertNotifications = withAlertNotifications(
     RecentListens
   );
 
   const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    critiquebrainzAuth: critiquebrainz,
+    ...globalAppContext,
     modal: modalRef,
   };
 

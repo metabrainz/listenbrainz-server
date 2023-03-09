@@ -3,7 +3,7 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
-
+import { Integrations } from "@sentry/tracing";
 import { faLink, faPlus } from "@fortawesome/free-solid-svg-icons";
 
 import NiceModal from "@ebay/nice-modal-react";
@@ -322,32 +322,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-  } = globalReactProps;
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const { missingData, user } = reactProps;
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
 
   const modalRef = React.createRef<SimpleModal>();
   const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
+    ...globalAppContext,
     modal: modalRef,
   };
 

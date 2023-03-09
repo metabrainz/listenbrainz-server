@@ -6902,6 +6902,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -7901,6 +7983,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -8705,6 +8869,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -9517,6 +9763,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -10325,6 +10653,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -11129,6 +11539,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -12323,6 +12815,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -13127,6 +13701,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -14130,6 +14786,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -14936,6 +15674,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -16894,6 +17714,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -17893,6 +18795,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -18888,6 +19872,88 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -35483,6 +36549,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -36482,6 +37630,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -37286,6 +38516,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -38098,6 +39410,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -38906,6 +40300,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -39710,6 +41186,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -40904,6 +42462,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -41708,6 +43348,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -42711,6 +44433,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -43517,6 +45321,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl
@@ -45475,6 +47361,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -46474,6 +48442,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
                             dataTarget="#SimpleModal"
                             dataToggle="modal"
                             icon={
@@ -47469,6 +49519,88 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                               </FontAwesomeIcon>
                                
                               Personally recommend
+                            </button>
+                          </ListenControl>
+                          <ListenControl
+                            action={[Function]}
+                            dataTarget="#CBReviewModal"
+                            dataToggle="modal"
+                            icon={
+                              Object {
+                                "icon": Array [
+                                  512,
+                                  512,
+                                  Array [],
+                                  "f303",
+                                  "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                ],
+                                "iconName": "pencil-alt",
+                                "prefix": "fas",
+                              }
+                            }
+                            text="Write a review"
+                          >
+                            <button
+                              aria-label="Write a review"
+                              data-target="#CBReviewModal"
+                              data-toggle="modal"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="menuitem"
+                              title="Write a review"
+                              type="button"
+                            >
+                              <FontAwesomeIcon
+                                border={false}
+                                className=""
+                                fixedWidth={false}
+                                flip={null}
+                                icon={
+                                  Object {
+                                    "icon": Array [
+                                      512,
+                                      512,
+                                      Array [],
+                                      "f303",
+                                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                                    ],
+                                    "iconName": "pencil-alt",
+                                    "prefix": "fas",
+                                  }
+                                }
+                                inverse={false}
+                                listItem={false}
+                                mask={null}
+                                pull={null}
+                                pulse={false}
+                                rotation={null}
+                                size={null}
+                                spin={false}
+                                swapOpacity={false}
+                                symbol={false}
+                                title=""
+                                transform={null}
+                              >
+                                <svg
+                                  aria-hidden="true"
+                                  className="svg-inline--fa fa-pencil-alt fa-w-16 "
+                                  data-icon="pencil-alt"
+                                  data-prefix="fas"
+                                  focusable="false"
+                                  role="img"
+                                  style={Object {}}
+                                  viewBox="0 0 512 512"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                                    fill="currentColor"
+                                    style={Object {}}
+                                  />
+                                </svg>
+                              </FontAwesomeIcon>
+                               
+                              Write a review
                             </button>
                           </ListenControl>
                           <ListenControl

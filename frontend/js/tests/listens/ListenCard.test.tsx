@@ -13,6 +13,7 @@ import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext from "../../src/utils/GlobalAppContext";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import { waitForComponentToPaint } from "../test-utils";
+import CBReviewModal from "../../src/cb-review/CBReviewModal";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -328,6 +329,33 @@ describe("ListenCard", () => {
         wrapper.find(PinRecordingModal).first().childAt(0).props()
       ).toEqual({
         recordingToPin: props.listen,
+        newAlert,
+      });
+    });
+  });
+  describe("CBReviewModal", () => {
+    it("renders the CBReviewModal component with the correct props", async () => {
+      const newAlert = jest.fn();
+      wrapper = mount(
+        <GlobalAppContext.Provider value={globalProps}>
+          <NiceModal.Provider>
+            <ListenCard {...props} newAlert={newAlert} />
+          </NiceModal.Provider>
+        </GlobalAppContext.Provider>
+      );
+      await waitForComponentToPaint(wrapper);
+      expect(wrapper.find(CBReviewModal)).toHaveLength(0);
+
+      await act(() => {
+        const button = wrapper!.find("button[title='Write a review']").first();
+        button?.simulate("click");
+      });
+      await waitForComponentToPaint(wrapper);
+
+      expect(wrapper.find(CBReviewModal)).toHaveLength(1);
+      // recentListens renders CBReviewModal with listens[0] as listen by default
+      expect(wrapper.find(CBReviewModal).first().childAt(0).props()).toEqual({
+        listen: props.listen,
         newAlert,
       });
     });
