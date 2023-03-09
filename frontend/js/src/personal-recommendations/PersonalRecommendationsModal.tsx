@@ -94,11 +94,9 @@ export default NiceModal.create(
     const searchUsers = React.useCallback(
       (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event?.target?.value) {
-          const newSuggestions = followers
-            .map(lowerCase)
-            .filter((username) =>
-              includes(username, lowerCase(event.target.value))
-            );
+          const newSuggestions = followers.filter((username) =>
+            includes(lowerCase(username), lowerCase(event.target.value))
+          );
           setSuggestions(newSuggestions);
         } else {
           setSuggestions([]);
