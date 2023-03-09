@@ -25,15 +25,6 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   const [currentListen, setCurrentListen] = React.useState(playingNow);
   const [recordingData, setRecordingData] = React.useState<MetadataLookup>();
 
-  if (!currentUser) {
-    return (
-      <div>
-        Please{" "}
-        <a href="https://listenbrainz.org/login/">log in to ListenBrainz</a>
-      </div>
-    );
-  }
-
   /** Metadata lookup and storage */
   const onNewPlayingNow = React.useCallback(
     async (playingNowListen: Listen) => {
@@ -102,6 +93,15 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
       fetchPlayingNow();
     }
   }, []);
+
+  if (!currentUser) {
+    return (
+      <div>
+        Please{" "}
+        <a href="https://listenbrainz.org/login/">log in to ListenBrainz</a>
+      </div>
+    );
+  }
 
   return (
     <MetadataViewer recordingData={recordingData} playingNow={currentListen} />

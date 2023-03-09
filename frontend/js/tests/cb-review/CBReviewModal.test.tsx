@@ -47,7 +47,7 @@ const globalProps = {
 const submitReviewToCBSpy = jest
   .spyOn(testAPIService, "submitReviewToCB")
   .mockResolvedValue({
-    metadata: { review_id: "new review id that API returns" },
+    metadata: { review_id: "new-review-id-that-API-returns" },
   });
 
 const lookupMBReleaseFromTrackSpy = jest
@@ -152,7 +152,7 @@ describe("CBReviewModal", () => {
       "success",
       "Your review was submitted to CritiqueBrainz!",
       <a
-        href="new review id that API returns"
+        href="https://critiquebrainz.org/review/new-review-id-that-API-returns"
         target="_blank"
         rel="noopener noreferrer"
       >
