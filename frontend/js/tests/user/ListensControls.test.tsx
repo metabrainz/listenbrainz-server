@@ -60,22 +60,9 @@ fetchMock.mockIf(
   }
 );
 describe("ListensControls", () => {
-  let wrapper: ReactWrapper<ListensProps, ListensState, Listens> | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   describe("getFeedback", () => {
     it("calls the API correctly", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={GlobalContextMock.context}>
           <Listens {...props} />
         </GlobalAppContext.Provider>
@@ -106,7 +93,7 @@ describe("ListensControls", () => {
     it("doesn't call the API if there are no listens", async () => {
       const propsCopy = { ...props };
       propsCopy.listens = [];
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={GlobalContextMock.context}>
           <Listens {...propsCopy} />
         </GlobalAppContext.Provider>
@@ -135,7 +122,7 @@ describe("ListensControls", () => {
     };
 
     it("updates the recordingFeedbackMap state", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={GlobalContextMock.context}>
           <Listens {...feedbackProps} />
         </GlobalAppContext.Provider>
@@ -171,7 +158,7 @@ describe("ListensControls", () => {
     };
 
     it("returns the feedback after fetching from recordingFeedbackMap state", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={GlobalContextMock.context}>
           <Listens {...feedbackProps} />
         </GlobalAppContext.Provider>
@@ -185,7 +172,7 @@ describe("ListensControls", () => {
         "55215be2-094c-4c38-a0da-2a83863ee804": -1,
       };
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           recordingMsidFeedbackMap,
           recordingMbidFeedbackMap,
         });
@@ -205,7 +192,7 @@ describe("ListensControls", () => {
     });
 
     it("returns 0 if the recording is not in recordingFeedbackMap state", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={GlobalContextMock.context}>
           <Listens {...props} />
         </GlobalAppContext.Provider>
@@ -223,7 +210,7 @@ describe("ListensControls", () => {
 
   describe("updateFeedback", () => {
     it("updates the recordingFeedbackMap state for particular recording", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={GlobalContextMock.context}>
           <Listens {...props} />
         </GlobalAppContext.Provider>
@@ -235,7 +222,7 @@ describe("ListensControls", () => {
         "973e5620-829d-46dd-89a8-760d87076287": 0,
       };
       await act(async () => {
-        wrapper!.setState({ recordingMsidFeedbackMap });
+        wrapper.setState({ recordingMsidFeedbackMap });
       });
       await act(async () => {
         await instance.updateFeedback(
@@ -256,7 +243,7 @@ describe("ListensControls", () => {
 
   describe("removeListenFromListenList", () => {
     it("updates the listens state for particular recording", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={GlobalContextMock.context}>
           <Listens {...props} />
         </GlobalAppContext.Provider>
@@ -264,7 +251,7 @@ describe("ListensControls", () => {
 
       const instance = wrapper.instance();
       await act(async () => {
-        wrapper!.setState({ listens: props.listens as Listen[] });
+        wrapper.setState({ listens: props.listens as Listen[] });
       });
       await act(async () => {
         instance.removeListenFromListenList(props.listens?.[0] as Listen);

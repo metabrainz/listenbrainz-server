@@ -8,21 +8,8 @@ import * as ListeningActivityDataYear from "../__mocks__/userListeningActivityPr
 import * as ListeningActivityDataAllTime from "../__mocks__/userListeningActivityProcessDataAllTime.json";
 
 describe("BarDualTone", () => {
-  let wrapper: ReactWrapper<any, any, any> | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders correctly for week", () => {
-    wrapper = mount(
+    const wrapper = mount(
       <div style={{ width: 400, height: 225 }}>
         <BarDualTone
           data={ListeningActivityDataWeek}
@@ -37,7 +24,7 @@ describe("BarDualTone", () => {
   });
 
   it("renders correctly for month", () => {
-    wrapper = mount(
+    const wrapper = mount(
       <div style={{ width: 400, height: 225 }}>
         <BarDualTone
           data={ListeningActivityDataMonth}
@@ -52,7 +39,7 @@ describe("BarDualTone", () => {
   });
 
   it("renders correctly for year", () => {
-    wrapper = mount(
+    const wrapper = mount(
       <div style={{ width: 400, height: 225 }}>
         <BarDualTone
           data={ListeningActivityDataYear}
@@ -67,7 +54,7 @@ describe("BarDualTone", () => {
   });
 
   it("renders correctly for all_time", () => {
-    wrapper = mount(
+    const wrapper = mount(
       <div style={{ width: 400, height: 225 }}>
         <BarDualTone
           data={ListeningActivityDataAllTime}

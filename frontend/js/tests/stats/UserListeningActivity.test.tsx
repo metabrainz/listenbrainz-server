@@ -34,37 +34,13 @@ describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
-  let wrapper:
-    | ReactWrapper<
-        UserListeningActivityProps,
-        UserListeningActivityState,
-        UserListeningActivity
-      >
-    | ShallowWrapper<
-        UserListeningActivityProps,
-        UserListeningActivityState,
-        UserListeningActivity
-      >
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   describe("UserListeningActivity", () => {
     it("renders correctly for week", async () => {
-      wrapper = mount<UserListeningActivity>(
+      const wrapper = mount<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           data: userListeningActivityProcessedDataWeek,
           thisRangePeriod: { start: 1591574400, end: 1592092800 },
           lastRangePeriod: { start: 1590969600, end: 1591488000 },
@@ -77,11 +53,11 @@ describe.each([
     });
 
     it("renders correctly for month", async () => {
-      wrapper = mount<UserListeningActivity>(
+      const wrapper = mount<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "month" }} />
       );
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           data: userListeningActivityProcessedDataMonth,
           thisRangePeriod: { start: 1590969600 },
           lastRangePeriod: { start: 1588291200 },
@@ -94,11 +70,11 @@ describe.each([
     });
 
     it("renders correctly for year", async () => {
-      wrapper = mount<UserListeningActivity>(
+      const wrapper = mount<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "year" }} />
       );
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           data: userListeningActivityProcessedDataYear,
           thisRangePeriod: { start: 1577836800 },
           lastRangePeriod: { start: 1546300800 },
@@ -111,12 +87,12 @@ describe.each([
     });
 
     it("renders correctly for all_time", async () => {
-      wrapper = mount<UserListeningActivity>(
+      const wrapper = mount<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "all_time" }} />
       );
 
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           data: userListeningActivityProcessedDataAllTime,
           thisRangePeriod: {},
           lastRangePeriod: {},
@@ -129,11 +105,11 @@ describe.each([
     });
 
     it("renders corectly when range is invalid", async () => {
-      wrapper = mount<UserListeningActivity>(
+      const wrapper = mount<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       await act(async () => {
-        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+        wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
       });
       await waitForComponentToPaint(wrapper);
 
@@ -143,11 +119,11 @@ describe.each([
 
   describe("componentDidUpdate", () => {
     it("it sets correct state if range is incorrect", async () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       await act(async () => {
-        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+        wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
       });
       await waitForComponentToPaint(wrapper);
 
@@ -159,14 +135,14 @@ describe.each([
     });
 
     it("calls loadData once if range is valid", async () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
 
       instance.loadData = jest.fn();
       await act(async () => {
-        wrapper!.setProps({ range: "month" });
+        wrapper.setProps({ range: "month" });
       });
 
       expect(instance.loadData).toHaveBeenCalledTimes(1);
@@ -175,7 +151,7 @@ describe.each([
 
   describe("getData", () => {
     it("calls getUserListeningActivity with correct params", async () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
@@ -194,7 +170,7 @@ describe.each([
     });
 
     it("sets state correctly if data is not calculated", async () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
@@ -217,7 +193,7 @@ describe.each([
     });
 
     it("throws error", async () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
@@ -235,7 +211,7 @@ describe.each([
 
   describe("getNumberOfDaysInMonth", () => {
     it("calculates correctly for non leap February", () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
@@ -244,7 +220,7 @@ describe.each([
     });
 
     it("calculates correctly for leap February", () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
@@ -253,7 +229,7 @@ describe.each([
     });
 
     it("calculates correctly for December", () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
@@ -264,7 +240,7 @@ describe.each([
     });
 
     it("calculates correctly for November", () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
@@ -277,7 +253,7 @@ describe.each([
 
   describe("processData", () => {
     it("processes data correctly for week", () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
@@ -290,7 +266,7 @@ describe.each([
     });
 
     it("processes data correctly for month", () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "month" }} />
       );
       const instance = wrapper.instance();
@@ -303,7 +279,7 @@ describe.each([
     });
 
     it("processes data correctly for year", () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "year" }} />
       );
       const instance = wrapper.instance();
@@ -316,7 +292,7 @@ describe.each([
     });
 
     it("processes data correctly for all_time", async () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "all_time" }} />
       );
       const instance = wrapper.instance();
@@ -337,7 +313,7 @@ describe.each([
       expect(result).toEqual(userListeningActivityProcessedDataAllTime);
     });
     it("returns an empty array if no payload", async () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...{ ...props, range: "year" }} />
       );
       const instance = wrapper.instance();
@@ -353,7 +329,7 @@ describe.each([
 
   describe("loadData", () => {
     it("calls getData once", async () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();
@@ -368,7 +344,7 @@ describe.each([
     });
 
     it("set state correctly", async () => {
-      wrapper = shallow<UserListeningActivity>(
+      const wrapper = shallow<UserListeningActivity>(
         <UserListeningActivity {...props} />
       );
       const instance = wrapper.instance();

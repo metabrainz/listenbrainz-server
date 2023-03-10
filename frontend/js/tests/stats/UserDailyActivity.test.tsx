@@ -24,36 +24,12 @@ const props: UserDailyActivityProps = {
 Date.prototype.getTimezoneOffset = () => -330;
 
 describe("UserDailyActivity", () => {
-  let wrapper:
-    | ReactWrapper<
-        UserDailyActivityProps,
-        UserDailyActivityState,
-        UserDailyActivity
-      >
-    | ShallowWrapper<
-        UserDailyActivityProps,
-        UserDailyActivityState,
-        UserDailyActivity
-      >
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders correctly", async () => {
-    wrapper = shallow<UserDailyActivity>(
+    const wrapper = shallow<UserDailyActivity>(
       <UserDailyActivity {...{ ...props, range: "all_time" }} />
     );
     await act(async () => {
-      wrapper!.setState({
+      wrapper.setState({
         data: (userDailyActivityProcessedData as unknown) as UserDailyActivityData,
         graphContainerWidth: 1200,
         loading: false,
@@ -64,10 +40,10 @@ describe("UserDailyActivity", () => {
   });
 
   it("renders corectly when range is invalid", async () => {
-    wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+    const wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
 
     await act(async () => {
-      wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+      wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
     });
     await waitForComponentToPaint(wrapper);
 
@@ -75,7 +51,9 @@ describe("UserDailyActivity", () => {
   });
   describe("componentDidMount", () => {
     it('adds event listener for "resize" event', () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(window, "addEventListener");
@@ -87,7 +65,9 @@ describe("UserDailyActivity", () => {
     });
 
     it('calls "handleResize" once', () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       const instance = wrapper.instance();
 
       instance.handleResize = jest.fn();
@@ -99,9 +79,11 @@ describe("UserDailyActivity", () => {
 
   describe("componentDidUpdate", () => {
     it("it sets correct state if range is incorrect", async () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       await act(async () => {
-        wrapper!.setProps({ range: "invalid_range" as UserStatsAPIRange });
+        wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
       });
 
       expect(wrapper.state()).toMatchObject({
@@ -112,12 +94,14 @@ describe("UserDailyActivity", () => {
     });
 
     it("calls loadData once if range is valid", async () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       const instance = wrapper.instance();
 
       instance.loadData = jest.fn();
       await act(async () => {
-        wrapper!.setProps({ range: "month" });
+        wrapper.setProps({ range: "month" });
       });
 
       expect(instance.loadData).toHaveBeenCalledTimes(1);
@@ -126,7 +110,9 @@ describe("UserDailyActivity", () => {
 
   describe("componentWillUnmount", () => {
     it('removes event listener for "resize" event', () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(window, "removeEventListener");
@@ -140,7 +126,9 @@ describe("UserDailyActivity", () => {
 
   describe("getData", () => {
     it("calls getUserDailyActivity with correct params", async () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
@@ -157,7 +145,9 @@ describe("UserDailyActivity", () => {
     });
 
     it("sets state correctly if data is not calculated", async () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
@@ -178,7 +168,9 @@ describe("UserDailyActivity", () => {
     });
 
     it("throws error", async () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       const instance = wrapper.instance();
 
       const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
@@ -194,7 +186,7 @@ describe("UserDailyActivity", () => {
 
   describe("processData", () => {
     it("processes data correctly for all_time", () => {
-      wrapper = mount<UserDailyActivity>(
+      const wrapper = mount<UserDailyActivity>(
         <UserDailyActivity {...{ ...props, range: "all_time" }} />
       );
       const instance = wrapper.instance();
@@ -210,7 +202,7 @@ describe("UserDailyActivity", () => {
       expect(result).toEqual(userDailyActivityProcessedData);
     });
     it("returns an empty array if no payload", () => {
-      wrapper = mount<UserDailyActivity>(
+      const wrapper = mount<UserDailyActivity>(
         <UserDailyActivity {...{ ...props, range: "all_time" }} />
       );
       const instance = wrapper.instance();
@@ -224,7 +216,9 @@ describe("UserDailyActivity", () => {
 
   describe("loadData", () => {
     it("calls getData once", async () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       const instance = wrapper.instance();
 
       instance.getData = jest.fn();
@@ -237,7 +231,9 @@ describe("UserDailyActivity", () => {
     });
 
     it("set state correctly", async () => {
-      wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+      const wrapper = mount<UserDailyActivity>(
+        <UserDailyActivity {...props} />
+      );
       const instance = wrapper.instance();
 
       instance.getData = jest
