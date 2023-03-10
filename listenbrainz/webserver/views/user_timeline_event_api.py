@@ -556,7 +556,7 @@ def create_personal_recommendation_event(user_name):
         follower_results = db_user_relationship.multiple_users_by_username_following_user(user['id'], metadata.users)
         non_followers = []
         for follower in metadata.users:
-            if not follower_results[follower]:
+            if follower not in follower_results:
                 non_followers.append(follower)
         if non_followers:
             raise APIBadRequest(f"You cannot recommend tracks to non-followers! These people don't follow you {str(non_followers)}")
