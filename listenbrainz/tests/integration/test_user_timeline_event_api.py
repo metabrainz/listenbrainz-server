@@ -966,28 +966,55 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
 
-        # Only riksucks is following
+        # only riksucks is following
         db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
 
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
+            "track_name": "natkhat",
+            "artist_name": "seedhe maut",
             "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
-            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+            "blurb_content": "try out these new people in indian hip-hop!"
         }
 
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            headers={'authorization': 'token {}'.format(self.user['auth_token'])},
         )
         self.assert400(r)
         data = json.loads(r.data)
         self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['hrik2001']", data['error'])
 
+
+    def test_personal_recommendation_not_for_non_followers_peter_k(self):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        # only riksucks is following
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+
+        metadata = {
+            "track_name": "natkhat",
+            "artist_name": "seedhe maut",
+            "release_name": "न",
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": ["peter k"],
+            "blurb_content": "try out these new people in indian hip-hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'authorization': 'token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+        data = json.loads(r.data)
+        self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['peter k']", data['error'])
+  
     def test_personal_recommendation_stays_after_unfollowing(self):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
