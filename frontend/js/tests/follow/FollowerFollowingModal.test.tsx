@@ -50,7 +50,6 @@ describe("<FollowerFollowingModal />", () => {
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
-    wrapper.unmount();
   });
 });
 
@@ -77,6 +76,5 @@ describe("updateMode()", () => {
       instance.updateMode("follower");
     });
     expect(instance.state.activeMode).toEqual("follower");
-    wrapper.unmount();
   });
 });

@@ -28,6 +28,5 @@ describe("<SimilarUsersModal />", () => {
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
-    wrapper.unmount();
   });
 });

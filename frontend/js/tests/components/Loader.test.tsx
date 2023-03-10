@@ -16,7 +16,6 @@ describe("Loader", () => {
     );
 
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 
   it('renders child component when "isLoading" is false', () => {
@@ -27,6 +26,5 @@ describe("Loader", () => {
     );
 
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 });
