@@ -254,7 +254,7 @@ code.
 
 This builds and runs the containers needed for the tests. This script configures
 test-specific data volumes so that test data is isolated from your development
-data.
+data. Note that all tests are run: Unit tests and integration tests.
 
 To run tests faster, you can use some options to start up the test infrastructure
 once so that subsequent running of the tests is faster:
@@ -280,12 +280,6 @@ You can also make use of the following frontend testing options for efficient te
    ./test.sh fe -u          run frontend tests, update snapshots
    ./test.sh fe -b          build frontend test containers
    ./test.sh fe -t          run type-checker
-
-Also, run the **integration tests** for ListenBrainz.
-
-.. code-block:: bash
-
-   ./test.sh int
 
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
