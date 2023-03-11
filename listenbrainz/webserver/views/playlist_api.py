@@ -155,7 +155,7 @@ def serialize_jspf(playlist: Playlist):
 
 def serialize_xspf(playlist: Playlist):
     """
-        Given a playlist, return a properly formatted dict that can be passed to jsonify.
+        Given a playlist, return a stringified element tree
     """
 
     playlist_root = ET.Element("playlist")
@@ -184,7 +184,7 @@ def serialize_xspf(playlist: Playlist):
     playlist_extension = ET.SubElement(playlist_root, "extension", application=PLAYLIST_EXTENSION_URI)
 
     playlist_extension_public = ET.SubElement(playlist_extension, "public")
-    playlist_extension_public.text = playlist.public
+    playlist_extension_public.text = str(playlist.public).lower()
 
     playlist_extension_creator = ET.SubElement(playlist_extension, "creator")
     playlist_extension_creator.text = playlist.creator
@@ -197,7 +197,7 @@ def serialize_xspf(playlist: Playlist):
         if playlist.copied_from_mbid is None:
             playlist_extension_copied_from_deleted = ET.SubElement(playlist_extension,
                                                                    "playlist_extension_copied_from_deleted")
-            playlist_extension_copied_from_deleted.text = True
+            playlist_extension_copied_from_deleted.text = "true"
         else:
             playlist_extension_copied_from_mbid = ET.SubElement(playlist_extension, "copied_from_mbid")
             playlist_extension_copied_from_mbid.text = PLAYLIST_URI_PREFIX + str(playlist.copied_from_mbid)
@@ -310,10 +310,10 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
-            mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-            ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
-                rows = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
+                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+            rows = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
     except Exception:
         current_app.logger.error("Error while fetching metadata for a playlist: ", exc_info=True)
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
@@ -362,8 +362,8 @@ def create_playlist():
     validate_playlist(data)
 
     public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
-    collaborators = data.get("playlist", {}).\
-        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
+    collaborators = data.get("playlist", {}). \
+        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}). \
         get("collaborators", [])
 
     if type(collaborators) not in (list, tuple):
@@ -493,8 +493,8 @@ def edit_playlist(playlist_mbid):
     if data["playlist"].get("title"):
         playlist.name = data["playlist"]["title"]
 
-    collaborators = data.get("playlist", {}).\
-        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
+    collaborators = data.get("playlist", {}). \
+        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}). \
         get("collaborators", [])
     users = {}
 
