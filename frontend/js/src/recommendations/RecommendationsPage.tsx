@@ -135,7 +135,7 @@ export default class RecommendationsPage extends React.Component<
       const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
         newPlaylistId,
         currentUser.auth_token
-      );
+      ).then((res) => res.json());
       newAlert(
         "success",
         "Duplicated playlist",
