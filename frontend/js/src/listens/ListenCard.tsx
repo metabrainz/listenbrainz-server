@@ -10,6 +10,7 @@ import {
   faPaperPlane,
   faThumbtack,
   faPencilAlt,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSoundcloud,
@@ -46,6 +47,7 @@ import { millisecondsToStr } from "../playlists/utils";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 import PinRecordingModal from "../pins/PinRecordingModal";
 import CBReviewModal from "../cb-review/CBReviewModal";
+import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
 import ListenPayloadModal from "./ListenPayloadModal";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
@@ -257,6 +259,7 @@ export default class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
+    const { currentUser } = this.context;
 
     const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
@@ -524,6 +527,20 @@ export default class ListenCard extends React.Component<
                         }}
                         dataToggle="modal"
                         dataTarget="#PersonalRecommendationModal"
+                      />
+                    )}
+                    {Boolean(currentUser) && Boolean(recordingMSID) && (
+                      <ListenControl
+                        text="Link with MusicBrainz"
+                        icon={faLink}
+                        action={() => {
+                          NiceModal.show(MBIDMappingModal, {
+                            listenToMap: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#MapToMusicBrainzRecordingModal"
                       />
                     )}
                     {isListenReviewable && (

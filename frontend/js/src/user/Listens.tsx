@@ -42,7 +42,6 @@ import {
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCountCard from "../listens/ListenCountCard";
-import MbidMappingModal from "../mbid-mapping/MbidMappingModal";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -61,7 +60,6 @@ export interface ListensState {
   previousListenTs?: number;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
-  recordingToMapToMusicbrainz?: Listen;
   dateTimePickerValue: Date;
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
@@ -97,7 +95,6 @@ export default class Listens extends React.Component<
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
-      recordingToMapToMusicbrainz: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
       dateTimePickerValue: nextListenTs
@@ -252,7 +249,7 @@ export default class Listens extends React.Component<
         playingNow.track_metadata.artist_name,
         false
       );
-      playingNow.track_metadata.mbid_mapping = metadata as MbidMapping;
+      playingNow.track_metadata.mbid_mapping = metadata as MBIDMapping;
 
       await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {
@@ -537,10 +534,6 @@ export default class Listens extends React.Component<
       : 0;
   };
 
-  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
-    this.setState({ recordingToMapToMusicbrainz });
-  };
-
   deleteListen = async (listen: Listen) => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -673,22 +666,9 @@ export default class Listens extends React.Component<
       (Boolean(listenedAt) || listenedAt === 0) &&
       Boolean(recordingMSID);
 
-    const canManuallyMap = Boolean(recordingMSID);
-
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
 
-    if (canManuallyMap) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Link with MusicBrainz"
-          icon={faLink}
-          action={this.updateRecordingToMapToMusicbrainz.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#MapToMusicBrainzRecordingModal"
-        />
-      );
-    }
     if (canDelete) {
       additionalMenuItems.push(
         <ListenControl
@@ -737,7 +717,6 @@ export default class Listens extends React.Component<
       nextListenTs,
       previousListenTs,
       dateTimePickerValue,
-      recordingToMapToMusicbrainz,
       userPinnedRecording,
       playingNowListen,
     } = this.state;
@@ -945,12 +924,6 @@ export default class Listens extends React.Component<
                     </a>
                   </li>
                 </ul>
-                {currentUser && (
-                  <MbidMappingModal
-                    listenToMap={recordingToMapToMusicbrainz}
-                    newAlert={newAlert}
-                  />
-                )}
               </div>
             )}
           </div>

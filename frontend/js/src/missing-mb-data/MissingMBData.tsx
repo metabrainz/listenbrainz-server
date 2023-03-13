@@ -20,7 +20,7 @@ import { getArtistName, getPageProps, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import Loader from "../components/Loader";
-import MbidMappingModal from "../mbid-mapping/MbidMappingModal";
+import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
@@ -29,7 +29,6 @@ export type MissingMBDataProps = {
 
 export interface MissingMBDataState {
   missingData: Array<MissingMBData>;
-  recordingToMapToMusicbrainz?: Listen;
 
   currPage?: number;
   totalPages: number;
@@ -84,10 +83,6 @@ export default class MissingMBDataPage extends React.Component<
       );
       window.history.pushState(null, "", `?page=${updatedPage}`);
     }
-  };
-
-  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
-    this.setState({ recordingToMapToMusicbrainz });
   };
 
   handleClickNext = () => {
@@ -162,13 +157,7 @@ export default class MissingMBDataPage extends React.Component<
   };
 
   render() {
-    const {
-      missingData,
-      currPage,
-      totalPages,
-      loading,
-      recordingToMapToMusicbrainz,
-    } = this.state;
+    const { missingData, currPage, totalPages, loading } = this.state;
     const { user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const missingMBDataAsListen = missingData.map((data) => {
@@ -202,6 +191,7 @@ export default class MissingMBDataPage extends React.Component<
               </div>
               {missingData.map((data, index) => {
                 let additionalActions;
+                const listen = missingMBDataAsListen[index];
                 if (currentUser?.auth_token) {
                   const addToMB = (
                     <ListenControl
@@ -210,27 +200,23 @@ export default class MissingMBDataPage extends React.Component<
                       title="Add missing recording"
                       text=""
                       // eslint-disable-next-line react/jsx-no-bind
-                      action={this.submitMissingData.bind(
-                        this,
-                        missingMBDataAsListen[index]
-                      )}
+                      action={this.submitMissingData.bind(this, listen)}
                     />
                   );
 
-                  if (
-                    missingMBDataAsListen[index]?.track_metadata
-                      ?.additional_info?.recording_msid
-                  ) {
+                  if (listen?.track_metadata?.additional_info?.recording_msid) {
                     const linkWithMB = (
                       <ListenControl
                         buttonClassName="btn btn-sm btn-success"
                         text=""
                         title="Link with MusicBrainz"
                         icon={faLink}
-                        action={this.updateRecordingToMapToMusicbrainz.bind(
-                          this,
-                          missingMBDataAsListen[index]
-                        )}
+                        action={() => {
+                          NiceModal.show(MBIDMappingModal, {
+                            listenToMap: listen,
+                            newAlert,
+                          });
+                        }}
                         dataToggle="modal"
                         dataTarget="#MapToMusicBrainzRecordingModal"
                       />
@@ -297,12 +283,6 @@ export default class MissingMBDataPage extends React.Component<
                 </a>
               </li>
             </ul>
-            {currentUser && (
-              <MbidMappingModal
-                listenToMap={recordingToMapToMusicbrainz}
-                newAlert={newAlert}
-              />
-            )}
           </div>
         </div>
         <BrainzPlayer
