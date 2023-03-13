@@ -6984,7 +6984,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -7003,7 +7003,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -8065,7 +8065,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -8084,7 +8084,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -8955,7 +8955,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -8974,7 +8974,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -9845,7 +9845,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -9864,7 +9864,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -10735,7 +10735,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -10754,7 +10754,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -11625,7 +11625,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -11644,7 +11644,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -12897,7 +12897,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -12916,7 +12916,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -13787,7 +13787,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -13806,7 +13806,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -14868,7 +14868,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -14887,7 +14887,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -15760,7 +15760,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -15779,7 +15779,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -17796,7 +17796,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -17815,7 +17815,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -18877,7 +18877,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -18896,7 +18896,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -19958,7 +19958,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -19977,7 +19977,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -36631,7 +36631,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -36650,7 +36650,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -37712,7 +37712,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -37731,7 +37731,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -38602,7 +38602,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -38621,7 +38621,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -39492,7 +39492,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -39511,7 +39511,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -40382,7 +40382,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -40401,7 +40401,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -41272,7 +41272,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -41291,7 +41291,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -42544,7 +42544,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -42563,7 +42563,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -43434,7 +43434,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -43453,7 +43453,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -44515,7 +44515,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -44534,7 +44534,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -45407,7 +45407,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -45426,7 +45426,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -47443,7 +47443,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -47462,7 +47462,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -48524,7 +48524,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -48543,7 +48543,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
@@ -49605,7 +49605,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           </ListenControl>
                           <ListenControl
                             action={[Function]}
-                            dataTarget="#SimpleModal"
+                            dataTarget="#ListenPayloadModal"
                             dataToggle="modal"
                             icon={
                               Object {
@@ -49624,7 +49624,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                           >
                             <button
                               aria-label="Inspect listen"
-                              data-target="#SimpleModal"
+                              data-target="#ListenPayloadModal"
                               data-toggle="modal"
                               disabled={false}
                               onClick={[Function]}
