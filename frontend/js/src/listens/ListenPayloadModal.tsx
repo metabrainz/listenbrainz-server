@@ -55,6 +55,7 @@ export default NiceModal.create(({ listen }: ListenPayloadModalProps) => {
               className="close"
               data-dismiss="modal"
               aria-label="Close"
+              onClick={closeModal}
             >
               <span aria-hidden="true">&times;</span>
             </button>
