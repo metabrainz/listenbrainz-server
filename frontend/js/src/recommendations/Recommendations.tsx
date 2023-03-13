@@ -27,7 +27,6 @@ import {
 } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
-import SimpleModal from "../utils/SimpleModal";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -363,20 +362,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const { recommendations, user } = reactProps;
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const RecommendationsWithAlertNotifications = withAlertNotifications(
     Recommendations
   );
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <RecommendationsWithAlertNotifications
             initialAlerts={optionalAlerts}

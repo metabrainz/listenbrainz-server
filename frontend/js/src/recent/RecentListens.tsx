@@ -25,7 +25,6 @@ import {
   getRecordingMSID,
 } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
-import SimpleModal from "../utils/SimpleModal";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -252,17 +251,10 @@ document.addEventListener("DOMContentLoaded", () => {
     RecentListens
   );
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <RecentListensWithAlertNotifications
             initialAlerts={optionalAlerts}

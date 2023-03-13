@@ -22,7 +22,6 @@ import { getPageProps } from "../../utils/utils";
 import ListenCard from "../../listens/ListenCard";
 import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
-import SimpleModal from "../../utils/SimpleModal";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
@@ -253,17 +252,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const ColorPlayWithAlertNotifications = withAlertNotifications(ColorPlay);
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <ColorPlayWithAlertNotifications
             user={user}

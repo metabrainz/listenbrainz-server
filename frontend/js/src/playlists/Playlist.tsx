@@ -48,7 +48,6 @@ import {
   JSPFTrackToListen,
 } from "./utils";
 import { getPageProps } from "../utils/utils";
-import SimpleModal from "../utils/SimpleModal";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;
@@ -873,17 +872,10 @@ document.addEventListener("DOMContentLoaded", () => {
     PlaylistPage
   );
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <PlaylistPageWithAlertNotifications
             initialAlerts={optionalAlerts}

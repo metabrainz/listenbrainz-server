@@ -39,7 +39,6 @@ import {
 } from "../../../playlists/utils";
 import FollowButton from "../../../follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
-import SimpleModal from "../../../utils/SimpleModal";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -991,17 +990,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <YearInMusicWithAlertNotifications
             user={user}

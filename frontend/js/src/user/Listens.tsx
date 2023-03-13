@@ -42,7 +42,6 @@ import {
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCountCard from "../listens/ListenCountCard";
-import SimpleModal from "../utils/SimpleModal";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -968,17 +967,11 @@ document.addEventListener("DOMContentLoaded", () => {
   } = reactProps;
 
   const ListensWithAlertNotifications = withAlertNotifications(Listens);
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <ListensWithAlertNotifications
             initialAlerts={optionalAlerts}

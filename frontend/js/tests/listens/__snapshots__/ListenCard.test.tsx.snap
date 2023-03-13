@@ -813,7 +813,7 @@ exports[`ListenCard renders correctly 1`] = `
               </ListenControl>
               <ListenControl
                 action={[Function]}
-                dataTarget="#SimpleModal"
+                dataTarget="#ListenPayloadModal"
                 dataToggle="modal"
                 icon={
                   Object {
@@ -832,7 +832,7 @@ exports[`ListenCard renders correctly 1`] = `
               >
                 <button
                   aria-label="Inspect listen"
-                  data-target="#SimpleModal"
+                  data-target="#ListenPayloadModal"
                   data-toggle="modal"
                   disabled={false}
                   onClick={[Function]}
@@ -1741,7 +1741,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               </ListenControl>
               <ListenControl
                 action={[Function]}
-                dataTarget="#SimpleModal"
+                dataTarget="#ListenPayloadModal"
                 dataToggle="modal"
                 icon={
                   Object {
@@ -1760,7 +1760,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               >
                 <button
                   aria-label="Inspect listen"
-                  data-target="#SimpleModal"
+                  data-target="#ListenPayloadModal"
                   data-toggle="modal"
                   disabled={false}
                   onClick={[Function]}
@@ -2699,7 +2699,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               </ListenControl>
               <ListenControl
                 action={[Function]}
-                dataTarget="#SimpleModal"
+                dataTarget="#ListenPayloadModal"
                 dataToggle="modal"
                 icon={
                   Object {
@@ -2718,7 +2718,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               >
                 <button
                   aria-label="Inspect listen"
-                  data-target="#SimpleModal"
+                  data-target="#ListenPayloadModal"
                   data-toggle="modal"
                   disabled={false}
                   onClick={[Function]}

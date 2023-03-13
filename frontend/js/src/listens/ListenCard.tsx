@@ -7,7 +7,6 @@ import {
   faCommentDots,
   faExternalLinkAlt,
   faCode,
-  faCopy,
   faPaperPlane,
   faThumbtack,
   faPencilAlt,
@@ -49,6 +48,7 @@ import PersonalRecommendationModal from "../personal-recommendations/PersonalRec
 import PinRecordingModal from "../pins/PinRecordingModal";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
+import ListenPayloadModal from "./ListenPayloadModal";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -259,7 +259,7 @@ export default class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
-    const { modal, currentUser } = this.context;
+    const { currentUser } = this.context;
 
     const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
@@ -562,35 +562,12 @@ export default class ListenCard extends React.Component<
                       text="Inspect listen"
                       icon={faCode}
                       action={() => {
-                        const stringifiedJSON = JSON.stringify(listen, null, 2);
-                        modal?.current?.updateModal(
-                          stringifiedJSON,
-                          "Inspect listen",
-                          <>
-                            <button
-                              type="button"
-                              className="btn btn-info"
-                              onClick={async () => {
-                                await navigator.clipboard.writeText(
-                                  stringifiedJSON
-                                );
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faCopy} /> Copy
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-default"
-                              data-dismiss="modal"
-                            >
-                              Close
-                            </button>
-                          </>,
-                          true
-                        );
+                        NiceModal.show(ListenPayloadModal, {
+                          listen,
+                        });
                       }}
                       dataToggle="modal"
-                      dataTarget="#SimpleModal"
+                      dataTarget="#ListenPayloadModal"
                     />
                   </ul>
                 </>
