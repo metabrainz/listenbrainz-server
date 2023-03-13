@@ -51,7 +51,6 @@ import {
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
-import SimpleModal from "../utils/SimpleModal";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -919,20 +918,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const { events } = reactProps;
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
     UserFeedPage
   );
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <UserFeedPageWithAlertNotifications
             initialAlerts={optionalAlerts}
