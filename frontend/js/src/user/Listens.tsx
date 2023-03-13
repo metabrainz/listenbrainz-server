@@ -250,7 +250,7 @@ export default class Listens extends React.Component<
         playingNow.track_metadata.artist_name,
         false
       );
-      playingNow.track_metadata.mbid_mapping = metadata as MbidMapping;
+      playingNow.track_metadata.mbid_mapping = metadata as MBIDMapping;
 
       await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {

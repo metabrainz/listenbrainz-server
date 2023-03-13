@@ -99,7 +99,7 @@ export default NiceModal.create(
           recordingMBIDInput
         )![2].toLowerCase();
         try {
-          await APIService.submitMbidMapping(
+          await APIService.submitMBIDMapping(
             auth_token,
             recordingMSID,
             recordingMBIDToSubmit
@@ -127,7 +127,7 @@ export default NiceModal.create(
       handleError,
     ]);
 
-    const handleMbidInputChange = React.useCallback(
+    const handleMBIDInputChange = React.useCallback(
       async (event: React.ChangeEvent<HTMLInputElement>) => {
         event.preventDefault();
         const input = event.target.value;
@@ -260,7 +260,7 @@ export default NiceModal.create(
                       className="form-control"
                       id="recording-mbid"
                       name="recording-mbid"
-                      onChange={handleMbidInputChange}
+                      onChange={handleMBIDInputChange}
                       placeholder="MusicBrainz recording URL/MBID"
                       required
                       minLength={36}

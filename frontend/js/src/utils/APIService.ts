@@ -952,7 +952,7 @@ export default class APIService {
     return response.json();
   };
 
-  submitMbidMapping = async (
+  submitMBIDMapping = async (
     userToken: string,
     recordingMSID: string,
     recordingMBID: string
