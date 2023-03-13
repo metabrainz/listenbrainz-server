@@ -15,7 +15,6 @@ import {
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import { getListenablePin, getPageProps } from "../utils/utils";
-import SimpleModal from "../utils/SimpleModal";
 import UserFeedback from "./UserFeedback";
 import UserPins from "../pins/UserPins";
 
@@ -115,17 +114,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const { feedback, feedback_count, user, pins, pin_count } = reactProps;
   const UserTasteWithAlertNotifications = withAlertNotifications(UserTaste);
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <UserTasteWithAlertNotifications
             initialAlerts={optionalAlerts}

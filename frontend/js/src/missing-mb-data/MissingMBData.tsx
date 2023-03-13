@@ -20,7 +20,6 @@ import { getArtistName, getPageProps, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import Loader from "../components/Loader";
-import SimpleModal from "../utils/SimpleModal";
 import MbidMappingModal from "../mbid-mapping/MbidMappingModal";
 
 export type MissingMBDataProps = {
@@ -338,20 +337,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const { missingData, user } = reactProps;
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const MissingMBDataPageWithAlertNotification = withAlertNotifications(
     MissingMBDataPage
   );
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <MissingMBDataPageWithAlertNotification
             initialAlerts={optionalAlerts}
