@@ -29,7 +29,7 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
-import AddListenModal from "../add-listen/add-listen-modal";
+import AddListenModal from "../add-listen/AddListenModal";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
@@ -748,6 +748,11 @@ export default class Listens extends React.Component<
             <button
               type="button"
               className="btn btn-primary add-listen-btn"
+              onClick={() => {
+                NiceModal.show(AddListenModal, {
+                  newAlert,
+                });
+              }}
               data-Toggle="modal"
               data-Target="#AddListenModal"
             >
@@ -928,7 +933,6 @@ export default class Listens extends React.Component<
             )}
           </div>
         </div>
-        {currentUser && <AddListenModal newAlert={newAlert} />}
         <BrainzPlayer
           listens={allListenables}
           newAlert={newAlert}
