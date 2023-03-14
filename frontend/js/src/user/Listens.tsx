@@ -12,13 +12,9 @@ import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
 import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import {
-  faCompactDisc,
-  faLink,
-  faTrashAlt,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
