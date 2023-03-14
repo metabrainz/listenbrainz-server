@@ -112,7 +112,7 @@ export default NiceModal.create(({ newAlert }: AddListenModalProps) => {
             handleError(error);
           }
         },
-        350,
+        800,
         { leading: false, trailing: true }
       ),
     [handleError]
