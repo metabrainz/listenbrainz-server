@@ -11,24 +11,25 @@
 
 {% block content %}
   <div id="user-profile">
-      <div class="profile-on-mb">
-          See profile on&nbsp;
-          <img
-                  src="/static/img/musicbrainz-16.svg"
-                  alt="MusicBrainz Logo"
-          />
-          <a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">
-              MusicBrainz
-          </a>
-      </div>
     <ul class="nav nav-tabs" role="tablist">
-        <li class="username"><div>{{ user.musicbrainz_id }}</div></li>
-        <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
-        <li {{ 'class=active' if active_section=='stats' }}><a href="{{ url_for('user.stats', user_name=user.musicbrainz_id) }}">Statistics</a></li>
-        <li {{ 'class=active' if active_section=='taste' }}><a href="{{ url_for('user.taste', user_name=user.musicbrainz_id) }}">Taste</a></li>
-        <li {{ 'class=active' if active_section=='playlists' }}><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) }}">Playlists</a></li>
-        <li {{ 'class=active' if active_section=='recommendations' }}><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) }}">Recommendations</a></li>
-      </ul>
+      <li class="username"><div>{{ user.musicbrainz_id }}</div></li>
+      <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
+      <li {{ 'class=active' if active_section=='stats' }}><a href="{{ url_for('user.stats', user_name=user.musicbrainz_id) }}">Statistics</a></li>
+      <li {{ 'class=active' if active_section=='taste' }}><a href="{{ url_for('user.taste', user_name=user.musicbrainz_id) }}">Taste</a></li>
+      <li {{ 'class=active' if active_section=='playlists' }}><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) }}">Playlists</a></li>
+      <li {{ 'class=active' if active_section=='recommendations' }}><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) }}">Recommendations</a></li>
+    </ul>
+    <div class="profile-on-mb">
+      See profile on&nbsp;
+      <img
+      src="/static/img/musicbrainz-16.svg"
+      alt="MusicBrainz Logo"
+      />
+      <a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">
+        MusicBrainz
+      </a>
+    </div>
+    
 
     {% block profile_content %} {% endblock %}
 

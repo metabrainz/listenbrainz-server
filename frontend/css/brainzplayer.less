@@ -21,6 +21,9 @@
   bottom: 0;
   right: 0;
   width: calc(100% - @sidenav-width);
+  @media (max-width: @offscreen-sidenav-breakpoint) {
+    width: 100%;
+  }
   height: @brainzplayer-height;
   background: @white-background;
   display: flex;

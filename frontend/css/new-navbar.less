@@ -1,60 +1,106 @@
 // Height of the BrainzPlayer component (fixed at the bottom of the page)
 @sidenav-width: 190px;
 @brainzplayer-height: 60px;
-
+@offscreen-sidenav-breakpoint: @grid-float-breakpoint-max;
+@navbar-height: 72px;
 
 body {
 	display: flex;
-	> nav {
-		min-width: @sidenav-width;
-		height: 100vh;
-		display: flex;
-		position: sticky;
-		left: 0;
-		top: 0;
-		text-align: right;
-		flex-direction: column;
-		align-items: flex-end;
-		border-image: linear-gradient(
-		  to bottom,
-		  @blue,
-		  @orange
-		) 1 100%;
-		border-right: 9px solid;
-		padding: 2em 1em;
-		
-		a {
-			display: block;
-			font-weight: 500;
-			&, &:visited, &:hover, &:visited:hover
-			{
-				/* Annoyingly we need this not-button because of Bootstrap 3*/
-				&, &:not(.button){
-					color: @blue;
+	> nav[role="navigation"] {
+		#side-nav {
+			min-width: @sidenav-width;
+			// using important here to override Botostrap 3 collapse plugin setting height
+			height: 100vh !important;
+			display: flex;
+			position: sticky;
+			left: 0;
+			top: 0;
+			text-align: right;
+			flex-direction: column;
+			align-items: flex-end;
+			border-right: 9px solid;
+			border-image: linear-gradient(
+			to bottom,
+			@blue,
+			@orange
+			) 1 100%;
+			padding: 2em 1em;
+			background-color: @white;
+			z-index: 100;
+			
+			
+			a {
+				display: block;
+				font-weight: 500;
+				&, &:visited, &:hover, &:visited:hover
+				{
+					/* Annoyingly we need this not-button because of Bootstrap 3*/
+					&, &:not(.button){
+						color: @blue;
+					}
+				}
+				&.active{
+					text-decoration: underline;
+					text-underline-offset: 6px;
+					font-style: italic;
+					font-weight: 700;
 				}
 			}
-			&.active{
-				text-decoration: underline;
-				text-underline-offset: 6px;
-				font-style: italic;
-				font-weight: 700;
+
+			.main-nav {
+				line-height: 2.5em;
+				font-size: 18px;
+			}
+			.navbar-bottom {
+				margin-top:auto;
+				font-size: 12px;
+			}
+			.navbar-logo {
+				z-index: 102; // just above the toggle hamburger button
 			}
 		}
-		
 		/* Sections of the sidebar navigation */
 		.navbar-logo {
 			height: auto;
 			width: 40px;
 			margin-bottom:1.5em;
 		}
-
-		.main-nav {
-			line-height: 2.5em;
-			font-size: 18px;
-		}
-		.navbar-bottom {
-			margin-top:auto;
-			font-size: 12px;
+		// header shown on small screens, with button to open drawer menu
+		.navbar-header{
+			display: none;
+			height: @navbar-height;
+			border-bottom: 2px solid;
+			border-image: linear-gradient(
+				to right,
+				@blue,
+				@orange
+				) 100% 1;
+			
+			.navbar-logo{
+				// padding-bottom: 17px;
+				// line-height: 20px;
+				// padding: ((@navbar-height - @logo-height) / 2) @navbar-padding-horizontal;
+				// height: @logo-height;
+				// display: inline-block;
+				margin: 0;
+				margin-left: auto;
+				margin-right: auto;
+				width: auto;
+				align-self: center;
+				>img{
+					height: 26px;
+    				margin-top: 3px;
+				}
+			}
+			.navbar-toggle {
+				z-index: 101; // just above so it can be clicked to close the side-nav
+				margin-left: @navbar-padding-horizontal;
+				border-color: @blue;
+				position: absolute;
+				.icon-bar {
+					background-color: @blue;
+				}
+			}
 		}
 	}
 	/* main content */
@@ -63,14 +109,43 @@ body {
 		// Leave some space for BrainzPlayer
 		padding-bottom: @brainzplayer-height;
 	}
+	
+	/* Styles for mobile devices */
+	@media (max-width: @offscreen-sidenav-breakpoint) {
+		display: initial;
+		> nav[role="navigation"] {
+			#side-nav {
+				transition: left 0.5s ease-out;
+				position: absolute;
+				left: -@sidenav-width;
+				&.collapse.in{
+					left:0
+				}
+			}
+			.navbar-header{
+				display: flex;
+				align-items: center;
+			}
+		}
+	}
+
 }
 
 @nav-tabs-link-padding: 1em 1.5em;
+@nav-tabs-link-padding-mobile: 0.8em 1em;
 @nav-tabs-background-color: #F3F3F3;
 .nav.nav-tabs {
 	margin-left:  ceil((@grid-gutter-width / -2));
   	margin-right: floor((@grid-gutter-width / -2));
 	background-color: @nav-tabs-background-color;
+	&::after{
+		content: "";
+		width: 4em;
+		background: linear-gradient(270deg, #fff, transparent);
+		position: absolute;
+		right: 0;
+		height: 47px;
+	}
 	> li{
 		> a {
 			color: #1E1E1E;
@@ -86,11 +161,24 @@ body {
 		}
 		&.username{
 			font-weight: 700;
-			background-color: darken(@nav-tabs-background-color,15%);
-			// color: @white;
+			// background-color: darken(@nav-tabs-background-color,15%);
+			background: linear-gradient(to right,@blue 10%,@orange 170%);
+			color: @white;
 			> * {
 				// &:extend(.nav.nav-tabs>li>a);
 				padding: @nav-tabs-link-padding;
+			}
+		}
+	}
+	/* Styles for mobile devices */
+	@media (max-width: @offscreen-sidenav-breakpoint) {
+		display: inline-flex;
+		overflow-x: scroll;
+		max-width: 100vw;
+		min-width: 100vw;
+		> li {
+			> a, &.username > * {
+				padding: @nav-tabs-link-padding-mobile;
 			}
 		}
 	}
