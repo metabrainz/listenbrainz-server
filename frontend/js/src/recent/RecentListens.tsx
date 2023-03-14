@@ -24,7 +24,6 @@ import {
   getTrackName,
   getRecordingMSID,
 } from "../utils/utils";
-import ListenControl from "../listens/ListenControl";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -33,7 +32,6 @@ export type RecentListensProps = {
 export interface RecentListensState {
   listens: Array<Listen>;
   listenCount?: number;
-  recordingToMapToMusicbrainz?: Listen;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
 }
@@ -49,7 +47,6 @@ export default class RecentListens extends React.Component<
     super(props);
     this.state = {
       listens: props.listens || [],
-      recordingToMapToMusicbrainz: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
     };
@@ -58,10 +55,6 @@ export default class RecentListens extends React.Component<
   componentDidMount(): void {
     this.loadFeedback();
   }
-
-  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
-    this.setState({ recordingToMapToMusicbrainz });
-  };
 
   getFeedback = async () => {
     const { newAlert } = this.props;
@@ -164,7 +157,7 @@ export default class RecentListens extends React.Component<
   };
 
   render() {
-    const { listens, recordingToMapToMusicbrainz } = this.state;
+    const { listens } = this.state;
     const { newAlert } = this.props;
     const { APIService } = this.context;
 
@@ -179,22 +172,6 @@ export default class RecentListens extends React.Component<
             {listens.length > 0 && (
               <div id="listens">
                 {listens.map((listen) => {
-                  /* eslint-disable react/jsx-no-bind */
-                  const additionalMenuItems = [];
-                  additionalMenuItems.push(
-                    <ListenControl
-                      text="Map to a Recording"
-                      icon={faPencilAlt}
-                      action={this.updateRecordingToMapToMusicbrainz.bind(
-                        this,
-                        listen
-                      )}
-                      dataToggle="modal"
-                      dataTarget="#UpdateMusicbrainzMappingModal"
-                    />
-                  );
-
-                  /* eslint-enable react/jsx-no-bind */
                   return (
                     <ListenCard
                       key={`${listen.listened_at}-${getTrackName(listen)}-${
@@ -206,7 +183,6 @@ export default class RecentListens extends React.Component<
                       listen={listen}
                       newAlert={newAlert}
                       currentFeedback={this.getFeedbackForListen(listen)}
-                      additionalMenuItems={additionalMenuItems}
                     />
                   );
                 })}
