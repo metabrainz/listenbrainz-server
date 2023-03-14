@@ -6,13 +6,14 @@ import * as Sentry from "@sentry/react";
 
 import { get, isEqual, isInteger } from "lodash";
 import { Integrations } from "@sentry/tracing";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
@@ -26,7 +27,6 @@ import {
 } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
-import SimpleModal from "../utils/SimpleModal";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -347,18 +347,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { recommendations, user } = reactProps;
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -367,19 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    modal: modalRef,
-  };
+  const { recommendations, user } = reactProps;
 
   const RecommendationsWithAlertNotifications = withAlertNotifications(
     Recommendations
@@ -387,13 +368,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
-        <RecommendationsWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          recommendations={recommendations}
-          user={user}
-        />
+      <GlobalAppContext.Provider value={globalAppContext}>
+        <NiceModal.Provider>
+          <RecommendationsWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            recommendations={recommendations}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

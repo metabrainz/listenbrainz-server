@@ -15,8 +15,6 @@ import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOne
 import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
 import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
-import PinRecordingModal from "../../src/pins/PinRecordingModal";
-import CBReviewModal from "../../src/cb-review/CBReviewModal";
 import { waitForComponentToPaint } from "../test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
@@ -388,25 +386,6 @@ describe("Listens page", () => {
     });
   });
 
-  // Will re-add this test when feature flag is removed
-
-  describe("updateRecordingToPin", () => {
-    it("sets the recordingToPin in the state", async () => {
-      wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
-
-      const instance = wrapper.instance();
-      const recordingToPin = props.listens[1];
-
-      expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
-
-      await act(() => {
-        instance.updateRecordingToPin(recordingToPin);
-      });
-      await waitForComponentToPaint(wrapper);
-      expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
-    });
-  });
-
   describe("deleteListen", () => {
     it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
       const newAlertMock = jest.fn();
@@ -580,21 +559,6 @@ describe("Listens page", () => {
         "Error while deleting listen",
         "my error message"
       );
-    });
-  });
-
-  describe("updateRecordingToReview", () => {
-    it("sets the recordingToReview in the state", async () => {
-      wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
-      const instance = wrapper.instance();
-      const recordingToReview = props.listens[1];
-
-      expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
-      await act(() => {
-        instance.updateRecordingToReview(recordingToReview);
-      });
-      await waitForComponentToPaint(wrapper);
-      expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
     });
   });
 
@@ -1042,71 +1006,6 @@ describe("Listens page", () => {
         expect(wrapper.state("previousListenTs")).toEqual(undefined);
         expect(pushStateSpy).toHaveBeenCalledWith(null, "", "");
         expect(scrollSpy).toHaveBeenCalled();
-      });
-    });
-  });
-
-  // Will re-add this test when feature flag is removed
-
-  describe("pinRecordingModal", () => {
-    it("renders the PinRecordingModal component with the correct props", async () => {
-      wrapper = mount<Listens>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const recordingToPin = props.listens[0];
-      let pinRecordingModal = wrapper.find(PinRecordingModal).first();
-
-      // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
-      expect(pinRecordingModal.props()).toEqual({
-        recordingToPin: props.listens[0],
-        newAlert: props.newAlert,
-        onSuccessfulPin: expect.any(Function),
-      });
-      await act(() => {
-        instance.updateRecordingToPin(recordingToPin);
-      });
-      await waitForComponentToPaint(wrapper);
-
-      pinRecordingModal = wrapper.find(PinRecordingModal).first();
-      expect(pinRecordingModal.props()).toEqual({
-        recordingToPin,
-        newAlert: props.newAlert,
-        onSuccessfulPin: expect.any(Function),
-      });
-    });
-  });
-
-  describe("CBReviewModal", () => {
-    it("renders the CBReviewModal component with the correct props", async () => {
-      wrapper = mount<Listens>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const listen = props.listens[0];
-      let cbReviewModal = wrapper.find(CBReviewModal).first();
-
-      // recentListens renders CBReviewModal with listens[0] as listen by default
-      expect(cbReviewModal.props()).toEqual({
-        isCurrentUser: true,
-        listen: props.listens[0],
-        newAlert: props.newAlert,
-      });
-
-      await act(() => {
-        instance.updateRecordingToPin(listen);
-      });
-      await waitForComponentToPaint(wrapper);
-
-      cbReviewModal = wrapper.find(CBReviewModal).first();
-      expect(cbReviewModal.props()).toEqual({
-        isCurrentUser: true,
-        listen,
-        newAlert: props.newAlert,
       });
     });
   });

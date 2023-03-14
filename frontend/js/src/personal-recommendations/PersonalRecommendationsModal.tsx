@@ -1,5 +1,6 @@
 import * as React from "react";
-import { uniq, includes } from "lodash";
+import { uniq, includes, toLower } from "lodash";
+import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import NamePill from "./NamePill";
 import {
@@ -11,7 +12,7 @@ import {
 import SearchDropDown from "./SearchDropDown";
 
 export type PersonalRecommendationModalProps = {
-  recordingToPersonallyRecommend?: Listen;
+  listenToPersonallyRecommend: Listen;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -19,153 +20,142 @@ export type PersonalRecommendationModalProps = {
   ) => void;
 };
 
-export interface PersonalRecommendationModalState {
-  blurbContent: string;
-  users: Array<string>;
-  followers: Array<string>;
-  suggestions: Array<string>;
-}
+export const maxBlurbContentLength = 280;
 
-export default class PersonalRecommendationModal extends React.Component<
-  PersonalRecommendationModalProps,
-  PersonalRecommendationModalState
-> {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-  readonly maxBlurbContentLength = 280;
+/** A note about this modal:
+ * We use Bootstrap 3 modals, which work with jQuery and data- attributes
+ * In order to show the modal properly, including backdrop and visibility,
+ * you'll need dataToggle="modal" and dataTarget="#PersonalRecommendationModal"
+ * on the buttons that open this modal as well as data-dismiss="modal"
+ * on the buttons that close the modal. Modals won't work (be visible) without it
+ * until we move to Bootstrap 5 / Bootstrap React which don't require those attributes.
+ */
 
-  constructor(props: PersonalRecommendationModalProps) {
-    super(props);
-    this.state = {
-      blurbContent: "",
-      users: [],
-      followers: [],
-      suggestions: [],
-    };
-  }
+export default NiceModal.create(
+  ({
+    listenToPersonallyRecommend,
+    newAlert,
+  }: PersonalRecommendationModalProps) => {
+    // Use a hook to manage the modal state
+    const modal = useModal();
+    const [users, setUsers] = React.useState<string[]>([]);
+    const [followers, setFollowers] = React.useState<string[]>([]);
+    const [suggestions, setSuggestions] = React.useState<string[]>([]);
+    const [blurbContent, setBlurbContent] = React.useState("");
 
-  componentDidMount(): void {
-    const { APIService, currentUser } = this.context;
-    APIService.getFollowersOfUser(currentUser.name)
-      .then((response) => {
-        this.setState({ followers: response.followers });
-      })
-      .catch((error) => {
-        this.handleError(error, "Error while fetching followers");
-      });
-  }
+    const { APIService, currentUser } = React.useContext(GlobalAppContext);
+    const { name: currentUserName } = currentUser;
 
-  handleBlurbInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    event.preventDefault();
-    const input = event.target.value.replace(/\s\s+/g, " "); // remove line breaks and excessive spaces
-    if (input.length <= this.maxBlurbContentLength) {
-      this.setState({ blurbContent: input });
-    }
-  };
-
-  handleError = (error: string | Error, title?: string): void => {
-    const { newAlert } = this.props;
-    if (!error) {
-      return;
-    }
-    newAlert(
-      "danger",
-      title || "Error",
-      typeof error === "object" ? error.message : error
-    );
-  };
-
-  addUser = (user: string) => {
-    const { users } = this.state;
-    this.setState({ users: uniq([...users, user]), suggestions: [] });
-  };
-
-  removeUser = (user: string) => {
-    const { users } = this.state;
-    this.setState({ users: users.filter((element) => element !== user) });
-  };
-
-  searchUsers = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { followers } = this.state;
-    if (event.target.value) {
-      const suggestions = followers.filter((username) =>
-        includes(username, event.target.value)
-      );
-      this.setState({ suggestions });
-    } else {
-      this.setState({ suggestions: [] });
-    }
-  };
-
-  closeModal = () => {
-    const { APIService, currentUser } = this.context;
-    this.setState({
-      users: [],
-      blurbContent: "",
-      suggestions: [],
-    });
-    // update the followers list
-    APIService.getFollowersOfUser(currentUser.name)
-      .then((response) => {
-        this.setState({ followers: response.followers });
-      })
-      .catch((error) => {
-        this.handleError(error, "Error while fetching followers");
-      });
-  };
-
-  submitPersonalRecommendation = async () => {
-    const { recordingToPersonallyRecommend, newAlert } = this.props;
-    const { blurbContent, users } = this.state;
-    const { APIService, currentUser } = this.context;
-
-    if (recordingToPersonallyRecommend && currentUser?.auth_token) {
-      const metadata: UserTrackPersonalRecommendationMetadata = {
-        artist_name: getArtistName(recordingToPersonallyRecommend),
-        track_name: getTrackName(recordingToPersonallyRecommend),
-        release_name: recordingToPersonallyRecommend!.track_metadata
-          .release_name,
-        recording_mbid: getRecordingMBID(recordingToPersonallyRecommend),
-        recording_msid: getRecordingMSID(recordingToPersonallyRecommend),
-        users,
-        blurb_content: blurbContent,
-      };
-      try {
-        const status = await APIService.submitPersonalRecommendation(
-          currentUser.auth_token,
-          currentUser.name,
-          metadata
-        );
-        if (status === 200) {
-          newAlert(
-            "success",
-            `You recommended this track to ${users.length} user${
-              users.length > 1 ? "s" : ""
-            }`,
-            `${metadata.artist_name} - ${metadata.track_name}`
-          );
-          this.setState({ blurbContent: "" });
+    const handleError = React.useCallback(
+      (error: string | Error, title?: string): void => {
+        if (!error) {
+          return;
         }
-      } catch (error) {
-        this.handleError(error, "Error while recommending a track");
-      }
-    }
-  };
+        newAlert(
+          "danger",
+          title || "Error",
+          typeof error === "object" ? error.message : error
+        );
+      },
+      [newAlert]
+    );
 
-  render() {
-    const { recordingToPersonallyRecommend } = this.props;
-    if (!recordingToPersonallyRecommend) {
-      return null;
-    }
-    const { blurbContent, users, suggestions } = this.state;
+    /* On load, get the current user's followers */
+    React.useEffect(() => {
+      APIService.getFollowersOfUser(currentUserName)
+        .then((response) => {
+          setFollowers(response.followers);
+        })
+        .catch((error) => {
+          handleError(error, "Error while fetching followers");
+        });
+    }, [currentUserName, setFollowers]);
+
+    const handleBlurbInputChange = React.useCallback(
+      (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        event.preventDefault();
+        const input = event.target.value.replace(/\s\s+/g, " "); // remove line breaks and excessive spaces
+        if (input.length <= maxBlurbContentLength) {
+          setBlurbContent(input);
+        }
+      },
+      []
+    );
+
+    const addUser = (user: string) => {
+      setUsers((prevUsers) => uniq([...prevUsers, user]));
+      setSuggestions([]);
+    };
+
+    const removeUser = (user: string) => {
+      setUsers((prevUsers) => prevUsers.filter((element) => element !== user));
+    };
+
+    const searchUsers = React.useCallback(
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event?.target?.value) {
+          const newSuggestions = followers.filter((username) =>
+            includes(toLower(username), toLower(event.target.value))
+          );
+          setSuggestions(newSuggestions);
+        } else {
+          setSuggestions([]);
+        }
+      },
+      [followers]
+    );
+
+    const closeModal = () => {
+      modal.hide();
+      setTimeout(modal.remove, 500);
+    };
+
+    const submitPersonalRecommendation = React.useCallback(
+      async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        if (currentUser?.auth_token) {
+          const metadata: UserTrackPersonalRecommendationMetadata = {
+            artist_name: getArtistName(listenToPersonallyRecommend),
+            track_name: getTrackName(listenToPersonallyRecommend),
+            release_name: listenToPersonallyRecommend!.track_metadata
+              .release_name,
+            recording_mbid: getRecordingMBID(listenToPersonallyRecommend),
+            recording_msid: getRecordingMSID(listenToPersonallyRecommend),
+            users,
+            blurb_content: blurbContent,
+          };
+          try {
+            const status = await APIService.submitPersonalRecommendation(
+              currentUser.auth_token,
+              currentUser.name,
+              metadata
+            );
+            if (status === 200) {
+              newAlert(
+                "success",
+                `You recommended this track to ${users.length} user${
+                  users.length > 1 ? "s" : ""
+                }`,
+                `${metadata.artist_name} - ${metadata.track_name}`
+              );
+              closeModal();
+            }
+          } catch (error) {
+            handleError(error, "Error while recommending a track");
+          }
+        }
+      },
+      [listenToPersonallyRecommend, blurbContent, users]
+    );
+
     const {
       track_name,
       artist_name,
-    } = recordingToPersonallyRecommend.track_metadata;
-    const { APIService, currentUser } = this.context;
+    } = listenToPersonallyRecommend.track_metadata;
+
     return (
       <div
-        className="modal fade"
+        className={`modal fade ${modal.visible ? "in" : ""}`}
         id="PersonalRecommendationModal"
         tabIndex={-1}
         role="dialog"
@@ -180,7 +170,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 className="close"
                 data-dismiss="modal"
                 aria-label="Close"
-                onClick={this.closeModal}
+                onClick={closeModal}
               >
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -194,21 +184,17 @@ export default class PersonalRecommendationModal extends React.Component<
                   <NamePill
                     title={user}
                     // eslint-disable-next-line react/jsx-no-bind
-                    closeAction={this.removeUser.bind(this, user)}
+                    closeAction={removeUser.bind(this, user)}
                   />
                 );
               })}
               <input
                 type="text"
                 className="form-control"
-                onChange={this.searchUsers}
+                onChange={searchUsers}
                 placeholder="Add followers*"
               />
-              <SearchDropDown
-                suggestions={suggestions}
-                // eslint-disable-next-line react/jsx-no-bind
-                action={this.addUser}
-              />
+              <SearchDropDown suggestions={suggestions} action={addUser} />
               <p>Leave a message (optional)</p>
               <div className="form-group">
                 <textarea
@@ -219,11 +205,11 @@ export default class PersonalRecommendationModal extends React.Component<
                   name="blurb-content"
                   rows={4}
                   style={{ resize: "vertical" }}
-                  onChange={this.handleBlurbInputChange}
+                  onChange={handleBlurbInputChange}
                 />
               </div>
               <small className="character-count">
-                {blurbContent.length} / {this.maxBlurbContentLength}
+                {blurbContent.length} / {maxBlurbContentLength}
                 <br />
                 *Can’t find a user? Make sure they are following you, and then
                 try again.
@@ -234,6 +220,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 type="button"
                 className="btn btn-default"
                 data-dismiss="modal"
+                onClick={closeModal}
               >
                 Cancel
               </button>
@@ -242,7 +229,7 @@ export default class PersonalRecommendationModal extends React.Component<
                 className="btn btn-success"
                 data-dismiss="modal"
                 disabled={users.length === 0}
-                onClick={this.submitPersonalRecommendation}
+                onClick={submitPersonalRecommendation}
               >
                 Send Recommendation
               </button>
@@ -252,4 +239,4 @@ export default class PersonalRecommendationModal extends React.Component<
       </div>
     );
   }
-}
+);

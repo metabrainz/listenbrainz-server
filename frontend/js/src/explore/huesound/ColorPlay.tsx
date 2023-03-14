@@ -4,23 +4,24 @@ import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
+import NiceModal from "@ebay/nice-modal-react";
 import ColorWheel from "./ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import ErrorBoundary from "../../utils/ErrorBoundary";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+} from "../../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import Loader from "../components/Loader";
-import { getPageProps } from "../utils/utils";
-import ListenCard from "../listens/ListenCard";
-import Card from "../components/Card";
-import { COLOR_WHITE } from "../utils/constants";
-import SimpleModal from "../utils/SimpleModal";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import Loader from "../../components/Loader";
+import { getPageProps } from "../../utils/utils";
+import ListenCard from "../../listens/ListenCard";
+import Card from "../../components/Card";
+import { COLOR_WHITE } from "../../utils/constants";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
@@ -240,31 +241,27 @@ export default class ColorPlay extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, current_user, spotify, youtube } = globalReactProps;
+  const {
+    domContainer,
+    reactProps,
+    globalAppContext,
+    optionalAlerts,
+  } = getPageProps();
+
   const { user } = reactProps;
 
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
   const ColorPlayWithAlertNotifications = withAlertNotifications(ColorPlay);
-
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    modal: modalRef,
-  };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
-        <ColorPlayWithAlertNotifications user={user} />
+      <GlobalAppContext.Provider value={globalAppContext}>
+        <NiceModal.Provider>
+          <ColorPlayWithAlertNotifications
+            user={user}
+            initialAlerts={optionalAlerts}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

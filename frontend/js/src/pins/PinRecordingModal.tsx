@@ -1,5 +1,6 @@
 import * as React from "react";
 import { get as _get } from "lodash";
+import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   getArtistName,
@@ -9,7 +10,7 @@ import {
 } from "../utils/utils";
 
 export type PinRecordingModalProps = {
-  recordingToPin?: Listen;
+  recordingToPin: Listen;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -18,97 +19,102 @@ export type PinRecordingModalProps = {
   onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
 };
 
-export interface PinRecordingModalState {
-  blurbContent: string;
-}
+export const maxBlurbContentLength = 280;
 
-export default class PinRecordingModal extends React.Component<
-  PinRecordingModalProps,
-  PinRecordingModalState
-> {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-  readonly maxBlurbContentLength = 280;
+/** A note about this modal:
+ * We use Bootstrap 3 modals, which work with jQuery and data- attributes
+ * In order to show the modal properly, including backdrop and visibility,
+ * you'll need dataToggle="modal" and dataTarget="#PinRecordingModal"
+ * on the buttons that open this modal as well as data-dismiss="modal"
+ * on the buttons that close the modal. Modals won't work (be visible) without it
+ * until we move to Bootstrap 5 / Bootstrap React which don't require those attributes.
+ */
 
-  constructor(props: PinRecordingModalProps) {
-    super(props);
-    this.state = { blurbContent: "" };
-  }
+export default NiceModal.create(
+  ({ recordingToPin, newAlert, onSuccessfulPin }: PinRecordingModalProps) => {
+    const modal = useModal();
+    const [blurbContent, setBlurbContent] = React.useState("");
 
-  submitPinRecording = async () => {
-    const { recordingToPin, newAlert, onSuccessfulPin } = this.props;
-    const { blurbContent } = this.state;
-    const { APIService, currentUser } = this.context;
+    const { APIService, currentUser } = React.useContext(GlobalAppContext);
 
-    if (recordingToPin && currentUser?.auth_token) {
-      const recordingMSID = _get(
-        recordingToPin,
-        "track_metadata.additional_info.recording_msid"
-      );
-      const recordingMBID = getRecordingMBID(recordingToPin);
-      let newPin: PinnedRecording;
-
-      try {
-        const response = await APIService.submitPinRecording(
-          currentUser.auth_token,
-          recordingMSID,
-          recordingMBID || undefined,
-          blurbContent || undefined
+    const handleError = React.useCallback(
+      (error: string | Error, title?: string): void => {
+        if (!error) {
+          return;
+        }
+        newAlert(
+          "danger",
+          title || "Error",
+          typeof error === "object" ? error.message : error
         );
-        const { data } = response;
-        newPin = data;
-      } catch (error) {
-        this.handleError(error, "Error while pinning track");
-        return;
-      }
-
-      newAlert(
-        "success",
-        `You pinned a track!`,
-        `${getArtistName(recordingToPin)} - ${getTrackName(recordingToPin)}`
-      );
-      this.setState({ blurbContent: "" });
-
-      if (onSuccessfulPin) {
-        onSuccessfulPin(newPin);
-      }
-    }
-  };
-
-  handleBlurbInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    event.preventDefault();
-    const input = event.target.value.replace(/\s\s+/g, " "); // remove line breaks and excessive spaces
-    if (input.length <= this.maxBlurbContentLength) {
-      this.setState({ blurbContent: input });
-    }
-  };
-
-  handleError = (error: string | Error, title?: string): void => {
-    const { newAlert } = this.props;
-    if (!error) {
-      return;
-    }
-    newAlert(
-      "danger",
-      title || "Error",
-      typeof error === "object" ? error.message : error
+      },
+      [newAlert]
     );
-  };
 
-  render() {
-    const { recordingToPin } = this.props;
-    if (!recordingToPin) {
-      return null;
-    }
-    const { blurbContent } = this.state;
-    const { track_name } = recordingToPin.track_metadata;
-    const { artist_name } = recordingToPin.track_metadata;
+    const handleBlurbInputChange = React.useCallback(
+      (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        event.preventDefault();
+        const input = event.target.value.replace(/\s\s+/g, " "); // remove line breaks and excessive spaces
+        if (input.length <= maxBlurbContentLength) {
+          setBlurbContent(input);
+        }
+      },
+      []
+    );
+
+    const closeModal = () => {
+      modal.hide();
+      setTimeout(modal.remove, 500);
+    };
+
+    const submitPinRecording = React.useCallback(
+      async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        if (recordingToPin && currentUser?.auth_token) {
+          const recordingMSID = _get(
+            recordingToPin,
+            "track_metadata.additional_info.recording_msid"
+          );
+          const recordingMBID = getRecordingMBID(recordingToPin);
+          let newPin: PinnedRecording;
+
+          try {
+            const response = await APIService.submitPinRecording(
+              currentUser.auth_token,
+              recordingMSID,
+              recordingMBID || undefined,
+              blurbContent || undefined
+            );
+            const { data } = response;
+            newPin = data;
+          } catch (error) {
+            handleError(error, "Error while pinning track");
+            return;
+          }
+
+          newAlert(
+            "success",
+            `You pinned a track!`,
+            `${getArtistName(recordingToPin)} - ${getTrackName(recordingToPin)}`
+          );
+          if (onSuccessfulPin) {
+            onSuccessfulPin(newPin);
+          }
+          setBlurbContent("");
+          closeModal();
+        }
+      },
+      [recordingToPin, blurbContent]
+    );
+
+    const { track_name, artist_name } = recordingToPin.track_metadata;
+
     const unpin_time_ms: number =
       new Date(Date.now()).getTime() + 1000 * 3600 * 24 * 7;
 
     return (
       <div
-        className="modal fade"
+        className={`modal fade ${modal.visible ? "in" : ""}`}
         id="PinRecordingModal"
         tabIndex={-1}
         role="dialog"
@@ -146,14 +152,14 @@ export default class PinRecordingModal extends React.Component<
                   placeholder="Let your followers know why you are showcasing this track..."
                   value={blurbContent}
                   name="blurb-content"
-                  onChange={this.handleBlurbInputChange}
+                  onChange={handleBlurbInputChange}
                   rows={4}
                   style={{ resize: "vertical" }}
                   spellCheck="false"
                 />
               </div>
               <small style={{ display: "block", textAlign: "right" }}>
-                {blurbContent.length} / {this.maxBlurbContentLength}
+                {blurbContent.length} / {maxBlurbContentLength}
               </small>
               <small>
                 Pinning this track will replace any track currently pinned.{" "}
@@ -170,16 +176,17 @@ export default class PinRecordingModal extends React.Component<
                 type="button"
                 className="btn btn-default"
                 data-dismiss="modal"
+                onClick={closeModal}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 className="btn btn-success"
-                onClick={this.submitPinRecording}
+                onClick={submitPinRecording}
                 data-dismiss="modal"
               >
-                Pin Track
+                Pin track
               </button>
             </div>
           </form>
@@ -187,4 +194,4 @@ export default class PinRecordingModal extends React.Component<
       </div>
     );
   }
-}
+);

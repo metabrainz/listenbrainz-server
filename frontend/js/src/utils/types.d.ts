@@ -4,6 +4,8 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "time-ago";
 declare module "debounce-async";
+// declaration typescript file doesn't exist for react-datetime-picker/dist/entry.nostyle.js so had to declare a dummy declaration.
+declare module "react-datetime-picker/dist/entry.nostyle";
 
 declare module "react-bs-notifier";
 declare type AlertType = "danger" | "warning" | "success" | "info";
@@ -43,17 +45,17 @@ interface AdditionalInfo {
   work_mbids?: Array<string> | null;
 }
 
-declare type MbidMappingArtist = {
+declare type MBIDMappingArtist = {
   artist_mbid: string;
   artist_credit_name: string;
   join_phrase: string;
 };
 
-declare type MbidMapping = {
+declare type MBIDMapping = {
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
-  artists?: Array<MbidMappingArtist>;
+  artists?: Array<MBIDMappingArtist>;
   caa_id?: number;
   caa_release_mbid?: string;
 };
@@ -421,7 +423,7 @@ declare type TrackMetadata = {
   recording_msid?: string;
   release_mbid?: string;
   additional_info?: AdditionalInfo;
-  mbid_mapping?: MbidMapping;
+  mbid_mapping?: MBIDMapping;
 };
 
 declare type FeedbackResponseWithTrackMetadata = FeedbackResponse & {
@@ -679,4 +681,4 @@ type UserFreshReleasesResponse = {
 
 declare type SearchUser = {
   user_name: string;
-}
+};

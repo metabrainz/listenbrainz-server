@@ -4,27 +4,17 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import {
-  faHeart,
-  faHeartBroken,
-  faThumbtack,
-} from "@fortawesome/free-solid-svg-icons";
-import { clone, get, has, isNaN } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import NiceModal from "@ebay/nice-modal-react";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import PinRecordingModal from "../pins/PinRecordingModal";
 import { getListenablePin, getPageProps } from "../utils/utils";
-import SimpleModal from "../utils/SimpleModal";
 import UserFeedback from "./UserFeedback";
 import UserPins from "../pins/UserPins";
 
@@ -36,14 +26,7 @@ export type UserTasteProps = {
   user: ListenBrainzUser;
 } & WithAlertNotificationsInjectedProps;
 
-export interface UserTasteState {
-  recordingToPin?: BaseListenFormat;
-}
-
-export default class UserTaste extends React.Component<
-  UserTasteProps,
-  UserTasteState
-> {
+export default class UserTaste extends React.Component<UserTasteProps> {
   static contextType = GlobalAppContext;
   static RecordingMetadataToListenFormat = (
     feedbackItem: FeedbackResponseWithTrackMetadata
@@ -56,17 +39,7 @@ export default class UserTaste extends React.Component<
 
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  constructor(props: UserTasteProps) {
-    super(props);
-    this.state = {};
-  }
-
-  updateRecordingToPin = (recordingToPin: BaseListenFormat) => {
-    this.setState({ recordingToPin });
-  };
-
   render() {
-    const { recordingToPin } = this.state;
     const {
       feedback,
       user,
@@ -97,7 +70,6 @@ export default class UserTaste extends React.Component<
               newAlert={newAlert}
               totalCount={totalFeedbackCount}
               user={user}
-              updateRecordingToPin={this.updateRecordingToPin}
             />
           </div>
           <div className="col-md-5">
@@ -109,12 +81,6 @@ export default class UserTaste extends React.Component<
             />
           </div>
         </div>
-        {currentUser && (
-          <PinRecordingModal
-            recordingToPin={recordingToPin || listenables[0]}
-            newAlert={newAlert}
-          />
-        )}
         <BrainzPlayer
           listens={listenables}
           newAlert={newAlert}
@@ -131,22 +97,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { feedback, feedback_count, user, pins, pin_count } = reactProps;
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -156,30 +111,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const { feedback, feedback_count, user, pins, pin_count } = reactProps;
   const UserTasteWithAlertNotifications = withAlertNotifications(UserTaste);
-
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    modal: modalRef,
-  };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
-        <UserTasteWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          user={user}
-          feedback={feedback}
-          totalFeedbackCount={feedback_count}
-          pins={pins}
-          totalPinsCount={pin_count}
-        />
+      <GlobalAppContext.Provider value={globalAppContext}>
+        <NiceModal.Provider>
+          <UserTasteWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            user={user}
+            feedback={feedback}
+            totalFeedbackCount={feedback_count}
+            pins={pins}
+            totalPinsCount={pin_count}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

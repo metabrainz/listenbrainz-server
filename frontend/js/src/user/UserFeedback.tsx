@@ -27,7 +27,6 @@ export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
   totalCount: number;
   user: ListenBrainzUser;
-  updateRecordingToPin: (recordingToPin: BaseListenFormat) => void;
 } & WithAlertNotificationsInjectedProps;
 
 export interface UserFeedbackState {
@@ -297,11 +296,6 @@ export default class UserFeedback extends React.Component<
     }
   };
 
-  updateRecordingToPin = (recordingToPin: BaseListenFormat) => {
-    const { updateRecordingToPin } = this.props;
-    updateRecordingToPin(recordingToPin);
-  };
-
   getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
     const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
 
@@ -383,17 +377,6 @@ export default class UserFeedback extends React.Component<
             </div>
             <div id="listens" style={{ opacity: loading ? "0.4" : "1" }}>
               {listensFromFeedback.map((listen) => {
-                const additionalMenuItems = [
-                  <ListenControl
-                    title="Pin this recording"
-                    text="Pin this track"
-                    icon={faThumbtack}
-                    // eslint-disable-next-line react/jsx-no-bind
-                    action={this.updateRecordingToPin.bind(this, listen)}
-                    dataToggle="modal"
-                    dataTarget="#PinRecordingModal"
-                  />,
-                ];
                 const recording_msid = getRecordingMSID(listen);
                 const recording_mbid = getRecordingMBID(listen);
                 return (
@@ -404,7 +387,6 @@ export default class UserFeedback extends React.Component<
                     listen={listen}
                     currentFeedback={this.getFeedbackForListen(listen)}
                     updateFeedbackCallback={this.updateFeedback}
-                    additionalMenuItems={additionalMenuItems}
                     newAlert={newAlert}
                   />
                 );

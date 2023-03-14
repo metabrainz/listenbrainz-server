@@ -73,9 +73,10 @@ def create_user_recording_recommendation_event(user_name):
             }
         }
 
-
     :param user_name: The MusicBrainz ID of the user who is recommending the recording.
     :type user_name: ``str``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, recording has been recommended!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend recordings on the behalf of this user
@@ -130,7 +131,6 @@ def create_user_notification_event(user_name):
     :statuscode 403: Forbidden, you are not an approved user.
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
-
     """
     creator = validate_auth_header()
     if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
@@ -239,6 +239,8 @@ def user_feed(user_name: str):
     :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned
     :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :type count: ``int``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, you have feed events!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permission to view this user's feed.
@@ -364,6 +366,8 @@ def delete_feed_events(user_name):
 
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Successful deletion
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
@@ -420,6 +424,8 @@ def hide_user_timeline_event(user_name):
 
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Event hidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
@@ -473,14 +479,16 @@ def unhide_user_timeline_event(user_name):
         }
 
     :type user_name: ``str``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Event unhidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
     :statuscode 404: User not found
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
-
     '''
+    
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
         raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
@@ -507,18 +515,21 @@ def create_personal_recommendation_event(user_name):
     recommended, and also the list of followers getting recommended:
 
     .. code-block:: json
-    {
-        "metadata": {
-            "artist_name": "<The name of the artist, required>",
-            "track_name": "<The name of the track, required>",
-            "recording_msid": "<The MessyBrainz ID of the recording, required>",
-            "release_name": "<The name of the release, optional>",
-            "recording_mbid": "<The MusicBrainz ID of the recording, optional>",
-            "users": [<usernames of the persons you want to recommend to, required>]
-            "blurb_content": "<String containing personalized recommendation>"
-        }
-    }
 
+        {
+            "metadata": {
+                "artist_name": "<The name of the artist, required>",
+                "track_name": "<The name of the track, required>",
+                "recording_msid": "<The MessyBrainz ID of the recording, required>",
+                "release_name": "<The name of the release, optional>",
+                "recording_mbid": "<The MusicBrainz ID of the recording, optional>",
+                "users": [<usernames of the persons you want to recommend to, required>]
+                "blurb_content": "<String containing personalized recommendation>"
+            }
+        }
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, recording has been recommended!
     :statuscode 400: Bad request, check ``response['error']`` for more
     details.
@@ -526,8 +537,8 @@ def create_personal_recommendation_event(user_name):
     personal recordings on the behalf of this user
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
-
     '''
+    
     user = validate_auth_header()
 
     if user_name != user['musicbrainz_id']:
@@ -545,7 +556,7 @@ def create_personal_recommendation_event(user_name):
         follower_results = db_user_relationship.multiple_users_by_username_following_user(user['id'], metadata.users)
         non_followers = []
         for follower in metadata.users:
-            if not follower_results[follower]:
+            if not follower_results or not follower_results[follower]:
                 non_followers.append(follower)
         if non_followers:
             raise APIBadRequest(f"You cannot recommend tracks to non-followers! These people don't follow you {str(non_followers)}")

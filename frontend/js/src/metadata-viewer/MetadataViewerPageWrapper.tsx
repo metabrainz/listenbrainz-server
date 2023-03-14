@@ -9,8 +9,7 @@ import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -25,15 +24,6 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [currentListen, setCurrentListen] = React.useState(playingNow);
   const [recordingData, setRecordingData] = React.useState<MetadataLookup>();
-
-  if (!currentUser) {
-    return (
-      <div>
-        Please{" "}
-        <a href="https://listenbrainz.org/login/">log in to ListenBrainz</a>
-      </div>
-    );
-  }
 
   /** Metadata lookup and storage */
   const onNewPlayingNow = React.useCallback(
@@ -104,6 +94,15 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
     }
   }, []);
 
+  if (!currentUser) {
+    return (
+      <div>
+        Please{" "}
+        <a href="https://listenbrainz.org/login/">log in to ListenBrainz</a>
+      </div>
+    );
+  }
+
   return (
     <MetadataViewer recordingData={recordingData} playingNow={currentListen} />
   );
@@ -113,18 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { playing_now } = reactProps;
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -134,25 +126,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const { playing_now } = reactProps;
+
   const PlayingNowPageWithAlertNotifications = withAlertNotifications(
     PlayingNowPage
   );
 
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <PlayingNowPageWithAlertNotifications
           initialAlerts={optionalAlerts}
           playingNow={playing_now}

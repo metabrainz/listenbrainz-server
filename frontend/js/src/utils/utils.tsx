@@ -1,12 +1,14 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import { isFinite, isUndefined } from "lodash";
+import { isFinite, isUndefined, castArray } from "lodash";
 import { Rating } from "react-simple-star-rating";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
 import NamePill from "../personal-recommendations/NamePill";
+import { GlobalAppContextT } from "./GlobalAppContext";
+import APIServiceClass from "./APIService";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
@@ -132,9 +134,29 @@ const searchForYoutubeTrack = async (
 const getAdditionalContent = (metadata: EventMetadata): string =>
   _.get(metadata, "blurb_content") ?? _.get(metadata, "text") ?? "";
 
-const getArtistMBIDs = (listen: Listen): string[] | undefined =>
-  _.get(listen, "track_metadata.additional_info.artist_mbids") ??
-  _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
+const getArtistMBIDs = (listen: Listen): string[] | undefined => {
+  const additionalInfoArtistMBIDs = _.get(
+    listen,
+    "track_metadata.additional_info.artist_mbids"
+  );
+  const mbidMappingArtistMBIDs = _.get(
+    listen,
+    "track_metadata.mbid_mapping.artist_mbids"
+  );
+  if (additionalInfoArtistMBIDs || mbidMappingArtistMBIDs) {
+    return additionalInfoArtistMBIDs ?? mbidMappingArtistMBIDs;
+  }
+
+  // Backup: cast artist_mbid as an array if it exists
+  const additionalInfoArtistMBID = _.get(
+    listen,
+    "track_metadata.additional_info.artist_mbid"
+  );
+  if (additionalInfoArtistMBID) {
+    return [additionalInfoArtistMBID];
+  }
+  return undefined;
+};
 
 const getRecordingMSID = (listen: Listen): string =>
   _.get(listen, "track_metadata.additional_info.recording_msid");
@@ -357,6 +379,13 @@ const fullLocalizedDateFromTimestampOrISODate = (
   });
 };
 
+const convertDateToUnixTimestamp = (date: Date): number => {
+  const newDate = new Date(date);
+  const timestampInMs = newDate.getTime();
+  const unixTimestamp = Math.floor(newDate.getTime() / 1000);
+  return unixTimestamp;
+};
+
 /** Loads a script asynchronously into the HTML page */
 export function loadScriptAsync(document: any, scriptSrc: string): void {
   const el = document.createElement("script");
@@ -380,27 +409,33 @@ const createAlert = (
   };
 };
 
-interface GlobalProps {
-  api_url: string;
+type SentryProps = {
   sentry_dsn: string;
+  sentry_traces_sample_rate?: number;
+};
+type GlobalAppProps = {
+  api_url: string;
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
   critiquebrainz?: CritiqueBrainzUser;
-  sentry_traces_sample_rate?: number;
-}
+};
+type GlobalProps = GlobalAppProps & SentryProps;
 
 const getPageProps = (): {
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
-  globalReactProps: GlobalProps;
+  sentryProps: SentryProps;
   optionalAlerts: Alert[];
+  globalAppContext: GlobalAppContextT;
 } => {
   let domContainer = document.getElementById("react-container");
   const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
   let reactProps = {};
   let globalReactProps = {} as GlobalProps;
+  let sentryProps = {} as SentryProps;
+  let globalAppContext = {} as GlobalAppContextT;
   const optionalAlerts = [];
   if (!domContainer) {
     // Ensure there is a container for React rendering
@@ -421,6 +456,31 @@ const getPageProps = (): {
     if (propsElement?.innerHTML) {
       reactProps = JSON.parse(propsElement!.innerHTML);
     }
+
+    const {
+      current_user,
+      api_url,
+      spotify,
+      youtube,
+      critiquebrainz,
+      sentry_traces_sample_rate,
+      sentry_dsn,
+    } = globalReactProps;
+
+    const apiService = new APIServiceClass(
+      api_url || `${window.location.origin}/1`
+    );
+    globalAppContext = {
+      APIService: apiService,
+      currentUser: current_user,
+      spotifyAuth: spotify,
+      youtubeAuth: youtube,
+      critiquebrainzAuth: critiquebrainz,
+    };
+    sentryProps = {
+      sentry_dsn,
+      sentry_traces_sample_rate,
+    };
   } catch (err) {
     // Show error to the user and ask to reload page
     const errorMessage = `Please refresh the page.
@@ -433,7 +493,13 @@ const getPageProps = (): {
     );
     optionalAlerts.push(newAlert);
   }
-  return { domContainer, reactProps, globalReactProps, optionalAlerts };
+  return {
+    domContainer,
+    reactProps,
+    sentryProps,
+    globalAppContext,
+    optionalAlerts,
+  };
 };
 
 const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
@@ -746,6 +812,7 @@ export {
   formatWSMessageToListen,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
+  convertDateToUnixTimestamp,
   getPageProps,
   searchForYoutubeTrack,
   createAlert,

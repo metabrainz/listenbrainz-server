@@ -467,6 +467,13 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
+    def test_nan_in_json(self):
+        """ Test for invalid submission in which a listen has null listened_at field """
+        with open(self.path_to_data_file('invalid_listen_nan_in_json.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+
     def test_null_listened_at(self):
         """ Test for invalid submission in which a listen has null listened_at field """
         with open(self.path_to_data_file('invalid_listen_null_listened_at.json'), 'r') as f:

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, isEqual, isNil, isNumber } from "lodash";
+import { get, isEqual, isNil, isNumber } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -7,7 +7,10 @@ import {
   faCommentDots,
   faExternalLinkAlt,
   faCode,
-  faCopy,
+  faPaperPlane,
+  faThumbtack,
+  faPencilAlt,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSoundcloud,
@@ -17,6 +20,7 @@ import {
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   getArtistLink,
   getTrackLink,
@@ -29,6 +33,8 @@ import {
   getTrackName,
   getTrackDurationInMs,
   getRecordingMSID,
+  getArtistMBIDs,
+  getReleaseGroupMBID,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
@@ -38,6 +44,11 @@ import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import { millisecondsToStr } from "../playlists/utils";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+import PinRecordingModal from "../pins/PinRecordingModal";
+import CBReviewModal from "../cb-review/CBReviewModal";
+import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
+import ListenPayloadModal from "./ListenPayloadModal";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -180,7 +191,7 @@ export default class ListenCard extends React.Component<
       const metadata: UserTrackRecommendationMetadata = {
         artist_name: getArtistName(listen),
         track_name: getTrackName(listen),
-        release_name: _get(listen, "track_metadata.release_name"),
+        release_name: get(listen, "track_metadata.release_name"),
       };
 
       const recording_mbid = getRecordingMBID(listen);
@@ -244,15 +255,18 @@ export default class ListenCard extends React.Component<
       currentFeedback,
       newAlert,
       updateFeedbackCallback,
+      additionalActions,
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
-    const { additionalActions } = this.props;
-    const { modal } = this.context;
+    const { currentUser } = this.context;
 
     const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
+    const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
     const releaseMBID = getReleaseMBID(listen);
+    const releaseGroupMBID = getReleaseGroupMBID(listen);
+    const artistMBIDs = getArtistMBIDs(listen);
     const spotifyURL = SpotifyPlayer.getURLFromListen(listen);
     const youtubeURL = YoutubePlayer.getURLFromListen(listen);
     const soundcloudURL = SoundcloudPlayer.getURLFromListen(listen);
@@ -263,13 +277,18 @@ export default class ListenCard extends React.Component<
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const hasRecordingMBID = Boolean(recordingMBID);
-    const enableRecommendButton =
+    const hasInfoAndMBID =
       artistName && trackName && (hasRecordingMSID || hasRecordingMBID);
+    const isListenReviewable =
+      Boolean(recordingMBID) ||
+      artistMBIDs?.length ||
+      Boolean(trackMBID) ||
+      Boolean(releaseGroupMBID);
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
       additionalMenuItems?.length ||
-      enableRecommendButton ||
+      hasInfoAndMBID ||
       recordingMBID ||
       spotifyURL ||
       youtubeURL ||
@@ -368,7 +387,10 @@ export default class ListenCard extends React.Component<
           ) : (
             <div className="listen-details">
               <div className="title-duration">
-                <div title={trackName} className="ellipsis-2-lines">
+                <div
+                  title={trackName}
+                  className={compact ? "ellipsis" : "ellipsis-2-lines"}
+                >
                   {getTrackLink(listen)}
                 </div>
                 {trackDurationMs && (
@@ -471,7 +493,21 @@ export default class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    {enableRecommendButton && (
+                    {hasInfoAndMBID && (
+                      <ListenControl
+                        text="Pin this track"
+                        icon={faThumbtack}
+                        action={() => {
+                          NiceModal.show(PinRecordingModal, {
+                            recordingToPin: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
+                      />
+                    )}
+                    {hasInfoAndMBID && (
                       <ListenControl
                         icon={faCommentDots}
                         title="Recommend to my followers"
@@ -479,40 +515,59 @@ export default class ListenCard extends React.Component<
                         action={this.recommendListenToFollowers}
                       />
                     )}
+                    {hasInfoAndMBID && (
+                      <ListenControl
+                        text="Personally recommend"
+                        icon={faPaperPlane}
+                        action={() => {
+                          NiceModal.show(PersonalRecommendationModal, {
+                            listenToPersonallyRecommend: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#PersonalRecommendationModal"
+                      />
+                    )}
+                    {Boolean(currentUser) && Boolean(recordingMSID) && (
+                      <ListenControl
+                        text="Link with MusicBrainz"
+                        icon={faLink}
+                        action={() => {
+                          NiceModal.show(MBIDMappingModal, {
+                            listenToMap: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#MapToMusicBrainzRecordingModal"
+                      />
+                    )}
+                    {isListenReviewable && (
+                      <ListenControl
+                        text="Write a review"
+                        icon={faPencilAlt}
+                        action={() => {
+                          NiceModal.show(CBReviewModal, {
+                            listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#CBReviewModal"
+                      />
+                    )}
                     {additionalMenuItems}
                     <ListenControl
                       text="Inspect listen"
                       icon={faCode}
                       action={() => {
-                        const stringifiedJSON = JSON.stringify(listen, null, 2);
-                        modal?.current?.updateModal(
-                          stringifiedJSON,
-                          "Inspect listen",
-                          <>
-                            <button
-                              type="button"
-                              className="btn btn-info"
-                              onClick={async () => {
-                                await navigator.clipboard.writeText(
-                                  stringifiedJSON
-                                );
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faCopy} /> Copy
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-default"
-                              data-dismiss="modal"
-                            >
-                              Close
-                            </button>
-                          </>,
-                          true
-                        );
+                        NiceModal.show(ListenPayloadModal, {
+                          listen,
+                        });
                       }}
                       dataToggle="modal"
-                      dataTarget="#SimpleModal"
+                      dataTarget="#ListenPayloadModal"
                     />
                   </ul>
                 </>

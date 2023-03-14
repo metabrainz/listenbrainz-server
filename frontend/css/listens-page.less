@@ -426,6 +426,10 @@
           }
         }
       }
+
+      .badge {
+        flex-shrink: 0;
+      }
     }
     .recommendation-controls {
       flex: 0 140px;
@@ -638,6 +642,33 @@
   @media (max-width: @screen-xs) {
     .empty-action {
       padding: 0px 3em;
+    }
+  }
+}
+
+.add-listen-btn {
+  border-radius: 3px;
+  height: 30px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.listen-header {
+  display: flex;
+  h3 {
+    display: flex;
+    flex-direction: column;
+    flex: 0.61;
+  }
+}
+
+@media (max-width: 992px) {
+  .listen-header {
+    display: flex;
+    h3 {
+      display: flex;
+      flex-direction: column;
+      flex: 0.99;
     }
   }
 }

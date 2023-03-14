@@ -5,10 +5,9 @@ import * as Sentry from "@sentry/react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual, isNil } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import NiceModal from "@ebay/nice-modal-react";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
   WithAlertNotificationsInjectedProps,
@@ -27,7 +26,6 @@ import {
   userChartEntityToListen,
 } from "./utils";
 import ListenCard from "../listens/ListenCard";
-import SimpleModal from "../utils/SimpleModal";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -665,22 +663,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { user } = reactProps;
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -690,28 +677,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const { user } = reactProps;
   const UserEntityChartWithAlertNotifications = withAlertNotifications(
     UserEntityChart
   );
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
-        <UserEntityChartWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          user={user}
-        />
+      <GlobalAppContext.Provider value={globalAppContext}>
+        <NiceModal.Provider>
+          <UserEntityChartWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

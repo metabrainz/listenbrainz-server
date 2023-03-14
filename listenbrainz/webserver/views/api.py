@@ -1,7 +1,7 @@
-import time
 from operator import itemgetter
 
 import psycopg2
+import orjson
 import ujson
 from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.ratelimit import ratelimit
@@ -83,7 +83,7 @@ def submit_listen():
         )
 
     try:
-        data = ujson.loads(raw_data.decode("utf-8"))
+        data = orjson.loads(raw_data.decode("utf-8"))
     except ValueError as e:
         log_raise_400("Cannot parse JSON document: %s" % e)
 

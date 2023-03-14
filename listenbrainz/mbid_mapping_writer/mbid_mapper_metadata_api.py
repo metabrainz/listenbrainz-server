@@ -275,7 +275,7 @@ class MBIDMapperMetadataAPI:
         return {
             'artist_credit_name': hit['document']['artist_credit_name'],
             'artist_credit_id': hit['document']['artist_credit_id'],
-            'artist_mbids': hit['document']['artist_mbids'],
+            'artist_mbids': hit['document']['artist_mbids'][1:-1].split(","),
             'release_name': hit['document']['release_name'],
             'release_mbid': hit['document']['release_mbid'],
             'recording_name': hit['document']['recording_name'],
