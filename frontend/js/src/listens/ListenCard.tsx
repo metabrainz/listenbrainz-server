@@ -324,6 +324,68 @@ export default class ListenCard extends React.Component<
         </span>
       );
     }
+    let thumbnail;
+    if (customThumbnail) {
+      thumbnail = customThumbnail;
+    } else if (thumbnailSrc) {
+      thumbnail = (
+        <div className="listen-thumbnail">
+          <a
+            href={
+              releaseMBID
+                ? `https://musicbrainz.org/release/${releaseMBID}`
+                : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
+            }
+            title={listen.track_metadata?.release_name ?? "Cover art"}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src={thumbnailSrc}
+              alt={listen.track_metadata?.release_name ?? "Cover art"}
+            />
+          </a>
+        </div>
+      );
+    } else if (releaseMBID) {
+      thumbnail = (
+        <div className="listen-thumbnail">
+          <a
+            href={`https://musicbrainz.org/release/${releaseMBID}/cover-art`}
+            title="Add cover art in MusicBrainz"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src={ListenCard.defaultThumbnailSrc}
+              alt="Add cover art in MusicBrainz"
+            />
+          </a>
+        </div>
+      );
+    } else {
+      const openModal = () => {
+        NiceModal.show(MBIDMappingModal, {
+          listenToMap: listen,
+          newAlert,
+        });
+      };
+      thumbnail = (
+        <div
+          className="listen-thumbnail no-cover-art"
+          title="Link with MusicBrainz"
+          onClick={openModal}
+          onKeyDown={openModal}
+          role="button"
+          tabIndex={0}
+          // onKeyPress={action}
+          data-toggle="modal"
+          data-target="#MapToMusicBrainzRecordingModal"
+        >
+          <FontAwesomeIcon icon={faLink} />
+        </div>
+      );
+    }
 
     return (
       <Card
@@ -337,51 +399,7 @@ export default class ListenCard extends React.Component<
       >
         <div className="main-content">
           {beforeThumbnailContent}
-          {customThumbnail || (
-            <div className="listen-thumbnail">
-              {thumbnailSrc ? (
-                <a
-                  href={
-                    releaseMBID
-                      ? `https://musicbrainz.org/release/${releaseMBID}`
-                      : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
-                  }
-                  title={listen.track_metadata?.release_name ?? "Cover art"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    src={thumbnailSrc}
-                    alt={listen.track_metadata?.release_name ?? "Cover art"}
-                  />
-                </a>
-              ) : (
-                <a
-                  href={
-                    releaseMBID
-                      ? `https://musicbrainz.org/release/${releaseMBID}/cover-art`
-                      : "https://musicbrainz.org/doc/How_to_Add_Cover_Art"
-                  }
-                  title={
-                    releaseMBID
-                      ? "Add cover art in MusicBrainz"
-                      : "How can I add missing cover art?"
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    src={ListenCard.defaultThumbnailSrc}
-                    alt={
-                      releaseMBID
-                        ? "Add cover art in MusicBrainz"
-                        : "How can I add missing cover art?"
-                    }
-                  />
-                </a>
-              )}
-            </div>
-          )}
+          {thumbnail}
           {listenDetails ? (
             <div className="listen-details">{listenDetails}</div>
           ) : (

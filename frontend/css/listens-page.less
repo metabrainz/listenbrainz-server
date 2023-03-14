@@ -232,6 +232,9 @@
         margin-right: 10px;
         width: 56px;
         height: 56px;
+        &.no-cover-art{
+          min-width: 56px;
+        }
       }
     }
   }
@@ -259,6 +262,15 @@
     }
 
     .listen-thumbnail {
+      &.no-cover-art{
+        background-color: @gray-lighter;
+        text-align: center;
+        min-width: @cover-art-thumbnail-size;
+        >svg{
+          color: lighten(@gray-light, 15%);
+          max-width: 38px;
+        }
+      }
       flex: 0;
       padding: 0;
       margin: -10px;
