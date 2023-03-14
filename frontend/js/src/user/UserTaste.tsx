@@ -6,7 +6,7 @@ import * as Sentry from "@sentry/react";
 
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,

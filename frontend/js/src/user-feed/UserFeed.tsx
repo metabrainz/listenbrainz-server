@@ -33,7 +33,7 @@ import {
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";

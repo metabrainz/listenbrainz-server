@@ -8,7 +8,7 @@ import { get } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
