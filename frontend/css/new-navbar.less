@@ -149,12 +149,14 @@ body {
 	}
 	/* When not all tabs fit horizontally,
 	hide tabs behind gradient to indicate there's more */
+	position: relative;
 	&::after{
 		content: "";
 		width: 4em;
 		background: linear-gradient(270deg, #fff, transparent);
 		position: absolute;
 		right: 0;
+		top: 0;
 		height: 47px;
 	}
 	
