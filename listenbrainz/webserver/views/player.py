@@ -148,17 +148,25 @@ def load_release(release_mbid):
                                                                                       release["artist-credit-phrase"])
         now = datetime.now()
         playlist = WritablePlaylist(description=desc, name=name, creator="listenbrainz", creator_id=1, created=now)
-        for medium in release["medium-list"]:
-            for recording in medium["track-list"]:
-                rec = WritablePlaylistRecording(title=recording["name"],
-                                                artist_credit=release["artist-credit-phrase"],
-                                                artist_mbids=[a["artist"]["mbid"] for a in recording["artist-credit"]],
-                                                release_name=release["name"],
-                                                release_mbid=release["mbid"],
-                                                position=recording["position"],
-                                                mbid=recording["recording_id"],
-                                                added_by_id=1, created=now)
-                playlist.recordings.append(rec)
+
+        if release.get("medium-list"):
+            for medium in release["medium-list"]:
+                if not medium.get("track-list"):
+                    continue
+
+                for recording in medium.get("track-list", []):
+                    rec = WritablePlaylistRecording(
+                        title=recording["name"],
+                        artist_credit=release["artist-credit-phrase"],
+                        artist_mbids=[a["artist"]["mbid"] for a in recording["artist-credit"]],
+                        release_name=release["name"],
+                        release_mbid=release["mbid"],
+                        position=recording["position"],
+                        mbid=recording["recording_id"],
+                        added_by_id=1,
+                        created=now
+                    )
+                    playlist.recordings.append(rec)
 
     return render_template(
         "player/player-page.html",
