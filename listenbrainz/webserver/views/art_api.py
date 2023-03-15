@@ -367,5 +367,8 @@ def cover_art_yim_2022(user_name):
         case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year")
         case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
-    status_code = 200 if svg is not None else 204
-    return svg, status_code, {"Content-Type": "image/svg+xml"}
+    if svg is None:
+        return "", 204
+
+    return svg, 200, {"Content-Type": "image/svg+xml"}
+
