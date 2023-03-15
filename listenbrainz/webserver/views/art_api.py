@@ -313,12 +313,12 @@ def _cover_art_yim_artists(user_name, stats):
 
 def _cover_art_yim_playlist(user_name, stats, key):
     """ Create the SVG using playlist tracks' cover arts for the given YIM playlist. """
+    if stats.get(key) is None or stats.get(f"{key}-coverart") is None:
+        return None
+
     all_cover_arts = stats[f"{key}-coverart"]
     image_urls = []
     selected_urls = set()
-
-    if stats.get(key) is None:
-        return None
 
     for track in stats[key]["track"]:
         mbid = track["identifier"].split("/")[-1]
