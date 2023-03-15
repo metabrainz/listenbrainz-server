@@ -134,10 +134,21 @@ body {
 @nav-tabs-link-padding: 1em 1.5em;
 @nav-tabs-link-padding-mobile: 0.8em 1em;
 @nav-tabs-background-color: #F3F3F3;
-.nav.nav-tabs {
+.nav-tabs-container{
+	/* Tab container should be full width and scrollable if there is excess*/
+	width: calc(100% + @grid-gutter-width);
+	overflow-x: scroll;
 	margin-left:  ceil((@grid-gutter-width / -2));
-  	margin-right: floor((@grid-gutter-width / -2));
-	background-color: @nav-tabs-background-color;
+	margin-right: floor((@grid-gutter-width / -2));
+	/* But we want to hide the scrollbar: */
+	-ms-overflow-style: none;  /* Internet Explorer and Edge */
+	scrollbar-width: none;  /* Firefox */
+	&::-webkit-scrollbar {
+		/* Chrome, Safari and Opera */
+		display: none;
+	}
+	/* When not all tabs fit horizontally,
+	hide tabs behind gradient to indicate there's more */
 	&::after{
 		content: "";
 		width: 4em;
@@ -146,39 +157,51 @@ body {
 		right: 0;
 		height: 47px;
 	}
-	> li{
-		> a {
-			color: #1E1E1E;
-			padding: @nav-tabs-link-padding;
-			border: 1px solid @nav-tabs-border-color;
-			border-top:none;
-			border-bottom: none;
-			margin-right: -1px;
-		}
-		&.active > a {
-			color: #1E1E1E;
-			font-weight: 700;
-		}
-		&.username{
-			font-weight: 700;
-			// background-color: darken(@nav-tabs-background-color,15%);
-			background: linear-gradient(to right,@blue 10%,@orange 170%);
-			color: @white;
-			> * {
-				// &:extend(.nav.nav-tabs>li>a);
+	
+	.nav.nav-tabs {
+		background-color: @nav-tabs-background-color;
+		display: flex;
+		
+		> li{
+			background-color: @nav-tabs-background-color;
+			border-bottom: 1px solid @nav-tabs-border-color;
+			float:unset;
+			> a {
+				color: #1E1E1E;
 				padding: @nav-tabs-link-padding;
+				border: 1px solid @nav-tabs-border-color;
+				border-top:none;
+				border-bottom: none;
+				margin-right: -1px;
+				margin-bottom: 0px;
+				&:hover {
+					color: initial;
+				}
+			}
+			&.active > a {
+				color: #1E1E1E;
+				font-weight: 700;
+				border-bottom: 1px solid white;
+				margin-bottom: -1px;
+			}
+			&.username{
+				font-weight: 700;
+				background: linear-gradient(to right,@blue 10%,@orange 170%);
+				color: @white;
+				> * {
+					padding: @nav-tabs-link-padding;
+				}
 			}
 		}
-	}
-	/* Styles for mobile devices */
-	@media (max-width: @offscreen-sidenav-breakpoint) {
-		display: inline-flex;
-		overflow-x: scroll;
-		max-width: 100vw;
-		min-width: 100vw;
-		> li {
-			> a, &.username > * {
-				padding: @nav-tabs-link-padding-mobile;
+		
+
+		/* Styles for mobile devices */
+		@media (max-width: @offscreen-sidenav-breakpoint) {
+
+			> li {
+				> a, &.username > * {
+					padding: @nav-tabs-link-padding-mobile;
+				}
 			}
 		}
 	}

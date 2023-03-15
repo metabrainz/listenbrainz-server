@@ -3,10 +3,12 @@ endblock -%}
 {% set active_page = "feed" %}
 
 {% block content %}
-  <ul class="nav nav-tabs" role="tablist">
-    <li class="active"><a href="{{ url_for('index.feed') }}">My Feed</a></li>
-    <li ><a href="{{ url_for('index.recent_listens') }}">Global</a></li>
-  </ul>
+  <div class="nav-tabs-container">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="active"><a href="{{ url_for('index.feed') }}">My Feed</a></li>
+      <li ><a href="{{ url_for('index.recent_listens') }}">Global</a></li>
+    </ul>
+  </div>
   {{ super() }}
 {% endblock %}
 
