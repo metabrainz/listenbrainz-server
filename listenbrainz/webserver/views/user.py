@@ -210,7 +210,7 @@ def stats(user_name: str):
 
 @user_bp.route("/<user_name>/collaborations/")
 def collaborations(user_name: str):
-    return redirect(url_for("user.playlists", user_name=current_user.musicbrainz_id))
+    return redirect(url_for("user.playlists", user_name=user_name))
 
 
 @user_bp.route("/<user_name>/playlists/")
