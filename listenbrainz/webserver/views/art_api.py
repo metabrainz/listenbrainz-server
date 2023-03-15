@@ -225,6 +225,11 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
 
 def _cover_art_yim_stats(user_name, stats):
     """ Create the SVG using YIM statistics for the given year. """
+    if stats.get("day_of_week") is None or stats.get("most_listened_year") is None or \
+        stats.get("total_listen_count") is None or stats.get("total_new_artists_discovered") or \
+        stats.get("total_artists_count") is None:
+        return None
+
     match stats["day_of_week"]:
         case "Monday": most_played_day_message = 'I SURVIVED <tspan class="user-stat">MONDAYS</tspan> WITH MUSIC'
         case "Tuesday": most_played_day_message = 'I CHILLED WITH MUSIC ON <tspan class="user-stat">TUESDAY</tspan>'
@@ -254,6 +259,10 @@ def _cover_art_yim_albums(user_name, stats):
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
     image_urls = []
     selected_urls = set()
+
+    if stats.get("top_releases") is None:
+        return None
+
     for item in stats["top_releases"]:
         if "caa_id" in item and "caa_release_mbid" in item:
             url = cac.resolve_cover_art(item["caa_id"], item["caa_release_mbid"], 250)
@@ -277,6 +286,9 @@ def _cover_art_yim_albums(user_name, stats):
 
 def _cover_art_yim_tracks(user_name, stats):
     """ Create the SVG using top tracks for the given user. """
+    if stats.get("top_recordings") is None:
+        return None
+
     return render_template(
         "art/svg-templates/yim-2022-tracks.svg",
         user_name=user_name,
@@ -288,6 +300,8 @@ def _cover_art_yim_tracks(user_name, stats):
 
 def _cover_art_yim_artists(user_name, stats):
     """ Create the SVG using top artists for the given user. """
+    if stats.get("top_artists") is None:
+        return None
     return render_template(
         "art/svg-templates/yim-2022-artists.svg",
         user_name=user_name,
@@ -302,6 +316,10 @@ def _cover_art_yim_playlist(user_name, stats, key):
     all_cover_arts = stats[f"{key}-coverart"]
     image_urls = []
     selected_urls = set()
+
+    if stats.get(key) is None:
+        return None
+
     for track in stats[key]["track"]:
         mbid = track["identifier"].split("/")[-1]
         # check existence in set to avoid duplicates
@@ -336,26 +354,18 @@ def cover_art_yim_2022(user_name):
     if image is None:
         raise APIBadRequest("Type of Image needs to be specified should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
-    if image not in ("stats", "artists", "albums", "tracks", "discovery-playlist", "missed-playlist"):
-        raise APIBadRequest(f"Invalid image type {image}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
-
     stats = db_yim.get(user["id"], 2022)
     if stats is None:
         raise APIBadRequest(f"Year In Music report for user {user_name} not found")
 
-    if image == "stats":
-        svg = _cover_art_yim_stats(user_name, stats)
-    elif image == "albums":
-        svg = _cover_art_yim_albums(user_name, stats)
-    elif image == "tracks":
-        svg = _cover_art_yim_tracks(user_name, stats)
-    elif image == "artists":
-        svg = _cover_art_yim_artists(user_name, stats)
-    elif image == "discovery-playlist":
-        svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year")
-    elif image == "missed-playlist":
-        svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year")
-    else:
-        svg = None
+    match image:
+        case "stats": svg = _cover_art_yim_stats(user_name, stats)
+        case "albums": svg = _cover_art_yim_albums(user_name, stats)
+        case "tracks": svg = _cover_art_yim_tracks(user_name, stats)
+        case "artists": svg = _cover_art_yim_artists(user_name, stats)
+        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year")
+        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year")
+        case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
-    return svg, 200, {"Content-Type": "image/svg+xml"}
+    status_code = 200 if svg is not None else 204
+    return svg, status_code, {"Content-Type": "image/svg+xml"}
