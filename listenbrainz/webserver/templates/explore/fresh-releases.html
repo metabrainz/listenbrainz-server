@@ -1,5 +1,8 @@
 {%- extends 'base-react.html' -%}
 
+<!-- these props are used in the navbar to highlight the navbar items -->
+{% set active_page = "explore" %}
+
 {%- block title -%}Fresh releases - ListenBrainz{%- endblock -%}
 {% block scripts %}
     {{ super() }}

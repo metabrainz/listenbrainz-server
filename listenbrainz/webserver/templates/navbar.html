@@ -24,7 +24,7 @@
       <a href="{{ url_for('index.feed') }}" {{ 'class=active' if active_page == 'feed'}}>Feed</a>
       <a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}"  {{ 'class=active' if active_page=='profile' and my_profile }}>Profile</a>
       {% endif %}
-      <a >Explore</a>
+      <a href="{{ url_for('explore.index') }}"  {{ 'class=active' if active_page=='explore' }}>Explore</a>
     </div>
 
     <div class="navbar-bottom">
