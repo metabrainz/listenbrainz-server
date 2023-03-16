@@ -134,6 +134,8 @@ body {
 @nav-tabs-link-padding: 1em 1.5em;
 @nav-tabs-link-padding-mobile: 0.8em 1em;
 @nav-tabs-background-color: #F3F3F3;
+@tabs-height: 42px;
+@tabs-height-mobile: 42px;
 .nav-tabs-container{
 	/* Tab container should be full width and scrollable if there is excess*/
 	width: calc(100% + @grid-gutter-width);
@@ -146,18 +148,6 @@ body {
 	&::-webkit-scrollbar {
 		/* Chrome, Safari and Opera */
 		display: none;
-	}
-	/* When not all tabs fit horizontally,
-	hide tabs behind gradient to indicate there's more */
-	position: relative;
-	&::after{
-		content: "";
-		width: 4em;
-		background: linear-gradient(270deg, #fff, transparent);
-		position: absolute;
-		right: 0;
-		top: 0;
-		height: 47px;
 	}
 	
 	.nav.nav-tabs {
@@ -197,13 +187,25 @@ body {
 		}
 		
 
-		/* Styles for mobile devices */
-		@media (max-width: @offscreen-sidenav-breakpoint) {
+	}
+	/* Styles for mobile devices */
+	@media (max-width: @offscreen-sidenav-breakpoint) {
+		/* When not all tabs fit horizontally,
+		hide tabs behind gradient to indicate there's more */
+		&::after{
+			content: "";
+			width: 4em;
+			background: linear-gradient(270deg, #fff, transparent);
+			position: fixed;
+			right: 0;
+			height: @tabs-height;
+			margin-top: -@tabs-height;
+		}
+	
 
-			> li {
-				> a, &.username > * {
-					padding: @nav-tabs-link-padding-mobile;
-				}
+		.nav.nav-tabs > li {
+			> a, &.username > * {
+				padding: @nav-tabs-link-padding-mobile;
 			}
 		}
 	}
