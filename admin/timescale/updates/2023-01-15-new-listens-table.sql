@@ -9,7 +9,7 @@ CREATE TABLE listen_new (
     data            JSONB                    NOT NULL
 );
 
-SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => INTERVAL '30 days');
+SELECT create_hypertable('listen_new', 'listened_at', chunk_time_interval => INTERVAL '30 days');
 
 INSERT INTO listen_new (listened_at, tz_offset, created,  user_id, recording_msid, data)
      SELECT listened_at
