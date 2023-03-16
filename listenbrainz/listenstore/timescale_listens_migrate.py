@@ -28,7 +28,7 @@ def process_chunk(chunk_start):
                   , created
                   , user_id
                   , (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid
-                  , jsonb_set(data->'track_metadata', '{track_name}', track_name, true) #- '{additional_info,recording_msid}'
+                  , jsonb_set(data->'track_metadata', '{track_name}'::text[], to_jsonb(track_name), true) #- '{additional_info,recording_msid}'::text[]
                FROM listen
               WHERE listened_at >= :start 
                 AND listened_at < :end
