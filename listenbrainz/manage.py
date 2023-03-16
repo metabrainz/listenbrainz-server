@@ -8,7 +8,7 @@ import sqlalchemy
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.db import timescale as ts, do_not_recommend
-from listenbrainz.listenstore import timescale_fill_userid
+from listenbrainz.listenstore import timescale_fill_userid, timescale_listens_migrate
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
@@ -294,6 +294,14 @@ def spotify_add_userid():
     app = create_app()
     with app.app_context():
         spotify_fill_user_id.main()
+
+
+@cli.command()
+def listen_migrate():
+    """ Migrate the listens table to new schema. """
+    app = create_app()
+    with app.app_context():
+        timescale_listens_migrate.migrate_listens()
 
 
 @cli.command()
