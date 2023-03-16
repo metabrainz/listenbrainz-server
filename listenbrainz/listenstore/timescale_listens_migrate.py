@@ -62,7 +62,11 @@ def migrate_listens():
         row = result.fetchone()
         already_done_ts = row.already_done_ts
 
-    chunk_start = already_done_ts - already_done_ts % CHUNK_SECONDS
+    if already_done_ts:
+        chunk_start = already_done_ts - already_done_ts % CHUNK_SECONDS
+    else:
+        chunk_start = LISTEN_MINIMUM_TS
+
     number_chunks = math.ceil((max_listened_at - chunk_start) / CHUNK_SECONDS)
     chunk_count = 0
     start_time = time.monotonic()
