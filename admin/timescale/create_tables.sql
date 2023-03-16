@@ -9,6 +9,14 @@ CREATE TABLE listen (
         data            JSONB                    NOT NULL
 );
 
+CREATE TABLE listen_new (
+    listened_at     BIGINT                   NOT NULL,
+    created         TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    user_id         INTEGER                  NOT NULL,
+    recording_msid  UUID                     NOT NULL,
+    data            JSONB                    NOT NULL
+);
+
 CREATE TABLE listen_delete_metadata (
     id                  SERIAL                      NOT NULL,
     user_id             INTEGER                     NOT NULL,
