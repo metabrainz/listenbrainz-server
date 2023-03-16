@@ -2,8 +2,6 @@
 // https://jestjs.io/docs/en/configuration.html
 
 module.exports = {
-  preset: "ts-jest",
-
   // Automatically clear mock calls and instances between every test
   clearMocks: true,
 
@@ -31,9 +29,8 @@ module.exports = {
   testPathIgnorePatterns: ["\\\\node_modules\\\\"],
 
   // This option sets the URL for the jsdom environment. It is reflected in properties such as location.href
-  testURL: "http://localhost",
-  transform: {
-    "\\.[jt]sx?$": "ts-jest",
+  testEnvironmentOptions: {
+    url: "http://localhost",
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
