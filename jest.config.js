@@ -33,6 +33,7 @@ module.exports = {
     url: "http://localhost",
   },
 
+  preset: "ts-jest",
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   transformIgnorePatterns: ["<rootDir>/node_modules/"],
 
@@ -40,4 +41,9 @@ module.exports = {
   verbose: true,
 
   snapshotSerializers: ["enzyme-to-json/serializer"],
+
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true,
+  },
 };
