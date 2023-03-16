@@ -107,7 +107,7 @@
     "@types/enzyme": "^3.10.5",
     "@types/enzyme-to-json": "^1.5.3",
     "@types/file-saver": "^2.0.5",
-    "@types/jest": "^25.2.1",
+    "@types/jest": "^29.5.0",
     "@types/less": "^3.0.3",
     "@types/lodash": "^4.14.149",
     "@types/react": "^18.0.25",
