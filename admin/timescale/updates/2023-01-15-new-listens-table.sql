@@ -11,13 +11,6 @@ CREATE TABLE listen_new (
 
 SELECT create_hypertable('listen_new', 'listened_at', chunk_time_interval => INTERVAL '30 days');
 
-INSERT INTO listen_new (listened_at, tz_offset, created,  user_id, recording_msid, data)
-     SELECT listened_at
-          , NULL
-          , created
-          , user_id
-          , (data->'track_metadata'->>'recording_msid')::UUID
-          , jsonb_insert((data->'track_metadata')::jsonb - 'recording_msid', '{track_name}', to_jsonb(track_name))
-       FROM listen;
+CREATE UNIQUE INDEX listened_at_user_id_recording_msid_ndx_listen ON listen_new (listened_at DESC, user_id, recording_msid);
 
 COMMIT;
