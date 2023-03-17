@@ -54,7 +54,7 @@ export type YearInMusicProps = {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
-      artist_mbids: string[];
+      artist_mbid: string;
       listen_count: number;
     }>;
     top_releases: Array<{
@@ -701,7 +701,7 @@ export default class YearInMusic extends React.Component<
                           const details = getEntityLink(
                             "artist",
                             artist.artist_name,
-                            artist.artist_mbids[0]
+                            artist.artist_mbid
                           );
                           const thumbnail = (
                             <span className="badge badge-info">
@@ -718,7 +718,7 @@ export default class YearInMusic extends React.Component<
                               track_name: "",
                               artist_name: artist.artist_name,
                               additional_info: {
-                                artist_mbids: artist.artist_mbids,
+                                artist_mbids: [artist.artist_mbid],
                               },
                             },
                           };
@@ -726,7 +726,7 @@ export default class YearInMusic extends React.Component<
                           return (
                             <ListenCard
                               compact
-                              key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
+                              key={`top-artists-${artist.artist_name}-${artist.artist_mbid}`}
                               listen={listenHere}
                               customThumbnail={thumbnail}
                               listenDetails={details}
