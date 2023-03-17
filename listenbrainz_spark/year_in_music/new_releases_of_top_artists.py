@@ -8,11 +8,13 @@ from listenbrainz_spark.postgres.release_group import create_year_release_groups
 
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_dump
-from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
 
 def get_new_releases_of_top_artists(year):
-    get_listens_from_dump().createOrReplaceTempView("listens")
+    from_date = datetime(year, 1, 1)
+    to_date = datetime.combine(date(year, 12, 31), time.max)
+    get_listens_from_dump(from_date, to_date).createOrReplaceTempView("listens")
+
     create_year_release_groups(year)
     listenbrainz_spark\
         .sql_context\
@@ -20,7 +22,7 @@ def get_new_releases_of_top_artists(year):
         .parquet(config.HDFS_CLUSTER_URI + RELEASE_GROUPS_YEAR_DATAFRAME)\
         .createOrReplaceTempView("release_groups_of_year")
 
-    new_releases = run_query(_get_new_releases_of_top_artists(year))
+    new_releases = run_query(_get_new_releases_of_top_artists())
 
     for entry in new_releases.toLocalIterator():
         data = entry.asDict(recursive=True)
@@ -32,10 +34,7 @@ def get_new_releases_of_top_artists(year):
         ).dict(exclude_none=True)
 
 
-def _get_new_releases_of_top_artists(year):
-    start = datetime.combine(date(year, 1, 1), time.min)
-    end = datetime.combine(date(year, 12, 31), time.max)
-
+def _get_new_releases_of_top_artists():
     # instead of exploding the artist mbids, it is possible to use arrays_overlap on the two artist credit mbids
     # however in that case spark will do a BroadcastNestedLoopJoin which is very slow (takes 3 hours). the query
     # below using equality on artist mbid takes 2 minutes.
@@ -45,9 +44,7 @@ def _get_new_releases_of_top_artists(year):
                  , artist_credit_mbids
                  , count(*) as listen_count
               FROM listens
-             WHERE listened_at >= to_timestamp('{start}')
-               AND listened_at <= to_timestamp('{end}')
-               AND artist_credit_mbids IS NOT NULL
+             WHERE artist_credit_mbids IS NOT NULL
           GROUP BY user_id
                  , artist_credit_mbids
         ), top_artists AS (
