@@ -27,14 +27,14 @@ def process_created(created: datetime):
                   , jsonb_set(data->'track_metadata', '{track_name}'::text[], to_jsonb(track_name), true) #- '{additional_info,recording_msid}'::text[]
                FROM listen
               WHERE listened_at >= :start
-                AND created < :end
+                AND created >= :last_created
            ORDER BY listened_at ASC  
         ON CONFLICT (listened_at, user_id, recording_msid)
          DO NOTHING
     """
     s = time.monotonic()
     with timescale.engine.connect() as connection:
-        connection.execute(text(query), {"start": LISTEN_MINIMUM_TS, "end": created})
+        connection.execute(text(query), {"start": LISTEN_MINIMUM_TS, "last_created": created})
     e = time.monotonic()
 
     print(f" - fixed up using created in {round(e-s, 2)}s")
